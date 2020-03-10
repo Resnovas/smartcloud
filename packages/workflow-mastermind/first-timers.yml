@@ -1,0 +1,4 @@
+labels:
+  - first-timers
+  - available
+template: .github/ISSUE_TEMPLATE/FIRST_TIMERS_ISSUE_TEMPLATE.md

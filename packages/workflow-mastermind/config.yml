@@ -1,0 +1,11 @@
+# Comment to be posted to on first time issues
+newIssueWelcomeComment: >
+  Thanks for opening your first issue! Be sure to follow the issue template, and provide as much infomation as possible. The more information you can provide the quicker our team can create a new patch!
+
+# Comment to be posted to on PRs from first time contributors in your repository
+newPRWelcomeComment: >
+  Thanks for opening this pull request! Please check out our contributing guidelines if you have not already. <3
+
+# Comment to be posted to on pull requests merged by a first time user
+firstPRMergeComment: >
+  Congrats on merging your first pull request! We here at smartcloud are proud of you! Let's keep moving towards a better future...

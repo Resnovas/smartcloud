@@ -1,0 +1,12 @@
+name: Pull Request Verification
+on:
+  pull_request:
+    branches:
+      - master
+      - develop
+jobs:
+  build:
+    name: Check Actions
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
