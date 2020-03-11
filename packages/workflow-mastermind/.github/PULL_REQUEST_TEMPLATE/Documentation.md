@@ -1,3 +1,12 @@
+---
+name: Documentation
+about: Update, modify or create documentation
+title: 'Docs:'
+labels: ''
+assignees: ''
+
+---
+
 <!-- Mention "documentation" or "docs" in the MR title -->
 <!-- For changing documentation location use the "Change documentation location" template -->
 

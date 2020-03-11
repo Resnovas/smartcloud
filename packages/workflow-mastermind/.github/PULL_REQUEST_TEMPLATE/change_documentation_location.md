@@ -1,3 +1,12 @@
+---
+name: Documentation Location
+about: Change the location of our documentation
+title: 'Docs: '
+labels: ''
+assignees: ''
+
+---
+
 <!-- Use this description template for changing documentation location. For new docs or updates to existing docs, use the "Documentation" template -->
 
 ## What does this MR do?
