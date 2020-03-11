@@ -9,3 +9,30 @@ newPRWelcomeComment: >
 # Comment to be posted to on pull requests merged by a first time user
 firstPRMergeComment: >
   Congrats on merging your first pull request! We here at smartcloud are proud of you! Let's keep moving towards a better future...
+
+sentimentBotReplyComment: >
+  Please be sure to review the code of conduct and be respectful of other users. cc/ @Smartcloudgg/community
+
+updateDocsComment: >
+  Thanks for opening this pull request! The maintainers of this repository would appreciate it if you would update some of our documentation based on your changes.
+
+
+requestInfoReplyComment:
+ - Ah no! young blade! That was a trifle short!
+ - Tell me more !
+ - I am sure you can be more effusive
+
+entimentBotToxicityThreshold: .7
+requestInfoLabelToAdd: more-information-needed
+checkIssueTemplate: true
+checkPullRequestTemplate: true
+requestInfoOn:
+  pullRequest: true
+  issue: true
+updateDocsWhiteList:
+  - bug
+  - chore
+updateDocsTargetFiles:
+  - README
+  - CHANGELOG
+  - docs/
