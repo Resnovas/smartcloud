@@ -1,0 +1,39 @@
+{
+  "issue": {
+    "subject_cannot_be_empty": true,
+    "subject_must_be_longer_than": 5,
+    "subject_must_be_shorter_than": 100,
+    "subject_must_be_in_tense": "imperative",
+    "subject_must_start_with_case": "upper",
+    "body_cannot_be_empty": true,
+    "body_must_include_reproduction_steps": true
+  },
+  "pull_request": {
+    "additions_must_be_less_than": 300,
+    "changes_must_be_less_than": 300,
+    "subject_cannot_be_empty": true,
+    "subject_must_be_longer_than": 5,
+    "subject_must_be_shorter_than": 100,
+    "subject_must_be_in_tense": "imperative",
+    "subject_must_start_with_case": "upper",
+    "body_cannot_be_empty": true,
+    "subject_must_include_github_issue": true,
+    "body_must_include_verification_steps": true,
+    "body_must_include_screenshot": true,
+    "body_must_close_github_issue": true
+  },
+  "commit": {
+    "cannot_be_fixup": true,
+    "subject_cannot_be_empty": true,
+    "subject_must_be_longer_than": 5,
+    "subject_must_be_shorter_than": 100,
+    "subject_lines_must_be_shorter_than": 50,
+    "subject_must_be_in_tense": "imperative",
+    "subject_must_start_with_case": "upper",
+    "body_cannot_be_empty": true
+  },
+  "branch": {
+    "name_must_be_shorter_than": 100,
+    "name_must_include_github_issue": true
+  }
+}
