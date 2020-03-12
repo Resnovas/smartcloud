@@ -26,11 +26,11 @@ comments:
 #    - 'include' patterns will associate a label if any of these patterns match
 #    - 'exclude' patterns will ignore this label if any of these patterns match
 labels:
-  'bug':
+  'Bug: New':
     include:
       - '\bbug[s]?\b'
     exclude: []
-  'help wanted':
+  'Help wanted':
     include:
       - '\bhelp( me)?\b'
     exclude:

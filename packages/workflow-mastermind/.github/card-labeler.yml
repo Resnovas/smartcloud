@@ -1,9 +1,30 @@
-Project name1:
-  Column name1:
-    - 'Status: test1'
-  Column name2:
-    - 'Status: test2-1'
-    - 'Status: test2-2'
+DevOps:
+  Requested:
+    - "Status: Available"
+  Accepted:
+    - 'DevOps: Accepted'
+    - 'Status: To Do'
+  In progress:
+    - 'DevOps: Developing'
+    - 'Status: In Progress'
+  Testing:
+    - 'DevOps: Testing'
+    - 'Status: In Progress'
+  Reviewing:
+    - 'DevOps: Reviewing'
+    - 'Status: In Review'
+  Staging:
+    - 'DevOps: Staging'
+    - 'Status: Staging'
+  Deploying:
+    - 'DevOps: Deploying'
+    - 'Status: Deploying'
+  Completed:
+    - 'DevOps: Completed'
+    - 'Status: Completed'
+  Rejected:
+    - 'DevOps: Rejected'
+    - 'Status: Wontfix'
 Project name2:
   Column name3:
     - 'Status: test1'

@@ -3,16 +3,23 @@ tag-template: 'v$NEXT_PATCH_VERSION'
 categories:
   - title: '🚀 Features'
     labels:
-      - 'feature'
-      - 'enhancement'
+      - 'Type: Feature'
+      - 'Type: Enhancement'
   - title: '🐛 Bug Fixes'
     labels:
-      - 'fix'
-      - 'bugfix'
-      - 'bug'
+      - 'Bug: Fixed'
+      - 'Type: Fix'
   - title: '🧰 Maintenance'
-    label: 'chore'
-change-template: '- $TITLE @$AUTHOR (#$NUMBER)'
+    labels:
+      - 'Type: Chore'
+      - 'Type: Docs'
+      - 'Type: Style'
+      - 'Type: Refactor'
+      - 'Type: Optimisation'
+  - title: '💀 Reverts'
+    labels:
+      - 'Type: Revert'
+change-template: '- $TITLE #$NUMBER (@$AUTHOR)'
 template: |
   ## Changes
 
