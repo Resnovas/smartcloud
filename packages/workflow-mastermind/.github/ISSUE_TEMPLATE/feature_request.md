@@ -36,8 +36,8 @@ Add any other context or screenshots about the feature request here.
 ### Feature Process
 
 **Documentation**
-- [] Documentation include in feature branch
-- [] Merge Request created
+- [ ] Documentation include in feature branch
+- [ ] Merge Request created
 
 **Availability & Testing**
 This section needs to be retained and filled in during the workflow planning breakdown phase of this feature proposal, if not earlier.
