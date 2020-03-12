@@ -63,6 +63,8 @@
 
   { "name": "CLA: Signed", "color": "#dd6127" },
   { "name": "CLA: Unsigned", "color": "#dd6127" },
+  { "name": "CLA: Already Signed", "color": "#dd6127" },
+  { "name": "CLA: Not Required", "color": "#dd6127" },
 
   { "name": "security vulnerability", "color": "#D1260F" },
   { "name": "security fix", "color": "#D1260F" },

@@ -19,4 +19,3 @@ jobs:
         path-to-signatures: 'signatures/version1/cla.json'
         path-To-cladocument: 'https://github.com/ibakshay/test-action-workflow/blob/master/cla.md'
         branch: ${{ github.ref }}
-        empty-commit-flag: false

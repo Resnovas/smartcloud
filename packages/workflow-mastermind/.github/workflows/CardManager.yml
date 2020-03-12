@@ -1,7 +1,7 @@
 name: Project Card Event
 on:
   project_card:
-    types: [moved]
+    types: [created, moved]
 jobs:
   triage:
     name: Auto card labeler

@@ -25,6 +25,22 @@ DevOps:
   Rejected:
     - 'DevOps: Rejected'
     - 'Status: Wontfix'
-Project name2:
-  Column name3:
-    - 'Status: test1'
+Issue Status:
+  New:
+    - 'Bug: New'
+    - 'Type: Bug'
+  Closed:
+    - 'Bug: Fixed'
+    - 'Type: Bug'
+  High priority:
+    - 'Bug: Confirmed'
+    - 'Type: Bug'
+    - 'Priority: High'
+  Medium priority:
+    - 'Bug: Confirmed'
+    - 'Type: Bug'
+    - 'Priority: Medium'
+  Low priority:
+    - 'Bug: Confirmed'
+    - 'Type: Bug'
+    - 'Priority: Low'
