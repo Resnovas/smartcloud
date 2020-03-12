@@ -6,7 +6,7 @@ on:
     types: [created]
 jobs:
   rebase:
-    name: Rebase
+    name: Automatic Rebase
     if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/rebase')
     runs-on: ubuntu-latest
     steps:
@@ -19,6 +19,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   revert-commit:
+    Name: Automatic Revert
     if: contains(github.event.comment.body, '/revert')
     runs-on: ubuntu-latest
     steps:
@@ -29,6 +30,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   CLAssistant:
+    Name: CLA Assistant
     if: github.event.comment.body == '/recheckcla' || github.event.comment.body == '/cla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA'
     runs-on: ubuntu-latest
     steps:
@@ -43,6 +45,7 @@ jobs:
         branch: ${{ github.ref }}
 
   labels:
+    name: Update Labels
     if: contains(github.event.comment.body, '/update-issues')
     runs-on: ubuntu-latest
     steps:
@@ -52,6 +55,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   create_issue_branch_job:
+    name: Create Issue Branch
     if: contains(github.event.comment.body, '/cib') || contains(github.event.comment.body, '/create-issue-branch')
     runs-on: ubuntu-latest
     steps:
