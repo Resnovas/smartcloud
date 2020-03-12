@@ -2,7 +2,7 @@
 name: Documentation Location
 about: Change the location of our documentation
 title: 'Docs: '
-labels: ''
+labels: 'Type: Documentation'
 assignees: ''
 
 ---

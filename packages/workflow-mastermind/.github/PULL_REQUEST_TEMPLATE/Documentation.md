@@ -2,7 +2,7 @@
 name: Documentation
 about: Update, modify or create documentation
 title: 'Docs:'
-labels: ''
+labels: 'Type: Documentation'
 assignees: ''
 
 ---

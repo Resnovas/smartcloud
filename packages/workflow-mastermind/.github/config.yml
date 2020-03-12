@@ -16,10 +16,9 @@ sentimentBotReplyComment: >
 updateDocsComment: >
   Thanks for opening this pull request! The maintainers of this repository would appreciate it if you would update some of our documentation based on your changes.
 
-
 requestInfoReplyComment:
  - Ah no! young blade! That was a trifle short!
- - Tell me more !
+ - Tell me more!
  - I am sure you can be more effusive
 
 entimentBotToxicityThreshold: .7
