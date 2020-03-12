@@ -1,0 +1,38 @@
+name: "Pull Requests"
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, edited ]
+
+jobs:
+  CLAssistant:
+    runs-on: ubuntu-latest
+    steps:
+    - name: "CLA Assistant"
+      # Alpha Release
+      uses: cla-assistant/github-action@v1.2.0-alpha
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        path-to-signatures: 'signatures/version1/cla.json'
+        path-To-cladocument: 'https://github.com/ibakshay/test-action-workflow/blob/master/cla.md'
+        branch: ${{ github.ref }}
+
+  rebase:
+    name: Rebase
+    if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/rebase')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+      with:
+        fetch-depth: 0
+    - name: Automatic Rebase
+      uses: cirrus-actions/rebase@1.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  wip:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: wip/action@v1.0.0

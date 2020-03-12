@@ -1,0 +1,69 @@
+name: Issue Management
+on:
+  issues:
+    types: [assigned]
+  issue_comment:
+    types: [created]
+jobs:
+  rebase:
+    name: Rebase
+    if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/rebase')
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+      with:
+        fetch-depth: 0
+    - name: Automatic Rebase
+      uses: cirrus-actions/rebase@1.2
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  revert-commit:
+    if: contains(github.event.comment.body, '/revert')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Automatic Revert
+        uses: srt32/revert@v0.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  CLAssistant:
+    if: github.event.comment.body == '/recheckcla' || github.event.comment.body == '/cla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA'
+    runs-on: ubuntu-latest
+    steps:
+    - name: "CLA Assistant"
+      # Alpha Release
+      uses: cla-assistant/github-action@v1.2.0-alpha
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        path-to-signatures: 'signatures/version1/cla.json'
+        path-To-cladocument: 'https://github.com/ibakshay/test-action-workflow/blob/master/cla.md'
+        branch: ${{ github.ref }}
+
+  labels:
+    if: contains(github.event.comment.body, '/update-issues')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@1.0.0
+      - uses: lannonbr/issue-label-manager-action@2.0.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create_issue_branch_job:
+    if: contains(github.event.comment.body, '/cib') || contains(github.event.comment.body, '/create-issue-branch')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create Issue Branch
+      uses: robvanderleek/create-issue-branch@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # https://github.community/t5/GitHub-Actions/Workflow-is-failing-if-no-job-can-be-ran-due-to-condition/m-p/38186#M3250
+  always_job:
+    name: Always run job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Always run
+        run: echo "This job is used to prevent the workflow to fail when all other jobs are skipped."
