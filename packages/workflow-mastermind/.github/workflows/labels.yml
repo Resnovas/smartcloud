@@ -2,10 +2,7 @@ name: Label Management
 
 on:
   label:
-    types:
-      - created
-      - edited
-      - deleted
+    types: [created, edited, deleted]
 
 jobs:
   sync:
