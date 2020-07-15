@@ -33,7 +33,7 @@ ComOps:
     Testing:
     - 'ComOps - Testing'
     - 'Status - In Progress'
-    Reviewing:
+    Awaiting Review:
     - 'ComOps - Awaiting Review'
     - 'Status - In Review'
     Completed:
