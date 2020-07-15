@@ -1,20 +1,5 @@
-# Comment to be posted to on first time issues
-newIssueWelcomeComment: >
-  Thanks for opening your first issue! Be sure to follow the issue template, and provide as much infomation as possible. The more information you can provide the quicker our team can create a new patch!
-
-# Comment to be posted to on PRs from first time contributors in your repository
-newPRWelcomeComment: >
-  Thanks for opening this pull request! Please check out our contributing guidelines if you have not already. <3
-
-# Comment to be posted to on pull requests merged by a first time user
-firstPRMergeComment: >
-  Congrats on merging your first pull request! The maintainers are proud of you! Let's keep moving towards a better future...
-
 sentimentBotReplyComment: >
   Please be sure to review the code of conduct and be respectful of other users. /cc @Videndum/moderators
-
-updateDocsComment: >
-  Thanks for opening this pull request! The maintainers of this repository would appreciate it if you would update some of our documentation based on your changes. You can find all our current documentation in either /wiki or /docs
 
 requestInfoReplyComment:
  - Ah no! young blade! That was a trifle short!
@@ -28,12 +13,6 @@ checkPullRequestTemplate: true
 requestInfoOn:
   pullRequest: true
   issue: true
-updateDocsWhiteList:
-  - bug
-  - chore
 requestInfoUserstoExclude:
   - ${{github.rerepository_owner}}
-updateDocsTargetFiles:
-  - README
-  - CHANGELOG
-  - docs/
+
