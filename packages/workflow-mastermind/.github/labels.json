@@ -50,6 +50,11 @@
         "description": "This wont be worked on by DevOPS or Community contributors"
     },
     {
+        "name": "Status - Stale",
+        "color": "#CFD3D7",
+        "description": "This issue has been automatically marked as stale because it has not had recent activity"
+    },
+    {
         "name": "Type - Chore",
         "color": "#0075CA",
         "description": "Changes to the build process or auxiliary tools and libraries such as documentation generation"
