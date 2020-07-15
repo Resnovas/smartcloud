@@ -1,0 +1,33 @@
+name: Release Management
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  invite:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Invite contributor to the organization
+        uses: lekterable/inclusive-organization-action@v1.1.0
+        with:
+          organization: Videndum
+          team: community
+          comment: |
+            Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!
+
+            We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks.
+            Our bot should have already sent the invite. We look forward to you joining the team.
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+
+
+# This job creates releases on github which can then be used to track code updates using tags and semantic versioning. Please see ./../release-drafter.yml for configuration
+# Find out more: https://github.com/release-drafter/release-drafter
+  update_release_draft:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: release-drafter/release-drafter@v5
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

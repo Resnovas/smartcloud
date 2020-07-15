@@ -1,28 +1,50 @@
-name: "Pull Requests"
+name: Pull Request Management
+
+# This workflow automatically lables PR to ensure that all PR's are correct within the release draft.
+
 on:
   pull_request:
     types: [ opened, synchronize, reopened, edited ]
 
 jobs:
-  CLAssistant:
+  assign_project:
+    runs-on: ubuntu-latest
+    name: Assign to project
+    steps:
+      - name: Assign NEW pull requests to project DevOps
+        uses: skeet70/default-project-board-action@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          issue: ${{ github.event.issue.number }}
+          project: 1
+
+  semantic:
+    name: Semantic Title
     runs-on: ubuntu-latest
     steps:
-    - name: "CLA Assistant"
-      # Alpha Release
-      uses: cla-assistant/github-action@v1.2.0-alpha
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      with:
-        path-to-signatures: 'signatures/version1/cla.json'
-        path-To-cladocument: 'https://github.com/ibakshay/test-action-workflow/blob/master/cla.md'
-        branch: ${{ github.ref }}
+      - name: Check title
+        uses: amannn/action-semantic-pull-request@v1.2.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  pr-labeler:
+    name: Labeler
+    runs-on: ubuntu-latest
+    steps:
+      - uses: TimonVS/pr-labeler-action@v3
+        with:
+          configuration-path: .github/pr-labeler.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   rebase:
     name: Rebase
     if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/rebase')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - name: Checkout
+      uses: actions/checkout@master
       with:
         fetch-depth: 0
     - name: Automatic Rebase
@@ -30,7 +52,63 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  conflibot:
+    name: Conflict Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Warn potential conflicts
+        uses: wktk/conflibot@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
+  label_sizes:
+    name: Pull Request Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions-ecosystem/action-size@v2
+        id: size
+        with:
+          size_xs_label: "Size - XS"
+          size_s_label: "Size - S"
+          size_m_label: "Size - M"
+          size_l_label: "Size - L"
+          size_xl_label: "Size - XL"
+          size_xxl_label: "Size - XXL"
+
+      - uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          labels: ${{ steps.size.outputs.stale_labels }}
+
+      - uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          labels: ${{ steps.size.outputs.new_label }}
+
+  CLAssistant:
+    name: "CLA Assistant"
+    runs-on: ubuntu-latest
+    steps:
+      - name: "CLA Assistant"
+        if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request'
+        # Alpha Release
+        uses: cla-assistant/github-action@v1.3.0-alpha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          path-to-signatures: './contributors/cla.json'
+          path-To-cladocument: 'https://github.com/${{github.repository}}/contributors/cla.md'
+          # branch should not be protected
+          branch: 'master'
+          whitelist: ${{github.rerepository_owner}},bot*
+          empty-commit-flag: false
+          blockchain-storage-flag: false
+
   wip:
+    name: Work in progress
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

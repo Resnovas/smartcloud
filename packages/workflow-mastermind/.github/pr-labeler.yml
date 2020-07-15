@@ -1,0 +1,8 @@
+## This defines which lables should be applied to each PR
+## {lable}: {branches}
+
+'Type - Chore': 'chore/*'
+'Type - Fix': 'issue/*'
+'Type - Feature': 'feature/*'
+'Type - Documentation': 'docs/*'
+'Type - Maintenance': 'maintenance/*'

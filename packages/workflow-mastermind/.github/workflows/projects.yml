@@ -1,4 +1,4 @@
-name: Project Card Event
+name: Project Management
 on:
   project_card:
     types: [created, moved]
@@ -7,4 +7,5 @@ jobs:
     name: Auto card labeler
     runs-on: ubuntu-latest
     steps:
-      - uses: technote-space/auto-card-labeler@v1
+      - name: Adjust Lables
+        uses: technote-space/auto-card-labeler@v1

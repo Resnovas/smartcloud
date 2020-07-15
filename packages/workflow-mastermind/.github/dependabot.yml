@@ -1,0 +1,18 @@
+version: 2
+updates:
+    - package-ecosystem: "npm"
+    # Keep npm dependencies up to date
+      directory: "/"
+    # Check the npm registry for updates at 2am UTC
+      schedule:
+        interval: "daily"
+        time: "02:00"
+      labels:
+        - "Type - Chore"
+        - "skip-changelog"
+
+    - package-ecosystem: "github-actions"
+      directory: "/"
+      schedule:
+        interval: "daily"
+        time: "02:00"

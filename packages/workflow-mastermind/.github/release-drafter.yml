@@ -1,26 +1,37 @@
-name-template: 'v$NEXT_PATCH_VERSION 🌈'
-tag-template: 'v$NEXT_PATCH_VERSION'
+# This workflow creates releases on github which can then be used to track code updates using tags and semantic versioning. Please see ./workflows/release-drafter.yml for execution
+# Find out more: https://github.com/release-drafter/release-drafter
+
+name-template: 'v$RESOLVED_VERSION 🌈'
+tag-template: 'v$RESOLVED_VERSION'
 categories:
   - title: '🚀 Features'
-    labels:
-      - 'Type: Feature'
-      - 'Type: Enhancement'
+    labels: 'Type - Feature'
   - title: '🐛 Bug Fixes'
     labels:
       - 'Bug: Fixed'
-      - 'Type: Fix'
+      - 'Type - Fix'
   - title: '🧰 Maintenance'
+    label:
+      - 'Type - Chore'
+      - 'Type - Documentation'
+      - 'Type - Maintenance'
+change-template: '- $TITLE (#$NUMBER)'
+exclude-labels:
+  - 'skip-changelog'
+version-resolver:
+  major:
     labels:
-      - 'Type: Chore'
-      - 'Type: Docs'
-      - 'Type: Style'
-      - 'Type: Refactor'
-      - 'Type: Optimisation'
-  - title: '💀 Reverts'
+      - 'Versioning: Major'
+  minor:
     labels:
-      - 'Type: Revert'
-change-template: '- $TITLE #$NUMBER (@$AUTHOR)'
+      - 'Versioning: Minor'
+  patch:
+    labels:
+      - 'Versioning: Patch'
+  default: patch
 template: |
   ## Changes
+
+  Contributors: $CONTRIBUTORS
 
   $CHANGES

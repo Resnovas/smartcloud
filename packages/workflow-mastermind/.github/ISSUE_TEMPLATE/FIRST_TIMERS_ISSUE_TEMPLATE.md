@@ -10,11 +10,11 @@ This issue is reserved for people who never contributed to Open Source before. W
 Nothing. This issue is meant to welcome you to Open Source :) We are happy to walk you trough the process.
 
 ### :clipboard: Step by Step
-- [ ] 🙋 **Claim this issue**: Comment below  
+- [ ] 🙋 **Claim this issue**: Comment below
   Please 🙏 only claim if you want to start working on it within a day. We will select a person at random as the contributor the day after the issue is created.
   Once claimed we add you as contributor to this repository.
 - [ ] 👌 **Accept our invitation** to this repository. Once accepted, assign yourself to this repository
-- [ ] 🔄 **replace** the `available` label with `in progress`.
+- [ ] 🔄 **replace** the `DevOps` (Developer) Project with `ComOps` (Community).
 - [ ] 📝 **Update** the file [$FILENAME in the `$REPO` repository]($BRANCH_URL) (press the little pen Icon) and edit the line as shown below.
 
 ```diff

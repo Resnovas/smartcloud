@@ -11,10 +11,10 @@ firstPRMergeComment: >
   Congrats on merging your first pull request! The maintainers are proud of you! Let's keep moving towards a better future...
 
 sentimentBotReplyComment: >
-  Please be sure to review the code of conduct and be respectful of other users. cc/ @IIC
+  Please be sure to review the code of conduct and be respectful of other users. /cc @Videndum/moderators
 
 updateDocsComment: >
-  Thanks for opening this pull request! The maintainers of this repository would appreciate it if you would update some of our documentation based on your changes.
+  Thanks for opening this pull request! The maintainers of this repository would appreciate it if you would update some of our documentation based on your changes. You can find all our current documentation in either /wiki or /docs
 
 requestInfoReplyComment:
  - Ah no! young blade! That was a trifle short!
@@ -31,6 +31,8 @@ requestInfoOn:
 updateDocsWhiteList:
   - bug
   - chore
+requestInfoUserstoExclude:
+  - ${{github.rerepository_owner}}
 updateDocsTargetFiles:
   - README
   - CHANGELOG

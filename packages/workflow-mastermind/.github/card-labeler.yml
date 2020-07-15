@@ -1,46 +1,60 @@
 DevOps:
-  Requested:
-    - "Status: Available"
-  Accepted:
-    - 'DevOps: Accepted'
-    - 'Status: To Do'
-  In progress:
-    - 'DevOps: Developing'
-    - 'Status: In Progress'
-  Testing:
-    - 'DevOps: Testing'
-    - 'Status: In Progress'
-  Reviewing:
-    - 'DevOps: Reviewing'
-    - 'Status: In Review'
-  Staging:
-    - 'DevOps: Staging'
-    - 'Status: Staging'
-  Deploying:
-    - 'DevOps: Deploying'
-    - 'Status: Deploying'
-  Completed:
-    - 'DevOps: Completed'
-    - 'Status: Completed'
-  Rejected:
-    - 'DevOps: Rejected'
-    - 'Status: Wontfix'
-Issue Status:
-  New:
-    - 'Bug: New'
-    - 'Type: Bug'
-  Closed:
-    - 'Bug: Fixed'
-    - 'Type: Bug'
-  High priority:
-    - 'Bug: Confirmed'
-    - 'Type: Bug'
-    - 'Priority: High'
-  Medium priority:
-    - 'Bug: Confirmed'
-    - 'Type: Bug'
-    - 'Priority: Medium'
-  Low priority:
-    - 'Bug: Confirmed'
-    - 'Type: Bug'
-    - 'Priority: Low'
+    Requested:
+    - "Status - Available"
+    Accepted:
+    - 'DevOps - Accepted'
+    - 'Status - Pending'
+    In progress:
+    - 'DevOps - Developing'
+    - 'Status - In Progress'
+    Testing:
+    - 'DevOps - Testing'
+    - 'Status - In Progress'
+    Reviewing:
+    - 'DevOps - Reviewing'
+    - 'Status - In Review'
+    Staging:
+    - 'DevOps - Staging'
+    - 'Status - Staging'
+    Completed:
+    - 'DevOps - Completed'
+    - 'Status - Completed'
+    Rejected:
+    - 'DevOps - Rejected'
+    - 'Status - Do not develop'
+    On Hold:
+    - 'Status - On Hold'
+ComOps:
+    Accepted:
+    - 'CommOps - Accepted'
+    In progress:
+    - 'ComOps - Developing'
+    - 'Status - In Progress'
+    Testing:
+    - 'ComOps - Testing'
+    - 'Status - In Progress'
+    Reviewing:
+    - 'ComOps - Awaiting Review'
+    - 'Status - In Review'
+    Completed:
+    - 'ComOps - Completed'
+    - 'Status - Completed'
+Issues:
+    New:
+    - 'Bug - New'
+    - 'Type - Bug'
+    Closed:
+    - 'Bug - Fixed'
+    - 'Type - Bug'
+    High Priority:
+    - 'Bug - Confirmed'
+    - 'Type - Bug'
+    - 'Priority - High'
+    Medium Priority:
+    - 'Bug - Confirmed'
+    - 'Type - Bug'
+    - 'Priority - Medium'
+    Low Priority:
+    - 'Bug - Confirmed'
+    - 'Type - Bug'
+    - 'Priority - Low'
