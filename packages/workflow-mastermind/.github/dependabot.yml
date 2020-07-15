@@ -9,6 +9,7 @@ updates:
         time: "02:00"
       labels:
         - "Type - Chore"
+        - "Content - Dependences"
         - "skip-changelog"
 
     - package-ecosystem: "github-actions"
@@ -16,3 +17,8 @@ updates:
       schedule:
         interval: "daily"
         time: "02:00"
+      labels:
+        - "Type - Chore"
+        - "Content - Dependences"
+        - "Content - Workflow & CI"
+        - "skip-changelog"

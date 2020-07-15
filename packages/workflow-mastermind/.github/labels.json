@@ -360,6 +360,11 @@
         "description": "Changes that affect the dependences"
     },
     {
+        "name": "Content - Workflow & CI",
+        "color": "#f9cea2",
+        "description": "Changes that affect the workflow & CI"
+    },
+    {
         "name": "Content - UI / UX",
         "color": "#f9cea2",
         "description": "Changes that affect the UI / UX"
