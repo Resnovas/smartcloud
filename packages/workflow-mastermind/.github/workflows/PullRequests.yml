@@ -94,18 +94,15 @@ jobs:
     steps:
       - name: "CLA Assistant"
         if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request'
-        # Alpha Release
         uses: cla-assistant/github-action@v1.3.0-alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: './contributors/cla.json'
-          path-To-cladocument: 'https://github.com/${{github.repository}}/contributors/cla.md'
-          # branch should not be protected
+          path-to-signatures: '/contributors/cla.json'
           branch: 'master'
+          label: true
           whitelist: ${{github.rerepository_owner}},bot*
           empty-commit-flag: false
-          blockchain-storage-flag: false
 
   wip:
     name: Work in progress
