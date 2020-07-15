@@ -31,14 +31,14 @@ jobs:
           repository: ${{ github.repository }}
           issue: ${{ github.event.issue.number }}
           project: 1
-      - name: Assign NEW issues to project DevOps
+      - name: Assign NEW bugs to project bugs
         uses: skeet70/default-project-board-action@v1
         if: contains(github.event.issue.labels.*.name, "Type - Bug")
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           issue: ${{ github.event.issue.number }}
-          project: 1
+          project: 2
 
   create_issue_branch_job:
     name: Issue Branches

@@ -7,17 +7,18 @@ on:
     types: [ opened, synchronize, reopened, edited ]
 
 jobs:
-  assign_project:
-    runs-on: ubuntu-latest
-    name: Assign to project
-    steps:
-      - name: Assign NEW pull requests to project DevOps
-        uses: skeet70/default-project-board-action@v1
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          issue: ${{ github.event.issue.number }}
-          project: 1
+  # Not sure why this isn't working, but have raised a ticket
+  # assign_project:
+  #   runs-on: ubuntu-latest
+  #   name: Assign to project
+  #   steps:
+  #     - name: Assign NEW pull requests to project DevOps
+  #       uses: skeet70/default-project-board-action@v1
+  #       with:
+  #         github_token: ${{ secrets.GITHUB_TOKEN }}
+  #         repository: ${{ github.repository }}
+  #         issue: ${{ github.event.issue.number }}
+  #         project: 1
 
   semantic:
     name: Semantic Title
