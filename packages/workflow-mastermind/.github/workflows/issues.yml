@@ -7,18 +7,6 @@ on:
     types: [created, edited]
 
 jobs:
-  labels:
-    name: Ensure Lables
-    runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/labels')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@1.0.0
-      - name: Create Lables
-        uses: lannonbr/issue-label-manager-action@2.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   assign_project:
     runs-on: ubuntu-latest
     name: Assign to project
