@@ -14,11 +14,9 @@ This project is completely free to use, without any requirements and without war
 - Create a branch - Creates branches from `development` and posts comment with the branch attached. Following rules apply:
     - All branches will be created with the name {issue.number}-{issue.title}
     - Labels are used to define branch types
-    - `Type: Chore` will be created with the prefix `chore/`
-    - `Type: Feature, Enhancement` will be created with the prefix `feature/`
-    - `Type: Maintenance, Refactor, Style, Optimisation' will be created with the prefix `maintenance/`
+    - `Type - Chore, Feature, Enhancement, Maintenance, Refactor, Style, Optimisation & Bug` will be created with the appropriate prefix
     - `Type: Discussion, Question, Revert` will automatically be skipped
-    - `Type: Bug` & anything not already defined will be created with the prefix `issue/`
+    - Anything not already defined will be created with the prefix `issue/`
 - Revert Commits - When `/revert {commit id}` is commented will automatically revert that commit
 - CLA Assistant - When a Pull Request has the comment `/recheckcla` or the CLA acknowledge message, will run CLA checks to ensure contributor has signed the CLA.
 - Always Run - This job is used to prevent the workflow to fail when all other jobs are skipped.
