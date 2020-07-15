@@ -33,7 +33,7 @@ jobs:
           project: 1
       - name: Assign NEW bugs to project bugs
         uses: skeet70/default-project-board-action@v1
-        if: contains(github.event.issue.labels.*.name, "Type - Bug")
+        if: contains(github.event.issue.labels.*.name, 'Type - Bug')
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
