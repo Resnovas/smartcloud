@@ -74,7 +74,7 @@ jobs:
           path-To-cladocument: 'https://github.com/${{github.repository}}/contributors/cla.md'
           branch: 'master'
           label: true
-          whitelist: ${{github.rerepository_owner}},bot*
+          whitelist: bot*
           empty-commit-flag: false
 
   always_job:
