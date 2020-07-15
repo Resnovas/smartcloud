@@ -7,18 +7,6 @@ on:
     types: [created, edited]
 
 jobs:
-  labels:
-    name: Ensure Lables
-    runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/labels')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@1.0.0
-      - name: Create Lables
-        uses: lannonbr/issue-label-manager-action@2.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   assign_project:
     runs-on: ubuntu-latest
     name: Assign to project
@@ -40,18 +28,6 @@ jobs:
           issue: ${{ github.event.issue.number }}
           project: 2
 
-  labels:
-    name: Ensure Lables
-    runs-on: ubuntu-latest
-    if: contains(github.event.comment.body, '/labels')
-    steps:
-      - name: Checkout
-        uses: actions/checkout@1.0.0
-      - name: Create Lables
-        uses: lannonbr/issue-label-manager-action@2.0.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   create_issue_branch_job:
     name: Issue Branches
     runs-on: ubuntu-latest
@@ -66,7 +42,7 @@ jobs:
       if: contains(github.event.comment.body, '/revert')
       steps:
       - name: Checkout
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2.3.1
       - name: Automatic Revert
         uses: srt32/revert@v0.0.1
         env:

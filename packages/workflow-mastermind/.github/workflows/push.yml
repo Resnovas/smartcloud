@@ -6,6 +6,21 @@ on:
       - master
 
 jobs:
+  labeler:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.1
+      - name: Run Labeler
+        if: success()
+        uses: crazy-max/ghaction-github-labeler@v2
+        with:
+          yaml_file: .github/labels.yml
+          skip_delete: false
+          dry_run: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   invite:
     runs-on: ubuntu-latest
     steps:
@@ -22,12 +37,53 @@ jobs:
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
 
-
-# This job creates releases on github which can then be used to track code updates using tags and semantic versioning. Please see ./../release-drafter.yml for configuration
-# Find out more: https://github.com/release-drafter/release-drafter
   update_release_draft:
+    name: Create release Draft
     runs-on: ubuntu-latest
     steps:
       - uses: release-drafter/release-drafter@v5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  create-changelog:
+    name: Create Changelog
+    runs-on: ubuntu-18.04
+    steps:
+      - name: "📥 Check-out"
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 0
+      - uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pullRequests: 'true'
+          prWoLabels: 'skip-changelog'
+          breakingLabels: 'Versioning - BREAKING'
+          enhancementLabels: 'Type - Enhancement, Type - Feature'
+          bugLabels: 'Type - Fix, Bug - Fixed'
+          deprecatedLabels: 'Type - Decrecated'
+          removedLabels: 'Type - Removal'
+          securityLabels: 'security fix'
+          stripGeneratorNotice: "false"
+      - name: Commit files
+        run: |
+          ls
+          git add CHANGELOG.md
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "docs(changelog): update" -a
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: 'docs/changelog'
+          force: true
+      - name: pull-request
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: 'docs/changelog'
+          destination_branch: "master"
+          pr_title: "docs: updating changelog"
+          pr_body: ":crown: *An automated PR*"
+          pr_label: "skip-changelog"
