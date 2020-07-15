@@ -239,12 +239,12 @@ labels:
       description: Changes that affect the fronted
 
 
-    - name: 'security vulnerability'
-      color: D1260F
-      description: A Security vulnerability
     - name: 'security fix'
       color: D1260F
       description: A Security Fix
+    - name: 'security vulnerability'
+      color: D1260F
+      description: A Security vulnerability
     - name: 'Duplicate'
       color: ffffff
       description: A Duplicate of another issue/pull
@@ -254,12 +254,12 @@ labels:
     - name: 'More information needed'
       color: ffffff
       description: Requires more information before it can continue
-    - name: 'skip-changelog'
-      color: ffffff
-      description: Skip the changelog
     - name: 'Good first issue'
       color: ffffff
       description: A Good issue for first time github users
     - name: 'First Timers'
       color: ffffff
       description: A Good issue for first time github users
+    - name: 'skip-changelog'
+      color: ffffff
+      description: Skip the changelog
