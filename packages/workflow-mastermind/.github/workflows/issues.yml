@@ -28,6 +28,18 @@ jobs:
           issue: ${{ github.event.issue.number }}
           project: 2
 
+  Labels:
+    name: Manage Labelss
+    runs-on: ubuntu-latest
+    if: contains(github.event.comment.body, '/labels')
+    steps:
+      - name: Checkout
+        uses: actions/checkout@1.0.0
+      - name: Sync labels
+        uses: b4b4r07/github-labeler@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   create_issue_branch_job:
     name: Issue Branches
     runs-on: ubuntu-latest
@@ -58,12 +70,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: 'contributors/cla.json'
-          path-To-cladocument: 'https://github.com/${{github.repository}}/contributors/cla.md'
+          path-to-signatures: 'docs/getting-started/contributing/cla.json'
+          path-To-cladocument: 'https://github.com/${{github.repository}}/docs/getting-started/contributing/cla.md'
           branch: 'master'
           label: true
           whitelist: bot*
-          empty-commit-flag: false
+          empty-commit-flag: true
 
   always_job:
       name: Always run job

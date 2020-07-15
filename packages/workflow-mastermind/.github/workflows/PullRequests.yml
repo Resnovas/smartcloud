@@ -99,12 +99,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: 'contributors/cla.json'
-          path-To-cladocument: 'https://github.com/${{github.repository}}/contributors/cla.md'
+          path-to-signatures: 'docs/getting-started/contributing/cla.json'
+          path-To-cladocument: 'https://github.com/${{github.repository}}/docs/getting-started/contributing/cla.md'
           branch: 'master'
           label: true
           whitelist: bot*
-          empty-commit-flag: false
+          empty-commit-flag: true
 
   wip:
     name: Work in progress

@@ -1,265 +1,496 @@
 labels:
-    - name: 'Status - Abandoned'
-      color: CFD3D7
-      description: This issue / pull request has been abandone
-    - name: 'Status - Available'
-      color: CFD3D7
-      description: This issue is available for either Developers or Community contributors to develo
-    - name: 'Status - Blocked'
-      color: CFD3D7
-      description: Another issue is blocking the development of this issu
-    - name: 'Status - Completed'
-      color: CFD3D7
-      description: Development has finished and been merged for this issu
-    - name: 'Status - In Progress'
-      color: CFD3D7
-      description: Development is underway for this issu
-    - name: 'Status - On Hold'
-      color: CFD3D7
-      description: The developers have decided to hold the development of this request. Please see the comments for the reaso
-    - name: 'Status - Pending'
-      color: CFD3D7
-      description: The developers have approved development of this request. The next available developer will start working on it soo
-    - name: 'Status - Review Needed'
-      color: CFD3D7
-      description: This pull request is waiting on review
-    - name: 'Status - Revision Needed'
-      color: CFD3D7
-      description: This pull request has been reviewed and requires revisio
-    - name: 'Status - Do not develop'
-      color: CFD3D7
-      description: This wont be worked on by DevOPS or Community contributor
-    - name: 'Status - Stale'
-      color: CFD3D7
-      description: This issue has been automatically marked as stale because it has not had recent activit
+  - name: 'Status - Abandoned'
+    color: CFD3D7
+    description: This issue / pull request has been abandone
+  - name: 'Status - Available'
+    color: CFD3D7
+    description: This issue is available for either Developers or Community contributors to develo
+  - name: 'Status - Blocked'
+    color: CFD3D7
+    description: Another issue is blocking the development of this issu
+  - name: 'Status - Completed'
+    color: CFD3D7
+    description: Development has finished and been merged for this issu
+  - name: 'Status - In Progress'
+    color: CFD3D7
+    description: Development is underway for this issu
+  - name: 'Status - On Hold'
+    color: CFD3D7
+    description: The developers have decided to hold the development of this request. Please see the comments for the reaso
+  - name: 'Status - Pending'
+    color: CFD3D7
+    description: The developers have approved development of this request. The next available developer will start working on it soo
+  - name: 'Status - Review Needed'
+    color: CFD3D7
+    description: This pull request is waiting on review
+  - name: 'Status - Revision Needed'
+    color: CFD3D7
+    description: This pull request has been reviewed and requires revisio
+  - name: 'Status - Do not develop'
+    color: CFD3D7
+    description: This wont be worked on by DevOPS or Community contributor
+  - name: 'Status - Stale'
+    color: CFD3D7
+    description: This issue has been automatically marked as stale because it has not had recent activit
 
 
-    - name: 'Type - Chore'
-      color: 0075CA
-      description: Changes to the build process or auxiliary tools and libraries such as documentation generatio
-    - name: 'Type - Bug'
-      color: 0075CA
-      description: A possible bu
-    - name: 'Type - Maintenance'
-      color: 0075CA
-      description: Changes to maintain the projec
-    - name: 'Type - Discussion'
-      color: 0075CA
-      description: A conversation about somethin
-    - name: 'Type - Documentation'
-      color: 0075CA
-      description: Changes to the documentatio
-    - name: 'Type - Feature'
-      color: 0075CA
-      description: A new featur
-    - name: 'Type - Enhancement'
-      color: 0075CA
-      description: Improving a featur
-    - name: 'Type - Question'
-      color: 0075CA
-      description: Question about this projec
-    - name: 'Type - Fix'
-      color: 0075CA
-      description: A bug fi
-    - name: 'Type - Optimisation'
-      color: 0075CA
-      description: A code change that improves performanc
-    - name: 'Type - Refactor'
-      color: 0075CA
-      description: A code change that neither fixes a bug nor adds a featur
-    - name: 'Type - Revert'
-      color: 0075CA
-      description: Removes & Discards a previous change as erro
-    - name: 'Type - Decrecated'
-      color: 0075CA
-      description: Removes previous functionality which is no longer neede
-    - name: 'Type - Removal'
-      color: 0075CA
-      description: Removes previous functionality which is no longer neede
-    - name: 'Type - Style'
-      color: 0075CA
-      description: Changes that do not affect the meaning of the code (white-space formatting missing semi-colons etc
+  - name: 'Type - Chore'
+    color: 0075CA
+    description: Changes to the build process or auxiliary tools and libraries such as documentation generatio
+  - name: 'Type - Bug'
+    color: 0075CA
+    description: A possible bu
+  - name: 'Type - Maintenance'
+    color: 0075CA
+    description: Changes to maintain the projec
+  - name: 'Type - Discussion'
+    color: 0075CA
+    description: A conversation about somethin
+  - name: 'Type - Documentation'
+    color: 0075CA
+    description: Changes to the documentatio
+  - name: 'Type - Feature'
+    color: 0075CA
+    description: A new featur
+  - name: 'Type - Enhancement'
+    color: 0075CA
+    description: Improving a featur
+  - name: 'Type - Question'
+    color: 0075CA
+    description: Question about this projec
+  - name: 'Type - Fix'
+    color: 0075CA
+    description: A bug fi
+  - name: 'Type - Optimisation'
+    color: 0075CA
+    description: A code change that improves performanc
+  - name: 'Type - Refactor'
+    color: 0075CA
+    description: A code change that neither fixes a bug nor adds a featur
+  - name: 'Type - Revert'
+    color: 0075CA
+    description: Removes & Discards a previous change as erro
+  - name: 'Type - Decrecated'
+    color: 0075CA
+    description: Removes previous functionality which is no longer neede
+  - name: 'Type - Removal'
+    color: 0075CA
+    description: Removes previous functionality which is no longer neede
+  - name: 'Type - Style'
+    color: 0075CA
+    description: Changes that do not affect the meaning of the code (white-space formatting missing semi-colons etc
 
 
-    - name: 'DevOps - Accepted'
-      color: 172875
-      description: DevOPS are plannin
-    - name: 'DevOps - Completed'
-      color: 172875
-      description: DevOPS have complete
-    - name: 'DevOps - Deploying'
-      color: 172875
-      description: DevOPS are deploying to lates
-    - name: 'DevOps - Developing'
-      color: 172875
-      description: DevOPS are Developin
-    - name: 'DevOps - Rejected'
-      color: 172875
-      description: DevOPS wont continu
-    - name: 'DevOps - Reviewing'
-      color: 172875
-      description: DevOPS awaiting revie
-    - name: 'DevOps - Staging'
-      color: 172875
-      description: DevOPS deployed to Stagin
-    - name: 'DevOps - Testing'
-      color: 172875
-      description: DevOPS deployed to Testin
+  - name: 'DevOps - Accepted'
+    color: 172875
+    description: DevOPS are plannin
+  - name: 'DevOps - Completed'
+    color: 172875
+    description: DevOPS have complete
+  - name: 'DevOps - Deploying'
+    color: 172875
+    description: DevOPS are deploying to lates
+  - name: 'DevOps - Developing'
+    color: 172875
+    description: DevOPS are Developin
+  - name: 'DevOps - Rejected'
+    color: 172875
+    description: DevOPS wont continu
+  - name: 'DevOps - Reviewing'
+    color: 172875
+    description: DevOPS awaiting revie
+  - name: 'DevOps - Staging'
+    color: 172875
+    description: DevOPS deployed to Stagin
+  - name: 'DevOps - Testing'
+    color: 172875
+    description: DevOPS deployed to Testin
 
 
-    - name: 'CommOps - Accepted'
-      color: bbb1ed
-      description: A community contributor is planning to work on this issue
-    - name: 'CommOps - Completed'
-      color: bbb1ed
-      description: The contributor has completed this issue and handed over to the developers to stage & deploy
-    - name: 'CommOps - Developing'
-      color: bbb1ed
-      description: The contributor is developing this issue
-    - name: 'CommOps - Awaiting Review'
-      color: bbb1ed
-      description: The contributor is awaiting review
-    - name: 'CommOps - Testing'
-      color: bbb1ed
-      description: The contributor is awaiting testing results
+  - name: 'CommOps - Accepted'
+    color: bbb1ed
+    description: A community contributor is planning to work on this issue
+  - name: 'CommOps - Completed'
+    color: bbb1ed
+    description: The contributor has completed this issue and handed over to the developers to stage & deploy
+  - name: 'CommOps - Developing'
+    color: bbb1ed
+    description: The contributor is developing this issue
+  - name: 'CommOps - Awaiting Review'
+    color: bbb1ed
+    description: The contributor is awaiting review
+  - name: 'CommOps - Testing'
+    color: bbb1ed
+    description: The contributor is awaiting testing results
 
 
-    - name: 'Platform - Android'
-      color: E0BE84
-    - name: 'Platform - AWS'
-      color: E0BE84
-    - name: 'Platform - Google Cloud'
-      color: E0BE84
-    - name: 'Platform - Cross-Platform'
-      color: E0BE84
-    - name: 'Platform - IOS'
-      color: E0BE84
-    - name: 'Platform - Ubuntu'
-      color: E0BE84
-    - name: 'Platform - Fedora'
-      color: E0BE84
-    - name: 'Platform - Debian'
-      color: E0BE84
-    - name: 'Platform - MacOS'
-      color: E0BE84
-    - name: 'Platform - Windows 7'
-      color: E0BE84
-    - name: 'Platform - Windows 8'
-      color: E0BE84
-    - name: 'Platform - Windows 10'
-      color: E0BE84
-    - name: 'Platform - Other'
-      color: E0BE84
+  - name: 'Platform - Android'
+    color: E0BE84
+  - name: 'Platform - AWS'
+    color: E0BE84
+  - name: 'Platform - Google Cloud'
+    color: E0BE84
+  - name: 'Platform - Cross-Platform'
+    color: E0BE84
+  - name: 'Platform - IOS'
+    color: E0BE84
+  - name: 'Platform - Ubuntu'
+    color: E0BE84
+  - name: 'Platform - Fedora'
+    color: E0BE84
+  - name: 'Platform - Debian'
+    color: E0BE84
+  - name: 'Platform - MacOS'
+    color: E0BE84
+  - name: 'Platform - Windows 7'
+    color: E0BE84
+  - name: 'Platform - Windows 8'
+    color: E0BE84
+  - name: 'Platform - Windows 10'
+    color: E0BE84
+  - name: 'Platform - Other'
+    color: E0BE84
 
 
-    - name: 'Priority - Low'
-      color: 8de8b3
-      description: This bug isn't a high priority for the next release
-    - name: 'Priority - Medium'
-      color: 8de8b3
-      description: This bug affects more than 10% of users and should be patched before the next major release
-    - name: 'Priority - High'
-      color: 8de8b3
-      description: This bug affects more than 25% of users and should be patched before the next minor release
-    - name: 'Priority - Critical'
-      color: 8de8b3
-      description: This bug affects more than 50% of users and should be patched before any new features are added
+  - name: 'Priority - Low'
+    color: 8de8b3
+    description: This bug isn't a high priority for the next release
+  - name: 'Priority - Medium'
+    color: 8de8b3
+    description: This bug affects more than 10% of users and should be patched before the next major release
+  - name: 'Priority - High'
+    color: 8de8b3
+    description: This bug affects more than 25% of users and should be patched before the next minor release
+  - name: 'Priority - Critical'
+    color: 8de8b3
+    description: This bug affects more than 50% of users and should be patched before any new features are added
 
 
-      - name: 'Size - XS'
-      color: ffffff
-      description: Less than 10 lines changed
-    - name: 'Size - S'
-      color: ffffff
-      description: More than 10 lines changed
-    - name: 'Size - M'
-      color: ffffff
-      description: More than 30 lines changed
-    - name: 'Size - L'
-      color: ffffff
-      description: More than 100 lines changed
-    - name: 'Size - XL'
-      color: ffffff
-      description: More than 500 lines changed
-    - name: 'Size - XXL'
-      color: ffffff
-      description: More than 1000 lines changed
+  - name: 'Size - XS'
+    color: ffffff
+    description: Less than 10 lines changed
+  - name: 'Size - S'
+    color: ffffff
+    description: More than 10 lines changed
+  - name: 'Size - M'
+    color: ffffff
+    description: More than 30 lines changed
+  - name: 'Size - L'
+    color: ffffff
+    description: More than 100 lines changed
+  - name: 'Size - XL'
+    color: ffffff
+    description: More than 500 lines changed
+  - name: 'Size - XXL'
+    color: ffffff
+    description: More than 1000 lines changed
 
 
-    - name: 'Bug - Confirmed'
-      color: D73A4A
-      description: This bug has been confirmed
-    - name: 'Bug - New'
-      color: D73A4A
-      description: This bug is new
-    - name: 'Bug - Fixed'
-      color: D73A4A
-      description: This bug has been fixed
+  - name: 'Bug - Confirmed'
+    color: D73A4A
+    description: This bug has been confirmed
+  - name: 'Bug - New'
+    color: D73A4A
+    description: This bug is new
+  - name: 'Bug - Fixed'
+    color: D73A4A
+    description: This bug has been fixed
 
 
-    - name: 'CLA - Signed'
-      color: dd6127
-      description: Contributor License Agreement has been signed
-    - name: 'CLA - Unsigned'
-      color: dd6127
-      description: Contributor License Agreement has not been signed
-    - name: 'CLA - Not Required'
-      color: dd6127
-      description: Contributor License Agreement not required
+  - name: 'CLA - Signed'
+    color: dd6127
+    description: Contributor License Agreement has been signed
+  - name: 'CLA - Unsigned'
+    color: dd6127
+    description: Contributor License Agreement has not been signed
+  - name: 'CLA - Not Required'
+    color: dd6127
+    description: Contributor License Agreement not required
 
 
-    - name: 'Versioning - Major'
-      color: e580c8
-      description: Major version to be incremented because of backwards incompatible changes are introduced
-    - name: 'Versioning - Minor'
-      color: e580c8
-      description: Minor version to be incremented because of substantial new functionality or improvements are introduced
-    - name: 'Versioning - Patch'
-      color: e580c8
-      description: Patch version to be incremented because backwards compatible bug fixes are introduced. A bug fix is defined as an internal change that fixes incorrect behavior.
-    - name: 'Versioning - BREAKING'
-      color: e580c8
-      description: A breaking change.
+  - name: 'Versioning - Major'
+    color: e580c8
+    description: Major version to be incremented because of backwards incompatible changes are introduced
+  - name: 'Versioning - Minor'
+    color: e580c8
+    description: Minor version to be incremented because of substantial new functionality or improvements are introduced
+  - name: 'Versioning - Patch'
+    color: e580c8
+    description: Patch version to be incremented because backwards compatible bug fixes are introduced. A bug fix is defined as an internal change that fixes incorrect behavior.
+  - name: 'Versioning - BREAKING'
+    color: e580c8
+    description: A breaking change.
 
 
-    - name: 'Content - Dependences'
-      color: f9cea2
-      description: Changes that affect the dependences
-    - name: 'Content - Workflow & CI'
-      color: f9cea2
-      description: Changes that affect the workflow & CI
-    - name: 'Content - UI / UX'
-      color: f9cea2
-      description: Changes that affect the UI / UX
-    - name: 'Content - Backend'
-      color: f9cea2
-      description: Changes that affect the backend.
-    - name: 'Content - frontend'
-      color: f9cea2
-      description: Changes that affect the fronted
+  - name: 'Content - Dependences'
+    color: f9cea2
+    description: Changes that affect the dependences
+  - name: 'Content - Workflow & CI'
+    color: f9cea2
+    description: Changes that affect the workflow & CI
+  - name: 'Content - UI / UX'
+    color: f9cea2
+    description: Changes that affect the UI / UX
+  - name: 'Content - Backend'
+    color: f9cea2
+    description: Changes that affect the backend.
+  - name: 'Content - frontend'
+    color: f9cea2
+    description: Changes that affect the fronted
 
 
-    - name: 'security fix'
-      color: D1260F
-      description: A Security Fix
-    - name: 'security vulnerability'
-      color: D1260F
-      description: A Security vulnerability
-    - name: 'Duplicate'
-      color: ffffff
-      description: A Duplicate of another issue/pull
-    - name: 'Help wanted'
-      color: ffffff
-      description: Help is needed to continue
-    - name: 'More information needed'
-      color: ffffff
-      description: Requires more information before it can continue
-    - name: 'Good first issue'
-      color: ffffff
-      description: A Good issue for first time github users
-    - name: 'First Timers'
-      color: ffffff
-      description: A Good issue for first time github users
-    - name: 'skip-changelog'
-      color: ffffff
-      description: Skip the changelog
+  - name: 'security fix'
+    color: D1260F
+    description: A Security Fix
+  - name: 'security vulnerability'
+    color: D1260F
+    description: A Security vulnerability
+  - name: 'Duplicate'
+    color: ffffff
+    description: A Duplicate of another issue/pull
+  - name: 'Help wanted'
+    color: ffffff
+    description: Help is needed to continue
+  - name: 'More information needed'
+    color: ffffff
+    description: Requires more information before it can continue
+  - name: 'Good first issue'
+    color: ffffff
+    description: A Good issue for first time github users
+  - name: 'First Timers'
+    color: ffffff
+    description: A Good issue for first time github users
+  - name: 'skip-changelog'
+    color: ffffff
+    description: Skip the changelog
+
+
+repos:
+  - name: Videndum/Smartcloud
+    labels:
+    - 'Status - Abandoned'
+    - 'Status - Available'
+    - 'Status - Blocked'
+    - 'Status - Completed'
+    - 'Status - In Progress'
+    - 'Status - On Hold'
+    - 'Status - Pending'
+    - 'Status - Review Needed'
+    - 'Status - Revision Needed'
+    - 'Status - Do not develop'
+    - 'Status - Stale'
+    - 'Type - Chore'
+    - 'Type - Bug'
+    - 'Type - Maintenance'
+    - 'Type - Discussion'
+    - 'Type - Documentation'
+    - 'Type - Feature'
+    - 'Type - Enhancement'
+    - 'Type - Question'
+    - 'Type - Fix'
+    - 'Type - Optimisation'
+    - 'Type - Refactor'
+    - 'Type - Revert'
+    - 'Type - Decrecated'
+    - 'Type - Removal'
+    - 'Type - Style'
+    - 'DevOps - Accepted'
+    - 'DevOps - Completed'
+    - 'DevOps - Deploying'
+    - 'DevOps - Developing'
+    - 'DevOps - Rejected'
+    - 'DevOps - Reviewing'
+    - 'DevOps - Staging'
+    - 'DevOps - Testing'
+    - 'CommOps - Accepted'
+    - 'CommOps - Completed'
+    - 'CommOps - Developing'
+    - 'CommOps - Awaiting Review'
+    - 'CommOps - Testing'
+    - 'Platform - Android'
+    - 'Platform - AWS'
+    - 'Platform - Google Cloud'
+    - 'Platform - Cross-Platform'
+    - 'Platform - IOS'
+    - 'Platform - Ubuntu'
+    - 'Platform - Fedora'
+    - 'Platform - Debian'
+    - 'Platform - MacOS'
+    - 'Platform - Windows 7'
+    - 'Platform - Windows 8'
+    - 'Platform - Windows 10'
+    - 'Platform - Other'
+    - 'Priority - Low'
+    - 'Priority - Medium'
+    - 'Priority - High'
+    - 'Priority - Critical'
+    - 'Size - XS'
+    - 'Size - S'
+    - 'Size - M'
+    - 'Size - L'
+    - 'Size - XL'
+    - 'Size - XXL'
+    - 'Bug - Confirmed'
+    - 'Bug - New'
+    - 'Bug - Fixed'
+    - 'CLA - Signed'
+    - 'CLA - Unsigned'
+    - 'CLA - Not Required'
+    - 'Versioning - Major'
+    - 'Versioning - Minor'
+    - 'Versioning - Patch'
+    - 'Versioning - BREAKING'
+    - 'Content - Dependences'
+    - 'Content - Workflow & CI'
+    - 'Content - UI / UX'
+    - 'Content - Backend'
+    - 'Content - frontend'
+    - 'security fix'
+    - 'security vulnerability'
+    - 'Duplicate'
+    - 'Help wanted'
+    - 'More information needed'
+    - 'Good first issue'
+    - 'First Timers'
+    - 'skip-changelog'
+
+
+  - name: Videndum/.github
+    labels:
+    - 'Status - Abandoned'
+    - 'Status - Available'
+    - 'Status - Blocked'
+    - 'Status - Completed'
+    - 'Status - In Progress'
+    - 'Status - On Hold'
+    - 'Status - Pending'
+    - 'Status - Review Needed'
+    - 'Status - Revision Needed'
+    - 'Status - Do not develop'
+    - 'Status - Stale'
+    - 'Type - Chore'
+    - 'Type - Bug'
+    - 'Type - Maintenance'
+    - 'Type - Discussion'
+    - 'Type - Documentation'
+    - 'Type - Feature'
+    - 'Type - Enhancement'
+    - 'Type - Question'
+    - 'Type - Fix'
+    - 'Type - Optimisation'
+    - 'Type - Refactor'
+    - 'Type - Revert'
+    - 'Type - Decrecated'
+    - 'Type - Removal'
+    - 'Type - Style'
+    - 'DevOps - Accepted'
+    - 'DevOps - Completed'
+    - 'DevOps - Deploying'
+    - 'DevOps - Developing'
+    - 'DevOps - Rejected'
+    - 'DevOps - Reviewing'
+    - 'DevOps - Staging'
+    - 'DevOps - Testing'
+    - 'CommOps - Accepted'
+    - 'CommOps - Completed'
+    - 'CommOps - Developing'
+    - 'CommOps - Awaiting Review'
+    - 'CommOps - Testing'
+    - 'Priority - Low'
+    - 'Priority - Medium'
+    - 'Priority - High'
+    - 'Priority - Critical'
+    - 'Size - XS'
+    - 'Size - S'
+    - 'Size - M'
+    - 'Size - L'
+    - 'Size - XL'
+    - 'Size - XXL'
+    - 'Bug - Confirmed'
+    - 'Bug - New'
+    - 'Bug - Fixed'
+    - 'CLA - Signed'
+    - 'CLA - Unsigned'
+    - 'CLA - Not Required'
+    - 'Versioning - Major'
+    - 'Versioning - Minor'
+    - 'Versioning - Patch'
+    - 'Versioning - BREAKING'
+    - 'Content - Dependences'
+    - 'Content - Workflow & CI'
+    - 'security fix'
+    - 'security vulnerability'
+    - 'Duplicate'
+    - 'Help wanted'
+    - 'More information needed'
+    - 'Good first issue'
+    - 'First Timers'
+    - 'skip-changelog'
+
+
+  - name: Videndum/Ira-Videndum
+    labels:
+    - 'Status - Abandoned'
+    - 'Status - Available'
+    - 'Status - Blocked'
+    - 'Status - Completed'
+    - 'Status - In Progress'
+    - 'Status - On Hold'
+    - 'Status - Pending'
+    - 'Status - Review Needed'
+    - 'Status - Revision Needed'
+    - 'Status - Do not develop'
+    - 'Status - Stale'
+    - 'Type - Chore'
+    - 'Type - Bug'
+    - 'Type - Maintenance'
+    - 'Type - Discussion'
+    - 'Type - Documentation'
+    - 'Type - Feature'
+    - 'Type - Enhancement'
+    - 'Type - Question'
+    - 'Type - Fix'
+    - 'Type - Optimisation'
+    - 'Type - Refactor'
+    - 'Type - Revert'
+    - 'Type - Decrecated'
+    - 'Type - Removal'
+    - 'Type - Style'
+    - 'DevOps - Accepted'
+    - 'DevOps - Completed'
+    - 'DevOps - Deploying'
+    - 'DevOps - Developing'
+    - 'DevOps - Rejected'
+    - 'DevOps - Reviewing'
+    - 'DevOps - Staging'
+    - 'DevOps - Testing'
+    - 'Priority - Low'
+    - 'Priority - Medium'
+    - 'Priority - High'
+    - 'Priority - Critical'
+    - 'Size - XS'
+    - 'Size - S'
+    - 'Size - M'
+    - 'Size - L'
+    - 'Size - XL'
+    - 'Size - XXL'
+    - 'Bug - Confirmed'
+    - 'Bug - New'
+    - 'Bug - Fixed'
+    - 'CLA - Signed'
+    - 'CLA - Unsigned'
+    - 'CLA - Not Required'
+    - 'Versioning - Major'
+    - 'Versioning - Minor'
+    - 'Versioning - Patch'
+    - 'Versioning - BREAKING'
+    - 'Content - Dependences'
+    - 'Content - Workflow & CI'
+    - 'security fix'
+    - 'security vulnerability'
+    - 'Duplicate'
+    - 'Help wanted'
+    - 'More information needed'
+    - 'Good first issue'
+    - 'First Timers'
+    - 'skip-changelog'

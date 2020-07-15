@@ -22,6 +22,5 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "Import existing labels"
           title: "Import existing labels"
-          body: Current labels.yaml and existing labels don't match.
+          body: Current labels.yml and existing labels don't match.
           branch: chore/import-labels
-          branch-suffix: timestamp
