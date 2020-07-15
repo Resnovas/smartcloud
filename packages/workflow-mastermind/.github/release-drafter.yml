@@ -8,7 +8,7 @@ categories:
     labels: 'Type - Feature'
   - title: '🐛 Bug Fixes'
     labels:
-      - 'Bug: Fixed'
+      - 'Bug - Fixed'
       - 'Type - Fix'
   - title: '🧰 Maintenance'
     label:
@@ -21,13 +21,13 @@ exclude-labels:
 version-resolver:
   major:
     labels:
-      - 'Versioning: Major'
+      - 'Versioning - Major'
   minor:
     labels:
-      - 'Versioning: Minor'
+      - 'Versioning - Minor'
   patch:
     labels:
-      - 'Versioning: Patch'
+      - 'Versioning - Patch'
   default: patch
 template: |
   ## Changes
