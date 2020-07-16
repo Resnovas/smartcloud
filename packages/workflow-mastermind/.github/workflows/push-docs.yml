@@ -7,7 +7,7 @@ on:
       - docs/auto-update
     paths:
       - "docs/**"
-      - "README.me"
+      - "README.md"
       - "CHANGELOG.md"
   gollum:
 
