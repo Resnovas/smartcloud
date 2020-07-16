@@ -72,20 +72,12 @@ jobs:
           securityLabels: 'security fix'
           stripGeneratorNotice: "false"
       - name: Commit files
-        run: |
-          set +e
-          ls
-          git add CHANGELOG.md
-          git config --local user.email ${{github.actor}}@@users.noreply.github.com
-          git config --local user.name ${{github.actor}}
-          git commit -m "docs(changelog): update" -a
-          set -e
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: 'chore/changelog'
-          force: true
+          commit_message: 'docs: update'
+          branch: 'docs/auto-update'
+          commit_options: '--signoff'
+          push_options: '--force'
       - name: pull-request
         uses: repo-sync/pull-request@v2
         with:
