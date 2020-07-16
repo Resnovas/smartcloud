@@ -2,15 +2,62 @@ name: Documentation
 
 on:
   push:
+    branch:
+      - master
+      - docs/auto-update
     paths:
       - "docs/**"
-  repository_dispatch:
-    types: [docs]
+      - "README.me"
+      - "CHANGELOG.md"
   gollum:
 
 jobs:
 
-  # syncs to the github inbuilt wiki
+  # Automatically copies and renames README, SUMMARY & CHANGELOG to be correct for both github Wiki and Gitbook
+  copyfiles:
+    name: Copy & Rename docs files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+      - name: Copy Files
+        run: |
+        cp README.md docs/README.md
+        cp README.md docs/Home.md
+        cp docs/SUMMARY.md docs/_Sidebar.md
+        cp CHANGELOG.md docs/information/changelog.md
+      - name: Commit files
+        run: |
+          set +e
+          ls
+          git add .
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "docs(changelog): update" -a
+          set -e
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: 'docs/auto-update'
+      - name: pull-request
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: 'docs/auto-update'
+          destination_branch: "master"
+          pr_title: "docs: auto-update"
+          pr_body: ":crown: *An automated PR*"
+          pr_label: "skip-changelog"
+      - name: Merge me!
+        uses: ridedott/merge-me-action@master
+        with:
+          GITHUB_LOGIN: github-actions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_METHOD: REBASE
+
+
+  # syncs to the github inbuilt wiki & {repository}-wiki repo
   job-sync-docs-to-wiki:
     name: Sync to wiki
     runs-on: ubuntu-latest
@@ -24,19 +71,17 @@ jobs:
           source: docs
           destination: wiki
           token: ${{ secrets.GITHUB_TOKEN }}
-
-  # syncs to an external repository wiki (used for gitbook)
-  # sync-downstream:
-  #   name: Update wiki repo
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
-  #     - uses: nxtlvlsoftware/git-subtree-action@master
-  #       with:
-  #         repo: '${{ github.repository }}-wiki'
-  #         path: 'docs'
-  #         deploy_key: ${{ secrets.DOWNSTREAM_GITHUB_DEPLOY_KEY }}
+      - run: echo ${{github.event}}
+      - name: Copy to ${{github.repository}}-wiki
+        uses: andstor/copycat-action@v3
+        with:
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          src_path: /docs
+          dst_path: /.
+          dst_owner: ${{github.repository_owner}}
+          dst_repo_name: ${{github.repository.name}}-wiki
+          commit_message: "docs: auto-update"
+        continue-on-error: true
 
   # syncs from the github inbuilt wiki
   job-sync-wiki-to-docs:
@@ -55,13 +100,24 @@ jobs:
           source: wiki
           destination: docs
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: 'docs/update-from-wiki'
+          branch: 'docs/auto-update'
       - name: pull-request
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           source_branch: 'master'
-          destination_branch: 'docs/update-from-wiki'
-          pr_title: "docs: updating docs from wiki"
+          destination_branch: 'docs/auto-update'
+          pr_title: "docs: auto-update"
           pr_body: ":crown: *An automated PR*"
           pr_label: "skip-changelog"
+      - run: echo ${{github.event}}
+      - name: Copy to ${{github.repository}}-wiki
+        uses: andstor/copycat-action@v3
+        with:
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          src_path: /docs
+          dst_path: /.
+          dst_owner: ${{github.repository_owner}}
+          dst_repo_name: ${{github.repository.name}}-wiki
+          commit_message: "docs: auto-update"
+        continue-on-error: true
