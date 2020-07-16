@@ -32,9 +32,9 @@ jobs:
           set +e
           ls
           git add .
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -m "docs(changelog): update" -a
+          git config --local user.email ${{github.actor}}@@users.noreply.github.com
+          git config --local user.name ${{github.actor}}
+          git commit -m "docs: update" -a
           set -e
       - name: Push changes
         uses: ad-m/github-push-action@master
@@ -74,7 +74,6 @@ jobs:
           source: docs
           destination: wiki
           token: ${{ secrets.GITHUB_TOKEN }}
-      - run: echo ${{ toJson(github.event)}}
       - name: Copy to ${{github.repository}}-wiki
         uses: andstor/copycat-action@v3
         with:
@@ -113,7 +112,6 @@ jobs:
           pr_title: "docs: auto-update"
           pr_body: ":crown: *An automated PR*"
           pr_label: "skip-changelog"
-      - run: echo ${{ toJson(github.event)}}
       - name: Copy to ${{github.repository}}-wiki
         uses: andstor/copycat-action@v3
         with:

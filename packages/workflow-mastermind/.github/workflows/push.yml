@@ -76,8 +76,8 @@ jobs:
           set +e
           ls
           git add CHANGELOG.md
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
+          git config --local user.email ${{github.actor}}@@users.noreply.github.com
+          git config --local user.name ${{github.actor}}
           git commit -m "docs(changelog): update" -a
           set -e
       - name: Push changes
