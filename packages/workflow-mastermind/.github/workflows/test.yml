@@ -1,0 +1,20 @@
+name: Test Management
+
+on:
+  push
+
+jobs:
+  testEnv:
+    name: Test the env loads properly
+    runs-on: ubuntu-latest
+    steps:
+    - uses: technote-space/load-config-action@v1
+      with:
+        CONFIG_FILENAME: allconfig.yml
+    - name: Dump
+      run: |
+        echo ${{ env.claEnabled }}
+        echo ${{ env.claPush }}
+    - name: Dump if
+      if: env.claEnabled == true
+      run: echo if statement worked

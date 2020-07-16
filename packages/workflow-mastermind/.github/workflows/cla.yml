@@ -12,11 +12,17 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA')
     steps:
-      - name: "Check-out"
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - name: Checkout
+        if: env.claEnabled == true
+        id: checkout
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: "CLA Assistant"
+      - name: CLA Assistant
+        needs: checkout
         uses: cla-assistant/github-action@v1.3.0-alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

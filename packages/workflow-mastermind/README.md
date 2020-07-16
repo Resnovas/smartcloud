@@ -2,6 +2,9 @@
 
 Welcome to my .github repository. This repository is where I develop all my workflows & templates used within all my organisations repositories. This repository is a collection of work from a range of people. I have done my best to document all the actions used [here](). If you discover an action missing from that list, please let me know or create a PR to update it.
 
+<!-- toc -->
+<!-- tocstop -->
+
 ## Workflow Status
 ![Documentation](https://github.com/TGTGamer/.github/workflows/Documentation/badge.svg)
 ![Release Management](https://github.com/TGTGamer/.github/workflows/Release%20Management/badge.svg)
