@@ -17,41 +17,26 @@ jobs:
   copyfiles:
     name: Copy & Rename docs files
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     if: github.event_name != 'gollum'
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Copy Files
-        run: |
-          cp README.md docs/README.md
-          cp README.md docs/Home.md
-          cp docs/SUMMARY.md docs/_Sidebar.md
-          cp CHANGELOG.md docs/information/changelog.md
-      - name: Commit files
-        uses: stefanzweifel/git-auto-commit-action@v4
+      - name: Sync workflows
+        uses: technote-space/create-pr-action@v2
         with:
-          commit_message: 'docs: update'
-          branch: 'docs/auto-update'
-          commit_options: ' --signoff'
-          push_options: '--force'
-      - name: pull-request
-        uses: repo-sync/pull-request@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: 'docs/auto-update'
-          destination_branch: "master"
-          pr_title: "docs: auto-update"
-          pr_body: ":crown: *An automated PR*"
-          pr_label: "skip-changelog"
-      - name: Merge me!
-        uses: ridedott/merge-me-action@master
-        with:
-          GITHUB_LOGIN: github-actions
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_METHOD: REBASE
-
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          EXECUTE_COMMANDS: |
+            cp README.md docs/README.md
+            cp README.md docs/Home.md
+            cp docs/SUMMARY.md docs/_Sidebar.md
+            cp CHANGELOG.md docs/information/changelog.md
+          COMMIT_MESSAGE: 'docs: update'
+          PR_BRANCH_PREFIX: docs/
+          PR_BRANCH_NAME: 'auto-update'
+          PR_TITLE: 'docs: update'
 
   # syncs to the github inbuilt wiki & {repository}_wiki repo
   job-sync-docs-to-wiki:
