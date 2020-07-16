@@ -76,7 +76,7 @@ jobs:
         with:
           commit_message: 'docs: update'
           branch: 'docs/auto-update'
-          commit_options: '--signoff'
+          commit_options: --signoff
           push_options: '--force'
       - name: pull-request
         uses: repo-sync/pull-request@v2
