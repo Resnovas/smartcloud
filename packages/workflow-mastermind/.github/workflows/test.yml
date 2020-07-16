@@ -12,9 +12,11 @@ jobs:
       with:
         CONFIG_FILENAME: allconfig.yml
     - name: Dump
+      id: dump
       run: |
         echo ${{ env.claEnabled }}
         echo ${{env.claPush}}
     - name: Dump if
+      need: dump
       if: ${{env.claEnabled}} == true
       run: echo if statement worked
