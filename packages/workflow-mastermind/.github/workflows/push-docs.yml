@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
       - name: Copy Files
         run: |
           cp README.md docs/README.md
@@ -31,9 +33,9 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: 'docs: update'
-          commit_options: ' --signoff'
           branch: 'docs/auto-update'
-          force: true
+          commit_options: ' --signoff'
+          push_options: '--force'
       - name: pull-request
         uses: repo-sync/pull-request@v2
         with:
