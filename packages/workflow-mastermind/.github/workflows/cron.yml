@@ -2,13 +2,23 @@ name: Mark stale issues and pull requests
 
 on:
   schedule:
-  - cron: "0 0 * * *"
+  - cron: '*/15 * * * *'
 
 jobs:
+  # Awaiting new package - fix has been done
+  # # Automatically labels all pull requests based on changed files
+  # labeler:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - uses: docker://docker.io/ilyam8/periodic-pr-labeler:v0.1.0
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #         GITHUB_REPOSITORY: ${{ github.repository }}
+  #         LABEL_MAPPINGS_FILE: .github/path-labeler.yml
+
+  # Automatically marks pull request and issues as stale after x length of time
   stale:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/stale@v3.0.8
       with:

@@ -8,6 +8,7 @@ on:
 
 jobs:
   # Not sure why this isn't working, but have raised a ticket
+  # Automatically assigns the pull request to project 1
   # assign_project:
   #   runs-on: ubuntu-latest
   #   name: Assign to project
@@ -20,6 +21,16 @@ jobs:
   #         issue: ${{ github.event.issue.number }}
   #         project: 1
 
+  # Automatically blocks WIP pull request based on the title
+  wip:
+    name: Work in progress
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: wip/action@v1.0.0
+
+  # Ensures semantic titles to ensure semantic is achieved when merge is squashed
   semantic:
     name: Semantic Title
     runs-on: ubuntu-latest
@@ -29,23 +40,35 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Automatically labels based on the branch path
   pr-labeler:
-    name: Labeler
+    name: Branch Labeler
     runs-on: ubuntu-latest
     steps:
       - uses: TimonVS/pr-labeler-action@v3
         with:
-          configuration-path: .github/pr-labeler.yml
+          configuration-path: .github/branch-labeler.yml
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Automatically labels based on files changed
+  path-labeler:
+    name: Path Labeler
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/labeler@v2
+      with:
+        configuration-path: '.github/path-labeler.yml'
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+
+  # Automatically rebases on request
   rebase:
     name: Rebase
     if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/rebase')
     runs-on: ubuntu-latest
     steps:
     - name: Checkout
-      uses: actions/checkout@master
+      uses: actions/checkout@v2.3.1
       with:
         fetch-depth: 0
     - name: Automatic Rebase
@@ -53,21 +76,23 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Automatically checks for conflicts with other pull requests
   conflibot:
     name: Conflict Check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.1
       - name: Warn potential conflicts
         uses: wktk/conflibot@v1
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
+  # Automatically labels the pull request based on size
   label_sizes:
     name: Pull Request Size
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.1
 
       - uses: actions-ecosystem/action-size@v2
         id: size
@@ -89,27 +114,48 @@ jobs:
           github_token: ${{ secrets.github_token }}
           labels: ${{ steps.size.outputs.new_label }}
 
+  # Ensures the CLA is signed
   CLAssistant:
-    name: "CLA Assistant"
+    name: CLA Assistant
     runs-on: ubuntu-latest
+    if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request'
     steps:
+      - name: "Check-out"
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: master
       - name: "CLA Assistant"
-        if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request'
         uses: cla-assistant/github-action@v1.3.0-alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: 'docs/getting-started/contributing/cla.json'
+          path-to-signatures: '.github/cla.json'
           path-To-cladocument: 'https://github.com/${{github.repository}}/docs/getting-started/contributing/cla.md'
-          branch: 'master'
+          branch: 'chore/cla'
           label: true
           whitelist: bot*
-          empty-commit-flag: true
+          empty-commit-flag: false
+      - name: pull-request
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: 'chore/cla'
+          destination_branch: "master"
+          pr_title: "docs: updating changelog"
+          pr_body: ":crown: *An automated PR*"
+          pr_label: "skip-changelog"
 
-  wip:
-    name: Work in progress
+  # Automatically merges bot pull requests made by CLAssistant
+  merge-me:
+    name: Merge me!
+    needs:
+      - CLAssistant
     runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: wip/action@v1.0.0
+      - name: Merge me!
+        uses: ridedott/merge-me-action@master
+        with:
+          GITHUB_LOGIN: github-actions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_METHOD: SQUASH

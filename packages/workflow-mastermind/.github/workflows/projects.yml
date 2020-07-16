@@ -3,6 +3,7 @@ on:
   project_card:
     types: [created, moved]
 jobs:
+  # Automatically assigns labels based on config ../card-labeler.yml
   triage:
     name: Auto card labeler
     runs-on: ubuntu-latest

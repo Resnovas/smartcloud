@@ -1,0 +1,12 @@
+## This defines which lables should be applied to each PR
+## {lable}: {branches}
+
+'Type - Chore': 'chore/*'
+'Type - Enhancement': 'enhancement/*'
+'Type - Feature': 'feature/*'
+'Type - Documentation': 'docs/*'
+'Type - Fix': 'bug/*'
+'Type - Maintenance': 'maintenance/*'
+'Type - Optimisation': 'optimisation/*'
+'Type - Refactor': 'refactor/*'
+'Type - Style': 'style/*'

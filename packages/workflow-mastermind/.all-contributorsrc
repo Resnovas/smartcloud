@@ -6,7 +6,7 @@
   "commitConvention": "angular",
   "files": [
     "README.md",
-    "contributors/all_contributors.md"
+    "./docs/getting-started/contributing/all_contributors.md"
   ],
   "imageSize": 100,
   "contributorsPerLine": 7,

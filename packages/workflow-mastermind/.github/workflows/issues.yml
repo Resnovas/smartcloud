@@ -7,6 +7,7 @@ on:
     types: [created, edited]
 
 jobs:
+  # Automatically assigns to project based on tags
   assign_project:
     runs-on: ubuntu-latest
     name: Assign to project
@@ -28,6 +29,7 @@ jobs:
           issue: ${{ github.event.issue.number }}
           project: 2
 
+  # Automatically creates branches based on tags
   create_issue_branch_job:
     name: Issue Branches
     runs-on: ubuntu-latest
@@ -37,6 +39,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Automatically reverts commits on request
   revert-commit:
       runs-on: ubuntu-latest
       if: contains(github.event.comment.body, '/revert')
@@ -48,26 +51,48 @@ jobs:
         env:
             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+  # Ensures the CLA is signed
   CLAssistant:
     name: "CLA Assistant"
     runs-on: ubuntu-latest
+    if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request'
     steps:
+      - name: "Check-out"
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: master
       - name: "CLA Assistant"
-        if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request'
         uses: cla-assistant/github-action@v1.3.0-alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: 'docs/getting-started/contributing/cla.json'
+          path-to-signatures: '.github/cla.json'
           path-To-cladocument: 'https://github.com/${{github.repository}}/docs/getting-started/contributing/cla.md'
-          branch: 'master'
+          branch: 'chore/cla'
           label: true
           whitelist: bot*
-          empty-commit-flag: true
+          empty-commit-flag: false
+      - name: pull-request
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: 'chore/cla'
+          destination_branch: "master"
+          pr_title: "docs: updating changelog"
+          pr_body: ":crown: *An automated PR*"
+          pr_label: "skip-changelog"
 
-  always_job:
-      name: Always run job
-      runs-on: ubuntu-latest
-      steps:
-      - name: Always run
-        run: echo "This job is used to prevent the workflow to fail when all other jobs are skipped."
+  # Automatically merges bot pull requests made by CLAssistant
+  merge-me:
+    name: Merge me!
+    needs:
+      - CLAssistant
+    runs-on: ubuntu-latest
+    steps:
+      - name: Merge me!
+        uses: ridedott/merge-me-action@master
+        with:
+          GITHUB_LOGIN: github-actions
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MERGE_METHOD: SQUASH
