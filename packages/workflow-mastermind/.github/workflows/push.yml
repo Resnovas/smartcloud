@@ -32,10 +32,10 @@ jobs:
           organization: ${{github.repository_owner}}
           team: Community
           comment: |
-          Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!
+            Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!
 
-          We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks.
-          Our bot should have already sent the invite. We look forward to you joining the team.
+            We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks.
+            Our bot should have already sent the invite. We look forward to you joining the team.
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         continue-on-error: true
