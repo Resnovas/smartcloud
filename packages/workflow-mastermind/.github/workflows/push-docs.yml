@@ -28,16 +28,10 @@ jobs:
           cp docs/SUMMARY.md docs/_Sidebar.md
           cp CHANGELOG.md docs/information/changelog.md
       - name: Commit files
-        uses: EndBug/add-and-commit@v4
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          message: 'docs: update'
-          force: true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Push changes
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          commit_message: 'docs: update'
+          commit_options: ' --signoff'
           branch: 'docs/auto-update'
           force: true
       - name: pull-request
