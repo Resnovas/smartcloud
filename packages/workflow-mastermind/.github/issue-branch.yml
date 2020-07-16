@@ -7,19 +7,21 @@ branches:
     - label: 'Type - Chore'
       prefix: chore/
     - label: 'Type - Enhancement'
-      prefix: enhancement/
+      prefix: enhance/
     - label: 'Type - Feature'
-      prefix: feature/
+      prefix: feat/
     - label: 'Type - Documentation'
       prefix: docs/
     - label: 'Type - Bug'
       prefix: bug/
     - label: 'Type - Maintenance'
-      prefix: maintenance/
+      prefix: maint/
     - label: 'Type - Optimisation'
-      prefix: optimisation/
+      prefix: opt/
+    - label: 'Type - Decrecated'
+      prefix: dep/
     - label: 'Type - Refactor'
-      prefix: refactor/
+      prefix: ref/
     - label: 'Type - Style'
       prefix: style/
     - label: 'Type - Discussion'

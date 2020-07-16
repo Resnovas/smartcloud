@@ -1,0 +1,103 @@
+name: Pull Request Management
+
+# This workflow automatically lables PR to ensure that all PR's are correct within the release draft.
+
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, edited ]
+
+jobs:
+  # Automatically blocks WIP pull request based on the title
+  wip:
+    name: Work in progress
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: y-temp4/add-wip-label@v1.0.0
+        with:
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+      - uses: wip/action@v1.0.0
+
+  # Ensures semantic titles to ensure semantic is achieved when merge is squashed
+  semantic:
+    name: Semantic Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check title
+        uses: amannn/action-semantic-pull-request@v1.2.2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Automatically labels based on the branch path
+  pr-labeler:
+    name: Branch Labeler
+    runs-on: ubuntu-latest
+    steps:
+      - uses: TimonVS/pr-labeler-action@v3
+        with:
+          configuration-path: .github/labeler-branch.yml
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Automatically labels the pull request based on size
+  label_sizes:
+    name: Pull Request Size
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.1
+      - uses: actions-ecosystem/action-size@v2
+        id: size
+        with:
+          size_xs_label: "Size - XS"
+          size_s_label: "Size - S"
+          size_m_label: "Size - M"
+          size_l_label: "Size - L"
+          size_xl_label: "Size - XL"
+          size_xxl_label: "Size - XXL"
+      - uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          labels: ${{ steps.size.outputs.stale_labels }}
+      - uses: actions-ecosystem/action-add-labels@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          labels: ${{ steps.size.outputs.new_label }}
+
+  # Automatically labels based on files changed
+  path-labeler:
+    name: Path Labeler
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/labeler@v2
+      with:
+        configuration-path: '.github/labeler-path.yml'
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+
+  # Automatically label sponsors requests
+  sponsor:
+    name: Sponsor Label
+    runs-on: ubuntu-latest
+    steps:
+      - uses: JasonEtco/is-sponsor-label-action@v1
+        with:
+          label: Sponsor Request ❤️
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Automatically checks for conflicts with other pull requests
+  conflibot:
+    name: Pull Request Conflict Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.1
+      - name: Warn potential conflicts
+        uses: wktk/conflibot@v1
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }
+      - name: check if prs are dirty
+        uses: eps1lon/actions-label-merge-conflict@releases/1.x
+        with:
+          dirtyLabel: "Needs rebase"
+          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+

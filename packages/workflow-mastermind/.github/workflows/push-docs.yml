@@ -53,7 +53,7 @@ jobs:
           MERGE_METHOD: REBASE
 
 
-  # syncs to the github inbuilt wiki & {repository}-wiki repo
+  # syncs to the github inbuilt wiki & {repository}_wiki repo
   job-sync-docs-to-wiki:
     name: Sync to wiki
     needs: copyfiles
@@ -68,14 +68,14 @@ jobs:
           source: docs
           destination: wiki
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Copy to ${{github.repository}}-wiki
+      - name: Copy to ${{github.repository}}_wiki
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.ACCESS_TOKEN }}
           src_path: /docs
           dst_path: /.
           dst_owner: ${{github.repository_owner}}
-          dst_repo_name: ${{github.repository.name}}-wiki
+          dst_repo_name: '${{github.repository.name}}_wiki'
           commit_message: "docs: auto-update"
         continue-on-error: true
 
@@ -106,13 +106,13 @@ jobs:
           pr_title: "docs: auto-update"
           pr_body: ":crown: *An automated PR*"
           pr_label: "skip-changelog"
-      - name: Copy to ${{github.repository}}-wiki
+      - name: Copy to ${{github.repository}}_wiki
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.ACCESS_TOKEN }}
           src_path: /docs
           dst_path: /.
           dst_owner: ${{github.repository_owner}}
-          dst_repo_name: ${{github.repository.name}}-wiki
+          dst_repo_name: '${{github.repository.name}}_wiki'
           commit_message: "docs: auto-update"
         continue-on-error: true

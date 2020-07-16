@@ -10,3 +10,5 @@ jobs:
     steps:
       - name: Adjust Lables
         uses: technote-space/auto-card-labeler@v1
+        with:
+          CONFIG_FILENAME: 'labeler-card.yml'

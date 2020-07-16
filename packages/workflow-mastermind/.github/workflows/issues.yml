@@ -7,30 +7,54 @@ on:
     types: [created, edited]
 
 jobs:
+  # Automatically applies labels according to title
+  AutoLabel:
+    name: Auto Label
+    runs-on: ubuntu-latest
+    steps:
+    - uses: github/issue-labeler@v2.0
+      with:
+        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+        configuration-path: .github/labeler-title.yml
+
+  # Automatically label sponsors requests
+  sponsor:
+    name: Sponsor Label
+    runs-on: ubuntu-latest
+    steps:
+      - uses: JasonEtco/is-sponsor-label-action@v1
+        with:
+          label: Sponsor Request ❤️
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   # Automatically assigns to project based on tags
   assign_project:
     runs-on: ubuntu-latest
     name: Assign to project
     steps:
       - name: Assign NEW issues to project DevOps
-        uses: skeet70/default-project-board-action@v1
+        uses: docker://takanabe/github-actions-automate-projects:v0.0.1
         if: github.event.action == 'opened'
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          issue: ${{ github.event.issue.number }}
-          project: 1
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          # GITHUB_PROJECT_URL: https://github.com/orgs/${{github.repository_owner}}/projects/1
+          GITHUB_PROJECT_URL: https://github.com/${{github.repository}}/projects/1
+          GITHUB_PROJECT_COLUMN_NAME: Requested
       - name: Assign NEW bugs to project bugs
-        uses: skeet70/default-project-board-action@v1
+        needs: AutoLabel
+        uses: docker://takanabe/github-actions-automate-projects:v0.0.1
         if: contains(github.event.issue.labels.*.name, 'Type - Bug')
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          repository: ${{ github.repository }}
-          issue: ${{ github.event.issue.number }}
-          project: 2
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          #GITHUB_PROJECT_URL: https://github.com/orgs/${{github.repository_owner}}/projects/2
+          GITHUB_PROJECT_URL: https://github.com/${{github.repository}}/projects/2
+          GITHUB_PROJECT_COLUMN_NAME: New
+
 
   # Automatically creates branches based on tags
   create_issue_branch_job:
+    needs: AutoLabel
     name: Issue Branches
     runs-on: ubuntu-latest
     steps:
@@ -38,50 +62,3 @@ jobs:
       uses: robvanderleek/create-issue-branch@master
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Automatically reverts commits on request
-  revert-commit:
-      runs-on: ubuntu-latest
-      if: contains(github.event.comment.body, '/revert')
-      steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.1
-      - name: Automatic Revert
-        uses: srt32/revert@v0.0.1
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Ensures the CLA is signed
-  CLAssistant:
-    name: "CLA Assistant"
-    runs-on: ubuntu-latest
-    if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA') || github.event_name == 'pull_request'
-    steps:
-      - name: "Check-out"
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: "CLA Assistant"
-        uses: cla-assistant/github-action@v1.3.0-alpha
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          path-to-signatures: '.github/cla.json'
-          path-To-cladocument: 'https://github.com/${{github.repository}}/docs/getting-started/contributing/cla.md'
-          branch: ${{github.head_ref}}
-          label: true
-          whitelist: bot*
-
-  # Automatically merges bot pull requests made by CLAssistant
-  merge-me:
-    name: Merge me!
-    needs:
-      - CLAssistant
-    runs-on: ubuntu-latest
-    steps:
-      - name: Merge me!
-        uses: ridedott/merge-me-action@master
-        with:
-          GITHUB_LOGIN: github-actions
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_METHOD: SQUASH

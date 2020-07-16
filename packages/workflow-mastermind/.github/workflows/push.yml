@@ -29,15 +29,16 @@ jobs:
       - name: Invite contributor to the organization
         uses: lekterable/inclusive-organization-action@v1.1.0
         with:
-          organization: Videndum
-          team: community
+          organization: ${{github.repository_owner}}
+          team: Community
           comment: |
-            Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!
+          Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!
 
-            We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks.
-            Our bot should have already sent the invite. We look forward to you joining the team.
+          We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks.
+          Our bot should have already sent the invite. We look forward to you joining the team.
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        continue-on-error: true
 
   # Using the config in ../release-drafter.yml creates release drafts automatically
   update_release_draft:

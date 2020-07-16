@@ -251,6 +251,15 @@
 - name: 'Help wanted'
   color: ffffff
   description: Help is needed to continue
+- name: 'Needs rebase'
+  color: ffffff
+  description: This request needs to be rebased
+- name: 'Work in progress'
+  color: ffffff
+  description: This pull request is a wip
+- name: 'Sponsor Request ❤️'
+  color: ffffff
+  description: This request has come from a sponsor
 - name: 'More information needed'
   color: ffffff
   description: Requires more information before it can continue

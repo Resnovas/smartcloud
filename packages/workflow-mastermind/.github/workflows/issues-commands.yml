@@ -1,0 +1,55 @@
+name: Issue Management
+
+on:
+  issue_comment:
+    types: [created, edited]
+
+jobs:
+  # Automatically reverts commits on request
+  revert-commit:
+      runs-on: ubuntu-latest
+      if: contains(github.event.comment.body, '/revert')
+      steps:
+      - name: Checkout
+        uses: actions/checkout@v2.3.1
+      - name: Automatic Revert
+        uses: srt32/revert@v0.0.1
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # Automatically rebases on request
+  rebase:
+    name: Rebase
+    if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/rebase')
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2.3.1
+      with:
+        fetch-depth: 0
+    - name: Automatic Rebase
+      uses: cirrus-actions/rebase@1.3.1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  labels:
+    name: label command
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.1
+        with:
+          ref: ${{github.head_ref}}
+      - id: Claim
+        if: contains(github.event.comment.body, '/claim')
+        uses: actions-ecosystem/action-remove-labels@v1
+        with:
+          github_token: ${{ secrets.github_token }}
+          labels: 'CommOps - Accepted'
+      - name: Assign claimed issues to ComOps
+        needs: Claim
+        uses: docker://takanabe/github-actions-automate-projects:v0.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          # GITHUB_PROJECT_URL: https://github.com/orgs/${{github.repository_owner}}/projects/3
+          GITHUB_PROJECT_URL: https://github.com/${{github.repository}}/projects/3
+          GITHUB_PROJECT_COLUMN_NAME: Accepted

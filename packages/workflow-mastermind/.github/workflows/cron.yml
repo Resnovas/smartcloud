@@ -1,4 +1,4 @@
-name: Mark stale issues and pull requests
+name: Cron Management
 
 on:
   schedule:
@@ -13,7 +13,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          LABEL_MAPPINGS_FILE: .github/path-labeler.yml
+          LABEL_MAPPINGS_FILE: .github/labeler-path.yml
 
   # Automatically marks pull request and issues as stale after x length of time
   stale:
