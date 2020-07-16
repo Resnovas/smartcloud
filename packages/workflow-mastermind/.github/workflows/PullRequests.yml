@@ -132,19 +132,9 @@ jobs:
         with:
           path-to-signatures: '.github/cla.json'
           path-To-cladocument: 'https://github.com/${{github.repository}}/docs/getting-started/contributing/cla.md'
-          branch: 'chore/cla'
+          branch: ${{github.head_ref}}
           label: true
           whitelist: bot*
-          empty-commit-flag: false
-      - name: pull-request
-        uses: repo-sync/pull-request@v2
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: 'chore/cla'
-          destination_branch: "master"
-          pr_title: "docs: updating cla"
-          pr_body: ":crown: *An automated PR*"
-          pr_label: "skip-changelog"
 
   # Automatically merges bot pull requests made by CLAssistant
   merge-me:
