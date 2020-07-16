@@ -1,5 +1,7 @@
 # TGTGamer/.github
 
+**This is currently a work in progress. If you have somehow found this while im doing serious updates, drop me a line or open a issue and i will notify you when it's ready to be used again**
+
 This is a .github repository which I use across all my organisations & personal projects. Within this repository, you will find the configuration for many, many things. We choose to use workflows more than bots, however, some have been included to speed things up. If you have any questions or notice a bug, let us know in the issues and we will endeavour to fix them asap.
 
 This project is completely free to use, without any requirements and without warranty.
