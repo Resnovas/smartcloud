@@ -1,2 +1,2 @@
 claEnabled: true
-claPush: ${{github.head_ref}}
+claPush: github.head_ref
