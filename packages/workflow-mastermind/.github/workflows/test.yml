@@ -17,6 +17,6 @@ jobs:
         echo ${{ env.claEnabled }}
         echo ${{env.claPush}}
     - name: Dump if
-      need: dump
+      needs: dump
       if: ${{env.claEnabled}} == true
       run: echo if statement worked
