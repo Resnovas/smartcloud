@@ -9,7 +9,6 @@ This project is completely free to use, without any requirements and without war
 **You MUST keep clean commit history (ideally squashing your changes, so each commit correspond to single change/feature) for some of these features to work correctly**
 
 ## Prerequisite
-
 To use this collection, you need to ensure that you have the following branches
 - `docs/auto-update` - Used for all automatic updates except changelog
 - `chore/changelog` - Used for automatic changelog creation

@@ -26,6 +26,6 @@ jobs:
         stale-issue-label: 'Status - Stale'
         stale-pr-message: 'Stale pull request message'
         stale-pr-label: 'Status - Abandoned'
-        exempt-issue-label: 'security vulnerability'
+        exempt-issue-labels: 'security vulnerability'
         days-before-stale: 30
         days-before-close: 5
