@@ -63,13 +63,6 @@ To use this collection, you need to ensure that you have the following branches
 - gitactions - Checks gitactions packages for updates daily at 0200 UTC and labels pull requests according to config.
 
 
-**`.github/config.yml`**
-- APP URL: https://probot.github.io/apps/request-info/
-- Checks pull requests and issues against templates to ensure that users have provided enough information
-- APP URL: https://probot.github.io/apps/sentiment-bot/
-- Replies to toxic comments with designated comment
-
-
 **`.github/first-timers.yml`**
 - APP URL: https://github.com/hoodiehq/first-timers-bot
 - Create beautiful issues for first-time Open Source contributors – automagically ✨ based on hidden branches.
@@ -79,21 +72,3 @@ To use this collection, you need to ensure that you have the following branches
 - APP URL: https://github.com/all-contributors/all-contributors-bot
 - The @all-contributors bot automatically adds contributor acknowledgements according to the all-contributors specification
 
-
-**`contributing.json`**
-- APP URL: https://gitmagic.io/
-- Defines your contribution guidelines for issues, pull requests, branches and commit messages.
-
-
-**`pullapprove.yml`**
-- APP URL: https://www.pullapprove.com/
-- PullApprove gives you full control over your review process. Decide exactly who needs to review which PRs, and when. PullApprove will automatically request reviewers to make it happen.
-
-
-**`.whitesource`**
-- APP URL: https://bolt.whitesourcesoftware.com/github/
-- Harness the power of open source without compromising on security or agility!
-
-
-**No config files:**
-- [GitGuardian](https://dashboard.gitguardian.com/) - GitGuardian provides real-time secrets detection and security policies enforcement across all your repositories.
