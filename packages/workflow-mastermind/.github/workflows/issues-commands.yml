@@ -10,12 +10,12 @@ jobs:
       runs-on: ubuntu-latest
       if: contains(github.event.comment.body, '/revert')
       steps:
-      - name: Checkout
-        uses: actions/checkout@v2.3.1
-      - name: Automatic Revert
-        uses: srt32/revert@v0.0.1
-        env:
-            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        - name: Checkout
+          uses: actions/checkout@v2.3.1
+        - name: Automatic Revert
+          uses: srt32/revert@v0.0.1
+          env:
+              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Automatically rebases on request
   rebase:
@@ -23,33 +23,36 @@ jobs:
     if: github.event.issue.pull_request != '' && contains(github.event.comment.body, '/rebase')
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout
-      uses: actions/checkout@v2.3.1
-      with:
-        fetch-depth: 0
-    - name: Automatic Rebase
-      uses: cirrus-actions/rebase@1.3.1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout
+        uses: actions/checkout@v2.3.1
+        with:
+          fetch-depth: 0
+      - name: Automatic Rebase
+        uses: cirrus-actions/rebase@1.3.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  labels:
-    name: label command
+  issueCommands:
+    name: Issue commands
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - uses: actions/checkout@v2.3.1
         with:
           ref: ${{github.head_ref}}
+
       - id: Claim
-        if: contains(github.event.comment.body, '/claim')
+        if: ( contains(github.event.comment.body, '/claim') && ${{env.commandsEnabled}} == true &&  ${{env.claim}} == true )
         uses: actions-ecosystem/action-remove-labels@v1
         with:
           github_token: ${{ secrets.github_token }}
           labels: 'CommOps - Accepted'
       - name: Assign claimed issues to ComOps
-        needs: Claim
+        if: ( ${{ success() }} && ${{env.commandsEnabled}} == true &&  ${{env.claim}} == true )
         uses: docker://takanabe/github-actions-automate-projects:v0.0.1
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          # GITHUB_PROJECT_URL: https://github.com/orgs/${{github.repository_owner}}/projects/3
-          GITHUB_PROJECT_URL: https://github.com/${{github.repository}}/projects/3
-          GITHUB_PROJECT_COLUMN_NAME: Accepted
+          GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.ComOps}}
+          GITHUB_PROJECT_COLUMN_NAME: ${{env.ComOpsColumn}}

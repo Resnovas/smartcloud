@@ -15,20 +15,21 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
+      - run: if [ ${{env.claPush}} == 'head' ]; then echo ::set-env name=claBranch::${{github.head_ref}} ; else echo ::set-env name=claBranch::${{env.claPush}} ; fi
       - name: Checkout
-        if: env.claEnabled == true
+        if: ${{env.claEnabled}} == true
         id: checkout
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: CLA Assistant
-        needs: checkout
+        if: ${{env.claEnabled}} == true
         uses: cla-assistant/github-action@v1.3.0-alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: '.github/cla.json'
-          path-To-cladocument: 'https://github.com/${{github.repository}}/docs/getting-started/contributing/cla.md'
-          branch: ${{github.head_ref}}
-          label: true
+          path-to-signatures: ${{env.claPath}}
+          path-To-cladocument: 'https://github.com/${{github.repository}}/${{env.claDocs}}'
+          branch: ${{env.claBranch}}
+          label: ${{env.claLabel}}
           whitelist: bot*

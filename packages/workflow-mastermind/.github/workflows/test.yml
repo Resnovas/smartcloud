@@ -4,6 +4,12 @@ on:
   pull_request
 
 jobs:
+  TestWitout:
+    name: tests if env exists
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{env.claPush}}
+
   testEnv:
     name: Test the env loads properly
     runs-on: ubuntu-latest
@@ -16,9 +22,16 @@ jobs:
       run: |
         echo ${{ env.claEnabled }}
         echo ${{env.claPush}}
-        echo ::set-env name=test::${{github.head_ref}}
+        if [ ${{env.claPush}} == 'github.head_ref' ]; then echo ::set-env name=claBranch::${{github.head_ref}} ; else echo ::set-env name=claBranch::${{env.claPush}} ; fi
     - name: Dump if
       if: ( ${{ success() }} && ${{env.claEnabled}} == true )
       run: |
         echo if statement worked
         echo ${{env.test}}
+
+
+  TestAfter:
+    name: tests if env exists
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{env.claPush}}

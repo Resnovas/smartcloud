@@ -10,15 +10,18 @@ jobs:
   labeler:
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - name: Checkout
+        if: ${{env.ensureLabels}} == true
         uses: actions/checkout@v2.3.1
       - name: Run Labeler
-        if: success()
+        if: ${{env.ensureLabels}} == true
         uses: crazy-max/ghaction-github-labeler@v2
         with:
-          yaml_file: .github/labels.yml
-          skip_delete: false
-          dry_run: false
+          yaml_file: ${{env.ensureLabelsConfig}}
+          skip_delete: ${{env.ensureLabelsSkipDelete}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -26,16 +29,17 @@ jobs:
   invite:
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - run: if [ ${{env.inclusiveOrg}} == 'owner' ]; then echo ::set-env name=inclusiveorg::${{github.repository_owner}} ; else echo ::set-env name=inclusiveorg::${{env.inclusiveOrg}} ; fi
       - name: Invite contributor to the organization
         uses: lekterable/inclusive-organization-action@v1.1.0
+        if: ${{env.inclusiveEnabled}} == true
         with:
-          organization: ${{github.repository_owner}}
-          team: Community
-          comment: |
-            Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!
-
-            We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks.
-            Our bot should have already sent the invite. We look forward to you joining the team.
+          organization: ${{env.inclusiveorg}}
+          team: ${{env.inclusiveTeam}}
+          comment: ${{env.inclusiveComment}}
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         continue-on-error: true
@@ -45,7 +49,11 @@ jobs:
     name: Create release Draft
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - uses: release-drafter/release-drafter@v5
+        if: ${{env.releaseDrafter}} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -54,40 +62,43 @@ jobs:
     name: Create Changelog
     runs-on: ubuntu-18.04
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - name: "Check-out"
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: master
-          fetch-depth: 0
+          ref: ${{env.changelogRef}}
+          fetch-depth: ${{env.changelogFetchDepth}}
       - uses: heinrichreimer/github-changelog-generator-action@v2.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          pullRequests: 'true'
-          prWoLabels: 'skip-changelog'
-          breakingLabels: 'Versioning - BREAKING'
-          enhancementLabels: 'Type - Enhancement, Type - Feature'
-          bugLabels: 'Type - Fix, Bug - Fixed'
-          deprecatedLabels: 'Type - Decrecated'
-          removedLabels: 'Type - Removal'
-          securityLabels: 'security fix'
-          stripGeneratorNotice: "false"
+          pullRequests: ${{env.pullRequests}}
+          prWoLabels: ${{env.prWoLabels}}
+          breakingLabels: ${{env.breakingLabels}}
+          enhancementLabels: ${{env.enhancementLabels}}
+          bugLabels: ${{env.bugLabels}}
+          deprecatedLabels: ${{env.deprecatedLabels}}
+          removedLabels: ${{env.removedLabels}}
+          securityLabels: ${{env.securityLabels}}
+          stripGeneratorNotice: ${{env.stripGeneratorNotice}}
       - name: Commit files
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: 'docs: update'
-          branch: 'docs/auto-update'
-          commit_options: --signoff
-          push_options: '--force'
+          commit_message: ${{env.changelogCommitMessage}}
+          branch: ${{env.changelogBranch}}
+          commit_options: ${{env.changelogCommit_options}}
+          push_options: ${{env.changelogPush_options}}
       - name: pull-request
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: 'chore/changelog'
-          destination_branch: "master"
-          pr_title: "docs: updating changelog"
-          pr_body: ":crown: *An automated PR*"
-          pr_label: "skip-changelog"
+          source_branch: ${{env.changelogBranch}}
+          destination_branch: ${{env.changelogTargetBranch}}
+          pr_title: ${{env.changelogPRtitle}}
+          pr_body: ${{env.changelogPRbody}}
+          pr_label: ${{env.changelogPRlabel}}
 
   # Automatically merges bot pull requests made by create-changelog
   merge-me:

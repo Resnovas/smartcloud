@@ -9,23 +9,31 @@ jobs:
   labeler:
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - uses: docker://docker.io/ilyam8/periodic-pr-labeler:v0.1.1
+        if: ${{env.periodicLabeler}} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
-          LABEL_MAPPINGS_FILE: .github/labeler-path.yml
+          LABEL_MAPPINGS_FILE: ${{env.periodicPath}}
 
   # Automatically marks pull request and issues as stale after x length of time
   stale:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/stale@v3.0.8
-      with:
-        repo-token: ${{ secrets.GITHUB_TOKEN }}
-        stale-issue-message: 'This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.'
-        stale-issue-label: 'Status - Stale'
-        stale-pr-message: 'Stale pull request message'
-        stale-pr-label: 'Status - Abandoned'
-        exempt-issue-labels: 'security vulnerability'
-        days-before-stale: 30
-        days-before-close: 5
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - uses: actions/stale@v3.0.8
+        if: ${{env.stale}} == true
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          stale-issue-message: ${{env.stale-issue-message}}
+          stale-issue-label: ${{env.stale-issue-label}}
+          stale-pr-message: ${{env.stale-pr-message}}
+          stale-pr-label: ${{env.stale-pr-label}}
+          exempt-issue-labels: ${{env.exempt-issue-labels}}
+          days-before-stale: ${{env.days-before-stale}}
+          days-before-close: ${{env.days-before-close}}

@@ -14,17 +14,26 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - uses: y-temp4/add-wip-label@v1.0.0
+        if: ${{env.wipLabel}} == true
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
       - uses: wip/action@v1.0.0
+        if: ${{env.wipEnable}} == true
 
   # Ensures semantic titles to ensure semantic is achieved when merge is squashed
   semantic:
     name: Semantic Title
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - name: Check title
+        if: ${{env.semanticEnable}} == true
         uses: amannn/action-semantic-pull-request@v1.2.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,9 +43,13 @@ jobs:
     name: Branch Labeler
     runs-on: ubuntu-latest
     steps:
-      - uses: TimonVS/pr-labeler-action@v3
+      - uses: technote-space/load-config-action@v1
         with:
-          configuration-path: .github/labeler-branch.yml
+          CONFIG_FILENAME: allconfig.yml
+      - uses: TimonVS/pr-labeler-action@v3
+        if: ${{env.labelBranch}} == true
+        with:
+          configuration-path: ${{env.labelBranchConfig}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -45,21 +58,27 @@ jobs:
     name: Pull Request Size
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - uses: actions/checkout@v2.3.1
       - uses: actions-ecosystem/action-size@v2
+        if: ${{env.labelSize}} == true
         id: size
         with:
-          size_xs_label: "Size - XS"
-          size_s_label: "Size - S"
-          size_m_label: "Size - M"
-          size_l_label: "Size - L"
-          size_xl_label: "Size - XL"
-          size_xxl_label: "Size - XXL"
+          size_xs_label: ${{env.size_xs_label}}
+          size_s_label: ${{env.size_s_label}}
+          size_m_label: ${{env.size_m_label}}
+          size_l_label: ${{env.size_l_label}}
+          size_xl_label: ${{env.size_xl_label}}
+          size_xxl_label: ${{env.size_xxl_label}}
       - uses: actions-ecosystem/action-remove-labels@v1
+        if: ${{env.labelSize}} == true
         with:
           github_token: ${{ secrets.github_token }}
           labels: ${{ steps.size.outputs.stale_labels }}
       - uses: actions-ecosystem/action-add-labels@v1
+        if: ${{env.labelSize}} == true
         with:
           github_token: ${{ secrets.github_token }}
           labels: ${{ steps.size.outputs.new_label }}
@@ -69,9 +88,13 @@ jobs:
     name: Path Labeler
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/labeler@v2
+    - uses: technote-space/load-config-action@v1
       with:
-        configuration-path: '.github/labeler-path.yml'
+        CONFIG_FILENAME: allconfig.yml
+    - uses: actions/labeler@v2
+      if: ${{env.labelPath}} == true
+      with:
+        configuration-path: ${{env.labelPathConfig}}
         repo-token: "${{ secrets.GITHUB_TOKEN }}"
 
   # Automatically label sponsors requests
@@ -79,7 +102,11 @@ jobs:
     name: Sponsor Label
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - uses: JasonEtco/is-sponsor-label-action@v1
+        if: ${{env.labelSponsor}} == true
         with:
           label: Sponsor Request ❤️
         env:
@@ -90,14 +117,19 @@ jobs:
     name: Pull Request Conflict Check
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - uses: actions/checkout@v2.3.1
       - name: Warn potential conflicts
         uses: wktk/conflibot@v1
+        if: ${{env.conflictPull}} == true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }
       - name: check if prs are dirty
+        if: ${{env.conflictMaster}} == true
         uses: eps1lon/actions-label-merge-conflict@releases/1.x
         with:
-          dirtyLabel: "Needs rebase"
+          dirtyLabel: ${{env.conflictMasterDirty}}
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
 
