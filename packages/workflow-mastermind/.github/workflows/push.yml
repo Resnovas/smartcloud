@@ -32,7 +32,7 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - run: if [ ${{env.inclusiveOrg}} == 'owner' ]; then echo ::set-env name=inclusiveorg::${{github.repository_owner}} ; else echo ::set-env name=inclusiveorg::${{env.inclusiveOrg}} ; fi
+      - run: if [ ${{env.inclusiveOrg}} === 'owner' ]; then echo ::set-env name=inclusiveorg::${{github.repository_owner}} ; else echo ::set-env name=inclusiveorg::${{env.inclusiveOrg}} ; fi
       - name: Invite contributor to the organization
         uses: lekterable/inclusive-organization-action@v1.1.0
         if: ${{env.inclusiveEnabled}} == true
@@ -65,13 +65,29 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
+      - name: Import GPG key
+        if: (${{env.changelog}} == true && ${{env.gpgEnable}})
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v2
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      - name: GPG user IDs
+        if: ${{env.changelog}} == true
+        run: |
+          echo "fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}"
+          echo "keyid:       ${{ steps.import_gpg.outputs.keyid }}"
+          echo "name:        ${{ steps.import_gpg.outputs.name }}"
+          echo "email:       ${{ steps.import_gpg.outputs.email }}"
       - name: "Check-out"
+        if: ${{env.changelog}} == true
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: ${{env.changelogRef}}
           fetch-depth: ${{env.changelogFetchDepth}}
       - uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        if: ${{env.changelog}} == true
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pullRequests: ${{env.pullRequests}}
@@ -84,6 +100,7 @@ jobs:
           securityLabels: ${{env.securityLabels}}
           stripGeneratorNotice: ${{env.stripGeneratorNotice}}
       - name: Commit files
+        if: ${{env.changelog}} == true
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: ${{env.changelogCommitMessage}}
@@ -91,6 +108,7 @@ jobs:
           commit_options: ${{env.changelogCommit_options}}
           push_options: ${{env.changelogPush_options}}
       - name: pull-request
+        if: ${{env.changelog}} == true
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

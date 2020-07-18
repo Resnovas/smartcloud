@@ -17,13 +17,16 @@ jobs:
     name: TOC Generator
     runs-on: ubuntu-latest
     steps:
-      - uses: technote-space/toc-generator@v2
+      - uses: technote-space/load-config-action@v1
         with:
-          FOLDING: true
-          CREATE_PR: true
-          PR_BRANCH_PREFIX: 'docs/'
+          CONFIG_FILENAME: allconfig.yml
+      - uses: technote-space/toc-generator@v2
+        if: ${{env.tocEnable}} == true
+        with:
+          FOLDING: ${{env.tocFolding}}
+          CREATE_PR: ${{env.tocCreatePr}}
+          PR_BRANCH_PREFIX: ${{env.tocPrefix}}
           GITHUB_TOKEN: ${{secrets.ACCESS_TOKEN}}
-
 
   # Automatically copies and renames README, SUMMARY & CHANGELOG to be correct for both github Wiki and Gitbook
   copyfiles:
@@ -33,11 +36,16 @@ jobs:
     timeout-minutes: 5
     if: github.event_name != 'gollum'
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - name: Checkout Repo
+        if: ${{env.copyEnable}} == true
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
       - name: Sync workflows
+        if: ${{env.copyEnable}} == true
         uses: technote-space/create-pr-action@v2
         with:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
@@ -46,10 +54,10 @@ jobs:
             cp README.md docs/Home.md
             cp docs/SUMMARY.md docs/_Sidebar.md
             cp CHANGELOG.md docs/information/changelog.md
-          COMMIT_MESSAGE: 'docs: update'
-          PR_BRANCH_PREFIX: docs/
-          PR_BRANCH_NAME: 'auto-update'
-          PR_TITLE: 'docs: update'
+          COMMIT_MESSAGE: ${{env.copyCommit}}
+          PR_BRANCH_PREFIX: ${{env.copyBranchPrefix}}
+          PR_BRANCH_NAME: ${{env.copyBranch}}
+          PR_TITLE: ${{env.copyPr}}
 
   # syncs to the github inbuilt wiki & {repository}_wiki repo
   job-sync-docs-to-wiki:
@@ -58,23 +66,28 @@ jobs:
     if: github.event_name != 'gollum'
     runs-on: ubuntu-latest
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - name: Checkout Repo
         uses: actions/checkout@v2
       - name: Sync docs to wiki
+        if: ( ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true )
         uses: newrelic/wiki-sync-action@master
         with:
-          source: docs
-          destination: wiki
+          source: ${{env.docsToWikiSource}}
+          destination: ${{env.docsToWikiDestination}}
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Copy to ${{github.repository}}_wiki
+      - name: Copy to ${{github.repository}}
+        if: ( ${{env.wikiEnable}} == true && ${{env.docsToRepo}} == true )
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.ACCESS_TOKEN }}
-          src_path: /docs
-          dst_path: /.
+          src_path: ${{env.docsToRepoSource}}
+          dst_path: /${{env.docsToRepoDestination}}
           dst_owner: ${{github.repository_owner}}
-          dst_repo_name: '${{github.repository.name}}_wiki'
-          commit_message: "docs: auto-update"
+          dst_repo_name: ${{github.repository.name}}${{env.docsToRepoSuffix}}
+          commit_message: ${{env.docsToRepoCommit}}
         continue-on-error: true
 
   # syncs from the github inbuilt wiki
@@ -83,7 +96,11 @@ jobs:
     runs-on: ubuntu-latest
     if: github.event_name == 'gollum'
     steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - name: Checkout Repo
+        if: ${{env.wikiEnable}} == true
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -94,23 +111,25 @@ jobs:
           source: wiki
           destination: docs
           token: ${{ secrets.GITHUB_TOKEN }}
-          branch: 'docs/auto-update'
+          branch: "docs/auto-update"
       - name: pull-request
+        if: ( ${{env.wikiEnable}} == true && ${{env.wikiToDocs}} == true )
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: 'master'
-          destination_branch: 'docs/auto-update'
+          source_branch: "docs/auto-update"
+          destination_branch: "master"
           pr_title: "docs: auto-update"
           pr_body: ":crown: *An automated PR*"
           pr_label: "skip-changelog"
-      - name: Copy to ${{github.repository}}_wiki
+      - name: Copy to ${{github.repository}}
+        if: ( ${{env.wikiEnable}} == true && ${{env.wikiToRepo}} == true )
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.ACCESS_TOKEN }}
-          src_path: /docs
-          dst_path: /.
+          src_path: ${{env.docsToRepoSource}}
+          dst_path: /${{env.docsToRepoDestination}}
           dst_owner: ${{github.repository_owner}}
-          dst_repo_name: '${{github.repository.name}}_wiki'
-          commit_message: "docs: auto-update"
+          dst_repo_name: ${{github.repository.name}}${{env.docsToRepoSuffix}}
+          commit_message: ${{env.docsToRepoCommit}}
         continue-on-error: true
