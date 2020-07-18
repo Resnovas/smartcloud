@@ -272,3 +272,6 @@
 - name: 'skip-changelog'
   color: ffffff
   description: Skip the changelog
+- name: 'automerge'
+  color: ffffff
+  description: Automatically Merge this request
