@@ -1,9 +1,9 @@
-name: "CLA Assistant"
+name: Contributor License Agreement Management
 on:
   issue_comment:
     types: [created]
   pull_request:
-    types: [opened,closed,synchronize]
+    types: [opened, closed, synchronize]
 
 # Ensures the CLA is signed
 jobs:
@@ -29,7 +29,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           path-to-signatures: ${{env.claPath}}
-          path-To-cladocument: 'https://github.com/${{github.repository}}/${{env.claDocs}}'
+          path-To-cladocument: "https://github.com/${{github.repository}}/${{env.claDocs}}"
           branch: ${{env.claBranch}}
           label: ${{env.claLabel}}
           whitelist: bot*
