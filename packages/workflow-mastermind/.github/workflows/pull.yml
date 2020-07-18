@@ -137,10 +137,10 @@ jobs:
   auto-approve:
     runs-on: ubuntu-latest
     steps:
-     - uses: technote-space/load-config-action@v1
+      - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-    - uses: hmarr/auto-approve-action@v2.0.0
-      if: (${{env.autoApprove}} == true && contains(${{env.approvalList}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
-      with:
-        github-token: "${{ secrets.GITHUB_TOKEN }}"
+      - uses: hmarr/auto-approve-action@v2.0.0
+        if: (${{env.autoApprove}} == true && contains(${{env.approvalList}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
+        with:
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
