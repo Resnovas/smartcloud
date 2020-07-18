@@ -4,7 +4,7 @@ name: Pull Request Management
 
 on:
   pull_request:
-    types: [ opened, synchronize, reopened, edited ]
+    types: [opened, synchronize, reopened, edited]
 
 jobs:
   # Automatically blocks WIP pull request based on the title
@@ -88,19 +88,20 @@ jobs:
     name: Path Labeler
     runs-on: ubuntu-latest
     steps:
-    - uses: technote-space/load-config-action@v1
-      with:
-        CONFIG_FILENAME: allconfig.yml
-    - uses: actions/labeler@v2
-      if: ${{env.labelPath}} == true
-      with:
-        configuration-path: ${{env.labelPathConfig}}
-        repo-token: "${{ secrets.GITHUB_TOKEN }}"
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - uses: actions/labeler@v2
+        if: ${{env.labelPath}} == true
+        with:
+          configuration-path: ${{env.labelPathConfig}}
+          repo-token: "${{ secrets.GITHUB_TOKEN }}"
 
   # Automatically label sponsors requests
   sponsor:
     name: Sponsor Label
     runs-on: ubuntu-latest
+    if: github.event.action == 'opened'
     steps:
       - uses: technote-space/load-config-action@v1
         with:
@@ -132,4 +133,3 @@ jobs:
         with:
           dirtyLabel: ${{env.conflictMasterDirty}}
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
-
