@@ -20,7 +20,7 @@ jobs:
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: ${{env.labelTitlePath}}
-          enable-versioned-regex: ${{enc.Labelversioned}}
+          enable-versioned-regex: ${{env.Labelversioned}}
 
   # Automatically label sponsors requests
   sponsor:
