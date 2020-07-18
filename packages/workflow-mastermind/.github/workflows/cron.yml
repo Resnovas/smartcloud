@@ -2,7 +2,7 @@ name: Cron Management
 
 on:
   schedule:
-  - cron: '*/15 * * * *'
+    - cron: "*/15 * * * *"
 
 jobs:
   # Automatically labels all pull requests based on changed files
@@ -26,6 +26,8 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
+      - run: |
+          echo "${{env.days-before-close}}"
       - uses: actions/stale@v3.0.8
         if: ${{env.stale}} == true
         with:
