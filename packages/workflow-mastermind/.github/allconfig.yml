@@ -140,3 +140,7 @@ wikiToRepo: true
 
 # GPG
 gpgEnable: true
+
+# Auto Approve
+autoApprove: true
+approvalList: ["dependabot[bot]", "dependabot-preview[bot]"]
