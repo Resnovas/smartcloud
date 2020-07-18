@@ -27,6 +27,7 @@ periodicPath: ".github/labeler-path.yml"
 # Title Labeler
 labelTitle: true # enable / disable
 labelTitlePath: ".github/labeler-title.yml"
+Labelversioned: 0
 
 # Sponsor Labeler
 labelSponsor: true # enable / disable

@@ -20,6 +20,7 @@ jobs:
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: ${{env.labelTitlePath}}
+          enable-versioned-regex: ${{enc.Labelversioned}}
 
   # Automatically label sponsors requests
   sponsor:
@@ -61,18 +62,17 @@ jobs:
           GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.Issues}}
           GITHUB_PROJECT_COLUMN_NAME: ${{env.IssuesColumn}}
 
-
   # Automatically creates branches based on tags
   create_issue_branch_job:
     needs: AutoLabel
     name: Issue Branches
     runs-on: ubuntu-latest
     steps:
-    - uses: technote-space/load-config-action@v1
-      with:
-        CONFIG_FILENAME: allconfig.yml
-    - name: Create Issue Branch
-      if: ${{env.issueBranch}} == true
-      uses: robvanderleek/create-issue-branch@master
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - name: Create Issue Branch
+        if: ${{env.issueBranch}} == true
+        uses: robvanderleek/create-issue-branch@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
