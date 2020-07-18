@@ -144,3 +144,13 @@ gpgEnable: true
 # Auto Approve
 autoApprove: true
 approvalList: ["dependabot[bot]", "dependabot-preview[bot]"]
+
+# Auto Merge
+autoMerge: true
+autoMergeLabels: "automerge"
+autoMergeDeleteLabels: "automerge"
+autoMergeMethod: "squash"
+autoMergeForks: true
+autoMergeRetries: 6
+autoMergeSleep: 5000
+autoMergeDelete: true
