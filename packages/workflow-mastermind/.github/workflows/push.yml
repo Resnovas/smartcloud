@@ -99,12 +99,15 @@ jobs:
           removedLabels: ${{env.removedLabels}}
           securityLabels: ${{env.securityLabels}}
           stripGeneratorNotice: ${{env.stripGeneratorNotice}}
+      - run: if [ ${{env.changelog}} == true ]; then echo ::set-env name=commitName::${{ env.changelogName }} echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
       - name: Commit files
         if: ${{env.changelog}} == true
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: ${{env.changelogCommitMessage}}
           branch: ${{env.changelogBranch}}
+          commit_user_name: ${{env.changelogName}}
+          commit_user_email: ${{env.changelogEmail}}
           commit_options: ${{env.changelogCommit_options}}
           push_options: ${{env.changelogPush_options}}
       - name: pull-request
