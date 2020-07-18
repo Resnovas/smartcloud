@@ -10,7 +10,7 @@ jobs:
   CLAssistant:
     name: "CLA Assistant"
     runs-on: ubuntu-latest
-    if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA')
+    if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA' || github.event_name == 'pull_request' )
     steps:
       - uses: technote-space/load-config-action@v1
         with:
