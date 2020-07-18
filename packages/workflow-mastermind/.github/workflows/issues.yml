@@ -15,7 +15,7 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - uses: github/issue-labeler@v2.0
+      - uses: github/issue-labeler@v2.2
         if: ${{env.labelTitle}} == true
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
