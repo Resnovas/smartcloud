@@ -1,53 +1,53 @@
 # Stale Manager
 stale: true # enable / disable
-stale-issue-message: 'This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.'
-stale-issue-label: 'Status - Stale'
-stale-pr-message: 'Stale pull request message'
-stale-pr-label: 'Status - Abandoned'
-exempt-issue-labels: 'security vulnerability'
+stale-issue-message: "This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions."
+stale-issue-label: "Status - Stale"
+stale-pr-message: "Stale pull request message"
+stale-pr-label: "Status - Abandoned"
+exempt-issue-labels: "security vulnerability"
 days-before-stale: 30
 days-before-close: 5
 
 # Contributor License Agreement Config
 claEnabled: true # enable / disable
-claPath: '.github/cla.json'
-claDocs: 'docs/getting-started/contributing/cla.md'
-claPush: 'head'  # Where should CLA push to? (head || your_branch)
+claPath: ".github/cla.json"
+claDocs: "docs/getting-started/contributing/cla.md"
+claPush: "head" # Where should CLA push to? (head || your_branch)
 claLabel: true # enable / disable
 
 # Ensure Labels
 ensureLabels: true
-ensureLabelsConfig: '.github/labels.yml'
+ensureLabelsConfig: ".github/labels.yml"
 ensureLabelsSkipDelete: false
 
 # Periodic Labeler
 periodicLabeler: true # enable / disable
-periodicPath: '.github/labeler-path.yml'
+periodicPath: ".github/labeler-path.yml"
 
 # Title Labeler
 labelTitle: true # enable / disable
-labelTitlePath: '.github/labeler-title.yml'
+labelTitlePath: ".github/labeler-title.yml"
 
 # Sponsor Labeler
 labelSponsor: true # enable / disable
-sponsorLabel: 'Sponsor Request ❤️'
+sponsorLabel: "Sponsor Request ❤️"
 
 # Branch Labeler
 labelBranch: true # enable / disable
-labelBranchConfig: '.github/labeler-branch.yml'
+labelBranchConfig: ".github/labeler-branch.yml"
 
 # Path Labeler
 labelPath: true
-labelPathConfig: '.github/labeler-path.yml'
+labelPathConfig: ".github/labeler-path.yml"
 
 # Size Labeler
 labelSize: true
-size_xs_label: 'Size - XS'
-size_s_label: 'Size - S'
-size_m_label: 'Size - M'
-size_l_label: 'Size - L'
-size_xl_label: 'Size - XL'
-size_xxl_label: 'Size - XXL'
+size_xs_label: "Size - XS"
+size_s_label: "Size - S"
+size_m_label: "Size - M"
+size_l_label: "Size - L"
+size_xl_label: "Size - XL"
+size_xxl_label: "Size - XXL"
 
 # Work In Progress
 wipEnable: true # enable / disable
@@ -56,14 +56,14 @@ wipLabel: true # enable / disable
 # Projects config
 assignProjects: true # enable / disable
 labelCards: true # enable / disable
-labelCardsConfig: 'labeler-card.yml'
+labelCardsConfig: "labeler-card.yml"
 useOrg: false # enable / disable
 DevOps: 1
-DevOpsColumn: 'Requested'
+DevOpsColumn: "Requested"
 Issues: 2
-IssuesColumn: 'New'
+IssuesColumn: "New"
 ComOps: 3
-ComOpsColumn: 'Accepted'
+ComOpsColumn: "Accepted"
 
 #Issue Branches
 issueBranch: true # enable / disable
@@ -73,7 +73,7 @@ semanticEnable: true # enable / disable
 
 # Conflict check
 conflictMaster: true # enable / disable
-conflictMasterDirty: 'Needs rebase'
+conflictMasterDirty: "Needs rebase"
 conflictPull: true # enable / disable
 
 # Commands
@@ -82,31 +82,31 @@ claim: true # enable / disable
 
 # Inclusive Organisation
 inclusiveEnabled: true # enable / disable
-inclusiveOrg: 'owner'
-inclusiveTeam: 'Community'
-inclusiveComment: 'Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks. Our bot should have already sent the invite. We look forward to you joining the team.'
+inclusiveOrg: "owner"
+inclusiveTeam: "Community"
+inclusiveComment: "Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks. Our bot should have already sent the invite. We look forward to you joining the team."
 
 # Release drafter
 releaseDrafter: true
 
 # Automatic Changelog
 changelog: true # enable / disable
-changelogRef: 'master'
+changelogRef: "master"
 changelogFetchDepth: 0
 pullRequests: true
-prWoLabels: 'skip-changelog'
-breakingLabels: 'Versioning - BREAKING'
-enhancementLabels: 'Type - Enhancement, Type - Feature'
-bugLabels: 'Type - Fix, Bug - Fixed'
-deprecatedLabels: 'Type - Decrecated'
-removedLabels: 'Type - Removal'
-securityLabels: 'security fix'
-stripGeneratorNotice: 'false'
-changelogCommitMessage: 'docs: update'
-changelogBranch: 'chore/changelog'
-changelogTargetBranch: 'master'
-changelogCommit_options: '--signoff'
-changelogCommit_options: '--force'
+prWoLabels: "skip-changelog"
+breakingLabels: "Versioning - BREAKING"
+enhancementLabels: "Type - Enhancement, Type - Feature"
+bugLabels: "Type - Fix, Bug - Fixed"
+deprecatedLabels: "Type - Decrecated"
+removedLabels: "Type - Removal"
+securityLabels: "security fix"
+stripGeneratorNotice: "false"
+changelogCommitMessage: "docs: update"
+changelogBranch: "chore/changelog"
+changelogTargetBranch: "master"
+changelogCommit_options: "--signoff"
+changelogPush_options: "--force"
 changelogPRtitle: "docs: updating changelog"
 changelogPRbody: ":crown: *An automated PR*"
 changelogPRlabel: "skip-changelog"
@@ -115,25 +115,25 @@ changelogPRlabel: "skip-changelog"
 tocEnable: true
 tocFolding: true
 tocCreatePr: true
-tocPrefix: 'docs/'
+tocPrefix: "docs/"
 
 # Copy and Rename
 copyEnable: true
-copyCommit: 'docs: update'
-copyBranchPrefix: 'docs/'
-copyBranch: 'auto-update'
-copyPr: 'docs: update'
+copyCommit: "docs: update"
+copyBranchPrefix: "docs/"
+copyBranch: "auto-update"
+copyPr: "docs: update"
 
 # wiki Sync
 wikiEnable: true
 docsToWiki: true
-docsToWikiSource: 'docs'
-docsToWikiDestination: 'wiki'
+docsToWikiSource: "docs"
+docsToWikiDestination: "wiki"
 docsToRepo: true
-docsToRepoSource: 'docs'
-docsToRepoDestination: '.'
-docsToRepoSuffix: '_wiki'
-docsToRepoCommit: 'docs: auto-update'
+docsToRepoSource: "docs"
+docsToRepoDestination: "."
+docsToRepoSuffix: "_wiki"
+docsToRepoCommit: "docs: auto-update"
 wikiToDocs: true
 wikiToRepo: true
 
