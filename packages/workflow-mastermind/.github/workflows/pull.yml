@@ -126,12 +126,13 @@ jobs:
         uses: wktk/conflibot@v1
         if: ${{env.conflictPull}} == true
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }
+          github-token: ${{ secrets.GITHUB_TOKEN }}
       - name: check if prs are dirty
         if: ${{env.conflictMaster}} == true
         uses: eps1lon/actions-label-merge-conflict@releases/1.x
         with:
           dirtyLabel: ${{env.conflictMasterDirty}}
+          removeOnDirtyLabel: ${{env.conflictMasterDirty}}
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
 
   auto-approve:
