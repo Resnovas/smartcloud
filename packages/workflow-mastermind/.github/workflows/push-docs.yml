@@ -64,7 +64,7 @@ jobs:
             cp README.md docs/Home.md
             cp docs/SUMMARY.md docs/_Sidebar.md
             cp CHANGELOG.md docs/information/changelog.md
-      - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
+      - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
       - name: commit
         if: ${{env.copyEnable}} == true
         uses: stefanzweifel/git-auto-commit-action@v4
