@@ -3,8 +3,7 @@ name: Pull Request Management
 # This workflow automatically lables PR to ensure that all PR's are correct within the release draft.
 
 on:
-  pull_request:
-    types: [opened, synchronize, reopened, edited]
+  pull_request
 
 jobs:
   # Automatically blocks WIP pull request based on the title
@@ -147,3 +146,27 @@ jobs:
         if: (${{env.autoApprove}} == true && contains(${{env.approvalList}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
+
+  automerge:
+    needs:
+      - conflibot
+      - path-labeler
+      - pr-labeler
+      - auto-approve
+    runs-on: ubuntu-latest
+    steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - name: automerge
+        if: ${{env.autoMerge}} == true
+        uses: "pascalgn/automerge-action@4536e8847eb62fe2f0ee52c8fa92d17aa97f932f"
+        env:
+          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          MERGE_LABELS: ${{env.autoMergeLabels}}
+          MERGE_REMOVE_LABELS: ${{env.autoMergeDeleteLabels}}
+          MERGE_METHOD: ${{env.autoMergeMethod}}
+          MERGE_FORKS: ${{env.autoMergeForks}}
+          MERGE_RETRIES: ${{env.autoMergeRetries}}
+          MERGE_RETRY_SLEEP: ${{env.autoMergeSleep}}
+          MERGE_DELETE_BRANCH: ${{env.autoMergeDelete}}
