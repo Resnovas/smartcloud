@@ -12,3 +12,4 @@
 'Type - Refactor': 'ref/*'
 'Type - Style': 'style/*'
 'Type - Revert': 'revert/*'
+'automerge': ['ref/*', 'chore/*', 'docs/*', 'maint/*']
