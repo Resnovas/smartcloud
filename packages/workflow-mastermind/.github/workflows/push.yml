@@ -72,6 +72,12 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
+      - uses: peterjgrainger/action-create-branch@v1.0.0
+        if: ${{env.changelog}} == true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: ${{env.changelogBranch}}-${{github.run_id}}
       - name: GPG user IDs
         if: ${{env.changelog}} == true
         run: |
@@ -84,7 +90,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{env.changelogRef}}
+          ref: ${{env.changelogBranch}}-${{github.run_id}}
           fetch-depth: ${{env.changelogFetchDepth}}
       - uses: heinrichreimer/github-changelog-generator-action@v2.1.1
         if: ${{env.changelog}} == true
@@ -105,7 +111,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: ${{env.changelogCommitMessage}}
-          branch: ${{env.changelogBranch}}
+          branch: ${{env.changelogBranch}}-${{github.run_id}}
           commit_user_name: ${{env.changelogName}}
           commit_user_email: ${{env.changelogEmail}}
           commit_options: ${{env.changelogCommit_options}}
@@ -115,7 +121,7 @@ jobs:
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: ${{env.changelogBranch}}
+          source_branch: ${{env.changelogBranch}}-${{github.run_id}}
           destination_branch: ${{env.changelogTargetBranch}}
           pr_title: ${{env.changelogPRtitle}}
           pr_body: ${{env.changelogPRbody}}

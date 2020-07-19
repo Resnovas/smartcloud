@@ -104,7 +104,7 @@ removedLabels: "Type - Removal"
 securityLabels: "security fix"
 stripGeneratorNotice: "false"
 changelogCommitMessage: "docs: update"
-changelogBranch: "chore/changelog"
+changelogBranch: "docs/changelog"
 changelogTargetBranch: "master"
 changelogCommit_options: "--signoff"
 changelogPush_options: "--force"
@@ -144,6 +144,11 @@ docsToRepoDestination: "."
 docsToRepoSuffix: "_wiki"
 docsToRepoCommit: "docs: auto-update"
 wikiToDocs: true
+wikiToDocsBranch: "docs/auto-update"
+wikiToDocsTargetBranch: "master"
+wikiToDocsPRtitle: "docs: updating wikiToDocs"
+wikiToDocsPRbody: ":crown: *An automated PR*"
+wikiToDocsPRlabel: "skip-changelog,automerge"
 wikiToRepo: true
 
 # GPG
