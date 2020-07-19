@@ -19,10 +19,10 @@ jobs:
         uses: "pascalgn/automerge-action@4536e8847eb62fe2f0ee52c8fa92d17aa97f932f"
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-          # MERGE_LABELS: "${{env.autoMergeLabels}}"
-          # MERGE_REMOVE_LABELS: "${{env.autoMergeDeleteLabels}}"
-          MERGE_METHOD: "${{env.autoMergeMethod}}"
-          MERGE_FORKS: "${{env.autoMergeForks}}"
-          MERGE_RETRIES: "${{env.autoMergeRetries}}"
-          MERGE_RETRY_SLEEP: "${{env.autoMergeSleep}}"
-          MERGE_DELETE_BRANCH: "${{env.autoMergeDelete}}"
+          MERGE_LABELS: ${{env.autoMergeLabels}}
+          MERGE_REMOVE_LABELS: ${{env.autoMergeDeleteLabels}}
+          MERGE_METHOD: ${{env.autoMergeMethod}}
+          MERGE_FORKS: ${{env.autoMergeForks}}
+          MERGE_RETRIES: ${{env.autoMergeRetries}}
+          MERGE_RETRY_SLEEP: ${{env.autoMergeSleep}}
+          MERGE_DELETE_BRANCH: ${{env.autoMergeDelete}}
