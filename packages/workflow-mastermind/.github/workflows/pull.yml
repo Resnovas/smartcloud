@@ -9,7 +9,7 @@ on:
 jobs:
   # Automatically blocks WIP pull request based on the title
   wip:
-    name: Work in progress
+    name: Work in progress job
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -17,11 +17,13 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - uses: y-temp4/add-wip-label@v1.0.0
+      - name: Work in progress label
+        uses: y-temp4/add-wip-label@v1.0.0
         if: ${{env.wipLabel}} == true
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-      - uses: wip/action@v1.0.0
+      - name: Work in progress status
+        uses: wip/action@v1.0.0
         if: ${{env.wipEnable}} == true
 
   # Ensures semantic titles to ensure semantic is achieved when merge is squashed

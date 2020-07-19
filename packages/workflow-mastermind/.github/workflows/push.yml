@@ -120,17 +120,3 @@ jobs:
           pr_title: ${{env.changelogPRtitle}}
           pr_body: ${{env.changelogPRbody}}
           pr_label: ${{env.changelogPRlabel}}
-
-  # Automatically merges bot pull requests made by create-changelog
-  merge-me:
-    name: Merge me!
-    needs:
-      - create-changelog
-    runs-on: ubuntu-latest
-    steps:
-      - name: Merge me!
-        uses: ridedott/merge-me-action@master
-        with:
-          GITHUB_LOGIN: github-actions
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          MERGE_METHOD: REBASE
