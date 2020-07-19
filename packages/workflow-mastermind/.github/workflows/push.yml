@@ -119,13 +119,13 @@ jobs:
           push_options: ${{env.changelogPush_options}}
       - name: Delete branch
         uses: dawidd6/action-delete-branch@v3
-        if: ${{steps.commit.outputs.changes_detected}} == false && ${{env.changelog}} == true
+        if: ( ${{steps.commit.outputs.changes_detected}} == false && ${{env.changelog}} == true )
         with:
           github_token: ${{github.token}}
           branches: ${{env.changelogBranch}}-${{github.run_id}}
       - name: pull-request
         uses: repo-sync/pull-request@v2
-        if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.changelog}} == true
+        if: ( ${{steps.commit.outputs.changes_detected}} == true && ${{env.changelog}} == true )
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           source_branch: ${{env.changelogBranch}}-${{github.run_id}}

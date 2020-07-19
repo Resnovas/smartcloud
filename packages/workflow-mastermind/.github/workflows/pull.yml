@@ -153,6 +153,8 @@ jobs:
       - path-labeler
       - pr-labeler
       - auto-approve
+      - wip
+      - semantic
     runs-on: ubuntu-latest
     steps:
       - uses: technote-space/load-config-action@v1

@@ -78,12 +78,12 @@ jobs:
           push_options: ${{env.copyfilesPush_options}}
       - name: Delete branch
         uses: dawidd6/action-delete-branch@v3
-        if: ${{steps.commit.outputs.changes_detected}} == false && ${{env.copyEnable}} == true
+        if: ( ${{steps.commit.outputs.changes_detected}} == false && ${{env.copyEnable}} == true )
         with:
           github_token: ${{github.token}}
           branches: ${{env.copyfilesBranch}}-${{github.run_id}}
       - name: Sync workflows
-        if: ${{env.copyEnable}} == true
+        if: ( ${{steps.commit.outputs.changes_detected}} == true && ${{env.copyEnable}} == true )
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
