@@ -44,6 +44,13 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
+      - name: Import GPG key
+        if: (${{env.copyEnable}} == true && ${{env.gpgEnable}})
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v2
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.PASSPHRASE }}
       - name: Checkout Repo
         if: ${{env.copyEnable}} == true
         uses: actions/checkout@v2
@@ -57,6 +64,7 @@ jobs:
             cp README.md docs/Home.md
             cp docs/SUMMARY.md docs/_Sidebar.md
             cp CHANGELOG.md docs/information/changelog.md
+      - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
       - name: commit
         if: ${{env.copyEnable}} == true
         uses: stefanzweifel/git-auto-commit-action@v4
@@ -64,8 +72,8 @@ jobs:
         with:
           commit_message: ${{env.copyfilesCommitMessage}}
           branch: ${{env.copyfilesBranch}}-${{github.run_id}}
-          commit_user_name: ${{env.copyfilesName}}
-          commit_user_email: ${{env.copyfilesEmail}}
+          commit_user_name: ${{env.changelogName}}
+          commit_user_email: ${{env.changelogEmail}}
           commit_options: ${{env.copyfilesCommit_options}}
           push_options: ${{env.copyfilesPush_options}}
       - name: Delete branch
