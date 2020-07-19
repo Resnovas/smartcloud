@@ -110,7 +110,7 @@ changelogCommit_options: "--signoff"
 changelogPush_options: "--force"
 changelogPRtitle: "docs: updating changelog"
 changelogPRbody: ":crown: *An automated PR*"
-changelogPRlabel: "skip-changelog"
+changelogPRlabel: "skip-changelog,automerge"
 
 # Generate Table of Contents
 tocEnable: true
@@ -125,13 +125,13 @@ copyBranchPrefix: "docs/"
 copyBranch: "auto-update"
 copyPr: "docs: update"
 copyfilesCommitMessage: "docs: update"
-copyfilesBranch: "docs/copyfiles"
+copyfilesBranch: "docs/auto-update"
 copyfilesTargetBranch: "master"
 copyfilesCommit_options: "--signoff"
 copyfilesPush_options: "--force"
 copyfilesPRtitle: "docs: updating copyfiles"
 copyfilesPRbody: ":crown: *An automated PR*"
-copyfilesPRlabel: "skip-changelog"
+copyfilesPRlabel: "skip-changelog,automerge"
 
 # wiki Sync
 wikiEnable: true
