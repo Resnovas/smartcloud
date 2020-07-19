@@ -1,5 +1,8 @@
 name: Automerge Management
 on:
+  pull_request:
+    types: 
+    - labeled
   pull_request_review:
     types:
       - submitted

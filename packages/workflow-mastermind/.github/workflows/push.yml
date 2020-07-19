@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  pull_request: 
+    types: [closed, synchronize]
 
 jobs:
   # Ensures all the labels are correct all the time according to ../labels.yml
