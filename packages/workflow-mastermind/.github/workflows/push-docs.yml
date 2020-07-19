@@ -51,13 +51,16 @@ jobs:
           fetch-depth: 0
           ref: ${{env.copyfilesBranch}}-${{github.run_id}}
       - name: manage files
+        if: ${{env.copyEnable}} == true
         run: |
             cp README.md docs/README.md
             cp README.md docs/Home.md
             cp docs/SUMMARY.md docs/_Sidebar.md
             cp CHANGELOG.md docs/information/changelog.md
       - name: commit
+        if: ${{env.copyEnable}} == true
         uses: stefanzweifel/git-auto-commit-action@v4
+        id: commit
         with:
           commit_message: ${{env.copyfilesCommitMessage}}
           branch: ${{env.copyfilesBranch}}-${{github.run_id}}
@@ -65,6 +68,12 @@ jobs:
           commit_user_email: ${{env.copyfilesEmail}}
           commit_options: ${{env.copyfilesCommit_options}}
           push_options: ${{env.copyfilesPush_options}}
+      - name: Delete branch
+        uses: dawidd6/action-delete-branch@v3
+        if: ${{steps.commit.outputs.changes_detected}} == false && ${{env.copyEnable}} == true
+        with:
+          github_token: ${{github.token}}
+          branches: ${{env.copyfilesBranch}}-${{github.run_id}}
       - name: Sync workflows
         if: ${{env.copyEnable}} == true
         uses: repo-sync/pull-request@v2
