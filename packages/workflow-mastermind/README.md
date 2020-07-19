@@ -73,7 +73,7 @@ This template is currently capable of the following activities.
 
 ### Understanding developer workflow
 
-Something
+I will add this shortly
 
 ## Contributing
 
