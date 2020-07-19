@@ -124,6 +124,14 @@ copyCommit: "docs: update"
 copyBranchPrefix: "docs/"
 copyBranch: "auto-update"
 copyPr: "docs: update"
+copyfilesCommitMessage: "docs: update"
+copyfilesBranch: "docs/copyfiles"
+copyfilesTargetBranch: "master"
+copyfilesCommit_options: "--signoff"
+copyfilesPush_options: "--force"
+copyfilesPRtitle: "docs: updating copyfiles"
+copyfilesPRbody: ":crown: *An automated PR*"
+copyfilesPRlabel: "skip-changelog"
 
 # wiki Sync
 wikiEnable: true
@@ -143,7 +151,7 @@ gpgEnable: true
 
 # Auto Approve
 autoApprove: true
-approvalList: ["dependabot[bot]", "dependabot-preview[bot]"]
+approvalList: ["dependabot[bot]", "dependabot-preview[bot], github-actions[bot], github-actions, github-user, actions-user, web-flow"]
 
 # Auto Merge
 autoMerge: true

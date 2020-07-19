@@ -44,20 +44,32 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - name: Sync workflows
-        if: ${{env.copyEnable}} == true
-        uses: technote-space/create-pr-action@v2
-        with:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          EXECUTE_COMMANDS: |
+      - name: manage files
+        run: |
             cp README.md docs/README.md
             cp README.md docs/Home.md
             cp docs/SUMMARY.md docs/_Sidebar.md
             cp CHANGELOG.md docs/information/changelog.md
-          COMMIT_MESSAGE: ${{env.copyCommit}}
-          PR_BRANCH_PREFIX: ${{env.copyBranchPrefix}}
-          PR_BRANCH_NAME: ${{env.copyBranch}}
-          PR_TITLE: ${{env.copyPr}}
+      - name: commit
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: ${{env.copyfilesCommitMessage}}
+          branch: ${{env.copyfilesBranch}}
+          commit_user_name: ${{env.copyfilesName}}
+          commit_user_email: ${{env.copyfilesEmail}}
+          commit_options: ${{env.copyfilesCommit_options}}
+          push_options: ${{env.copyfilesPush_options}}
+      - name: Sync workflows
+        if: ${{env.copyEnable}} == true
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: ${{env.copyfilesBranch}}
+          destination_branch: ${{env.copyfilesTargetBranch}}
+          pr_title: ${{env.copyfilesPRtitle}}
+          pr_body: ${{env.copyfilesPRbody}}
+          pr_label: ${{env.copyfilesPRlabel}}
+
 
   # syncs to the github inbuilt wiki & {repository}_wiki repo
   job-sync-docs-to-wiki:
