@@ -4,7 +4,7 @@ Welcome to this template for GitActions Workflow.
 
 ## Introduction
 
-When working on GitActions, I found that there went many templates of high quality to use, which made my life hell for quiet a while. In total I submitted in excess of 300 commits to get my initial workflow running how I wanted, and that just isn't acceptable. Within this repository, I am to provide the tools and solutions for most of the common usecases within the development community for GitActions. This includes automatically generating content, updating dependencies, managing the project and much more.
+When working on GitActions, I found that there went many templates of high quality to use, which made my life hell for quiet a while. In total I submitted in excess of 300 commits to get my initial workflow running how I wanted, and that just isn't acceptable. Within this repository, I am to provide the tools and solutions for most of the common usecases within the development community for GitActions. This includes automatically generating content, updating dependencies, managing the project and much more. While this template is highly usefull, it is not intended, nor will ever, replace development workflows on your personal projects. We have ensured not to include any lint or build tools. 
 
 To make it super simple for everyone to use, we built every job using an environment variable importer. A big thanks to [@technote-space](https://github.com/technote-space) for creating [Load Config Action](https://github.com/technote-space/load-config-action) which basically powers this entire configuration.
 
