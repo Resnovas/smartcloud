@@ -20,7 +20,7 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - uses: peterjgrainger/action-create-branch@v1.0.0
+      - uses: peterjgrainger/action-create-branch@2.0.1
         if: ${{env.copyEnable}} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -139,7 +139,7 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - uses: peterjgrainger/action-create-branch@v1.0.0
+      - uses: peterjgrainger/action-create-branch@2.0.1
         if: ${{env.wikiEnable}} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -74,7 +74,7 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
-      - uses: peterjgrainger/action-create-branch@v1.0.0
+      - uses: peterjgrainger/action-create-branch@2.0.1
         if: ${{env.changelog}} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
