@@ -114,13 +114,6 @@ changelogPRlabel: "skip-changelog,automerge"
 changelogName: ""
 changelogEmail: ""
 
-# Generate Table of Contents
-tocEnable: true
-tocPaths: README.md
-tocFolding: true
-tocCreatePr: false
-tocPrefix: ""
-
 # Copy and Rename
 copyEnable: true
 copyCommit: "docs: update"

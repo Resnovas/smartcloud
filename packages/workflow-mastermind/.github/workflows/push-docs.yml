@@ -51,17 +51,6 @@ jobs:
             cp docs/SUMMARY.md docs/_Sidebar.md
             cp CHANGELOG.md docs/information/changelog.md
       - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
-      - uses: technote-space/toc-generator@v2
-        if: ${{env.tocEnable}} == true
-        with:
-          COMMIT_NAME: ${{env.commitName}}
-          COMMIT_EMAIL: ${{env.commitEmail}}
-          TARGET_PATHS: ${{env.tocPaths}}
-          FOLDING: ${{env.tocFolding}}
-          CREATE_PR: ${{env.tocCreatePr}}
-          PR_BRANCH_PREFIX: ${{env.tocPrefix}}
-          PR_BRANCH_NAME: ${{env.copyfilesBranch}}-${{github.run_id}}
-          GITHUB_TOKEN: ${{secrets.ACCESS_TOKEN}}
       - name: commit
         if: ${{env.copyEnable}} == true
         uses: stefanzweifel/git-auto-commit-action@v4
