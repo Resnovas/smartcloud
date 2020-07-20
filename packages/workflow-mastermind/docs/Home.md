@@ -1,85 +1,82 @@
-# We Recently decided that this method of building the bot was not worth our time, and are moving to a completely serverless method. We will keep people informated and will continue to work on the bot. If you want to continue working on or with the old version of our bot, feel free to fork the branch `selfhost`
+# Universal GitActions Workflows
 
----
-description: >-
-  Smartcloud Artificial Assistant is a software developed by TGT Media Ltd for
-  the open-source community. Designed to be extremely easy to modify and
-  generate new content around.
----
+Welcome to this template for GitActions Workflow.
 
-# Smartcloud Artificial Assistant \(SCAA\)
+<!-- toc -->
+<!-- tocstop -->
 
-![](.gitbook/assets/logo.png)
+## Introduction
 
-{% hint style="danger" %}
-_**This software is not release ready. Please do not try to install and instead contact the developers on info@tgtmedia.org for correct installation help and guidance**_
-{% endhint %}
+When working on GitActions, I found that there went many templates of high quality to use, which made my life hell for quiet a while. In total I submitted in excess of 300 commits to get my initial workflow running how I wanted, and that just isn't acceptable. Within this repository, I am to provide the tools and solutions for most of the common use cases within the development community for GitActions. This includes automatically generating content, updating dependencies, managing the project and much more. While this template is highly useful, it is not intended, nor will ever, replace development workflows on your personal projects. We have ensured not to include any lint or build tools.
 
-#### What is Smartcloud Artificial Assistant?
+To make it super simple for everyone to use, we built every job using an environment variable importer. A big thanks to [@technote-space](https://github.com/technote-space) for creating [Load Config Action](https://github.com/technote-space/load-config-action) which basically powers this entire configuration.
 
-Smartcloud Artificial Assistant otherwise known as SCAA, is open-source software for integrating applications and software. We designed for small communities, such as twitch and discord communities, however, are capable of up-scaling at the touch of a button. Our services integrate with Dialogflow to provide artificial intelligence services to those who need it, in a way which is easy to use.
+*Note:* due to the way Github handles Actions, I chose to develop this project on both Branches & Forks, in the hopes of having a cleaner commit history which will make it easier for you to understand what is happening. If you want to help creating this template, feel free to checkout the Contribution Guidelines.  
 
-#### Why was it created?
+## Github Actions
 
-When this project started, it was not much more than a discord application communicating between multiple end-points to run community focused actions and operations. Now growing to become much more than a simple bot, this application has been rewritten to be modular and made open source. We have already created modules for YouTube, Twitch, Discord, Messenger, Dialogflow, and a few others, but we ain't finished there. We want to continue to provide users with the tools they require, which includes goals to achieve website builders, development tools, game integrations and publicly accessible API's for all actions and endpoints...
+GitHub Actions makes it easy to automate all your software workflows, now with world-class CI/CD. Build, test, and deploy your code right from GitHub. Make code reviews, branch management, and issue triaging work the way you want. Kick off workflows with GitHub events like push, issue creation, or a new release. Combine and configure actions for the services you use, built and maintained by the community. Whether you want to build a container, deploy a web service, or automate welcoming new users to your open source projects—there's an action for that.
 
-#### Why use it over other options?
+Read more about Github Actions [here](https://github.com/features/actions)
 
-We are aware of other options which you could use instead of our application, such as xxx and yyyy, however we believe, that our system with the support of our community could be more powerful and easier to use.
+## In this template
 
-#### I'm not a developer, can I use SCAA?
-
-Yes, this project is developed so that all level of users can use it, with versions pre-packaged as well as simple CLI tools, we believe we have created the simplest project to use for users who want to create custom applications.
-
-We also have started work on an hosted version, with more features pre-built into the application. This allows our users to experience Smartcloud at it's full potential without having complex setups.
-
-#### Where is the official support & documentation?
-
-All our official documentation is powered by markdown and can be located within the `@smartcloud/app/wiki` directory or can be found online at [https://docs.smartcloud.gg/](https://docs.smartcloud.gg/)
-
-## The Specifications
-
-Yeah, this is the boring bit, "What can you do", and our answer will always be "whatever you can imagine" because we build this application to be fully extendable, and even encourage it using our online package sharing tools built into our command line and user interfaces.
+1. Completely customisable configs
+2. Automatic changelog & release creation
+3. Automatic project management
+4. Automatic merging & approval
+5. Automatic contribution license agreements
+6. Automatic updates with automerge via [Dependabot](https://docs.github.com/en/github/managing-security-vulnerabilities/configuring-github-dependabot-security-updates)
+7. Automatic document syncronisation (see [here]())
+8. Automatic labeling based on title, path, branch and files
+9. Automatic branch creation based on labels
+10. Commands for contribution automation
 
 ## Getting Started
 
-### Installation
+It is **Extremely** important to understand while using this template the code within `.github/workflows` & the templates within `.github/ISSUE_TEMPLATE` will automatically update within a new pull request whenever the template is updated. If you choose to change anything within these files, please ensure to review the automatic pull requests before merging them.
 
-#### Automatic installation
+To get started with this template, please follow our [documentation](docs/getting-started/getting-started.md). If you like to contribute to this template, please read the [contributing guidelines](docs/contributing/README.md).
 
-We have built a automatic installation system to ensure speed and simplicity. This installer will guide you through all the options of SCAA, and automatically install all dependencies, modules, templates and much more.
+## Why use this template
 
-Simply install our command line interface using:
+This template is simply designed to save you, your team or community hours of painful debugging and stress creating a workflow from scratch. With many functions which users use regulary built in with simple `boolean` toggles setup within our `allconfig.yml`, this template is one of the quickest ways to get your custom workflow up and running without any serious hassle. Each action within this template has been hand picked and customised to work perfectly with each other, while also ensuring that everything is customisable.
 
-```bash
-npm i -g @smartcloud/cli
-```
+This workflow does use a couple of External applications, they are not required but we highly recommend installing them. You can find more about the bots used within this workflow within the appriciations & configuations docs.  
 
-Once installed, run the command
+<!-- Move to another page -->
+### Understanding user workflow
 
-```bash
-smartcloud install
-```
+1. User creates issue
+   1. Automatically gets labeled based on title & body
+   2. [Needs: a] Branch Automatically gets generated
+   3. [Needs: a] Automatically gets assigned to project board
+2. Branch is worked on by contributor
+3. Contributor uses commands to move project in boards using [commands]() which trigger labels
+4. Contributor creates pull request
+   1. Automatically gets labeled based on if `WIP:` is prefixed
+   2. Automatically gets labeled based on branch path
+   3. Automatically gets labeled based on pull request size
+   4. Automatically gets labeled based on changed file paths
+   5. Automatically checks for conflicts with `Master` and `Pull Requests`
+   6. Automatically ensures the `CLA` has been signed
+5. Pull Request gets merged to master
+   1. Automatically invites user to team `Community`
+   2. Automatically creates & updates changelog.md
+   3. Automatically creates & updates github release
+   4. Automatically checks for updates to documentation (synced both directions)
+      1. Copies & renames files
+         - cp README.md -> docs/README.md (Used in gitbook)
+         - cp README.md -> docs/Home.md (Used in {{repo}}.wiki)
+         - cp docs/SUMMARY.md -> docs/_Sidebar.md (Used in {{repo}}.wiki)
+         - cp CHANGELOG.md -> docs/information/changelog.md
+      2. Automatically pushes to {{repo}}.wiki.git (Used in {{repo}}.wiki)
+      3. Automatically pushes to {{repo}}_wiki.git (Used in gitbook)
 
-You can read more about our automatic installation options here:
+### Understanding developer workflow
 
-#### Manual installation
+I will add this shortly, as soon as I get it all working xD.
 
-{% hint style="danger" %}
-_**HIGHLY NOT RECOMMENDED - THIS TAKES 10X LONGER TO COMPLETE**_
-{% endhint %}
+## Final Note
 
-We haven't actually written this section yet, please come back soon...
-
-### Contributing
-
-{% page-ref page="getting-started/contributing/" %}
-
-### Licensing
-
-We originally designed this application to be completely closed-source, therefore it was built with a license system integrated. When we decided to go open-source, rather then delete the license system, we simply made the license free to purchase and added a signup into our installer, while this license exists, it is purely used to track users, provide support and operational assistance to users who need it.
-
-{% hint style="danger" %}
-However, with this said, users who choose not to register a license with us, will not receive support outside our forums and Gitlab support pages.
-{% endhint %}
-
+Thank you for taking the time to look through this repository. If you have liked what you have found, please would you favourite & share. Ideally I would like to get a community behind this project which can ensure that it is maintained, updated and improved as GitActions get more siffisticated.
