@@ -1,0 +1,5 @@
+*       @Videndum
+*.yml    @Videndum/automation
+docs/*/**  @Videndum/community
+docs\getting-started\contributing\CODE_OF_CONDUCT.md @Videndum/admins
+docs\getting-started\contributing\AGREEMENT.md @Videndum/security

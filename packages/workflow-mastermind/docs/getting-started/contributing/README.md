@@ -14,7 +14,7 @@ Following these guidelines helps to communicate that you respect the time of the
 
 ## Contributor License Agreement
 
-We have a Contributor License Agreement which can be found at [`{root}/docs/getting-started/contributing/agreement.md`](./agrement.md). It is required for [Standard Contributions](contribution-types.md#std) and [Major Contributions](contribution-types.md#major).
+We have a Contributor License Agreement which can be found at [`{root}/docs/getting-started/contributing/agreement.md`](./AGREEMENT.md). It is required for [Standard Contributions](contribution-types.md#std) and [Major Contributions](contribution-types.md#major).
 
 ## Responsibilities
 
