@@ -20,6 +20,12 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
+      - uses: peterjgrainger/action-create-branch@2.0.1
+        if: ${{env.copyEnable}} == true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: ${{env.copyfilesBranch}}-${{github.run_id}}
       - name: Import GPG key
         if: ${{env.copyEnable}} == true && ${{env.gpgEnable}}
         id: import_gpg
