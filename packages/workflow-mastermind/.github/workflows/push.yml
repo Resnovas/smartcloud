@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master
-  pull_request: 
-    types: [closed, synchronize]
 
 jobs:
   # Ensures all the labels are correct all the time according to ../labels.yml
@@ -68,7 +66,7 @@ jobs:
         with:
           CONFIG_FILENAME: allconfig.yml
       - name: Import GPG key
-        if: ${{env.changelog}} == true && ${{env.gpgEnable}
+        if: ${{env.changelog}} == true && ${{env.gpgEnable}}
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v2
         env:
