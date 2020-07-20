@@ -116,9 +116,10 @@ changelogEmail: ""
 
 # Generate Table of Contents
 tocEnable: true
+tocPaths: README.md
 tocFolding: true
-tocCreatePr: true
-tocPrefix: "docs/"
+tocCreatePr: false
+tocPrefix: ""
 
 # Copy and Rename
 copyEnable: true

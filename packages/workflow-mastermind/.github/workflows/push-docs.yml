@@ -10,33 +10,9 @@ on:
   gollum:
 
 jobs:
-  # Automatically generates Table of Contents
-  generateTOC:
-    name: TOC Generator
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - uses: peterjgrainger/action-create-branch@2.0.1
-        if: ${{env.copyEnable}} == true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          branch: ${{env.copyfilesBranch}}-${{github.run_id}}
-      - uses: technote-space/toc-generator@v2
-        if: ${{env.tocEnable}} == true
-        with:
-          FOLDING: ${{env.tocFolding}}
-          CREATE_PR: ${{env.tocCreatePr}}
-          PR_BRANCH_PREFIX: ${{env.tocPrefix}}
-          PR_BRANCH_NAME: ${{env.copyfilesBranch}}-${{github.run_id}}
-          GITHUB_TOKEN: ${{secrets.ACCESS_TOKEN}}
-
   # Automatically copies and renames README, SUMMARY & CHANGELOG to be correct for both github Wiki and Gitbook
   copyfiles:
     name: Copy & Rename docs files
-    needs: generateTOC
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: github.event_name != 'gollum'
@@ -51,6 +27,10 @@ jobs:
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           PASSPHRASE: ${{ secrets.PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+          git_push_gpgsign: true
       - name: Checkout Repo
         if: ${{env.copyEnable}} == true
         uses: actions/checkout@v2
@@ -65,6 +45,17 @@ jobs:
             cp docs/SUMMARY.md docs/_Sidebar.md
             cp CHANGELOG.md docs/information/changelog.md
       - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
+      - uses: technote-space/toc-generator@v2
+        if: ${{env.tocEnable}} == true
+        with:
+          COMMIT_NAME: ${{env.commitName}}
+          COMMIT_EMAIL: ${{env.commitEmail}}
+          TARGET_PATHS: ${{env.tocPaths}}
+          FOLDING: ${{env.tocFolding}}
+          CREATE_PR: ${{env.tocCreatePr}}
+          PR_BRANCH_PREFIX: ${{env.tocPrefix}}
+          PR_BRANCH_NAME: ${{env.copyfilesBranch}}-${{github.run_id}}
+          GITHUB_TOKEN: ${{secrets.ACCESS_TOKEN}}
       - name: commit
         if: ${{env.copyEnable}} == true
         uses: stefanzweifel/git-auto-commit-action@v4
@@ -175,7 +166,6 @@ jobs:
   delete: 
     runs-on: ubuntu-latest
     needs: 
-      - generateTOC
       - copyfiles
       - job-sync-docs-to-wiki
     steps: 
