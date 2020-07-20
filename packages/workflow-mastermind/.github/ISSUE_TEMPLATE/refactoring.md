@@ -1,8 +1,8 @@
 ---
 name: Code Refactoring
 about: Refactoring code for community benefit
-title: 'Refactor: '
-labels: 'Type: Refactor'
+title: 'refactor: '
+labels: 'Type - Refactor'
 assignees: ''
 
 ---

@@ -1,8 +1,8 @@
 ---
 name: Documentation Review
 about: A review to highlight issues in documentation
-title: 'Docs: '
-labels: 'Type: Documentation'
+title: 'docs: '
+labels: 'Type - Documentation'
 assignees: ''
 
 ---

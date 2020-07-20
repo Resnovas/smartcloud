@@ -1,8 +1,8 @@
 ---
 name: Documentation Location
 about: Change the location of our documentation
-title: 'Docs: '
-labels: 'Type: Documentation'
+title: 'docs: '
+labels: 'Type - Documentation'
 assignees: ''
 
 ---

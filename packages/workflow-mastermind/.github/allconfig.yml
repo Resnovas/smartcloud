@@ -111,6 +111,8 @@ changelogPush_options: "--force"
 changelogPRtitle: "docs: updating changelog"
 changelogPRbody: ":crown: *An automated PR*"
 changelogPRlabel: "skip-changelog,automerge"
+changelogName: ""
+changelogEmail: ""
 
 # Generate Table of Contents
 tocEnable: true

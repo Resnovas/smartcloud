@@ -1,8 +1,8 @@
 ---
 name: Documentation
 about: Update, modify or create documentation
-title: 'Docs:'
-labels: 'Type: Documentation'
+title: 'docs:'
+labels: 'Type - Documentation'
 assignees: ''
 
 ---

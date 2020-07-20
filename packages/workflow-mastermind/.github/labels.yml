@@ -107,19 +107,19 @@
   description: DevOPS deployed to Testing
 
 
-- name: 'CommOps - Accepted'
+- name: 'ComOps - Accepted'
   color: bbb1ed
   description: A community contributor is planning to work on this issue
-- name: 'CommOps - Completed'
+- name: 'ComOps - Completed'
   color: bbb1ed
   description: The contributor has completed this issue and handed over to the developers to stage & deploy
-- name: 'CommOps - Developing'
+- name: 'ComOps - Developing'
   color: bbb1ed
   description: The contributor is developing this issue
-- name: 'CommOps - Awaiting Review'
+- name: 'ComOps - Awaiting Review'
   color: bbb1ed
   description: The contributor is awaiting review
-- name: 'CommOps - Testing'
+- name: 'ComOps - Testing'
   color: bbb1ed
   description: The contributor is awaiting testing results
 
@@ -234,7 +234,7 @@
 - name: 'Content - Backend'
   color: f9cea2
   description: Changes that affect the backend
-- name: 'Content - frontend'
+- name: 'Content - Frontend'
   color: f9cea2
   description: Changes that affect the fronted
 
