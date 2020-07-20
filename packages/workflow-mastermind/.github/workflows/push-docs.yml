@@ -184,7 +184,7 @@ jobs:
           CONFIG_FILENAME: allconfig.yml
       - name: Delete branch
         uses: dawidd6/action-delete-branch@v3
-        if: jobs.copyfiles.steps.commit.outputs.changes_detected == false && env.copyEnable == true
+        if: ( job.copyfiles.steps.commit.outputs.changes_detected == false && env.copyEnable == true )
         with:
           github_token: ${{github.token}}
           branches: ${{env.copyfilesBranch}}-${{github.run_id}} 
