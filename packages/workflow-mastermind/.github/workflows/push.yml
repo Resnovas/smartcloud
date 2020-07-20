@@ -44,23 +44,179 @@ jobs:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         continue-on-error: true
 
-  # Using the config in ../release-drafter.yml creates release drafts automatically
-  update_release_draft:
-    name: Create release Draft
+  copyfiles:
+    name: Copy & Rename docs files
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event_name != 'gollum'
+    steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - uses: peterjgrainger/action-create-branch@2.0.1
+        if: ${{env.copyEnable}} == true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: ${{env.copyfilesBranch}}-${{github.run_id}}
+      - name: Import GPG key
+        if: ${{env.copyEnable}} == true && ${{env.gpgEnable}}
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v2
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.PASSPHRASE }}
+          git_user_signingkey: true
+          git_commit_gpgsign: true
+          git_tag_gpgsign: true
+          git_push_gpgsign: true
+      - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
+      - run: |
+          git config --global user.name "${{env.commitName}}"
+          git config --global user.email "${{env.commitEmail}}"
+      - name: Checkout Repo
+        if: ${{env.copyEnable}} == true
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+          ref: ${{env.copyfilesBranch}}-${{github.run_id}}
+      - name: manage files
+        if: ${{env.copyEnable}} == true
+        run: |
+            cp README.md docs/README.md
+            cp README.md docs/Home.md
+            cp docs/SUMMARY.md docs/_Sidebar.md
+            cp CHANGELOG.md docs/information/changelog.md
+      - name: commit
+        if: ${{env.copyEnable}} == true
+        uses: stefanzweifel/git-auto-commit-action@v4
+        id: commit
+        with:
+          commit_message: ${{env.copyfilesCommitMessage}}
+          branch: ${{env.copyfilesBranch}}-${{github.run_id}}
+          commit_user_name: ${{env.commitName}}
+          commit_user_email: ${{env.commitEmail}}
+          commit_options: ${{env.copyfilesCommit_options}}
+          push_options: ${{env.copyfilesPush_options}}
+      - name: Sync workflows
+        if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.copyEnable}} == true
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: ${{env.copyfilesBranch}}-${{github.run_id}}
+          destination_branch: ${{env.copyfilesTargetBranch}}
+          pr_title: ${{env.copyfilesPRtitle}}
+          pr_body: ${{env.copyfilesPRbody}}
+          pr_label: ${{env.copyfilesPRlabel}}
+
+
+  # syncs to the github inbuilt wiki & {repository}_wiki repo
+  job-sync-docs-to-wiki:
+    name: Sync to wiki
+    needs: copyfiles
+    if: github.event_name != 'gollum'
     runs-on: ubuntu-latest
     steps:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - uses: release-drafter/release-drafter@v5
-        if: ${{env.releaseDrafter}} == true
+      - name: Checkout Repo
+        uses: actions/checkout@v2
+        if: ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true
+        with: 
+          ref: ${{env.copyfilesBranch}}-${{github.run_id}}
+      - name: Sync docs to wiki
+        if: ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true
+        uses: newrelic/wiki-sync-action@master
+        with:
+          source: ${{env.docsToWikiSource}}
+          destination: ${{env.docsToWikiDestination}}
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Copy to ${{github.repository}}
+        if: ${{env.wikiEnable}} == true && ${{env.docsToRepo}} == true
+        uses: andstor/copycat-action@v3
+        with:
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          src_path: ${{env.docsToRepoSource}}
+          dst_path: /${{env.docsToRepoDestination}}
+          dst_owner: ${{github.repository_owner}}
+          dst_repo_name: ${{github.repository.name}}${{env.docsToRepoSuffix}}
+          commit_message: ${{env.docsToRepoCommit}}
+        continue-on-error: true
+
+  # syncs from the github inbuilt wiki
+  job-sync-wiki-to-docs:
+    name: Sync from wiki
+    runs-on: ubuntu-latest
+    if: github.event_name == 'gollum'
+    steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - uses: peterjgrainger/action-create-branch@2.0.1
+        if: ${{env.wikiEnable}} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          branch: ${{env.copyfilesBranch}}-${{github.run_id}}
+      - name: Checkout Repo
+        if: ${{env.wikiEnable}} == true
+        uses: actions/checkout@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{env.copyfilesBranch}}-${{github.run_id}}
+      - name: Sync Wiki to Docs
+        uses: newrelic/wiki-sync-action@master
+        with:
+          source: ${{env.docsToWikiDestination}}
+          destination: ${{env.docsToWikiSource}}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{env.wikiToDocsBranch}}-${{github.run_id}}
+      - name: pull-request
+        if: ${{env.wikiEnable}} == true && ${{env.wikiToDocs}} == true
+        uses: repo-sync/pull-request@v2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          source_branch: ${{env.wikiToDocsBranch}}-${{github.run_id}}
+          destination_branch: ${{env.wikiToDocsTargetBranch}}
+          pr_title: ${{env.wikiToDocsPRtitle}}
+          pr_body: ${{env.wikiToDocsPRbody}}
+          pr_label: ${{env.wikiToDocsPRlabel}}
+      - name: Copy to ${{github.repository}}
+        if: ${{env.wikiEnable}} == true && ${{env.wikiToRepo}} == true
+        uses: andstor/copycat-action@v3
+        with:
+          personal_token: ${{ secrets.ACCESS_TOKEN }}
+          src_path: ${{env.docsToRepoSource}}
+          dst_path: /${{env.docsToRepoDestination}}
+          dst_owner: ${{github.repository_owner}}
+          dst_repo_name: ${{github.repository.name}}${{env.docsToRepoSuffix}}
+          commit_message: ${{env.docsToRepoCommit}}
+        continue-on-error: true
+
+  delete: 
+    runs-on: ubuntu-latest
+    needs: 
+      - copyfiles
+      - job-sync-docs-to-wiki
+    steps: 
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - name: Delete branch
+        uses: dawidd6/action-delete-branch@v3
+        if: ( job.copyfiles.steps.commit.outputs.changes_detected == false && env.copyEnable == true )
+        with:
+          github_token: ${{github.token}}
+          branches: ${{env.copyfilesBranch}}-${{github.run_id}}
 
   # creates a changelog, commits, pushes, and creates a pull request
   create-changelog:
     name: Create Changelog
     runs-on: ubuntu-18.04
+    needs: 
+      - copyfiles
+      - job-sync-docs-to-wiki
     steps:
       - uses: technote-space/load-config-action@v1
         with:
@@ -137,3 +293,21 @@ jobs:
           pr_title: ${{env.changelogPRtitle}}
           pr_body: ${{env.changelogPRbody}}
           pr_label: ${{env.changelogPRlabel}}
+          
+  # Using the config in ../release-drafter.yml creates release drafts automatically
+  update_release_draft:
+    name: Create release Draft
+    needs: 
+      - copyfiles
+      - job-sync-docs-to-wiki
+    runs-on: ubuntu-latest
+    steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - run: if [ ( ${{contains(github.event.issue.labels.*.name, 'Versioning - Major')}} || ${{contains(github.event.issue.labels.*.name, 'Versioning - Minor')}} || ${{contains(github.event.issue.labels.*.name, 'Versioning - Patch')}} ) == true ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
+      - uses: release-drafter/release-drafter@v5
+        if: ${{env.releaseDrafter}} == true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          publish: ${{env.publish}}
