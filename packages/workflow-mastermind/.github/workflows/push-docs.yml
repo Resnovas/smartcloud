@@ -76,12 +76,6 @@ jobs:
           commit_user_email: ${{env.commitEmail}}
           commit_options: ${{env.copyfilesCommit_options}}
           push_options: ${{env.copyfilesPush_options}}
-      - name: Delete branch
-        uses: dawidd6/action-delete-branch@v3
-        if: ${{steps.commit.outputs.changes_detected}} == false && ${{env.copyEnable}} == true
-        with:
-          github_token: ${{github.token}}
-          branches: ${{env.copyfilesBranch}}-${{github.run_id}}
       - name: Sync workflows
         if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.copyEnable}} == true
         uses: repo-sync/pull-request@v2
@@ -177,3 +171,20 @@ jobs:
           dst_repo_name: ${{github.repository.name}}${{env.docsToRepoSuffix}}
           commit_message: ${{env.docsToRepoCommit}}
         continue-on-error: true
+
+  delete: 
+    runs-on: ubuntu-latest
+    needs: 
+      - generateTOC
+      - copyfiles
+      - job-sync-docs-to-wiki
+    steps: 
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - name: Delete branch
+        uses: dawidd6/action-delete-branch@v3
+        if: jobs.copyfiles.steps.commit.outputs.changes_detected == false && env.copyEnable == true
+        with:
+          github_token: ${{github.token}}
+          branches: ${{env.copyfilesBranch}}-${{github.run_id}} 
