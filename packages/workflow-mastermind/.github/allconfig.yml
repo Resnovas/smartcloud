@@ -163,3 +163,6 @@ autoMergeForks: true
 autoMergeRetries: 6
 autoMergeSleep: 5000
 autoMergeDelete: true
+
+# Profanity check
+checkProfanity: true

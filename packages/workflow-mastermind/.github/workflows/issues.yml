@@ -77,3 +77,20 @@ jobs:
         uses: robvanderleek/create-issue-branch@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  
+  # Check for profanity
+  profanity:
+    runs-on: ubuntu-latest
+    name: profanity check
+    steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - name: Checkout
+        if: ${{env.checkProfanity}} == true
+        uses: actions/checkout@v2
+      - name: Profanity check step
+        if: ${{env.checkProfanity}} == true
+        uses: tailaiw/mind-your-language-action@v1.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
