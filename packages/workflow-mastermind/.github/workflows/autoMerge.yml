@@ -21,7 +21,7 @@ jobs:
         if: ${{env.autoMerge}} == true
         uses: "pascalgn/automerge-action@4536e8847eb62fe2f0ee52c8fa92d17aa97f932f"
         env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+          GITHUB_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
           MERGE_LABELS: ${{env.autoMergeLabels}}
           MERGE_REMOVE_LABELS: ${{env.autoMergeDeleteLabels}}
           MERGE_METHOD: ${{env.autoMergeMethod}}
