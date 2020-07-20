@@ -39,8 +39,8 @@ jobs:
           git_push_gpgsign: true
       - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
       - run: |
-          git config --global user.name ${{env.commitName}}
-          git config --global user.email ${{env.commitEmail}}
+          git config --global user.name "${{env.commitName}}"
+          git config --global user.email "${{env.commitEmail}}"
       - name: Checkout Repo
         if: ${{env.copyEnable}} == true
         uses: actions/checkout@v2
