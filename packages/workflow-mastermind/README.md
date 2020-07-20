@@ -75,7 +75,7 @@ This workflow does use a couple of External applications, they are not required 
 
 ### Understanding developer workflow
 
-I will add this shortly, as soon as I get it all working xD.
+I will add this shortly, as soon as I get it all working xD...
 
 ## Final Note
 
