@@ -47,7 +47,7 @@ jobs:
         with:
           CONFIG_FILENAME: allconfig.yml
       - name: Import GPG key
-        if: (${{env.copyEnable}} == true && ${{env.gpgEnable}})
+        if: ${{env.copyEnable}} == true && ${{env.gpgEnable}}
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v2
         env:
@@ -74,18 +74,18 @@ jobs:
         with:
           commit_message: ${{env.copyfilesCommitMessage}}
           branch: ${{env.copyfilesBranch}}-${{github.run_id}}
-          commit_user_name: ${{env.changelogName}}
-          commit_user_email: ${{env.changelogEmail}}
+          commit_user_name: ${{env.commitName}}
+          commit_user_email: ${{env.commitEmail}}
           commit_options: ${{env.copyfilesCommit_options}}
           push_options: ${{env.copyfilesPush_options}}
       - name: Delete branch
         uses: dawidd6/action-delete-branch@v3
-        if: ( ${{steps.commit.outputs.changes_detected}} == false && ${{env.copyEnable}} == true )
+        if: ${{steps.commit.outputs.changes_detected}} == false && ${{env.copyEnable}} == true
         with:
           github_token: ${{github.token}}
           branches: ${{env.copyfilesBranch}}-${{github.run_id}}
       - name: Sync workflows
-        if: ( ${{steps.commit.outputs.changes_detected}} == true && ${{env.copyEnable}} == true )
+        if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.copyEnable}} == true
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -108,18 +108,18 @@ jobs:
           CONFIG_FILENAME: allconfig.yml
       - name: Checkout Repo
         uses: actions/checkout@v2
-        if: ( ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true )
+        if: ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true
         with: 
           ref: ${{env.copyfilesBranch}}-${{github.run_id}}
       - name: Sync docs to wiki
-        if: ( ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true )
+        if: ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true
         uses: newrelic/wiki-sync-action@master
         with:
           source: ${{env.docsToWikiSource}}
           destination: ${{env.docsToWikiDestination}}
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Copy to ${{github.repository}}
-        if: ( ${{env.wikiEnable}} == true && ${{env.docsToRepo}} == true )
+        if: ${{env.wikiEnable}} == true && ${{env.docsToRepo}} == true
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.ACCESS_TOKEN }}
@@ -159,7 +159,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           branch: ${{env.wikiToDocsBranch}}-${{github.run_id}}
       - name: pull-request
-        if: ( ${{env.wikiEnable}} == true && ${{env.wikiToDocs}} == true )
+        if: ${{env.wikiEnable}} == true && ${{env.wikiToDocs}} == true
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
@@ -169,7 +169,7 @@ jobs:
           pr_body: ${{env.wikiToDocsPRbody}}
           pr_label: ${{env.wikiToDocsPRlabel}}
       - name: Copy to ${{github.repository}}
-        if: ( ${{env.wikiEnable}} == true && ${{env.wikiToRepo}} == true )
+        if: ${{env.wikiEnable}} == true && ${{env.wikiToRepo}} == true
         uses: andstor/copycat-action@v3
         with:
           personal_token: ${{ secrets.ACCESS_TOKEN }}
