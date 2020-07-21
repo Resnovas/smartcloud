@@ -195,6 +195,7 @@ jobs:
         continue-on-error: true
 
   delete: 
+    name: Delete auto-update branch (no changes detected)
     runs-on: ubuntu-latest
     needs: 
       - copyfiles
@@ -210,11 +211,30 @@ jobs:
           github_token: ${{github.token}}
           branches: ${{env.copyfilesBranch}}-${{github.run_id}}
 
+  # Using the config in ../release-drafter.yml creates release drafts automatically
+  update_release_draft:
+    name: Create release Draft
+    needs: 
+      - copyfiles
+      - job-sync-docs-to-wiki
+    runs-on: ubuntu-latest
+    steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - run: if [ ${{contains(github.event.issue.labels.*.name, 'Versioning - Major')}} == true || ${{contains(github.event.issue.labels.*.name, 'Versioning - Minor')}} == true || ${{contains(github.event.issue.labels.*.name, 'Versioning - Patch')}} == true ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
+      - uses: release-drafter/release-drafter@v5
+        if: ${{env.releaseDrafter}} == true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          publish: ${{env.publish}}
+          
   # creates a changelog, commits, pushes, and creates a pull request
   create-changelog:
     name: Create Changelog
     runs-on: ubuntu-18.04
     needs: 
+      - update_release_draft
       - copyfiles
       - job-sync-docs-to-wiki
     steps:
@@ -293,21 +313,3 @@ jobs:
           pr_title: ${{env.changelogPRtitle}}
           pr_body: ${{env.changelogPRbody}}
           pr_label: ${{env.changelogPRlabel}}
-          
-  # Using the config in ../release-drafter.yml creates release drafts automatically
-  update_release_draft:
-    name: Create release Draft
-    needs: 
-      - copyfiles
-      - job-sync-docs-to-wiki
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - run: if [ ${{contains(github.event.issue.labels.*.name, 'Versioning - Major')}} == true || ${{contains(github.event.issue.labels.*.name, 'Versioning - Minor')}} == true || ${{contains(github.event.issue.labels.*.name, 'Versioning - Patch')}} == true ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
-      - uses: release-drafter/release-drafter@v5
-        if: ${{env.releaseDrafter}} == true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          publish: ${{env.publish}}
