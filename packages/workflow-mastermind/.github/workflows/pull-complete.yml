@@ -7,48 +7,8 @@ on:
   gollum: 
 
 jobs:
-  # Ensures all the labels are correct all the time according to ../labels.yml
-  labeler:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - name: Checkout
-        if: ${{env.ensureLabels}} == true
-        uses: actions/checkout@v2.3.1
-      - name: Run Labeler
-        if: ${{env.ensureLabels}} == true
-        uses: crazy-max/ghaction-github-labeler@v2
-        with:
-          yaml_file: ${{env.ensureLabelsConfig}}
-          skip_delete: ${{env.ensureLabelsSkipDelete}}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Automatically invites users to our team when their pull request is merged
-  invite:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - run: if [ ${{env.inclusiveOrg}} === 'owner' ]; then echo ::set-env name=inclusiveorg::${{github.repository_owner}} ; else echo ::set-env name=inclusiveorg::${{env.inclusiveOrg}} ; fi
-      - name: Invite contributor to the organization
-        uses: lekterable/inclusive-organization-action@v1.1.0
-        if: ${{env.inclusiveEnabled}} == true
-        with:
-          organization: ${{env.inclusiveorg}}
-          team: ${{env.inclusiveTeam}}
-          comment: ${{env.inclusiveComment}}
-        env:
-          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-        continue-on-error: true
-
-  copyfiles:
-    name: Copy & Rename docs files
+  createBranch:
+    name: create branch for automation
     runs-on: ubuntu-latest
     timeout-minutes: 5
     if: github.event_name != 'gollum' && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
@@ -57,13 +17,41 @@ jobs:
         with:
           CONFIG_FILENAME: allconfig.yml
       - uses: peterjgrainger/action-create-branch@2.0.1
-        if: ${{env.copyEnable}} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          branch: ${{env.copyfilesBranch}}-${{github.run_id}}
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+  
+  # Using the config in ../release-drafter.yml creates release drafts automatically
+  update_release_draft:
+    name: Create release Draft
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
+      - run: if [ ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Major')}} == 'true' || ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Minor')}} == 'true' || ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Patch')}} == 'true' ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
+      - uses: release-drafter/release-drafter@v5
+        if: ${{env.releaseDrafter}} == true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          publish: ${{env.publish}}
+          
+  # creates a changelog, commits, pushes, and creates a pull request
+  create-changelog:
+    name: Copy files for wiki & docs
+    runs-on: ubuntu-18.04
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    needs: 
+      - createBranch
+      - update_release_draft
+    steps:
+      - uses: technote-space/load-config-action@v1
+        with:
+          CONFIG_FILENAME: allconfig.yml
       - name: Import GPG key
-        if: ${{env.copyEnable}} == true && ${{env.gpgEnable}}
+        if: ${{env.changelog}} == true && ${{env.gpgEnable}} == true
         id: import_gpg
         uses: crazy-max/ghaction-import-gpg@v2
         env:
@@ -73,16 +61,33 @@ jobs:
           git_commit_gpgsign: true
           git_tag_gpgsign: true
           git_push_gpgsign: true
-      - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
-      - run: |
-          git config --global user.name "${{env.commitName}}"
-          git config --global user.email "${{env.commitEmail}}"
-      - name: Checkout Repo
-        if: ${{env.copyEnable}} == true
+      - name: GPG user IDs
+        if: ${{env.changelog}} == true
+        run: |
+          echo "fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}"
+          echo "keyid:       ${{ steps.import_gpg.outputs.keyid }}"
+          echo "name:        ${{ steps.import_gpg.outputs.name }}"
+          echo "email:       ${{ steps.import_gpg.outputs.email }}"
+      - name: "Check-out"
+        if: ${{env.changelog}} == true
         uses: actions/checkout@v2
         with:
-          fetch-depth: 0
-          ref: ${{env.copyfilesBranch}}-${{github.run_id}}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+          fetch-depth: ${{env.changelogFetchDepth}}
+      - uses: heinrichreimer/github-changelog-generator-action@v2.1.1
+        if: ${{env.changelog}} == true
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          pullRequests: ${{env.pullRequests}}
+          prWoLabels: ${{env.prWoLabels}}
+          breakingLabels: ${{env.breakingLabels}}
+          enhancementLabels: ${{env.enhancementLabels}}
+          bugLabels: ${{env.bugLabels}}
+          deprecatedLabels: ${{env.deprecatedLabels}}
+          removedLabels: ${{env.removedLabels}}
+          securityLabels: ${{env.securityLabels}}
+          stripGeneratorNotice: ${{env.stripGeneratorNotice}}
       - name: manage files
         if: ${{env.copyEnable}} == true
         run: |
@@ -90,45 +95,34 @@ jobs:
             cp README.md docs/Home.md
             cp docs/SUMMARY.md docs/_Sidebar.md
             cp CHANGELOG.md docs/information/changelog.md
-      - name: commit
-        if: ${{env.copyEnable}} == true
-        uses: stefanzweifel/git-auto-commit-action@v4
+      - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
+      - name: Commit files
         id: commit
+        if: ${{env.changelog}} == true
+        uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: ${{env.copyfilesCommitMessage}}
-          branch: ${{env.copyfilesBranch}}-${{github.run_id}}
+          commit_message: ${{env.changelogCommitMessage}}
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
           commit_user_name: ${{env.commitName}}
           commit_user_email: ${{env.commitEmail}}
-          commit_author: "${{env.commitName}} <${{env.commitEmail}}>"
-          commit_options: ${{env.copyfilesCommit_options}}
-          push_options: ${{env.copyfilesPush_options}}
-      - name: Sync workflows
-        if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.copyEnable}} == true
+          commit_options: ${{env.changelogCommit_options}}
+          push_options: ${{env.changelogPush_options}}
+      - name: Delete branch
+        uses: dawidd6/action-delete-branch@v3
+        if: ${{steps.commit.outputs.changes_detected}} == false && ${{env.changelog}} == true
+        with:
+          github_token: ${{github.token}}
+          branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+      - name: pull-request
         uses: repo-sync/pull-request@v2
+        if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.changelog}} == true
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: ${{env.copyfilesBranch}}-${{github.run_id}}
-          destination_branch: ${{env.copyfilesTargetBranch}}
-          pr_title: ${{env.copyfilesPRtitle}}
-          pr_body: ${{env.copyfilesPRbody}}
-          pr_label: ${{env.copyfilesPRlabel}}
-
-
-  # syncs to the github inbuilt wiki & {repository}_wiki repo
-  job-sync-docs-to-wiki:
-    name: Sync to wiki
-    needs: copyfiles
-    if: github.event_name != 'gollum' && github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - name: Checkout Repo
-        uses: actions/checkout@v2
-        if: ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true
-        with: 
-          ref: ${{env.copyfilesBranch}}-${{github.run_id}}
+          source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+          destination_branch: ${{env.changelogTargetBranch}}
+          pr_title: ${{env.changelogPRtitle}}
+          pr_body: ${{env.changelogPRbody}}
+          pr_label: ${{env.changelogPRlabel}}
       - name: Sync docs to wiki
         if: ${{env.wikiEnable}} == true && ${{env.docsToWiki}} == true
         uses: newrelic/wiki-sync-action@master
@@ -147,8 +141,8 @@ jobs:
           dst_repo_name: ${{github.repository.name}}${{env.docsToRepoSuffix}}
           commit_message: ${{env.docsToRepoCommit}}
         continue-on-error: true
-
-  # syncs from the github inbuilt wiki
+  
+    # syncs from the github inbuilt wiki
   job-sync-wiki-to-docs:
     name: Sync from wiki
     runs-on: ubuntu-latest
@@ -162,26 +156,26 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          branch: ${{env.copyfilesBranch}}-${{github.run_id}}
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
       - name: Checkout Repo
         if: ${{env.wikiEnable}} == true
         uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{env.copyfilesBranch}}-${{github.run_id}}
+          ref: ${{env.autoBranchPrefix}}${{env.autoBranch}}
       - name: Sync Wiki to Docs
         uses: newrelic/wiki-sync-action@master
         with:
           source: ${{env.docsToWikiDestination}}
           destination: ${{env.docsToWikiSource}}
           token: ${{ secrets.ACCESS_TOKEN }}
-          branch: ${{env.wikiToDocsBranch}}-${{github.run_id}}
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
       - name: pull-request
         if: ${{env.wikiEnable}} == true && ${{env.wikiToDocs}} == true
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
-          source_branch: ${{env.wikiToDocsBranch}}-${{github.run_id}}
+          source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
           destination_branch: ${{env.wikiToDocsTargetBranch}}
           pr_title: ${{env.wikiToDocsPRtitle}}
           pr_body: ${{env.wikiToDocsPRbody}}
@@ -198,125 +192,44 @@ jobs:
           commit_message: ${{env.docsToRepoCommit}}
         continue-on-error: true
 
-  delete: 
-    name: Delete auto-update branch (no changes detected)
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+  misc:
+    name: Pull Request Completion misc jobs
     runs-on: ubuntu-latest
-    needs: 
-      - copyfiles
-      - job-sync-docs-to-wiki
-    steps: 
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - name: Delete branch
-        uses: dawidd6/action-delete-branch@v3
-        if: ( job.copyfiles.steps.commit.outputs.changes_detected == false && env.copyEnable == true )
-        with:
-          github_token: ${{github.token}}
-          branches: ${{env.copyfilesBranch}}-${{github.run_id}}
-
-  # Using the config in ../release-drafter.yml creates release drafts automatically
-  update_release_draft:
-    name: Create release Draft
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    needs: 
-      - copyfiles
-      - job-sync-docs-to-wiki
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - run: if [ ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Major')}} == 'true' || ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Minor')}} == 'true' || ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Patch')}} == 'true' ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
-      - uses: release-drafter/release-drafter@v5
-        if: ${{env.releaseDrafter}} == true
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          publish: ${{env.publish}}
-          
-  # creates a changelog, commits, pushes, and creates a pull request
-  create-changelog:
-    name: Create Changelog
-    runs-on: ubuntu-18.04
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    needs: 
+    needs:
+      - createBranch
       - update_release_draft
-      - copyfiles
       - job-sync-docs-to-wiki
+      - create-changelog
     steps:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - name: Import GPG key
-        if: ${{env.changelog}} == true && ${{env.gpgEnable}}
-        id: import_gpg
-        uses: crazy-max/ghaction-import-gpg@v2
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
-          PASSPHRASE: ${{ secrets.PASSPHRASE }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-          git_tag_gpgsign: true
-          git_push_gpgsign: true
-      - uses: peterjgrainger/action-create-branch@2.0.1
-        if: ${{env.changelog}} == true
+      - name: Checkout
+        if: ${{env.ensureLabels}} == true
+        uses: actions/checkout@v2.3.1
+      - name: Run Labeler
+        if: ${{env.ensureLabels}} == true
+        uses: crazy-max/ghaction-github-labeler@v2
+        with:
+          yaml_file: ${{env.ensureLabelsConfig}}
+          skip_delete: ${{env.ensureLabelsSkipDelete}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: if [ ${{env.inclusiveOrg}} === 'owner' ]; then echo ::set-env name=inclusiveorg::${{github.repository_owner}} ; else echo ::set-env name=inclusiveorg::${{env.inclusiveOrg}} ; fi
+      - name: Invite contributor to the organization
+        uses: lekterable/inclusive-organization-action@v1.1.0
+        if: ${{env.inclusiveEnabled}} == true
         with:
-          branch: ${{env.changelogBranch}}-${{github.run_id}}
-      - name: GPG user IDs
-        if: ${{env.changelog}} == true
-        run: |
-          echo "fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}"
-          echo "keyid:       ${{ steps.import_gpg.outputs.keyid }}"
-          echo "name:        ${{ steps.import_gpg.outputs.name }}"
-          echo "email:       ${{ steps.import_gpg.outputs.email }}"
-      - name: "Check-out"
-        if: ${{env.changelog}} == true
-        uses: actions/checkout@v2
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{env.changelogBranch}}-${{github.run_id}}
-          fetch-depth: ${{env.changelogFetchDepth}}
-      - uses: heinrichreimer/github-changelog-generator-action@v2.1.1
-        if: ${{env.changelog}} == true
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          pullRequests: ${{env.pullRequests}}
-          prWoLabels: ${{env.prWoLabels}}
-          breakingLabels: ${{env.breakingLabels}}
-          enhancementLabels: ${{env.enhancementLabels}}
-          bugLabels: ${{env.bugLabels}}
-          deprecatedLabels: ${{env.deprecatedLabels}}
-          removedLabels: ${{env.removedLabels}}
-          securityLabels: ${{env.securityLabels}}
-          stripGeneratorNotice: ${{env.stripGeneratorNotice}}
-      - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
-      - name: Commit files
-        id: commit
-        if: ${{env.changelog}} == true
-        uses: stefanzweifel/git-auto-commit-action@v4
-        with:
-          commit_message: ${{env.changelogCommitMessage}}
-          branch: ${{env.changelogBranch}}-${{github.run_id}}
-          commit_user_name: ${{env.commitName}}
-          commit_user_email: ${{env.commitEmail}}
-          commit_options: ${{env.changelogCommit_options}}
-          push_options: ${{env.changelogPush_options}}
+          organization: ${{env.inclusiveorg}}
+          team: ${{env.inclusiveTeam}}
+          comment: ${{env.inclusiveComment}}
+        env:
+          ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+        continue-on-error: true
       - name: Delete branch
         uses: dawidd6/action-delete-branch@v3
-        if: ${{steps.commit.outputs.changes_detected}} == false && ${{env.changelog}} == true
+        if: ( job.create-changelog.steps.commit.outputs.changes_detected == false && env.copyEnable == true )
         with:
           github_token: ${{github.token}}
-          branches: ${{env.changelogBranch}}-${{github.run_id}}
-      - name: pull-request
-        uses: repo-sync/pull-request@v2
-        if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.changelog}} == true
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          source_branch: ${{env.changelogBranch}}-${{github.run_id}}
-          destination_branch: ${{env.changelogTargetBranch}}
-          pr_title: ${{env.changelogPRtitle}}
-          pr_body: ${{env.changelogPRbody}}
-          pr_label: ${{env.changelogPRlabel}}
+          branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}

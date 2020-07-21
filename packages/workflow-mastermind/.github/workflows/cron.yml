@@ -2,7 +2,7 @@ name: Cron Management
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/45 * * * *"
 
 jobs:
   # Automatically labels all pull requests based on changed files
@@ -18,16 +18,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           LABEL_MAPPINGS_FILE: ${{env.periodicPath}}
-
-  # Automatically marks pull request and issues as stale after x length of time
-  stale:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - run: |
-          echo "${{env.days-before-close}}"
       - uses: actions/stale@v3.0.8
         if: ${{env.stale}} == true
         with:
@@ -39,3 +29,4 @@ jobs:
           exempt-issue-labels: ${{env.exempt-issue-labels}}
           days-before-stale: ${{env.days-before-stale}}
           days-before-close: ${{env.days-before-close}}
+      

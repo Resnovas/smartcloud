@@ -90,6 +90,10 @@ inclusiveComment: "Well done on getting your first Pull Request merged by our re
 # Release drafter
 releaseDrafter: true
 
+# Branch for automation
+autoBranch: "auto-update"
+autoBranchPrefix: "docs/"
+
 # Automatic Changelog
 changelog: true # enable / disable
 changelogRef: "master"
@@ -104,10 +108,9 @@ removedLabels: "Type - Removal"
 securityLabels: "security fix"
 stripGeneratorNotice: "false"
 changelogCommitMessage: "docs: update"
-changelogBranch: "docs/changelog"
 changelogTargetBranch: "master"
 changelogCommit_options: "--signoff"
-changelogPush_options: "--force"
+changelogPush_options: ""
 changelogPRtitle: "docs: updating changelog"
 changelogPRbody: ":crown: *An automated PR*"
 changelogPRlabel: "skip-changelog,automerge"
@@ -117,14 +120,11 @@ changelogEmail: ""
 # Copy and Rename
 copyEnable: true
 copyCommit: "docs: update"
-copyBranchPrefix: "docs/"
-copyBranch: "auto-update"
 copyPr: "docs: update"
 copyfilesCommitMessage: "docs: update"
-copyfilesBranch: "docs/auto-update"
 copyfilesTargetBranch: "master"
 copyfilesCommit_options: "--signoff"
-copyfilesPush_options: "--force"
+copyfilesPush_options: ""
 copyfilesPRtitle: "docs: updating copyfiles"
 copyfilesPRbody: ":crown: *An automated PR*"
 copyfilesPRlabel: "skip-changelog,automerge"
@@ -140,7 +140,6 @@ docsToRepoDestination: "."
 docsToRepoSuffix: "_wiki"
 docsToRepoCommit: "docs: auto-update"
 wikiToDocs: true
-wikiToDocsBranch: "docs/auto-update"
 wikiToDocsTargetBranch: "master"
 wikiToDocsPRtitle: "docs: updating wikiToDocs"
 wikiToDocsPRbody: ":crown: *An automated PR*"
