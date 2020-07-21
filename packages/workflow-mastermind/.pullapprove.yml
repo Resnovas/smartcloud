@@ -3,6 +3,9 @@ pullapprove_conditions:
   - condition: "base.ref == 'master'"
     unmet_status: success
     explanation: "Review not required unless merging to master"
+  - condition: "body"
+    unmet_status: failed
+    explanation: "You must have a pull request body"
   - condition: "body and '- [ ]' not in body"
     unmet_status: pending
     explanation: "Please finish all the tasks first"
