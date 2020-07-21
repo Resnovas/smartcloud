@@ -12,19 +12,12 @@ notifications:
   - when: pull_request.opened
     if: "author_association == 'FIRST_TIME_CONTRIBUTOR'"
     comment: |
-      Hey @{{ author }}, thanks for the PR! The review will start once
-      the tests and CI checks have passed. If they don't, please review
-      the logs and try to fix the issues (ask for help if you can't
-      figure it out). A reviewer will be assigned once the tests are
-      passing and they'll walk you through getting the PR finished
-      and merged. You'll also need to sign our CLA if you haven't before.
-
+      Hey @{{ author }}, thanks for the PR! The review will start once the tests and CI checks have passed. If they don't, please review the logs and try to fix the issues (ask for help if you can't figure it out). 
+      A reviewer will be assigned once the tests arepassing and they'll walk you through getting the PR finished and merged.
   - when: pull_request.opened
     if: "author_association == 'CONTRIBUTOR'"
     comment: |
-      Hey @{{ author }}, thanks for the PR! The review will start once
-      the tests and CI checks have passed. You'll also need to sign our
-      CLA if you haven't before.
+      Hey @{{ author }}, thanks for the PR! The review will start once the tests and CI checks have passed.
   - when: pullapprove.approved
     if: "author_association == 'CONTRIBUTOR'"
     comment: "The review is completed. Thanks @{{ author }}, we'll take it from here."
