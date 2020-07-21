@@ -1,8 +1,5 @@
 version: 3
 pullapprove_conditions:
-  - condition: "commits.is_signed_off"
-    unmet_status: "pending"
-    explanation: "Commits need to be signed-off before review starts"
   - condition: "base.ref == 'master'"
     unmet_status: success
     explanation: "Review not required unless merging to master"
