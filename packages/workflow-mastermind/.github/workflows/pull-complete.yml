@@ -229,7 +229,6 @@ jobs:
         continue-on-error: true
       - name: Delete branch
         uses: dawidd6/action-delete-branch@v3
-        if: ( job.create-changelog.steps.commit.outputs.changes_detected == false && env.copyEnable == true )
         with:
           github_token: ${{github.token}}
           branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}
