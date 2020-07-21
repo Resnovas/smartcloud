@@ -44,26 +44,11 @@ jobs:
         if: ${{env.semanticEnable}} == true
         uses: amannn/action-semantic-pull-request@v1.2.2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
 
-  # Automatically labels based on the branch path
-  pr-labeler:
-    name: Branch Labeler
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - uses: TimonVS/pr-labeler-action@v3
-        if: ${{env.labelBranch}} == true
-        with:
-          configuration-path: ${{env.labelBranchConfig}}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-  # Automatically labels the pull request based on size
-  label_sizes:
-    name: Pull Request Size
+  # Automatically labels based on files changed
+  labeler:
+    name: Path Labeler
     runs-on: ubuntu-latest
     steps:
       - uses: technote-space/load-config-action@v1
@@ -90,40 +75,32 @@ jobs:
         with:
           github_token: ${{ secrets.github_token }}
           labels: ${{ steps.size.outputs.new_label }}
-
-  # Automatically labels based on files changed
-  path-labeler:
-    name: Path Labeler
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
       - uses: actions/labeler@v2
         if: ${{env.labelPath}} == true
         with:
           configuration-path: ${{env.labelPathConfig}}
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
-
-  # Automatically label sponsors requests
-  sponsor:
-    name: Sponsor Label
-    runs-on: ubuntu-latest
-    if: github.event.action == 'opened'
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
       - uses: JasonEtco/is-sponsor-label-action@v1
-        if: ${{env.labelSponsor}} == true
+        if: github.event.action == 'opened' && ${{env.labelSponsor}} == true
         with:
           label: Sponsor Request ❤️
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: TimonVS/pr-labeler-action@v3
+        if: ${{env.labelBranch}} == true
+        with:
+          configuration-path: ${{env.labelBranchConfig}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
 
-  # Automatically checks for conflicts with other pull requests
-  conflibot:
+  # Automatically approves
+  approval:
     name: Pull Request Conflict Check
+    needs:
+      - wip
+      - semantic
+      - labeler
     runs-on: ubuntu-latest
     steps:
       - uses: technote-space/load-config-action@v1
@@ -142,26 +119,18 @@ jobs:
           dirtyLabel: ${{env.conflictMasterDirty}}
           removeOnDirtyLabel: ${{env.conflictMasterDirty}}
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
-
-  auto-approve:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: technote-space/load-config-action@v1
-        with:
-          CONFIG_FILENAME: allconfig.yml
-      - uses: hmarr/auto-approve-action@v2.0.0
+      - name: Automatically approve
+        uses: hmarr/auto-approve-action@v2.0.0
         if: (${{env.autoApprove}} == true && contains(${{env.approvalList}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"
-
+          github-token: "${{ secrets.GITHUB_TOKEN }}"      
+  
   automerge:
     needs:
-      - conflibot
-      - path-labeler
-      - pr-labeler
-      - auto-approve
       - wip
       - semantic
+      - labeler
+      - approval
     runs-on: ubuntu-latest
     steps:
       - uses: technote-space/load-config-action@v1
