@@ -36,6 +36,7 @@ jobs:
         if: ${{env.releaseDrafter}} == true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
           publish: ${{env.publish}}
           
   # creates a changelog, commits, pushes, and creates a pull request
@@ -80,13 +81,13 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           pullRequests: ${{env.pullRequests}}
-          prWoLabels: ${{env.prWoLabels}}
-          breakingLabels: ${{env.breakingLabels}}
-          enhancementLabels: ${{env.enhancementLabels}}
-          bugLabels: ${{env.bugLabels}}
-          deprecatedLabels: ${{env.deprecatedLabels}}
-          removedLabels: ${{env.removedLabels}}
-          securityLabels: ${{env.securityLabels}}
+          prWoLabels: "${{env.prWoLabels}}"
+          breakingLabels: "${{env.breakingLabels}}"
+          enhancementLabels: "${{env.enhancementLabels}}"
+          bugLabels: "${{env.bugLabels}}"
+          deprecatedLabels: "${{env.deprecatedLabels}}"
+          removedLabels: "${{env.removedLabels}}"
+          securityLabels: "${{env.securityLabels}}"
           stripGeneratorNotice: ${{env.stripGeneratorNotice}}
       - name: manage files
         if: ${{env.copyEnable}} == true
@@ -112,7 +113,7 @@ jobs:
         uses: repo-sync/pull-request@v2
         if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.changelog}} == true
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.ACCESS_TOKEN }}
           source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
           destination_branch: ${{env.changelogTargetBranch}}
           pr_title: ${{env.changelogPRtitle}}
