@@ -134,7 +134,7 @@ jobs:
         with:
           source: ${{env.docsToWikiSource}}
           destination: ${{env.docsToWikiDestination}}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ACCESS_TOKEN }}
       - name: Copy to ${{github.repository}}
         if: ${{env.wikiEnable}} == true && ${{env.docsToRepo}} == true
         uses: andstor/copycat-action@v3
@@ -173,13 +173,13 @@ jobs:
         with:
           source: ${{env.docsToWikiDestination}}
           destination: ${{env.docsToWikiSource}}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.ACCESS_TOKEN }}
           branch: ${{env.wikiToDocsBranch}}-${{github.run_id}}
       - name: pull-request
         if: ${{env.wikiEnable}} == true && ${{env.wikiToDocs}} == true
         uses: repo-sync/pull-request@v2
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.ACCESS_TOKEN }}
           source_branch: ${{env.wikiToDocsBranch}}-${{github.run_id}}
           destination_branch: ${{env.wikiToDocsTargetBranch}}
           pr_title: ${{env.wikiToDocsPRtitle}}
