@@ -86,6 +86,7 @@ jobs:
           label: Sponsor Request ❤️
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
       - uses: TimonVS/pr-labeler-action@v3
         if: ${{env.labelBranch}} == true
         with:
