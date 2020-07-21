@@ -106,6 +106,7 @@ bugLabels: "Type - Fix, Bug - Fixed"
 deprecatedLabels: "Type - Decrecated"
 removedLabels: "Type - Removal"
 securityLabels: "security fix"
+excludeLabels: "skip-changelog"
 stripGeneratorNotice: "true"
 
 changelogCommitMessage: "docs: update"

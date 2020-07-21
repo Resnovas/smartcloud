@@ -1,6 +1,9 @@
 name: Release Management
 
 on:
+  push:
+    branches:
+      - master
   pull_request:
     types:
       - closed
@@ -25,7 +28,6 @@ jobs:
   # Using the config in ../release-drafter.yml creates release drafts automatically
   update_release_draft:
     name: Create release Draft
-    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
     runs-on: ubuntu-latest
     steps:
       - uses: technote-space/load-config-action@v1
@@ -82,6 +84,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           pullRequests: ${{env.pullRequests}}
           prWoLabels: "${{env.prWoLabels}}"
+          excludeLabels: "${{env.excludeLabels}}"
           breakingLabels: "${{env.breakingLabels}}"
           enhancementLabels: "${{env.enhancementLabels}}"
           bugLabels: "${{env.bugLabels}}"
