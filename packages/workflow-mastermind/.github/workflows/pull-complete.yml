@@ -105,6 +105,7 @@ jobs:
           branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
           commit_user_name: ${{env.commitName}}
           commit_user_email: ${{env.commitEmail}}
+          commit_author: "${{env.commitName}} <${{env.commitEmail}}>"
           commit_options: ${{env.changelogCommit_options}}
           push_options: ${{env.changelogPush_options}}
       - name: Delete branch
