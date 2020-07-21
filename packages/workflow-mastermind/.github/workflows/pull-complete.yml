@@ -31,7 +31,7 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - run: if [ ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Major')}} == 'true' || ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Minor')}} == 'true' || ${{contains(github.event.pull_request.labels.*.name, 'Versioning - Patch')}} == 'true' ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
+      - run: if [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Major')}}" == "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Minor')}}" == "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Patch')}}" == "true" ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
       - uses: release-drafter/release-drafter@v5
         if: ${{env.releaseDrafter}} == true
         env:
