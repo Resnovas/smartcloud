@@ -200,7 +200,6 @@ jobs:
     needs:
       - createBranch
       - update_release_draft
-      - job-sync-docs-to-wiki
       - create-changelog
     steps:
       - uses: technote-space/load-config-action@v1
