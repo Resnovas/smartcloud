@@ -3,7 +3,18 @@ name: Pull Request Management
 # This workflow automatically lables PR to ensure that all PR's are correct within the release draft.
 
 on:
-  pull_request
+  pull_request: 
+    types:
+      - opened
+      - edited
+      - assigned
+      - synchronize
+      - reopened
+      - unlabeled
+      - labeled
+  pull_request_review:
+    types:
+      - submitted
 
 jobs:
   # Automatically blocks WIP pull request based on the title
