@@ -99,7 +99,7 @@ jobs:
           commit_options: -S --sign-off
       - name: pull-request
         uses: repo-sync/pull-request@v2
-        if: ${{steps.commitConfig.outputs.changes_detected}} == true && ${{steps.commitWorkflow.outputs.changes_detected}} == true
+        if: ${{steps.commitWorkflow.outputs.changes_detected}} == true
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
           source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
@@ -110,6 +110,7 @@ jobs:
             
             Please ensure to review this change carefully.
       - name: Delete branch
+        if: ${{steps.commitWorkflow.outputs.changes_detected}} == true
         uses: dawidd6/action-delete-branch@v3
         with:
           github_token: ${{github.token}}
