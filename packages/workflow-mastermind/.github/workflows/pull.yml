@@ -27,7 +27,7 @@ jobs:
         uses: y-temp4/add-wip-label@v1.0.0
         if: ${{env.wipLabel}} == true
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Work in progress status
         uses: wip/action@v1.0.0
         if: ${{env.wipEnable}} == true
@@ -79,7 +79,7 @@ jobs:
         if: ${{env.labelPath}} == true
         with:
           configuration-path: ${{env.labelPathConfig}}
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
       - uses: JasonEtco/is-sponsor-label-action@v1
         if: github.event.action == 'opened' && ${{env.labelSponsor}} == true
         with:
@@ -119,12 +119,16 @@ jobs:
         with:
           dirtyLabel: ${{env.conflictMasterDirty}}
           removeOnDirtyLabel: ${{env.conflictMasterDirty}}
-          repoToken: "${{ secrets.GITHUB_TOKEN }}"
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
       - name: Automatically approve
         uses: hmarr/auto-approve-action@v2.0.0
         if: (${{env.autoApprove}} == true && contains(${{env.approvalList}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
         with:
-          github-token: "${{ secrets.GITHUB_TOKEN }}"      
+          github-token: ${{ secrets.GITHUB_TOKEN }}    
+      - name: Run pull request stats
+        uses: flowwer-dev/pull-request-stats@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
   
   automerge:
     needs:
