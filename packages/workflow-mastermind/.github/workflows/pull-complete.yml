@@ -62,9 +62,19 @@ jobs:
         with:
           publish: ${{env.publish}}
       - run: |
-          if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
-          if [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Major')}}" == "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Minor')}}" == "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Patch')}}" == "true" ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
-          echo "${{steps.release.outputs.tag_name}}" > workflow-version.txt
+          if [ "${{env.gpgEnable}}" = "false" ]; 
+          then echo ::set-env name=commitName::"${{ env.changelogName }}" ; echo ::set-env name=commitEmail::"${{ env.changelogEmail }}" ; 
+          else echo ::set-env name=commitName::"${{ steps.import_gpg.outputs.name }}" ; echo ::set-env name=commitEmail::"${{ steps.import_gpg.outputs.email }}" ; 
+          fi ; 
+
+          if [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Major')}}" = "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Minor')}}" = "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Patch')}}" = "true" ]; 
+          then echo ::set-env name=publish::true ;
+          else echo ::set-env name=publish::false ; 
+          fi ; 
+
+          if [ "${{steps.release.outputs.tag_name}}" != "" ]; 
+          then echo "${{steps.release.outputs.tag_name}}" > workflow-version.txt ; echo ::set-env name=versioning::true ;
+          fi;
       - name: Commit files
         id: commit
         uses: stefanzweifel/git-auto-commit-action@v4
@@ -76,9 +86,15 @@ jobs:
           commit_author: "${{env.commitName}} <${{env.commitEmail}}>"
           commit_options: "-S --signoff"
           push_options: ""
+      - name: Delete branch
+        if: ${{steps.commit.outputs.changes_detected}} == false && ${{env.versioning}} == false
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{github.token}}
+          branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
       - name: pull-request
         uses: repo-sync/pull-request@v2
-        if: ${{steps.commit.outputs.changes_detected}} == true
+        if: ${{steps.commit.outputs.changes_detected}} == true && ${{env.versioning}} == true
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
           source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
@@ -86,11 +102,6 @@ jobs:
           pr_title: "chore: set version file"
           pr_body: ${{env.changelogPRbody}}
           pr_label: ${{env.changelogPRlabel}}
-      - name: Delete branch
-        uses: dawidd6/action-delete-branch@v3
-        with:
-          github_token: ${{github.token}}
-          branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
 
 
           
