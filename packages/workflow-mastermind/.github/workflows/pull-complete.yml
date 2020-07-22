@@ -48,11 +48,11 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
       - uses: actions/checkout@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+          ref: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
           fetch-depth: 0
       - uses: release-drafter/release-drafter@v5
         id: release
@@ -70,7 +70,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
           commit_message: "chore: set version file"
-          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
           commit_user_name: ${{env.commitName}}
           commit_user_email: ${{env.commitEmail}}
           commit_author: "${{env.commitName}} <${{env.commitEmail}}>"
@@ -81,7 +81,7 @@ jobs:
         if: ${{steps.commit.outputs.changes_detected}} == true
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
-          source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+          source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
           destination_branch: ${{env.changelogTargetBranch}}
           pr_title: "chore: set version file"
           pr_body: ${{env.changelogPRbody}}
@@ -90,7 +90,7 @@ jobs:
         uses: dawidd6/action-delete-branch@v3
         with:
           github_token: ${{github.token}}
-          branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}
+          branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
 
 
           
