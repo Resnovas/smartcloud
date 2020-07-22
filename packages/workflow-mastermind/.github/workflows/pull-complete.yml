@@ -65,7 +65,7 @@ jobs:
           if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
           if [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Major')}}" == "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Minor')}}" == "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, 'Versioning - Patch')}}" == "true" ]; then echo ::set-env name=publish::true ; else echo ::set-env name=publish::false ; fi
           ls
-          echo version="${{steps.release.outputs.tag_name}}" > .github/workflows/workflow-version.txt
+          echo version="${{steps.release.outputs.tag_name}}" > workflow-version.txt
       - name: Commit files
         id: commit
         uses: stefanzweifel/git-auto-commit-action@v4
