@@ -12,7 +12,6 @@ days-before-close: 5
 claEnabled: true # enable / disable
 claPath: ".github/cla.json"
 claDocs: "docs/getting-started/contributing/cla.md"
-claPush: "head" # Where should CLA push to? (head || your_branch)
 claLabel: true # enable / disable
 
 # Ensure Labels
@@ -154,7 +153,7 @@ gpgEnable: true
 
 # Auto Approve
 autoApprove: true
-approvalList: ["dependabot[bot]", "dependabot-preview[bot], github-actions[bot], github-actions, github-user, actions-user, web-flow"]
+approvalList: ["dependabot[bot]", "dependabot-preview[bot], github-actions[bot], github-actions, github-user, actions-user, web-flow, VidendumStudios"]
 
 # Auto Merge
 autoMerge: true

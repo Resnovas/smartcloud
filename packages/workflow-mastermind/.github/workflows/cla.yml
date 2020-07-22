@@ -15,13 +15,11 @@ jobs:
       - uses: technote-space/load-config-action@v1
         with:
           CONFIG_FILENAME: allconfig.yml
-      - run: if [ ${{env.claPush}} == 'head' ]; then echo ::set-env name=claBranch::${{github.head_ref}} ; else echo ::set-env name=claBranch::${{env.claPush}} ; fi
-      - name: Checkout
-        if: ${{env.claEnabled}} == true
-        id: checkout
-        uses: actions/checkout@v2
+      - uses: peterjgrainger/action-create-branch@2.0.1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA
       - name: CLA Assistant
         if: ${{env.claEnabled}} == true
         uses: cla-assistant/github-action@v1.3.0-alpha
@@ -30,6 +28,13 @@ jobs:
         with:
           path-to-signatures: ${{env.claPath}}
           path-To-cladocument: "https://github.com/${{github.repository}}/${{env.claDocs}}"
-          branch: ${{env.claBranch}}
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA
           label: ${{env.claLabel}}
           whitelist: bot*
+      - name: Delete branch
+        if: failure()
+        uses: dawidd6/action-delete-branch@v3
+        with:
+          github_token: ${{github.token}}
+          branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
+
