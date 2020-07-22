@@ -94,6 +94,7 @@ releaseDrafter: true
 autoBranch: "auto-update"
 autoBranchPrefix: "docs/"
 
+
 # Automatic Changelog
 changelog: true # enable / disable
 changelogRef: "master"
@@ -112,7 +113,7 @@ stripGeneratorNotice: "true"
 changelogCommitMessage: "docs: update"
 changelogTargetBranch: "master"
 changelogCommit_options: "-S --signoff"
-changelogPush_options: "--force"
+changelogPush_options: ""
 changelogPRtitle: "docs: updating changelog"
 changelogPRbody: ":crown: *An automated PR*"
 changelogPRlabel: "skip-changelog,automerge"
@@ -126,7 +127,7 @@ copyPr: "docs: update"
 copyfilesCommitMessage: "docs: update"
 copyfilesTargetBranch: "master"
 copyfilesCommit_options: "-S --signoff"
-copyfilesPush_options: "--force"
+copyfilesPush_options: ""
 copyfilesPRtitle: "docs: updating copyfiles"
 copyfilesPRbody: ":crown: *An automated PR*"
 copyfilesPRlabel: "skip-changelog,automerge"
