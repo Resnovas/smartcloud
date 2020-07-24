@@ -30,15 +30,15 @@ jobs:
           path-To-cladocument: "https://github.com/${{github.repository}}/${{env.claDocs}}"
           branch: "${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA"
           label: ${{env.claLabel}}
-          whitelist: bot*
+          whitelist: ${{env.autoWhitelist}}
       - name: pull-request
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
           source_branch: "${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA"
-          destination_branch: "master"
-          pr_title: "chore: CLA Management"
-          pr_body: "Automatic Merge"
-          pr_label: "skip-changelog,automerge"
+          destination_branch: ${{env.autoDestination}}
+          pr_title: ${{env.claPRtitle}}
+          pr_body: ${{env.autoBody}}
+          pr_label: ${{env.autoLabels}}
         continue-on-error: true
 

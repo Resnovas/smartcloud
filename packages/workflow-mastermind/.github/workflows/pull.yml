@@ -83,7 +83,7 @@ jobs:
       - uses: JasonEtco/is-sponsor-label-action@v1
         if: github.event.action == 'opened' && ${{env.labelSponsor}} == true
         with:
-          label: Sponsor Request ❤️
+          label: ${{env.sponsorLabel}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
@@ -122,7 +122,7 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
       - name: Automatically approve
         uses: hmarr/auto-approve-action@v2.0.0
-        if: (${{env.autoApprove}} == true && contains(${{env.approvalList}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
+        if: (${{env.autoApprove}} == true && contains(${{env.autoWhitelist}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}    
       - name: Run pull request stats
