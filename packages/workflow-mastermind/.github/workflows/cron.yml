@@ -18,7 +18,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           LABEL_MAPPINGS_FILE: ${{env.periodicPath}}
-      - uses: actions/stale@v3.0.8
+      - uses: actions/stale@v3.0.9
         if: ${{env.stale}} == true
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
