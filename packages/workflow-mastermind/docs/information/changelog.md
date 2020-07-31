@@ -11,7 +11,6 @@
 
 **Merged pull requests:**
 
-- fix: automerge repeating [\#103](https://github.com/Videndum/Universal-GitAction-Workflows/pull/103)
 - feat: profanity check [\#76](https://github.com/Videndum/Universal-GitAction-Workflows/pull/76)
 - feat: publish release [\#75](https://github.com/Videndum/Universal-GitAction-Workflows/pull/75)
 - feat: pull approval [\#74](https://github.com/Videndum/Universal-GitAction-Workflows/pull/74)
@@ -27,6 +26,3 @@
 - feat: branch deletion without change [\#44](https://github.com/Videndum/Universal-GitAction-Workflows/pull/44)
 - feat: automatic branch creation [\#43](https://github.com/Videndum/Universal-GitAction-Workflows/pull/43)
 - feat: add automerge [\#38](https://github.com/Videndum/Universal-GitAction-Workflows/pull/38)
-
-
-

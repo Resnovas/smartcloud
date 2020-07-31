@@ -43,6 +43,6 @@ Add any other context about the problem here.
 - [ ] Have reproduced on clean installation
 - [ ] Have reproduced on development build
 - [ ] Have included logs or screenshots
-- [ ] Have contacted support via smartcloud official website
+- [ ] Have contacted support via the official website
 - [ ] Have asked the community for guidance
 - [ ] Have linked any related issues
