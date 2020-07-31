@@ -175,6 +175,7 @@ releasePatch: 'Versioning - Patch'
 
 # Automatic Changelog
 changelog: true # enable / disable
+changelogFile: 'docs/information/changelog.md'
 pullRequests: true
 prWoLabels: "skip-changelog"
 breakingLabels: "Versioning - BREAKING"

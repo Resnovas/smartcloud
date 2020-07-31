@@ -63,7 +63,7 @@ jobs:
         id: package
         uses: juliangruber/read-file-action@v1
         with:
-          path: ./workflow-version.txt
+          path: .github/workflow-version.txt
       - run: |
           git clone https://github.com/Videndum/Universal-GitAction-Workflows.git .github/.tmp
           cd .github/.tmp || exit

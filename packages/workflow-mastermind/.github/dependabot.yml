@@ -11,6 +11,7 @@ updates:
         - "Type - Chore"
         - "Content - Dependences"
         - "automerge"
+        - "Versioning - Patch"
 
     - package-ecosystem: "github-actions"
       directory: "/"
@@ -21,5 +22,5 @@ updates:
         - "Type - Chore"
         - "Content - Dependences"
         - "Content - Workflow & CI"
-        - "skip-changelog"
         - "automerge"
+        - "Versioning - Patch"

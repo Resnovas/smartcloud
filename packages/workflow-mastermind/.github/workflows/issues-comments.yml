@@ -6,6 +6,18 @@ on:
 
 jobs:
   # Automatically reverts commits on request
+  profanityCheck:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Profanity check step
+        if: ${{env.checkProfanity}} == true
+        uses: tailaiw/mind-your-language-action@v1.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
   revert-commit:
     runs-on: ubuntu-latest
     if: contains(github.event.comment.body, '/revert')

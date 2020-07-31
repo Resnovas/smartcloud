@@ -237,6 +237,9 @@
 - name: 'Content - Frontend'
   color: f9cea2
   description: Changes that affect the fronted
+- name: 'Content - Documentation'
+  color: f9cea2
+  description: Changes that affect the documentation
 
 
 - name: 'security fix'

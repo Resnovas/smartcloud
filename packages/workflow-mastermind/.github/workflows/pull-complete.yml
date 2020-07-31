@@ -70,7 +70,7 @@ jobs:
           fi ; 
 
           if [ "${{steps.release.outputs.tag_name}}" != "" ]; 
-          then echo "${{steps.release.outputs.tag_name}}" > workflow-version.txt ; echo ::set-env name=versioning::true ;
+          then echo "${{steps.release.outputs.tag_name}}" > .github/workflow-version.txt ; echo ::set-env name=versioning::true ;
           fi;
       - name: Commit files
         id: commit
@@ -118,6 +118,7 @@ jobs:
         if: ${{env.changelog}} == true
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          output: ${{ env.changelogFile }}
           pullRequests: ${{env.pullRequests}}
           prWoLabels: "${{env.prWoLabels}}"
           excludeLabels: "${{env.excludeLabels}}"
@@ -131,10 +132,8 @@ jobs:
       - name: manage files
         if: ${{env.copyEnable}} == true
         run: |
-            cp README.md docs/README.md
             cp README.md docs/Home.md
             cp docs/SUMMARY.md docs/_Sidebar.md
-            cp CHANGELOG.md docs/information/changelog.md
       - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
       - name: Commit files
         id: commit

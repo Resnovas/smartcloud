@@ -2,9 +2,7 @@ name: Issue Management
 
 on:
   issues:
-    types: [opened, edited, reopened, assigned]
-  issue_comment:
-    types: [created, edited]
+    types: [opened, edited, assigned]
 
 jobs:
   # Automatically applies labels according to title
