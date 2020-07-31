@@ -19,7 +19,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          branch: "${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA"
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA
       - name: CLA Assistant
         if: ${{env.claEnabled}} == true
         uses: cla-assistant/github-action@v1.3.0-alpha
@@ -28,14 +28,14 @@ jobs:
         with:
           path-to-signatures: "${{env.claPath}}"
           path-To-cladocument: "https://github.com/${{github.repository}}/${{env.claDocs}}"
-          branch: "${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA"
+          branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA
           label: ${{env.claLabel}}
           whitelist: ${{env.autoWhitelist}}
       - name: pull-request
         uses: repo-sync/pull-request@v2
         with:
           github_token: ${{ secrets.ACCESS_TOKEN }}
-          source_branch: "${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA"
+          source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA
           destination_branch: ${{env.autoDestination}}
           pr_title: ${{env.claPRtitle}}
           pr_body: ${{env.autoBody}}

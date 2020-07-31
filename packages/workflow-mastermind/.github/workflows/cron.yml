@@ -33,7 +33,7 @@ jobs:
   updater: 
     name: Automatically update workflow files
     runs-on: ubuntu-latest
-    if: github.repository != "Videndum/Universal-GitAction-Workflows"
+    if: github.repository != Videndum/Universal-GitAction-Workflows
     steps:
       - uses: technote-space/load-config-action@v1
         with:

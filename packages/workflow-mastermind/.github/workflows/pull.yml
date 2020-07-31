@@ -8,9 +8,6 @@ on:
       - opened
       - edited
       - synchronize
-  pull_request_review:
-    types:
-      - submitted
 
 jobs:
   # Automatically blocks WIP pull request based on the title
@@ -65,21 +62,25 @@ jobs:
           size_l_label: ${{env.size_l_label}}
           size_xl_label: ${{env.size_xl_label}}
           size_xxl_label: ${{env.size_xxl_label}}
+        continue-on-error: true
       - uses: actions-ecosystem/action-remove-labels@v1
         if: ${{env.labelSize}} == true
         with:
           github_token: ${{ secrets.github_token }}
           labels: ${{ steps.size.outputs.stale_labels }}
+        continue-on-error: true
       - uses: actions-ecosystem/action-add-labels@v1
         if: ${{env.labelSize}} == true
         with:
           github_token: ${{ secrets.github_token }}
           labels: ${{ steps.size.outputs.new_label }}
+        continue-on-error: true
       - uses: actions/labeler@v2
         if: ${{env.labelPath}} == true
         with:
           configuration-path: ${{env.labelPathConfig}}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
       - uses: JasonEtco/is-sponsor-label-action@v1
         if: github.event.action == 'opened' && ${{env.labelSponsor}} == true
         with:
@@ -93,7 +94,12 @@ jobs:
           configuration-path: ${{env.labelBranchConfig}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
+        continue-on-error: true
+      - name: Run pull request stats
+        uses: flowwer-dev/pull-request-stats@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
 
   # Automatically approves
   approval:
@@ -113,6 +119,7 @@ jobs:
         if: ${{env.conflictPull}} == true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
       - name: check if prs are dirty
         if: ${{env.conflictMaster}} == true
         uses: eps1lon/actions-label-merge-conflict@releases/1.x
@@ -120,15 +127,13 @@ jobs:
           dirtyLabel: ${{env.conflictMasterDirty}}
           removeOnDirtyLabel: ${{env.conflictMasterDirty}}
           repoToken: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
       - name: Automatically approve
         uses: hmarr/auto-approve-action@v2.0.0
         if: (${{env.autoApprove}} == true && contains(${{env.autoWhitelist}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}    
-      - name: Run pull request stats
-        uses: flowwer-dev/pull-request-stats@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
   
   automerge:
     needs:

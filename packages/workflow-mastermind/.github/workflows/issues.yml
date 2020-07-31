@@ -2,7 +2,7 @@ name: Issue Management
 
 on:
   issues:
-    types: [opened, edited, reopened, assigned, labeled]
+    types: [opened, edited, reopened, assigned]
   issue_comment:
     types: [created, edited]
 
@@ -23,18 +23,21 @@ jobs:
         uses: tailaiw/mind-your-language-action@v1.0.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
       - uses: github/issue-labeler@v2.2
         if: ${{env.labelTitle}} == true
         with:
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
           configuration-path: ${{env.labelTitlePath}}
           enable-versioned-regex: ${{env.Labelversioned}}
+        continue-on-error: true
       - uses: JasonEtco/is-sponsor-label-action@v1
         if: ${{env.labelSponsor}} == true
         with:
           label: ${{env.sponsorLabel}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
       - run: if [ ${{env.useOrg}} == true ]; then echo ::set-env name=projectPath::"org/${{github.repository_owner}}" ; else echo ::set-env name=projectPath::"${{github.repository}}" ; fi
       - name: Assign NEW issues to project DevOps
         uses: docker://takanabe/github-actions-automate-projects:v0.0.1
@@ -43,6 +46,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.DevOps}}
           GITHUB_PROJECT_COLUMN_NAME: ${{env.DevOpsColumn}}
+        continue-on-error: true
       - name: Assign NEW bugs to project bugs
         uses: docker://takanabe/github-actions-automate-projects:v0.0.1
         if: ( contains(github.event.issue.labels.*.name, 'Type - Bug') && ${{env.assignProjects}} == true )
@@ -50,8 +54,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
           GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.Issues}}
           GITHUB_PROJECT_COLUMN_NAME: ${{env.IssuesColumn}}
+        continue-on-error: true
       - name: Create Issue Branch
         if: ${{env.issueBranch}} == true
         uses: robvanderleek/create-issue-branch@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true

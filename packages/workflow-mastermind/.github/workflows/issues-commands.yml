@@ -32,7 +32,19 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  issueCommands:
+  cib: 
+    name: Create issue branch
+    if: contains(github.event.comment.body, '/createbranch')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Create Issue Branch
+        if: ${{env.issueBranch}} == true
+        uses: robvanderleek/create-issue-branch@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  CommunityCommands:
     name: Issue commands
     runs-on: ubuntu-latest
     if: contains(github.event.comment.body, '/claim')
