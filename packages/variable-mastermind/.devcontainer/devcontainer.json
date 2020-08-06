@@ -9,12 +9,10 @@
       "VARIANT": "14"
     }
   },
-
   // Set *default* container specific settings.json values on container create.
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash"
   },
-
   "mounts": [
     "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
   ],
@@ -23,19 +21,19 @@
   },
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
-    "vsls-contrib.codetour",
-    "waderyan.nodejs-extension-pack",
-    "numso.prettier-standard-vscode",
+    "codestream.codestream",
     "ms-azuretools.vscode-docker",
     "ms-kubernetes-tools.vscode-kubernetes-tools",
-    "vsls-contrib.spaces"
+    "numso.prettier-standard-vscode",
+    "vsls-contrib.codetour",
+    "waderyan.nodejs-extension-pack",
   ],
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  "forwardPorts": [3000],
-
+  "forwardPorts": [
+    3000
+  ],
   // Use 'postCreateCommand' to run commands after the container is created.
   "postCreateCommand": "yarn-recursive --cmd install"
-
   // Uncomment to connect as a non-root user. See https://aka.ms/vscode-remote/containers/non-root.
   // "remoteUser": "node"
 }
