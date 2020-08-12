@@ -8,7 +8,7 @@ on:
 # Ensures the CLA is signed
 jobs:
   CLAssistant:
-    name: "CLA Assistant"
+    name: 'CLA Assistant'
     runs-on: ubuntu-latest
     if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA' || github.event_name == 'pull_request' )
     steps:
@@ -26,8 +26,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: "${{env.claPath}}"
-          path-To-cladocument: "https://github.com/${{github.repository}}/${{env.claDocs}}"
+          path-to-signatures: '${{env.claPath}}'
+          path-To-cladocument: 'https://github.com/${{github.repository}}/${{env.claDocs}}'
           branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA
           label: ${{env.claLabel}}
           whitelist: join(${{env.autoWhitelist}})
@@ -42,4 +42,3 @@ jobs:
       #     pr_body: ${{env.autoBody}}
       #     pr_label: ${{env.autoLabels}}
       #   continue-on-error: true
-

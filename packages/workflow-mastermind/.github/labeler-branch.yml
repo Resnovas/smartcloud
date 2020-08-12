@@ -14,5 +14,5 @@
 'Type - Revert': 'revert/*'
 'automerge': ['ref/*', 'chore/*', 'docs/*', 'maint/*']
 'Versioning - Patch': ['revert/*', 'bug/*']
-'Versioning - Minor': ['enhance/*',]
+'Versioning - Minor': ['enhance/*']
 'Versioning - Major': ['dep/*']

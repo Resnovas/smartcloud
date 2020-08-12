@@ -3,7 +3,7 @@ name: Pull Request Management
 # This workflow automatically lables PR to ensure that all PR's are correct within the release draft.
 
 on:
-  pull_request: 
+  pull_request:
     types:
       - opened
       - edited
@@ -41,7 +41,7 @@ jobs:
         if: ${{env.semanticEnable}} == true
         uses: amannn/action-semantic-pull-request@v1.2.2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   # Automatically labels based on files changed
   labeler:
@@ -134,7 +134,6 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
-  
   automerge:
     needs:
       - wip
@@ -150,7 +149,7 @@ jobs:
         if: ${{env.autoMerge}} == true
         uses: "pascalgn/automerge-action@v0.9.0"
         env:
-          GITHUB_TOKEN: "${{ secrets.ACCESS_TOKEN }}"
+          GITHUB_TOKEN: '${{ secrets.ACCESS_TOKEN }}'
           MERGE_LABELS: ${{env.autoMergeLabels}}
           MERGE_REMOVE_LABELS: ${{env.autoMergeDeleteLabels}}
           MERGE_METHOD: ${{env.autoMergeMethod}}

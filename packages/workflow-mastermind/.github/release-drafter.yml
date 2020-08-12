@@ -5,19 +5,19 @@ name-template: 'v$RESOLVED_VERSION 🌈'
 tag-template: 'v$RESOLVED_VERSION'
 categories:
   - title: '🚀 Features'
-    labels: 
-    - 'Type - Feature'
+    labels:
+      - 'Type - Feature'
   - title: '🐛 Bug Fixes'
     labels:
       - 'Bug - Fixed'
       - 'Type - Fix'
   - title: '📖 Documentation'
-    labels: 
+    labels:
       - 'Type - Documentation'
   - title: '🧰 Maintenance'
     labels:
-      - "Type - Chore"
-      - "Type - Maintenance"
+      - 'Type - Chore'
+      - 'Type - Maintenance'
 change-template: '- $TITLE (#$NUMBER)'
 exclude-labels:
   - 'skip-changelog'

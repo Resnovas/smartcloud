@@ -2,10 +2,10 @@ version: 3
 pullapprove_conditions:
   - condition: "base.ref == 'master'"
     unmet_status: success
-    explanation: "Review not required unless merging to master"
+    explanation: 'Review not required unless merging to master'
   - condition: "body and '- [ ]' not in body"
     unmet_status: pending
-    explanation: "Please finish all the tasks first (must have PR body)"
+    explanation: 'Please finish all the tasks first (must have PR body)'
   - condition: "'security fix' not in labels"
 
 notifications:
@@ -28,7 +28,7 @@ groups:
     type: optional
     reviewers:
       teams:
-      - admins
+        - admins
     reviews:
       request: 0
       required: 1
@@ -44,17 +44,17 @@ groups:
   # Uses lables:
   design:
     conditions:
-    - "'ui/ux' in labels"
+      - "'ui/ux' in labels"
     reviewers:
       teams:
-      - design
+        - design
 
   # Changing this file requires ADMIN approval
   pullapprove:
     conditions:
-    - "'.pullapprove.yml' in files"
+      - "'.pullapprove.yml' in files"
     reviewers:
       teams:
-      - admins
+        - admins
     reviews:
       required: 1

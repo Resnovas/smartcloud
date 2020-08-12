@@ -7,12 +7,22 @@
 # --
 
 # Branch for automation
-autoBranch: "auto-update"
-autoBranchPrefix: "chore/"
-autoWhitelist: ["dependabot[bot]","dependabot-preview[bot]","github-actions[bot]","github-actions","github-user","actions-user","web-flow","VidendumStudios"]
-autoDestination: "master"
-autoBody: ":crown: *An automated PR*"
-autoLabels: "skip-changelog,automerge"
+autoBranch: 'auto-update'
+autoBranchPrefix: 'chore/'
+autoWhitelist:
+  [
+    'dependabot[bot]',
+    'dependabot-preview[bot]',
+    'github-actions[bot]',
+    'github-actions',
+    'github-user',
+    'actions-user',
+    'web-flow',
+    'VidendumStudios',
+  ]
+autoDestination: 'master'
+autoBody: ':crown: *An automated PR*'
+autoLabels: 'skip-changelog,automerge'
 
 # GPG
 gpgEnable: true
@@ -22,20 +32,20 @@ gpgTagSign: true
 gpgPushSign: true
 
 # Commit Config
-CommitOptions: "-S --sign-off"
-PushOptions: ""
+CommitOptions: '-S --sign-off'
+PushOptions: ''
 
 # Projects config
 assignProjects: true # enable / disable
 labelCards: true # enable / disable
-labelCardsConfig: "labeler-card.yml"
+labelCardsConfig: 'labeler-card.yml'
 useOrg: false # enable / disable
 DevOps: 1
-DevOpsColumn: "Requested"
+DevOpsColumn: 'Requested'
 Issues: 2
-IssuesColumn: "New"
+IssuesColumn: 'New'
 ComOps: 3
-ComOpsColumn: "Accepted"
+ComOpsColumn: 'Accepted'
 
 # --
 # --
@@ -47,10 +57,10 @@ ComOpsColumn: "Accepted"
 
 # Contributor License Agreement Config
 claEnabled: true # enable / disable
-claPath: ".github/cla.json"
-claDocs: "docs/getting-started/contributing/cla.md"
+claPath: '.github/cla.json'
+claDocs: 'docs/getting-started/contributing/cla.md'
 claLabel: true # enable / disable
-claPRtitle: "chore: CLA Management"
+claPRtitle: 'chore: CLA Management'
 
 # --
 # --
@@ -62,15 +72,15 @@ claPRtitle: "chore: CLA Management"
 
 # Periodic Labeler
 periodicLabeler: true # enable / disable
-periodicPath: ".github/labeler-path.yml"
+periodicPath: '.github/labeler-path.yml'
 
 # Stale Manager
 stale: true # enable / disable
-stale-issue-message: "This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions."
-stale-issue-label: "Status - Stale"
-stale-pr-message: "Stale pull request message"
-stale-pr-label: "Status - Abandoned"
-exempt-issue-labels: "security vulnerability"
+stale-issue-message: 'This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.'
+stale-issue-label: 'Status - Stale'
+stale-pr-message: 'Stale pull request message'
+stale-pr-label: 'Status - Abandoned'
+exempt-issue-labels: 'security vulnerability'
 days-before-stale: 30
 days-before-close: 5
 
@@ -87,12 +97,12 @@ checkProfanity: true
 
 # Title Labeler
 labelTitle: true # enable / disable
-labelTitlePath: ".github/labeler-title.yml"
+labelTitlePath: '.github/labeler-title.yml'
 Labelversioned: 0
 
 # Sponsor Labeler
 labelSponsor: true # enable / disable
-sponsorLabel: "Sponsor Request ❤️"
+sponsorLabel: 'Sponsor Request ❤️'
 
 #Issue Branches
 issueBranch: true # enable / disable
@@ -126,24 +136,24 @@ semanticEnable: true # enable / disable
 
 # Size Labeler
 labelSize: true
-size_xs_label: "Size - XS"
-size_s_label: "Size - S"
-size_m_label: "Size - M"
-size_l_label: "Size - L"
-size_xl_label: "Size - XL"
-size_xxl_label: "Size - XXL"
+size_xs_label: 'Size - XS'
+size_s_label: 'Size - S'
+size_m_label: 'Size - M'
+size_l_label: 'Size - L'
+size_xl_label: 'Size - XL'
+size_xxl_label: 'Size - XXL'
 
 # Path Labeler
 labelPath: true
-labelPathConfig: ".github/labeler-path.yml"
+labelPathConfig: '.github/labeler-path.yml'
 
 # Branch Labeler
 labelBranch: true # enable / disable
-labelBranchConfig: ".github/labeler-branch.yml"
+labelBranchConfig: '.github/labeler-branch.yml'
 
 # Conflict check
 conflictMaster: true # enable / disable
-conflictMasterDirty: "Needs rebase"
+conflictMasterDirty: 'Needs rebase'
 conflictPull: true # enable / disable
 
 # Auto Approve
@@ -151,9 +161,9 @@ autoApprove: true
 
 # Auto Merge
 autoMerge: true
-autoMergeLabels: "automerge"
-autoMergeDeleteLabels: "automerge"
-autoMergeMethod: "squash"
+autoMergeLabels: 'automerge'
+autoMergeDeleteLabels: 'automerge'
+autoMergeMethod: 'squash'
 autoMergeForks: true
 autoMergeRetries: 6
 autoMergeSleep: 5000
@@ -177,40 +187,40 @@ releasePatch: 'Versioning - Patch'
 changelog: true # enable / disable
 changelogFile: 'docs/information/changelog.md'
 pullRequests: true
-prWoLabels: "skip-changelog"
-breakingLabels: "Versioning - BREAKING"
-enhancementLabels: "Type - Enhancement, Type - Feature"
-bugLabels: "Type - Fix, Bug - Fixed"
-deprecatedLabels: "Type - Decrecated"
-removedLabels: "Type - Removal"
-securityLabels: "security fix"
-excludeLabels: "skip-changelog"
-stripGeneratorNotice: "true"
+prWoLabels: 'skip-changelog'
+breakingLabels: 'Versioning - BREAKING'
+enhancementLabels: 'Type - Enhancement, Type - Feature'
+bugLabels: 'Type - Fix, Bug - Fixed'
+deprecatedLabels: 'Type - Decrecated'
+removedLabels: 'Type - Removal'
+securityLabels: 'security fix'
+excludeLabels: 'skip-changelog'
+stripGeneratorNotice: 'true'
 
 # Copy and Rename
 copyEnable: true
-changelogTargetBranch: "master"
+changelogTargetBranch: 'master'
 
 # wiki Sync
 wikiEnable: true
 docsToWiki: true
-docsToWikiSource: "docs"
-docsToWikiDestination: "wiki"
+docsToWikiSource: 'docs'
+docsToWikiDestination: 'wiki'
 docsToRepo: true
-docsToRepoSource: "docs"
-docsToRepoDestination: "."
-docsToRepoSuffix: "_wiki"
+docsToRepoSource: 'docs'
+docsToRepoDestination: '.'
+docsToRepoSuffix: '_wiki'
 wikiToDocs: true
-wikiToDocsPRtitle: "docs: updating wikiToDocs"
+wikiToDocsPRtitle: 'docs: updating wikiToDocs'
 wikiToRepo: true
 
 # Ensure Labels
 ensureLabels: true
-ensureLabelsConfig: ".github/labels.yml"
+ensureLabelsConfig: '.github/labels.yml'
 ensureLabelsSkipDelete: false
 
 # Inclusive Organisation
 inclusiveEnabled: true # enable / disable
-inclusiveOrg: "owner"
-inclusiveTeam: "Community"
-inclusiveComment: "Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks. Our bot should have already sent the invite. We look forward to you joining the team."
+inclusiveOrg: 'owner'
+inclusiveTeam: 'Community'
+inclusiveComment: 'Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks. Our bot should have already sent the invite. We look forward to you joining the team.'

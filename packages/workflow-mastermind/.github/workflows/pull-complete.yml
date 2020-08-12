@@ -7,7 +7,7 @@ on:
   pull_request:
     types:
       - closed
-  gollum: 
+  gollum:
 
 jobs:
   createBranch:
@@ -24,7 +24,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
-  
+
   # Using the config in ../release-drafter.yml creates release drafts automatically
   update_release_draft:
     name: Create release Draft
@@ -52,10 +52,10 @@ jobs:
         with:
           branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
       - run: |
-          if [ "${{contains(github.event.pull_request.labels.*.name, ${{env.releaseMajor}})}}" = "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, ${{env.releaseMinor}})}}" = "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, ${{env.releasePatch}})}}" = "true" ]; 
+          if [ "${{contains(github.event.pull_request.labels.*.name, env.releaseMajor)}}" = "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, env.releaseMinor)}}" = "true" ] || [ "${{contains(github.event.pull_request.labels.*.name, env.releasePatch)}}" = "true" ]; 
           then echo ::set-env name=publish::true ;
           else echo ::set-env name=publish::false ; 
-          fi ; 
+          fi ;
       - uses: release-drafter/release-drafter@v5
         id: release
         if: ${{env.releaseDrafter}} == true
@@ -76,20 +76,20 @@ jobs:
         id: commit
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "chore: set version file"
+          commit_message: 'chore: set version file'
           branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
           commit_user_name: ${{env.commitName}}
           commit_user_email: ${{env.commitEmail}}
-          commit_author: "${{env.commitName}} <${{env.commitEmail}}>"
+          commit_author: '${{env.commitName}} <${{env.commitEmail}}>'
           commit_options: ${{env.CommitOptions}}
           push_options: ${{env.PushOptions}}
-          
+
   # creates a changelog, commits, pushes, and creates a pull request
   create-changelog:
     name: Copy files for wiki & docs
     runs-on: ubuntu-18.04
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
-    needs: 
+    needs:
       - createBranch
       - update_release_draft
     steps:
@@ -107,7 +107,7 @@ jobs:
           git_commit_gpgsign: ${{env.gpgCommitSign}}
           git_tag_gpgsign: ${{env.gpgTagSign}}
           git_push_gpgsign: ${{env.gpgPushSign}}
-      - name: "Check-out"
+      - name: 'Check-out'
         if: ${{env.changelog}} == true
         uses: actions/checkout@v2
         with:
@@ -120,31 +120,31 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           output: ${{ env.changelogFile }}
           pullRequests: ${{env.pullRequests}}
-          prWoLabels: "${{env.prWoLabels}}"
-          excludeLabels: "${{env.excludeLabels}}"
-          breakingLabels: "${{env.breakingLabels}}"
-          enhancementLabels: "${{env.enhancementLabels}}"
-          bugLabels: "${{env.bugLabels}}"
-          deprecatedLabels: "${{env.deprecatedLabels}}"
-          removedLabels: "${{env.removedLabels}}"
-          securityLabels: "${{env.securityLabels}}"
+          prWoLabels: '${{env.prWoLabels}}'
+          excludeLabels: '${{env.excludeLabels}}'
+          breakingLabels: '${{env.breakingLabels}}'
+          enhancementLabels: '${{env.enhancementLabels}}'
+          bugLabels: '${{env.bugLabels}}'
+          deprecatedLabels: '${{env.deprecatedLabels}}'
+          removedLabels: '${{env.removedLabels}}'
+          securityLabels: '${{env.securityLabels}}'
           stripGeneratorNotice: ${{env.stripGeneratorNotice}}
       - name: manage files
         if: ${{env.copyEnable}} == true
         run: |
-            cp README.md docs/Home.md
-            cp docs/SUMMARY.md docs/_Sidebar.md
+          cp README.md docs/Home.md
+          cp docs/SUMMARY.md docs/_Sidebar.md
       - run: if [ ${{env.gpgEnable}} == false ]; then echo ::set-env name=commitName::${{ env.changelogName }} ; echo ::set-env name=commitEmail::${{ env.changelogEmail }} ; else echo ::set-env name=commitName::${{ steps.import_gpg.outputs.name }} ; echo ::set-env name=commitEmail::${{ steps.import_gpg.outputs.email }} ; fi
       - name: Commit files
         id: commit
         if: ${{env.changelog}} == true
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "docs: update changelog"
+          commit_message: 'docs: update changelog'
           branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
           commit_user_name: ${{env.commitName}}
           commit_user_email: ${{env.commitEmail}}
-          commit_author: "${{env.commitName}} <${{env.commitEmail}}>"
+          commit_author: '${{env.commitName}} <${{env.commitEmail}}>'
           commit_options: ${{env.CommitOptions}}
           push_options: ${{env.PushOptions}}
       - name: Sync docs to wiki
@@ -164,9 +164,9 @@ jobs:
           dst_path: ${{env.docsToRepoDestination}}
           dst_owner: ${{github.repository_owner}}
           dst_repo_name: ${{env.repository_name}}${{env.docsToRepoSuffix}}
-          commit_message: "docs: auto update"
+          commit_message: 'docs: auto update'
         continue-on-error: true
-  
+
     # syncs from the github inbuilt wiki
   job-sync-wiki-to-docs:
     name: Sync from wiki
@@ -215,7 +215,7 @@ jobs:
           dst_path: /${{env.docsToRepoDestination}}
           dst_owner: ${{github.repository_owner}}
           dst_repo_name: ${{env.repository_name}}${{env.docsToRepoSuffix}}
-          commit_message: "docs: auto update"
+          commit_message: 'docs: auto update'
         continue-on-error: true
 
   misc:
@@ -252,7 +252,7 @@ jobs:
         env:
           ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
         continue-on-error: true
-  
+
   pullordelete:
     name: Pull Request Completion misc jobs
     runs-on: ubuntu-latest
@@ -263,6 +263,6 @@ jobs:
           github_token: ${{ secrets.ACCESS_TOKEN }}
           source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_release
           destination_branch: ${{env.autoDestination}}
-          pr_title: "chore: automatic updates from release workflow"
+          pr_title: 'chore: automatic updates from release workflow'
           pr_body: ${{env.autoBody}}
           pr_label: ${{env.autoLabels}}

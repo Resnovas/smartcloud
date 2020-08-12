@@ -25,7 +25,7 @@ jobs:
       - uses: github/issue-labeler@v2.2
         if: ${{env.labelTitle}} == true
         with:
-          repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          repo-token: '${{ secrets.GITHUB_TOKEN }}'
           configuration-path: ${{env.labelTitlePath}}
           enable-versioned-regex: ${{env.Labelversioned}}
         continue-on-error: true

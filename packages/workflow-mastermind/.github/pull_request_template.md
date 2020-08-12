@@ -1,13 +1,11 @@
 ---
+
 name: Default Template
 about: The default template used by Github for pull requests
 title: '[type]([scope]): [title]'
 labels: ''
 assignees: ''
-
----
-
-<!-- Thank you for concidering to create a pull request for this project.
+---<!-- Thank you for concidering to create a pull request for this project.
 To ensure a smoove transition, please follow the steps detailed bellow.
 
 If you wish to use a different pull request template, the following templates are available.
@@ -18,7 +16,7 @@ If you wish to use a different pull request template, the following templates ar
 [Refactoring](?template=refactor_template.md): Should be used when refactoring code
 [Stylisation](?template=style_template.md): Should be used for style changes (line breaks, typos, syntax)
 [Documentation Changes](?template=documentation_template.md): Should be used for updating the documentation
- -->
+-->
 
 ## What does this PR do?
 
@@ -29,6 +27,7 @@ If you wish to use a different pull request template, the following templates ar
 <!-- Link related issues below. Insert the issue link or reference after the word "Closes" if merging this should automatically close it. -->
 
 ## Author's checklist
+
 - [ ] Link docs to and from the higher-level index page, plus other related docs where helpful.
 - [ ] Apply the ~documentation label.
 
@@ -38,11 +37,11 @@ All reviewers can help ensure accuracy, clarity, completeness.
 
 **1. Primary Reviewer**
 
-* [ ] Review by a code reviewer or other selected colleague to confirm accuracy, clarity, and completeness. This can be skipped for minor fixes without substantive content changes.
+- [ ] Review by a code reviewer or other selected colleague to confirm accuracy, clarity, and completeness. This can be skipped for minor fixes without substantive content changes.
 
 **2. Technical Writer**
 
-* [ ] Optional: Technical writer review. If not requested for this PR, must be scheduled post-merge.
+- [ ] Optional: Technical writer review. If not requested for this PR, must be scheduled post-merge.
 
 **3. Maintainer**
 

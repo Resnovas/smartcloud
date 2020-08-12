@@ -2,7 +2,7 @@ name: Cron Management
 
 on:
   schedule:
-    - cron: "0 */12 * * *"
+    - cron: '0 */12 * * *'
 
 jobs:
   # Automatically labels all pull requests based on changed files
@@ -29,8 +29,8 @@ jobs:
           exempt-issue-labels: ${{env.exempt-issue-labels}}
           days-before-stale: ${{env.days-before-stale}}
           days-before-close: ${{env.days-before-close}}
-      
-  updater: 
+
+  updater:
     name: Automatically update workflow files
     runs-on: ubuntu-latest
     if: github.repository != Videndum/Universal-GitAction-Workflows
@@ -79,24 +79,24 @@ jobs:
         id: commitConfig
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "chore!: update allconfig.yml to version ${{env.latestTag}} (Possibily Breaking Change)"
+          commit_message: 'chore!: update allconfig.yml to version ${{env.latestTag}} (Possibily Breaking Change)'
           branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_workflows
           commit_user_name: ${{env.commitName}}
           commit_user_email: ${{env.commitEmail}}
-          commit_author: "${{env.commitName}} <${{env.commitEmail}}>"
-          commit_options: "${{env.commitOptions}}"
+          commit_author: '${{env.commitName}} <${{env.commitEmail}}>'
+          commit_options: '${{env.commitOptions}}'
       - run: |
           cp -fR .github/.tmp/.github/workflows .github/workflows 2>> template-sync-log.txt
       - name: Commit Workflows
         id: commitWorkflow
         uses: stefanzweifel/git-auto-commit-action@v4
         with:
-          commit_message: "chore!: update workflows to version ${{env.latestTag}} (Possibily Breaking Change)"
+          commit_message: 'chore!: update workflows to version ${{env.latestTag}} (Possibily Breaking Change)'
           branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_workflows
           commit_user_name: ${{env.commitName}}
           commit_user_email: ${{env.commitEmail}}
-          commit_author: "${{env.commitName}} <${{env.commitEmail}}>"
-          commit_options: "${{env.commitOptions}}"
+          commit_author: '${{env.commitName}} <${{env.commitEmail}}>'
+          commit_options: '${{env.commitOptions}}'
       - name: pull-request
         uses: repo-sync/pull-request@v2
         if: ${{steps.commitWorkflow.outputs.changes_detected}} == true || ${{steps.commitConfig.outputs.changes_detected}} == true
@@ -104,10 +104,10 @@ jobs:
           github_token: ${{ secrets.ACCESS_TOKEN }}
           source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_workflows
           destination_branch: ${{env.autoDestination}}
-          pr_title: "chore: BREAKING update template files to latest version (${{env.latestTag}})"
+          pr_title: 'chore: BREAKING update template files to latest version (${{env.latestTag}})'
           pr_body: |
             This pull request has been automatically generated to update the workflow templates which we have created. This automatic update is very likely **BREAKING** for anyone who has modified files heavily. 
-            
+
             Please ensure to review this change carefully.
       - name: Delete branch
         if: ${{steps.commitWorkflow.outputs.changes_detected}} != true && ${{steps.commitConfig.outputs.changes_detected}} != true
@@ -115,4 +115,3 @@ jobs:
         with:
           github_token: ${{github.token}}
           branches: ${{env.autoBranchPrefix}}${{env.autoBranch}}_workflows
-  
