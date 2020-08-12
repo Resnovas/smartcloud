@@ -19,7 +19,7 @@
 - fix: release [\#59](https://github.com/Videndum/Universal-GitAction-Workflows/pull/59)
 - fix: remove triggers & solve \(Line: 71, Col: 13\) [\#56](https://github.com/Videndum/Universal-GitAction-Workflows/pull/56)
 - fix: minor issues with workflow [\#55](https://github.com/Videndum/Universal-GitAction-Workflows/pull/55)
-- fix: change token to ACCESS\_TOKEN [\#54](https://github.com/Videndum/Universal-GitAction-Workflows/pull/54)
+- fix: change token to ACCESS_TOKEN [\#54](https://github.com/Videndum/Universal-GitAction-Workflows/pull/54)
 - fix: triggers [\#52](https://github.com/Videndum/Universal-GitAction-Workflows/pull/52)
 - fix: gpg values [\#50](https://github.com/Videndum/Universal-GitAction-Workflows/pull/50)
 - fix: Copy & Rename step "commit" [\#47](https://github.com/Videndum/Universal-GitAction-Workflows/pull/47)

@@ -1,6 +1,6 @@
 # How to get support 👨‍👩‍👧‍👦
 
-For **help**, **support** and **questions** please use **[our forum]()**  🚑.
+For **help**, **support** and **questions** please use **[our forum]()** 🚑.
 
 We have a **help** category in our **[forum]()** where you can get quick answers, help with debugging weird issues, and general help.
 

@@ -1,19 +1,16 @@
 ---
+
 name: Feature request
 about: Suggest an idea for this project
 title: 'feat: '
 labels: 'Type - Feature'
 assignees: ''
-
----
-
-### Proposal
+---### Proposal
 
 **Is your feature request related to a problem? Please describe.**
 A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
 
-* Include use cases, benefits, and/or goals (contributes to our vision?)
-
+- Include use cases, benefits, and/or goals (contributes to our vision?)
 
 **Describe the solution you'd like**
 A clear and concise description of what you want to happen.
@@ -36,6 +33,7 @@ Add any other context or screenshots about the feature request here.
 ### Feature Process
 
 **Documentation**
+
 - [ ] Documentation include in feature branch
 - [ ] Merge Request created
 
@@ -45,6 +43,7 @@ This section needs to be retained and filled in during the workflow planning bre
 What risks does this change pose to our availability? How might it affect the quality of the product? What additional test coverage or changes to tests will be needed? Will it require cross-browser testing?
 
 Please list the test areas (unit, integration and end-to-end) that needs to be added or updated to ensure that this feature will work as intended. Please use the list below as guidance.
-* Unit test changes
-* Integration test changes
-* End-to-end test change
+
+- Unit test changes
+- Integration test changes
+- End-to-end test change

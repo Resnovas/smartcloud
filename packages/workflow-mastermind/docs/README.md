@@ -11,7 +11,7 @@ When working on GitActions, I found that there went many templates of high quali
 
 To make it super simple for everyone to use, we built every job using an environment variable importer. A big thanks to [@technote-space](https://github.com/technote-space) for creating [Load Config Action](https://github.com/technote-space/load-config-action) which basically powers this entire configuration.
 
-*Note:* due to the way Github handles Actions, I chose to develop this project on both Branches & Forks, in the hopes of having a cleaner commit history which will make it easier for you to understand what is happening. If you want to help creating this template, feel free to checkout the Contribution Guidelines.  
+_Note:_ due to the way Github handles Actions, I chose to develop this project on both Branches & Forks, in the hopes of having a cleaner commit history which will make it easier for you to understand what is happening. If you want to help creating this template, feel free to checkout the Contribution Guidelines.
 
 ## Github Actions
 
@@ -42,9 +42,10 @@ To get started with this template, please follow our [documentation](docs/gettin
 
 This template is simply designed to save you, your team or community hours of painful debugging and stress creating a workflow from scratch. With many functions which users use regulary built in with simple `boolean` toggles setup within our `allconfig.yml`, this template is one of the quickest ways to get your custom workflow up and running without any serious hassle. Each action within this template has been hand picked and customised to work perfectly with each other, while also ensuring that everything is customisable.
 
-This workflow does use a couple of External applications, they are not required but we highly recommend installing them. You can find more about the bots used within this workflow within the appriciations & configuations docs.  
+This workflow does use a couple of External applications, they are not required but we highly recommend installing them. You can find more about the bots used within this workflow within the appriciations & configuations docs.
 
 <!-- Move to another page -->
+
 ### Understanding user workflow
 
 1. User creates issue
@@ -68,10 +69,10 @@ This workflow does use a couple of External applications, they are not required 
       1. Copies & renames files
          - cp README.md -> docs/README.md (Used in gitbook)
          - cp README.md -> docs/Home.md (Used in {{repo}}.wiki)
-         - cp docs/SUMMARY.md -> docs/_Sidebar.md (Used in {{repo}}.wiki)
+         - cp docs/SUMMARY.md -> docs/\_Sidebar.md (Used in {{repo}}.wiki)
          - cp CHANGELOG.md -> docs/information/changelog.md
       2. Automatically pushes to {{repo}}.wiki.git (Used in {{repo}}.wiki)
-      3. Automatically pushes to {{repo}}_wiki.git (Used in gitbook)
+      3. Automatically pushes to {{repo}}\_wiki.git (Used in gitbook)
 
 ### Understanding developer workflow
 
