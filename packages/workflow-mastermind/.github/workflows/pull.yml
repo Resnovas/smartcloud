@@ -39,7 +39,7 @@ jobs:
           CONFIG_FILENAME: allconfig.yml
       - name: Check title
         if: ${{env.semanticEnable}} == true
-        uses: amannn/action-semantic-pull-request@v1.2.2
+        uses: amannn/action-semantic-pull-request@v1.2.6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
