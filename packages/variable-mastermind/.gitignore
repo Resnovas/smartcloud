@@ -97,3 +97,10 @@ Thumbs.db
 # Ignore built ts files
 __tests__/runner/*
 lib/**/*
+
+# Blackbox files
+.blackbox/
+.blackbox/pubring.gpg~
+.blackbox/pubring.kbx~
+.blackbox/secring.gpg
+/__tests__/config.json

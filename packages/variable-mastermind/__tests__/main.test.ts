@@ -1,27 +1,38 @@
-import {wait} from '../src/wait'
-import * as process from 'process'
-import * as cp from 'child_process'
-import * as path from 'path'
-
-test('throws invalid number', async () => {
-  const input = parseInt('foo', 10)
-  await expect(wait(input)).rejects.toThrow('milliseconds not a number')
+import * as classes from '../src/classes'
+import * as settings from '../.github/allconfigs.json'
+import * as config from './config.json'
+test('string settings input', async () => {
+  await expect(
+    classes.global.parseSettings({
+      token: config.token,
+      settings: settings
+    })
+  )
 })
-
-test('wait 500 ms', async () => {
-  const start = new Date()
-  await wait(500)
-  const end = new Date()
-  var delta = Math.abs(end.getTime() - start.getTime())
-  expect(delta).toBeGreaterThan(450)
+test('file settings input', async () => {
+  const input = '.github/allconfigs.json'
+  await classes.global.parseSettings({
+    token: config.token,
+    file: input,
+    owner: 'Videndum',
+    repo: 'manage-github-secrets'
+  })
 })
-
-// shows how the runner will run a javascript action with env / stdout protocol
-test('test runs', () => {
-  process.env['INPUT_MILLISECONDS'] = '500'
-  const ip = path.join(__dirname, '..', 'lib', 'main.js')
-  const options: cp.ExecSyncOptions = {
-    env: process.env
-  }
-  console.log(cp.execSync(`node ${ip}`, options).toString())
+test('blank settings input', async () => {
+  const input = ''
+  await expect(
+    classes.global.parseSettings({
+      token: config.token,
+      settings: input
+    })
+  )
 })
+test('use settings with output', async () => {
+  await classes.global.useSettings('output', settings)
+})
+// test('use settings with environment', async () => {
+//   await classes.global.useSettings('environment', settings)
+// })
+// test('use settings with secret', async () => {
+//   await classes.global.useSettings('secret', settings)
+// })

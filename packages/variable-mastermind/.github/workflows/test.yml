@@ -15,10 +15,27 @@ jobs:
           npm install
       - run: |
           npm run all
-  test: # make sure the action works on a clean machine without building
+  test-env: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./
         with:
-          milliseconds: 1000
+          settings: ${{ secrets.SETTINGS }}
+          settingsjson: '.github/allconfigs.json'
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo ${{env.inclusive_comment}}
+
+  test-output: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: tests
+        with:
+          settings: ${{ secrets.SETTINGS }}
+          settingsjson: '.github/allconfigs.json'
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo ${{jobs.test-output.steps.tests.outputs.inclusive_comment}}

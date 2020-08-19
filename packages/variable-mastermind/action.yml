@@ -1,11 +1,23 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'Manage Github Secrets'
+description: 'Creates, manages, updates repository secrets, environment variables and outputs for use within other actions'
+author: 'Videndum'
 inputs:
-  milliseconds: # change this
+  settings:
+    required: false
+    description: 'Settings to be passed'
+  settingsjson:
+    required: false
+    description: 'JSON file to be passed'
+    default: '.github/allconfigs.json'
+  mode:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: 'Sets the mode of the action - Output, Secrets, Environment'
+    default: 'outputs'
+  token: 
+    required: true
+    description: 'The token that should be used'
+    default: ''
+
 runs:
   using: 'node12'
   main: 'dist/index.js'

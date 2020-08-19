@@ -1,18 +1,22 @@
 import * as core from '@actions/core'
-import {wait} from './wait'
-
-async function run(): Promise<void> {
+import classes, { global } from './classes'
+async function run (): Promise<void> {
   try {
-    const ms: string = core.getInput('milliseconds')
-    core.debug(`Waiting ${ms} milliseconds ...`) // debug is only output if you set the secret `ACTIONS_RUNNER_DEBUG` to true
-
-    core.debug(new Date().toTimeString())
-    await wait(parseInt(ms, 10))
-    core.debug(new Date().toTimeString())
-
-    core.setOutput('time', new Date().toTimeString())
+    const inputdata = {
+      mode: core.getInput('mode'),
+      file: core.getInput('settingsjson'),
+      settings: core.getInput('settings'),
+      token: core.getInput('token')
+    }
+    core.debug(`mode is ${inputdata.mode}.`)
+    core.debug(`file is ${inputdata.file}.`)
+    core.debug(`settings are ${inputdata.settings}.`)
+    const settings = await global.parseSettings(inputdata).catch(err => {
+      core.setFailed(err)
+    })
+    classes.global.useSettings(inputdata.mode, settings)
   } catch (error) {
-    core.setFailed(error.message)
+    core.setFailed(error)
   }
 }
 

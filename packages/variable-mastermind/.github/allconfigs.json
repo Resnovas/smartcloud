@@ -1,207 +1,236 @@
 {
-    "settings": {
-        "lastCommit": "" 
-    },
-    "outputs": {
-        "auto": {
-            "vars": {
-                "branch": "auto-update",
-                "branchPrefix": "chore/",
-                "whitelist": ["dependabot[bot]","dependabot-preview[bot]","github-actions[bot]","github-actions","github-user","actions-user","web-flow","VidendumStudios"],
-                "destination": "master",
-                "body": ":crown: *An automated PR*",
-                "labels": "skip-changelog,automerge",
-                "commitOptions": "-S --sign-off",
-                "PpushOptions": ""
-            } 
-        },
-        "gpg": {
-            "secret": true,
-            "vars": {
-                "signingKey": true,
-                "commitSign": true,
-                "tagSign": true,
-                "pushSign": true
-            }
-        },
-        "projects": {
-            "secret": true,
-            "vars": {
-                "cardsConfig": "labeler-card.yml",
-                "useOrg": "false ",
-                "devOps": "1",
-                "devOpsColumn": "Requested",
-                "issues": "2",
-                "issuesColumn": "New",
-                "comOps": "3",
-                "comOpsColumn": "Accepted"
-            }
-        },
-        "cla": {
-            "secret": true,
-            "vars": {
-                "path": ".github/cla.json",
-                "docs": "docs/getting-started/contributing/cla.md",
-                "label": true,
-                "prtitle": "chore: CLA Management"
-            }
-        },
-        "periodic": {
-            "secret": true,
-            "vars": {
-                "path": ".github/labeler-path.yml"
-            }
-        },
-        "stale": {
-            "secret": true,
-            "vars": {
-                "stale-issue-message": "This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.",
-                "stale-issue-label": "Status - Stale",
-                "stale-pr-message": "Stale pull request message",
-                "stale-pr-label": "Status - Abandoned",
-                "exempt-issue-labels": "security vulnerability",
-                "days-before-stale": "30",
-                "days-before-close": "5"
-            }
-        },
-        "profanity": {
-            "secret": true
-        },
-        "title": {
-            "secret": true,
-            "vars": {
-                "labelTitlePath": ".github/labeler-title.yml",
-                "Labelversioned": "0"
-            }
-        },
-        "sponsor": {
-            "secret": true,
-            "vars": {
-                "Label": "Sponsor Request ❤️"
-            }
-        },
-        "issueBranch": {
-            "secret": true
-        },
-        "commands": {
-            "secret": true,
-            "vars": {
-                "claim": true
-            }
-        },
-        "wip": {
-            "secret": true,
-            "vars": {
-                "label": true
-            }
-        },
-        "semantic": {
-            "secret": true
-        },
-        "size": {
-            "secret": true,
-            "vars": {
-                "size_xs_label": "Size - XS",
-                "size_s_label": "Size - S",
-                "size_m_label": "Size - M",
-                "size_l_label": "Size - L",
-                "size_xl_label": "Size - XL",
-                "size_xxl_label": "Size - XXL"
-            }
-        },
-        "path": {
-            "secret": true,
-            "vars": {
-                "config": ".github/labeler-path.yml"
-            }
-        },
-        "branch": {
-            "secret": true,
-            "vars": {
-                "config": ".github/labeler-branch.yml"
-            }
-        },
-        "conflict": {
-            "secret": true,
-            "vars": {
-                "master": true,
-                "pull": true,
-                "dirty": "Needs rebase"
-            }
-        },
-        "approve": {
-            "secret": true
-        },
-        "merge": {
-            "secret": true,
-            "vars": {
-                "labels": "automerge",
-                "deleteLabels": "automerge",
-                "method": "squash",
-                "forks": true,
-                "retries": 6,
-                "sleep": 5000,
-                "delete": true
-            }
-        },
-        "release": {
-            "secret": true,
-            "vars": {
-                "major": "Versioning - Major",
-                "minor": "Versioning - Minor",
-                "patch": "Versioning - Patch"
-            }
-        },
-        "changelog": {
-            "secret": true,
-            "vars": {
-                "Config": "docs/information/changelog.md",
-                "pullRequests": true,
-                "prWoLabels": "skip-changelog",
-                "breakingLabels": "Versioning - BREAKING",
-                "enhancementLabels": "Type - Enhancement, Type - Feature",
-                "bugLabels": "Type - Fix, Bug - Fixed",
-                "deprecatedLabels": "Type - Decrecated",
-                "removedLabels": "Type - Removal",
-                "securityLabels": "security fix",
-                "excludeLabels": "skip-changelog",
-                "stripGeneratorNotice": "true"
-            }
-        },
-        "copy": {
-            "secret": true,
-            "vars": {
-                "targetBranch": "master"
-            }
-        },
-        "wiki": {
-            "secret": true,
-            "vars": {
-                "docsToWiki": true,
-                "docsToWikiSource": "docs",
-                "docsToWikiDestination": "wiki",
-                "docsToRepo": true,
-                "docsToRepoSource": "docs",
-                "docsToRepoDestination": ".",
-                "docsToRepoSuffix": "_wiki",
-                "wikiToDocs": true,
-                "wikiToDocsPRtitle": "docs: updating wikiToDocs",
-                "wikiToRepo": true
-            }
-        },
-        "labels": {
-            "secret": true,
-            "vars": {
-                "config": ".github/labels.yml"
-            }
-        },
-        "inclusive": {
-            "secret": true,
-            "vars": {
-                "inclusiveOrg": "owner",
-                "inclusiveTeam": "Community",
-                "inclusiveComment": "Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks. Our bot should have already sent the invite. We look forward to you joining the team."
-            }
-        }
+  "auto": {
+    "enabled": true,
+    "vars": {
+      "branch": "auto-update",
+      "branchPrefix": "chore/",
+      "whitelist": [
+        "dependabot[bot]",
+        "dependabot-preview[bot]",
+        "github-actions[bot]",
+        "github-actions",
+        "github-user",
+        "actions-user",
+        "web-flow",
+        "VidendumStudios"
+      ],
+      "destination": "master",
+      "body": ":crown: *An automated PR*",
+      "labels": "skip-changelog,automerge",
+      "commitOptions": "-S --sign-off",
+      "pushOptions": ""
     }
+  },
+  "gpg": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "signingKey": true,
+      "commitSign": true,
+      "tagSign": true,
+      "pushSign": true
+    }
+  },
+  "projects": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "cardsConfig": "labeler-card.yml",
+      "useOrg": "false ",
+      "devOps": "1",
+      "devOpsColumn": "Requested",
+      "issues": "2",
+      "issuesColumn": "New",
+      "comOps": "3",
+      "comOpsColumn": "Accepted"
+    }
+  },
+  "cla": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "path": ".github/cla.json",
+      "docs": "docs/getting-started/contributing/cla.md",
+      "label": true,
+      "prtitle": "chore: CLA Management"
+    }
+  },
+  "periodic": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "path": ".github/labeler-path.yml"
+    }
+  },
+  "stale": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "stale-issue-message": "This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.",
+      "stale-issue-label": "Status - Stale",
+      "stale-pr-message": "Stale pull request message",
+      "stale-pr-label": "Status - Abandoned",
+      "exempt-issue-labels": "security vulnerability",
+      "days-before-stale": "30",
+      "days-before-close": "5"
+    }
+  },
+  "profanity": {
+    "secret": false,
+    "enabled": true
+  },
+  "title": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "labelTitlePath": ".github/labeler-title.yml",
+      "Labelversioned": "0"
+    }
+  },
+  "sponsor": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "Label": "Sponsor Request ❤️"
+    }
+  },
+  "issueBranch": {
+    "secret": false,
+    "enabled": true
+  },
+  "commands": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "claim": true
+    }
+  },
+  "wip": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "label": true
+    }
+  },
+  "semantic": {
+    "secret": false,
+    "enabled": true
+  },
+  "size": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "xs_label": "Size - XS",
+      "s_label": "Size - S",
+      "m_label": "Size - M",
+      "l_label": "Size - L",
+      "xl_label": "Size - XL",
+      "xxl_label": "Size - XXL"
+    }
+  },
+  "path": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "config": ".github/labeler-path.yml"
+    }
+  },
+  "branch": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "config": ".github/labeler-branch.yml"
+    }
+  },
+  "conflict": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "master": true,
+      "pull": true,
+      "dirty": "Needs rebase"
+    }
+  },
+  "approve": {
+    "secret": false,
+    "enabled": true
+  },
+  "merge": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "labels": "automerge",
+      "deleteLabels": "automerge",
+      "method": "squash",
+      "forks": true,
+      "retries": 6,
+      "sleep": 5000,
+      "delete": true
+    }
+  },
+  "release": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "major": "Versioning - Major",
+      "minor": "Versioning - Minor",
+      "patch": "Versioning - Patch"
+    }
+  },
+  "changelog": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "Config": "docs/information/changelog.md",
+      "pullRequests": true,
+      "prWoLabels": "skip-changelog",
+      "breakingLabels": "Versioning - BREAKING",
+      "enhancementLabels": "Type - Enhancement, Type - Feature",
+      "bugLabels": "Type - Fix, Bug - Fixed",
+      "deprecatedLabels": "Type - Decrecated",
+      "removedLabels": "Type - Removal",
+      "securityLabels": "security fix",
+      "excludeLabels": "skip-changelog",
+      "stripGeneratorNotice": "true"
+    }
+  },
+  "copy": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "targetBranch": "master"
+    }
+  },
+  "wiki": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "docsToWiki": true,
+      "docsToWikiSource": "docs",
+      "docsToWikiDestination": "wiki",
+      "docsToRepo": true,
+      "docsToRepoSource": "docs",
+      "docsToRepoDestination": ".",
+      "docsToRepoSuffix": "_wiki",
+      "wikiToDocs": true,
+      "wikiToDocsPRtitle": "docs: updating wikiToDocs",
+      "wikiToRepo": true
+    }
+  },
+  "labels": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "config": ".github/labels.yml"
+    }
+  },
+  "inclusive": {
+    "secret": false,
+    "enabled": true,
+    "vars": {
+      "org": "owner",
+      "team": "Community",
+      "comment": "Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks. Our bot should have already sent the invite. We look forward to you joining the team."
+    }
+  }
 }

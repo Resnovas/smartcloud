@@ -1,7 +1,7 @@
 // For format details, see https://aka.ms/vscode-remote/devcontainer.json or this file's README at:
 // https://github.com/microsoft/vscode-dev-containers/tree/master/containers/typescript-node
 {
-  "name": "Github Secrets DevContainer",
+  "name": "Git Secrets",
   "build": {
     "dockerfile": "Dockerfile",
     // Update 'VARIANT' to pick a Node version. Rebuild the container if it already exists to update. Available variants: 10, 12, 14
@@ -14,10 +14,14 @@
     "terminal.integrated.shell.linux": "/bin/bash"
   },
   "mounts": [
-    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind"
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=${env:HOME}${env:USERPROFILE}/.kube,target=/usr/local/share/kube-localhost,type=bind",
+    "source=${env:HOME}${env:USERPROFILE}/.minikube,target=/usr/local/share/minikube-localhost,type=bind",
+    "source=${env:HOME}${env:USERPROFILE}/gpg,target=/root/gpg,type=bind"
   ],
   "remoteEnv": {
-    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}"
+    "LOCAL_WORKSPACE_FOLDER": "${localWorkspaceFolder}",
+    "SYNC_LOCALHOST_KUBECONFIG": "true"
   },
   // Add the IDs of extensions you want installed when the container is created.
   "extensions": [
