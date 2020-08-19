@@ -269,8 +269,12 @@ jobs:
         continue-on-error: true
 
   pullordelete:
-    name: Pull Request Completion misc jobs
+    name: delete or pull
     runs-on: ubuntu-latest
+    needs: 
+      - createBranch
+      - update_release_draft
+      - create-changelog
     steps:
       - name: Get Configurations
         uses: Videndum/manage-github-secrets@1.0.0-beta
