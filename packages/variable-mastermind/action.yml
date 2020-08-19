@@ -21,3 +21,5 @@ inputs:
 runs:
   using: 'node12'
   main: 'dist/index.js'
+  icon: 'at-sign'
+  color: 'purple'
