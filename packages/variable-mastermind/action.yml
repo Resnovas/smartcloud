@@ -1,8 +1,9 @@
 name: 'Manage Github Secrets'
 description: 'Creates, manages, updates repository secrets, environment variables and outputs for use within other actions'
 author: 'Videndum'
-icon: 'at-sign'
-color: 'purple'
+branding:
+  icon: 'at-sign'
+  color: 'purple'
 inputs:
   settings:
     required: false
