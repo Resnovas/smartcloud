@@ -30,7 +30,7 @@ jobs:
       - name: check env
         run: echo "${{env.inclusive_comment}}"
       - name: check output
-        run: echo "${{jobs.test-output.steps.tests.outputs.inclusive_comment}}"
+        run: echo "${{job.test-output.steps.tests.outputs.inclusive_comment}}"
         
   test-output: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
