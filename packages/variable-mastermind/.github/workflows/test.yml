@@ -39,5 +39,7 @@ jobs:
           settingsjson: '.github/allconfigs.json'
           mode: 'environment'
           token: ${{ secrets.GITHUB_TOKEN }}
-      - run: echo "${{env.inclusive_comment}}"
-      - run: echo "${{job.test-output.steps.tests.outputs.inclusive_comment}}"
+      - name: check env
+        run: echo "${{env.inclusive_comment}}"
+      - name: check output
+        run: echo "${{job.test-output.steps.tests.outputs.inclusive_comment}}"
