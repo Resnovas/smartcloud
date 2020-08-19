@@ -1,4 +1,4 @@
-name: 'build-test'
+name: 'testing'
 on: # rebuild any PRs and main branch changes
   workflow_dispatch:
   pull_request:
@@ -7,20 +7,10 @@ on: # rebuild any PRs and main branch changes
       - master
       - 'releases/*'
 
-jobs:
-#   build: # make sure build/ci work properly
-#     runs-on: ubuntu-latest
-#     steps:
-#       - uses: actions/checkout@v2
-#       - run: |
-#           npm install
-#       - run: |
-#           npm run all
-       
+jobs:     
   test-nofile: # make sure the action works without file option
+    name: No File
     runs-on: ubuntu-latest
-    outputs: 
-      test: ${{steps.tests.outputs.inclusive_comment}}}
     steps:
       - uses: actions/checkout@v2
       - uses: ./
@@ -33,6 +23,7 @@ jobs:
         run: echo "${{steps.tests.outputs.inclusive_comment}}"
         
   test-nosettings: # make sure the action works without settings option
+    name: No Settings
     runs-on: ubuntu-latest
     outputs: 
       test: ${{steps.tests.outputs.inclusive_comment}}}
@@ -48,6 +39,7 @@ jobs:
         run: echo "${{steps.tests.outputs.inclusive_comment}}"
         
   test-output: # make sure the action works as output
+    name: Outputs
     runs-on: ubuntu-latest
     outputs: 
       test: ${{steps.tests.outputs.inclusive_comment}}}
@@ -65,6 +57,7 @@ jobs:
         run: echo "${{steps.tests.outputs.inclusive_comment}}"
 
   test-env: # make sure the action works as environment
+    name: Environment
     runs-on: ubuntu-latest
     needs: test-output
     steps:
@@ -81,9 +74,17 @@ jobs:
         run: |
           echo "${{needs.test-output.outputs.test}}"
 
-  test: # make sure the action works as output
+  test-skips: # make sure the action works as output
+    name: Skips
     runs-on: ubuntu-latest
     needs: test-output
     if: needs.test-output.outputs.enabled == 'true'
+    steps:
+      - run: echo this did run
+  test-runs: # make sure the action works as output
+    name: Echos
+    runs-on: ubuntu-latest
+    needs: test-output
+    if: needs.test-output.outputs.enabled == 'false'
     steps:
       - run: echo this did run
