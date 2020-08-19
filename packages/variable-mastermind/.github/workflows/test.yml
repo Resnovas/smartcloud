@@ -45,4 +45,4 @@ jobs:
       - name: check env
         run: echo "${{env.inclusive_comment}}"
       - name: check output
-        run: echo "${{job.test-output.steps.tests.outputs.inclusive_comment}}"
+        run: echo "${{jobs.test-output.steps.tests.outputs.inclusive_comment}}"
