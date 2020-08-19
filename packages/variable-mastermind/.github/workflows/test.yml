@@ -19,8 +19,7 @@ jobs:
   test-output: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     outputs: 
-      test: ${{steps.tests.outputs}}
-      test2: ${{steps.tests.outputs.inclusive_comment}}}
+      test: ${{steps.tests.outputs.inclusive_comment}}}
     steps:
       - uses: actions/checkout@v2
       - uses: ./
@@ -48,5 +47,4 @@ jobs:
         run: echo "${{env.inclusive_comment}}"
       - name: check output
         run: |
-          echo "${{needs.test-output.test.inclusive_comment}}"
-          echo "${{needs.test-output.test2}}"
+          echo "${{needs.test-output.test}}"
