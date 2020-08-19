@@ -8,11 +8,14 @@ jobs:
     name: Auto card labeler
     runs-on: ubuntu-latest
     steps:
-      - uses: technote-space/load-config-action@v1
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
         with:
-          CONFIG_FILENAME: allconfig.yml
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Adjust Lables
-        if: ${{env.labelCards}} == true
+        if: ${{env.projects_enabled}} == true
         uses: technote-space/auto-card-labeler@v1
         with:
-          CONFIG_FILENAME: ${{env.labelCardsConfig}}
+          CONFIG_FILENAME: ${{env.projects_cardsConfig}}

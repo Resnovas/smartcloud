@@ -17,28 +17,34 @@ jobs:
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
-      - uses: technote-space/load-config-action@v1
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
         with:
-          CONFIG_FILENAME: allconfig.yml
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Work in progress label
         uses: y-temp4/add-wip-label@v1.0.0
-        if: ${{env.wipLabel}} == true
+        if: ${{env.wip_label}} == true
         with:
           repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Work in progress status
         uses: wip/action@v1.0.0
-        if: ${{env.wipEnable}} == true
+        if: ${{env.wip_enabled}} == true
 
   # Ensures semantic titles to ensure semantic is achieved when merge is squashed
   semantic:
     name: Semantic Title
     runs-on: ubuntu-latest
     steps:
-      - uses: technote-space/load-config-action@v1
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
         with:
-          CONFIG_FILENAME: allconfig.yml
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check title
-        if: ${{env.semanticEnable}} == true
+        if: ${{env.semantic_enabled}} == true
         uses: amannn/action-semantic-pull-request@v1.2.6
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -48,12 +54,15 @@ jobs:
     name: Path Labeler
     runs-on: ubuntu-latest
     steps:
-      - uses: technote-space/load-config-action@v1
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
         with:
-          CONFIG_FILENAME: allconfig.yml
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v2.3.1
       - uses: actions-ecosystem/action-size@v2
-        if: ${{env.labelSize}} == true
+        if: ${{env.size_enabled}} == true
         id: size
         with:
           size_xs_label: ${{env.size_xs_label}}
@@ -64,41 +73,36 @@ jobs:
           size_xxl_label: ${{env.size_xxl_label}}
         continue-on-error: true
       - uses: actions-ecosystem/action-remove-labels@v1
-        if: ${{env.labelSize}} == true
+        if: ${{env.size_enabled}} == true
         with:
           github_token: ${{ secrets.github_token }}
           labels: ${{ steps.size.outputs.stale_labels }}
         continue-on-error: true
       - uses: actions-ecosystem/action-add-labels@v1
-        if: ${{env.labelSize}} == true
+        if: ${{env.size_enabled}} == true
         with:
           github_token: ${{ secrets.github_token }}
           labels: ${{ steps.size.outputs.new_label }}
         continue-on-error: true
       - uses: actions/labeler@v2
-        if: ${{env.labelPath}} == true
+        if: ${{env.path_enabled}} == true
         with:
-          configuration-path: ${{env.labelPathConfig}}
+          configuration-path: ${{env.path_config}}
           repo-token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
       - uses: JasonEtco/is-sponsor-label-action@v1
-        if: github.event.action == 'opened' && ${{env.labelSponsor}} == true
+        if: github.event.action == 'opened' && ${{env.sponsor_enabled}} == true
         with:
-          label: ${{env.sponsorLabel}}
+          label: ${{env.sponsor_label}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
       - uses: TimonVS/pr-labeler-action@v3
-        if: ${{env.labelBranch}} == true
+        if: ${{env.branch_enabled}} == true
         with:
-          configuration-path: ${{env.labelBranchConfig}}
+          configuration-path: ${{env.branch_Config}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
-      - name: Run pull request stats
-        uses: flowwer-dev/pull-request-stats@v1
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
 
   # Automatically approves
@@ -110,27 +114,29 @@ jobs:
       - labeler
     runs-on: ubuntu-latest
     steps:
-      - uses: technote-space/load-config-action@v1
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
         with:
-          CONFIG_FILENAME: allconfig.yml
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v2.3.1
       - name: Warn potential conflicts
         uses: wktk/conflibot@v1
-        if: ${{env.conflictPull}} == true
+        if: ${{env.conflict_pull}} == true
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
       - name: check if prs are dirty
-        if: ${{env.conflictMaster}} == true
+        if: ${{env.conflict_master}} == true
         uses: eps1lon/actions-label-merge-conflict@releases/1.x
         with:
-          dirtyLabel: ${{env.conflictMasterDirty}}
-          removeOnDirtyLabel: ${{env.conflictMasterDirty}}
+          dirtyLabel: ${{env.conflict_dirty}}
           repoToken: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
       - name: Automatically approve
         uses: hmarr/auto-approve-action@v2.0.0
-        if: (${{env.autoApprove}} == true && contains(${{env.autoWhitelist}}, github.actor) || ${{env.autoApprove}} == true && github.actor == github.repository_owner )
+        if: (${{env.approve_enabled}} == true && contains(${{env.auto_whitelist}}, github.actor) || ${{env.approve_enabled}} == true && github.actor == github.repository_owner )
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -142,18 +148,21 @@ jobs:
       - approval
     runs-on: ubuntu-latest
     steps:
-      - uses: technote-space/load-config-action@v1
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
         with:
-          CONFIG_FILENAME: allconfig.yml
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: automerge
-        if: ${{env.autoMerge}} == true
-        uses: "pascalgn/automerge-action@v0.9.0"
+        if: ${{env.merge_enabled}} == true
+        uses: 'pascalgn/automerge-action@v0.9.0'
         env:
           GITHUB_TOKEN: '${{ secrets.ACCESS_TOKEN }}'
-          MERGE_LABELS: ${{env.autoMergeLabels}}
-          MERGE_REMOVE_LABELS: ${{env.autoMergeDeleteLabels}}
-          MERGE_METHOD: ${{env.autoMergeMethod}}
-          MERGE_FORKS: ${{env.autoMergeForks}}
-          MERGE_RETRIES: ${{env.autoMergeRetries}}
-          MERGE_RETRY_SLEEP: ${{env.autoMergeSleep}}
-          MERGE_DELETE_BRANCH: ${{env.autoMergeDelete}}
+          MERGE_LABELS: ${{env.merge_labels}}
+          MERGE_REMOVE_LABELS: ${{env.merge_deleteLabels}}
+          MERGE_METHOD: ${{env.merge_method}}
+          MERGE_FORKS: ${{env.merge_forks}}
+          MERGE_RETRIES: ${{env.merge_retries}}
+          MERGE_RETRY_SLEEP: ${{env.merge_sleep}}
+          MERGE_DELETE_BRANCH: ${{env.merge_delete}}

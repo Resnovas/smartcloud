@@ -10,51 +10,54 @@ jobs:
     name: Issue Automation
     runs-on: ubuntu-latest
     steps:
-      - uses: technote-space/load-config-action@v1
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
         with:
-          CONFIG_FILENAME: allconfig.yml
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Checkout
-        if: ${{env.checkProfanity}} == true
+        if: ${{env.profanity_enabled}} == true
         uses: actions/checkout@v2
       - name: Profanity check step
-        if: ${{env.checkProfanity}} == true
+        if: ${{env.profanity_enabled}} == true
         uses: tailaiw/mind-your-language-action@v1.0.3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
       - uses: github/issue-labeler@v2.2
-        if: ${{env.labelTitle}} == true
+        if: ${{env.title_enabled}} == true
         with:
           repo-token: '${{ secrets.GITHUB_TOKEN }}'
-          configuration-path: ${{env.labelTitlePath}}
-          enable-versioned-regex: ${{env.Labelversioned}}
+          configuration-path: ${{env.title_path}}
+          enable-versioned-regex: ${{env.title_labelVersioned}}
         continue-on-error: true
       - uses: JasonEtco/is-sponsor-label-action@v1
-        if: ${{env.labelSponsor}} == true
+        if: ${{env.sponsor_enabled}} == true
         with:
-          label: ${{env.sponsorLabel}}
+          label: ${{env.sponsor_label}}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
-      - run: if [ ${{env.useOrg}} == true ]; then echo ::set-env name=projectPath::"org/${{github.repository_owner}}" ; else echo ::set-env name=projectPath::"${{github.repository}}" ; fi
+      - run: if [ ${{env.projects_useOrg}} == true ]; then echo ::set-env name=projectPath::"org/${{github.repository_owner}}" ; else echo ::set-env name=projectPath::"${{github.repository}}" ; fi
       - name: Assign NEW issues to project DevOps
         uses: docker://takanabe/github-actions-automate-projects:v0.0.1
-        if: ( github.event.action == 'opened' && ${{env.assignProjects}} == true )
+        if: ( github.event.action == 'opened' && ${{env.projects_enabled}} == true )
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.DevOps}}
-          GITHUB_PROJECT_COLUMN_NAME: ${{env.DevOpsColumn}}
+          GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.projects_devOps}}
+          GITHUB_PROJECT_COLUMN_NAME: ${{env.projects_devOpsColumn}}
         continue-on-error: true
       - name: Assign NEW bugs to project bugs
         uses: docker://takanabe/github-actions-automate-projects:v0.0.1
-        if: ( contains(github.event.issue.labels.*.name, 'Type - Bug') && ${{env.assignProjects}} == true )
+        if: ( contains(github.event.issue.labels.*.name, 'Type - Bug') && ${{env.projects_enabled}} == true )
         env:
           GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
-          GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.Issues}}
-          GITHUB_PROJECT_COLUMN_NAME: ${{env.IssuesColumn}}
+          GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.projects_issues}}
+          GITHUB_PROJECT_COLUMN_NAME: ${{env.projects_issuesColumn}}
         continue-on-error: true
       - name: Create Issue Branch
-        if: ${{env.issueBranch}} == true
+        if: ${{env.issueBranch_enabled}} == true
         uses: robvanderleek/create-issue-branch@master
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
