@@ -26,7 +26,7 @@ jobs:
         with:
           settings: ${{ secrets.SETTINGS }}
           settingsjson: '.github/allconfigs.json'
-          mode: 'environment'
+          mode: 'output'
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: check output
         run: echo "${{steps.tests.outputs.inclusive_comment}}"
