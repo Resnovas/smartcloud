@@ -16,21 +16,6 @@ jobs:
 #       - run: |
 #           npm run all
         
-
-  test-output: # make sure the action works on a clean machine without building
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./
-        id: tests
-        with:
-          settings: ${{ secrets.SETTINGS }}
-          settingsjson: '.github/allconfigs.json'
-          mode: 'output'
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: check output
-        run: echo "${{steps.tests.outputs.inclusive_comment}}"
-  
   test-env: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     needs: test-output
@@ -46,3 +31,17 @@ jobs:
         run: echo "${{env.inclusive_comment}}"
       - name: check output
         run: echo "${{jobs.test-output.steps.tests.outputs.inclusive_comment}}"
+        
+  test-output: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: tests
+        with:
+          settings: ${{ secrets.SETTINGS }}
+          settingsjson: '.github/allconfigs.json'
+          mode: 'output'
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: check output
+        run: echo "${{steps.tests.outputs.inclusive_comment}}"
