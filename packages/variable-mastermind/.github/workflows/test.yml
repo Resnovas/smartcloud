@@ -47,4 +47,4 @@ jobs:
         run: echo "${{env.inclusive_comment}}"
       - name: check output
         run: |
-          echo "${{needs.test-output.test}}"
+          echo "${{needs.test-output.outputs.test}}"
