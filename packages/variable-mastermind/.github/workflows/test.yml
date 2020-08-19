@@ -27,6 +27,8 @@ jobs:
           settingsjson: '.github/allconfigs.json'
           mode: 'environment'
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: check output
+        run: echo "${{steps.tests.outputs.inclusive_comment}}"
   
   test-env: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
