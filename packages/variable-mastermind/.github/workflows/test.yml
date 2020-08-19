@@ -16,7 +16,22 @@ jobs:
 #           npm install
 #       - run: |
 #           npm run all
-               
+       
+  test-nofile: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    outputs: 
+      test: ${{steps.tests.outputs.inclusive_comment}}}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./
+        id: tests
+        with:
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'output'
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: check output
+        run: echo "${{steps.tests.outputs.inclusive_comment}}"
+        
   test-output: # make sure the action works on a clean machine without building
     runs-on: ubuntu-latest
     outputs: 
