@@ -1,105 +1,87 @@
-<p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
-</p>
+# Manage Github Secrets
 
-# Create a JavaScript Action using TypeScript
+This action is build to support the production of github workflow templates, and provide functionality to pass data from secrets or files to workflow steps. This therefore allows users to create complex workflows with complex enviormental variables.
 
-Use this template to bootstrap the creation of a TypeScript action.:rocket:
+We use secrets in this to reduce the load on the API as another method we tried would cause the api to max out regularly.
 
-This template includes compilation support, tests, a validation workflow, publishing, and versioning guidance.
+## Table of contents
 
-If you are new, there's also a simpler introduction. See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+- [Manage Github Secrets](#manage-github-secrets)
+  - [Table of contents](#table-of-contents)
+  - [Use this action](#use-this-action)
+  - [Using Job Outputs](#using-job-outputs)
+  - [Using Job Environment](#using-job-environment)
 
-## Create an action from this template
+## Use this action
 
-Click the `Use this Template` and provide the new repo details for your action
+To get started with this action, create a file named `allconfig.json` or `allconfig.yml` and store your configuration variables within. For instance this is a valid file:
 
-## Code in Main
+_[allconfig.json](.github/allconfigs.json)_
 
-Install the dependencies
-
-```bash
-$ npm install
-```
-
-Build the typescript and package it for distribution
-
-```bash
-$ npm run build && npm run package
-```
-
-Run the tests :heavy_check_mark:
-
-```bash
-$ npm test
-
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-
-...
-```
-
-## Change action.yml
-
-The action.yml contains defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try {
-      ...
-  }
-  catch (error) {
-    core.setFailed(error.message);
+```json
+{
+  "auto": {
+    // prefixed to the variables in this collection
+    "enabled": true, // Should this section be used
+    "vars": {
+      // stores all the variables
+      "branch": "auto-update"
+    }
   }
 }
-
-run()
 ```
 
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos so we will checkin the packed dist folder.
-
-Then run [ncc](https://github.com/zeit/ncc) and push the results:
-
-```bash
-$ npm run package
-$ git add dist
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Your action is now published! :rocket:
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing `./` in a workflow in your repo (see [test.yml](.github/workflows/test.yml))
+_[allconfig.yml](.github/allconfigs.yml)_
 
 ```yaml
-uses: ./
-with:
-  milliseconds: 1000
+auto: # prefixed to the variables in this collection
+  enabled: true # Should this section be used
+  vars: # stores all the variables
+    branch: 'auto-update'
 ```
 
-See the [actions tab](https://github.com/actions/javascript-action/actions) for runs of this action! :rocket:
+Using the action within a workflow can require a small bit of configuration, depending on the application. The following exaples are created from our application [Universal GitActions Workflows](https://github.com/Videndum/Universal-GitAction-Workflows) which is heavily based on this action.
 
-## Usage:
+## Using Job Outputs
 
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and latest V1 action
+```yaml
+jobs:
+  getConfigs:
+    runs-on: ubuntu-latest
+    outputs:
+      setting: ${{steps.tests.outputs.test_setting}}} # By setting which outputs you want to use here you can use them in other jobs
+    steps:
+      - name: Manage Github Secrets
+        uses: Videndum/manage-github-secrets@1.0.0-beta
+        with:
+          settings: ${{ secrets.SETTINGS }} # The secret containing your JSON settings string
+          settingsjson: '.github/allconfigs.json' # The file storing the settings (can be JSON or YML)
+          mode: 'output' # The mode to output vars - Options: output, environment, secret
+          token: ${{ secrets.GITHUB_TOKEN }} # Your github token to allow access to the API if needed (only used as backup when secret.SETTINGS isn't valid)
+
+  test-output: # make sure the action works on a clean machine without building
+    runs-on: ubuntu-latest
+    needs: getConfigs
+    steps:
+      - name: check output
+        run: |
+          echo "${{needs.getConfigs.outputs.setting}}"
+```
+
+## Using Job Environment
+
+```yaml
+jobs:
+  getConfigs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Manage Github Secrets
+        uses: Videndum/manage-github-secrets@1.0.0-beta
+        with:
+          settings: ${{ secrets.SETTINGS }} # The secret containing your JSON settings string
+          settingsjson: '.github/allconfigs.json' # The file storing the settings (can be JSON or YML)
+          mode: 'environment' # The mode to output vars - Options: output, environment, secret
+          token: ${{ secrets.GITHUB_TOKEN }} # Your github token to allow access to the API if needed (only used as backup when secret.SETTINGS isn't valid)
+      - name: check env
+        run: echo "${{env.test_setting}}"
+```
