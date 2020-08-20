@@ -36,7 +36,7 @@ jobs:
   updater:
     name: Automatically update workflow files
     runs-on: ubuntu-latest
-    if: github.repository != Videndum/Universal-GitAction-Workflows
+    if: github.repository ! Videndum/Universal-GitAction-Workflows
     steps:
       - name: Get Configurations
         uses: Videndum/manage-github-secrets@1.0.0-beta
