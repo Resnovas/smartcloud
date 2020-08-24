@@ -45,7 +45,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check title
         if: ${{env.semantic_enabled}} == true
-        uses: amannn/action-semantic-pull-request@v1.2.6
+        uses: amannn/action-semantic-pull-request@v1.2.8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
