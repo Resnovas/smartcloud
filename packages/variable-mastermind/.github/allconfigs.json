@@ -71,10 +71,10 @@
     "enabled": true,
     "vars": {
       "enabled": true,
-      "stale-issue-message": "This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.",
-      "stale-issue-label": "Status - Stale",
-      "stale-pr-message": "Stale pull request message",
-      "stale-pr-label": "Status - Abandoned",
+      "issue-message": "This issue has been automatically marked as stale because it has not had recent activity. It will be closed if no further activity occurs. Thank you for your contributions.",
+      "issue-label": "Status - Stale",
+      "pr-message": "Stale pull request message",
+      "pr-label": "Status - Abandoned",
       "exempt-issue-labels": "security vulnerability",
       "days-before-stale": "30",
       "days-before-close": "5"
@@ -82,15 +82,18 @@
   },
   "profanity": {
     "secret": false,
-    "enabled": true
+    "enabled": true,
+    "vars": {
+      "enabled": true
+    }
   },
   "title": {
     "secret": false,
     "enabled": true,
     "vars": {
       "enabled": true,
-      "labelTitlePath": ".github/labeler-title.yml",
-      "Labelversioned": "0"
+      "path": ".github/labeler-title.yml",
+      "labelVersioned": "0"
     }
   },
   "sponsor": {
@@ -98,12 +101,15 @@
     "enabled": true,
     "vars": {
       "enabled": true,
-      "Label": "Sponsor Request ❤️"
+      "label": "Sponsor Request ❤️"
     }
   },
   "issueBranch": {
     "secret": false,
-    "enabled": true
+    "enabled": true,
+    "vars": {
+      "enabled": true
+    }
   },
   "commands": {
     "secret": false,
@@ -123,7 +129,10 @@
   },
   "semantic": {
     "secret": false,
-    "enabled": true
+    "enabled": true,
+    "vars": {
+      "enabled": true
+    }
   },
   "size": {
     "secret": false,
@@ -166,7 +175,10 @@
   },
   "approve": {
     "secret": false,
-    "enabled": true
+    "enabled": true,
+    "vars": {
+      "enabled": true
+    }
   },
   "merge": {
     "secret": false,
@@ -197,7 +209,7 @@
     "enabled": true,
     "vars": {
       "enabled": true,
-      "Config": "docs/information/changelog.md",
+      "config": "docs/information/changelog.md",
       "pullRequests": true,
       "prWoLabels": "skip-changelog",
       "breakingLabels": "Versioning - BREAKING",
@@ -240,7 +252,8 @@
     "enabled": true,
     "vars": {
       "enabled": true,
-      "config": ".github/labels.yml"
+      "config": ".github/labels.yml",
+      "skipDelete": false
     }
   },
   "inclusive": {
