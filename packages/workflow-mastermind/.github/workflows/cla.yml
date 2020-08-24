@@ -26,7 +26,7 @@ jobs:
           branch: ${{env.auto_branchPrefix}}${{env.auto_branch}}_CLA
       - name: CLA Assistant
         if: ${{env.cla_enabled}} == true
-        uses: cla-assistant/github-action@v1.4.3-alpha
+        uses: cla-assistant/github-action@v2.0.0-alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
