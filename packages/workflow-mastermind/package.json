@@ -27,7 +27,7 @@
   "devDependencies": {
     "prettier-plugin-organize-imports": "^1.1.1",
     "prettier-plugin-pkg": "^0.8.0",
-    "prettier-plugin-sh": "^0.5.0",
+    "prettier-plugin-sh": "^0.6.0",
     "prettier-standard": "^16.4.1"
   }
 }
