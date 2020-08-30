@@ -1,19 +1,19 @@
 # Used by issues
-'Type - Chore':
-  - 'chore'
-'Type - Enhancement':
-  - 'enhancement'
-  - 'enhance'
 'Type - Feature':
   - 'feature'
   - 'feat'
+  - 'enhancement'
+  - 'enhance'
 'Type - Documentation':
   - 'docs'
 'Type - Bug':
   - 'bug'
 'Type - Maintenance':
+  - 'chore'
   - 'maintenance'
   - 'maint'
+  - 'optimisation'
+  - 'opt'
 'Type - Optimisation':
   - 'optimisation'
   - 'opt'

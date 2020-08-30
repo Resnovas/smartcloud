@@ -104,19 +104,19 @@
   description: DevOPS deployed to Testing
 
 - name: 'ComOps - Accepted'
-  color: bbb1ed
+  color: bfdadc
   description: A community contributor is planning to work on this issue
 - name: 'ComOps - Completed'
-  color: bbb1ed
+  color: bfdadc
   description: The contributor has completed this issue and handed over to the developers to stage & deploy
 - name: 'ComOps - Developing'
-  color: bbb1ed
+  color: bfdadc
   description: The contributor is developing this issue
 - name: 'ComOps - Awaiting Review'
-  color: bbb1ed
+  color: bfdadc
   description: The contributor is awaiting review
 - name: 'ComOps - Testing'
-  color: bbb1ed
+  color: bfdadc
   description: The contributor is awaiting testing results
 
 - name: 'Platform - Android'
@@ -160,22 +160,22 @@
   description: This bug affects more than 50% of users and should be patched before any new features are added
 
 - name: 'Size - XS'
-  color: ffffff
+  color: d4c5f9
   description: Less than 10 lines changed
 - name: 'Size - S'
-  color: ffffff
+  color: d4c5f9
   description: More than 10 lines changed
 - name: 'Size - M'
-  color: ffffff
+  color: d4c5f9
   description: More than 30 lines changed
 - name: 'Size - L'
-  color: ffffff
+  color: d4c5f9
   description: More than 100 lines changed
 - name: 'Size - XL'
-  color: ffffff
+  color: d4c5f9
   description: More than 500 lines changed
 - name: 'Size - XXL'
-  color: ffffff
+  color: d4c5f9
   description: More than 1000 lines changed
 
 - name: 'Bug - Confirmed'
@@ -237,32 +237,35 @@
   color: D1260F
   description: A Security vulnerability
 - name: 'Duplicate'
-  color: ffffff
+  color: d4c5f9
   description: A Duplicate of another issue/pull
 - name: 'Help wanted'
-  color: ffffff
+  color: d4c5f9
   description: Help is needed to continue
 - name: 'Needs rebase'
-  color: ffffff
+  color: d4c5f9
   description: This request needs to be rebased
 - name: 'Work in progress'
-  color: ffffff
+  color: d4c5f9
   description: This pull request is a wip
 - name: 'Sponsor Request ❤️'
-  color: ffffff
+  color: d4c5f9
   description: This request has come from a sponsor
 - name: 'More information needed'
-  color: ffffff
+  color: d4c5f9
   description: Requires more information before it can continue
 - name: 'Good first issue'
-  color: ffffff
+  color: d4c5f9
   description: A Good issue for first time github users
 - name: 'First Timers'
-  color: ffffff
+  color: d4c5f9
   description: A Good issue for first time github users
 - name: 'skip-changelog'
-  color: ffffff
+  color: d4c5f9
   description: Skip the changelog
 - name: 'automerge'
-  color: ffffff
+  color: d4c5f9
   description: Automatically Merge this request
+- name: 'closed'
+  color: d4c5f9
+  description: A closed & locked issue or pr

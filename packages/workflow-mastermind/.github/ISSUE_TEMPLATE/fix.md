@@ -1,7 +1,7 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: 'bug([context]): '
+name: Code fix
+about: Let us know about a solution to an existing bug
+title: 'fix([context]): '
 ---
 
 <!-- Please use [context] in title to describe the package related to this issue.
@@ -9,18 +9,10 @@ Valid options are; smartcloudjs, cli, discord, workflows, components, webfront, 
 smartcloud-discord context example: bug(discord): {your title here}
 -->
 
-## Describe the bug
+## Describe the fix
 
-<!-- A clear and concise description of what the bug is. -->
-
-### To Reproduce
-
-<!-- Steps to reproduce the behaviour:-->
-
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+Addresses bug: #<number>
+<!-- A clear and concise description of what the fix is. -->
 
 ### Expected behaviour
 
@@ -36,12 +28,12 @@ smartcloud-discord context example: bug(discord): {your title here}
 
 ## Device Information
 
-<!-- Please uncomment for reporting desktop bug
+<!-- Please uncomment for fixing desktop bug
 - Version: [e.g. 22]
 - Platform: [e.g. macOS, Google Cloud, ubuntu 18.04]
 -->
 
-<!-- Please uncomment for reporting mobile bug
+<!-- Please uncomment for fixing mobile bug
 - Version: [e.g. 22]
 - Device: [e.g. iPhone6]
 - Platform: [e.g. iOS, Andriod]
@@ -60,18 +52,17 @@ smartcloud-discord context example: bug(discord): {your title here}
 
 <!-- Add any other context about the problem here. -->
 
-## Bug Checklist
+## Fix Checklist
 
 <!-- Please be honest here; we don't mind if you haven't done all these steps; however, we need to know where has been tested and how extensively we need to test it ourselves.
 
-We would appreciate it if you could maintain this section cleanly and clearly. If someone confirms your bug, add them to the "Bug confirmed by" section. Our bot will automatically detect if you have enough users confirmed to tag this bug as "Bug - Confirmed".
+We would appreciate it if you could maintain this section cleanly and clearly. If someone confirms your bug, add them to the "Fix confirmed by" section. Our bot will automatically detect if you have enough users confirmed to tag this bug as "Fix - Confirmed".
 -->
 
-- [ ] Have reproduced on my application version
-- [ ] Have reproduced on a clean installation
-- [ ] Have reproduced on a development build
+- [ ] Have fixed on a clean installation
+- [ ] Have fixed on a stable build
+- [ ] Have fixed on a development build
 - [ ] Have included logs or screenshots
-- [ ] Have contacted support via the official website
-- [ ] Have asked the community for guidance
 - [ ] Have linked any related issues
-- [ ] Bug confirmed by <!--@yourusername & @friendsusername-->
+- [ ] Fix confirmed by <!--@yourusername & @friendsusername-->
+

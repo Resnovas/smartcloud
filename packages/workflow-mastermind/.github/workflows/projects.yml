@@ -1,7 +1,7 @@
 name: Project Management
 on:
   project_card:
-    types: [created, moved]
+    types: [created, moved, deleted]
 jobs:
   # Automatically assigns labels based on config ../card-labeler.yml
   triage:

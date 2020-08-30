@@ -1,0 +1,66 @@
+name: Release Management
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  misc:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    steps:
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
+        with:
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: actions/checkout
+        uses: actions/checkout@v2.0.0
+
+      # Inclusive Org
+      - run: if [ ${{env.inclusive_org}} === 'owner' ]; then echo ::set-env name=inclusiveorg::${{github.repository_owner}} ; else echo ::set-env name=inclusiveorg::${{env.inclusive_org}} ; fi
+      - name: Invite contributor to the organization
+        uses: lekterable/inclusive-organization-action@v1.1.0
+        if: ${{env.inclusive_enabled}} == true
+        with:
+          organization: ${{env.inclusiveorg}}
+          team: ${{env.inclusive_team}}
+          comment: ${{env.inclusive_comment}}
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        continue-on-error: true
+
+      # Sync Node meta
+      - name: Jaid/action-sync-node-meta
+        if: ${{env.syncNode_enabled}} == true
+        uses: jaid/action-sync-node-meta@v1.4.0
+        with:
+          direction: ${{env.syncNode_direction}}
+          approve: ${{env.syncNode_approve}}
+          commitMessagePrefix: ${{env.syncNode_commitMessagePrefix}}
+          syncDescription: ${{env.syncNode_description}}
+          syncHomepage: ${{env.syncNode_homepage}}
+          syncKeywords: ${{env.syncNode_keywords}}
+          githubToken: ${{ secrets.BOT_TOKEN }}
+
+      # Debt Collection
+      - name: Generate technical debt issue
+        if: ${{env.debt_enabled}} == true
+        uses: teepsdonnelly/debt-collector@v1.0.0
+        with:
+          title_prefix: 'debt:'
+          body_end: regex
+          token: ${{secrets.BOT_TOKEN}}
+
+      # Sentry
+      - name: Create Sentry release
+        if: ${{env.sentry_enabled}} == true &&
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ env.sentry_org }}
+          SENTRY_PROJECT: ${{ secrets.sentry_project }}
+        with:
+          environment: production

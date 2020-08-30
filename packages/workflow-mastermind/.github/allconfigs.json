@@ -111,14 +111,6 @@
       "enabled": true
     }
   },
-  "commands": {
-    "secret": false,
-    "enabled": true,
-    "vars": {
-      "enabled": true,
-      "claim": true
-    }
-  },
   "wip": {
     "secret": false,
     "enabled": true,
@@ -234,7 +226,7 @@
     "secret": false,
     "enabled": true,
     "vars": {
-      "enabled": true,
+      "enabled": false,
       "docsToWiki": true,
       "docsToWikiSource": "docs",
       "docsToWikiDestination": "wiki",
@@ -264,6 +256,56 @@
       "org": "owner",
       "team": "Community",
       "comment": "Well done on getting your first Pull Request merged by our reviewers. The maintainers are proud of you!We would like to invite you to become a member of our github community team, which will allow you to get more access to our services & access to contributor only perks. Our bot should have already sent the invite. We look forward to you joining the team."
+    }
+  },
+  "syncNode": {
+    "enabled": true,
+    "vars": {
+      "enabled": true,
+      "direction": "overwrite-github",
+      "approve": true,
+      "commitMessagePrefix": "chore:",
+      "description": true,
+      "homepage": true,
+      "keywords": true
+    }
+  },
+  "debt": {
+    "enabled": true,
+    "vars": {
+      "enabled": true
+    }
+  },
+  "jest": {
+    "enabled": true,
+    "vars": {
+      "enabled": true,
+      "command": "npm run test:coverage"
+    }
+  },
+  "sentry": {
+    "enabled": true,
+    "vars": {
+      "enabled": true,
+      "org": "",
+      "project": ""
+    }
+  },
+  "command": {
+    "enabled": true,
+    "vars": {
+      "settings": [
+        {
+          "command": "help",
+          "permission": "none",
+          "issue_type": "both"
+        },
+        {
+          "command": "rebase",
+          "permission": "admin",
+          "issue_type": "pull-request"
+        }
+      ]
     }
   }
 }

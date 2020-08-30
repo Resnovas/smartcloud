@@ -1,18 +1,13 @@
 name: Pull Request Management
-
-# This workflow automatically lables PR to ensure that all PR's are correct within the release draft.
-
 on:
   pull_request:
     types:
       - opened
       - edited
       - synchronize
-
 jobs:
   # Automatically blocks WIP pull request based on the title
   wip:
-    name: Work in progress job
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -23,19 +18,20 @@ jobs:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
           token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Work in progress label
-        uses: y-temp4/add-wip-label@v1.0.0
-        if: ${{env.wip_label}} == true
-        with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Work in progress label
+      #   uses: y-temp4/add-wip-label@v1.0.0
+      #   if: ${{env.wip_label}} == true
+      #   with:
+      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Work in progress status
         uses: wip/action@v1.0.0
         if: ${{env.wip_enabled}} == true
 
   # Ensures semantic titles to ensure semantic is achieved when merge is squashed
-  semantic:
-    name: Semantic Title
+  conventional:
+    name: Conventional PR Title
     runs-on: ubuntu-latest
+    needs: wip
     steps:
       - name: Get Configurations
         uses: Videndum/manage-github-secrets@1.0.0-beta
@@ -45,13 +41,14 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check title
         if: ${{env.semantic_enabled}} == true
-        uses: amannn/action-semantic-pull-request@v1.2.8
+        uses: aslafy-z/conventional-pr-title-action@v2.2.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-  # Automatically labels based on files changed
+  # Setup labels
   labeler:
-    name: Path Labeler
+    name: Pull Labeler
+    needs: conventional
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
@@ -61,6 +58,12 @@ jobs:
           mode: 'environment'
           token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/checkout@v2.3.1
+      # super Labeler
+      - name: Super Labeller
+        uses: Videndum/super-labeler-action@v1.0.0
+        with:
+          GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
+      # Label size based (soon to be merged with super labeler)
       - uses: actions-ecosystem/action-size@v2
         if: ${{env.size_enabled}} == true
         id: size
@@ -75,43 +78,42 @@ jobs:
       - uses: actions-ecosystem/action-remove-labels@v1
         if: ${{env.size_enabled}} == true
         with:
-          github_token: ${{ secrets.github_token }}
+          github_token: ${{ secrets.BOT_TOKEN }}
           labels: ${{ steps.size.outputs.stale_labels }}
         continue-on-error: true
       - uses: actions-ecosystem/action-add-labels@v1
         if: ${{env.size_enabled}} == true
         with:
-          github_token: ${{ secrets.github_token }}
+          github_token: ${{ secrets.BOT_TOKEN }}
           labels: ${{ steps.size.outputs.new_label }}
         continue-on-error: true
-      - uses: actions/labeler@v2
-        if: ${{env.path_enabled}} == true
-        with:
-          configuration-path: ${{env.path_config}}
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+
+      # Sponsor labels
       - uses: JasonEtco/is-sponsor-label-action@v1
         if: github.event.action == 'opened' && ${{env.sponsor_enabled}} == true
         with:
           label: ${{env.sponsor_label}}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         continue-on-error: true
-      - uses: TimonVS/pr-labeler-action@v3
-        if: ${{env.branch_enabled}} == true
-        with:
-          configuration-path: ${{env.branch_Config}}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+      # - uses: actions/labeler@v2
+      #   if: ${{env.path_enabled}} == true
+      #   with:
+      #     configuration-path: ${{env.path_config}}
+      #     repo-token: ${{ secrets.BOT_TOKEN }}
+      #     continue-on-error: true
+      # - uses: TimonVS/pr-labeler-action@v3
+      #   if: ${{env.branch_enabled}} == true
+      #   with:
+      #     configuration-path: ${{env.branch_Config}}
+      #   env:
+      #     GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+      #   continue-on-error: true
 
-  # Automatically approves
-  approval:
+    # Automatically approves
+  conflictCheck:
     name: Pull Request Conflict Check
-    needs:
-      - wip
-      - semantic
-      - labeler
+    needs: labeler
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
@@ -125,27 +127,33 @@ jobs:
         uses: wktk/conflibot@v1
         if: ${{env.conflict_pull}} == true
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+          github-token: ${{ secrets.BOT_TOKEN }}
       - name: check if prs are dirty
         if: ${{env.conflict_master}} == true
         uses: eps1lon/actions-label-merge-conflict@releases/1.x
         with:
           dirtyLabel: ${{env.conflict_dirty}}
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-        continue-on-error: true
+          repoToken: ${{ secrets.BOT_TOKEN }}
+
+  approval:
+    needs:
+      - conflictCheck
+    runs-on: ubuntu-latest
+    steps:
+      - name: Get Configurations
+        uses: Videndum/manage-github-secrets@1.0.0-beta
+        with:
+          settings: ${{ secrets.SETTINGS }}
+          mode: 'environment'
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Automatically approve
         uses: hmarr/auto-approve-action@v2.0.0
         if: (${{env.approve_enabled}} == true && contains(${{env.auto_whitelist}}, github.actor) || ${{env.approve_enabled}} == true && github.actor == github.repository_owner )
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.BOT_TOKEN }}
 
   automerge:
-    needs:
-      - wip
-      - semantic
-      - labeler
-      - approval
+    needs: approval
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
@@ -158,7 +166,7 @@ jobs:
         if: ${{env.merge_enabled}} == true
         uses: 'pascalgn/automerge-action@v0.9.0'
         env:
-          GITHUB_TOKEN: '${{ secrets.ACCESS_TOKEN }}'
+          GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
           MERGE_LABELS: ${{env.merge_labels}}
           MERGE_REMOVE_LABELS: ${{env.merge_deleteLabels}}
           MERGE_METHOD: ${{env.merge_method}}

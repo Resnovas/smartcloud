@@ -12,9 +12,7 @@ branches:
   - label: 'Type - Documentation'
     prefix: docs/
   - label: 'Type - Bug'
-    prefix: bug/
-  - label: 'Type - Maintenance'
-    prefix: maint/
+    prefix: fix/
   - label: 'Type - Optimisation'
     prefix: opt/
   - label: 'Type - Decrecated'
@@ -30,4 +28,4 @@ branches:
   - label: 'Type - Revert'
     skip: true
   - label: '*'
-    prefix: issue/
+    skip: true

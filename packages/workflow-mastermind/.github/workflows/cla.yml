@@ -19,11 +19,7 @@ jobs:
           settingsjson: '.github/allconfigs.json'
           mode: 'environment'
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: peterjgrainger/action-create-branch@2.0.1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          branch: ${{env.auto_branchPrefix}}${{env.auto_branch}}_CLA
+
       - name: CLA Assistant
         if: ${{env.cla_enabled}} == true
         uses: cla-assistant/github-action@v2.0.1-alpha
@@ -32,17 +28,6 @@ jobs:
         with:
           path-to-signatures: '${{env.cla_path}}'
           path-To-cladocument: 'https://github.com/${{github.repository}}/${{env.claDocs}}'
-          branch: ${{env.auto_branchPrefix}}${{env.auto_branch}}_CLA
           label: ${{env.cla_label}}
           whitelist: join(${{env.auto_whitelist}})
         continue-on-error: true
-      # - name: pull-request
-      #   uses: repo-sync/pull-request@v2
-      #   with:
-      #     github_token: ${{ secrets.ACCESS_TOKEN }}
-      #     source_branch: ${{env.autoBranchPrefix}}${{env.autoBranch}}_CLA
-      #     destination_branch: ${{env.autoDestination}}
-      #     pr_title: ${{env.claPRtitle}}
-      #     pr_body: ${{env.autoBody}}
-      #     pr_label: ${{env.autoLabels}}
-      #   continue-on-error: true
