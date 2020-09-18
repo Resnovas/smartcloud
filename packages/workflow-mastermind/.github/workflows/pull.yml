@@ -41,7 +41,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Check title
         if: ${{env.semantic_enabled}} == true
-        uses: aslafy-z/conventional-pr-title-action@v2.2.0
+        uses: aslafy-z/conventional-pr-title-action@v2.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
