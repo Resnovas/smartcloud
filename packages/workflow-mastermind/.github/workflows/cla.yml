@@ -22,7 +22,7 @@ jobs:
 
       - name: CLA Assistant
         if: ${{env.cla_enabled}} == true
-        uses: cla-assistant/github-action@v2.0.1-alpha
+        uses: cla-assistant/github-action@v2.0.2-alpha
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
