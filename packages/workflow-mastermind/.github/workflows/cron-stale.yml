@@ -15,7 +15,7 @@ jobs:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
           token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/stale@v3.0.12
+      - uses: actions/stale@v3.0.13
         if: ${{env.stale_enabled}} == true
         with:
           repo-token: ${{ secrets.BOT_TOKEN }}
