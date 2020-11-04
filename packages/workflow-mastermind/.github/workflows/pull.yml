@@ -24,7 +24,7 @@ jobs:
       #   with:
       #     repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Work in progress status
-        uses: wip/action@v1.0.0
+        uses: wip/action@v1.1.0
         if: ${{env.wip_enabled}} == true
 
   # Ensures semantic titles to ensure semantic is achieved when merge is squashed
