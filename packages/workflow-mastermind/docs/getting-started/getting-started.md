@@ -7,5 +7,6 @@ Using this template is super simple, but requires a small bit of configuration. 
 This template **requires** the following:
 
 - An `ACCESS_TOKEN` secret
+- A Bot Account (Optional)
 
 ## Using this template

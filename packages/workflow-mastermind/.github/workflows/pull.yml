@@ -13,16 +13,11 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
           token: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Work in progress label
-      #   uses: y-temp4/add-wip-label@v1.0.0
-      #   if: ${{env.wip_label}} == true
-      #   with:
-      #     repo-token: ${{ secrets.GITHUB_TOKEN }}
       - name: Work in progress status
         uses: wip/action@v1.1.0
         if: ${{env.wip_enabled}} == true
@@ -34,7 +29,7 @@ jobs:
     needs: wip
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -52,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -60,7 +55,7 @@ jobs:
       - uses: actions/checkout@v2.3.1
       # super Labeler
       - name: Super Labeller
-        uses: Videndum/super-labeler-action@v1.0.0
+        uses: Videndum/super-labeler-action@1.0.1
         with:
           GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
       # Label size based (soon to be merged with super labeler)
@@ -88,28 +83,6 @@ jobs:
           labels: ${{ steps.size.outputs.new_label }}
         continue-on-error: true
 
-      # Sponsor labels
-      - uses: JasonEtco/is-sponsor-label-action@v1
-        if: github.event.action == 'opened' && ${{env.sponsor_enabled}} == true
-        with:
-          label: ${{env.sponsor_label}}
-        env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-        continue-on-error: true
-      # - uses: actions/labeler@v2
-      #   if: ${{env.path_enabled}} == true
-      #   with:
-      #     configuration-path: ${{env.path_config}}
-      #     repo-token: ${{ secrets.BOT_TOKEN }}
-      #     continue-on-error: true
-      # - uses: TimonVS/pr-labeler-action@v3
-      #   if: ${{env.branch_enabled}} == true
-      #   with:
-      #     configuration-path: ${{env.branch_Config}}
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-      #   continue-on-error: true
-
     # Automatically approves
   conflictCheck:
     name: Pull Request Conflict Check
@@ -117,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -141,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -157,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'

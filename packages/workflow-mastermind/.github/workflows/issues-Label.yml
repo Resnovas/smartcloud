@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -20,22 +20,13 @@ jobs:
         uses: actions/checkout@v2
       # super Labeler
       - name: Super Labeller
-        uses: Videndum/super-labeler-action@v1.0.0
+        uses: Videndum/super-labeler-action@1.0.1
         with:
           GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
       # Profanity
       - name: Profanity check step
         if: ${{env.profanity_enabled}} == true
         uses: tailaiw/mind-your-language-action@v1.0.3
-        env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
-        continue-on-error: true
-      # Sponsor Label
-      - name: Sponsor Label
-        uses: JasonEtco/is-sponsor-label-action@v1
-        if: ${{env.sponsor_enabled}} == true
-        with:
-          label: ${{env.sponsor_label}}
         env:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         continue-on-error: true
@@ -46,12 +37,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
           token: ${{ secrets.GITHUB_TOKEN }}
-      - run: if [ ${{env.projects_useOrg}} == true ]; then echo ::set-env name=projectPath::"org/${{github.repository_owner}}" ; else echo ::set-env name=projectPath::"${{github.repository}}" ; fi
+      - run: if [ ${{env.projects_useOrg}} == true ]; then echo "projectPath=org/${{github.repository_owner}}" >> $GITHUB_ENV ; else echo "projectPath=${{github.repository}}" >> $GITHUB_ENV ; fi
       - name: Assign NEW issues to project DevOps
         uses: docker://takanabe/github-actions-automate-projects:v0.0.1
         if: github.event.action == 'opened' && ${{env.projects_enabled}} == true

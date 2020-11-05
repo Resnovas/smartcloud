@@ -11,7 +11,7 @@ jobs:
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -20,7 +20,7 @@ jobs:
         uses: actions/checkout@v2.0.0
 
       # Inclusive Org
-      - run: if [ ${{env.inclusive_org}} === 'owner' ]; then echo ::set-env name=inclusiveorg::${{github.repository_owner}} ; else echo ::set-env name=inclusiveorg::${{env.inclusive_org}} ; fi
+      - run: if [ ${{env.inclusive_org}} === 'owner' ]; then echo "inclusiveorg=${{github.repository_owner}}" >> $GITHUB_ENV ; else echo "inclusiveorg=${{env.inclusive_org}}" >> $GITHUB_ENV ; fi
       - name: Invite contributor to the organization
         uses: lekterable/inclusive-organization-action@v1.1.0
         if: ${{env.inclusive_enabled}} == true

@@ -1,6 +1,6 @@
 # Universal GitActions Workflows
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FVidendum%2FUniversal-GitAction-Workflows.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FVidendum%2FUniversal-GitAction-Workflows?ref=badge_shield)
 
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FVidendum%2FUniversal-GitAction-Workflows.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FVidendum%2FUniversal-GitAction-Workflows?ref=badge_shield)
 
 Welcome to this template for GitActions Workflow. A fully automatically generating workflow template for Github.
 
@@ -18,6 +18,7 @@ Welcome to this template for GitActions Workflow. A fully automatically generati
     - [Understanding developer workflow](#understanding-developer-workflow)
   - [Backlog & Contributing](#backlog--contributing)
   - [Final Note](#final-note)
+  - [License](#license)
 
 ## Features
 
@@ -126,6 +127,6 @@ Our backlog can be found on [Github](https://github.com/Videndum/Universal-GitAc
 
 Thank you for taking the time to look through this repository. If you have liked what you have found, please would you favourite & share. Ideally I would like to get a community behind this project which can ensure that it is maintained, updated and improved as GitActions get more suffisticated.
 
-
 ## License
+
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FVidendum%2FUniversal-GitAction-Workflows.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FVidendum%2FUniversal-GitAction-Workflows?ref=badge_large)

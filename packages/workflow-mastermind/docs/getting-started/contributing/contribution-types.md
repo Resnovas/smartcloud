@@ -1,19 +1,5 @@
 # Contribution Types
 
-For all contributions you are required to do the following
-
-1. Create your own fork of the latest development code
-2. Do the changes in your fork
-3. If you like the change and think the project could use it:
-   - Be sure you have followed the code style for the project.
-   - Be sure to have commented the code so others can follow.
-   - Be sure to have checked your using the latest API changes within your code.
-   - Be sure to have named your pull request according to our documentation.
-   - Be sure to have included your information within the merge request.
-4. Send a merge request.
-5. Await confirmation & Make any changes that Maintainers request.
-6. Get added to the list of contributors.
-
 ## Minor Contributions
 
 Small contributions such as fixing spelling errors, where the content is small enough to not be considered intellectual property, can be submitted by a contributor as a minor patch, without a CLA.

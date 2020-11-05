@@ -4,12 +4,31 @@ First off, thank you for considering contributing to this project.
 
 This project uses the [Univeersal GitActions Workflows](https://github.com/TGTGamer/Universal-GitAction-Workflows) to automate our workflow, alongside provide templates for issues and pull requests. If you want to learn more about exactly what is included within the workflows, please checkout the documentation there.
 
+- [Contributing](#contributing)
+  - [Why the guidelines](#why-the-guidelines)
+  - [Contributor License Agreement](#contributor-license-agreement)
+  - [Responsibilities](#responsibilities)
+  - [External Contributions Workflow](#external-contributions-workflow)
+  - [Internal Contributions Workflow](#internal-contributions-workflow)
+    - [Branch Names](#branch-names)
+  - [Contribution Types](#contribution-types)
+    - [Minor Contributions](#minor-contributions)
+    - [Standard Contributions](#standard-contributions)
+    - [Major Contributions](#major-contributions)
+  - [Your First Contribution](#your-first-contribution)
+  - [Your first project](#your-first-project)
+  - [Creating a merge request](#creating-a-merge-request)
+    - [Titling your request](#titling-your-request)
+    - [Prefixes](#prefixes)
+  - [Security Disclosures](#security-disclosures)
+  - [Understanding Labels](#understanding-labels)
+
 ## Why the guidelines
 
-Following these guidelines helps to communicate that you respect the time of the developers managing and creating this project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests. We created these guideleines to ensure that everyone has the same information when working on the project.
+Following these guidelines helps to communicate that you respect the time of the developers managing and creating this project. In return, they should reciprocate that respect in addressing your issue, assessing changes, and helping you finalize your pull requests. We created these guidelines to ensure that everyone has the same information when working on the project.
 
 - Please don't use the issue tracker for support questions.
-- Please check whether the FAQ or can help with your issue.
+- Please check whether the FAQ can help with your issue.
 - Please check the closed tickets & pull requests before opening an new one.
 
 ## Contributor License Agreement
@@ -18,11 +37,85 @@ We have a Contributor License Agreement which can be found at [`{root}/docs/gett
 
 ## Responsibilities
 
-- Ensure cross-platform compatibility for every change that's accepted. Windows, Mac, Debian & Ubuntu Linux.
+- Ensure cross-platform compatibility for every change that's accepted.
 - Ensure that code meets all [requirements](contribution-types.md)
 - Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
 - Ensure each contribution is created on its own branch to ensure we can follow [Semantic Versioning](http://semver.org/)
 - Be welcoming to newcomers and encourage diverse new contributors from all backgrounds
+
+## External Contributions Workflow
+
+For all contributions you are required to do the following
+
+1. Create your own fork of the latest development code
+2. Do the changes in your fork
+3. If you like the change and think the project could use it:
+   - Be sure you have followed the code style for the project.
+   - Be sure to have commented the code so others can follow.
+   - Be sure to have checked your using the latest API changes within your code.
+   - Be sure to have named your pull request according to our documentation.
+   - Be sure to have included your information within the Pull Request.
+4. Send a Pull Request.
+5. Await confirmation & Make any changes that Maintainers request.
+6. Get added to the list of contributors.
+
+## Internal Contributions Workflow
+
+For all contributions you are required to do the following
+
+1. Create an issue for the feature / issue / improvement
+2. Create your own branch of the latest development code (Normally automatically done by our bot)
+3. Do the changes in your branch
+4. If you like the change and think the project could use it:
+   - Be sure you have followed the code style for the project.
+   - Be sure to have commented the code so others can follow.
+   - Be sure to have checked your using the latest API changes within your code.
+   - Be sure to have named your pull request according to our documentation.
+   - Be sure to have included your information within the Pull Request.
+5. Send a Pull Request.
+6. Await confirmation & Make any changes that Maintainers request.
+
+### Branch Names
+
+A branch will normally be created by the automatic system for each issue, if not please follow the branch name configuration defined as follows:
+
+- Chore: chore/
+- Enhancement: enhance/
+- Feature: feat/
+- Documentation: docs/
+- Bug: fix/
+- Optimisation: opt/
+- Decrecated: dep/
+- Refactor: ref/
+- Style: style/
+
+## Contribution Types
+
+### Minor Contributions
+
+Small contributions such as fixing spelling errors, where the content is small enough to not be considered intellectual property, can be submitted by a contributor as a minor patch, without a CLA.
+
+As a rule of thumb, changes are obvious fixes if they do not introduce any new functionality or creative thinking. As long as the change does not affect functionality, some likely examples include the following:
+
+- Spelling / grammar fixes
+- Typo correction, white space and formatting changes
+- Comment clean up
+- Bug fixes that change default return values or error codes stored in constants
+- Adding logging messages or debugging output
+- Changes to �metadata� files like Gemfile, .gitignore, build scripts, etc.
+- Moving source files from one directory or package to another
+
+### Standard Contributions
+
+Standard contributions are contributions which are too large to be considered a minor contribution however, only address one feature or function. This can include, but is not limited to, tutorials, wiki pages, new features (e.g. small integrations) and feature enhancements. Our automation systems will automatically do all the hard work of labeling, assigning and reviewing your contribution.
+
+You our required to sign the CLA and agree to it's terms. This will be automatically handled by our automation when you create a pull request, and once signed you will be able to submit without resigning.
+
+### Major Contributions
+
+Major contributions are contributions which add, modify or remove multiple features or modules. We can not emphasise enough how much the community helps us every time they submit one of these.
+
+You our required to sign the CLA and agree to it's terms. This will be automatically handled by our automation when you create a pull request, and once signed you will be able to submit without resigning.
 
 ## Your First Contribution
 

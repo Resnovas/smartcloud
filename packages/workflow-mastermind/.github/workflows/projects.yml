@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.0-beta
+        uses: Videndum/manage-github-secrets@1.0.1
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
