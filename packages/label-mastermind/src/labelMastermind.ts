@@ -139,7 +139,7 @@ export default class labelMastermind {
    * @since 1.0.0
    */
   async processConfig(): Promise<Config> {
-    if (!this.configJSON) {
+    if (JSON.stringify(this.configJSON) === '{}') {
       if (!fs.existsSync(this.configPath)) {
         throw new Error(`config not found at "${this.configPath}"`)
       }
