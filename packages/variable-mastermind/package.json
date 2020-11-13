@@ -15,18 +15,25 @@
     "doc": "./docs",
     "test": "./__tests__"
   },
-  "keywords": ["actions", "node", "setup"],
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
   "scripts": {
-    "all": "npm run build && npm run format && npm run package && npm test",
+    "all": "npm run build && npm run package && npm run format && npm test",
     "build": "tsc",
-    "format": "prettier-standard --write **/*.ts",
-    "format-check": "prettier-standard --check **/*.ts",
+    "format": "prettier --config .prettier.json --write .",
+    "format-check": "prettier --config .prettier.json --check .",
     "package": "ncc build --source-map",
     "test": "jest"
   },
   "dependencies": {
     "@actions/core": "^1.2.6",
-    "@actions/github": "^4.0.0"
+    "@actions/github": "^4.0.0",
+    "@octokit/core": "^3.2.1",
+    "octonode": "^0.9.5",
+    "tweetsodium": "^0.0.5"
   },
   "devDependencies": {
     "@types/jest": "^26.0.15",
@@ -36,6 +43,7 @@
     "jest": "^26.6.3",
     "jest-circus": "^26.6.3",
     "js-yaml": "^3.14.0",
+    "prettier": "^2.1.2",
     "prettier-plugin-organize-imports": "^1.1.1",
     "prettier-plugin-pkg": "^0.8.0",
     "prettier-plugin-sh": "^0.6.0",

@@ -1,38 +1,40 @@
-import * as classes from '../src/classes'
 import * as settings from '../.github/allconfigs.json'
+import * as settingsOLD from '../.github/allconfigs.old.json'
+import { Global, inputdata } from '../src/classes'
 import * as config from './config.json'
+
+const input: inputdata = {
+  mode: 'secret',
+  token: config.token,
+  owner: 'Videndum',
+  repo: 'manage-github-secrets',
+  secretname: 'SETTINGS',
+  secretorg: false,
+  secrets: false
+}
+
 test('string settings input', async () => {
-  await expect(
-    classes.global.parseSettings({
-      token: config.token,
-      settings: settings
-    })
+  let globalinput = input
+  globalinput.settings = JSON.stringify(settings)
+  const global = new Global(globalinput)
+  await expect(await global.parseSettings()).toEqual(
+    settings['manage-github-secrets']
   )
 })
+
 test('file settings input', async () => {
-  const input = '.github/allconfigs.json'
-  await classes.global.parseSettings({
-    token: config.token,
-    file: input,
-    owner: 'Videndum',
-    repo: 'manage-github-secrets'
-  })
+  let globalinput = input
+  globalinput.file = '.github/allconfigs.json'
+  const global = new Global(globalinput)
+  await expect(settingsOLD).toReturn
 })
+
 test('blank settings input', async () => {
-  const input = ''
-  await expect(
-    classes.global.parseSettings({
-      token: config.token,
-      settings: input
-    })
-  )
+  const global = new Global(input)
+  await expect(await global.parseSettings()).toBeUndefined
 })
+
 test('use settings with output', async () => {
-  await classes.global.useSettings('output', settings)
+  const global = new Global(input)
+  expect(await global.useSettings('output', settings['manage-github-secrets']))
 })
-// test('use settings with environment', async () => {
-//   await classes.global.useSettings('environment', settings)
-// })
-// test('use settings with secret', async () => {
-//   await classes.global.useSettings('secret', settings)
-// })

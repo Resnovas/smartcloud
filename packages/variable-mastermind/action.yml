@@ -16,9 +16,21 @@ inputs:
     required: true
     description: 'Sets the mode of the action - Output, Secrets, Environment'
     default: 'outputs'
-  token: 
+  secretOrg:
     required: true
-    description: 'The token that should be used'
+    description: 'If set to true, will update the "SETTINGS" secret within the organisation instead'
+    default: 'false'
+  secretupdates:
+    required: true
+    description: 'If set to true, will update the "SETTINGS" secret within the repository'
+    default: 'false'
+  secretname:
+    required: false
+    description: 'sets the secret name to be used for settings secret'
+    default: 'SETTINGS'
+  token:
+    required: true
+    description: 'The token that should be used (NEEDS be a personal access token)'
     default: ''
 
 runs:
