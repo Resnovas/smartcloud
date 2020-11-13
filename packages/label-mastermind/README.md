@@ -1,17 +1,46 @@
-# super-labeler-action
+# Label Mastermind
 
-A superpowered issue and pull request labeler for Github Actions.
+The super-powered labeler for Github Actions, with complex customisable conditions for PR, Issues and Projects.
 
-Super Labeler allows you to declaratively define your repository's labels, and when to apply them, in a config file that's checked into your repository.
+## Capabilities
 
-_This is a fork of [IvanFon/super-labeler-action](https://github.com/IvanFon/super-labeler-action) which we are maintaining due to the main repository going inactive. The original idea and all credit goes to IvanFon._
+Label Mastermind is capable of the following:
+
+- Create, Update, Delete Labels declaratively from Config file or JSON String
+- Apply Labels based on conditions:
+  - Pull Releases
+  - Issues
+  - Project Cards
+- Conditions:
+  - [creatorMatches](#creatormatches)
+  - [descriptionMatches](#descriptionmatches)
+  - [isLocked](#islocked)
+  - [isOpen](#isopen)
+  - [titleMatches](#titlematches)
+  - [changesSize](#changessize)
+  - [branchMatches](#branchmatches)
+  - [filesMatch](#filesmatch)
+  - [isDraft](#isdraft)
+  - [pendingReview](#pendingreview)
+  - [isApproved](#isapproved)
+  - [requestedChanges](#requestedchanges)
+
+Label Mastermind is designed to work in combination with other Videndum Studios Projects. Check out our [Universal Workflows Project](https://github.com/Videndum/Universal-GitAction-Workflows)
 
 ## Getting Started
 
-Create a new Github Actions workflow at `.github/workflows/label.yml`:
+<details>
+  <summary><b>Click to show automatic configuration</b></summary>
+
+The quickest way to get started with Label Mastermind is through our [Universal Workflows Project](https://github.com/Videndum/Universal-GitAction-Workflows)'s automatic installer.
+
+**THIS IS UNDER CONSTRUCTION. PLEASE USE MANUAL CONFIGURATION**
+
+</details>
 
 <details>
-  <summary><b>Click to show example workflow</b></summary>
+  <summary><b>Click to show manual configuration</b></summary>
+Create a new Github Actions workflow at `.github/workflows/label.yml`:
 
 _Note: `actions/checkout` must be run first so that the labeler action can find your config file._
 
@@ -27,17 +56,12 @@ jobs:
     name: Label issues and pull requests
     steps:
       - uses: actions/checkout@v2
-      - uses: IvanFon/super-labeler-action@v1
+      - uses: Videndum/label-mastermind@latest
         with:
           github-token: '${{ secrets.GITHUB_TOKEN }}'
 ```
 
-</details>
-
 Now create the labeler config file at `.github/labels.json`:
-
-<details>
-  <summary><b>Click here to show example config</b></summary>
 
 ```json
 {
@@ -78,13 +102,14 @@ Now create the labeler config file at `.github/labels.json`:
 }
 ```
 
-</details>
+Be sure that Github Actions is enabled for in your repository's settings. Label Mastermind will now run on your issues and pull requests.
 
-Be sure that Github Actions is enabled for in your repository's settings. Super Labeler will now run on your issues and pull requests.
+</details>
 
 ## Index
 
-- [super-labeler-action](#super-labeler-action)
+- [Label Mastermind](#label-mastermind)
+  - [Capabilities](#capabilities)
   - [Getting Started](#getting-started)
   - [Index](#index)
   - [How it Works](#how-it-works)
@@ -107,10 +132,11 @@ Be sure that Github Actions is enabled for in your repository's settings. Super 
       - [requestedChanges](#requestedchanges)
     - [Issue Conditions](#issue-conditions)
   - [Running Locally](#running-locally)
+  - [Credit](#credit)
 
 ## How it Works
 
-Whenever Super Labeler runs, it will first add and update your repository's labels to match your config. Then it will go through each label's conditions to determine if it should apply or remove that label.
+Whenever Label Mastermind runs, it will first add and update your repository's labels to match your config. Then it will go through each label's conditions to determine if it should apply or remove that label.
 
 Each label has a list of conditions that must be met for it to be applied. You must specify the minimum number of conditions that must be met for the label to be applied.
 
@@ -150,7 +176,7 @@ While the label's name, which will be displayed on Github, is "Bugfix! 🎉", to
 
 The config object contains three keys:
 
-- `labels`: Your repository's labels, which will be automatically created and updated by Super Labeler
+- `labels`: Your repository's labels, which will be automatically created and updated by Label Mastermind
 - `issue`: Labels to apply to issues, and their conditions
 - `pr`: Labels to apply to pull requests, and their conditions
 
@@ -395,6 +421,10 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 9. (Optional) If pushing changes to Github
    - Delete `./context.json`, `./config`, `./lib`, `./dist`.
    - Run `yarn dev:all`.
+
+## Credit
+
+This was originally conceptualised over on [IvanFon/super-labeler-action](https://github.com/IvanFon/super-labeler-action), unfortunately he stopped maintaining it. The original idea credit goes to IvanFon. We Invite him and the other contributors to join this project whenever they feel ready to return.
 
 ---
 

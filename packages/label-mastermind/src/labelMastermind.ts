@@ -4,7 +4,7 @@ import { GitHub } from '@actions/github'
 import { CurContext, Config, Options, labelIdToName } from './types'
 import { labelHandler } from './labelHandler'
 import { contextHandler } from './contextHandler'
-import { log } from './'
+import { log } from '.'
 
 let local: any
 let context = github.context
@@ -24,7 +24,7 @@ try {
  * @author IvanFon, TGTGamer
  * @since 1.0.0
  */
-export default class SuperLabeler {
+export default class labelMastermind {
   client: GitHub
   opts: Options
   configJSON: Options['configJSON']

@@ -8,7 +8,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { Options, Config } from './types'
 import path from 'path'
-import superLabeler from './superLabeler'
+import labelMastermind from './labelMastermind'
 import { Log } from '@videndum/utilities'
 let local: any = undefined
 let dryRun: boolean
@@ -61,7 +61,7 @@ function start() {
     configJSON,
     dryRun
   }
-  const action = new superLabeler(new github.GitHub(GITHUB_TOKEN), options)
+  const action = new labelMastermind(new github.GitHub(GITHUB_TOKEN), options)
   action.run()
 }
 start()
