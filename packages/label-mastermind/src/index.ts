@@ -36,7 +36,7 @@ function start() {
       `Super Labeler is running in local dryrun mode. No labels will be applyed`,
       3
     )
-  log(core.getInput('configJSON'), 1)
+  log(`input is: '${core.getInput('configJSON')}'`, 1)
   const configInput = JSON.parse(
     core.getInput('configJSON') === '' ? '{}' : core.getInput('configJSON')
   )
