@@ -77,6 +77,10 @@ export default class labelMastermind {
       log(`Error thrown while processing config: ` + err, 5)
       throw err
     })
+    if (!configs) {
+      log(`No config data.`, 5)
+      throw new Error(`No configuration data to use`)
+    }
     log(`Config: ${JSON.stringify(configs)}`, 1)
 
     /**
@@ -139,7 +143,7 @@ export default class labelMastermind {
    * @since 1.0.0
    */
   async processConfig(): Promise<Config> {
-    if (JSON.stringify(this.configJSON) === '{}') {
+    if (!this.configJSON.labels) {
       if (!fs.existsSync(this.configPath)) {
         throw new Error(`config not found at "${this.configPath}"`)
       }
