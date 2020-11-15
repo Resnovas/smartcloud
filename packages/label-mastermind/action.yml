@@ -11,7 +11,7 @@ inputs:
     required: false
   configJSON:
     description: 'JSON string with configuration data'
-    default: '.github/labels.json'
+    default: ''
     required: false
 runs:
   using: 'node12'
