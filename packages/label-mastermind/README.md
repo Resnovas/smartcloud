@@ -11,7 +11,7 @@ Label Mastermind is capable of the following:
   - Pull Releases
   - Issues
   - Project Cards
-- Conditions:
+- List of Conditions:
   - [creatorMatches](#creatormatches)
   - [descriptionMatches](#descriptionmatches)
   - [isLocked](#islocked)
