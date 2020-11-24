@@ -1,0 +1,110 @@
+[
+  {
+    "root": ".",
+    "projectType": "node",
+    "versioning": "SemVer",
+    "prereleaseName": "alpha",
+    "pr": {
+      "manageRelease": {
+        "version": "bump",
+        "labels": {
+          "prerelease": "Versioning - Prerelease",
+          "build": "Versioning - Build",
+          "patch": "Versioning - Patch",
+          "minor": "Versioning - Minor",
+          "major": "Versioning - Major",
+          "breaking": "Versioning - Breaking"
+        },
+        "createTag": true,
+        "createRelease": true,
+        "createMilestone": {},
+        "createPackages": "npm publish",
+        "createChangelog": {
+          "includeIssues": true,
+          "sections": [
+            {
+              "title": "Features Effectuated",
+              "PRlabels": ["Type - Feature"],
+              "issueLabels": [],
+              "includeCommitter": true,
+              "linkPR": true
+            },
+            {
+              "title": "Bugs Squashed",
+              "PRlabels": ["Type - Fix"],
+              "issueLabels": [],
+              "includeCommitter": true,
+              "linkPR": true
+            },
+            {
+              "title": "Maintenance & Dusting",
+              "PRlabels": [
+                "Type - Maintenance",
+                "Type - Style",
+                "Type - Documentation",
+                "Type - Enhancement",
+                "Type - Optimisation",
+                "Type - Refactor"
+              ],
+              "issueLabels": [],
+              "includeCommitter": true,
+              "linkPR": true
+            },
+            {
+              "title": "Abolishment",
+              "PRlabels": [
+                "Type - Revert",
+                "Type - Decrecated",
+                "Type - Removal"
+              ],
+              "issueLabels": [],
+              "includeCommitter": true,
+              "linkPR": true
+            },
+            {
+              "title": "Confession Time",
+              "PRlabels": [],
+              "issueLabels": ["Bug - Confirmed"],
+              "includeCommitter": true,
+              "linkPR": true
+            }
+          ]
+        },
+        "conditions": {}
+      },
+      "enforceConventions": {
+        "conventions": [
+          {
+            "requires": 1,
+            "contexts": ["workflow", "something"],
+            "conditions": "semanticTitle"
+          }
+        ]
+      },
+      "automaticApprove": {
+        "conventions": [
+          {
+            "requires": 1,
+            "conditions": [{}]
+          }
+        ]
+      },
+      "duplicateHotfix": {},
+      "createMilestone": {},
+      "syncRemote": {}
+    },
+    "issue": {
+      "ref": "develop",
+      "assignProject": {},
+      "assignColumn": {},
+      "createBranch": {}
+    },
+    "project": {
+      "ref": "develop",
+      "enforceConventions": {},
+      "syncRemote": {},
+      "openBranch": {},
+      "assignMilestone": {}
+    }
+  }
+]
