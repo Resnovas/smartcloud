@@ -1,0 +1,15 @@
+{
+  "version": "independent",
+  "npmClient": "yarn",
+  "packages": [
+    "packages/*"
+  ],
+  "changelogPreset": {
+    "name": "conventionalcommits"
+  },
+  "ignoreChanges": [
+    "**/__fixtures__/**",
+    "**/__tests__/**",
+    "**/*.md"
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "name": "@videndum/action-masterminds",
+  "homepage": "https://smartcloud.gg/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Videndum/action-masterminds.git"
+  },
+  "bugs": {
+    "email": "bugs.action-masterminds@videndum.studio",
+    "url": "https://github.com/Videndum/action-masterminds/issues"
+  },
+  "author": {
+    "name": "Videndum Studios",
+    "email": "action-masterminds@videndum.studios",
+    "url": "http://videndum.studios"
+  },
+  "contributors": [
+    "Contributors can be found in readme.md"
+  ],
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "postinstall": "lerna bootstrap",
+    "start": "lerna run start",
+    "docs:start": "gatsby develop",
+    "docs:build": "gatsby build --prefix-paths",
+    "docs:format": "prettier --write \"src/**/*.{js,jsx,css,json}\"",
+    "docs:lint": "eslint --fix \"src/**/*.{js,jsx}\""
+  },
+  "config": {
+    "commitizen": {
+      "path": "cz-conventional-changelog"
+    }
+  },
+  "husky": {
+    "hooks": {
+      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true"
+    }
+  },
+  "devDependencies": {
+    "commitizen": "^4.2.1",
+    "concurrently": "^5.2.0",
+    "conventional-changelog-cli": "^2.1.0",
+    "cz-conventional-changelog": "3.3.0",
+    "husky": "^4.2.5",
+    "lerna": "^3.22.1",
+    "prettier": "^2.1.2",
+    "prettier-plugin-organize-imports": "^1.1.1",
+    "prettier-plugin-pkg": "^0.8.0",
+    "prettier-plugin-sh": "^0.6.0"
+  },
+  "private": false
+}
