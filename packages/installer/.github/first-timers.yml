@@ -1,0 +1,5 @@
+labels:
+  - 'First timers'
+  - 'Status: Available'
+  - 'Good first issue'
+template: .github/ISSUE_TEMPLATE/FIRST_TIMERS_ISSUE_TEMPLATE.md

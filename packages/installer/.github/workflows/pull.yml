@@ -13,7 +13,7 @@ jobs:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.1
+        uses: ./variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -29,7 +29,7 @@ jobs:
     needs: wip
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.1
+        uses: ./variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -47,7 +47,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.1
+        uses: ./variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -90,7 +90,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.1
+        uses: ./variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -114,7 +114,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.1
+        uses: ./variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -130,7 +130,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: Videndum/manage-github-secrets@1.0.1
+        uses: ./variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'

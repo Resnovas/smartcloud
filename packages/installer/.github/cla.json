@@ -1,0 +1,20 @@
+{
+  "signedContributors": [
+    {
+      "name": "TGTGamer",
+      "id": 11413796,
+      "comment_id": 659174126,
+      "created_at": "2020-07-16T05:48:45Z",
+      "repoId": 246427617,
+      "pullRequestNo": 17
+    },
+    {
+      "name": "VidendumStudios",
+      "id": 68557851,
+      "comment_id": 661927316,
+      "created_at": "2020-07-21T15:22:50Z",
+      "repoId": 246427617,
+      "pullRequestNo": 117
+    }
+  ]
+}
