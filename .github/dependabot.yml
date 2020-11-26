@@ -13,66 +13,13 @@ updates:
         prefix: maint
         include: scope
 
-  - package-ecosystem: 'npm'
-    # Keep npm dependencies up to date
-    directory: '/packages/installer'
-    # Check the npm registry for updates at 2am UTC
-    schedule:
-      interval: 'daily'
-      time: '02:00'
-    labels:
-      - 'automerge'  
-    commit-message:
-        prefix: maint
-        include: scope
-
-  - package-ecosystem: 'npm'
-    # Keep npm dependencies up to date
-    directory: '/packages/label-mastermind'
-    # Check the npm registry for updates at 2am UTC
-    schedule:
-      interval: 'daily'
-      time: '02:00'
-    labels:
-      - 'automerge'  
-    commit-message:
-        prefix: maint
-        include: scope
-
-  - package-ecosystem: 'npm'
-    # Keep npm dependencies up to date
-    directory: '/packages/release-mastermind'
-    # Check the npm registry for updates at 2am UTC
-    schedule:
-      interval: 'daily'
-      time: '02:00'
-    labels:
-      - 'automerge'  
-    commit-message:
-        prefix: maint
-        include: scope
-
-  - package-ecosystem: 'npm'
-    # Keep npm dependencies up to date
-    directory: '/packages/variable-mastermind'
-    # Check the npm registry for updates at 2am UTC
-    schedule:
-      interval: 'daily'
-      time: '02:00'
-    labels:
-      - 'automerge'
-    commit-message:
-        prefix: maint
-        include: scope
-
   - package-ecosystem: 'github-actions'
     directory: '/'
     schedule:
       interval: 'daily'
       time: '02:00'
     labels:
-      - 'Type - Chore'
-      - 'Content - Dependences'
-      - 'Content - Workflow & CI'
       - 'automerge'
-      - 'Versioning - Patch'
+    commit-message:
+        prefix: maint
+        include: scope
