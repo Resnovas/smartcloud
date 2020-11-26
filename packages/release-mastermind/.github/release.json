@@ -76,7 +76,15 @@
         "conventions": [
           {
             "requires": 1,
-            "contexts": ["workflow", "something"],
+            "contexts": [
+              "workflow",
+              "release",
+              "label",
+              "variable",
+              "installer",
+              "deps",
+              "deps-dev"
+            ],
             "conditions": "semanticTitle"
           }
         ]
