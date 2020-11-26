@@ -36,7 +36,6 @@ jobs:
   # Setup labels
   release-mastermind:
     name: Release Mastermind
-    needs: label-mastermind
     runs-on: ubuntu-latest
     steps:          
       # super Labeler
