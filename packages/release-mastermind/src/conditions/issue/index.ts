@@ -2,7 +2,6 @@ import { Condition, handlers as sharedHandlers } from '../util'
 
 export type IssueCondition = Condition
 
-console.log(sharedHandlers)
 const handlers = [...sharedHandlers]
 
 export const getIssueConditionHandler = (condition: IssueCondition) => {

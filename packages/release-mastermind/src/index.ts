@@ -55,11 +55,9 @@ async function run() {
     showLogs,
     dryRun
   }
-  const token = core.getInput('TOKEN')
   const action = new releaseMastermind(new github.GitHub(GITHUB_TOKEN), options)
   action.run().catch(err => {
     log(`Label Mastermind did not complete due to error: ${err}`, 8)
-    throw err
   })
 }
 run()
