@@ -9,18 +9,18 @@ jobs:
     name: Issue Automation
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2.3.1
       - name: Get Configurations
-        uses: packages/variable-mastermind/
+        uses: ./packages/variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
           token: ${{ secrets.BOT_TOKEN }}
       
       # super Labeler
-      - name: Checkout
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.1
       - name: Super Labeller
-        uses: packages/label-mastermind
+        uses: ./packages/label-mastermind
         with:
           GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
       
@@ -39,8 +39,9 @@ jobs:
     needs: AutoLabel
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2.3.1
       - name: Get Configurations
-        uses: packages/variable-mastermind/
+        uses: ./packages/variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -61,10 +62,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
           GITHUB_PROJECT_URL: https://github.com/${{env.projectPath}}/projects/${{env.projects_issues}}
           GITHUB_PROJECT_COLUMN_NAME: ${{env.projects_issuesColumn}}
-        continue-on-error: true
-      - name: Create Issue Branch
-        if: ${{env.issueBranch_enabled}} == true
-        uses: robvanderleek/create-issue-branch@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         continue-on-error: true
