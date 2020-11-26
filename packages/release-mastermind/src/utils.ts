@@ -86,7 +86,7 @@ class Utils {
     return JSON.parse(
       await filesAPI.get(
         { client, repo },
-        path.join(directory, root, 'package.json'),
+        path.join(directory, root, '/package.json'),
         ref
       )
     ).version

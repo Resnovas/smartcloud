@@ -1577,7 +1577,7 @@
   },
   "releaseMastermind": [
     {
-      "root": "./packages/release-mastermind",
+      "root": "./packages/release-mastermind/",
       "projectType": "node",
       "versioning": "SemVer",
       "prereleaseName": "alpha",
