@@ -82,14 +82,9 @@ class Utils {
     root: string,
     ref?: string
   ): Promise<string> {
-    const directory = process.env.GITHUB_WORKSPACE || process.cwd()
-    return JSON.parse(
-      await filesAPI.get(
-        { client, repo },
-        path.join(directory, root, '/package.json'),
-        ref
-      )
-    ).version
+    const file = path.join(root, '/package.json')
+    log(`Getting file: ${file}`, 1)
+    return JSON.parse(await filesAPI.get({ client, repo }, file, ref)).version
   }
 }
 
