@@ -1,3 +1,4 @@
+import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github'
 import fs from 'fs'
@@ -27,6 +28,7 @@ export default class releaseMastermind {
 
   constructor(client: GitHub, options: Options) {
     log(`Release Mastermind Constructed: ${options}`, 1)
+    core.startGroup('Setup Phase')
     this.client = client
     this.opts = options
     this.configJSON = options.configJSON
@@ -80,6 +82,7 @@ export default class releaseMastermind {
       })
       log(`Current Context: ${JSON.stringify(curContext)}`, 1)
 
+      core.endGroup()
       this.applyContext(config, curContext)
     })
   }
