@@ -41,6 +41,7 @@ class ContextHandler {
 
     return {
       ref: pr.base.ref,
+      sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
       labels,
@@ -85,6 +86,7 @@ class ContextHandler {
       })
 
     return {
+      sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
       labels,

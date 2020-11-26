@@ -39,8 +39,9 @@ export interface pullRequestConfig {
   syncRemote?: syncRemote[] // sync a remote repository
 }
 
-interface issueConfig {
+export interface issueConfig {
   ref?: string
+  enforceConventions?: enforceConventions // enforce the conventions
   assignProject?: assignProject
   assignColumn?: AssignColumn
   createBranch?: createBranch
@@ -213,6 +214,7 @@ export type Labels = string[]
 
 interface GeneralContext {
   ref?: string
+  sha: string
   action: string
   currentVersion: version
   labels: Labels

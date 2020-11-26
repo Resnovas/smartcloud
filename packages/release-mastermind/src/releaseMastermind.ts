@@ -53,7 +53,6 @@ export default class releaseMastermind {
       )}`,
       1
     )
-
     /**
      * Process the config
      * @author TGTGamer
@@ -174,7 +173,7 @@ export default class releaseMastermind {
       ctx = new PullRequests(this.client, this.repo, config, curContext.context)
       ctx.run()
     } else if (curContext.type == 'issue') {
-      ctx = new Issues(config, curContext.context)
+      ctx = new Issues(this.client, this.repo, config, curContext.context)
     }
   }
 }
