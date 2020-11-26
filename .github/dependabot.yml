@@ -8,10 +8,10 @@ updates:
       interval: 'daily'
       time: '02:00'
     labels:
-      - 'Type - Chore'
-      - 'Content - Dependences'
-      - 'automerge'
-      - 'Versioning - Patch'
+      - 'automerge'  
+    commit-message:
+        prefix: maint
+        include: scope
 
   - package-ecosystem: 'github-actions'
     directory: '/'
@@ -19,8 +19,7 @@ updates:
       interval: 'daily'
       time: '02:00'
     labels:
-      - 'Type - Chore'
-      - 'Content - Dependences'
-      - 'Content - Workflow & CI'
       - 'automerge'
-      - 'Versioning - Patch'
+    commit-message:
+        prefix: maint
+        include: scope
