@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: /packages/variable-mastermind/
+        uses: packages/variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -20,7 +20,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Super Labeller
-        uses: /packages/label-mastermind
+        uses: packages/label-mastermind
         with:
           GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
       
@@ -40,7 +40,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: /packages/variable-mastermind/
+        uses: packages/variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
