@@ -147,7 +147,9 @@ export default class labelMastermind {
       if (!fs.existsSync(this.configPath)) {
         throw new Error(`config not found at "${this.configPath}"`)
       }
-      return await JSON.parse(fs.readFileSync(this.configPath).toString())
+      const pathConfig = JSON.parse(fs.readFileSync(this.configPath).toString())
+      if (!pathConfig.labelMastermind) return pathConfig
+      else return pathConfig.labelMastermind
     } else {
       return this.configJSON
     }
