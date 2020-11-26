@@ -1,6 +1,6 @@
+import path from 'path'
 import { log } from '.'
 import { ApiProps, filesAPI } from './api'
-// import { filesAPI } from './api'
 import { Config, version } from './types'
 
 class Utils {
@@ -83,8 +83,13 @@ class Utils {
     ref?: string
   ): Promise<string> {
     const directory = process.env.GITHUB_WORKSPACE || process.cwd()
-    return JSON.parse(await filesAPI.get({ client, repo }, 'package.json', ref))
-      .version
+    return JSON.parse(
+      await filesAPI.get(
+        { client, repo },
+        path.join(directory, root, 'package.json'),
+        ref
+      )
+    ).version
   }
 }
 
