@@ -23,6 +23,7 @@ jobs:
         uses: ./packages/label-mastermind
         with:
           GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
+          config: .github/allconfigs.json
       
       # Profanity ---- Should add to release mastermind
       - name: Profanity check step
