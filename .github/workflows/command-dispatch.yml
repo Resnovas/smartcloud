@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Configurations
-        uses: ./variable-mastermind/
+        uses: ./packages/variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
