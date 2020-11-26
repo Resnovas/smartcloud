@@ -62,7 +62,7 @@ export default class releaseMastermind {
       log(`Error thrown while processing config: ` + err, 5)
       throw err
     })
-    if (!configs) {
+    if (!configs[0]) {
       log(`No config data.`, 5)
       throw new Error(`No configuration data to use`)
     }
