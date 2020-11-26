@@ -1,26 +1,21 @@
-name: 'Manage Github Secrets'
-description: 'Creates, manages, updates repository secrets, environment variables and outputs for use within other actions'
+name: 'Release Mastermind'
+description: ''
 author: 'Videndum'
 branding:
   icon: 'at-sign'
   color: 'purple'
 inputs:
-  settings:
-    required: false
-    description: 'Settings to be passed'
-  settingsjson:
-    required: false
-    description: 'JSON file to be passed'
-    default: '.github/allconfigs.json'
-  mode:
+  GITHUB_TOKEN:
+    description: 'The GITHUB_TOKEN secret'
     required: true
-    description: 'Sets the mode of the action - Output, Secrets, Environment'
-    default: 'outputs'
-  token:
-    required: true
-    description: 'The token that should be used'
+  config:
+    description: 'Config file path'
+    default: '.github/labels.json'
+    required: false
+  configJSON:
+    description: 'JSON string with configuration data'
     default: ''
-
+    required: false
 runs:
   using: 'node12'
   main: 'dist/index.js'
