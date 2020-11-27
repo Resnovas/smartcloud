@@ -23,7 +23,6 @@ jobs:
 
   release-mastermind:
     name: Release Mastermind
-    needs: label-mastermind
     runs-on: ubuntu-latest
     steps:          
       - uses: actions/checkout@v2.3.1
