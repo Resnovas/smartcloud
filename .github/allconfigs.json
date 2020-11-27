@@ -1672,6 +1672,15 @@
       },
       "issue": {
         "ref": "develop",
+        "enforceConventions": {
+          "conventions": [
+            {
+              "requires": 1,
+              "contexts": ["workflow", "release", "label", "variable", "installer", "deps", "deps-dev"],
+              "conditions": "semanticTitle"
+            }
+          ]
+        },
         "assignProject": {},
         "assignColumn": {},
         "createBranch": {}
