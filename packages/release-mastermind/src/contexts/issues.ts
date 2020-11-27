@@ -1,13 +1,15 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
-import { Config, IssueContext } from '../types'
+import { Config, CurContext, IssueContext, version } from '../types'
 import { enforceConventions } from './utils'
 
 export class Issues {
   private configs: Config
-  private config: Config['issue']
+  private config: Config['pr']
+  private curContext: CurContext
   private context: IssueContext
+  private newVersion: version = {}
   private client: GitHub
   private repo: { owner: string; repo: string }
 
@@ -15,16 +17,20 @@ export class Issues {
     client: GitHub,
     repo: { owner: string; repo: string },
     configs: Config,
-    curContext: IssueContext
+    curContext: CurContext
   ) {
+    if (curContext.type !== 'issue')
+      throw new Error('Cannot construct without issue context')
     if (!configs) throw new Error('Cannot construct without configs')
-    if (!configs.issue) throw new Error('Cannot construct without Issue config')
+    if (!configs.issue) throw new Error('Cannot construct without PR config')
     if (!curContext) throw new Error('Cannot construct without context')
     this.client = client
     this.repo = repo
     this.configs = configs
     this.config = configs.issue
-    this.context = curContext
+    this.curContext = curContext
+    this.context = curContext.context
+    this.newVersion = curContext.context.currentVersion
   }
 
   async run(attempt?: number) {
@@ -40,7 +46,7 @@ export class Issues {
         enforceConventionsSuccess = await enforceConventions(
           'pr',
           this.config.enforceConventions,
-          this.context
+          this.curContext
         )
       if (enforceConventionsSuccess) {
         // some code

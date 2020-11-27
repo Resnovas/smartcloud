@@ -2,12 +2,7 @@ import * as core from '@actions/core'
 import { log } from '..'
 import { Condition } from '../conditions'
 import evaluator, { ConditionSetType } from '../conditions/evaluator'
-import {
-  issueConfig,
-  IssueContext,
-  PRContext,
-  pullRequestConfig
-} from '../types'
+import { CurContext, issueConfig, pullRequestConfig } from '../types'
 import { semantic } from './helper/semantic'
 
 export function enforceConventions(
@@ -15,7 +10,7 @@ export function enforceConventions(
   enforceConventions:
     | pullRequestConfig['enforceConventions']
     | issueConfig['enforceConventions'],
-  context: PRContext | IssueContext
+  context: CurContext
 ) {
   if (!enforceConventions || !enforceConventions.conventions)
     throw new Error('No enforceable conventions')
@@ -49,8 +44,13 @@ export function enforceConventions(
       convention.conditions = conditions
     }
     if (
-      //@ts-ignore
-      evaluator(ConditionSetType[type], convention, context[`${type}Props`])
+      evaluator(
+        ConditionSetType[type],
+        convention,
+        context.type == 'issue'
+          ? context.context.issueProps
+          : context.context.prProps
+      )
     ) {
       successful++
     } else {

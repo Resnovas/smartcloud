@@ -170,10 +170,11 @@ export default class releaseMastermind {
   applyContext(config: Config, curContext: CurContext) {
     let ctx: PullRequests | Issues
     if (curContext.type == 'pr') {
-      ctx = new PullRequests(this.client, this.repo, config, curContext.context)
+      ctx = new PullRequests(this.client, this.repo, config, curContext)
       ctx.run()
     } else if (curContext.type == 'issue') {
-      ctx = new Issues(this.client, this.repo, config, curContext.context)
+      ctx = new Issues(this.client, this.repo, config, curContext)
+      ctx.run()
     }
   }
 }

@@ -5,6 +5,7 @@ import { pullRequestsAPI } from '../api'
 import evaluator, { ConditionSetType } from '../conditions/evaluator'
 import {
   Config,
+  CurContext,
   PRContext,
   pullRequestConfig,
   release,
@@ -16,6 +17,7 @@ import { enforceConventions } from './utils'
 export class PullRequests {
   private configs: Config
   private config: Config['pr']
+  private curContext: CurContext
   private context: PRContext
   private newVersion: version = {}
   private client: GitHub
@@ -25,8 +27,10 @@ export class PullRequests {
     client: GitHub,
     repo: { owner: string; repo: string },
     configs: Config,
-    curContext: PRContext
+    curContext: CurContext
   ) {
+    if (curContext.type !== 'pr')
+      throw new Error('Cannot construct without PR context')
     if (!configs) throw new Error('Cannot construct without configs')
     if (!configs.pr) throw new Error('Cannot construct without PR config')
     if (!curContext) throw new Error('Cannot construct without context')
@@ -34,8 +38,9 @@ export class PullRequests {
     this.repo = repo
     this.configs = configs
     this.config = configs.pr
-    this.context = curContext
-    this.newVersion = curContext.currentVersion
+    this.curContext = curContext
+    this.context = curContext.context
+    this.newVersion = curContext.context.currentVersion
   }
 
   async run(attempt?: number) {
@@ -51,7 +56,7 @@ export class PullRequests {
         enforceConventionsSuccess = await enforceConventions(
           'pr',
           this.config.enforceConventions,
-          this.context
+          this.curContext
         )
       if (enforceConventionsSuccess) {
         // if (this.config.automaticApprove)
