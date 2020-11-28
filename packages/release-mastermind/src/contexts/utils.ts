@@ -1,23 +1,24 @@
 import * as core from '@actions/core'
+import { GitHub } from '@actions/github'
 import { log } from '..'
-import { api, ApiProps } from '../api'
-import { Condition } from '../conditions'
-import evaluator, { ConditionSetType } from '../conditions/evaluator'
+import { api, ApiProps, Repo } from '../api'
 import {
+  Condition,
+  ConditionSetType,
   CurContext,
-  issueConfig,
-  projectConfig,
-  pullRequestConfig
-} from '../types'
+  evaluator
+} from '../conditions'
+import { IssueConfig, Labels, ProjectConfig, PullRequestConfig } from '../types'
 import { semantic } from './helper/semantic'
 
 export function enforceConventions(
   { client, repo }: ApiProps,
   enforceConventions:
-    | pullRequestConfig['enforceConventions']
-    | issueConfig['enforceConventions']
-    | projectConfig['enforceConventions'],
-  context: CurContext
+    | PullRequestConfig['enforceConventions']
+    | IssueConfig['enforceConventions']
+    | ProjectConfig['enforceConventions'],
+  context: CurContext,
+  dryRun: boolean
 ) {
   if (!enforceConventions || !enforceConventions.conventions)
     throw new Error('No enforceable conventions')
@@ -74,26 +75,28 @@ export function enforceConventions(
 
   if (required > successful) {
     failedMessages.forEach(fail => core.setFailed(fail))
-    createConventionComment(
-      context,
-      enforceConventions,
-      { client, repo },
-      false,
-      failedMessages
-    )
+    !dryRun &&
+      createConventionComment(
+        context,
+        enforceConventions,
+        { client, repo },
+        false,
+        failedMessages
+      )
     return false
   }
   log(`All conventions successfully enforced. Moving to next step`, 2)
-  createConventionComment(context, enforceConventions, { client, repo }, true)
+  !dryRun &&
+    createConventionComment(context, enforceConventions, { client, repo }, true)
   return true
 }
 
 async function createConventionComment(
   CurContext: CurContext,
   enforceConventions:
-    | pullRequestConfig['enforceConventions']
-    | issueConfig['enforceConventions']
-    | projectConfig['enforceConventions'],
+    | PullRequestConfig['enforceConventions']
+    | IssueConfig['enforceConventions']
+    | ProjectConfig['enforceConventions'],
   { client, repo }: ApiProps,
   success: boolean,
   failMessages?: string[]
@@ -122,7 +125,8 @@ async function createConventionComment(
   let previousComment: number | undefined
   if (commentList) {
     commentList.forEach((comment: any) => {
-      if (comment.body.includes(prefix)) previousComment = comment.id
+      if (comment.body.includes(prefix) && comment.state !== 'DISMISSED')
+        previousComment = comment.id
     })
   }
   respond(CurContext, { client, repo }, success, previousComment, body)
@@ -162,7 +166,7 @@ function respond(
       )
   } else if (previousComment && success) {
     if (CurContext.type == 'pr')
-      api.pullRequests.reviews.delete(
+      api.pullRequests.reviews.dismiss(
         { client, IDNumber: CurContext.context.IDNumber, repo },
         previousComment,
         'Conventions corrected - Review no longer required'
@@ -180,5 +184,60 @@ function respond(
         { client, IDNumber: CurContext.context.IDNumber, repo },
         body as string
       )
+  }
+}
+
+/**
+ * Add or Remove Labels
+ * @author IvanFon, TGTGamer, jbinda
+ * @since 1.0.0
+ */
+export async function addRemoveLabel({
+  client,
+  curLabels,
+  labelID,
+  labelName,
+  IDNumber,
+  repo,
+  shouldHaveLabel,
+  dryRun
+}: {
+  client: GitHub
+  curLabels: Labels | undefined
+  labelID: string
+  labelName: string
+  IDNumber: number
+  repo: Repo
+  shouldHaveLabel: boolean
+  dryRun: boolean
+}) {
+  const hasLabel = curLabels?.[labelName]
+  if (shouldHaveLabel && !hasLabel) {
+    log(`Adding label "${labelID}"...`, 2)
+    await api.labels
+      .add({ client, repo, IDNumber, label: labelName, dryRun })
+      .catch(err => {
+        log(`Error thrown while adding labels: ` + err, 5)
+      })
+  } else if (!shouldHaveLabel && hasLabel) {
+    log(`Removing label "${labelID}"...`, 2)
+    await api.labels
+      .remove({
+        client,
+        repo,
+        IDNumber,
+        label: labelName,
+        dryRun
+      })
+      .catch(err => {
+        log(`Error thrown while removing labels: ` + err, 5)
+      })
+  } else {
+    log(
+      `No action required for label "${labelID}" ${
+        hasLabel ? 'as label is already applied.' : '.'
+      }`,
+      2
+    )
   }
 }

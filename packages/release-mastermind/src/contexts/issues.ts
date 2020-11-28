@@ -1,23 +1,32 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
-import { Config, CurContext, IssueContext, version } from '../types'
-import { enforceConventions } from './utils'
+import {
+  ConditionSetType,
+  CurContext,
+  evaluator,
+  IssueContext,
+  Version
+} from '../conditions'
+import { Config } from '../types'
+import { addRemoveLabel, enforceConventions } from './utils'
 
 export class Issues {
   private configs: Config
   private config: Config['pr']
   private curContext: CurContext
   private context: IssueContext
-  private newVersion: version = {}
+  private newVersion: Version = {}
   private client: GitHub
   private repo: { owner: string; repo: string }
+  private dryRun: boolean
 
   constructor(
     client: GitHub,
     repo: { owner: string; repo: string },
     configs: Config,
-    curContext: CurContext
+    curContext: CurContext,
+    dryRun: boolean
   ) {
     if (curContext.type !== 'issue')
       throw new Error('Cannot construct without issue context')
@@ -31,6 +40,7 @@ export class Issues {
     this.curContext = curContext
     this.context = curContext.context
     this.newVersion = curContext.context.currentVersion
+    this.dryRun = dryRun
   }
 
   async run(attempt?: number) {
@@ -46,10 +56,11 @@ export class Issues {
         enforceConventionsSuccess = await enforceConventions(
           { client: this.client, repo: this.repo },
           this.config.enforceConventions,
-          this.curContext
+          this.curContext,
+          this.dryRun
         )
       if (enforceConventionsSuccess) {
-        // some code
+        if (this.config.labels) this.applyLabels(this.dryRun)
         core.endGroup()
       }
     } catch (err) {
@@ -66,6 +77,41 @@ export class Issues {
       setTimeout(async () => {
         this.run(attempt)
       }, seconds * 1000)
+    }
+  }
+
+  /**
+   * Apply Labels to Issues
+   * @author IvanFon, TGTGamer, jbinda
+   * @since 1.0.0
+   */
+  async applyLabels(dryRun: boolean) {
+    if (!this.config?.labels || !this.configs.labels)
+      throw new Error('Config is required to add labels')
+    const { labels: curLabels, issueProps, IDNumber } = this.context
+    for (const [labelID, conditionsConfig] of Object.entries(
+      this.config.labels
+    )) {
+      log(`Label: ${labelID}`, 1)
+
+      const shouldHaveLabel = evaluator(
+        ConditionSetType.issue,
+        conditionsConfig,
+        issueProps
+      )
+
+      await addRemoveLabel({
+        client: this.client,
+        curLabels,
+        labelID,
+        labelName: this.configs.labels[labelID],
+        IDNumber,
+        repo: this.repo,
+        shouldHaveLabel,
+        dryRun
+      }).catch(err => {
+        log(`Error thrown while running addRemoveLabel: ` + err, 5)
+      })
     }
   }
 }

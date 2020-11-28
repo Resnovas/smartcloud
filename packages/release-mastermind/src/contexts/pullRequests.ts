@@ -2,32 +2,33 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
 import { api } from '../api'
-import evaluator, { ConditionSetType } from '../conditions/evaluator'
 import {
-  Config,
+  ConditionSetType,
   CurContext,
+  evaluator,
   PRContext,
-  pullRequestConfig,
-  release,
-  version
-} from '../types'
+  Version
+} from '../conditions'
+import { Config, PullRequestConfig, Release } from '../types'
 import { utils } from '../utils'
-import { enforceConventions } from './utils'
+import { addRemoveLabel, enforceConventions } from './utils'
 
 export class PullRequests {
   private configs: Config
   private config: Config['pr']
   private curContext: CurContext
   private context: PRContext
-  private newVersion: version = {}
+  private newVersion: Version = {}
   private client: GitHub
   private repo: { owner: string; repo: string }
+  private dryRun: boolean
 
   constructor(
     client: GitHub,
     repo: { owner: string; repo: string },
     configs: Config,
-    curContext: CurContext
+    curContext: CurContext,
+    dryRun: boolean
   ) {
     if (curContext.type !== 'pr')
       throw new Error('Cannot construct without PR context')
@@ -41,6 +42,7 @@ export class PullRequests {
     this.curContext = curContext
     this.context = curContext.context
     this.newVersion = curContext.context.currentVersion
+    this.dryRun = dryRun
   }
 
   async run(attempt?: number) {
@@ -56,9 +58,11 @@ export class PullRequests {
         enforceConventionsSuccess = await enforceConventions(
           { client: this.client, repo: this.repo },
           this.config.enforceConventions,
-          this.curContext
+          this.curContext,
+          this.dryRun
         )
       if (enforceConventionsSuccess) {
+        if (this.config.labels) await this.applyLabels(this.dryRun)
         // if (this.config.automaticApprove)
         //   await this.automaticApprove(this.config.automaticApprove)
         // duplicate hotfix
@@ -91,7 +95,42 @@ export class PullRequests {
     }
   }
 
-  automaticApprove(automaticApprove: pullRequestConfig['automaticApprove']) {
+  /**
+   * Apply Labels to Pull Requests
+   * @author IvanFon, TGTGamer, jbinda
+   * @since 1.0.0
+   */
+  async applyLabels(dryRun: boolean) {
+    if (!this.config?.labels || !this.configs.labels)
+      throw new Error('Config is required to add labels')
+    const { labels: curLabels, prProps, IDNumber } = this.context
+    for (const [labelID, conditionsConfig] of Object.entries(
+      this.config.labels
+    )) {
+      log(`Label: ${labelID}`, 1)
+
+      const shouldHaveLabel = evaluator(
+        ConditionSetType.pr,
+        conditionsConfig,
+        prProps
+      )
+
+      await addRemoveLabel({
+        client: this.client,
+        curLabels,
+        labelID,
+        labelName: this.configs.labels[labelID],
+        IDNumber,
+        repo: this.repo,
+        shouldHaveLabel,
+        dryRun
+      }).catch(err => {
+        log(`Error thrown while running addRemoveLabel: ` + err, 5)
+      })
+    }
+  }
+
+  automaticApprove(automaticApprove: PullRequestConfig['automaticApprove']) {
     if (!automaticApprove || !automaticApprove.conventions)
       throw new Error('Not Able to automatically approve')
     automaticApprove.conventions.forEach(convention => {
@@ -119,31 +158,31 @@ export class PullRequests {
     })
   }
 
-  bumpVersion(labels: release['labels']) {
-    if (!labels) return
+  bumpVersion(labels: Release['labels']) {
+    if (!labels || !this.context.labels) return
     if (
       (this.configs.versioning == 'SemVer' ||
         this.configs.versioning == undefined) &&
       this.newVersion.semantic
     ) {
       if (
-        this.context.labels.indexOf(labels.major) !== -1 || labels.breaking
-          ? this.context.labels.indexOf(labels.major) !== -1
+        this.context.labels[labels.major] || labels.breaking
+          ? this.context.labels[labels.major]
           : true
       ) {
         this.newVersion.semantic.major++
-      } else if (this.context.labels.indexOf(labels.minor) !== -1) {
+      } else if (this.context.labels[labels.minor]) {
         this.newVersion.semantic.minor++
-      } else if (this.context.labels.indexOf(labels.patch) !== -1) {
+      } else if (this.context.labels[labels.patch]) {
         this.newVersion.semantic.patch++
       }
-      if (this.context.labels.indexOf(labels.prerelease) !== -1) {
+      if (this.context.labels[labels.prerelease]) {
         this.newVersion.semantic.prerelease =
           this.newVersion.semantic.prerelease ||
           this.configs.prereleaseName ||
           'prerelease'
       }
-      if (this.context.labels.indexOf(labels.build) !== -1) {
+      if (this.context.labels[labels.build]) {
         this.newVersion.semantic.build = +1
       }
       this.newVersion.name = `${this.newVersion.semantic.major}.${

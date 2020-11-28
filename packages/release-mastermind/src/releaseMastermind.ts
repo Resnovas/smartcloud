@@ -3,9 +3,11 @@ import * as github from '@actions/github'
 import { GitHub } from '@actions/github'
 import fs from 'fs'
 import { log } from '.'
+import { CurContext } from './conditions'
 import { contextHandler } from './contextHandler'
 import { Issues, Project, PullRequests } from './contexts'
-import { Config, CurContext, Options } from './types'
+import { Config, Options, Runners } from './types'
+import { utils } from './utils'
 
 let local: any
 let context = github.context
@@ -59,15 +61,41 @@ export default class releaseMastermind {
      * @since 1.1.0
      */
     log(`Config: ${JSON.stringify(this.configJSON)}`, 1)
-    const configs: Config[] = await this.processConfig().catch(err => {
+    const configs = await this.processConfig().catch(err => {
       log(`Error thrown while processing config: ` + err, 5)
       throw err
     })
-    if (!configs[0]) {
+    if (!configs.runners[0]) {
       log(`No config data.`, 5)
       throw new Error(`No configuration data to use`)
     }
-    configs.forEach(async config => {
+
+    if (configs.labels) {
+      /**
+       * Syncronise the labels
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      await this.syncLabels(configs).catch(err => {
+        log(`Error thrown while syncronising labels: ` + err, 5)
+        throw err
+      })
+    }
+
+    // Run each release manager
+    configs.runners.forEach(async config => {
+      /**
+       * Convert label ID's to Names
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      config.labels = await Object.entries(
+        configs.labels ? configs.labels : []
+      ).reduce((acc: { [key: string]: string }, cur) => {
+        acc[cur[0]] = cur[1].name
+        return acc
+      }, {})
+
       log(`Config: ${JSON.stringify(config)}`, 1)
 
       /**
@@ -81,6 +109,17 @@ export default class releaseMastermind {
       })
       log(`Current Context: ${JSON.stringify(curContext)}`, 1)
 
+      /**
+       * Combine the Shared & Context.type Configs
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      for (const label in config.sharedLabelsConfig) {
+        const ctx = config[curContext.type]
+        if (ctx && 'labels' in ctx && !(label in ctx.labels)) {
+          ctx.labels[label] = config.sharedLabelsConfig[label]
+        }
+      }
       core.endGroup()
       this.applyContext(config, curContext)
     })
@@ -91,8 +130,8 @@ export default class releaseMastermind {
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
-  async processConfig(): Promise<Config[]> {
-    if (!this.configJSON?.[0]?.projectType) {
+  async processConfig(): Promise<Runners> {
+    if (!this.configJSON?.runners[0]) {
       if (!fs.existsSync(this.configPath)) {
         throw new Error(`config not found at "${this.configPath}"`)
       }
@@ -188,16 +227,40 @@ export default class releaseMastermind {
     return curContext
   }
 
+  /**
+   * Syncronise labels to repository
+   * @author IvanFon, TGTGamer, jbinda
+   * @since 1.0.0
+   */
+  async syncLabels(config: Runners) {
+    await utils
+      .syncLabels({
+        client: this.client,
+        repo: this.repo,
+        config: config.labels,
+        dryRun: this.dryRun
+      })
+      .catch((err: { message: string | Error }) => {
+        log(`Error thrown while handling syncLabels tasks: ${err.message}`, 5)
+      })
+  }
+
   applyContext(config: Config, curContext: CurContext) {
     let ctx: PullRequests | Issues | Project
     if (curContext.type == 'pr') {
-      ctx = new PullRequests(this.client, this.repo, config, curContext)
+      ctx = new PullRequests(
+        this.client,
+        this.repo,
+        config,
+        curContext,
+        this.dryRun
+      )
       ctx.run()
     } else if (curContext.type == 'issue') {
-      ctx = new Issues(this.client, this.repo, config, curContext)
+      ctx = new Issues(this.client, this.repo, config, curContext, this.dryRun)
       ctx.run()
     } else if (curContext.type == 'project') {
-      ctx = new Project(this.client, this.repo, config, curContext)
+      ctx = new Project(this.client, this.repo, config, curContext, this.dryRun)
       ctx.run()
     }
   }

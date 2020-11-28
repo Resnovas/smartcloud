@@ -1,5 +1,4 @@
-import { ApiProps } from '.'
-import { Tags } from '../types'
+import { ApiProps, Tags } from '.'
 
 export async function get({ client, repo }: ApiProps): Promise<Tags> {
   const options = await client.repos.listTags({

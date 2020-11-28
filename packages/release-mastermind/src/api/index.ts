@@ -16,12 +16,12 @@ export interface Repo {
   owner: string
   repo: string
 }
-
 export interface ApiProps {
   client: github.GitHub
   repo: Repo
 }
-
 export interface IssueApiProps extends ApiProps {
   IDNumber: number
 }
+export type Event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT'
+export type Tags = string[]
