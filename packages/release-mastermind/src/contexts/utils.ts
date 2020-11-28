@@ -211,7 +211,14 @@ export async function addRemoveLabel({
   shouldHaveLabel: boolean
   dryRun: boolean
 }) {
-  const hasLabel = curLabels?.[labelName]
+  if (!curLabels) return
+  log(
+    `Current label: ${labelName.toLowerCase()} -- Does issue have label: ${Boolean(
+      curLabels[labelName.toLowerCase()]
+    )} but should it: ${shouldHaveLabel}`,
+    1
+  )
+  const hasLabel = Boolean(curLabels[labelName.toLowerCase()])
   if (shouldHaveLabel && !hasLabel) {
     log(`Adding label "${labelID}"...`, 2)
     await api.labels
@@ -234,8 +241,8 @@ export async function addRemoveLabel({
       })
   } else {
     log(
-      `No action required for label "${labelID}" ${
-        hasLabel ? 'as label is already applied.' : '.'
+      `No action required for label "${labelID}"${
+        hasLabel ? ' as label is already applied.' : '.'
       }`,
       2
     )
