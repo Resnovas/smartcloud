@@ -11,7 +11,8 @@ import { conventionsConfig, release } from '../types'
 
 export enum ConditionSetType {
   issue = 'issue',
-  pr = 'pr'
+  pr = 'pr',
+  project = 'project'
 }
 
 const forConditions = <T extends IssueCondition | PRCondition>(

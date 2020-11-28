@@ -1,8 +1,17 @@
 import * as github from '@actions/github'
-export * from './files'
-export * from './labels'
-export * from './pullRequests'
+import * as files from './files'
+import * as issues from './issues'
+import * as labels from './labels'
+import * as project from './project'
+import * as pullRequests from './pullRequests'
 
+export const api = {
+  files,
+  issues,
+  labels,
+  project,
+  pullRequests
+}
 export interface Repo {
   owner: string
   repo: string

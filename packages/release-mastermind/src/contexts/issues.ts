@@ -44,7 +44,7 @@ export class Issues {
     try {
       if (this.config.enforceConventions)
         enforceConventionsSuccess = await enforceConventions(
-          'pr',
+          { client: this.client, repo: this.repo },
           this.config.enforceConventions,
           this.curContext
         )
