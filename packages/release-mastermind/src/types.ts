@@ -47,7 +47,7 @@ export interface issueConfig {
   createBranch?: createBranch
 }
 
-interface projectConfig {
+export interface projectConfig {
   ref?: string
   enforceConventions?: enforceConventions
   syncRemote?: exProjects[]
@@ -160,11 +160,14 @@ interface automaticApprove {
 }
 
 interface enforceConventions {
+  onColumn?: column[] // optionally move card to another column on failure
   commentHeader?: string // will go above the list of failed comments
   commentFooter?: string // will go below the list of failed comments
   moveToColumn?: string // optionally move card to another column on failure
   conventions: conventionsConfig[]
 }
+
+export type column = string | number
 export interface conventionsConfig extends SharedConfig {
   failedComment: string // short comment to explain the condition
   contexts?: string[]
@@ -193,6 +196,7 @@ interface PRConditionConfig {
 export type CurContext =
   | { type: 'pr'; context: PRContext }
   | { type: 'issue'; context: IssueContext }
+  | { type: 'project'; context: ProjectContext }
 
 interface Props {
   creator: string
@@ -206,7 +210,10 @@ export interface PRProps extends Props {
 }
 
 export interface IssueProps extends Props {}
-export interface ProjectProps extends Props {}
+export interface ProjectProps extends Props {
+  project_id: number
+  column_id: number
+}
 
 export type Tags = string[]
 
@@ -238,5 +245,9 @@ export interface PRContext extends GeneralContext {
 
 export interface IssueContext extends GeneralContext {
   issueProps: IssueProps
+}
+
+export interface ProjectContext extends GeneralContext {
+  projectProps: ProjectProps
 }
 export type event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT'

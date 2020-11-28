@@ -1,6 +1,6 @@
 import path from 'path'
 import { log } from '.'
-import { ApiProps, filesAPI } from './api'
+import { api, ApiProps } from './api'
 import { Config, version } from './types'
 
 class Utils {
@@ -62,6 +62,7 @@ class Utils {
     } else {
       throw new Error("There isn't any version to use")
     }
+    if (!rawVersion) rawVersion = '0.0.0'
 
     if (config.versioning == 'SemVer' || config.versioning == undefined) {
       let SemVer = rawVersion.split('.')
@@ -84,7 +85,7 @@ class Utils {
   ): Promise<string> {
     const file = path.join(root, '/package.json')
     log(`Getting file: ${file}`, 1)
-    return JSON.parse(await filesAPI.get({ client, repo }, file, ref)).version
+    return JSON.parse(await api.files.get({ client, repo }, file, ref)).version
   }
 }
 

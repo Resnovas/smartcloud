@@ -1,7 +1,14 @@
 import { Context } from '@actions/github/lib/context'
 import { log } from '.'
-import { ApiProps } from './api'
-import { Config, IssueContext, Labels, PRContext, version } from './types'
+import { api, ApiProps } from './api'
+import {
+  Config,
+  IssueContext,
+  Labels,
+  PRContext,
+  ProjectContext,
+  version
+} from './types'
 import { utils } from './utils'
 
 class ContextHandler {
@@ -56,6 +63,62 @@ class ContextHandler {
     }
   }
 
+  /**
+   * Parse the Project Context
+   * @author IvanFon, TGTGamer, jbinda
+   * @since 1.0.0
+   */
+  async parseProject(
+    { client, repo }: ApiProps,
+    config: Config,
+    context: Context
+  ): Promise<ProjectContext | undefined> {
+    const project = context.payload.project_card
+    if (!project || !config.project) {
+      return
+    }
+    log(
+      `context.payload.project_card: ` +
+        JSON.stringify(context.payload.project_card),
+      1
+    )
+
+    if (!project.content_url) throw new Error('No content information to get')
+    const issueNumber: number = project.content_url.split('/').pop()
+    const issue = await await api.issues.get({
+      client,
+      IDNumber: issueNumber,
+      repo
+    })
+
+    const labels: Labels = await this.parseLabels(issue.labels).catch(err => {
+      log(`Error thrown while parsing labels: ` + err, 5)
+      throw err
+    })
+
+    const currentVersion: version = await utils
+      .parseVersion({ client, repo }, config, config.project.ref)
+      .catch(err => {
+        log(`Error thrown while parsing versioning: ` + err, 5)
+        throw err
+      })
+
+    return {
+      sha: context.sha,
+      action: context.payload.action as string,
+      currentVersion,
+      labels,
+      IDNumber: issueNumber,
+      projectProps: {
+        project_id: project.project_url.split('/').pop(),
+        creator: issue.user.login,
+        column_id: project.column_id,
+        description: issue.body || '',
+        state: issue.state as ProjectContext['projectProps']['state'],
+        title: issue.title
+      }
+    }
+  }
   /**
    * Parse the Issue Context
    * @author IvanFon, TGTGamer, jbinda

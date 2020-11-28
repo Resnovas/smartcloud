@@ -4,7 +4,7 @@ import { GitHub } from '@actions/github'
 import fs from 'fs'
 import { log } from '.'
 import { contextHandler } from './contextHandler'
-import { Issues, PullRequests } from './contexts'
+import { Issues, Project, PullRequests } from './contexts'
 import { Config, CurContext, Options } from './types'
 
 let local: any
@@ -155,6 +155,27 @@ export default class releaseMastermind {
         type: 'issue',
         context: ctx
       }
+    } else if (context.payload.project_card) {
+      /**
+       * Project Context
+       * @author TGTGamer
+       * @since 1.0.0
+       */
+      const ctx = await contextHandler
+        .parseProject({ client: this.client, repo: this.repo }, config, context)
+        .catch(err => {
+          log(`Error thrown while parsing Project context: ` + err, 5)
+          throw err
+        })
+      if (!ctx) {
+        throw new Error('Issue not found on context')
+      }
+      log(`issue context: ${JSON.stringify(ctx)}`, 1)
+
+      curContext = {
+        type: 'project',
+        context: ctx
+      }
     } else {
       /**
        * No Context
@@ -168,12 +189,15 @@ export default class releaseMastermind {
   }
 
   applyContext(config: Config, curContext: CurContext) {
-    let ctx: PullRequests | Issues
+    let ctx: PullRequests | Issues | Project
     if (curContext.type == 'pr') {
       ctx = new PullRequests(this.client, this.repo, config, curContext)
       ctx.run()
     } else if (curContext.type == 'issue') {
       ctx = new Issues(this.client, this.repo, config, curContext)
+      ctx.run()
+    } else if (curContext.type == 'project') {
+      ctx = new Project(this.client, this.repo, config, curContext)
       ctx.run()
     }
   }

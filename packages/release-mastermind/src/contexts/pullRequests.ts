@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
-import { pullRequestsAPI } from '../api'
+import { api } from '../api'
 import evaluator, { ConditionSetType } from '../conditions/evaluator'
 import {
   Config,
@@ -54,7 +54,7 @@ export class PullRequests {
     try {
       if (this.config.enforceConventions)
         enforceConventionsSuccess = await enforceConventions(
-          'pr',
+          { client: this.client, repo: this.repo },
           this.config.enforceConventions,
           this.curContext
         )
@@ -102,7 +102,7 @@ export class PullRequests {
           automaticApprove.commentHeader +
           '\n\n Automatically Approved - Will automatically merge shortly! \n\n' +
           automaticApprove.commentFooter
-        pullRequestsAPI.createReview(
+        api.pullRequests.reviews.create(
           {
             client: this.client,
             IDNumber: this.context.IDNumber,

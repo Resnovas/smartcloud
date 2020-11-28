@@ -126,7 +126,24 @@
     },
     "project": {
       "ref": "develop",
-      "enforceConventions": {},
+      "enforceConventions": {
+        "onColumn": ["Accepted", "Reviewing"],
+        "conventions": [
+          {
+            "requires": 1,
+            "contexts": [
+              "workflow",
+              "release",
+              "label",
+              "variable",
+              "installer",
+              "deps",
+              "deps-dev"
+            ],
+            "conditions": "semanticTitle"
+          }
+        ]
+      },
       "syncRemote": {},
       "openBranch": {},
       "assignMilestone": {}
