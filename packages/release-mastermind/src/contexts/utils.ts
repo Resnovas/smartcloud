@@ -48,7 +48,7 @@ export function enforceConventions(
       convention.failedComment =
         `Semantic Conditions failed - Please title your ${
           context.type == 'pr' ? 'pull request' : 'issue'
-        } using one of the valid options:\r\n\r\n types: ` +
+        } using one of the valid options:\r\n\r\n Types: ` +
         semantic.join(', ') +
         (convention.contexts
           ? `\r\n\r\n Contexts: ${convention.contexts?.join(', ')}`
