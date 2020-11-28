@@ -1,7 +1,7 @@
 name: Project Management
 on:
   project_card:
-    types: [created, moved, deleted]
+
 jobs:
   # Automatically assigns labels based on config ../card-labeler.yml
   triage:
@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.1
       - name: Get Configurations
-        uses: packages/variable-mastermind/
+        uses: ./packages/variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
           mode: 'environment'
@@ -20,3 +20,13 @@ jobs:
         uses: technote-space/auto-card-labeler@v1
         with:
           CONFIG_FILENAME: ${{env.projects_cardsConfig}}
+
+  release-mastermind:
+    name: Release Mastermind
+    runs-on: ubuntu-latest
+    steps:          
+      - uses: actions/checkout@v2.3.1
+      - uses: ./packages/release-mastermind/
+        with:
+          GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
+          config: .github/allconfigs.json
