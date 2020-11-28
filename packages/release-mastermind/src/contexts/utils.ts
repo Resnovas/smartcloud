@@ -211,7 +211,15 @@ export async function addRemoveLabel({
   shouldHaveLabel: boolean
   dryRun: boolean
 }) {
-  if (!curLabels) return
+  if (!curLabels || !labelName)
+    return log(
+      `Can't run add or remove labels if you don't provide "${
+        !curLabels
+          ? `" the current labels ${curLabels}`
+          : `" the name of the label you want to apply ${labelName}`
+      }`,
+      2
+    )
   log(
     `Current label: ${labelName.toLowerCase()} -- Does issue have label: ${Boolean(
       curLabels[labelName.toLowerCase()]

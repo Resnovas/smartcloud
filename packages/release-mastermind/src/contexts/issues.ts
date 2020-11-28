@@ -60,7 +60,7 @@ export class Issues {
           this.dryRun
         )
       if (enforceConventionsSuccess) {
-        if (this.config.labels) this.applyLabels(this.dryRun)
+        if (this.config.labels) await this.applyLabels(this.dryRun)
         core.endGroup()
       }
     } catch (err) {
