@@ -29,7 +29,7 @@ const forConditions = <T extends IssueCondition | PRCondition>(
   return matches
 }
 
-export default function evaluator(
+export function evaluator(
   conditionSetType: ConditionSetType,
   config: conventionsConfig | release,
   props: PRProps | IssueProps

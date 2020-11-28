@@ -3,12 +3,14 @@ import { log } from '.'
 import { api, ApiProps } from './api'
 import {
   Config,
+  Labels
+} from './types'
+import {
   IssueContext,
-  Labels,
   PRContext,
   ProjectContext,
-  version
-} from './types'
+  Version
+} from './conditions'
 import { utils } from './utils'
 
 class ContextHandler {
@@ -39,7 +41,7 @@ class ContextHandler {
       throw err
     })
 
-    const currentVersion: version = await utils
+    const currentVersion: Version = await utils
       .parseVersion({ client, repo }, config, config.pr.ref || pr.base.ref)
       .catch(err => {
         log(`Error thrown while parsing versioning: ` + err, 5)
@@ -96,7 +98,7 @@ class ContextHandler {
       throw err
     })
 
-    const currentVersion: version = await utils
+    const currentVersion: Version = await utils
       .parseVersion({ client, repo }, config, config.project.ref)
       .catch(err => {
         log(`Error thrown while parsing versioning: ` + err, 5)
@@ -141,7 +143,7 @@ class ContextHandler {
       throw err
     })
 
-    const currentVersion: version = await utils
+    const currentVersion: Version = await utils
       .parseVersion({ client, repo }, config, config.issue.ref)
       .catch(err => {
         log(`Error thrown while parsing versioning: ` + err, 5)

@@ -2,15 +2,8 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
 import { api } from '../api'
-import evaluator, { ConditionSetType } from '../conditions/evaluator'
-import {
-  Config,
-  CurContext,
-  PRContext,
-  pullRequestConfig,
-  release,
-  version
-} from '../types'
+import {Config, PullRequestConfig, Release} from '../types'
+import {evaluator, ConditionSetType, CurContext, PRContext, Version} from '../conditions'
 import { utils } from '../utils'
 import { enforceConventions } from './utils'
 
@@ -19,7 +12,7 @@ export class PullRequests {
   private config: Config['pr']
   private curContext: CurContext
   private context: PRContext
-  private newVersion: version = {}
+  private newVersion: Version = {}
   private client: GitHub
   private repo: { owner: string; repo: string }
 
@@ -91,7 +84,7 @@ export class PullRequests {
     }
   }
 
-  automaticApprove(automaticApprove: pullRequestConfig['automaticApprove']) {
+  automaticApprove(automaticApprove: PullRequestConfig['automaticApprove']) {
     if (!automaticApprove || !automaticApprove.conventions)
       throw new Error('Not Able to automatically approve')
     automaticApprove.conventions.forEach(convention => {
@@ -119,7 +112,7 @@ export class PullRequests {
     })
   }
 
-  bumpVersion(labels: release['labels']) {
+  bumpVersion(labels: Release['labels']) {
     if (!labels) return
     if (
       (this.configs.versioning == 'SemVer' ||

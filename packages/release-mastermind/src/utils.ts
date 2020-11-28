@@ -1,7 +1,9 @@
 import path from 'path'
 import { log } from '.'
-import { api, ApiProps } from './api'
-import { Config, version } from './types'
+import { api, ApiProps, Repo } from './api'
+import { Config, Labels, Runners } from './types'
+import { Version } from './conditions'
+import { GitHub } from '@actions/github'
 
 class Utils {
   /**
@@ -48,7 +50,7 @@ class Utils {
     { client, repo }: ApiProps,
     config: Config,
     ref?: string
-  ): Promise<version> {
+  ): Promise<Version> {
     let rawVersion
     if (config.projectType === 'node') {
       rawVersion = await this.getNodeVersion(
@@ -66,7 +68,7 @@ class Utils {
 
     if (config.versioning == 'SemVer' || config.versioning == undefined) {
       let SemVer = rawVersion.split('.')
-      let versioning: version['semantic'] = {
+      let versioning: Version['semantic'] = {
         major: +SemVer[0],
         minor: +SemVer[1],
         patch: +SemVer[2].split('+')[0].split('-')[0],

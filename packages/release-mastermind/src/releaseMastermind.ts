@@ -4,8 +4,10 @@ import { GitHub } from '@actions/github'
 import fs from 'fs'
 import { log } from '.'
 import { contextHandler } from './contextHandler'
+import { CurContext } from './conditions'
 import { Issues, Project, PullRequests } from './contexts'
-import { Config, CurContext, Options } from './types'
+import { Config, Options, Runners, LabelIdToName } from './types'
+import { utils } from './utils'
 
 let local: any
 let context = github.context
@@ -59,15 +61,17 @@ export default class releaseMastermind {
      * @since 1.1.0
      */
     log(`Config: ${JSON.stringify(this.configJSON)}`, 1)
-    const configs: Config[] = await this.processConfig().catch(err => {
+    const configs = await this.processConfig().catch(err => {
       log(`Error thrown while processing config: ` + err, 5)
       throw err
     })
-    if (!configs[0]) {
+    if (!configs.runners[0]) {
       log(`No config data.`, 5)
       throw new Error(`No configuration data to use`)
     }
-    configs.forEach(async config => {
+
+    // Run each release manager
+    configs.runners.forEach(async config => {
       log(`Config: ${JSON.stringify(config)}`, 1)
 
       /**
@@ -91,8 +95,8 @@ export default class releaseMastermind {
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
-  async processConfig(): Promise<Config[]> {
-    if (!this.configJSON?.[0]?.projectType) {
+  async processConfig(): Promise<Runners> {
+    if (!this.configJSON?.runners[0]) {
       if (!fs.existsSync(this.configPath)) {
         throw new Error(`config not found at "${this.configPath}"`)
       }

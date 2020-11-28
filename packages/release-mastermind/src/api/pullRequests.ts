@@ -1,5 +1,5 @@
 import { IssueApiProps } from '.'
-import { event } from '../types'
+import { event } from '.'
 
 export const reviews = {
   async create(

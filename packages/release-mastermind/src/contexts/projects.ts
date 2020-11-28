@@ -2,7 +2,8 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
 import { api } from '../api'
-import { column, Config, CurContext, ProjectContext, version } from '../types'
+import { Config, Column} from '../types'
+import {CurContext, ProjectContext, Version } from '../conditions'
 import { enforceConventions } from './utils'
 
 export class Project {
@@ -10,7 +11,7 @@ export class Project {
   private config: Config['project']
   private curContext: CurContext
   private context: ProjectContext
-  private newVersion: version = {}
+  private newVersion: Version = {}
   private client: GitHub
   private repo: { owner: string; repo: string }
 
@@ -81,7 +82,7 @@ export class Project {
     }
   }
 
-  async convertColumnStringsToIDArray(columns: column[]): Promise<number[]> {
+  async convertColumnStringsToIDArray(columns: Column[]): Promise<number[]> {
     const columnList = await api.project.column.list(
       { client: this.client, repo: this.repo },
       this.context.projectProps.project_id

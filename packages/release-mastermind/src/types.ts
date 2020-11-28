@@ -6,60 +6,127 @@ import {
 } from './conditions/'
 
 /**
- * Configuration interfaces
+ * Application interfaces
  */
 
 export interface Options {
   configPath: string
-  configJSON: Config[]
+  configJSON: Runners
   showLogs: boolean
   dryRun: boolean
 }
 
+export interface Runners {
+  labels?: Labels
+  runners: Config[]
+}
+
 export interface Config {
-  projectType: projectType
+  projectType: ProjectType
   retryLimit?: number
   root: string // The root of the project (e.g. "." or "./packages/{package}")
-  versioning?: versionType // The type of versioning to apply
+  versioning?: VersionType // The type of versioning to apply
   prereleaseName?: string // If you want something other then "prerelease"
-  pr?: pullRequestConfig
-  issue?: issueConfig
-  project?: projectConfig
+  sharedLabels?: SharedLabels
+  pr?: PullRequestConfig
+  issue?: IssueConfig
+  project?: ProjectConfig
 }
 
-export type projectType = 'node' | 'other'
-export type versionType = 'SemVer'
 
-export interface pullRequestConfig {
-  ref?: string // Overrides the ref
-  enforceConventions?: enforceConventions // enforce the conventions
-  automaticApprove?: automaticApprove // Automatically approve PR based on conditions
-  manageRelease?: release // Manage releases (includes tags, milestones, packages and more)
-  duplicateHotfix?: duplicateHotfix // Duplicated a hotfix to the main branch
-  syncRemote?: syncRemote[] // sync a remote repository
+/**
+ * Config types
+ */
+
+export type ProjectType = 'node' | 'other'
+export type VersionType = 'SemVer'
+interface SharedLabels {
+  [key: string]: SharedConditions
 }
 
-export interface issueConfig {
-  ref?: string
-  enforceConventions?: enforceConventions // enforce the conventions
-  assignProject?: assignProject
-  assignColumn?: AssignColumn
-  createBranch?: createBranch
+export interface PullRequestConfig extends SharedConfig {
+  automaticApprove?: AutomaticApprove // Automatically approve PR based on conditions
+  manageRelease?: Release // Manage releases (includes tags, milestones, packages and more)
+  duplicateHotfix?: DuplicateHotfix // Duplicated a hotfix to the main branch
+  syncRemote?: SyncRemote[] // sync a remote repository
 }
 
-export interface projectConfig {
-  ref?: string
-  enforceConventions?: enforceConventions
-  syncRemote?: exProjects[]
-  openBranch?: openBranch
-  assignMilestone?: milestones[]
+export interface IssueConfig extends SharedConfig{
+  assignProject?: AssignProject
+  createBranch?: IssueCreateBranch
+}
+
+export interface ProjectConfig extends SharedConfig {
+  syncRemote?: ExProjects[]
+  openBranch?: ProjectCreateBranch
+  assignMilestone?: Milestones[]
 }
 
 /**
- * Individual Interfaces
+ * shared types
+ */
+interface SharedConfig {
+  ref?: string // Overrides the ref
+  enforceConventions?: EnforceConventions // enforce the conventions
+  labels: {
+    labelIdToName?: LabelIdToName
+  }
+}
+
+interface SharedConditions {
+  requires: number
+  conditions: Condition[] | string
+}
+
+interface SharedConventionsConfig extends SharedConditions {
+  failedComment: string // short comment to explain the condition
+  contexts?: string[]
+}
+
+interface CreateBranch {
+  branchPrefix?: string
+  branchSuffix?: string
+  branchName: 'title' | 'short' | 'number'
+}
+
+interface EnforceConventions {
+  onColumn?: Column[] // optionally move card to another column on failure
+  commentHeader?: string // will go above the list of failed comments
+  commentFooter?: string // will go below the list of failed comments
+  moveToColumn?: string // optionally move card to another column on failure
+  conventions: SharedConventionsConfig[]
+}
+
+export type LabelIdToName = {
+  [Key: string]: string
+}
+export type Column = string | number
+export interface Label {
+  name: string
+  description: string
+  color: string
+}
+
+export type Labels = {
+  [key: string]: Label
+}
+
+/**
+ * Pull Request Config types
  */
 
-export interface release extends PRConditionConfig {
+interface PRConditionConfig {
+  requires: number
+  conditions: PRCondition[]
+}
+
+interface AutomaticApprove {
+  commentHeader?: string // will go above the list of failed comments
+  commentFooter?: string // will go below the list of failed comments
+  conventions: SharedConventionsConfig[]
+}
+
+export interface Release extends PRConditionConfig {
   labels?: {
     build: string
     prerelease: string
@@ -69,12 +136,41 @@ export interface release extends PRConditionConfig {
     breaking?: string
   }
   createTag?: boolean
-  createRelease?: createRelease | boolean
-  createMilestone?: createMilestone
+  createRelease?: CreateRelease
+  createMilestone?: CreateMilestone
   createPackages?: string[] | string
-  createChangelog?: changelog
+  createChangelog?: Changelog
 }
-interface createRelease extends releaseChanges {
+
+interface DuplicateHotfix {
+  [title: string]: {
+    prName: 'unchanged' | 'number' | string
+    titlePrefix?: string
+    branches: string[]
+  }
+}
+interface SyncRemote {
+  localBranch: string
+  remoteBranch: string
+  localPath: string
+  remotePath: string
+}
+
+interface ReleaseChanges {
+  includeIssues?: boolean
+  sections?: Sections[]
+}
+
+interface Sections {
+  title: string
+  body?: string
+  PRlabels: Labels
+  issueLabels?: Labels
+  includeCommitter?: boolean
+  linkPR?: boolean
+}
+
+interface CreateRelease extends ReleaseChanges {
   tagName?: string
   tagPrefix?: string
   releaseName?: string
@@ -84,170 +180,55 @@ interface createRelease extends releaseChanges {
   prerelease?: boolean
   useChangelog?: boolean
 }
-interface changelog extends releaseChanges {
+interface Changelog extends ReleaseChanges {
   title?: string
   body?: string
 }
-interface releaseChanges {
-  includeIssues?: boolean
-  sections?: Sections[]
-}
-interface Sections {
-  title: string
-  body?: string
-  PRlabels: Labels
-  issueLabels?: Labels
-  includeCommitter?: boolean
-  linkPR?: boolean
-}
-interface changelog {}
-interface syncRemote {
-  localBranch: string
-  remoteBranch: string
-  localPath: string
-  remotePath: string
-}
-interface createMilestone {
+
+interface CreateMilestone {
   milestone: 'version' | string
   deadline?: string
 }
-interface nodeJS {
-  filename: string
+
+/**
+ * Issue Config types
+ */
+interface IssueConditionConfig {
+  requires: number
+  conditions: IssueCondition[]
 }
-interface duplicateHotfix {
-  [title: string]: {
-    prName: 'unchanged' | 'number' | string
-    titlePrefix?: string
-    branches: string[]
-  }
-}
-interface createBranch {
-  [label: string]: {
-    branchPrefix?: string
-    branchSuffix?: string
-    branchName: 'title' | 'short' | 'number'
-  }
-}
-interface AssignColumn {
-  [label: string]: {
-    column: string
-  }
-}
-interface openBranch {
-  onProject?: boolean
-  onColumn?: string
-}
-interface assignProject extends ProjectConditionConfig {
+
+interface AssignProject extends IssueConditionConfig {
   project: string
   column: string
 }
-interface milestones {
-  [milestone: string]: {
-    onColumn: string
-    ignoreLabels?: string[]
-  }
-}
-interface exProjects {
-  owner: string
-  repo?: string
-  project: string
+
+interface IssueCreateBranch {
+  [label: string]: CreateBranch
 }
 
-interface automaticApprove {
-  commentHeader?: string // will go above the list of failed comments
-  commentFooter?: string // will go below the list of failed comments
-  conventions: conventionsConfig[]
-}
-
-interface enforceConventions {
-  onColumn?: column[] // optionally move card to another column on failure
-  commentHeader?: string // will go above the list of failed comments
-  commentFooter?: string // will go below the list of failed comments
-  moveToColumn?: string // optionally move card to another column on failure
-  conventions: conventionsConfig[]
-}
-
-export type column = string | number
-export interface conventionsConfig extends SharedConfig {
-  failedComment: string // short comment to explain the condition
-  contexts?: string[]
-}
-
-interface SharedConfig {
-  requires: number
-  conditions: Condition[] | string
-}
+/**
+ * Project Config types
+ */
 
 interface ProjectConditionConfig {
   requires: number
   conditions: ProjectCondition[]
 }
 
-interface IssueConditionConfig {
-  requires: number
-  conditions: IssueCondition[]
+interface ExProjects {
+  owner: string
+  repo?: string
+  project: string
+}
+interface ProjectCreateBranch  extends CreateBranch{
+  onProject?: boolean
+  onColumn?: string
 }
 
-interface PRConditionConfig {
-  requires: number
-  conditions: PRCondition[]
-}
-
-export type CurContext =
-  | { type: 'pr'; context: PRContext }
-  | { type: 'issue'; context: IssueContext }
-  | { type: 'project'; context: ProjectContext }
-
-interface Props {
-  creator: string
-  description: string
-  state: 'open' | 'closed'
-  title: string
-}
-
-export interface PRProps extends Props {
-  branch: string
-}
-
-export interface IssueProps extends Props {}
-export interface ProjectProps extends Props {
-  project_id: number
-  column_id: number
-}
-
-export type Tags = string[]
-
-export type Labels = string[]
-
-interface GeneralContext {
-  ref?: string
-  sha: string
-  action: string
-  currentVersion: version
-  labels: Labels
-  IDNumber: number
-}
-
-export interface version {
-  name?: string
-  semantic?: {
-    major: number
-    minor: number
-    patch: number
-    prerelease?: string
-    build?: number
+interface Milestones {
+  [milestone: string]: {
+    onColumn: string
+    ignoreLabels?: string[]
   }
-}
-
-export interface PRContext extends GeneralContext {
-  prProps: PRProps
-}
-
-export interface IssueContext extends GeneralContext {
-  issueProps: IssueProps
-}
-
-export interface ProjectContext extends GeneralContext {
-  projectProps: ProjectProps
-}
-export type event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT'
+} 

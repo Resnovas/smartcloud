@@ -1,7 +1,8 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
-import { Config, CurContext, IssueContext, version } from '../types'
+import { Config } from '../types'
+import { CurContext, IssueContext, Version } from '../conditions'
 import { enforceConventions } from './utils'
 
 export class Issues {
@@ -9,7 +10,7 @@ export class Issues {
   private config: Config['pr']
   private curContext: CurContext
   private context: IssueContext
-  private newVersion: version = {}
+  private newVersion: Version = {}
   private client: GitHub
   private repo: { owner: string; repo: string }
 

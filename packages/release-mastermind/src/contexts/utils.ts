@@ -1,22 +1,20 @@
 import * as core from '@actions/core'
 import { log } from '..'
 import { api, ApiProps } from '../api'
-import { Condition } from '../conditions'
-import evaluator, { ConditionSetType } from '../conditions/evaluator'
+import { evaluator, ConditionSetType, Condition, CurContext } from '../conditions'
 import {
-  CurContext,
-  issueConfig,
-  projectConfig,
-  pullRequestConfig
+  IssueConfig,
+  ProjectConfig,
+  PullRequestConfig
 } from '../types'
 import { semantic } from './helper/semantic'
 
 export function enforceConventions(
   { client, repo }: ApiProps,
   enforceConventions:
-    | pullRequestConfig['enforceConventions']
-    | issueConfig['enforceConventions']
-    | projectConfig['enforceConventions'],
+    | PullRequestConfig['enforceConventions']
+    | IssueConfig['enforceConventions']
+    | ProjectConfig['enforceConventions'],
   context: CurContext
 ) {
   if (!enforceConventions || !enforceConventions.conventions)
@@ -91,9 +89,9 @@ export function enforceConventions(
 async function createConventionComment(
   CurContext: CurContext,
   enforceConventions:
-    | pullRequestConfig['enforceConventions']
-    | issueConfig['enforceConventions']
-    | projectConfig['enforceConventions'],
+    | PullRequestConfig['enforceConventions']
+    | IssueConfig['enforceConventions']
+    | ProjectConfig['enforceConventions'],
   { client, repo }: ApiProps,
   success: boolean,
   failMessages?: string[]
