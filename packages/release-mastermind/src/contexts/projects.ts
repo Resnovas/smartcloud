@@ -2,8 +2,8 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
 import { api } from '../api'
-import { Config, Column} from '../types'
-import {CurContext, ProjectContext, Version } from '../conditions'
+import { CurContext, ProjectContext, Version } from '../conditions'
+import { Column, Config } from '../types'
 import { enforceConventions } from './utils'
 
 export class Project {
@@ -14,12 +14,14 @@ export class Project {
   private newVersion: Version = {}
   private client: GitHub
   private repo: { owner: string; repo: string }
+  private dryRun: boolean
 
   constructor(
     client: GitHub,
     repo: { owner: string; repo: string },
     configs: Config,
-    curContext: CurContext
+    curContext: CurContext,
+    dryRun: boolean
   ) {
     if (curContext.type !== 'project')
       throw new Error('Cannot construct without issue context')
@@ -33,6 +35,7 @@ export class Project {
     this.curContext = curContext
     this.context = curContext.context
     this.newVersion = curContext.context.currentVersion
+    this.dryRun = dryRun
   }
 
   async run(attempt?: number) {
@@ -58,7 +61,8 @@ export class Project {
           enforceConventionsSuccess = await enforceConventions(
             { client: this.client, repo: this.repo },
             this.config.enforceConventions,
-            this.curContext
+            this.curContext,
+            this.dryRun
           )
       }
       if (enforceConventionsSuccess) {

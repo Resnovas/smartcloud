@@ -27,12 +27,12 @@ export interface Config {
   root: string // The root of the project (e.g. "." or "./packages/{package}")
   versioning?: VersionType // The type of versioning to apply
   prereleaseName?: string // If you want something other then "prerelease"
-  sharedLabels?: SharedLabels
+  labels?: { [key: string]: string }
+  sharedLabelsConfig?: SharedLabels
   pr?: PullRequestConfig
   issue?: IssueConfig
   project?: ProjectConfig
 }
-
 
 /**
  * Config types
@@ -51,7 +51,7 @@ export interface PullRequestConfig extends SharedConfig {
   syncRemote?: SyncRemote[] // sync a remote repository
 }
 
-export interface IssueConfig extends SharedConfig{
+export interface IssueConfig extends SharedConfig {
   assignProject?: AssignProject
   createBranch?: IssueCreateBranch
 }
@@ -69,7 +69,10 @@ interface SharedConfig {
   ref?: string // Overrides the ref
   enforceConventions?: EnforceConventions // enforce the conventions
   labels: {
-    labelIdToName?: LabelIdToName
+    [key: string]:
+      | IssueConditionConfig
+      | ProjectConditionConfig
+      | PRConditionConfig
   }
 }
 
@@ -78,7 +81,7 @@ interface SharedConditions {
   conditions: Condition[] | string
 }
 
-interface SharedConventionsConfig extends SharedConditions {
+export interface SharedConventionsConfig extends SharedConditions {
   failedComment: string // short comment to explain the condition
   contexts?: string[]
 }
@@ -97,9 +100,6 @@ interface EnforceConventions {
   conventions: SharedConventionsConfig[]
 }
 
-export type LabelIdToName = {
-  [Key: string]: string
-}
 export type Column = string | number
 export interface Label {
   name: string
@@ -107,7 +107,7 @@ export interface Label {
   color: string
 }
 
-export type Labels = {
+export interface Labels {
   [key: string]: Label
 }
 
@@ -115,7 +115,7 @@ export type Labels = {
  * Pull Request Config types
  */
 
-interface PRConditionConfig {
+export interface PRConditionConfig {
   requires: number
   conditions: PRCondition[]
 }
@@ -193,7 +193,7 @@ interface CreateMilestone {
 /**
  * Issue Config types
  */
-interface IssueConditionConfig {
+export interface IssueConditionConfig {
   requires: number
   conditions: IssueCondition[]
 }
@@ -221,7 +221,7 @@ interface ExProjects {
   repo?: string
   project: string
 }
-interface ProjectCreateBranch  extends CreateBranch{
+interface ProjectCreateBranch extends CreateBranch {
   onProject?: boolean
   onColumn?: string
 }
@@ -231,4 +231,4 @@ interface Milestones {
     onColumn: string
     ignoreLabels?: string[]
   }
-} 
+}

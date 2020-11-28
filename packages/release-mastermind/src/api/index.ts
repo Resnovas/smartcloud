@@ -23,5 +23,5 @@ export interface ApiProps {
 export interface IssueApiProps extends ApiProps {
   IDNumber: number
 }
-export type event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT'
+export type Event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT'
 export type Tags = string[]

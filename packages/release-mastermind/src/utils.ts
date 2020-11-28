@@ -1,9 +1,9 @@
+import { GitHub } from '@actions/github'
 import path from 'path'
 import { log } from '.'
 import { api, ApiProps, Repo } from './api'
-import { Config, Labels, Runners } from './types'
 import { Version } from './conditions'
-import { GitHub } from '@actions/github'
+import { Config, Labels, Runners } from './types'
 
 class Utils {
   /**
@@ -88,6 +88,80 @@ class Utils {
     const file = path.join(root, '/package.json')
     log(`Getting file: ${file}`, 1)
     return JSON.parse(await api.files.get({ client, repo }, file, ref)).version
+  }
+
+  /**
+   * Syncronise labels to repository
+   * @author IvanFon, TGTGamer, jbinda
+   * @since 1.0.0
+   */
+  async syncLabels({
+    client,
+    config,
+    repo,
+    dryRun
+  }: {
+    client: GitHub
+    config: Runners['labels']
+    repo: Repo
+    dryRun: boolean
+  }) {
+    /**
+     * Syncronises the repo labels
+     * !todo Add delete labels
+     * @since 2.0.0
+     */
+    if (!config) throw new Error('Cannot syncronise labels without config')
+    const curLabels: Labels = await api.labels
+      .get({ client, repo })
+      .catch(err => {
+        log(`Error thrown while getting labels: ` + err, 5)
+        throw err
+      })
+    log(`curLabels: ${JSON.stringify(curLabels)}`, 1)
+    for (const configLabel of Object.values(config)) {
+      const label = curLabels[configLabel.name.toLowerCase()]
+
+      /**
+       * Update label
+       * @author IvanFon, TGTGamer, jbinda
+       * @since 1.0.0
+       */
+      if (label) {
+        if (
+          (label.description !== configLabel.description &&
+            configLabel.description !== undefined) ||
+          label.color !== utils.formatColor(configLabel.color)
+        ) {
+          log(
+            `Recreate ${JSON.stringify(configLabel)} (prev: ${JSON.stringify(
+              label
+            )})`,
+            2
+          )
+          await api.labels
+            .update({ client, repo, label: configLabel, dryRun })
+            .catch(err => {
+              log(`Error thrown while updating label: ` + err, 5)
+            })
+        } else {
+          log(`No action required to update label: ${label.name}`, 2)
+        }
+
+        /**
+         * Create label
+         * @author IvanFon, TGTGamer, jbinda
+         * @since 1.0.0
+         */
+      } else {
+        log(`Create ${JSON.stringify(configLabel)}`, 2)
+        await api.labels
+          .create({ client, repo, label: configLabel, dryRun })
+          .catch(err => {
+            log(`Error thrown while creating label: ` + err, 5)
+          })
+      }
+    }
   }
 }
 

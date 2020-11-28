@@ -2,15 +2,13 @@ import { Context } from '@actions/github/lib/context'
 import { log } from '.'
 import { api, ApiProps } from './api'
 import {
-  Config,
-  Labels
-} from './types'
-import {
   IssueContext,
   PRContext,
   ProjectContext,
+  Reviews,
   Version
 } from './conditions'
+import { Config, Label, Labels } from './types'
 import { utils } from './utils'
 
 class ContextHandler {
@@ -36,10 +34,51 @@ class ContextHandler {
     )
 
     const IDNumber = pr.number
-    const labels: Labels = await this.parseLabels(pr.labels).catch(err => {
+    const labels = await this.parseLabels(pr.labels).catch(err => {
       log(`Error thrown while parsing labels: ` + err, 5)
       throw err
     })
+    const files: string[] = await api.files
+      .list({ client, repo, IDNumber })
+      .catch(err => {
+        log(`Error thrown while listing files: ` + err, 5)
+        throw err
+      })
+
+    const changes: number = await api.pullRequests
+      .changes(pr.additions, pr.deletions)
+      .catch(err => {
+        log(`Error thrown while handling changes: ` + err, 5)
+        throw err
+      })
+
+    const reviews: Reviews = await api.pullRequests.reviews
+      .list({ client, repo, IDNumber })
+      .catch(err => {
+        log(`Error thrown while handling reviews: ` + err, 5)
+        throw err
+      })
+
+    const pendingReview: boolean = await api.pullRequests.reviews
+      .pending(reviews.length, pr.requested_reviewers.length)
+      .catch(err => {
+        log(`Error thrown while handling reviews: ` + err, 5)
+        throw err
+      })
+
+    const requestedChanges: number = await api.pullRequests.reviews
+      .requestedChanges(reviews)
+      .catch(err => {
+        log(`Error thrown while handling reviews: ` + err, 5)
+        throw err
+      })
+
+    const approved: number = await api.pullRequests.reviews
+      .isApproved(reviews)
+      .catch(err => {
+        log(`Error thrown while handling reviews: ` + err, 5)
+        throw err
+      })
 
     const currentVersion: Version = await utils
       .parseVersion({ client, repo }, config, config.pr.ref || pr.base.ref)
@@ -59,8 +98,16 @@ class ContextHandler {
         branch: pr.head.ref,
         creator: pr.user.login,
         description: pr.body || '',
+        isDraft: pr.draft,
+        locked: pr.locked,
         state: pr.state,
-        title: pr.title
+        title: pr.title,
+        files,
+        changes,
+        reviews,
+        pendingReview,
+        requestedChanges,
+        approved
       }
     }
   }
@@ -93,7 +140,7 @@ class ContextHandler {
       repo
     })
 
-    const labels: Labels = await this.parseLabels(issue.labels).catch(err => {
+    const labels = await this.parseLabels(issue.labels).catch(err => {
       log(`Error thrown while parsing labels: ` + err, 5)
       throw err
     })
@@ -112,12 +159,13 @@ class ContextHandler {
       labels,
       IDNumber: issueNumber,
       projectProps: {
-        project_id: project.project_url.split('/').pop(),
         creator: issue.user.login,
-        column_id: project.column_id,
         description: issue.body || '',
+        locked: issue.locked,
         state: issue.state as ProjectContext['projectProps']['state'],
-        title: issue.title
+        title: issue.title,
+        project_id: project.project_url.split('/').pop(),
+        column_id: project.column_id
       }
     }
   }
@@ -138,7 +186,7 @@ class ContextHandler {
 
     log(`context.payload.issue: ` + JSON.stringify(context.payload.issue), 1)
 
-    const labels: Labels = await this.parseLabels(issue.labels).catch(err => {
+    const labels = await this.parseLabels(issue.labels).catch(err => {
       log(`Error thrown while parsing labels: ` + err, 5)
       throw err
     })
@@ -159,6 +207,7 @@ class ContextHandler {
       issueProps: {
         creator: issue.user.login,
         description: issue.body || '',
+        locked: issue.locked,
         state: issue.state,
         title: issue.title
       }
@@ -170,16 +219,14 @@ class ContextHandler {
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
-  async parseLabels(labels: any): Promise<Labels> {
+  async parseLabels(labels: any): Promise<Labels | undefined> {
     if (!Array.isArray(labels)) {
-      return []
+      return
     }
-    let returnLabels: Labels = []
-    labels.forEach(label => {
-      if (label.name) returnLabels.push(label.name)
-    })
-
-    return returnLabels
+    return labels.reduce((acc: { [key: string]: Label }, cur) => {
+      acc[cur.name.toLowerCase()] = cur
+      return acc
+    }, {})
   }
 }
 
