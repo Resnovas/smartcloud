@@ -113,7 +113,7 @@ async function createConventionComment(
       repo
     })
   } else {
-    api.pullRequests.reviews.list({
+    commentList = await api.pullRequests.reviews.list({
       client,
       IDNumber: CurContext.context.IDNumber,
       repo
@@ -121,12 +121,10 @@ async function createConventionComment(
   }
   let previousComment: number | undefined
   if (commentList) {
-    commentList.forEach(comment => {
-      console.log(comment.body.includes(prefix))
+    commentList.forEach((comment: any) => {
       if (comment.body.includes(prefix)) previousComment = comment.id
     })
   }
-  console.log(previousComment)
   respond(CurContext, { client, repo }, success, previousComment, body)
 }
 
