@@ -20,7 +20,7 @@ jobs:
   ## Sooon to be merged into @videndum/release-mastermind
   AutoAssign:
     name: Automatically Assign to branch and projects
-    needs: AutoLabel
+    needs: release-mastermind
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.1
