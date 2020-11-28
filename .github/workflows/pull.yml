@@ -3,62 +3,8 @@ on:
   pull_request:
 
 jobs:
-  # Automatically blocks WIP pull request based on the title
-  wip:
-    runs-on: ubuntu-latest
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    steps:
-      - uses: actions/checkout@v2.3.1
-      - name: Get Configurations
-        uses: ./packages/variable-mastermind/
-        with:
-          settings: ${{ secrets.SETTINGS }}
-          mode: 'environment'
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Work in progress status
-        uses: wip/action@v1.1.0
-        if: ${{env.wip_enabled}} == true
-
-
-  # Setup labels
-  # label-mastermind:
-  #   name: Label Mastermind
-  #   needs: wip
-  #   runs-on: ubuntu-latest
-  #   steps:          
-  #     # super Labeler
-  #     - uses: actions/checkout@v2.3.1
-  #     - uses: ./packages/label-mastermind/
-  #       with:
-  #         GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
-  #         config: .github/allconfigs.json
-
-  # Automatically approves
-  conflictCheck:
-    name: Pull Request Conflict Check
-    needs: label-mastermind
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2.3.1
-      - name: Get Configurations
-        uses: ./packages/variable-mastermind/
-        with:
-          settings: ${{ secrets.SETTINGS }}
-          mode: 'environment'
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      ## Should add to videndum/release-mastermind
-      - name: Warn potential conflicts
-        uses: wktk/conflibot@v1
-        if: ${{env.conflict_pull}} == true
-        with:
-          github-token: ${{ secrets.BOT_TOKEN }}
-
-  # Setup labels
   release-mastermind:
     name: Release Mastermind
-    needs: label-mastermind
     runs-on: ubuntu-latest
     steps:          
       # super Labeler
