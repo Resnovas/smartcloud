@@ -22,7 +22,7 @@
   ],
   "scripts": {
     "build": "tsc",
-    "dev:all": "npm run dev:package && npm run dev:format && npm run dev:test",
+    "dev:all": "npm run dev:package && npm run dev:format",
     "dev:format": "prettier --config .prettier.json --write .",
     "dev:format-check": "prettier --config .prettier.json --check .",
     "dev:package": "npm run dev:tsc && ncc build --source-map",

@@ -76,12 +76,16 @@ interface SharedConfig {
   }
 }
 
-interface SharedConditions {
+interface SharedConventionConditions {
   requires: number
   conditions: Condition[] | string
 }
+interface SharedConditions {
+  requires: number
+  conditions: Condition[]
+}
 
-export interface SharedConventionsConfig extends SharedConditions {
+export interface SharedConventionsConfig extends SharedConventionConditions {
   failedComment: string // short comment to explain the condition
   contexts?: string[]
 }

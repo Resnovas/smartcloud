@@ -115,13 +115,9 @@ export default class releaseMastermind {
        * @since 1.1.0
        */
       for (const label in config.sharedLabelsConfig) {
-        if (
-          config[curContext.type]?.labels &&
-          !config[curContext.type]?.labels[label]
-        ) {
-          //@ts-ignore
-          config[curContext.type].labels[label] =
-            config.sharedLabelsConfig[label]
+        const ctx = config[curContext.type]
+        if (ctx && 'labels' in ctx && !(label in ctx.labels)) {
+          ctx.labels[label] = config.sharedLabelsConfig[label]
         }
       }
       core.endGroup()
