@@ -6,7 +6,7 @@ import { log } from '.'
 import { CurContext } from './conditions'
 import { contextHandler } from './contextHandler'
 import { Issues, Project, PullRequests } from './contexts'
-import { Config, Options, Runners } from './types'
+import { Config, Label, Options, Runners } from './types'
 import { utils } from './utils'
 
 let local: any
@@ -233,6 +233,13 @@ export default class releaseMastermind {
    * @since 1.0.0
    */
   async syncLabels(config: Runners) {
+    config.labels = await Object.entries(
+      config.labels ? config.labels : []
+    ).reduce((acc: { [key: string]: Label }, cur) => {
+      acc[cur[1].name.toLowerCase()] = cur[1]
+      return acc
+    }, {})
+
     await utils
       .syncLabels({
         client: this.client,

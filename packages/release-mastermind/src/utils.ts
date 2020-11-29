@@ -162,6 +162,18 @@ class Utils {
           })
       }
     }
+
+    for (const curLabel of Object.values(curLabels)) {
+      const label = config[curLabel.name.toLowerCase()]
+      if (!label) {
+        log(`Delete ${JSON.stringify(curLabel)}`, 4)
+        await api.labels
+          .del({ client, repo, name: curLabel.name, dryRun })
+          .catch(err => {
+            log(`Error thrown while deleting label: ` + err, 5)
+          })
+      }
+    }
   }
 }
 
