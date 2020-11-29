@@ -30,7 +30,7 @@ export async function create({
   if (!dryRun) await client.issues.createLabel({ ...repo, ...label, color })
 }
 
-export async function deleteLabel({
+export async function del({
   client,
   repo,
   name,
