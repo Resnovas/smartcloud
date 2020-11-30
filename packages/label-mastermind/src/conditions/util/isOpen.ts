@@ -15,8 +15,8 @@ export interface ConditionIsOpen {
 
 const isOpen = (condition: ConditionIsOpen, issue: IssueProps | PRProps) => {
   return (
-    utils.normalize(issue.state) ===
-    utils.normalize(condition.value ? States.Open : States.Closed)
+    utils.parsingData.normalize(issue.state) ===
+    utils.parsingData.normalize(condition.value ? States.Open : States.Closed)
   )
 }
 

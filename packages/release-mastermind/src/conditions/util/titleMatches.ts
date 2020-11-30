@@ -12,7 +12,7 @@ const titleMatches = (
   condition: ConditionTitleMatches,
   issue: IssueProps | PRProps
 ) => {
-  const pattern = utils.processRegExpPattern(condition.pattern)
+  const pattern = utils.parsingData.processRegExpPattern(condition.pattern)
   return pattern.test(issue.title)
 }
 

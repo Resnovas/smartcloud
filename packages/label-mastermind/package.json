@@ -20,7 +20,7 @@
     "dev:format-check": "prettier --config .prettier.json --check .",
     "dev:package": "tsc && ncc build --source-map",
     "dev:test": "jest --json --outputFile=result.json --testLocationInResults",
-    "dev:all": "npm run dev:package && npm run dev:format && npm run dev:test"
+    "dev:all": "npm run dev:package && npm run dev:format"
   },
   "dependencies": {
     "@actions/core": "^1.2.6",

@@ -1,11 +1,11 @@
+import { Condition, handlers as sharedHandlers } from '../util'
 import branchMatches, { ConditionBranchMatches } from './branchMatches'
-import filesMatch, { ConditionFilesMatch } from './filesMatch'
-import isDraft, { ConditionIsDraft } from './isDraft'
 import changesSize, { ConditionChangesSize } from './changesSize'
+import filesMatch, { ConditionFilesMatch } from './filesMatch'
+import isApproved, { ConditionisApproved } from './isApproved'
+import isDraft, { ConditionIsDraft } from './isDraft'
 import pendingReview, { ConditionPendingReview } from './pendingReview'
 import requestedChanges, { ConditionRequestedChanges } from './requestedChanges'
-import isApproved, { ConditionisApproved } from './isApproved'
-import { Condition, handlers as sharedHandlers } from '../'
 
 export type PRCondition =
   | Condition
@@ -33,4 +33,4 @@ export const getPRConditionHandler = (condition: PRCondition) => {
   return handler?.[1]
 }
 
-export { PRProps } from '../'
+export { PRProps } from '..'

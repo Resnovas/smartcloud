@@ -1,4 +1,4 @@
-import { Condition, handlers as sharedHandlers } from '../'
+import { Condition, handlers as sharedHandlers } from '../util'
 
 export type IssueCondition = Condition
 

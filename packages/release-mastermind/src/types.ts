@@ -23,9 +23,9 @@ export interface Runners {
 
 export interface Config {
   projectType: ProjectType
-  retryLimit?: number
   root: string // The root of the project (e.g. "." or "./packages/{package}")
   versioning?: VersionType // The type of versioning to apply
+  retryLimit?: number
   prereleaseName?: string // If you want something other then "prerelease"
   labels?: { [key: string]: string }
   sharedLabelsConfig?: SharedLabels

@@ -233,18 +233,18 @@ export default class releaseMastermind {
    * @since 1.0.0
    */
   async syncLabels(config: Runners) {
-    config.labels = await Object.entries(
+    const labels = await Object.entries(
       config.labels ? config.labels : []
     ).reduce((acc: { [key: string]: Label }, cur) => {
       acc[cur[1].name.toLowerCase()] = cur[1]
       return acc
     }, {})
 
-    await utils
-      .syncLabels({
+    await utils.labels
+      .sync({
         client: this.client,
         repo: this.repo,
-        config: config.labels,
+        config: labels,
         dryRun: this.dryRun
       })
       .catch((err: { message: string | Error }) => {

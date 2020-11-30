@@ -1,16 +1,11 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
-import {
-  ConditionSetType,
-  CurContext,
-  evaluator,
-  IssueContext,
-  Version
-} from '../conditions'
+import { CurContext, IssueContext, Version } from '../conditions'
+import { ConditionSetType, evaluator } from '../evaluator'
 import { Config } from '../types'
-import { addRemoveLabel, enforceConventions } from './utils'
-
+import { utils } from '../utils'
+import * as methods from './methods'
 export class Issues {
   private configs: Config
   private config: Config['pr']
@@ -53,9 +48,9 @@ export class Issues {
       enforceConventionsSuccess: boolean = true
     try {
       if (this.config.enforceConventions)
-        enforceConventionsSuccess = await enforceConventions(
+        enforceConventionsSuccess = await methods.enforce(
           { client: this.client, repo: this.repo },
-          this.config.enforceConventions,
+          this.config,
           this.curContext,
           this.dryRun
         )
@@ -100,18 +95,20 @@ export class Issues {
         issueProps
       )
 
-      await addRemoveLabel({
-        client: this.client,
-        curLabels,
-        labelID,
-        labelName: this.configs.labels[labelID],
-        IDNumber,
-        repo: this.repo,
-        shouldHaveLabel,
-        dryRun
-      }).catch(err => {
-        log(`Error thrown while running addRemoveLabel: ` + err, 5)
-      })
+      await utils.labels
+        .addRemove({
+          client: this.client,
+          curLabels,
+          labelID,
+          labelName: this.configs.labels[labelID],
+          IDNumber,
+          repo: this.repo,
+          shouldHaveLabel,
+          dryRun
+        })
+        .catch(err => {
+          log(`Error thrown while running addRemoveLabel: ` + err, 5)
+        })
     }
   }
 }

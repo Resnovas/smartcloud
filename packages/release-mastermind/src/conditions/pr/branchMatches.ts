@@ -9,7 +9,7 @@ export interface ConditionBranchMatches {
 }
 
 const branchMatches = (condition: ConditionBranchMatches, pr: PRProps) => {
-  const pattern = utils.processRegExpPattern(condition.pattern)
+  const pattern = utils.parsingData.processRegExpPattern(condition.pattern)
   return pattern.test(pr.branch)
 }
 
