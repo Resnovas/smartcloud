@@ -2,16 +2,12 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { log } from '..'
 import { api } from '../api'
-import {
-  ConditionSetType,
-  CurContext,
-  evaluator,
-  PRContext,
-  Version
-} from '../conditions'
+import { CurContext, PRContext, Version } from '../conditions'
+import { ConditionSetType, evaluator } from '../evaluator'
 import { Config, PullRequestConfig, Release } from '../types'
 import { utils } from '../utils'
-import { addRemoveLabel, enforceConventions } from './utils'
+import { addRemove } from '../utils/labels'
+import * as methods from './methods'
 
 export class PullRequests {
   private configs: Config
@@ -55,9 +51,9 @@ export class PullRequests {
       enforceConventionsSuccess: boolean = true
     try {
       if (this.config.enforceConventions)
-        enforceConventionsSuccess = await enforceConventions(
+        enforceConventionsSuccess = await methods.enforce(
           { client: this.client, repo: this.repo },
-          this.config.enforceConventions,
+          this.config,
           this.curContext,
           this.dryRun
         )
@@ -85,7 +81,7 @@ export class PullRequests {
       )
       attempt++
       setTimeout(async () => {
-        this.newVersion = await utils.parseVersion(
+        this.newVersion = await utils.versioning.parse(
           { client: this.client, repo: this.repo },
           this.configs,
           this.config?.ref || this.context.ref
@@ -115,7 +111,7 @@ export class PullRequests {
         prProps
       )
 
-      await addRemoveLabel({
+      await addRemove({
         client: this.client,
         curLabels,
         labelID,

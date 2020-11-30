@@ -26,7 +26,7 @@ export async function create({
   label,
   dryRun
 }: ApiProps & { label: Label; dryRun: boolean }) {
-  const color = utils.formatColor(label.color)
+  const color = utils.parsingData.formatColor(label.color)
   if (!dryRun) await client.issues.createLabel({ ...repo, ...label, color })
 }
 
@@ -84,7 +84,7 @@ export async function update({
   label,
   dryRun
 }: ApiProps & { label: Label; dryRun: boolean }) {
-  const color = utils.formatColor(label.color)
+  const color = utils.parsingData.formatColor(label.color)
   if (!dryRun)
     await client.issues.updateLabel({
       ...repo,

@@ -80,8 +80,8 @@ class ContextHandler {
         throw err
       })
 
-    const currentVersion: Version = await utils
-      .parseVersion({ client, repo }, config, config.pr.ref || pr.base.ref)
+    const currentVersion: Version = await utils.versioning
+      .parse({ client, repo }, config, config.pr.ref)
       .catch(err => {
         log(`Error thrown while parsing versioning: ` + err, 5)
         throw err
@@ -145,8 +145,8 @@ class ContextHandler {
       throw err
     })
 
-    const currentVersion: Version = await utils
-      .parseVersion({ client, repo }, config, config.project.ref)
+    const currentVersion: Version = await utils.versioning
+      .parse({ client, repo }, config, config.project.ref)
       .catch(err => {
         log(`Error thrown while parsing versioning: ` + err, 5)
         throw err
@@ -191,8 +191,8 @@ class ContextHandler {
       throw err
     })
 
-    const currentVersion: Version = await utils
-      .parseVersion({ client, repo }, config, config.issue.ref)
+    const currentVersion: Version = await utils.versioning
+      .parse({ client, repo }, config, config.issue.ref)
       .catch(err => {
         log(`Error thrown while parsing versioning: ` + err, 5)
         throw err

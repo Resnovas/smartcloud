@@ -4,8 +4,7 @@ import { log } from '..'
 import { api } from '../api'
 import { CurContext, ProjectContext, Version } from '../conditions'
 import { Column, Config } from '../types'
-import { enforceConventions } from './utils'
-
+import * as methods from './methods'
 export class Project {
   private configs: Config
   private config: Config['project']
@@ -58,9 +57,9 @@ export class Project {
             this.context.projectProps.column_id
           )
         )
-          enforceConventionsSuccess = await enforceConventions(
+          enforceConventionsSuccess = await methods.enforce(
             { client: this.client, repo: this.repo },
-            this.config.enforceConventions,
+            this.config,
             this.curContext,
             this.dryRun
           )

@@ -1,5 +1,4 @@
 export { log } from '../'
-export * from './evaluator'
 export * from './issue'
 export * from './pr'
 export * from './project'
