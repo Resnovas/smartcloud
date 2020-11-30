@@ -1,5 +1,4 @@
 import { match } from 'minimatch'
-
 import { PRProps } from '.'
 
 const TYPE = 'filesMatch'

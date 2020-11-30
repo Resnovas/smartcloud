@@ -1,10 +1,12 @@
 import fs from 'fs'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github'
-import { CurContext, Config, Options, labelIdToName } from './types'
-import { labelHandler } from './labelHandler'
+import { Config, Label, Options } from './types'
 import { contextHandler } from './contextHandler'
+import { applyIssue, applyPR } from './labelHandler'
+import { CurContext } from './conditions'
 import { log } from '.'
+import { utils } from './utils'
 
 let local: any
 let context = github.context
@@ -88,7 +90,7 @@ export default class labelMastermind {
      * @author TGTGamer
      * @since 1.1.0
      */
-    const curContext = await this.processContext().catch(err => {
+    const curContext = await this.processContext(configs).catch(err => {
       log(`Error thrown while processing context: ` + err, 5)
       throw err
     })
@@ -99,10 +101,23 @@ export default class labelMastermind {
      * @since 1.1.0
      */
     for (const config in configs.shared) {
-      if (!configs[curContext.type][config]) {
-        configs[curContext.type][config] = configs.shared[config]
+      if (!configs[curContext.type].labels[config]) {
+        configs[curContext.type].labels[config] = configs.shared[config]
       }
     }
+
+    /**
+     * Convert label ID's to Names
+     * @author TGTGamer
+     * @since 1.1.0
+     */
+    const labelIdToName = await Object.entries(configs.labels).reduce(
+      (acc: { [key: string]: string }, cur) => {
+        acc[cur[0]] = cur[1].name
+        return acc
+      },
+      {}
+    )
 
     /**
      * Syncronise the labels
@@ -113,18 +128,6 @@ export default class labelMastermind {
       log(`Error thrown while syncronising labels: ` + err, 5)
       throw err
     })
-
-    /**
-     * Convert label ID's to Names
-     * @author TGTGamer
-     * @since 1.1.0
-     */
-    const labelIdToName: labelIdToName = await Object.entries(
-      configs.labels
-    ).reduce((acc: { [key: string]: string }, cur) => {
-      acc[cur[0]] = cur[1].name
-      return acc
-    }, {})
 
     /**
      * Apply the context
@@ -160,7 +163,7 @@ export default class labelMastermind {
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
-  async processContext() {
+  async processContext(config: Config) {
     let curContext: CurContext
 
     if (context.payload.pull_request) {
@@ -170,7 +173,7 @@ export default class labelMastermind {
        * @since 1.0.0
        */
       const ctx = await contextHandler
-        .parsePR(context, this.client, this.repo)
+        .parsePR({ client: this.client, repo: this.repo }, config, context)
         .catch(err => {
           log(`Error thrown while parsing PR context: ` + err, 5)
           throw err
@@ -189,10 +192,12 @@ export default class labelMastermind {
        * @author IvanFon, TGTGamer, jbinda
        * @since 1.0.0
        */
-      const ctx = await contextHandler.parseIssue(context).catch(err => {
-        log(`Error thrown while parsing issue context: ` + err, 5)
-        throw err
-      })
+      const ctx = await contextHandler
+        .parseIssue({ client: this.client, repo: this.repo }, config, context)
+        .catch(err => {
+          log(`Error thrown while parsing issue context: ` + err, 5)
+          throw err
+        })
       if (!ctx) {
         throw new Error('Issue not found on context')
       }
@@ -220,8 +225,15 @@ export default class labelMastermind {
    * @since 1.0.0
    */
   async syncLabels(config: Config) {
-    await labelHandler
-      .syncLabels({
+    config.labels = await Object.entries(
+      config.labels ? config.labels : []
+    ).reduce((acc: { [key: string]: Label }, cur) => {
+      acc[cur[1].name.toLowerCase()] = cur[1]
+      return acc
+    }, {})
+
+    await utils.labels
+      .sync({
         client: this.client,
         repo: this.repo,
         config: config.labels,
@@ -240,34 +252,30 @@ export default class labelMastermind {
   async applyContext(
     curContext: CurContext,
     config: Config,
-    labelIdToName: labelIdToName
+    labelIdToName: { [key: string]: string }
   ) {
     if (curContext.type === 'pr') {
-      await labelHandler
-        .applyPR({
-          client: this.client,
-          config: config.pr,
-          labelIdToName,
-          prContext: curContext.context,
-          repo: this.repo,
-          dryRun: this.dryRun
-        })
-        .catch((err: { message: string | Error }) => {
-          log(`Error thrown while handling PRLabel tasks: ${err.message}`, 5)
-        })
+      await applyPR({
+        client: this.client,
+        config: config.pr,
+        prContext: curContext.context,
+        labelIdToName,
+        repo: this.repo,
+        dryRun: this.dryRun
+      }).catch((err: { message: string | Error }) => {
+        log(`Error thrown while handling PRLabel tasks: ${err.message}`, 5)
+      })
     } else if (curContext.type === 'issue') {
-      await labelHandler
-        .applyIssue({
-          client: this.client,
-          config: config.issue,
-          issueContext: curContext.context,
-          labelIdToName,
-          repo: this.repo,
-          dryRun: this.dryRun
-        })
-        .catch((err: { message: string | Error }) => {
-          log(`Error thrown while handling issueLabel tasks: ${err.message}`, 5)
-        })
+      await applyIssue({
+        client: this.client,
+        config: config.issue,
+        issueContext: curContext.context,
+        labelIdToName,
+        repo: this.repo,
+        dryRun: this.dryRun
+      }).catch((err: { message: string | Error }) => {
+        log(`Error thrown while handling issueLabel tasks: ${err.message}`, 5)
+      })
     }
   }
 }

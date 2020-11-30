@@ -15,13 +15,10 @@ export interface SharedConfig {
   conditions: Condition[]
 }
 
-export type CurContext =
-  | { type: 'pr'; context: PRContext }
-  | { type: 'issue'; context: IssueContext }
-
-export type labelIdToName = { [Key: string]: string }
-
 export interface Config {
+  projectType: ProjectType
+  root: string
+  versioning?: VersionType
   labels: {
     [key: string]: {
       name: string
@@ -32,36 +29,31 @@ export interface Config {
   shared: {
     [key: string]: SharedConfig
   }
-  issue: {
-    [key: string]: IssueConditionConfig
-  }
-  pr: {
-    [key: string]: PRConditionConfig
-  }
+  issue: IssueConfig
+  pr: PullRequestConfig
+  project: ProjectConfig
   skip_labeling: string
   delete_labels: boolean
 }
 
-interface Props {
-  creator: string
-  description: string
-  locked: boolean
-  state: 'open' | 'closed'
-  title: string
+export interface IssueConfig {
+  ref?: string
+  labels: {
+    [key: string]: IssueConditionConfig
+  }
 }
-
-export interface PRProps extends Props {
-  branch: string
-  isDraft: boolean
-  files: string[]
-  reviews: Reviews
-  pendingReview: boolean
-  requestedChanges: number
-  approved: number
-  changes: number
+export interface PullRequestConfig {
+  ref?: string
+  labels: {
+    [key: string]: PRConditionConfig
+  }
 }
-
-export interface IssueProps extends Props {}
+export interface ProjectConfig {
+  ref?: string
+  labels: {
+    [key: string]: SharedConfig
+  }
+}
 
 export interface Label {
   name: string
@@ -69,19 +61,8 @@ export interface Label {
   color: string
 }
 
-export type Labels = Label[]
-
-interface GeneralContext {
-  labels: Labels
-  IDNumber: number
-}
-
-export interface PRContext extends GeneralContext {
-  prProps: PRProps
-}
-
-export interface IssueContext extends GeneralContext {
-  issueProps: IssueProps
+export interface Labels {
+  [key: string]: Label
 }
 
 export interface Options {
@@ -91,18 +72,6 @@ export interface Options {
   dryRun: boolean
 }
 
-export type Reviews = Review[]
-
-export interface Review {
-  id?: number
-  node_id?: string
-  user?: any
-  body?: string
-  state?: 'APPROVED' | '' | string
-  html_url?: string
-  pull_request_url?: string
-  author_association?: string
-  _links?: {}
-  submitted_at?: string
-  commit_id?: string
-}
+export type Runners = Config
+export type ProjectType = 'node' | 'other'
+export type VersionType = 'SemVer'
