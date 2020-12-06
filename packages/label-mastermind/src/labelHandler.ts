@@ -29,7 +29,7 @@ export async function applyIssue({
 }) {
   const { labels: curLabels, issueProps, IDNumber } = issueContext
   for (const [labelID, conditionsConfig] of Object.entries(config.labels)) {
-    log(new loggingData("100", `Label: ${labelID}`))
+    log(new loggingData('100', `Label: ${labelID}`))
 
     const shouldHaveLabel = evaluator(
       ConditionSetType.issue,
@@ -49,7 +49,13 @@ export async function applyIssue({
         dryRun
       })
       .catch(err => {
-        log(new loggingData("500", `Error thrown while running addRemoveLabel: `, err))
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while running addRemoveLabel: `,
+            err
+          )
+        )
       })
   }
 }
@@ -76,7 +82,7 @@ export async function applyPR({
 }) {
   const { labels: curLabels, prProps, IDNumber } = prContext
   for (const [labelID, conditionsConfig] of Object.entries(config.labels)) {
-    log(new loggingData("100", `Label: ${labelID}`))
+    log(new loggingData('100', `Label: ${labelID}`))
 
     const shouldHaveLabel = evaluator(
       ConditionSetType.pr,
@@ -96,7 +102,13 @@ export async function applyPR({
         dryRun
       })
       .catch(err => {
-        log(new loggingData("500", `Error thrown while running addRemoveLabel: `, err))
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while running addRemoveLabel: `,
+            err
+          )
+        )
       })
   }
 }

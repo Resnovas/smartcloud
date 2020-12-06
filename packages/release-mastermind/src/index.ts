@@ -3,7 +3,16 @@ import * as github from '@actions/github'
 import { Logger, loggingData } from '@videndum/utilities'
 import path from 'path'
 import releaseMastermind from './releaseMastermind'
-const L = new Logger({ console: { enabled: false }, sentry: { enabled: true, config: { dsn: "https://3ed727f54ce94ff7aca190b01eb17caa@o237244.ingest.sentry.io/5546354" } } })
+const L = new Logger({
+  console: { enabled: false },
+  sentry: {
+    enabled: true,
+    config: {
+      dsn:
+        'https://3ed727f54ce94ff7aca190b01eb17caa@o237244.ingest.sentry.io/5546354'
+    }
+  }
+})
 export function log(loggingData: loggingData) {
   L.log(loggingData)
   const type = Number(loggingData.name) / 100
@@ -22,7 +31,7 @@ try {
   local = require('../config.json')
   dryRun = local.GH_ACTION_LOCAL_TEST || false
   showLogs = local.SHOW_LOGS || false
-} catch { }
+} catch {}
 
 const { GITHUB_WORKSPACE = '' } = process.env
 
@@ -48,10 +57,10 @@ async function run() {
       (configInput?.pr || configInput?.issue || configInput?.project
         ? configInput
         : local == undefined
-          ? undefined
-          : require(local.configJSON).releaseMastermind
-            ? require(local.configJSON).releaseMastermind
-            : require(local.configJSON)),
+        ? undefined
+        : require(local.configJSON).releaseMastermind
+        ? require(local.configJSON).releaseMastermind
+        : require(local.configJSON)),
     showLogs,
     dryRun
   }

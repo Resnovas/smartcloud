@@ -32,7 +32,7 @@ class ContextHandler {
       new loggingData(
         '100',
         `context.payload.pull_request: ` +
-        JSON.stringify(context.payload.pull_request)
+          JSON.stringify(context.payload.pull_request)
       )
     )
 
@@ -49,37 +49,61 @@ class ContextHandler {
     const changes: number = await api.pullRequests
       .changes(pr.additions, pr.deletions)
       .catch(err => {
-        throw new loggingData('500', `Error thrown while handling changes: `, err)
+        throw new loggingData(
+          '500',
+          `Error thrown while handling changes: `,
+          err
+        )
       })
 
     const reviews: Reviews = await api.pullRequests.reviews
       .list({ client, repo, IDNumber })
       .catch(err => {
-        throw new loggingData('500', `Error thrown while handling reviews: `, err)
+        throw new loggingData(
+          '500',
+          `Error thrown while handling reviews: `,
+          err
+        )
       })
 
     const pendingReview: boolean = await api.pullRequests.reviews
       .pending(reviews.length, pr.requested_reviewers.length)
       .catch(err => {
-        throw new loggingData('500', `Error thrown while handling reviews: `, err)
+        throw new loggingData(
+          '500',
+          `Error thrown while handling reviews: `,
+          err
+        )
       })
 
     const requestedChanges: number = await api.pullRequests.reviews
       .requestedChanges(reviews)
       .catch(err => {
-        throw new loggingData('500', `Error thrown while handling reviews: `, err)
+        throw new loggingData(
+          '500',
+          `Error thrown while handling reviews: `,
+          err
+        )
       })
 
     const approved: number = await api.pullRequests.reviews
       .isApproved(reviews)
       .catch(err => {
-        throw new loggingData('500', `Error thrown while handling reviews: `, err)
+        throw new loggingData(
+          '500',
+          `Error thrown while handling reviews: `,
+          err
+        )
       })
 
     const currentVersion: Version = await utils.versioning
       .parse({ client, repo }, config, config.pr.ref)
       .catch(err => {
-        throw new loggingData('500', `Error thrown while parsing versioning: `, err)
+        throw new loggingData(
+          '500',
+          `Error thrown while parsing versioning: `,
+          err
+        )
       })
 
     return {
@@ -145,7 +169,11 @@ class ContextHandler {
     const currentVersion: Version = await utils.versioning
       .parse({ client, repo }, config, config.project.ref)
       .catch(err => {
-        throw new loggingData('500', `Error thrown while parsing versioning: `, err)
+        throw new loggingData(
+          '500',
+          `Error thrown while parsing versioning: `,
+          err
+        )
       })
 
     return {
@@ -194,7 +222,11 @@ class ContextHandler {
     const currentVersion: Version = await utils.versioning
       .parse({ client, repo }, config, config.issue.ref)
       .catch(err => {
-        throw new loggingData('500', `Error thrown while parsing versioning: `, err)
+        throw new loggingData(
+          '500',
+          `Error thrown while parsing versioning: `,
+          err
+        )
       })
 
     return {

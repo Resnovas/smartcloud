@@ -17,11 +17,19 @@ try {
   local = require('../config.json')
   dryRun = local.GH_ACTION_LOCAL_TEST || false
   showLogs = local.SHOW_LOGS || false
-} catch { }
+} catch {}
 
 const { GITHUB_WORKSPACE = '' } = process.env
 
-const L = new Logger({ sentry: { enabled: !showLogs, config: { dsn: 'https://e7dd11f1f35b46048a62a8de2b69fa83@o237244.ingest.sentry.io/5508005' } } })
+const L = new Logger({
+  sentry: {
+    enabled: !showLogs,
+    config: {
+      dsn:
+        'https://e7dd11f1f35b46048a62a8de2b69fa83@o237244.ingest.sentry.io/5508005'
+    }
+  }
+})
 export function log(loggingData: loggingData) {
   L.log(loggingData)
   const type = Number(loggingData.name) / 100
@@ -34,8 +42,12 @@ export function log(loggingData: loggingData) {
 
 function start() {
   if (dryRun)
-    log(new loggingData("300", `Label Mastermind is running in local dryrun mode. No labels will be applyed`
-    ))
+    log(
+      new loggingData(
+        '300',
+        `Label Mastermind is running in local dryrun mode. No labels will be applyed`
+      )
+    )
   const configInput = JSON.parse(
     core.getInput('configJSON') === '' ? '{}' : core.getInput('configJSON')
   )
@@ -44,19 +56,19 @@ function start() {
     (configInput.labels
       ? configInput
       : local == undefined
-        ? undefined
-        : require(local.configJSON))
+      ? undefined
+      : require(local.configJSON))
   const configFile = core.getInput('config')
-  log(new loggingData("100", `Config file ${configFile}`))
+  log(new loggingData('100', `Config file ${configFile}`))
   const configPath = path.join(GITHUB_WORKSPACE, configFile)
-  log(new loggingData("100", `Config Path ${configPath}`))
+  log(new loggingData('100', `Config Path ${configPath}`))
   const GITHUB_TOKEN =
     core.getInput('GITHUB_TOKEN') ||
     (local == undefined ? undefined : local.GITHUB_TOKEN)
   if (!GITHUB_TOKEN) {
     return core.setFailed('No Token provided')
   }
-  log(new loggingData("100", 'Github Token Collected '))
+  log(new loggingData('100', 'Github Token Collected '))
   const options: Options = {
     configPath,
     showLogs,

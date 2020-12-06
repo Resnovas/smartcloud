@@ -18,7 +18,7 @@ try {
   process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER
   if (!context.payload.issue && !context.payload.pull_request)
     context = require(local.github_context)
-} catch { }
+} catch {}
 
 /**
  * Super Labeler
@@ -40,7 +40,7 @@ export default class labelMastermind {
    * @since 1.0.0
    */
   constructor(client: GitHub, options: Options) {
-    log(new loggingData("100", `Superlabeller Constructed: ${options}`))
+    log(new loggingData('100', `Superlabeller Constructed: ${options}`))
     this.client = client
     this.opts = options
     this.configJSON = options.configJSON
@@ -57,18 +57,23 @@ export default class labelMastermind {
     if (this.dryRun) this.repo.repo = process.env.GITHUB_REPOSITORY || 'Unknown'
     if (this.dryRun)
       this.repo.owner = process.env.GITHUB_REPOSITORY_OWNER || 'Unknown'
-    log(new loggingData("100", `Repo data: ${this.repo.owner}/${this.repo.repo}`))
+    log(
+      new loggingData('100', `Repo data: ${this.repo.owner}/${this.repo.repo}`)
+    )
 
     /**
      * Capture and log context to debug for Local Running
      * @author TGTGamer
      * @since 1.0.0
      */
-    log(new loggingData("100",
-      `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
-        context
-      )}`
-    ))
+    log(
+      new loggingData(
+        '100',
+        `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
+          context
+        )}`
+      )
+    )
 
     /**
      * Process the config
@@ -76,12 +81,16 @@ export default class labelMastermind {
      * @since 1.1.0
      */
     const configs = await this.processConfig().catch(err => {
-      throw new loggingData("500", `Error thrown while processing config: `, err)
+      throw new loggingData(
+        '500',
+        `Error thrown while processing config: `,
+        err
+      )
     })
     if (!configs) {
-      throw new loggingData("500", `No config data.`)
+      throw new loggingData('500', `No config data.`)
     }
-    log(new loggingData("100", `Config: ${JSON.stringify(configs)}`))
+    log(new loggingData('100', `Config: ${JSON.stringify(configs)}`))
 
     /**
      * Get the context
@@ -89,7 +98,11 @@ export default class labelMastermind {
      * @since 1.1.0
      */
     const curContext = await this.processContext(configs).catch(err => {
-      throw new loggingData("500", `Error thrown while processing context: `, err)
+      throw new loggingData(
+        '500',
+        `Error thrown while processing context: `,
+        err
+      )
     })
 
     /**
@@ -122,7 +135,11 @@ export default class labelMastermind {
      * @since 1.1.0
      */
     await this.syncLabels(configs).catch(err => {
-      throw new loggingData("500", `Error thrown while syncronising labels: `, err)
+      throw new loggingData(
+        '500',
+        `Error thrown while syncronising labels: `,
+        err
+      )
     })
 
     /**
@@ -131,7 +148,7 @@ export default class labelMastermind {
      * @since 1.1.0
      */
     await this.applyContext(curContext, configs, labelIdToName).catch(err => {
-      throw new loggingData("500", `Error thrown while applying context: `, err)
+      throw new loggingData('500', `Error thrown while applying context: `, err)
     })
   }
 
@@ -143,7 +160,7 @@ export default class labelMastermind {
   async processConfig(): Promise<Config> {
     if (!this.configJSON?.labels) {
       if (!fs.existsSync(this.configPath)) {
-        throw new loggingData("500", `config not found at "${this.configPath}"`)
+        throw new loggingData('500', `config not found at "${this.configPath}"`)
       }
       const pathConfig = JSON.parse(fs.readFileSync(this.configPath).toString())
       if (!pathConfig.labelMastermind) return pathConfig
@@ -170,12 +187,16 @@ export default class labelMastermind {
       const ctx = await contextHandler
         .parsePR({ client: this.client, repo: this.repo }, config, context)
         .catch(err => {
-          throw new loggingData("500", `Error thrown while parsing PR context: `, err)
+          throw new loggingData(
+            '500',
+            `Error thrown while parsing PR context: `,
+            err
+          )
         })
       if (!ctx) {
-        throw new loggingData("500", 'Pull Request not found on context')
+        throw new loggingData('500', 'Pull Request not found on context')
       }
-      log(new loggingData("100", `PR context: ${JSON.stringify(ctx)}`))
+      log(new loggingData('100', `PR context: ${JSON.stringify(ctx)}`))
       curContext = {
         type: 'pr',
         context: ctx
@@ -189,12 +210,16 @@ export default class labelMastermind {
       const ctx = await contextHandler
         .parseIssue({ client: this.client, repo: this.repo }, config, context)
         .catch(err => {
-          throw new loggingData("500", `Error thrown while parsing issue context: `, err)
+          throw new loggingData(
+            '500',
+            `Error thrown while parsing issue context: `,
+            err
+          )
         })
       if (!ctx) {
-        throw new loggingData("500", 'Issue not found on context')
+        throw new loggingData('500', 'Issue not found on context')
       }
-      log(new loggingData("100", `issue context: ${JSON.stringify(ctx)}`))
+      log(new loggingData('100', `issue context: ${JSON.stringify(ctx)}`))
 
       curContext = {
         type: 'issue',
@@ -206,7 +231,10 @@ export default class labelMastermind {
        * @author TGTGamer
        * @since 1.1.0
        */
-      throw new loggingData("300", `There is no context to parse: ${JSON.stringify(context.payload)}`)
+      throw new loggingData(
+        '300',
+        `There is no context to parse: ${JSON.stringify(context.payload)}`
+      )
     }
     return curContext
   }
@@ -232,7 +260,12 @@ export default class labelMastermind {
         dryRun: this.dryRun
       })
       .catch((err: { message: string | Error }) => {
-        log(new loggingData("500", `Error thrown while handling syncLabels tasks: ${err.message}`))
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while handling syncLabels tasks: ${err.message}`
+          )
+        )
       })
   }
 
@@ -255,7 +288,12 @@ export default class labelMastermind {
         repo: this.repo,
         dryRun: this.dryRun
       }).catch((err: { message: string | Error }) => {
-        log(new loggingData("500", `Error thrown while handling PRLabel tasks: ${err.message}`))
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while handling PRLabel tasks: ${err.message}`
+          )
+        )
       })
     } else if (curContext.type === 'issue') {
       await applyIssue({
@@ -266,7 +304,12 @@ export default class labelMastermind {
         repo: this.repo,
         dryRun: this.dryRun
       }).catch((err: { message: string | Error }) => {
-        log(new loggingData("500", `Error thrown while handling issueLabel tasks: ${err.message}`))
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while handling issueLabel tasks: ${err.message}`
+          )
+        )
       })
     }
   }
