@@ -1,3 +1,4 @@
+import { loggingData } from '@videndum/utilities'
 import {
   getIssueConditionHandler,
   getPRConditionHandler,
@@ -26,7 +27,12 @@ const forConditions = <T extends IssueCondition | PRCondition>(
 ) => {
   let matches = 0
   for (const condition of conditions) {
-    log(`Condition: ${JSON.stringify(condition)} == ${callback(condition)}`, 1)
+    log(
+      new loggingData(
+        '100',
+        `Condition: ${JSON.stringify(condition)} == ${callback(condition)}`
+      )
+    )
     if (callback(condition)) {
       matches++
     }
@@ -45,15 +51,18 @@ export function evaluator(
 ) {
   const { conditions, requires } = config
   if (typeof conditions == 'string')
-    throw new Error('String can not be used to evaluate conditions')
+    throw new loggingData(
+      '500',
+      'String can not be used to evaluate conditions'
+    )
   const matches = forConditions(conditions, condition => {
     const handler =
       conditionSetType == ConditionSetType.issue
         ? getIssueConditionHandler(condition as IssueCondition)
         : getPRConditionHandler(condition as PRCondition)
-    log(`The handler is ${handler?.name}`, 1)
+    log(new loggingData('100', `The handler is ${handler?.name}`))
     return handler?.(condition as any, props as any) as boolean
   })
-  log(`Matches: ${matches}/${requires}`, 1)
+  log(new loggingData('100', `Matches: ${matches}/${requires}`))
   return matches >= requires
 }

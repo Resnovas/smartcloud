@@ -20,11 +20,7 @@
   "license": "GPL-3.0-or-later",
   "scripts": {
     "postinstall": "lerna bootstrap",
-    "start": "lerna run start",
-    "docs:start": "gatsby develop",
-    "docs:build": "gatsby build --prefix-paths",
-    "docs:format": "prettier --write \"src/**/*.{js,jsx,css,json}\"",
-    "docs:lint": "eslint --fix \"src/**/*.{js,jsx}\""
+    "start": "lerna run start"
   },
   "config": {
     "commitizen": {

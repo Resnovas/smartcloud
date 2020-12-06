@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
+import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { CurContext, IssueContext, Version } from '../conditions'
 import { ConditionSetType, evaluator } from '../evaluator'
@@ -24,10 +25,13 @@ export class Issues {
     dryRun: boolean
   ) {
     if (curContext.type !== 'issue')
-      throw new Error('Cannot construct without issue context')
-    if (!configs) throw new Error('Cannot construct without configs')
-    if (!configs.issue) throw new Error('Cannot construct without PR config')
-    if (!curContext) throw new Error('Cannot construct without context')
+      throw new loggingData('500', 'Cannot construct without issue context')
+    if (!configs)
+      throw new loggingData('500', 'Cannot construct without configs')
+    if (!configs.issue)
+      throw new loggingData('500', 'Cannot construct without PR config')
+    if (!curContext)
+      throw new loggingData('500', 'Cannot construct without context')
     this.client = client
     this.repo = repo
     this.configs = configs
@@ -39,7 +43,8 @@ export class Issues {
   }
 
   async run(attempt?: number) {
-    if (!this.config) throw new Error('Cannot start without config')
+    if (!this.config)
+      throw new loggingData('500', 'Cannot start without config')
     if (!attempt) {
       attempt = 1
       core.startGroup('Issue Actions')
@@ -60,13 +65,14 @@ export class Issues {
       }
     } catch (err) {
       if (attempt > 3) {
-        log(`Issue actions failed. Terminating job.`, 8)
         core.endGroup()
-        throw new Error(`Issue actions failed. Terminating job.`)
+        throw new loggingData('800', `Issue actions failed. Terminating job.`)
       }
       log(
-        `Issue Actions failed with "${err}", retrying in ${seconds} seconds....`,
-        4
+        new loggingData(
+          '400',
+          `Issue Actions failed with "${err}", retrying in ${seconds} seconds....`
+        )
       )
       attempt++
       setTimeout(async () => {
@@ -82,12 +88,12 @@ export class Issues {
    */
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
-      throw new Error('Config is required to add labels')
+      throw new loggingData('500', 'Config is required to add labels')
     const { labels: curLabels, issueProps, IDNumber } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
-      log(`Label: ${labelID}`, 1)
+      log(new loggingData('100', `Label: ${labelID}`))
 
       const shouldHaveLabel = evaluator(
         ConditionSetType.issue,
@@ -107,7 +113,12 @@ export class Issues {
           dryRun
         })
         .catch(err => {
-          log(`Error thrown while running addRemoveLabel: ` + err, 5)
+          log(
+            new loggingData(
+              '500',
+              `Error thrown while running addRemoveLabel: ` + err
+            )
+          )
         })
     }
   }

@@ -1,17 +1,17 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { Log } from '@videndum/utilities'
+import { Logger, loggingData } from '@videndum/utilities'
 import path from 'path'
 import releaseMastermind from './releaseMastermind'
-const L = new Log({ console: { enabled: false } })
-
-export function log(loggingData: string, type: number) {
-  L.log({ raw: loggingData }, type)
-  if (type == 1) core.debug(loggingData)
-  else if (type < 4) core.info(loggingData)
-  else if (type == 4) core.warning(loggingData)
-  else if (type < 7) core.error(loggingData)
-  else core.setFailed(loggingData)
+const L = new Logger({ console: { enabled: false }, sentry: { enabled: true, config: { dsn: "https://3ed727f54ce94ff7aca190b01eb17caa@o237244.ingest.sentry.io/5546354" } } })
+export function log(loggingData: loggingData) {
+  L.log(loggingData)
+  const type = Number(loggingData.name) / 100
+  if (type == 1) core.debug(loggingData.message)
+  else if (type < 4) core.info(loggingData.message)
+  else if (type == 4) core.warning(loggingData.message)
+  else if (type < 7) core.error(loggingData.message)
+  else core.setFailed(loggingData.message)
 }
 
 let local: any = undefined
@@ -22,7 +22,7 @@ try {
   local = require('../config.json')
   dryRun = local.GH_ACTION_LOCAL_TEST || false
   showLogs = local.SHOW_LOGS || false
-} catch {}
+} catch { }
 
 const { GITHUB_WORKSPACE = '' } = process.env
 
@@ -48,16 +48,22 @@ async function run() {
       (configInput?.pr || configInput?.issue || configInput?.project
         ? configInput
         : local == undefined
-        ? undefined
-        : require(local.configJSON).releaseMastermind
-        ? require(local.configJSON).releaseMastermind
-        : require(local.configJSON)),
+          ? undefined
+          : require(local.configJSON).releaseMastermind
+            ? require(local.configJSON).releaseMastermind
+            : require(local.configJSON)),
     showLogs,
     dryRun
   }
   const action = new releaseMastermind(new github.GitHub(GITHUB_TOKEN), options)
   action.run().catch(err => {
-    log(`Label Mastermind did not complete due to error: ${err}`, 8)
+    log(
+      new loggingData(
+        '800',
+        `Label Mastermind did not complete due to error:`,
+        err
+      )
+    )
   })
 }
 run()

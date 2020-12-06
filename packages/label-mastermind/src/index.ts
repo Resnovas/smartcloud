@@ -9,7 +9,7 @@ import * as github from '@actions/github'
 import { Options, Config } from './types'
 import path from 'path'
 import labelMastermind from './labelMastermind'
-import { Log } from '@videndum/utilities'
+import { Logger, loggingData } from '@videndum/utilities'
 let local: any = undefined
 let dryRun: boolean
 let showLogs: boolean = false
@@ -17,25 +17,25 @@ try {
   local = require('../config.json')
   dryRun = local.GH_ACTION_LOCAL_TEST || false
   showLogs = local.SHOW_LOGS || false
-} catch {}
+} catch { }
 
 const { GITHUB_WORKSPACE = '' } = process.env
 
-const L = new Log({ sentry: { enabled: !showLogs, config: { dsn: '' } } })
-export function log(loggingData: string, type: number) {
-  L.log({ raw: loggingData }, type)
-  if (type == 1) core.debug(loggingData)
-  else if (type < 4) core.info(loggingData)
-  else if (type < 7) core.error(loggingData)
-  else core.setFailed(loggingData)
+const L = new Logger({ sentry: { enabled: !showLogs, config: { dsn: 'https://e7dd11f1f35b46048a62a8de2b69fa83@o237244.ingest.sentry.io/5508005' } } })
+export function log(loggingData: loggingData) {
+  L.log(loggingData)
+  const type = Number(loggingData.name) / 100
+  if (type == 1) core.debug(loggingData.message)
+  else if (type < 4) core.info(loggingData.message)
+  else if (type == 4) core.warning(loggingData.message)
+  else if (type < 7) core.error(loggingData.message)
+  else core.setFailed(loggingData.message)
 }
 
 function start() {
   if (dryRun)
-    log(
-      `Super Labeler is running in local dryrun mode. No labels will be applyed`,
-      3
-    )
+    log(new loggingData("300", `Label Mastermind is running in local dryrun mode. No labels will be applyed`
+    ))
   const configInput = JSON.parse(
     core.getInput('configJSON') === '' ? '{}' : core.getInput('configJSON')
   )
@@ -44,19 +44,19 @@ function start() {
     (configInput.labels
       ? configInput
       : local == undefined
-      ? undefined
-      : require(local.configJSON))
+        ? undefined
+        : require(local.configJSON))
   const configFile = core.getInput('config')
-  log(`Config file ${configFile}`, 1)
+  log(new loggingData("100", `Config file ${configFile}`))
   const configPath = path.join(GITHUB_WORKSPACE, configFile)
-  log(`Config Path ${configPath}`, 1)
+  log(new loggingData("100", `Config Path ${configPath}`))
   const GITHUB_TOKEN =
     core.getInput('GITHUB_TOKEN') ||
     (local == undefined ? undefined : local.GITHUB_TOKEN)
   if (!GITHUB_TOKEN) {
     return core.setFailed('No Token provided')
   }
-  log('Github Token Collected ', 1)
+  log(new loggingData("100", 'Github Token Collected '))
   const options: Options = {
     configPath,
     showLogs,

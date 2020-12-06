@@ -1,6 +1,7 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github'
+import { loggingData } from '@videndum/utilities'
 import fs from 'fs'
 import { log } from '.'
 import { CurContext } from './conditions'
@@ -29,7 +30,7 @@ export default class releaseMastermind {
   repo = context.repo || {}
 
   constructor(client: GitHub, options: Options) {
-    log(`Release Mastermind Constructed: ${options}`, 1)
+    log(new loggingData('100', `Release Mastermind Constructed: ${options}`))
     core.startGroup('Setup Phase')
     this.client = client
     this.opts = options
@@ -42,7 +43,9 @@ export default class releaseMastermind {
     if (this.dryRun) this.repo.repo = process.env.GITHUB_REPOSITORY || 'Unknown'
     if (this.dryRun)
       this.repo.owner = process.env.GITHUB_REPOSITORY_OWNER || 'Unknown'
-    log(`Repo data: ${this.repo.owner}/${this.repo.repo}`, 1)
+    log(
+      new loggingData('100', `Repo data: ${this.repo.owner}/${this.repo.repo}`)
+    )
 
     /**
      * Capture and log context to debug for Local Running
@@ -50,24 +53,27 @@ export default class releaseMastermind {
      * @since 1.0.0
      */
     log(
-      `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
-        context
-      )}`,
-      1
+      new loggingData(
+        '500',
+        `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
+          context
+        )}`
+      )
     )
     /**
      * Process the config
      * @author TGTGamer
      * @since 1.1.0
      */
-    log(`Config: ${JSON.stringify(this.configJSON)}`, 1)
+    log(new loggingData('100', `Config: ${JSON.stringify(this.configJSON)}`))
+
     const configs = await this.processConfig().catch(err => {
-      log(`Error thrown while processing config: ` + err, 5)
-      throw err
+      throw log(
+        new loggingData('500', `Error thrown while processing config: `, err)
+      )
     })
     if (!configs.runners[0]) {
-      log(`No config data.`, 5)
-      throw new Error(`No configuration data to use`)
+      throw log(new loggingData('500', `No config data.`))
     }
 
     if (configs.labels) {
@@ -77,8 +83,13 @@ export default class releaseMastermind {
        * @since 1.1.0
        */
       await this.syncLabels(configs).catch(err => {
-        log(`Error thrown while syncronising labels: ` + err, 5)
-        throw err
+        throw log(
+          new loggingData(
+            '100',
+            `Error thrown while syncronising labels: `,
+            err
+          )
+        )
       })
     }
 
@@ -96,7 +107,7 @@ export default class releaseMastermind {
         return acc
       }, {})
 
-      log(`Config: ${JSON.stringify(config)}`, 1)
+      log(new loggingData('100', `Config: ${JSON.stringify(config)}`))
 
       /**
        * Get the context
@@ -104,10 +115,13 @@ export default class releaseMastermind {
        * @since 1.1.0
        */
       const curContext = await this.processContext(config).catch(err => {
-        log(`Error thrown while processing context: ` + err, 5)
-        throw err
+        throw log(
+          new loggingData('500', `Error thrown while processing context: `, err)
+        )
       })
-      log(`Current Context: ${JSON.stringify(curContext)}`, 1)
+      log(
+        new loggingData('100', `Current Context: ${JSON.stringify(curContext)}`)
+      )
 
       /**
        * Combine the Shared & Context.type Configs
@@ -162,13 +176,18 @@ export default class releaseMastermind {
       const ctx = await contextHandler
         .parsePR({ client: this.client, repo: this.repo }, config, context)
         .catch(err => {
-          log(`Error thrown while parsing PR context: ` + err, 5)
-          throw err
+          throw log(
+            new loggingData(
+              '500',
+              `Error thrown while parsing PR context: `,
+              err
+            )
+          )
         })
       if (!ctx) {
-        throw new Error('Pull Request not found on context')
+        throw new loggingData('500', 'Pull Request not found on context')
       }
-      log(`PR context: ${JSON.stringify(ctx)}`, 1)
+      log(new loggingData('100', `PR context: ${JSON.stringify(ctx)}`))
       curContext = {
         type: 'pr',
         context: ctx
@@ -182,13 +201,17 @@ export default class releaseMastermind {
       const ctx = await contextHandler
         .parseIssue({ client: this.client, repo: this.repo }, config, context)
         .catch(err => {
-          log(`Error thrown while parsing issue context: ` + err, 5)
-          throw err
+          throw log(
+            new loggingData(
+              '500',
+              `Error thrown while parsing issue context: ` + err
+            )
+          )
         })
       if (!ctx) {
         throw new Error('Issue not found on context')
       }
-      log(`issue context: ${JSON.stringify(ctx)}`, 1)
+      log(new loggingData('100', `issue context: ${JSON.stringify(ctx)}`))
 
       curContext = {
         type: 'issue',
@@ -203,13 +226,19 @@ export default class releaseMastermind {
       const ctx = await contextHandler
         .parseProject({ client: this.client, repo: this.repo }, config, context)
         .catch(err => {
-          log(`Error thrown while parsing Project context: ` + err, 5)
-          throw err
+          log(
+            new loggingData(
+              '500',
+              `Error thrown while parsing Project context: `,
+              err
+            )
+          )
+          return err
         })
       if (!ctx) {
         throw new Error('Issue not found on context')
       }
-      log(`issue context: ${JSON.stringify(ctx)}`, 1)
+      log(new loggingData('100', `issue context: ${JSON.stringify(ctx)}`))
 
       curContext = {
         type: 'project',
@@ -221,8 +250,12 @@ export default class releaseMastermind {
        * @author TGTGamer
        * @since 1.1.0
        */
-      log(`There is no context to parse: ${JSON.stringify(context.payload)}`, 3)
-      throw new Error('There is no context')
+      throw log(
+        new loggingData(
+          '300',
+          `There is no context to parse: ${JSON.stringify(context.payload)}`
+        )
+      )
     }
     return curContext
   }
@@ -247,8 +280,14 @@ export default class releaseMastermind {
         config: labels,
         dryRun: this.dryRun
       })
-      .catch((err: { message: string | Error }) => {
-        log(`Error thrown while handling syncLabels tasks: ${err.message}`, 5)
+      .catch(err => {
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while handling syncLabels tasks:`,
+            err
+          )
+        )
       })
   }
 

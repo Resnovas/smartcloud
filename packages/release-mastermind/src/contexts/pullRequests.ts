@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
+import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { api } from '../api'
 import { CurContext, PRContext, Version } from '../conditions'
@@ -71,13 +72,19 @@ export class PullRequests {
       }
     } catch (err) {
       if (attempt > 3) {
-        log(`Pull Request actions failed. Terminating job.`, 8)
         core.endGroup()
-        throw new Error(`Pull Request actions failed. Terminating job.`)
+        throw log(
+          new loggingData(
+            '800',
+            `Pull Request actions failed. Terminating job.`
+          )
+        )
       }
       log(
-        `Pull Request Actions failed with "${err}", retrying in ${seconds} seconds....`,
-        4
+        new loggingData(
+          '400',
+          `Pull Request Actions failed with "${err}", retrying in ${seconds} seconds....`
+        )
       )
       attempt++
       setTimeout(async () => {
@@ -98,12 +105,12 @@ export class PullRequests {
    */
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
-      throw new Error('Config is required to add labels')
+      throw new loggingData('500', 'Config is required to add labels')
     const { labels: curLabels, prProps, IDNumber } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
-      log(`Label: ${labelID}`, 1)
+      log(new loggingData('100', `Label: ${labelID}`))
 
       const shouldHaveLabel = evaluator(
         ConditionSetType.pr,
@@ -121,18 +128,23 @@ export class PullRequests {
         shouldHaveLabel,
         dryRun
       }).catch(err => {
-        log(`Error thrown while running addRemoveLabel: ` + err, 5)
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while running addRemoveLabel: ` + err
+          )
+        )
       })
     }
   }
 
   automaticApprove(automaticApprove: PullRequestConfig['automaticApprove']) {
     if (!automaticApprove || !automaticApprove.conventions)
-      throw new Error('Not Able to automatically approve')
+      throw new loggingData('500', 'Not Able to automatically approve')
     automaticApprove.conventions.forEach(convention => {
       if (!convention.conditions) return
       if (evaluator(ConditionSetType.pr, convention, this.context.prProps)) {
-        log(`Automatically Approved Successfully`, 2)
+        log(new loggingData('200', `Automatically Approved Successfully`))
         let body =
           automaticApprove.commentHeader +
           '\n\n Automatically Approved - Will automatically merge shortly! \n\n' +
@@ -192,7 +204,7 @@ export class PullRequests {
           ? `+${this.newVersion.semantic.build}`
           : ''
       }`
-      log(`New Version is: ${this.newVersion.name}`, 1)
+      log(new loggingData('100', `New Version is: ${this.newVersion.name}`))
     }
   }
 }

@@ -1,4 +1,5 @@
 import * as core from '@actions/core'
+import { loggingData } from '@videndum/utilities'
 import { log } from '../..'
 import { api, ApiProps } from '../../api'
 import { Condition, CurContext } from '../../conditions'
@@ -78,7 +79,12 @@ export function enforce(
       )
     return false
   }
-  log(`All conventions successfully enforced. Moving to next step`, 2)
+  log(
+    new loggingData(
+      '200',
+      `All conventions successfully enforced. Moving to next step`
+    )
+  )
   !dryRun && createConventionComment(context, config, { client, repo }, true)
   return true
 }

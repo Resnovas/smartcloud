@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
+import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { api } from '../api'
 import { CurContext, ProjectContext, Version } from '../conditions'
@@ -23,10 +24,13 @@ export class Project {
     dryRun: boolean
   ) {
     if (curContext.type !== 'project')
-      throw new Error('Cannot construct without issue context')
-    if (!configs) throw new Error('Cannot construct without configs')
-    if (!configs.project) throw new Error('Cannot construct without PR config')
-    if (!curContext) throw new Error('Cannot construct without context')
+      throw new loggingData('500', 'Cannot construct without issue context')
+    if (!configs)
+      throw new loggingData('500', 'Cannot construct without configs')
+    if (!configs.project)
+      throw new loggingData('500', 'Cannot construct without PR config')
+    if (!curContext)
+      throw new loggingData('500', 'Cannot construct without context')
     this.client = client
     this.repo = repo
     this.configs = configs
@@ -38,7 +42,8 @@ export class Project {
   }
 
   async run(attempt?: number) {
-    if (!this.config) throw new Error('Cannot start without config')
+    if (!this.config)
+      throw new loggingData('500', 'Cannot start without config')
     if (!attempt) {
       attempt = 1
       core.startGroup('project Actions')
@@ -70,13 +75,16 @@ export class Project {
       }
     } catch (err) {
       if (attempt > 3) {
-        log(`project actions failed. Terminating job.`, 8)
         core.endGroup()
-        throw new Error(`project actions failed. Terminating job.`)
+        throw log(
+          new loggingData('800', `project actions failed. Terminating job.`)
+        )
       }
       log(
-        `project Actions failed with "${err}", retrying in ${seconds} seconds....`,
-        4
+        new loggingData(
+          '400',
+          `project Actions failed with "${err}", retrying in ${seconds} seconds....`
+        )
       )
       attempt++
       setTimeout(async () => {
@@ -98,7 +106,10 @@ export class Project {
             columnID = value.id
         })
         if (!columnID)
-          throw new Error(`${column} doesn't exist on this project`)
+          throw new loggingData(
+            '500',
+            `${column} doesn't exist on this project`
+          )
         return columnID
       } else return column
     })

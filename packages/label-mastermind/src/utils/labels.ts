@@ -1,4 +1,5 @@
 import { GitHub } from '@actions/github'
+import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { api, Repo } from '../api'
 import { Labels, Runners } from '../types'
@@ -29,10 +30,11 @@ export async function sync({
   const curLabels: Labels = await api.labels
     .get({ client, repo })
     .catch(err => {
-      log(`Error thrown while getting labels: ` + err, 5)
-      throw err
+      throw log(
+        new loggingData('500', `Error thrown while getting labels: ` + err)
+      )
     })
-  log(`curLabels: ${JSON.stringify(curLabels)}`, 1)
+  log(new loggingData('100', `curLabels: ${JSON.stringify(curLabels)}`))
   for (const configLabel of Object.values(config)) {
     const label = curLabels[configLabel.name.toLowerCase()]
 
@@ -48,18 +50,30 @@ export async function sync({
         label.color !== formatColor(configLabel.color)
       ) {
         log(
-          `Recreate ${JSON.stringify(configLabel)} (prev: ${JSON.stringify(
-            label
-          )})`,
-          2
+          new loggingData(
+            '200',
+            `Recreate ${JSON.stringify(configLabel)} (prev: ${JSON.stringify(
+              label
+            )})`
+          )
         )
         await api.labels
           .update({ client, repo, label: configLabel, dryRun })
           .catch(err => {
-            log(`Error thrown while updating label: ` + err, 5)
+            log(
+              new loggingData(
+                '500',
+                `Error thrown while updating label: ` + err
+              )
+            )
           })
       } else {
-        log(`No action required to update label: ${label.name}`, 2)
+        log(
+          new loggingData(
+            '200',
+            `No action required to update label: ${label.name}`
+          )
+        )
       }
 
       /**
@@ -68,11 +82,13 @@ export async function sync({
        * @since 1.0.0
        */
     } else {
-      log(`Create ${JSON.stringify(configLabel)}`, 2)
+      log(new loggingData('200', `Create ${JSON.stringify(configLabel)}`))
       await api.labels
         .create({ client, repo, label: configLabel, dryRun })
         .catch(err => {
-          log(`Error thrown while creating label: ` + err, 5)
+          log(
+            new loggingData('500', `Error thrown while creating label: ` + err)
+          )
         })
     }
   }
@@ -80,11 +96,13 @@ export async function sync({
   for (const curLabel of Object.values(curLabels)) {
     const label = config[curLabel.name.toLowerCase()]
     if (!label) {
-      log(`Delete ${JSON.stringify(curLabel)}`, 4)
+      log(new loggingData('400', `Delete ${JSON.stringify(curLabel)}`))
       await api.labels
         .del({ client, repo, name: curLabel.name, dryRun })
         .catch(err => {
-          log(`Error thrown while deleting label: ` + err, 5)
+          log(
+            new loggingData('500', `Error thrown while deleting label: ` + err)
+          )
         })
     }
   }
@@ -116,29 +134,33 @@ export async function addRemove({
 }) {
   if (!curLabels || !labelName)
     return log(
-      `Can't run add or remove labels if you don't provide ${
-        !curLabels
-          ? `the current labels ${curLabels}`
-          : `the name of the label you want to apply: ${labelName}`
-      }`,
-      2
+      new loggingData(
+        '200',
+        `Can't run add or remove labels if you don't provide ${
+          !curLabels
+            ? `the current labels ${curLabels}`
+            : `the name of the label you want to apply: ${labelName}`
+        }`
+      )
     )
   log(
-    `Current label: ${labelName.toLowerCase()} -- Does issue have label: ${Boolean(
-      curLabels[labelName.toLowerCase()]
-    )} but should it: ${shouldHaveLabel}`,
-    1
+    new loggingData(
+      '100',
+      `Current label: ${labelName.toLowerCase()} -- Does issue have label: ${Boolean(
+        curLabels[labelName.toLowerCase()]
+      )} but should it: ${shouldHaveLabel}`
+    )
   )
   const hasLabel = Boolean(curLabels[labelName.toLowerCase()])
   if (shouldHaveLabel && !hasLabel) {
-    log(`Adding label "${labelID}"...`, 2)
+    log(new loggingData('200', `Adding label "${labelID}"...`))
     await api.labels
       .add({ client, repo, IDNumber, label: labelName, dryRun })
       .catch(err => {
-        log(`Error thrown while adding labels: ` + err, 5)
+        log(new loggingData('500', `Error thrown while adding labels: ` + err))
       })
   } else if (!shouldHaveLabel && hasLabel) {
-    log(`Removing label "${labelID}"...`, 2)
+    log(new loggingData('200', `Removing label "${labelID}"...`))
     await api.labels
       .remove({
         client,
@@ -148,14 +170,18 @@ export async function addRemove({
         dryRun
       })
       .catch(err => {
-        log(`Error thrown while removing labels: ` + err, 5)
+        log(
+          new loggingData('500', `Error thrown while removing labels: ` + err)
+        )
       })
   } else {
     log(
-      `No action required for label "${labelID}"${
-        hasLabel ? ' as label is already applied.' : '.'
-      }`,
-      2
+      new loggingData(
+        '200',
+        `No action required for label "${labelID}"${
+          hasLabel ? ' as label is already applied.' : '.'
+        }`
+      )
     )
   }
 }

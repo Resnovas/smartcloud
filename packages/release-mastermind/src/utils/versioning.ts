@@ -1,3 +1,4 @@
+import { loggingData } from '@videndum/utilities'
 import path from 'path'
 import { log } from '..'
 import { api, ApiProps } from '../api'
@@ -18,7 +19,12 @@ export async function parse(
   if (config.projectType === 'node') {
     rawVersion = await getNodeVersion({ client, repo }, config.root, ref).catch(
       err => {
-        log(`Error thrown while parsing node project: ` + err, 5)
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while parsing node project: ` + err
+          )
+        )
         throw err
       }
     )
@@ -47,6 +53,6 @@ export async function getNodeVersion(
   ref?: string
 ): Promise<string> {
   const file = path.join(root, '/package.json')
-  log(`Getting file: ${file}`, 1)
+  log(new loggingData('100', `Getting file: ${file}`))
   return JSON.parse(await api.files.get({ client, repo }, file, ref)).version
 }
