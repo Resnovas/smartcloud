@@ -221,7 +221,8 @@ interface ProjectConditionConfig {
 }
 
 interface ExProjects {
-  owner: string
+  owner?: string
+  user?: string
   repo?: string
   project: string
 }
