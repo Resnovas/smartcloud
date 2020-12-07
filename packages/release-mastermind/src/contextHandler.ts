@@ -172,6 +172,8 @@ class ContextHandler {
         throw err
       })
 
+    const changes = context.payload.changes
+
     return {
       sha: context.sha,
       action: context.payload.action as string,
@@ -185,7 +187,9 @@ class ContextHandler {
         state: issue.state as ProjectContext['projectProps']['state'],
         title: issue.title,
         project_id: project.project_url.split('/').pop(),
-        column_id: project.column_id
+        column_id: project.column_id,
+        changes,
+        cardID: project.id
       }
     }
   }
