@@ -54,7 +54,7 @@ export default class releaseMastermind {
      */
     log(
       new loggingData(
-        '500',
+        '100',
         `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
           context
         )}`
