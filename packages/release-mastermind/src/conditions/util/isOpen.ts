@@ -13,7 +13,10 @@ export interface ConditionIsOpen {
   value: boolean
 }
 
-const isOpen = (condition: ConditionIsOpen, issue: IssueProps | PRProps | ProjectProps) => {
+const isOpen = (
+  condition: ConditionIsOpen,
+  issue: IssueProps | PRProps | ProjectProps
+) => {
   return (
     utils.parsingData.normalize(issue.state) ===
     utils.parsingData.normalize(condition.value ? States.Open : States.Closed)
