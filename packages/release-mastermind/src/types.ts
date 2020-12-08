@@ -49,10 +49,11 @@ export interface PullRequestConfig extends SharedConfig {
   manageRelease?: Release // Manage releases (includes tags, milestones, packages and more)
   duplicateHotfix?: DuplicateHotfix // Duplicated a hotfix to the main branch
   syncRemote?: SyncRemote[] // sync a remote repository
+  assignProject?: AssignProject[]
 }
 
 export interface IssueConfig extends SharedConfig {
-  assignProject?: AssignProject
+  assignProject?: AssignProject[]
   createBranch?: IssueCreateBranch
 }
 
@@ -203,6 +204,9 @@ export interface IssueConditionConfig {
 }
 
 interface AssignProject extends IssueConditionConfig {
+  owner?: string
+  user?: string
+  repo?: string
   project: string
   column: string
 }

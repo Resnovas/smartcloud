@@ -2038,18 +2038,14 @@
               "sections": [
                 {
                   "title": "Features Effectuated",
-                  "PRlabels": [
-                    "Type - Feature"
-                  ],
+                  "PRlabels": ["Type - Feature"],
                   "issueLabels": [],
                   "includeCommitter": true,
                   "linkPR": true
                 },
                 {
                   "title": "Bugs Squashed",
-                  "PRlabels": [
-                    "Type - Fix"
-                  ],
+                  "PRlabels": ["Type - Fix"],
                   "issueLabels": [],
                   "includeCommitter": true,
                   "linkPR": true
@@ -2082,9 +2078,7 @@
                 {
                   "title": "Confession Time",
                   "PRlabels": [],
-                  "issueLabels": [
-                    "Bug - Confirmed"
-                  ],
+                  "issueLabels": ["Bug - Confirmed"],
                   "includeCommitter": true,
                   "linkPR": true
                 }
@@ -2113,15 +2107,21 @@
             "conventions": [
               {
                 "requires": 1,
-                "conditions": [
-                  {}
-                ]
+                "conditions": [{}]
               }
             ]
           },
           "duplicateHotfix": {},
           "createMilestone": {},
           "syncRemote": {},
+          "assignProject": [
+            {
+              "project": "Developer Operations",
+              "column": "Requested",
+              "requires": 0,
+              "conditions": []
+            }
+          ],
           "labels": {
             "xs": {
               "requires": 1,
@@ -2228,16 +2228,6 @@
                   "value": true
                 }
               ]
-            },
-            "devOpsApproved": {
-              "requires": 1,
-              "conditions": [
-                {
-                  "type": "isApproved",
-                  "value": true,
-                  "required": 1
-                }
-              ]
             }
           }
         },
@@ -2260,7 +2250,32 @@
               }
             ]
           },
-          "assignProject": {},
+          "assignProject": [
+            {
+              "project": "Developer Operations",
+              "column": "Requested",
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "hasLabel",
+                  "label": "Type - Bug",
+                  "value": false
+                }
+              ]
+            },
+            {
+              "project": "Developer Operations",
+              "column": "Requested",
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "hasLabel",
+                  "label": "Type - Bug",
+                  "value": true
+                }
+              ]
+            }
+          ],
           "assignColumn": {},
           "createBranch": {},
           "labels": {
@@ -2420,10 +2435,7 @@
         "project": {
           "ref": "develop",
           "enforceConventions": {
-            "onColumn": [
-              "Accepted",
-              "Reviewing"
-            ],
+            "onColumn": ["Accepted", "Reviewing"],
             "conventions": [
               {
                 "requires": 1,

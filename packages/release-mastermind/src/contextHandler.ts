@@ -233,7 +233,7 @@ class ContextHandler {
       sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
-      IDNumber: issue.number,
+      IDNumber: context.payload.issue?.id,
       issueProps: {
         creator: issue.user.login,
         description: issue.body || '',
