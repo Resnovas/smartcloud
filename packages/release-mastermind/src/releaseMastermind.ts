@@ -135,7 +135,7 @@ export default class releaseMastermind {
         }
       }
       core.endGroup()
-      this.applyContext(config, curContext)
+      this.applyContext(configs, config, curContext)
     })
   }
 
@@ -291,19 +291,27 @@ export default class releaseMastermind {
       })
   }
 
-  applyContext(config: Config, curContext: CurContext) {
+  applyContext(runners: Runners, config: Config, curContext: CurContext) {
     let ctx: PullRequests | Issues | Project
     if (curContext.type == 'pr') {
       ctx = new PullRequests(
         this.client,
         this.repo,
+        runners,
         config,
         curContext,
         this.dryRun
       )
       ctx.run()
     } else if (curContext.type == 'issue') {
-      ctx = new Issues(this.client, this.repo, config, curContext, this.dryRun)
+      ctx = new Issues(
+        this.client,
+        this.repo,
+        runners,
+        config,
+        curContext,
+        this.dryRun
+      )
       ctx.run()
     } else if (curContext.type == 'project') {
       ctx = new Project(this.client, this.repo, config, curContext, this.dryRun)

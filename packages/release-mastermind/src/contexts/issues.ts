@@ -4,10 +4,11 @@ import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { CurContext, IssueContext, Version } from '../conditions'
 import { ConditionSetType, evaluator } from '../evaluator'
-import { Config } from '../types'
+import { Config, Runners } from '../types'
 import { utils } from '../utils'
 import * as methods from './methods'
 export class Issues {
+  private runners: Runners
   private configs: Config
   private config: Config['pr']
   private curContext: CurContext
@@ -20,12 +21,15 @@ export class Issues {
   constructor(
     client: GitHub,
     repo: { owner: string; repo: string },
+    runners: Runners,
     configs: Config,
     curContext: CurContext,
     dryRun: boolean
   ) {
     if (curContext.type !== 'issue')
       throw new loggingData('500', 'Cannot construct without issue context')
+    if (!runners)
+      throw new loggingData('500', 'Cannot construct without configs')
     if (!configs)
       throw new loggingData('500', 'Cannot construct without configs')
     if (!configs.issue)
@@ -34,6 +38,7 @@ export class Issues {
       throw new loggingData('500', 'Cannot construct without context')
     this.client = client
     this.repo = repo
+    this.runners = runners
     this.configs = configs
     this.config = configs.issue
     this.curContext = curContext
@@ -89,7 +94,7 @@ export class Issues {
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
       throw new loggingData('500', 'Config is required to add labels')
-    const { labels: curLabels, issueProps, IDNumber } = this.context
+    const { issueProps, IDNumber } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
@@ -100,14 +105,35 @@ export class Issues {
         conditionsConfig,
         issueProps
       )
+      const labelName = this.configs.labels[labelID]
+      if (!labelName)
+        throw new loggingData(
+          '500',
+          `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
+        )
+      const hasLabel = Boolean(
+        this.context.issueProps.labels?.[labelName.toLowerCase()]
+      )
+      if (!shouldHaveLabel && hasLabel && this.context.issueProps.labels)
+        delete this.context.issueProps.labels[labelName.toLowerCase()]
+      if (
+        shouldHaveLabel &&
+        !hasLabel &&
+        this.context.issueProps.labels &&
+        this.runners.labels
+      )
+        this.context.issueProps.labels[
+          labelName.toLowerCase()
+        ] = this.runners.labels[labelID]
 
       await utils.labels
         .addRemove({
           client: this.client,
-          curLabels,
+          curLabels: this.context.issueProps.labels,
           labelID,
-          labelName: this.configs.labels[labelID],
+          labelName,
           IDNumber,
+          hasLabel,
           repo: this.repo,
           shouldHaveLabel,
           dryRun

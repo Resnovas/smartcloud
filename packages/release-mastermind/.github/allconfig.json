@@ -209,7 +209,7 @@
         "breakingLabels": "Versioning - BREAKING",
         "enhancementLabels": "Type - Enhancement, Type - Feature",
         "bugLabels": "Type - Fix, Bug - Fixed",
-        "deprecatedLabels": "Type - Decrecated",
+        "deprecatedLabels": "Type - Deprecated",
         "removedLabels": "Type - Removal",
         "securityLabels": "security fix",
         "excludeLabels": "skip-changelog",
@@ -428,8 +428,8 @@
         "color": "0075CA",
         "description": "Removes & Discards a previous change as error"
       },
-      "decrecated": {
-        "name": "Type - Decrecated",
+      "deprecated": {
+        "name": "Type - Deprecated",
         "color": "0075CA",
         "description": "Marks functionality which is no longer needed"
       },
@@ -957,19 +957,6 @@
           }
         ]
       },
-      "closed": {
-        "requires": 2,
-        "conditions": [
-          {
-            "type": "isLocked",
-            "value": true
-          },
-          {
-            "type": "isOpen",
-            "value": false
-          }
-        ]
-      },
       "workflow": {
         "requires": 1,
         "conditions": [
@@ -1425,8 +1412,8 @@
         "color": "0075CA",
         "description": "Removes & Discards a previous change as error"
       },
-      "decrecated": {
-        "name": "Type - Decrecated",
+      "deprecated": {
+        "name": "Type - Deprecated",
         "color": "0075CA",
         "description": "Marks functionality which is no longer needed"
       },
@@ -1960,19 +1947,6 @@
               }
             ]
           },
-          "closed": {
-            "requires": 2,
-            "conditions": [
-              {
-                "type": "isLocked",
-                "value": true
-              },
-              {
-                "type": "isOpen",
-                "value": false
-              }
-            ]
-          },
           "workflow": {
             "requires": 1,
             "conditions": [
@@ -2064,18 +2038,14 @@
               "sections": [
                 {
                   "title": "Features Effectuated",
-                  "PRlabels": [
-                    "Type - Feature"
-                  ],
+                  "PRlabels": ["Type - Feature"],
                   "issueLabels": [],
                   "includeCommitter": true,
                   "linkPR": true
                 },
                 {
                   "title": "Bugs Squashed",
-                  "PRlabels": [
-                    "Type - Fix"
-                  ],
+                  "PRlabels": ["Type - Fix"],
                   "issueLabels": [],
                   "includeCommitter": true,
                   "linkPR": true
@@ -2098,7 +2068,7 @@
                   "title": "Abolishment",
                   "PRlabels": [
                     "Type - Revert",
-                    "Type - Decrecated",
+                    "Type - deprecated",
                     "Type - Removal"
                   ],
                   "issueLabels": [],
@@ -2108,9 +2078,7 @@
                 {
                   "title": "Confession Time",
                   "PRlabels": [],
-                  "issueLabels": [
-                    "Bug - Confirmed"
-                  ],
+                  "issueLabels": ["Bug - Confirmed"],
                   "includeCommitter": true,
                   "linkPR": true
                 }
@@ -2139,9 +2107,7 @@
             "conventions": [
               {
                 "requires": 1,
-                "conditions": [
-                  {}
-                ]
+                "conditions": [{}]
               }
             ]
           },
@@ -2446,10 +2412,7 @@
         "project": {
           "ref": "develop",
           "enforceConventions": {
-            "onColumn": [
-              "Accepted",
-              "Reviewing"
-            ],
+            "onColumn": ["Accepted", "Reviewing"],
             "conventions": [
               {
                 "requires": 1,

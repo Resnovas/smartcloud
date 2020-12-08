@@ -107,7 +107,6 @@ class ContextHandler {
       sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
-      labels,
       IDNumber,
       prProps: {
         branch: pr.head.ref,
@@ -120,6 +119,7 @@ class ContextHandler {
         files,
         changes,
         reviews,
+        labels,
         pendingReview,
         requestedChanges,
         approved
@@ -178,7 +178,6 @@ class ContextHandler {
       sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
-      labels,
       IDNumber: issueNumber,
       projectProps: {
         creator: issue.user.login,
@@ -189,6 +188,7 @@ class ContextHandler {
         project_id: project.project_url.split('/').pop(),
         column_id: project.column_id,
         changes,
+        labels,
         cardID: project.id
       }
     }
@@ -233,13 +233,13 @@ class ContextHandler {
       sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
-      labels,
       IDNumber: issue.number,
       issueProps: {
         creator: issue.user.login,
         description: issue.body || '',
         locked: issue.locked,
         state: issue.state,
+        labels,
         title: issue.title
       }
     }
