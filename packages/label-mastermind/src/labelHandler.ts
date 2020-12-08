@@ -14,20 +14,22 @@ import { loggingData } from '@videndum/utilities'
  */
 export async function applyIssue({
   client,
+  configs,
   config,
-  issueContext,
+  context,
   labelIdToName,
   repo,
   dryRun
 }: {
   client: GitHub
+  configs: Config
   config: Config['issue']
-  issueContext: IssueContext
+  context: IssueContext
   labelIdToName: { [key: string]: string }
   repo: Repo
   dryRun: boolean
 }) {
-  const { labels: curLabels, issueProps, IDNumber } = issueContext
+  const { issueProps, IDNumber } = context
   for (const [labelID, conditionsConfig] of Object.entries(config.labels)) {
     log(new loggingData('100', `Label: ${labelID}`))
 
@@ -37,13 +39,34 @@ export async function applyIssue({
       issueProps
     )
 
+    const labelName = labelIdToName[labelID]
+    if (!labelName)
+      throw new loggingData(
+        '500',
+        `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
+      )
+    const hasLabel = Boolean(
+      context.issueProps.labels?.[labelName.toLowerCase()]
+    )
+    if (!shouldHaveLabel && hasLabel && context.issueProps.labels)
+      delete context.issueProps.labels[labelName.toLowerCase()]
+    if (
+      shouldHaveLabel &&
+      !hasLabel &&
+      context.issueProps.labels &&
+      configs.labels
+    )
+      context.issueProps.labels[labelName.toLowerCase()] =
+        configs.labels[labelID]
+
     await utils.labels
       .addRemove({
         client,
-        curLabels,
+        curLabels: context.issueProps.labels,
         labelID,
-        labelName: labelIdToName[labelID],
+        labelName,
         IDNumber,
+        hasLabel,
         repo,
         shouldHaveLabel,
         dryRun
@@ -67,20 +90,22 @@ export async function applyIssue({
  */
 export async function applyPR({
   client,
+  configs,
   config,
   labelIdToName,
-  prContext,
+  context,
   repo,
   dryRun
 }: {
   client: GitHub
+  configs: Config
   config: Config['pr']
   labelIdToName: { [key: string]: string }
-  prContext: PRContext
+  context: PRContext
   repo: Repo
   dryRun: boolean
 }) {
-  const { labels: curLabels, prProps, IDNumber } = prContext
+  const { prProps, IDNumber } = context
   for (const [labelID, conditionsConfig] of Object.entries(config.labels)) {
     log(new loggingData('100', `Label: ${labelID}`))
 
@@ -90,13 +115,31 @@ export async function applyPR({
       prProps
     )
 
+    const labelName = labelIdToName[labelID]
+    if (!labelName)
+      throw new loggingData(
+        '500',
+        `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
+      )
+    const hasLabel = Boolean(context.prProps.labels?.[labelName.toLowerCase()])
+    if (!shouldHaveLabel && hasLabel && context.prProps.labels)
+      delete context.prProps.labels[labelName.toLowerCase()]
+    if (
+      shouldHaveLabel &&
+      !hasLabel &&
+      context.prProps.labels &&
+      configs.labels
+    )
+      context.prProps.labels[labelName.toLowerCase()] = configs.labels[labelID]
+
     await utils.labels
       .addRemove({
         client,
-        curLabels,
+        curLabels: context.prProps.labels,
         labelID,
-        labelName: labelIdToName[labelID],
+        labelName,
         IDNumber,
+        hasLabel,
         repo,
         shouldHaveLabel,
         dryRun

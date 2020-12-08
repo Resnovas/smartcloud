@@ -1,4 +1,4 @@
-import { IssueProps, PRProps } from '../'
+import { IssueProps, ProjectProps, PRProps } from '../'
 import { utils } from '../../utils'
 
 const TYPE = 'isOpen'
@@ -13,7 +13,10 @@ export interface ConditionIsOpen {
   value: boolean
 }
 
-const isOpen = (condition: ConditionIsOpen, issue: IssueProps | PRProps) => {
+const isOpen = (
+  condition: ConditionIsOpen,
+  issue: IssueProps | PRProps | ProjectProps
+) => {
   return (
     utils.parsingData.normalize(issue.state) ===
     utils.parsingData.normalize(condition.value ? States.Open : States.Closed)

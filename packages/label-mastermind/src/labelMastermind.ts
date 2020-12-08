@@ -282,8 +282,9 @@ export default class labelMastermind {
     if (curContext.type === 'pr') {
       await applyPR({
         client: this.client,
+        configs: config,
         config: config.pr,
-        prContext: curContext.context,
+        context: curContext.context,
         labelIdToName,
         repo: this.repo,
         dryRun: this.dryRun
@@ -298,8 +299,9 @@ export default class labelMastermind {
     } else if (curContext.type === 'issue') {
       await applyIssue({
         client: this.client,
+        configs: config,
         config: config.issue,
-        issueContext: curContext.context,
+        context: curContext.context,
         labelIdToName,
         repo: this.repo,
         dryRun: this.dryRun
