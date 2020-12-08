@@ -38,72 +38,68 @@ class ContextHandler {
 
     const IDNumber = pr.number
     const labels = await this.parseLabels(pr.labels).catch(err => {
-      throw new loggingData('500', `Error thrown while parsing labels: `, err)
+      log(new loggingData('500', `Error thrown while parsing labels: `, err))
+      throw err
     })
     const files: string[] = await api.files
       .list({ client, repo, IDNumber })
       .catch(err => {
-        throw new loggingData('500', `Error thrown while listing files: `, err)
+        log(new loggingData('500', `Error thrown while listing files: `, err))
+        throw err
       })
 
     const changes: number = await api.pullRequests
       .changes(pr.additions, pr.deletions)
       .catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while handling changes: `,
-          err
+        log(
+          new loggingData('500', `Error thrown while handling changes: `, err)
         )
+        throw err
       })
 
     const reviews: Reviews = await api.pullRequests.reviews
       .list({ client, repo, IDNumber })
       .catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while handling reviews: `,
-          err
+        log(
+          new loggingData('500', `Error thrown while handling reviews: `, err)
         )
+        throw err
       })
 
     const pendingReview: boolean = await api.pullRequests.reviews
       .pending(reviews.length, pr.requested_reviewers.length)
       .catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while handling reviews: `,
-          err
+        log(
+          new loggingData('500', `Error thrown while handling reviews: `, err)
         )
+        throw err
       })
 
     const requestedChanges: number = await api.pullRequests.reviews
       .requestedChanges(reviews)
       .catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while handling reviews: `,
-          err
+        log(
+          new loggingData('500', `Error thrown while handling reviews: `, err)
         )
+        throw err
       })
 
     const approved: number = await api.pullRequests.reviews
       .isApproved(reviews)
       .catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while handling reviews: `,
-          err
+        log(
+          new loggingData('500', `Error thrown while handling reviews: `, err)
         )
+        throw err
       })
 
     const currentVersion: Version = await utils.versioning
       .parse({ client, repo }, config, config.pr.ref)
       .catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while parsing versioning: `,
-          err
+        log(
+          new loggingData('500', `Error thrown while parsing versioning: `, err)
         )
+        throw err
       })
 
     return {
@@ -111,7 +107,6 @@ class ContextHandler {
       sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
-      labels,
       IDNumber,
       prProps: {
         branch: pr.head.ref,
@@ -124,6 +119,7 @@ class ContextHandler {
         files,
         changes,
         reviews,
+        labels,
         pendingReview,
         requestedChanges,
         approved
@@ -163,24 +159,25 @@ class ContextHandler {
     })
 
     const labels = await this.parseLabels(issue.labels).catch(err => {
-      throw new loggingData('500', `Error thrown while parsing labels: `, err)
+      log(new loggingData('500', `Error thrown while parsing labels: `, err))
+      throw err
     })
 
     const currentVersion: Version = await utils.versioning
       .parse({ client, repo }, config, config.project.ref)
       .catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while parsing versioning: `,
-          err
+        log(
+          new loggingData('500', `Error thrown while parsing versioning: `, err)
         )
+        throw err
       })
+
+    const changes = context.payload.changes
 
     return {
       sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
-      labels,
       IDNumber: issueNumber,
       projectProps: {
         creator: issue.user.login,
@@ -189,7 +186,10 @@ class ContextHandler {
         state: issue.state as ProjectContext['projectProps']['state'],
         title: issue.title,
         project_id: project.project_url.split('/').pop(),
-        column_id: project.column_id
+        column_id: project.column_id,
+        changes,
+        labels,
+        cardID: project.id
       }
     }
   }
@@ -216,30 +216,30 @@ class ContextHandler {
     )
 
     const labels = await this.parseLabels(issue.labels).catch(err => {
-      throw new loggingData('500', `Error thrown while parsing labels: `, err)
+      log(new loggingData('500', `Error thrown while parsing labels: `, err))
+      throw err
     })
 
     const currentVersion: Version = await utils.versioning
       .parse({ client, repo }, config, config.issue.ref)
       .catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while parsing versioning: `,
-          err
+        log(
+          new loggingData('500', `Error thrown while parsing versioning: `, err)
         )
+        throw err
       })
 
     return {
       sha: context.sha,
       action: context.payload.action as string,
       currentVersion,
-      labels,
       IDNumber: issue.number,
       issueProps: {
         creator: issue.user.login,
         description: issue.body || '',
         locked: issue.locked,
         state: issue.state,
+        labels,
         title: issue.title
       }
     }
