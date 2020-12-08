@@ -67,76 +67,76 @@ export default class releaseMastermind {
      */
     log(new loggingData('100', `Config: ${JSON.stringify(this.configJSON)}`))
 
-    // const configs = await this.processConfig().catch(err => {
-    //   throw log(
-    //     new loggingData('500', `Error thrown while processing config: `, err)
-    //   )
-    // })
-    // if (!configs.runners[0]) {
-    //   throw log(new loggingData('500', `No config data.`))
-    // }
+    const configs = await this.processConfig().catch(err => {
+      throw log(
+        new loggingData('500', `Error thrown while processing config: `, err)
+      )
+    })
+    if (!configs.runners[0]) {
+      throw log(new loggingData('500', `No config data.`))
+    }
 
-    // if (configs.labels) {
-    //   /**
-    //    * Syncronise the labels
-    //    * @author TGTGamer
-    //    * @since 1.1.0
-    //    */
-    //   await this.syncLabels(configs).catch(err => {
-    //     throw log(
-    //       new loggingData(
-    //         '100',
-    //         `Error thrown while syncronising labels: `,
-    //         err
-    //       )
-    //     )
-    //   })
-    // }
+    if (configs.labels) {
+      /**
+       * Syncronise the labels
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      await this.syncLabels(configs).catch(err => {
+        throw log(
+          new loggingData(
+            '100',
+            `Error thrown while syncronising labels: `,
+            err
+          )
+        )
+      })
+    }
 
-    // // Run each release manager
-    // configs.runners.forEach(async config => {
-    //   /**
-    //    * Convert label ID's to Names
-    //    * @author TGTGamer
-    //    * @since 1.1.0
-    //    */
-    //   config.labels = await Object.entries(
-    //     configs.labels ? configs.labels : []
-    //   ).reduce((acc: { [key: string]: string }, cur) => {
-    //     acc[cur[0]] = cur[1].name
-    //     return acc
-    //   }, {})
+    // Run each release manager
+    configs.runners.forEach(async config => {
+      /**
+       * Convert label ID's to Names
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      config.labels = await Object.entries(
+        configs.labels ? configs.labels : []
+      ).reduce((acc: { [key: string]: string }, cur) => {
+        acc[cur[0]] = cur[1].name
+        return acc
+      }, {})
 
-    //   log(new loggingData('100', `Config: ${JSON.stringify(config)}`))
+      log(new loggingData('100', `Config: ${JSON.stringify(config)}`))
 
-    //   /**
-    //    * Get the context
-    //    * @author TGTGamer
-    //    * @since 1.1.0
-    //    */
-    //   const curContext = await this.processContext(config).catch(err => {
-    //     throw log(
-    //       new loggingData('500', `Error thrown while processing context: `, err)
-    //     )
-    //   })
-    //   log(
-    //     new loggingData('100', `Current Context: ${JSON.stringify(curContext)}`)
-    //   )
+      /**
+       * Get the context
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      const curContext = await this.processContext(config).catch(err => {
+        throw log(
+          new loggingData('500', `Error thrown while processing context: `, err)
+        )
+      })
+      log(
+        new loggingData('100', `Current Context: ${JSON.stringify(curContext)}`)
+      )
 
-    //   /**
-    //    * Combine the Shared & Context.type Configs
-    //    * @author TGTGamer
-    //    * @since 1.1.0
-    //    */
-    //   for (const label in config.sharedLabelsConfig) {
-    //     const ctx = config[curContext.type]
-    //     if (ctx && 'labels' in ctx && !(label in ctx.labels)) {
-    //       ctx.labels[label] = config.sharedLabelsConfig[label]
-    //     }
-    //   }
-    //   core.endGroup()
-    //   this.applyContext(configs, config, curContext)
-    // })
+      /**
+       * Combine the Shared & Context.type Configs
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      for (const label in config.sharedLabelsConfig) {
+        const ctx = config[curContext.type]
+        if (ctx && 'labels' in ctx && !(label in ctx.labels)) {
+          ctx.labels[label] = config.sharedLabelsConfig[label]
+        }
+      }
+      core.endGroup()
+      this.applyContext(configs, config, curContext)
+    })
   }
 
   /**

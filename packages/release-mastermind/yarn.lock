@@ -1286,6 +1286,16 @@
   resolved "https://registry.yarnpkg.com/@vercel/ncc/-/ncc-0.24.1.tgz#3ea2932c85ba87f4de6fe550d60e1bf5c005985e"
   integrity sha512-r9m7brz2hNmq5TF3sxrK4qR/FhXn44XIMglQUir4sT7Sh5GOaYXlMYikHFwJStf8rmQGTlvOoBXt4yHVonRG8A==
 
+"@videndum/utilities@../../../utilities":
+  version "1.0.0-alpha.3"
+  dependencies:
+    "@google-cloud/logging" "^8.0.8"
+    "@sentry/integrations" "^5.27.6"
+    "@sentry/node" "^5.27.6"
+    chalk "^4.1.0"
+    i18next "^19.5.2"
+    i18next-fs-backend "^1.0.7"
+
 "@videndum/utilities@^1.0.0-alpha.4":
   version "1.0.0-alpha.4"
   resolved "https://registry.yarnpkg.com/@videndum/utilities/-/utilities-1.0.0-alpha.4.tgz#467d4858de13983a451687869a8866f2988d48e7"
