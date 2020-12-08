@@ -1,4 +1,4 @@
-import { IssueProps, PRProps } from '../'
+import { IssueProps, ProjectProps, PRProps } from '../'
 import { utils } from '../../utils'
 
 const TYPE = 'titleMatches'
@@ -10,7 +10,7 @@ export interface ConditionTitleMatches {
 
 const titleMatches = (
   condition: ConditionTitleMatches,
-  issue: IssueProps | PRProps
+  issue: IssueProps | PRProps | ProjectProps
 ) => {
   const pattern = utils.parsingData.processRegExpPattern(condition.pattern)
   return pattern.test(issue.title)

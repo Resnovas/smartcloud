@@ -119,6 +119,7 @@ export async function addRemove({
   labelID,
   labelName,
   IDNumber,
+  hasLabel,
   repo,
   shouldHaveLabel,
   dryRun
@@ -128,6 +129,7 @@ export async function addRemove({
   labelID: string
   labelName: string
   IDNumber: number
+  hasLabel: boolean
   repo: Repo
   shouldHaveLabel: boolean
   dryRun: boolean
@@ -147,11 +149,10 @@ export async function addRemove({
     new loggingData(
       '100',
       `Current label: ${labelName.toLowerCase()} -- Does issue have label: ${Boolean(
-        curLabels[labelName.toLowerCase()]
+        hasLabel
       )} but should it: ${shouldHaveLabel}`
     )
   )
-  const hasLabel = Boolean(curLabels[labelName.toLowerCase()])
   if (shouldHaveLabel && !hasLabel) {
     log(new loggingData('200', `Adding label "${labelID}"...`))
     await api.labels

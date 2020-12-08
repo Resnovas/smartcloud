@@ -5,12 +5,13 @@ import { log } from '..'
 import { api } from '../api'
 import { CurContext, PRContext, Version } from '../conditions'
 import { ConditionSetType, evaluator } from '../evaluator'
-import { Config, PullRequestConfig, Release } from '../types'
+import { Config, PullRequestConfig, Release, Runners } from '../types'
 import { utils } from '../utils'
 import { addRemove } from '../utils/labels'
 import * as methods from './methods'
 
 export class PullRequests {
+  private runners: Runners
   private configs: Config
   private config: Config['pr']
   private curContext: CurContext
@@ -23,17 +24,20 @@ export class PullRequests {
   constructor(
     client: GitHub,
     repo: { owner: string; repo: string },
+    runners: Runners,
     configs: Config,
     curContext: CurContext,
     dryRun: boolean
   ) {
     if (curContext.type !== 'pr')
       throw new Error('Cannot construct without PR context')
+    if (!runners) throw new Error('Cannot construct without configs')
     if (!configs) throw new Error('Cannot construct without configs')
     if (!configs.pr) throw new Error('Cannot construct without PR config')
     if (!curContext) throw new Error('Cannot construct without context')
     this.client = client
     this.repo = repo
+    this.runners = runners
     this.configs = configs
     this.config = configs.pr
     this.curContext = curContext
@@ -106,7 +110,7 @@ export class PullRequests {
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
       throw new loggingData('500', 'Config is required to add labels')
-    const { labels: curLabels, prProps, IDNumber } = this.context
+    const { prProps, IDNumber } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
@@ -118,11 +122,33 @@ export class PullRequests {
         prProps
       )
 
+      const labelName = this.configs.labels[labelID]
+      if (!labelName)
+        throw new loggingData(
+          '500',
+          `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
+        )
+      const hasLabel = Boolean(
+        this.context.prProps.labels?.[labelName.toLowerCase()]
+      )
+      if (!shouldHaveLabel && hasLabel && this.context.prProps.labels)
+        delete this.context.prProps.labels[labelName.toLowerCase()]
+      if (
+        shouldHaveLabel &&
+        !hasLabel &&
+        this.context.prProps.labels &&
+        this.runners.labels
+      )
+        this.context.prProps.labels[
+          labelName.toLowerCase()
+        ] = this.runners.labels[labelID]
+
       await addRemove({
         client: this.client,
-        curLabels,
+        curLabels: this.context.prProps.labels,
         labelID,
-        labelName: this.configs.labels[labelID],
+        labelName,
+        hasLabel,
         IDNumber,
         repo: this.repo,
         shouldHaveLabel,
@@ -167,30 +193,30 @@ export class PullRequests {
   }
 
   bumpVersion(labels: Release['labels']) {
-    if (!labels || !this.context.labels) return
+    if (!labels || !this.context.prProps.labels) return
     if (
       (this.configs.versioning == 'SemVer' ||
         this.configs.versioning == undefined) &&
       this.newVersion.semantic
     ) {
       if (
-        this.context.labels[labels.major] || labels.breaking
-          ? this.context.labels[labels.major]
+        this.context.prProps.labels[labels.major] || labels.breaking
+          ? this.context.prProps.labels[labels.major]
           : true
       ) {
         this.newVersion.semantic.major++
-      } else if (this.context.labels[labels.minor]) {
+      } else if (this.context.prProps.labels[labels.minor]) {
         this.newVersion.semantic.minor++
-      } else if (this.context.labels[labels.patch]) {
+      } else if (this.context.prProps.labels[labels.patch]) {
         this.newVersion.semantic.patch++
       }
-      if (this.context.labels[labels.prerelease]) {
+      if (this.context.prProps.labels[labels.prerelease]) {
         this.newVersion.semantic.prerelease =
           this.newVersion.semantic.prerelease ||
           this.configs.prereleaseName ||
           'prerelease'
       }
-      if (this.context.labels[labels.build]) {
+      if (this.context.prProps.labels[labels.build]) {
         this.newVersion.semantic.build = +1
       }
       this.newVersion.name = `${this.newVersion.semantic.major}.${

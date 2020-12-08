@@ -26,7 +26,6 @@ interface GeneralContext {
   sha: string
   action: string
   currentVersion: Version
-  labels?: Labels
   IDNumber: number
 }
 
@@ -36,6 +35,7 @@ interface Props {
   locked: boolean
   state: 'open' | 'closed'
   title: string
+  labels?: Labels
 }
 
 export interface PRProps extends Props {
