@@ -2,6 +2,7 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
+import { api } from '../api'
 import { CurContext, IssueContext, Version } from '../conditions'
 import { ConditionSetType, evaluator } from '../evaluator'
 import { Config, Runners } from '../types'
@@ -10,7 +11,7 @@ import * as methods from './methods'
 export class Issues {
   private runners: Runners
   private configs: Config
-  private config: Config['pr']
+  private config: Config['issue']
   private curContext: CurContext
   private context: IssueContext
   private newVersion: Version = {}
@@ -33,7 +34,7 @@ export class Issues {
     if (!configs)
       throw new loggingData('500', 'Cannot construct without configs')
     if (!configs.issue)
-      throw new loggingData('500', 'Cannot construct without PR config')
+      throw new loggingData('500', 'Cannot construct without issue config')
     if (!curContext)
       throw new loggingData('500', 'Cannot construct without context')
     this.client = client
@@ -66,6 +67,8 @@ export class Issues {
         )
       if (enforceConventionsSuccess) {
         if (this.config.labels) await this.applyLabels(this.dryRun)
+        if (this.config.assignProject && this.context.action == 'opened')
+          await this.assignProject(this.dryRun)
         core.endGroup()
       }
     } catch (err) {
@@ -147,5 +150,75 @@ export class Issues {
           )
         })
     }
+  }
+
+  async assignProject(dryRun: boolean) {
+    if (!this.config?.assignProject) return
+    this.config.assignProject.forEach(async remote => {
+      // Get projects
+      let projects
+      if (remote.user)
+        projects = await api.project.projects.user(
+          { client: this.client, repo: this.repo },
+          remote.user
+        )
+      else if (remote.owner && !remote.repo)
+        projects = await api.project.projects.org(
+          { client: this.client, repo: this.repo },
+          remote.owner
+        )
+      else if (remote.owner && remote.repo)
+        projects = await api.project.projects.repo(
+          { client: this.client, repo: this.repo },
+          remote.owner,
+          remote.repo
+        )
+      else
+        projects = await api.project.projects.repo(
+          { client: this.client, repo: this.repo },
+          this.repo.owner,
+          this.repo.repo
+        )
+      // Get the column
+      const project = projects.filter(
+        project => project.name === remote.project
+      )[0]
+      if (!project) throw log(new loggingData('500', 'No project to use'))
+      const columns = await api.project.column.list(
+        { client: this.client, repo: this.repo },
+        project.id
+      )
+      if (!columns) throw log(new loggingData('500', 'No columns to use'))
+      const remoteColumn = columns.filter(
+        column => column.name === remote.column
+      )[0]
+      if (!remoteColumn) throw log(new loggingData('500', 'No column to use'))
+
+      const should =
+        remote.conditions.length > 0
+          ? evaluator(ConditionSetType.pr, remote, this.context.issueProps)
+          : true
+
+      if (should) {
+        log(new loggingData('100', `Adding to project ${project.name}`))
+        !dryRun &&
+          (await api.project.card
+            .create(
+              { client: this.client, repo: this.repo },
+              this.context.IDNumber,
+              remoteColumn.id,
+              'Issue'
+            )
+            .catch(err => {
+              log(
+                new loggingData(
+                  '500',
+                  `New error thrown when attempting to add to project "${project.name}"`,
+                  err
+                )
+              )
+            }))
+      }
+    })
   }
 }

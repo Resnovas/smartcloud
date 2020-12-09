@@ -4,14 +4,17 @@ const TYPE = 'hasLabel'
 
 export interface ConditionHasLabel {
   type: typeof TYPE
-  pattern: string
+  label: string
+  value: boolean
 }
 
 const hasLabel = (
   condition: ConditionHasLabel,
   issue: IssueProps | PRProps | ProjectProps
 ) => {
-  return Boolean(issue.labels?.[condition.pattern.toLowerCase()])
+  return (
+    Boolean(issue.labels?.[condition.label.toLowerCase()]) == condition.value
+  )
 }
 
 export default [TYPE, hasLabel] as const

@@ -2114,6 +2114,14 @@
           "duplicateHotfix": {},
           "createMilestone": {},
           "syncRemote": {},
+          "assignProject": [
+            {
+              "project": "Developer Operations",
+              "column": "Requested",
+              "requires": 0,
+              "conditions": []
+            }
+          ],
           "labels": {
             "xs": {
               "requires": 1,
@@ -2220,16 +2228,6 @@
                   "value": true
                 }
               ]
-            },
-            "devOpsApproved": {
-              "requires": 1,
-              "conditions": [
-                {
-                  "type": "isApproved",
-                  "value": true,
-                  "required": 1
-                }
-              ]
             }
           }
         },
@@ -2252,7 +2250,32 @@
               }
             ]
           },
-          "assignProject": {},
+          "assignProject": [
+            {
+              "project": "Developer Operations",
+              "column": "Requested",
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "hasLabel",
+                  "label": "Type - Bug",
+                  "value": false
+                }
+              ]
+            },
+            {
+              "project": "Developer Operations",
+              "column": "Requested",
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "hasLabel",
+                  "label": "Type - Bug",
+                  "value": true
+                }
+              ]
+            }
+          ],
           "assignColumn": {},
           "createBranch": {},
           "labels": {

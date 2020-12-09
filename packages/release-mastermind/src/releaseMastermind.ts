@@ -54,7 +54,7 @@ export default class releaseMastermind {
      */
     log(
       new loggingData(
-        '500',
+        '100',
         `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
           context
         )}`
@@ -312,10 +312,18 @@ export default class releaseMastermind {
         curContext,
         this.dryRun
       )
-      ctx.run()
+      ctx.run().catch(err => {
+        throw log(
+          new loggingData('500', `Error thrown while running context: `, err)
+        )
+      })
     } else if (curContext.type == 'project') {
       ctx = new Project(this.client, this.repo, config, curContext, this.dryRun)
-      ctx.run()
+      ctx.run().catch(err => {
+        throw log(
+          new loggingData('500', `Error thrown while running context: `, err)
+        )
+      })
     }
   }
 }

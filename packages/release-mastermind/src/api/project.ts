@@ -34,12 +34,14 @@ export const card = {
   async create(
     { client, repo }: ApiProps,
     content_id: number,
-    column_id: number
+    column_id: number,
+    content_type?: 'Issue' | 'PullRequest'
   ) {
     return (
       await client.projects.createCard({
         content_id,
-        column_id
+        column_id,
+        content_type
       })
     ).data
   },

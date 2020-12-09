@@ -209,7 +209,8 @@ export class Project {
         api.project.card.create(
           { client: this.client, repo: this.repo },
           this.context.IDNumber,
-          remoteColumn.id
+          remoteColumn.id,
+          'Issue'
         )
       } else if (this.context.action == 'moved') {
         api.project.card
