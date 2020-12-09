@@ -64,7 +64,8 @@ export class PullRequests {
         )
       if (enforceConventionsSuccess) {
         if (this.config.labels) await this.applyLabels(this.dryRun)
-        if (this.config.assignProject) await this.assignProject(this.dryRun)
+        if (this.config.assignProject && this.context.action == 'opened')
+          await this.assignProject(this.dryRun)
         // if (this.config.automaticApprove)
         //   await this.automaticApprove(this.config.automaticApprove)
         // duplicate hotfix
