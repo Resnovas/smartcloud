@@ -63,13 +63,13 @@ export class PullRequests {
           this.dryRun
         )
       if (enforceConventionsSuccess) {
-        if (this.config.labels) await this.applyLabels(this.dryRun)
+        // if (this.config.labels) await this.applyLabels(this.dryRun)
         if (this.config.assignProject) await this.assignProject(this.dryRun)
         // if (this.config.automaticApprove)
         //   await this.automaticApprove(this.config.automaticApprove)
         // duplicate hotfix
-        if (this.config.manageRelease)
-          await this.bumpVersion(this.config.manageRelease.labels)
+        // if (this.config.manageRelease)
+        //   await this.bumpVersion(this.config.manageRelease.labels)
         // create changelog
         // create release
         // sync remote repositories
