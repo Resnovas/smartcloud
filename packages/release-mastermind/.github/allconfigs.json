@@ -2117,7 +2117,7 @@
           "assignProject": [
             {
               "project": "Developer Operations",
-              "column": "Requested",
+              "column": "Reviewing",
               "requires": 0,
               "conditions": []
             }
