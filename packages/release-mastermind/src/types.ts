@@ -23,10 +23,10 @@ export interface Runners {
 
 export interface Config {
   projectType: ProjectType
-  root: string // The root of the project (e.g. "." or "./packages/{package}")
-  versioning?: VersionType // The type of versioning to apply
+  root: string
+  versioning?: VersionType
   retryLimit?: number
-  prereleaseName?: string // If you want something other then "prerelease"
+  prereleaseName?: string
   labels?: { [key: string]: string }
   sharedLabelsConfig?: SharedLabels
   pr?: PullRequestConfig
@@ -45,35 +45,35 @@ interface SharedLabels {
 }
 
 export interface PullRequestConfig extends SharedConfig {
-  automaticApprove?: AutomaticApprove // Automatically approve PR based on conditions
-  manageRelease?: Release // Manage releases (includes tags, milestones, packages and more)
-  duplicateHotfix?: DuplicateHotfix // Duplicated a hotfix to the main branch
-  syncRemote?: SyncRemote[] // sync a remote repository
   assignProject?: AssignProject[]
+  automaticApprove?: AutomaticApprove
+  manageRelease?: Release
+  duplicateHotfix?: { [title: string]: DuplicateHotfix }
+  syncRemote?: SyncRemote[]
 }
 
 export interface IssueConfig extends SharedConfig {
   assignProject?: AssignProject[]
-  createBranch?: IssueCreateBranch
+  createBranch?: { [label: string]: CreateBranch }
 }
 
 export interface ProjectConfig extends SharedConfig {
   syncRemote?: ExProjects[]
   openBranch?: ProjectCreateBranch
-  assignMilestone?: Milestones[]
+  assignMilestone?: { [milestone: string]: Milestones }
 }
 
 /**
  * shared types
  */
 interface SharedConfig {
-  ref?: string // Overrides the ref
-  enforceConventions?: EnforceConventions // enforce the conventions
-  labels: {
+  ref?: string
+  enforceConventions?: EnforceConventions
+  labels?: {
     [key: string]:
-      | IssueConditionConfig
-      | ProjectConditionConfig
-      | PRConditionConfig
+    | IssueConditionConfig
+    | ProjectConditionConfig
+    | PRConditionConfig
   }
 }
 
@@ -87,7 +87,7 @@ interface SharedConditions {
 }
 
 export interface SharedConventionsConfig extends SharedConventionConditions {
-  failedComment: string // short comment to explain the condition
+  failedComment: string
   contexts?: string[]
 }
 
@@ -98,10 +98,10 @@ interface CreateBranch {
 }
 
 interface EnforceConventions {
-  onColumn?: Column[] // optionally move card to another column on failure
-  commentHeader?: string // will go above the list of failed comments
-  commentFooter?: string // will go below the list of failed comments
-  moveToColumn?: string // optionally move card to another column on failure
+  onColumn?: Column[]
+  commentHeader?: string
+  commentFooter?: string
+  moveToColumn?: string
   conventions: SharedConventionsConfig[]
 }
 
@@ -126,8 +126,8 @@ export interface PRConditionConfig {
 }
 
 interface AutomaticApprove {
-  commentHeader?: string // will go above the list of failed comments
-  commentFooter?: string // will go below the list of failed comments
+  commentHeader?: string
+  commentFooter?: string
   conventions: SharedConventionsConfig[]
 }
 
@@ -148,11 +148,9 @@ export interface Release extends PRConditionConfig {
 }
 
 interface DuplicateHotfix {
-  [title: string]: {
-    prName: 'unchanged' | 'number' | string
-    titlePrefix?: string
-    branches: string[]
-  }
+  prName: 'unchanged' | 'number' | string
+  titlePrefix?: string
+  branches: string[]
 }
 interface SyncRemote {
   localBranch: string
@@ -169,8 +167,8 @@ interface ReleaseChanges {
 interface Sections {
   title: string
   body?: string
-  PRlabels: Labels
-  issueLabels?: Labels
+  PRlabels: string[]
+  issueLabels?: string[]
   includeCommitter?: boolean
   linkPR?: boolean
 }
@@ -211,10 +209,6 @@ interface AssignProject extends IssueConditionConfig {
   column: string
 }
 
-interface IssueCreateBranch {
-  [label: string]: CreateBranch
-}
-
 /**
  * Project Config types
  */
@@ -231,13 +225,11 @@ interface ExProjects {
   project: string
 }
 interface ProjectCreateBranch extends CreateBranch {
-  onProject?: boolean
+  onProject?: string
   onColumn?: string
 }
 
 interface Milestones {
-  [milestone: string]: {
     onColumn: string
     ignoreLabels?: string[]
-  }
 }
