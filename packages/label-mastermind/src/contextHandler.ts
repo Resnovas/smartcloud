@@ -109,6 +109,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: context.payload.pull_request?.id,
       prProps: {
+        pullRequestID: IDNumber,
         branch: pr.head.ref,
         creator: pr.user.login,
         description: pr.body || '',

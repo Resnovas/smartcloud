@@ -151,7 +151,7 @@ export class PullRequests {
         labelID,
         labelName,
         hasLabel,
-        IDNumber,
+        IDNumber: this.context.prProps.pullRequestID,
         repo: this.repo,
         shouldHaveLabel,
         dryRun

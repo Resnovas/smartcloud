@@ -39,6 +39,7 @@ interface Props {
 }
 
 export interface PRProps extends Props {
+  pullRequestID: number
   branch: string
   isDraft: boolean
   files: string[]
