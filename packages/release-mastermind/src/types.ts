@@ -71,9 +71,9 @@ interface SharedConfig {
   enforceConventions?: EnforceConventions
   labels?: {
     [key: string]:
-    | IssueConditionConfig
-    | ProjectConditionConfig
-    | PRConditionConfig
+      | IssueConditionConfig
+      | ProjectConditionConfig
+      | PRConditionConfig
   }
 }
 
@@ -230,6 +230,6 @@ interface ProjectCreateBranch extends CreateBranch {
 }
 
 interface Milestones {
-    onColumn: string
-    ignoreLabels?: string[]
+  onColumn: string
+  ignoreLabels?: string[]
 }
