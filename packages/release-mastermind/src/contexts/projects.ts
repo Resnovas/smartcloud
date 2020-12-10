@@ -60,7 +60,7 @@ export class Project {
         )
         if (
           this.config.enforceConventions?.onColumn?.includes(
-            this.context.projectProps.column_id
+            this.context.props.column_id
           )
         )
           enforceConventionsSuccess = await methods.enforce(
@@ -143,7 +143,7 @@ export class Project {
         new loggingData('500', 'There is not a remote to connect.')
       localColumn = await api.project.column.get(
         { client: this.client, repo: this.repo },
-        this.context.projectProps.column_id
+        this.context.props.column_id
       )
       // Get projects
       if (remote.user)
@@ -178,13 +178,13 @@ export class Project {
       if (this.context.action !== 'created') {
         localCard = await api.project.card.get(
           { client: this.client, repo: this.repo },
-          this.context.projectProps.cardID
+          this.context.props.ID
         )
         // Get the cards
         if (this.context.action == 'moved') {
           oldLocalColumn = await api.project.column.get(
             { client: this.client, repo: this.repo },
-            this.context.projectProps.changes.column_id.from
+            this.context.props.changes.column_id.from
           )
           oldRemoteColumn = columns.filter(
             column => column.name === oldLocalColumn.name
@@ -238,7 +238,7 @@ export class Project {
   async convertColumnStringsToIDArray(columns: Column[]): Promise<number[]> {
     const columnList = await api.project.column.list(
       { client: this.client, repo: this.repo },
-      this.context.projectProps.project_id
+      this.context.props.project_id
     )
     return await columns.map(column => {
       if (typeof column === 'string') {

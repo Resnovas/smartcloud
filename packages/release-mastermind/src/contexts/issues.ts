@@ -97,7 +97,7 @@ export class Issues {
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
       throw new loggingData('500', 'Config is required to add labels')
-    const { issueProps, IDNumber } = this.context
+    const { props, IDNumber } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
@@ -106,7 +106,7 @@ export class Issues {
       const shouldHaveLabel = evaluator(
         ConditionSetType.issue,
         conditionsConfig,
-        issueProps
+        props
       )
       const labelName = this.configs.labels[labelID]
       if (!labelName)
@@ -115,24 +115,24 @@ export class Issues {
           `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
         )
       const hasLabel = Boolean(
-        this.context.issueProps.labels?.[labelName.toLowerCase()]
+        this.context.props.labels?.[labelName.toLowerCase()]
       )
-      if (!shouldHaveLabel && hasLabel && this.context.issueProps.labels)
-        delete this.context.issueProps.labels[labelName.toLowerCase()]
+      if (!shouldHaveLabel && hasLabel && this.context.props.labels)
+        delete this.context.props.labels[labelName.toLowerCase()]
       if (
         shouldHaveLabel &&
         !hasLabel &&
-        this.context.issueProps.labels &&
+        this.context.props.labels &&
         this.runners.labels
       )
-        this.context.issueProps.labels[
+        this.context.props.labels[
           labelName.toLowerCase()
         ] = this.runners.labels[labelID]
 
       await utils.labels
         .addRemove({
           client: this.client,
-          curLabels: this.context.issueProps.labels,
+          curLabels: this.context.props.labels,
           labelID,
           labelName,
           IDNumber,
@@ -196,7 +196,7 @@ export class Issues {
 
       const should =
         remote.conditions.length > 0
-          ? evaluator(ConditionSetType.pr, remote, this.context.issueProps)
+          ? evaluator(ConditionSetType.pr, remote, this.context.props)
           : true
 
       if (should) {

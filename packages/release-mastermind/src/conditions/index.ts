@@ -11,15 +11,15 @@ export type CurContext =
   | { type: 'project'; context: ProjectContext }
 
 export interface PRContext extends GeneralContext {
-  prProps: PRProps
+  props: PRProps
 }
 
 export interface IssueContext extends GeneralContext {
-  issueProps: IssueProps
+  props: IssueProps
 }
 
 export interface ProjectContext extends GeneralContext {
-  projectProps: ProjectProps
+  props: ProjectProps
 }
 interface GeneralContext {
   ref?: string
@@ -36,10 +36,10 @@ interface Props {
   state: 'open' | 'closed'
   title: string
   labels?: Labels
+  ID: number
 }
 
 export interface PRProps extends Props {
-  pullRequestID: number
   branch: string
   isDraft: boolean
   files: string[]
@@ -58,7 +58,6 @@ export interface ProjectProps extends Props {
       from: number
     }
   }
-  cardID: number
 }
 
 export interface Version {

@@ -1,4 +1,5 @@
 export const semantic: string[] = [
+  'bug',
   'chore',
   'opt',
   'optimisation',

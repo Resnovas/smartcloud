@@ -112,7 +112,7 @@ export class PullRequests {
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
       throw new loggingData('500', 'Config is required to add labels')
-    const { prProps, IDNumber } = this.context
+    const { props, IDNumber } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
@@ -121,7 +121,7 @@ export class PullRequests {
       const shouldHaveLabel = evaluator(
         ConditionSetType.pr,
         conditionsConfig,
-        prProps
+        props
       )
 
       const labelName = this.configs.labels[labelID]
@@ -131,27 +131,27 @@ export class PullRequests {
           `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
         )
       const hasLabel = Boolean(
-        this.context.prProps.labels?.[labelName.toLowerCase()]
+        this.context.props.labels?.[labelName.toLowerCase()]
       )
-      if (!shouldHaveLabel && hasLabel && this.context.prProps.labels)
-        delete this.context.prProps.labels[labelName.toLowerCase()]
+      if (!shouldHaveLabel && hasLabel && this.context.props.labels)
+        delete this.context.props.labels[labelName.toLowerCase()]
       if (
         shouldHaveLabel &&
         !hasLabel &&
-        this.context.prProps.labels &&
+        this.context.props.labels &&
         this.runners.labels
       )
-        this.context.prProps.labels[
+        this.context.props.labels[
           labelName.toLowerCase()
         ] = this.runners.labels[labelID]
 
       await addRemove({
         client: this.client,
-        curLabels: this.context.prProps.labels,
+        curLabels: this.context.props.labels,
         labelID,
         labelName,
         hasLabel,
-        IDNumber: this.context.prProps.pullRequestID,
+        IDNumber: this.context.props.ID,
         repo: this.repo,
         shouldHaveLabel,
         dryRun
@@ -171,7 +171,7 @@ export class PullRequests {
       throw new loggingData('500', 'Not Able to automatically approve')
     automaticApprove.conventions.forEach(convention => {
       if (!convention.conditions) return
-      if (evaluator(ConditionSetType.pr, convention, this.context.prProps)) {
+      if (evaluator(ConditionSetType.pr, convention, this.context.props)) {
         log(new loggingData('200', `Automatically Approved Successfully`))
         let body =
           automaticApprove.commentHeader +
@@ -195,30 +195,30 @@ export class PullRequests {
   }
 
   bumpVersion(labels: Release['labels']) {
-    if (!labels || !this.context.prProps.labels) return
+    if (!labels || !this.context.props.labels) return
     if (
       (this.configs.versioning == 'SemVer' ||
         this.configs.versioning == undefined) &&
       this.newVersion.semantic
     ) {
       if (
-        this.context.prProps.labels[labels.major] || labels.breaking
-          ? this.context.prProps.labels[labels.major]
+        this.context.props.labels[labels.major] || labels.breaking
+          ? this.context.props.labels[labels.major]
           : true
       ) {
         this.newVersion.semantic.major++
-      } else if (this.context.prProps.labels[labels.minor]) {
+      } else if (this.context.props.labels[labels.minor]) {
         this.newVersion.semantic.minor++
-      } else if (this.context.prProps.labels[labels.patch]) {
+      } else if (this.context.props.labels[labels.patch]) {
         this.newVersion.semantic.patch++
       }
-      if (this.context.prProps.labels[labels.prerelease]) {
+      if (this.context.props.labels[labels.prerelease]) {
         this.newVersion.semantic.prerelease =
           this.newVersion.semantic.prerelease ||
           this.configs.prereleaseName ||
           'prerelease'
       }
-      if (this.context.prProps.labels[labels.build]) {
+      if (this.context.props.labels[labels.build]) {
         this.newVersion.semantic.build = +1
       }
       this.newVersion.name = `${this.newVersion.semantic.major}.${
@@ -280,7 +280,7 @@ export class PullRequests {
 
       const should =
         remote.conditions.length > 0
-          ? evaluator(ConditionSetType.pr, remote, this.context.prProps)
+          ? evaluator(ConditionSetType.pr, remote, this.context.props)
           : true
 
       if (should) {
