@@ -54,11 +54,7 @@ export function enforce(
       evaluator(
         ConditionSetType[context.type],
         convention,
-        context.type == 'issue'
-          ? context.context.issueProps
-          : context.type == 'project'
-          ? context.context.projectProps
-          : context.context.prProps
+        context.context.props
       )
     ) {
       successful++
@@ -108,13 +104,13 @@ async function createConventionComment(
   if (CurContext.type !== 'pr') {
     commentList = await api.issues.comments.list({
       client,
-      IDNumber: CurContext.context.IDNumber,
+      IDNumber: CurContext.context.props.ID,
       repo
     })
   } else {
     commentList = await api.pullRequests.reviews.list({
       client,
-      IDNumber: CurContext.context.IDNumber,
+      IDNumber: CurContext.context.props.ID,
       repo
     })
   }

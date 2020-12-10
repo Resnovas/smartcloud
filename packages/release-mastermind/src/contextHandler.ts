@@ -108,8 +108,8 @@ class ContextHandler {
       action: context.payload.action as string,
       currentVersion,
       IDNumber: context.payload.pull_request?.id,
-      prProps: {
-        pullRequestID: IDNumber,
+      props: {
+        ID: IDNumber,
         branch: pr.head.ref,
         creator: pr.user.login,
         description: pr.body || '',
@@ -180,17 +180,17 @@ class ContextHandler {
       action: context.payload.action as string,
       currentVersion,
       IDNumber: issue.id,
-      projectProps: {
+      props: {
+        ID: project.id,
         creator: issue.user.login,
         description: issue.body || '',
         locked: issue.locked,
-        state: issue.state as ProjectContext['projectProps']['state'],
+        state: issue.state as ProjectContext['props']['state'],
         title: issue.title,
         project_id: project.project_url.split('/').pop(),
         column_id: project.column_id,
         changes,
-        labels,
-        cardID: project.id
+        labels
       }
     }
   }
@@ -235,7 +235,8 @@ class ContextHandler {
       action: context.payload.action as string,
       currentVersion,
       IDNumber: context.payload.issue?.id,
-      issueProps: {
+      props: {
+        ID: issue.id,
         creator: issue.user.login,
         description: issue.body || '',
         locked: issue.locked,
