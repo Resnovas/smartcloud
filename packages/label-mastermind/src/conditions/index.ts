@@ -49,7 +49,7 @@ export interface PRProps extends Props {
   approved: number
   changes: number
 }
-export interface IssueProps extends Props { }
+export interface IssueProps extends Props {}
 export interface ProjectProps extends Props {
   project_id: number
   column_id: number

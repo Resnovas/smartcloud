@@ -130,7 +130,7 @@ export default class releaseMastermind {
        */
       for (const label in config.sharedLabelsConfig) {
         const ctx = config[curContext.type]?.labels
-        if (ctx && 'labels' in ctx && !(label in ctx)) {
+        if (ctx && !(label in ctx)) {
           ctx[label] = config.sharedLabelsConfig[label]
         }
       }

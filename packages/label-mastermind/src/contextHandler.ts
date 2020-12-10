@@ -32,7 +32,7 @@ class ContextHandler {
       new loggingData(
         '100',
         `context.payload.pull_request: ` +
-        JSON.stringify(context.payload.pull_request)
+          JSON.stringify(context.payload.pull_request)
       )
     )
 

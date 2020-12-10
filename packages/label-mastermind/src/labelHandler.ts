@@ -29,14 +29,14 @@ export async function applyIssue({
   repo: Repo
   dryRun: boolean
 }) {
-  const { issueProps, IDNumber } = context
+  const { props, IDNumber } = context
   for (const [labelID, conditionsConfig] of Object.entries(config.labels)) {
     log(new loggingData('100', `Label: ${labelID}`))
 
     const shouldHaveLabel = evaluator(
       ConditionSetType.issue,
       conditionsConfig,
-      issueProps
+      props
     )
 
     const labelName = labelIdToName[labelID]
@@ -45,24 +45,16 @@ export async function applyIssue({
         '500',
         `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
       )
-    const hasLabel = Boolean(
-      context.issueProps.labels?.[labelName.toLowerCase()]
-    )
-    if (!shouldHaveLabel && hasLabel && context.issueProps.labels)
-      delete context.issueProps.labels[labelName.toLowerCase()]
-    if (
-      shouldHaveLabel &&
-      !hasLabel &&
-      context.issueProps.labels &&
-      configs.labels
-    )
-      context.issueProps.labels[labelName.toLowerCase()] =
-        configs.labels[labelID]
+    const hasLabel = Boolean(context.props.labels?.[labelName.toLowerCase()])
+    if (!shouldHaveLabel && hasLabel && context.props.labels)
+      delete context.props.labels[labelName.toLowerCase()]
+    if (shouldHaveLabel && !hasLabel && context.props.labels && configs.labels)
+      context.props.labels[labelName.toLowerCase()] = configs.labels[labelID]
 
     await utils.labels
       .addRemove({
         client,
-        curLabels: context.issueProps.labels,
+        curLabels: context.props.labels,
         labelID,
         labelName,
         IDNumber,
@@ -105,14 +97,14 @@ export async function applyPR({
   repo: Repo
   dryRun: boolean
 }) {
-  const { prProps, IDNumber } = context
+  const { props, IDNumber } = context
   for (const [labelID, conditionsConfig] of Object.entries(config.labels)) {
     log(new loggingData('100', `Label: ${labelID}`))
 
     const shouldHaveLabel = evaluator(
       ConditionSetType.pr,
       conditionsConfig,
-      prProps
+      props
     )
 
     const labelName = labelIdToName[labelID]
@@ -121,21 +113,16 @@ export async function applyPR({
         '500',
         `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
       )
-    const hasLabel = Boolean(context.prProps.labels?.[labelName.toLowerCase()])
-    if (!shouldHaveLabel && hasLabel && context.prProps.labels)
-      delete context.prProps.labels[labelName.toLowerCase()]
-    if (
-      shouldHaveLabel &&
-      !hasLabel &&
-      context.prProps.labels &&
-      configs.labels
-    )
-      context.prProps.labels[labelName.toLowerCase()] = configs.labels[labelID]
+    const hasLabel = Boolean(context.props.labels?.[labelName.toLowerCase()])
+    if (!shouldHaveLabel && hasLabel && context.props.labels)
+      delete context.props.labels[labelName.toLowerCase()]
+    if (shouldHaveLabel && !hasLabel && context.props.labels && configs.labels)
+      context.props.labels[labelName.toLowerCase()] = configs.labels[labelID]
 
     await utils.labels
       .addRemove({
         client,
-        curLabels: context.prProps.labels,
+        curLabels: context.props.labels,
         labelID,
         labelName,
         IDNumber,
