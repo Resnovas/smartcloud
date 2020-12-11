@@ -192,7 +192,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: issue.id,
       props: {
-        ID: project.id,
+        ID: project.number,
         creator: issue.user.login,
         description: issue.body || '',
         locked: issue.locked,
