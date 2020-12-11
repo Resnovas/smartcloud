@@ -236,7 +236,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: context.payload.issue?.id,
       props: {
-        ID: issue.id,
+        ID: issue.number,
         creator: issue.user.login,
         description: issue.body || '',
         locked: issue.locked,
