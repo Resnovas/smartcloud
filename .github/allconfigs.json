@@ -2038,14 +2038,18 @@
               "sections": [
                 {
                   "title": "Features Effectuated",
-                  "PRlabels": ["Type - Feature"],
+                  "PRlabels": [
+                    "Type - Feature"
+                  ],
                   "issueLabels": [],
                   "includeCommitter": true,
                   "linkPR": true
                 },
                 {
                   "title": "Bugs Squashed",
-                  "PRlabels": ["Type - Fix"],
+                  "PRlabels": [
+                    "Type - Fix"
+                  ],
                   "issueLabels": [],
                   "includeCommitter": true,
                   "linkPR": true
@@ -2078,7 +2082,9 @@
                 {
                   "title": "Confession Time",
                   "PRlabels": [],
-                  "issueLabels": ["Bug - Confirmed"],
+                  "issueLabels": [
+                    "Bug - Confirmed"
+                  ],
                   "includeCommitter": true,
                   "linkPR": true
                 }
@@ -2107,7 +2113,9 @@
             "conventions": [
               {
                 "requires": 1,
-                "conditions": [{}]
+                "conditions": [
+                  {}
+                ]
               }
             ]
           },
@@ -2264,14 +2272,42 @@
               ]
             },
             {
-              "project": "Developer Operations",
-              "column": "Requested",
+              "project": "Issue",
+              "column": "New",
               "requires": 1,
               "conditions": [
                 {
                   "type": "hasLabel",
                   "label": "Type - Bug",
                   "value": true
+                },
+                {
+                  "type": "titleMatches",
+                  "pattern": "/^bug(\\(.*\\))?:/i"
+                },
+                {
+                  "type": "descriptionMatches",
+                  "pattern": "/(created|new|opened|made)( an| a)? bug/i"
+                }
+              ]
+            },
+            {
+              "project": "Issue",
+              "column": "High Priority",
+              "requires": 2,
+              "conditions": [
+                {
+                  "type": "hasLabel",
+                  "label": "Type - Bug",
+                  "value": true
+                },
+                {
+                  "type": "titleMatches",
+                  "pattern": "/^bug(\\(.*\\))?:/i"
+                },
+                {
+                  "type": "titleMatches",
+                  "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
                 }
               ]
             }
@@ -2435,7 +2471,10 @@
         "project": {
           "ref": "develop",
           "enforceConventions": {
-            "onColumn": ["Accepted", "Reviewing"],
+            "onColumn": [
+              "Accepted",
+              "Reviewing"
+            ],
             "conventions": [
               {
                 "requires": 1,
