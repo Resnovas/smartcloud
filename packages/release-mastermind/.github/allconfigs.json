@@ -2264,7 +2264,7 @@
               ]
             },
             {
-              "project": "Issue",
+              "project": "Issues",
               "column": "New",
               "requires": 1,
               "conditions": [
@@ -2284,7 +2284,7 @@
               ]
             },
             {
-              "project": "Issue",
+              "project": "Issues",
               "column": "High Priority",
               "requires": 2,
               "conditions": [
