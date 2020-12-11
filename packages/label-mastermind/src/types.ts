@@ -1,4 +1,9 @@
-import { IssueCondition, PRCondition, Condition } from './conditions/'
+import {
+  IssueCondition,
+  PRCondition,
+  Condition,
+  ProjectCondition
+} from './conditions/'
 
 export interface IssueConditionConfig {
   requires: number
@@ -7,7 +12,7 @@ export interface IssueConditionConfig {
 
 export interface PRConditionConfig {
   requires: number
-  conditions: PRCondition[]
+  conditions: ProjectCondition[]
 }
 
 export interface SharedConfig {
@@ -54,7 +59,10 @@ export interface ProjectConfig {
     [key: string]: SharedConfig
   }
 }
-
+export interface ProjectConditionConfig {
+  requires: number
+  conditions: ProjectCondition[]
+}
 export interface Label {
   name: string
   description: string

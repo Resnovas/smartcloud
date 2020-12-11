@@ -1,9 +1,7 @@
 import { Condition, handlers as sharedHandlers } from '../util'
 import onColumn, { ConditiononColumn } from './onColumn'
 
-export type ProjectCondition =
-  | Condition
-  | ConditiononColumn
+export type ProjectCondition = Condition | ConditiononColumn
 
 const handlers = [...sharedHandlers, onColumn]
 
