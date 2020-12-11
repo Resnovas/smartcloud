@@ -6,6 +6,7 @@ import {
   IssueProps,
   log,
   PRCondition,
+  ProjectCondition,
   PRProps
 } from './conditions'
 import { IssueConditionConfig, PRConditionConfig } from './types'
@@ -42,11 +43,16 @@ export function evaluator(
 ) {
   const { conditions, requires } = config
   if (typeof conditions == 'string')
-    throw new Error('String can not be used to evaluate conditions')
+    throw new loggingData(
+      '500',
+      'String can not be used to evaluate conditions'
+    )
   const matches = forConditions(conditions, condition => {
     const handler =
       conditionSetType == ConditionSetType.issue
         ? getIssueConditionHandler(condition as IssueCondition)
+        : conditionSetType == ConditionSetType.project
+        ? getIssueConditionHandler(condition as ProjectCondition)
         : getPRConditionHandler(condition as PRCondition)
     log(new loggingData('100', `The handler is ${handler?.name}`))
     return handler?.(condition as any, props as any) as boolean

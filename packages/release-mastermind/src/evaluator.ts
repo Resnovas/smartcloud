@@ -6,6 +6,7 @@ import {
   IssueProps,
   log,
   PRCondition,
+  ProjectCondition,
   PRProps
 } from './conditions'
 import {
@@ -59,6 +60,8 @@ export function evaluator(
     const handler =
       conditionSetType == ConditionSetType.issue
         ? getIssueConditionHandler(condition as IssueCondition)
+        : conditionSetType == ConditionSetType.project
+        ? getIssueConditionHandler(condition as ProjectCondition)
         : getPRConditionHandler(condition as PRCondition)
     log(new loggingData('100', `The handler is ${handler?.name}`))
     return handler?.(condition as any, props as any) as boolean
