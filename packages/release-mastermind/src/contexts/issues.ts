@@ -135,7 +135,7 @@ export class Issues {
           curLabels: this.context.props.labels,
           labelID,
           labelName,
-          IDNumber,
+          IDNumber: this.context.props.ID,
           hasLabel,
           repo: this.repo,
           shouldHaveLabel,
