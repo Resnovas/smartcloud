@@ -2499,7 +2499,187 @@
           ],
           "openBranch": {},
           "assignMilestone": {},
-          "labels": {}
+          "labels": {
+            "available": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Requested"
+                }
+              ]
+            },
+            "pending": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Accepted"
+                }
+              ]
+            },
+            "progress": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "In Progress"
+                }, 
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Testing"
+                }
+              ]
+            },
+            "review": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Reviewing"
+                }
+              ]
+            },
+            "completed": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Completed"
+                }
+              ]
+            },
+            "doNotDevelop": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Rejected"
+                }
+              ]
+            },
+            "devOpsAccepted": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Accepted"
+                }
+              ]
+            },
+            "devOpsDeveloping": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "In Progress"
+                }
+              ]
+            },
+            "devOpsTesting": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Testing"
+                }
+              ]
+            },
+            "devOpsReviewing": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Reviewing"
+                }
+              ]
+            },
+            "devOpsStaging": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Staging"
+                }
+              ]
+            },
+            "devOpsCompleted": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Completed"
+                }
+              ]
+            },
+            "devOpsRejected": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Developer Operations",
+                  "column": "Rejected"
+                }
+              ]
+            },
+            "priorityLow": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Issues",
+                  "column": "Low Priority"
+                }
+              ]
+            },
+            "priorityMedium": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Issues",
+                  "column": "Medium Priority"
+                }
+              ]
+            },
+            "priorityHigh": {
+              "requires": 1,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Issues",
+                  "column": "High Priority"
+                }
+              ]
+            },
+            "priorityCritical": {
+              "requires": 2,
+              "conditions": [
+                {
+                  "type": "onColumn",
+                  "project": "Issues",
+                  "column": "High Priority"
+                },
+                {
+                  "type": "titleMatches",
+                  "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+                }
+              ]
+            }
+          }
         }
       }
     ]

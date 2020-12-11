@@ -1,13 +1,15 @@
 import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
-import { Octokit } from '@octokit/rest'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { api } from '../api'
 import { CurContext, ProjectContext, Version } from '../conditions'
-import { Column, Config } from '../types'
+import { ConditionSetType, evaluator } from '../evaluator'
+import { Column, Config, Runners } from '../types'
+import { addRemove } from '../utils/labels'
 import * as methods from './methods'
 export class Project {
+  private runners: Runners
   private configs: Config
   private config: Config['project']
   private curContext: CurContext
@@ -20,12 +22,14 @@ export class Project {
   constructor(
     client: GitHub,
     repo: { owner: string; repo: string },
+    runners: Runners,
     configs: Config,
     curContext: CurContext,
     dryRun: boolean
   ) {
     if (curContext.type !== 'project')
       throw new loggingData('500', 'Cannot construct without issue context')
+    if (!runners) throw new Error('Cannot construct without configs')
     if (!configs)
       throw new loggingData('500', 'Cannot construct without configs')
     if (!configs.project)
@@ -34,6 +38,7 @@ export class Project {
       throw new loggingData('500', 'Cannot construct without context')
     this.client = client
     this.repo = repo
+    this.runners = runners
     this.configs = configs
     this.config = configs.project
     this.curContext = curContext
@@ -72,6 +77,7 @@ export class Project {
       }
       if (enforceConventionsSuccess) {
         // some code
+        if (this.config.labels) await this.applyLabels(this.dryRun)
         if (this.config.syncRemote)
           await this.syncRemote().catch(err => {
             log(new loggingData('500', 'Error syncing remote', err))
@@ -98,20 +104,67 @@ export class Project {
     }
   }
 
+  async applyLabels(dryRun: boolean) {
+    if (!this.config?.labels || !this.configs.labels)
+      throw new loggingData('500', 'Config is required to add labels')
+    const { props, IDNumber } = this.context
+    for (const [labelID, conditionsConfig] of Object.entries(
+      this.config.labels
+    )) {
+      log(new loggingData('100', `Label: ${labelID}`))
+
+      const shouldHaveLabel = evaluator(
+        ConditionSetType.project,
+        conditionsConfig,
+        props
+      )
+
+      const labelName = this.configs.labels[labelID]
+      if (!labelName)
+        throw new loggingData(
+          '500',
+          `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
+        )
+      const hasLabel = Boolean(
+        this.context.props.labels?.[labelName.toLowerCase()]
+      )
+      if (!shouldHaveLabel && hasLabel && this.context.props.labels)
+        delete this.context.props.labels[labelName.toLowerCase()]
+      if (
+        shouldHaveLabel &&
+        !hasLabel &&
+        this.context.props.labels &&
+        this.runners.labels
+      )
+        this.context.props.labels[
+          labelName.toLowerCase()
+        ] = this.runners.labels[labelID]
+
+      await addRemove({
+        client: this.client,
+        curLabels: this.context.props.labels,
+        labelID,
+        labelName,
+        hasLabel,
+        IDNumber: this.context.props.ID,
+        repo: this.repo,
+        shouldHaveLabel,
+        dryRun
+      }).catch(err => {
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while running addRemoveLabel: ` + err
+          )
+        )
+      })
+    }
+  }
+
   async syncRemote() {
     if (!this.config?.syncRemote) return
     this.config.syncRemote.forEach(async remote => {
       let remoteColumn
-      let localColumn: {
-        name: any
-        cards_url: string
-        created_at: string
-        id: number
-        node_id: string
-        project_url: string
-        updated_at: string
-        url: string
-      }
       let oldRemoteColumn
       let oldLocalColumn: {
         name: any
@@ -123,28 +176,11 @@ export class Project {
         updated_at: string
         url: string
       }
-      let localCard: {
-        archived: boolean
-        column_url: string
-        content_url: string
-        created_at: string
-        creator: Octokit.ProjectsGetCardResponseCreator
-        id: number
-        node_id: string
-        note: string
-        project_url: string
-        updated_at: string
-        url: string
-      }
       let remoteCard
       let projects = undefined
 
       if (!(remote.owner || remote.user) || !remote.project)
         new loggingData('500', 'There is not a remote to connect.')
-      localColumn = await api.project.column.get(
-        { client: this.client, repo: this.repo },
-        this.context.props.column_id
-      )
       // Get projects
       if (remote.user)
         projects = await api.project.projects.user(
@@ -173,13 +209,9 @@ export class Project {
       )
       if (!columns) throw log(new loggingData('500', 'No column to use'))
       remoteColumn = columns.filter(
-        column => column.name === localColumn.name
+        column => column.name === this.context.props.localColumn.name
       )[0]
       if (this.context.action !== 'created') {
-        localCard = await api.project.card.get(
-          { client: this.client, repo: this.repo },
-          this.context.props.ID
-        )
         // Get the cards
         if (this.context.action == 'moved') {
           oldLocalColumn = await api.project.column.get(
@@ -200,7 +232,7 @@ export class Project {
           )
         }
         remoteCard = remoteCard.filter(
-          card => card.content_url === localCard.content_url
+          card => card.content_url === this.context.props.localCard.content_url
         )[0]
         if (!remoteCard)
           throw log(new loggingData('500', 'No remote card to use'))
@@ -238,7 +270,7 @@ export class Project {
   async convertColumnStringsToIDArray(columns: Column[]): Promise<number[]> {
     const columnList = await api.project.column.list(
       { client: this.client, repo: this.repo },
-      this.context.props.project_id
+      this.context.props.project.id
     )
     return await columns.map(column => {
       if (typeof column === 'string') {

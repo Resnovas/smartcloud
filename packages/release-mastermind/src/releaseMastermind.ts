@@ -318,7 +318,14 @@ export default class releaseMastermind {
         )
       })
     } else if (curContext.type == 'project') {
-      ctx = new Project(this.client, this.repo, config, curContext, this.dryRun)
+      ctx = new Project(
+        this.client,
+        this.repo,
+        runners,
+        config,
+        curContext,
+        this.dryRun
+      )
       ctx.run().catch(err => {
         throw log(
           new loggingData('500', `Error thrown while running context: `, err)

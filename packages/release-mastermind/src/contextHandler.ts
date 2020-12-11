@@ -173,7 +173,18 @@ class ContextHandler {
         throw err
       })
 
+    let localProject
+    localProject = await api.project.projects.get(
+      { client, repo },
+      project.project_url.split('/').pop()
+    )
     const changes = context.payload.changes
+    const localColumn = await api.project.column.get(
+      { client, repo },
+      project.column_id
+    )
+
+    const localCard = await api.project.card.get({ client, repo }, project.id)
 
     return {
       sha: context.sha,
@@ -187,8 +198,10 @@ class ContextHandler {
         locked: issue.locked,
         state: issue.state as ProjectContext['props']['state'],
         title: issue.title,
-        project_id: project.project_url.split('/').pop(),
+        project: localProject,
         column_id: project.column_id,
+        localColumn,
+        localCard,
         changes,
         labels
       }

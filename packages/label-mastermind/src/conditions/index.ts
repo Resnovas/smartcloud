@@ -51,8 +51,10 @@ export interface PRProps extends Props {
 }
 export interface IssueProps extends Props {}
 export interface ProjectProps extends Props {
-  project_id: number
+  project: any
   column_id: number
+  localCard: localCard
+  localColumn: localColumn
   changes: {
     column_id: {
       from: number
@@ -84,4 +86,29 @@ export interface Review {
   _links?: {}
   submitted_at?: string
   commit_id?: string
+}
+
+interface localCard {
+  archived: boolean
+  column_url: string
+  content_url: string
+  created_at: string
+  creator: any
+  id: number
+  node_id: string
+  note: string
+  project_url: string
+  updated_at: string
+  url: string
+}
+
+interface localColumn {
+  name: any
+  cards_url: string
+  created_at: string
+  id: number
+  node_id: string
+  project_url: string
+  updated_at: string
+  url: string
 }
