@@ -2,15 +2,19 @@ import { loggingData } from '@videndum/utilities'
 import {
   getIssueConditionHandler,
   getPRConditionHandler,
+  getProjectConditionHandler,
   IssueCondition,
   IssueProps,
   log,
   PRCondition,
+  ProjectCondition,
+  ProjectProps,
   PRProps
 } from './conditions'
 import {
   IssueConditionConfig,
   PRConditionConfig,
+  ProjectConditionConfig,
   Release,
   SharedConventionsConfig
 } from './types'
@@ -21,7 +25,9 @@ export enum ConditionSetType {
   project = 'project'
 }
 
-const forConditions = <T extends IssueCondition | PRCondition>(
+const forConditions = <
+  T extends IssueCondition | PRCondition | ProjectCondition
+>(
   conditions: T[],
   callback: (condition: T) => boolean
 ) => {
@@ -45,9 +51,10 @@ export function evaluator(
   config:
     | PRConditionConfig
     | IssueConditionConfig
+    | ProjectConditionConfig
     | SharedConventionsConfig
     | Release,
-  props: PRProps | IssueProps
+  props: PRProps | IssueProps | ProjectProps
 ) {
   const { conditions, requires } = config
   if (typeof conditions == 'string')
@@ -59,7 +66,9 @@ export function evaluator(
     const handler =
       conditionSetType == ConditionSetType.issue
         ? getIssueConditionHandler(condition as IssueCondition)
-        : getPRConditionHandler(condition as PRCondition)
+        : conditionSetType == ConditionSetType.pr
+        ? getPRConditionHandler(condition as PRCondition)
+        : getProjectConditionHandler(condition as ProjectCondition)
     log(new loggingData('100', `The handler is ${handler?.name}`))
     return handler?.(condition as any, props as any) as boolean
   })

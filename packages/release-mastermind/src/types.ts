@@ -1,9 +1,4 @@
-import {
-  Condition,
-  IssueCondition,
-  PRCondition,
-  ProjectCondition
-} from './conditions/'
+import { Condition, IssueCondition, ProjectCondition } from './conditions/'
 
 /**
  * Application interfaces
@@ -122,7 +117,7 @@ export interface Labels {
 
 export interface PRConditionConfig {
   requires: number
-  conditions: PRCondition[]
+  conditions: ProjectCondition[]
 }
 
 interface AutomaticApprove {
@@ -213,7 +208,7 @@ interface AssignProject extends IssueConditionConfig {
  * Project Config types
  */
 
-interface ProjectConditionConfig {
+export interface ProjectConditionConfig {
   requires: number
   conditions: ProjectCondition[]
 }
