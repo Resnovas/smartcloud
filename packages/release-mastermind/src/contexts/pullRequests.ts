@@ -4,8 +4,8 @@ import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { api } from '../api'
 import { CurContext, PRContext, Version } from '../conditions'
-import { ConditionSetType, evaluator } from '../evaluator'
-import { Config, PullRequestConfig, Release, Runners } from '../types'
+import { evaluator } from '../evaluator'
+import { Config, PullRequestConfig, Release, Runners } from '../../types'
 import { utils } from '../utils'
 import { addRemove } from '../utils/labels'
 import * as methods from './methods'
@@ -112,14 +112,13 @@ export class PullRequests {
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
       throw new loggingData('500', 'Config is required to add labels')
-    const { props, IDNumber } = this.context
+    const { props } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
       log(new loggingData('100', `Label: ${labelID}`))
 
       const shouldHaveLabel = evaluator(
-        ConditionSetType.pr,
         conditionsConfig,
         props
       )
@@ -171,7 +170,7 @@ export class PullRequests {
       throw new loggingData('500', 'Not Able to automatically approve')
     automaticApprove.conventions.forEach(convention => {
       if (!convention.conditions) return
-      if (evaluator(ConditionSetType.pr, convention, this.context.props)) {
+      if (evaluator(convention, this.context.props)) {
         log(new loggingData('200', `Automatically Approved Successfully`))
         let body =
           automaticApprove.commentHeader +
@@ -221,17 +220,14 @@ export class PullRequests {
       if (this.context.props.labels[labels.build]) {
         this.newVersion.semantic.build = +1
       }
-      this.newVersion.name = `${this.newVersion.semantic.major}.${
-        this.newVersion.semantic.minor
-      }.${this.newVersion.semantic.patch}${
-        this.newVersion.semantic.prerelease
+      this.newVersion.name = `${this.newVersion.semantic.major}.${this.newVersion.semantic.minor
+        }.${this.newVersion.semantic.patch}${this.newVersion.semantic.prerelease
           ? `-${this.newVersion.semantic.prerelease}`
           : ''
-      }${
-        this.newVersion.semantic.build
+        }${this.newVersion.semantic.build
           ? `+${this.newVersion.semantic.build}`
           : ''
-      }`
+        }`
       log(new loggingData('100', `New Version is: ${this.newVersion.name}`))
     }
   }
@@ -280,7 +276,7 @@ export class PullRequests {
 
       const should =
         remote.conditions.length > 0
-          ? evaluator(ConditionSetType.pr, remote, this.context.props)
+          ? evaluator(remote, this.context.props)
           : true
 
       if (should) {

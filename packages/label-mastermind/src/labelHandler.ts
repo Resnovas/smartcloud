@@ -1,7 +1,7 @@
 import { GitHub } from '@actions/github'
 import { PRContext, IssueContext } from './conditions'
 import { ConditionSetType, evaluator } from './evaluator'
-import { Config } from './types'
+import { Config } from '../types'
 import { Repo } from './api'
 import { log } from '.'
 import { utils } from './utils'

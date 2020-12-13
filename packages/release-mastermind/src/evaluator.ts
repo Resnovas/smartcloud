@@ -9,7 +9,9 @@ import {
   PRCondition,
   ProjectCondition,
   ProjectProps,
-  PRProps
+  PRProps,
+  ConditionSetType,
+  Condition
 } from './conditions'
 import {
   IssueConditionConfig,
@@ -17,13 +19,7 @@ import {
   ProjectConditionConfig,
   Release,
   SharedConventionsConfig
-} from './types'
-
-export enum ConditionSetType {
-  issue = 'issue',
-  pr = 'pr',
-  project = 'project'
-}
+} from '../types'
 
 const forConditions = <
   T extends IssueCondition | PRCondition | ProjectCondition
@@ -47,7 +43,6 @@ const forConditions = <
 }
 
 export function evaluator(
-  conditionSetType: ConditionSetType,
   config:
     | PRConditionConfig
     | IssueConditionConfig
@@ -64,11 +59,11 @@ export function evaluator(
     )
   const matches = forConditions(conditions, condition => {
     const handler =
-      conditionSetType == ConditionSetType.issue
+      props.type == "issue"
         ? getIssueConditionHandler(condition as IssueCondition)
-        : conditionSetType == ConditionSetType.pr
-        ? getPRConditionHandler(condition as PRCondition)
-        : getProjectConditionHandler(condition as ProjectCondition)
+        : props.type == "pr"
+          ? getPRConditionHandler(condition as PRCondition)
+          : getProjectConditionHandler(condition as ProjectCondition)
     log(new loggingData('100', `The handler is ${handler?.name}`))
     return handler?.(condition as any, props as any) as boolean
   })

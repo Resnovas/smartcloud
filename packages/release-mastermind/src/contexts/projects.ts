@@ -4,8 +4,8 @@ import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { api } from '../api'
 import { CurContext, ProjectContext, Version } from '../conditions'
-import { ConditionSetType, evaluator } from '../evaluator'
-import { Column, Config, Runners } from '../types'
+import { evaluator } from '../evaluator'
+import { Column, Config, Runners } from '../../types'
 import { addRemove } from '../utils/labels'
 import * as methods from './methods'
 export class Project {
@@ -107,14 +107,13 @@ export class Project {
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
       throw new loggingData('500', 'Config is required to add labels')
-    const { props, IDNumber } = this.context
+    const { props } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
       log(new loggingData('100', `Label: ${labelID}`))
 
       const shouldHaveLabel = evaluator(
-        ConditionSetType.project,
         conditionsConfig,
         props
       )

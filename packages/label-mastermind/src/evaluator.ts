@@ -15,7 +15,7 @@ import {
   IssueConditionConfig,
   PRConditionConfig,
   ProjectConditionConfig
-} from './types'
+} from '../types'
 
 export enum ConditionSetType {
   issue = 'issue',

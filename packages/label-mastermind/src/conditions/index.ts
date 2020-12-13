@@ -3,7 +3,7 @@ export * from './issue'
 export * from './pr'
 export * from './project'
 export * from './util'
-import { Labels } from '../types'
+import { Labels } from '../../types'
 
 export type CurContext =
   | { type: 'pr'; context: PRContext }
@@ -37,8 +37,8 @@ interface Props {
   title: string
   labels?: Labels
   ID: number
+  type: "issue" | "pr" | "project"
 }
-
 export interface PRProps extends Props {
   branch: string
   isDraft: boolean
@@ -49,7 +49,7 @@ export interface PRProps extends Props {
   approved: number
   changes: number
 }
-export interface IssueProps extends Props {}
+export interface IssueProps extends Props { }
 export interface ProjectProps extends Props {
   project: any
   column_id: number

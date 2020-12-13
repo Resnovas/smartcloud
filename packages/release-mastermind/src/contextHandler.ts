@@ -9,7 +9,7 @@ import {
   Reviews,
   Version
 } from './conditions'
-import { Config, Label, Labels } from './types'
+import { Config, Label, Labels } from '../types'
 import { utils } from './utils'
 
 class ContextHandler {
@@ -32,7 +32,7 @@ class ContextHandler {
       new loggingData(
         '100',
         `context.payload.pull_request: ` +
-          JSON.stringify(context.payload.pull_request)
+        JSON.stringify(context.payload.pull_request)
       )
     )
 
@@ -109,6 +109,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: context.payload.pull_request?.id,
       props: {
+        type: "pr",
         ID: IDNumber,
         branch: pr.head.ref,
         creator: pr.user.login,
@@ -192,6 +193,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: issue.id,
       props: {
+        type: "project",
         ID: issue.number,
         creator: issue.user.login,
         description: issue.body || '',
@@ -249,6 +251,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: context.payload.issue?.id,
       props: {
+        type: "issue",
         ID: issue.number,
         creator: issue.user.login,
         description: issue.body || '',

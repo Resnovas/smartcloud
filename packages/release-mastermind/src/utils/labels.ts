@@ -2,7 +2,7 @@ import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { api, Repo } from '../api'
-import { Labels, Runners } from '../types'
+import { Labels, Runners } from '../../types'
 import { formatColor } from './parsingData'
 
 /**

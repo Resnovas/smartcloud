@@ -6,7 +6,7 @@
 
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { Options, Config } from './types'
+import { Options, Config } from '../types'
 import path from 'path'
 import labelMastermind from './labelMastermind'
 import { Logger, loggingData } from '@videndum/utilities'
