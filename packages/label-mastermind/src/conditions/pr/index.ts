@@ -7,8 +7,7 @@ import isDraft, { ConditionIsDraft } from './isDraft'
 import pendingReview, { ConditionPendingReview } from './pendingReview'
 import requestedChanges, { ConditionRequestedChanges } from './requestedChanges'
 
-export type PRCondition =
-  | Condition
+export type PRCondition = Condition
   | ConditionBranchMatches
   | ConditionFilesMatch
   | ConditionIsDraft
