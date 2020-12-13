@@ -1,6 +1,6 @@
 import { GitHub } from '@actions/github'
 import { PRContext, IssueContext } from './conditions'
-import { ConditionSetType, evaluator } from './evaluator'
+import { evaluator } from './evaluator'
 import { Config } from '../types'
 import { Repo } from './api'
 import { log } from '.'
@@ -33,11 +33,7 @@ export async function applyIssue({
   for (const [labelID, conditionsConfig] of Object.entries(config.labels)) {
     log(new loggingData('100', `Label: ${labelID}`))
 
-    const shouldHaveLabel = evaluator(
-      ConditionSetType.issue,
-      conditionsConfig,
-      props
-    )
+    const shouldHaveLabel = evaluator(conditionsConfig, props)
 
     const labelName = labelIdToName[labelID]
     if (!labelName)
@@ -101,11 +97,7 @@ export async function applyPR({
   for (const [labelID, conditionsConfig] of Object.entries(config.labels)) {
     log(new loggingData('100', `Label: ${labelID}`))
 
-    const shouldHaveLabel = evaluator(
-      ConditionSetType.pr,
-      conditionsConfig,
-      props
-    )
+    const shouldHaveLabel = evaluator(conditionsConfig, props)
 
     const labelName = labelIdToName[labelID]
     if (!labelName)

@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import { loggingData } from '@videndum/utilities'
 import { log } from '../..'
 import { api, ApiProps } from '../../api'
-import { Condition, CurContext, ConditionSetType } from '../../conditions'
+import { Condition, CurContext } from '../../conditions'
 import { evaluator } from '../../evaluator'
 import { IssueConfig, ProjectConfig, PullRequestConfig } from '../../../types'
 import { semantic } from '../../utils/helper/semantic'
@@ -51,7 +51,6 @@ export function enforce(
     }
     if (
       evaluator(
-        ConditionSetType[context.type],
         convention,
         context.context.props
       )

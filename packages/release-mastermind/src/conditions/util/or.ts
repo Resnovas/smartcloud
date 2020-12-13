@@ -1,4 +1,4 @@
-import { IssueProps, ProjectProps, PRProps, ConditionSetType } from '../'
+import { IssueProps, ProjectProps, PRProps } from '../'
 import { evaluator } from '../../evaluator'
 import { PRConditionConfig, IssueConditionConfig, ProjectConditionConfig } from '../../../types'
 const TYPE = '$or'
@@ -14,17 +14,10 @@ const or = (
     condition: ConditionOr,
     props: IssueProps | PRProps | ProjectProps
 ) => {
-    const type = props.type == "issue"
-        ? ConditionSetType.issue
-        : props.type == "pr"
-            ? ConditionSetType.pr
-            : ConditionSetType.project
-
     let success: boolean = false
 
     condition.pattern.forEach(condition => {
         if (evaluator(
-            type,
             condition,
             props
         )) success = true

@@ -9,9 +9,7 @@ import {
   PRCondition,
   ProjectCondition,
   ProjectProps,
-  PRProps,
-  ConditionSetType,
-  Condition
+  PRProps
 } from './conditions'
 import {
   IssueConditionConfig,
