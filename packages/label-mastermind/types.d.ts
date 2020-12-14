@@ -12,7 +12,7 @@ export interface IssueConditionConfig {
 
 export interface PRConditionConfig {
   requires: number
-  conditions: PRCondition[]
+  conditions: ProjectCondition[]
 }
 
 export interface SharedConfig {

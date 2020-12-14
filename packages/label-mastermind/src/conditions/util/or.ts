@@ -1,29 +1,28 @@
 import { IssueProps, ProjectProps, PRProps } from '../'
 import { evaluator } from '../../evaluator'
-import { PRConditionConfig, IssueConditionConfig, ProjectConditionConfig } from '../../../types'
+import {
+  PRConditionConfig,
+  IssueConditionConfig,
+  ProjectConditionConfig
+} from '../../../types'
 const TYPE = '$or'
 
 export interface ConditionOr {
-    type: typeof TYPE,
-    pattern: [
-        PRConditionConfig | IssueConditionConfig | ProjectConditionConfig,
-    ]
+  type: typeof TYPE
+  pattern: [PRConditionConfig | IssueConditionConfig | ProjectConditionConfig]
 }
 
 const or = (
-    condition: ConditionOr,
-    props: IssueProps | PRProps | ProjectProps
+  condition: ConditionOr,
+  props: IssueProps | PRProps | ProjectProps
 ) => {
-    let success: boolean = false
+  let success: boolean = false
 
-    condition.pattern.forEach(condition => {
-        if (evaluator(
-            condition,
-            props
-        )) success = true
-    })
+  condition.pattern.forEach(condition => {
+    if (evaluator(condition, props)) success = true
+  })
 
-    return success
+  return success
 }
 
 export default [TYPE, or] as const

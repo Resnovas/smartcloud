@@ -2,10 +2,10 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
+import { Column, Config, Runners } from '../../types'
 import { api } from '../api'
 import { CurContext, ProjectContext, Version } from '../conditions'
 import { evaluator } from '../evaluator'
-import { Column, Config, Runners } from '../../types'
 import { addRemove } from '../utils/labels'
 import * as methods from './methods'
 export class Project {
@@ -113,10 +113,7 @@ export class Project {
     )) {
       log(new loggingData('100', `Label: ${labelID}`))
 
-      const shouldHaveLabel = evaluator(
-        conditionsConfig,
-        props
-      )
+      const shouldHaveLabel = evaluator(conditionsConfig, props)
 
       const labelName = this.configs.labels[labelID]
       if (!labelName)

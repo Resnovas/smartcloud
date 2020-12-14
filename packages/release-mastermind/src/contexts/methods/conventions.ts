@@ -1,10 +1,10 @@
 import * as core from '@actions/core'
 import { loggingData } from '@videndum/utilities'
 import { log } from '../..'
+import { IssueConfig, ProjectConfig, PullRequestConfig } from '../../../types'
 import { api, ApiProps } from '../../api'
 import { Condition, CurContext } from '../../conditions'
 import { evaluator } from '../../evaluator'
-import { IssueConfig, ProjectConfig, PullRequestConfig } from '../../../types'
 import { semantic } from '../../utils/helper/semantic'
 import respond from '../../utils/respond'
 
@@ -41,7 +41,8 @@ export function enforce(
         })
       }
       convention.failedComment =
-        `Semantic Conditions failed - Please title your ${context.type == 'pr' ? 'pull request' : 'issue'
+        `Semantic Conditions failed - Please title your ${
+          context.type == 'pr' ? 'pull request' : 'issue'
         } using one of the valid options:\r\n\r\n Types: ` +
         semantic.join(', ') +
         (convention.contexts
@@ -49,12 +50,7 @@ export function enforce(
           : '')
       convention.conditions = conditions
     }
-    if (
-      evaluator(
-        convention,
-        context.context.props
-      )
-    ) {
+    if (evaluator(convention, context.context.props)) {
       successful++
     } else {
       failedMessages.push(convention.failedComment)
@@ -91,10 +87,12 @@ async function createConventionComment(
   failMessages?: string[]
 ) {
   if (!config.enforceConventions) return
-  let prefix: string = `<!--releaseMastermind: Conventions-->${config.enforceConventions?.commentHeader || ''
+  let prefix: string = `<!--releaseMastermind: Conventions-->${
+      config.enforceConventions?.commentHeader || ''
     }\r\n\r\n`,
-    suffix: string = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${config.enforceConventions?.commentFooter || ''
-      }`,
+    suffix: string = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${
+      config.enforceConventions?.commentFooter || ''
+    }`,
     body: string = prefix + failMessages?.join('\r\n\r\n') + suffix,
     commentList
   if (CurContext.type !== 'pr') {

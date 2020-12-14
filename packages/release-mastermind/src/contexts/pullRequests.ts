@@ -2,10 +2,10 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
+import { Config, PullRequestConfig, Release, Runners } from '../../types'
 import { api } from '../api'
 import { CurContext, PRContext, Version } from '../conditions'
 import { evaluator } from '../evaluator'
-import { Config, PullRequestConfig, Release, Runners } from '../../types'
 import { utils } from '../utils'
 import { addRemove } from '../utils/labels'
 import * as methods from './methods'
@@ -118,10 +118,7 @@ export class PullRequests {
     )) {
       log(new loggingData('100', `Label: ${labelID}`))
 
-      const shouldHaveLabel = evaluator(
-        conditionsConfig,
-        props
-      )
+      const shouldHaveLabel = evaluator(conditionsConfig, props)
 
       const labelName = this.configs.labels[labelID]
       if (!labelName)
@@ -220,14 +217,17 @@ export class PullRequests {
       if (this.context.props.labels[labels.build]) {
         this.newVersion.semantic.build = +1
       }
-      this.newVersion.name = `${this.newVersion.semantic.major}.${this.newVersion.semantic.minor
-        }.${this.newVersion.semantic.patch}${this.newVersion.semantic.prerelease
+      this.newVersion.name = `${this.newVersion.semantic.major}.${
+        this.newVersion.semantic.minor
+      }.${this.newVersion.semantic.patch}${
+        this.newVersion.semantic.prerelease
           ? `-${this.newVersion.semantic.prerelease}`
           : ''
-        }${this.newVersion.semantic.build
+      }${
+        this.newVersion.semantic.build
           ? `+${this.newVersion.semantic.build}`
           : ''
-        }`
+      }`
       log(new loggingData('100', `New Version is: ${this.newVersion.name}`))
     }
   }

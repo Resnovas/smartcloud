@@ -1,6 +1,7 @@
 import { Context } from '@actions/github/lib/context'
 import { loggingData } from '@videndum/utilities'
 import { log } from '.'
+import { Config, Label, Labels } from '../types'
 import { api, ApiProps } from './api'
 import {
   IssueContext,
@@ -9,7 +10,6 @@ import {
   Reviews,
   Version
 } from './conditions'
-import { Config, Label, Labels } from '../types'
 import { utils } from './utils'
 
 class ContextHandler {
@@ -32,7 +32,7 @@ class ContextHandler {
       new loggingData(
         '100',
         `context.payload.pull_request: ` +
-        JSON.stringify(context.payload.pull_request)
+          JSON.stringify(context.payload.pull_request)
       )
     )
 
@@ -109,7 +109,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: context.payload.pull_request?.id,
       props: {
-        type: "pr",
+        type: 'pr',
         ID: IDNumber,
         branch: pr.head.ref,
         creator: pr.user.login,
@@ -193,7 +193,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: issue.id,
       props: {
-        type: "project",
+        type: 'project',
         ID: issue.number,
         creator: issue.user.login,
         description: issue.body || '',
@@ -251,7 +251,7 @@ class ContextHandler {
       currentVersion,
       IDNumber: context.payload.issue?.id,
       props: {
-        type: "issue",
+        type: 'issue',
         ID: issue.number,
         creator: issue.user.login,
         description: issue.body || '',
