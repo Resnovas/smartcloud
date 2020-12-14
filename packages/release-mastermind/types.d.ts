@@ -152,6 +152,7 @@ interface SyncRemote {
   remoteBranch: string
   localPath: string
   remotePath: string
+  conditions: SharedConditions[]
 }
 
 interface ReleaseChanges {

@@ -2263,13 +2263,7 @@
               "project": "Developer Operations",
               "column": "Requested",
               "requires": 1,
-              "conditions": [
-                {
-                  "type": "hasLabel",
-                  "label": "Type - Bug",
-                  "value": false
-                }
-              ]
+              "conditions": []
             },
             {
               "project": "Issues",
@@ -2288,26 +2282,6 @@
                 {
                   "type": "descriptionMatches",
                   "pattern": "/(created|new|opened|made)( an| a)? bug/i"
-                }
-              ]
-            },
-            {
-              "project": "Issues",
-              "column": "High Priority",
-              "requires": 2,
-              "conditions": [
-                {
-                  "type": "hasLabel",
-                  "label": "Type - Bug",
-                  "value": true
-                },
-                {
-                  "type": "titleMatches",
-                  "pattern": "/^bug(\\(.*\\))?:/i"
-                },
-                {
-                  "type": "titleMatches",
-                  "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
                 }
               ]
             }
@@ -2496,6 +2470,11 @@
               "localProject": "Developer Operations",
               "owner": "Videndum",
               "project": "Developer Operations"
+            },
+            {
+              "localProject": "Issues",
+              "owner": "Videndum",
+              "project": "Issues"
             }
           ],
           "openBranch": {},
