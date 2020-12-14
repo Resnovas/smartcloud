@@ -214,6 +214,7 @@ export interface ProjectConditionConfig {
 }
 
 interface ExProjects {
+  localProject: string
   owner?: string
   user?: string
   repo?: string

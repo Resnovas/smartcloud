@@ -2482,6 +2482,7 @@
           },
           "syncRemote": [
             {
+              "localProject": "Developer Operations",
               "owner": "Videndum",
               "project": "Developer Operations"
             }

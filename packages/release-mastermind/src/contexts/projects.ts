@@ -160,6 +160,7 @@ export class Project {
   async syncRemote() {
     if (!this.config?.syncRemote) return
     this.config.syncRemote.forEach(async remote => {
+      if (remote.localProject !== this.context.props.project.name) return
       let remoteColumn
       let oldRemoteColumn
       let oldLocalColumn: {

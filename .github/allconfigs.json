@@ -2493,6 +2493,7 @@
           },
           "syncRemote": [
             {
+              "localProject": "Developer Operations",
               "owner": "Videndum",
               "project": "Developer Operations"
             }
@@ -2527,7 +2528,7 @@
                   "type": "onColumn",
                   "project": "Developer Operations",
                   "column": "In Progress"
-                }, 
+                },
                 {
                   "type": "onColumn",
                   "project": "Developer Operations",
