@@ -40,9 +40,14 @@ export class PullRequests extends Contexts {
       if (this.config.enforceConventions)
         enforceConventionsSuccess = await this.conventions.enforce(this)
       if (enforceConventionsSuccess) {
-        if (this.config.labels) await this.applyLabels(this)
-        if (this.config.assignProject && this.context.action == 'opened')
-          await this.assignProject(this)
+        if (this.config.labels)
+          await this.applyLabels(this).catch(err => {
+            log(new loggingData('500', 'Error applying labels', err))
+          })
+        if (this.config.assignProject)
+          await this.assignProject(this).catch(err => {
+            log(new loggingData('500', 'Error assigning projects', err))
+          })
         // if (this.config.automaticApprove)
         //   await this.automaticApprove(this.config.automaticApprove)
         // duplicate hotfix

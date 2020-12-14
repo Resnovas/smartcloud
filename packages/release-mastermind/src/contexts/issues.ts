@@ -38,9 +38,14 @@ export class Issues extends Contexts {
       if (this.config.enforceConventions)
         enforceConventionsSuccess = await this.conventions.enforce(this)
       if (enforceConventionsSuccess) {
-        if (this.config.labels) await this.applyLabels(this)
-        if (this.config.assignProject && this.context.action == 'opened')
-          await this.assignProject(this)
+        if (this.config.labels)
+          await this.applyLabels(this).catch(err => {
+            log(new loggingData('500', 'Error applying label', err))
+          })
+        if (this.config.assignProject)
+          await this.assignProject(this).catch(err => {
+            log(new loggingData('500', 'Error assigning projects', err))
+          })
         core.endGroup()
       }
     } catch (err) {

@@ -51,10 +51,13 @@ export class Project extends Contexts {
       }
       if (enforceConventionsSuccess) {
         // some code
-        if (this.config.labels) await this.applyLabels(this)
+        if (this.config.labels)
+          await this.applyLabels(this).catch(err => {
+            log(new loggingData('500', 'Error applying labels', err))
+          })
         if (this.config.syncRemote)
           await this.syncRemoteProject(this).catch(err => {
-            log(new loggingData('500', 'Error syncing remote', err))
+            log(new loggingData('500', 'Error syncing remote project', err))
           })
         core.endGroup()
       }
