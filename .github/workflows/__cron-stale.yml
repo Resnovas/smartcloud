@@ -11,19 +11,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.1
       - name: Get Configurations
-        uses: ./packages/variable-mastermind/
+        uses: ./packages/release-mastermind/
         with:
-          settings: ${{ secrets.SETTINGS }}
-          mode: 'environment'
-          token: ${{ secrets.GITHUB_TOKEN }}
-      - uses: actions/stale@v3.0.13
-        if: ${{env.stale_enabled}} == true
-        with:
-          repo-token: ${{ secrets.BOT_TOKEN }}
-          stale-issue-message: ${{env.stale_issue-message}}
-          stale-issue-label: ${{env.stale_issue-label}}
-          stale-pr-message: ${{env.stale_pr-message}}
-          stale-pr-label: ${{env.stale_pr-label}}
-          exempt-issue-labels: ${{env.stale_exempt-issue-labels}}
-          days-before-stale: ${{env.stale_days-before-stale}}
-          days-before-close: ${{env.stale_days-before-close}}
+          GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
+          config: .github/allconfigs.json
