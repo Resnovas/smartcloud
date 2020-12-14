@@ -1,10 +1,10 @@
 import { IssueProps, ProjectProps, PRProps } from '..'
-import { evaluator } from '../../evaluator'
 import {
-  PRConditionConfig,
   IssueConditionConfig,
+  PRConditionConfig,
   ProjectConditionConfig
 } from '../../../types'
+import { evaluator } from '../../evaluator'
 const TYPE = '$only'
 
 export interface ConditionOnlyOne {

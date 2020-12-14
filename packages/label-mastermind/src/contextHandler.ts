@@ -1,6 +1,7 @@
 import { Context } from '@actions/github/lib/context'
 import { loggingData } from '@videndum/utilities'
 import { log } from '.'
+import { Config, Label, Labels } from '../types'
 import { api, ApiProps } from './api'
 import {
   IssueContext,
@@ -9,7 +10,6 @@ import {
   Reviews,
   Version
 } from './conditions'
-import { Config, Label, Labels } from '../types'
 import { utils } from './utils'
 
 class ContextHandler {
