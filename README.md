@@ -48,6 +48,10 @@ Need reasons to consider using Release Manager?
         - [SharedLabels](#sharedlabels)
         - [PRConditionConfig](#prconditionconfig)
     - [Available Conditions](#available-conditions)
+      - [Conditional Conditions](#conditional-conditions)
+        - [$and](#and)
+        - [$or](#or)
+        - [$only](#only)
       - [Common Conditions](#common-conditions)
         - [creatorMatches](#creatormatches)
         - [descriptionMatches](#descriptionmatches)
@@ -457,6 +461,71 @@ export interface PRConditionConfig {
 ```
 
 ### Available Conditions
+
+For complex conditions, you can use conditional options such as `only`, `$and` and `$or`.
+
+#### Conditional Conditions
+
+##### $and
+
+Allows conditions to be combined to create more advanced conditions. Would require all conditions to return true otherwise it would fail.
+
+```json
+{
+  "type": "$and",
+  "pattern": [
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+  ]
+}
+```
+
+##### $or
+
+Allows conditions to be combined to create more advanced conditions. Would require one conditions to return true otherwise it would fail.
+
+```json
+{
+  "type": "$or",
+  "pattern": [
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+  ]
+}
+```
+
+##### $only
+
+Requires only the number specified in `requires` to pass otherwise it fails.
+
+```json
+{
+  "type": "$only",
+  "requires": 1,
+  "pattern": [
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+  ]
+}
+```
 
 #### Common Conditions
 

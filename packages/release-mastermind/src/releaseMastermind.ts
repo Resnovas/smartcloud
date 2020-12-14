@@ -4,10 +4,10 @@ import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import fs from 'fs'
 import { log } from '.'
+import { Config, Label, Options, Runners } from '../types'
 import { CurContext } from './conditions'
 import { contextHandler } from './contextHandler'
 import { Issues, Project, PullRequests } from './contexts'
-import { Config, Label, Options, Runners } from './types'
 import { utils } from './utils'
 
 let local: any

@@ -1,5 +1,12 @@
 import { loggingData } from '@videndum/utilities'
 import {
+  IssueConditionConfig,
+  PRConditionConfig,
+  ProjectConditionConfig,
+  Release,
+  SharedConventionsConfig
+} from '../types'
+import {
   getIssueConditionHandler,
   getPRConditionHandler,
   getProjectConditionHandler,
@@ -11,19 +18,6 @@ import {
   ProjectProps,
   PRProps
 } from './conditions'
-import {
-  IssueConditionConfig,
-  PRConditionConfig,
-  ProjectConditionConfig,
-  Release,
-  SharedConventionsConfig
-} from './types'
-
-export enum ConditionSetType {
-  issue = 'issue',
-  pr = 'pr',
-  project = 'project'
-}
 
 const forConditions = <
   T extends IssueCondition | PRCondition | ProjectCondition
@@ -47,7 +41,6 @@ const forConditions = <
 }
 
 export function evaluator(
-  conditionSetType: ConditionSetType,
   config:
     | PRConditionConfig
     | IssueConditionConfig
@@ -64,9 +57,9 @@ export function evaluator(
     )
   const matches = forConditions(conditions, condition => {
     const handler =
-      conditionSetType == ConditionSetType.issue
+      props.type == 'issue'
         ? getIssueConditionHandler(condition as IssueCondition)
-        : conditionSetType == ConditionSetType.pr
+        : props.type == 'pr'
         ? getPRConditionHandler(condition as PRCondition)
         : getProjectConditionHandler(condition as ProjectCondition)
     log(new loggingData('100', `The handler is ${handler?.name}`))

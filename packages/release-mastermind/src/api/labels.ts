@@ -1,5 +1,5 @@
 import { ApiProps, IssueApiProps } from '.'
-import { Label, Labels } from '../types'
+import { Label, Labels } from '../../types'
 import { utils } from '../utils'
 
 export async function add({

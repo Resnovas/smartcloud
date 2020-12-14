@@ -1,9 +1,9 @@
 import { loggingData } from '@videndum/utilities'
 import path from 'path'
 import { log } from '..'
+import { Config } from '../../types'
 import { api, ApiProps } from '../api'
 import { Version } from '../conditions'
-import { Config } from '../types'
 
 /**
  * Gets the version information

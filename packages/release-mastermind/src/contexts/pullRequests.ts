@@ -2,10 +2,10 @@ import * as core from '@actions/core'
 import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
+import { Config, PullRequestConfig, Release, Runners } from '../../types'
 import { api } from '../api'
 import { CurContext, PRContext, Version } from '../conditions'
-import { ConditionSetType, evaluator } from '../evaluator'
-import { Config, PullRequestConfig, Release, Runners } from '../types'
+import { evaluator } from '../evaluator'
 import { utils } from '../utils'
 import { addRemove } from '../utils/labels'
 import * as methods from './methods'
@@ -112,17 +112,13 @@ export class PullRequests {
   async applyLabels(dryRun: boolean) {
     if (!this.config?.labels || !this.configs.labels)
       throw new loggingData('500', 'Config is required to add labels')
-    const { props, IDNumber } = this.context
+    const { props } = this.context
     for (const [labelID, conditionsConfig] of Object.entries(
       this.config.labels
     )) {
       log(new loggingData('100', `Label: ${labelID}`))
 
-      const shouldHaveLabel = evaluator(
-        ConditionSetType.pr,
-        conditionsConfig,
-        props
-      )
+      const shouldHaveLabel = evaluator(conditionsConfig, props)
 
       const labelName = this.configs.labels[labelID]
       if (!labelName)
@@ -171,7 +167,7 @@ export class PullRequests {
       throw new loggingData('500', 'Not Able to automatically approve')
     automaticApprove.conventions.forEach(convention => {
       if (!convention.conditions) return
-      if (evaluator(ConditionSetType.pr, convention, this.context.props)) {
+      if (evaluator(convention, this.context.props)) {
         log(new loggingData('200', `Automatically Approved Successfully`))
         let body =
           automaticApprove.commentHeader +
@@ -280,7 +276,7 @@ export class PullRequests {
 
       const should =
         remote.conditions.length > 0
-          ? evaluator(ConditionSetType.pr, remote, this.context.props)
+          ? evaluator(remote, this.context.props)
           : true
 
       if (should) {

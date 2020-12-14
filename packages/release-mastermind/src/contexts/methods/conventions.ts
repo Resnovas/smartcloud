@@ -1,10 +1,10 @@
 import * as core from '@actions/core'
 import { loggingData } from '@videndum/utilities'
 import { log } from '../..'
+import { IssueConfig, ProjectConfig, PullRequestConfig } from '../../../types'
 import { api, ApiProps } from '../../api'
 import { Condition, CurContext } from '../../conditions'
-import { ConditionSetType, evaluator } from '../../evaluator'
-import { IssueConfig, ProjectConfig, PullRequestConfig } from '../../types'
+import { evaluator } from '../../evaluator'
 import { semantic } from '../../utils/helper/semantic'
 import respond from '../../utils/respond'
 
@@ -50,13 +50,7 @@ export function enforce(
           : '')
       convention.conditions = conditions
     }
-    if (
-      evaluator(
-        ConditionSetType[context.type],
-        convention,
-        context.context.props
-      )
-    ) {
+    if (evaluator(convention, context.context.props)) {
       successful++
     } else {
       failedMessages.push(convention.failedComment)

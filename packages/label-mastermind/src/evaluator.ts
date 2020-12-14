@@ -15,7 +15,7 @@ import {
   IssueConditionConfig,
   PRConditionConfig,
   ProjectConditionConfig
-} from './types'
+} from '../types'
 
 export enum ConditionSetType {
   issue = 'issue',
@@ -45,7 +45,6 @@ const forConditions = <
 }
 
 export function evaluator(
-  conditionSetType: ConditionSetType,
   config: PRConditionConfig | IssueConditionConfig | ProjectConditionConfig,
   props: PRProps | IssueProps | ProjectProps
 ) {
@@ -57,9 +56,9 @@ export function evaluator(
     )
   const matches = forConditions(conditions, condition => {
     const handler =
-      conditionSetType == ConditionSetType.issue
+      props.type == 'issue'
         ? getIssueConditionHandler(condition as IssueCondition)
-        : conditionSetType == ConditionSetType.pr
+        : props.type == 'pr'
         ? getPRConditionHandler(condition as PRCondition)
         : getProjectConditionHandler(condition as ProjectCondition)
     log(new loggingData('100', `The handler is ${handler?.name}`))

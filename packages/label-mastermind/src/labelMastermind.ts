@@ -1,7 +1,7 @@
 import fs from 'fs'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github'
-import { Config, Label, Options } from './types'
+import { Config, Label, Options } from '../types'
 import { contextHandler } from './contextHandler'
 import { applyIssue, applyPR } from './labelHandler'
 import { CurContext } from './conditions'

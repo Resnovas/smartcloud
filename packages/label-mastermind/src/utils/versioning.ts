@@ -3,7 +3,7 @@ import path from 'path'
 import { log } from '..'
 import { api, ApiProps } from '../api'
 import { Version } from '../conditions'
-import { Config } from '../types'
+import { Config } from '../../types'
 
 /**
  * Gets the version information
