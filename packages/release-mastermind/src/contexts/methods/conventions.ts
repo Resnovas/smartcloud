@@ -1,5 +1,6 @@
 import * as core from '@actions/core'
 import { loggingData } from '@videndum/utilities'
+import { Issues, Project, PullRequests } from '..'
 import { log } from '../..'
 import { IssueConfig, ProjectConfig, PullRequestConfig } from '../../../types'
 import { api, ApiProps } from '../../api'
@@ -8,18 +9,16 @@ import { evaluator } from '../../evaluator'
 import { semantic } from '../../utils/helper/semantic'
 import respond from '../../utils/respond'
 
-export function enforce(
-  { client, repo }: ApiProps,
-  config: PullRequestConfig | IssueConfig | ProjectConfig,
-  context: CurContext,
-  dryRun: boolean
-) {
-  if (!config.enforceConventions || !config.enforceConventions.conventions)
+export function enforce(this: Issues | PullRequests | Project) {
+  if (
+    !this.config.enforceConventions ||
+    !this.config.enforceConventions.conventions
+  )
     throw new Error('No enforceable conventions')
   let required = 0,
     successful = 0,
     failedMessages: string[] = []
-  config.enforceConventions.conventions.forEach(convention => {
+  this.config.enforceConventions.conventions.forEach(convention => {
     if (!convention.conditions) return
     required++
     if (convention.conditions == 'semanticTitle') {
@@ -42,7 +41,7 @@ export function enforce(
       }
       convention.failedComment =
         `Semantic Conditions failed - Please title your ${
-          context.type == 'pr' ? 'pull request' : 'issue'
+          this.curContext.type == 'pr' ? 'pull request' : 'issue'
         } using one of the valid options:\r\n\r\n Types: ` +
         semantic.join(', ') +
         (convention.contexts
@@ -50,7 +49,7 @@ export function enforce(
           : '')
       convention.conditions = conditions
     }
-    if (evaluator(convention, context.context.props)) {
+    if (evaluator(convention, this.context.props)) {
       successful++
     } else {
       failedMessages.push(convention.failedComment)
@@ -59,11 +58,11 @@ export function enforce(
 
   if (required > successful) {
     failedMessages.forEach(fail => core.setFailed(fail))
-    !dryRun &&
+    !this.dryRun &&
       createConventionComment(
-        context,
-        config,
-        { client, repo },
+        this.curContext,
+        this.config,
+        { client: this.client, repo: this.repo },
         false,
         failedMessages
       )
@@ -75,7 +74,13 @@ export function enforce(
       `All conventions successfully enforced. Moving to next step`
     )
   )
-  !dryRun && createConventionComment(context, config, { client, repo }, true)
+  !this.dryRun &&
+    createConventionComment(
+      this.curContext,
+      this.config,
+      { client: this.client, repo: this.repo },
+      true
+    )
   return true
 }
 

@@ -40,6 +40,7 @@
   "devDependencies": {
     "@types/jest": "^26.0.15",
     "@types/node": "^14.14.5",
+    "@types/nodegit": "^0.26.12",
     "@vercel/ncc": "^0.24.0",
     "eslint-plugin-github": "^4.1.1",
     "jest": "^26.6.1",

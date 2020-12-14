@@ -4,23 +4,14 @@ import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { Config, PullRequestConfig, Release, Runners } from '../../types'
 import { api } from '../api'
-import { CurContext, PRContext, Version } from '../conditions'
+import { CurContext, PRContext } from '../conditions'
 import { evaluator } from '../evaluator'
 import { utils } from '../utils'
-import { addRemove } from '../utils/labels'
-import * as methods from './methods'
+import { Contexts } from './methods'
 
-export class PullRequests {
-  private runners: Runners
-  private configs: Config
-  private config: Config['pr']
-  private curContext: CurContext
-  private context: PRContext
-  private newVersion: Version = {}
-  private client: GitHub
-  private repo: { owner: string; repo: string }
-  private dryRun: boolean
-
+export class PullRequests extends Contexts {
+  context: PRContext
+  config: PullRequestConfig
   constructor(
     client: GitHub,
     repo: { owner: string; repo: string },
@@ -30,20 +21,11 @@ export class PullRequests {
     dryRun: boolean
   ) {
     if (curContext.type !== 'pr')
-      throw new Error('Cannot construct without PR context')
-    if (!runners) throw new Error('Cannot construct without configs')
-    if (!configs) throw new Error('Cannot construct without configs')
-    if (!configs.pr) throw new Error('Cannot construct without PR config')
-    if (!curContext) throw new Error('Cannot construct without context')
-    this.client = client
-    this.repo = repo
-    this.runners = runners
-    this.configs = configs
-    this.config = configs.pr
-    this.curContext = curContext
+      throw new loggingData('500', 'Cannot construct without issue context')
+    super(client, repo, runners, configs, curContext, dryRun)
     this.context = curContext.context
-    this.newVersion = curContext.context.currentVersion
-    this.dryRun = dryRun
+    if (!configs.pr) throw new loggingData('500', 'Cannot start without config')
+    this.config = configs.pr
   }
 
   async run(attempt?: number) {
@@ -56,16 +38,16 @@ export class PullRequests {
       enforceConventionsSuccess: boolean = true
     try {
       if (this.config.enforceConventions)
-        enforceConventionsSuccess = await methods.enforce(
-          { client: this.client, repo: this.repo },
-          this.config,
-          this.curContext,
-          this.dryRun
-        )
+        enforceConventionsSuccess = await this.conventions.enforce(this)
       if (enforceConventionsSuccess) {
-        if (this.config.labels) await this.applyLabels(this.dryRun)
-        if (this.config.assignProject && this.context.action == 'opened')
-          await this.assignProject(this.dryRun)
+        if (this.config.labels)
+          await this.applyLabels(this).catch(err => {
+            log(new loggingData('500', 'Error applying labels', err))
+          })
+        if (this.config.assignProject)
+          await this.assignProject(this).catch(err => {
+            log(new loggingData('500', 'Error assigning projects', err))
+          })
         // if (this.config.automaticApprove)
         //   await this.automaticApprove(this.config.automaticApprove)
         // duplicate hotfix
@@ -74,6 +56,7 @@ export class PullRequests {
         // create changelog
         // create release
         // sync remote repositories
+        // if (this.config.syncRemote) await this.syncRemoteRepo(this)
         core.endGroup()
       }
     } catch (err) {
@@ -101,64 +84,6 @@ export class PullRequests {
         )
         this.run(attempt)
       }, seconds * 1000)
-    }
-  }
-
-  /**
-   * Apply Labels to Pull Requests
-   * @author IvanFon, TGTGamer, jbinda
-   * @since 1.0.0
-   */
-  async applyLabels(dryRun: boolean) {
-    if (!this.config?.labels || !this.configs.labels)
-      throw new loggingData('500', 'Config is required to add labels')
-    const { props } = this.context
-    for (const [labelID, conditionsConfig] of Object.entries(
-      this.config.labels
-    )) {
-      log(new loggingData('100', `Label: ${labelID}`))
-
-      const shouldHaveLabel = evaluator(conditionsConfig, props)
-
-      const labelName = this.configs.labels[labelID]
-      if (!labelName)
-        throw new loggingData(
-          '500',
-          `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
-        )
-      const hasLabel = Boolean(
-        this.context.props.labels?.[labelName.toLowerCase()]
-      )
-      if (!shouldHaveLabel && hasLabel && this.context.props.labels)
-        delete this.context.props.labels[labelName.toLowerCase()]
-      if (
-        shouldHaveLabel &&
-        !hasLabel &&
-        this.context.props.labels &&
-        this.runners.labels
-      )
-        this.context.props.labels[
-          labelName.toLowerCase()
-        ] = this.runners.labels[labelID]
-
-      await addRemove({
-        client: this.client,
-        curLabels: this.context.props.labels,
-        labelID,
-        labelName,
-        hasLabel,
-        IDNumber: this.context.props.ID,
-        repo: this.repo,
-        shouldHaveLabel,
-        dryRun
-      }).catch(err => {
-        log(
-          new loggingData(
-            '500',
-            `Error thrown while running addRemoveLabel: ` + err
-          )
-        )
-      })
     }
   }
 
@@ -230,75 +155,5 @@ export class PullRequests {
       }`
       log(new loggingData('100', `New Version is: ${this.newVersion.name}`))
     }
-  }
-
-  async assignProject(dryRun: boolean) {
-    if (!this.config?.assignProject) return
-    this.config.assignProject.forEach(async remote => {
-      // Get projects
-      let projects
-      if (remote.user)
-        projects = await api.project.projects.user(
-          { client: this.client, repo: this.repo },
-          remote.user
-        )
-      else if (remote.owner && !remote.repo)
-        projects = await api.project.projects.org(
-          { client: this.client, repo: this.repo },
-          remote.owner
-        )
-      else if (remote.owner && remote.repo)
-        projects = await api.project.projects.repo(
-          { client: this.client, repo: this.repo },
-          remote.owner,
-          remote.repo
-        )
-      else
-        projects = await api.project.projects.repo(
-          { client: this.client, repo: this.repo },
-          this.repo.owner,
-          this.repo.repo
-        )
-      // Get the column
-      const project = projects.filter(
-        project => project.name === remote.project
-      )[0]
-      if (!project) throw log(new loggingData('500', 'No project to use'))
-      const columns = await api.project.column.list(
-        { client: this.client, repo: this.repo },
-        project.id
-      )
-      if (!columns) throw log(new loggingData('500', 'No columns to use'))
-      const remoteColumn = columns.filter(
-        column => column.name === remote.column
-      )[0]
-      if (!remoteColumn) throw log(new loggingData('500', 'No column to use'))
-
-      const should =
-        remote.conditions.length > 0
-          ? evaluator(remote, this.context.props)
-          : true
-
-      if (should) {
-        log(new loggingData('100', `Adding to project ${project.name}`))
-        !dryRun &&
-          (await api.project.card
-            .create(
-              { client: this.client, repo: this.repo },
-              this.context.IDNumber,
-              remoteColumn.id,
-              'PullRequest'
-            )
-            .catch(err => {
-              log(
-                new loggingData(
-                  '500',
-                  `New error thrown when attempting to add to project "${project.name}"`,
-                  err
-                )
-              )
-            }))
-      }
-    })
   }
 }
