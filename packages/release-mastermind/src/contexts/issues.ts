@@ -20,7 +20,9 @@ export class Issues extends Contexts {
       throw new loggingData('500', 'Cannot construct without issue context')
     super(client, repo, runners, configs, curContext, dryRun)
     this.context = curContext.context
-    this.config = super.config as IssueConfig
+    if (!configs.issue)
+      throw new loggingData('500', 'Cannot start without config')
+    this.config = configs.issue
   }
 
   async run(attempt?: number) {
@@ -34,9 +36,9 @@ export class Issues extends Contexts {
       enforceConventionsSuccess: boolean = true
     try {
       if (this.config.enforceConventions)
-        enforceConventionsSuccess = await this.conventions.enforce()
+        enforceConventionsSuccess = await this.conventions.enforce(this)
       if (enforceConventionsSuccess) {
-        if (this.config.labels) await this.applyLabels()
+        if (this.config.labels) await this.applyLabels(this)
         if (this.config.assignProject && this.context.action == 'opened')
           await this.assignProject(this)
         core.endGroup()

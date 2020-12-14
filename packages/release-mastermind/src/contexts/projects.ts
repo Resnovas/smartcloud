@@ -21,7 +21,9 @@ export class Project extends Contexts {
       throw new loggingData('500', 'Cannot construct without issue context')
     super(client, repo, runners, configs, curContext, dryRun)
     this.context = curContext.context
-    this.config = super.config as ProjectConfig
+    if (!configs.project)
+      throw new loggingData('500', 'Cannot start without config')
+    this.config = configs.project
   }
 
   async run(attempt?: number) {
@@ -45,11 +47,11 @@ export class Project extends Contexts {
             this.context.props.column_id
           )
         )
-          enforceConventionsSuccess = await this.conventions.enforce()
+          enforceConventionsSuccess = await this.conventions.enforce(this)
       }
       if (enforceConventionsSuccess) {
         // some code
-        if (this.config.labels) await this.applyLabels()
+        if (this.config.labels) await this.applyLabels(this)
         if (this.config.syncRemote)
           await this.syncRemoteProject(this).catch(err => {
             log(new loggingData('500', 'Error syncing remote', err))

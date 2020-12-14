@@ -23,12 +23,12 @@ import { syncRemoteProject } from './syncRemoteProject'
 export { log } from '../..'
 
 export class Contexts {
-  protected runners: Runners
-  protected configs: Config
-  protected config: PullRequestConfig | IssueConfig | ProjectConfig
-  protected curContext: CurContext
-  protected context: ProjectContext | IssueContext | PRContext
-  protected newVersion: Version = {}
+  runners: Runners
+  configs: Config
+  config: PullRequestConfig | IssueConfig | ProjectConfig
+  curContext: CurContext
+  context: ProjectContext | IssueContext | PRContext
+  newVersion: Version = {}
   client: GitHub
   repo: { owner: string; repo: string }
   dryRun: boolean
@@ -53,8 +53,7 @@ export class Contexts {
       throw new loggingData('500', 'Cannot construct without context')
     this.curContext = curContext
     const config = configs[curContext.type]
-    if (!config)
-      throw new loggingData('500', 'Cannot construct without configs')
+    if (!config) throw new loggingData('500', 'Cannot construct without config')
     this.config = config
     this.newVersion = curContext.context.currentVersion
     this.context = curContext.context
@@ -63,9 +62,11 @@ export class Contexts {
 
   syncRemoteProject = (that: Project) => syncRemoteProject.call(that)
   assignProject = (that: Issues | PullRequests) => assignProject.call(that)
-  applyLabels = () => applyLabels.call(this)
+  applyLabels = (that: Issues | PullRequests | Project) =>
+    applyLabels.call(that)
 
   conventions = {
-    enforce: () => conventions.enforce.call(this)
+    enforce: (that: Issues | PullRequests | Project) =>
+      conventions.enforce.call(that)
   }
 }

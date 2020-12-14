@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
 import { loggingData } from '@videndum/utilities'
-import { Contexts } from '.'
+import { Issues, Project, PullRequests } from '..'
 import { log } from '../..'
 import { IssueConfig, ProjectConfig, PullRequestConfig } from '../../../types'
 import { api, ApiProps } from '../../api'
@@ -9,7 +9,7 @@ import { evaluator } from '../../evaluator'
 import { semantic } from '../../utils/helper/semantic'
 import respond from '../../utils/respond'
 
-export function enforce(this: Contexts) {
+export function enforce(this: Issues | PullRequests | Project) {
   if (
     !this.config.enforceConventions ||
     !this.config.enforceConventions.conventions

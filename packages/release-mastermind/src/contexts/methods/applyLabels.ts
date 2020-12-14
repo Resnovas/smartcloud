@@ -1,10 +1,10 @@
 import { loggingData } from '@videndum/utilities'
-import { Contexts } from '.'
+import { Issues, Project, PullRequests } from '..'
 import { log } from '../..'
 import { evaluator } from '../../evaluator'
 import { addRemove } from '../../utils/labels'
 
-export async function applyLabels(this: Contexts) {
+export async function applyLabels(this: Issues | PullRequests | Project) {
   if (!this.config?.labels || !this.configs.labels)
     throw new loggingData('500', 'Config is required to add labels')
   const { props } = this.context

@@ -24,7 +24,8 @@ export class PullRequests extends Contexts {
       throw new loggingData('500', 'Cannot construct without issue context')
     super(client, repo, runners, configs, curContext, dryRun)
     this.context = curContext.context
-    this.config = super.config as PullRequestConfig
+    if (!configs.pr) throw new loggingData('500', 'Cannot start without config')
+    this.config = configs.pr
   }
 
   async run(attempt?: number) {
@@ -37,9 +38,9 @@ export class PullRequests extends Contexts {
       enforceConventionsSuccess: boolean = true
     try {
       if (this.config.enforceConventions)
-        enforceConventionsSuccess = await this.conventions.enforce()
+        enforceConventionsSuccess = await this.conventions.enforce(this)
       if (enforceConventionsSuccess) {
-        if (this.config.labels) await this.applyLabels()
+        if (this.config.labels) await this.applyLabels(this)
         if (this.config.assignProject && this.context.action == 'opened')
           await this.assignProject(this)
         // if (this.config.automaticApprove)
