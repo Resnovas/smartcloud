@@ -1,13 +1,12 @@
 import * as core from '@actions/core'
 import { loggingData } from '@videndum/utilities'
+import { Contexts } from '.'
 import { Issues, Project, PullRequests } from '..'
 import { log } from '../..'
 import { IssueConfig, ProjectConfig, PullRequestConfig } from '../../../types'
-import { api, ApiProps } from '../../api'
 import { Condition, CurContext } from '../../conditions'
 import { evaluator } from '../../evaluator'
 import { semantic } from '../../utils/helper/semantic'
-import respond from '../../utils/respond'
 
 export function enforce(this: Issues | PullRequests | Project) {
   if (
@@ -40,8 +39,7 @@ export function enforce(this: Issues | PullRequests | Project) {
         })
       }
       convention.failedComment =
-        `Semantic Conditions failed - Please title your ${
-          this.curContext.type == 'pr' ? 'pull request' : 'issue'
+        `Semantic Conditions failed - Please title your ${this.curContext.type == 'pr' ? 'pull request' : 'issue'
         } using one of the valid options:\r\n\r\n Types: ` +
         semantic.join(', ') +
         (convention.contexts
@@ -49,7 +47,7 @@ export function enforce(this: Issues | PullRequests | Project) {
           : '')
       convention.conditions = conditions
     }
-    if (evaluator(convention, this.context.props)) {
+    if (evaluator.call(this, convention, this.context.props)) {
       successful++
     } else {
       failedMessages.push(convention.failedComment)
@@ -59,10 +57,8 @@ export function enforce(this: Issues | PullRequests | Project) {
   if (required > successful) {
     failedMessages.forEach(fail => core.setFailed(fail))
     !this.dryRun &&
-      createConventionComment(
-        this.curContext,
-        this.config,
-        { client: this.client, repo: this.repo },
+      createConventionComment.call(
+        this,
         false,
         failedMessages
       )
@@ -75,43 +71,33 @@ export function enforce(this: Issues | PullRequests | Project) {
     )
   )
   !this.dryRun &&
-    createConventionComment(
-      this.curContext,
-      this.config,
-      { client: this.client, repo: this.repo },
+    createConventionComment.call(
+      this,
       true
     )
   return true
 }
 
 async function createConventionComment(
-  CurContext: CurContext,
-  config: PullRequestConfig | IssueConfig | ProjectConfig,
-  { client, repo }: ApiProps,
+  this: Issues | PullRequests | Project,
   success: boolean,
   failMessages?: string[]
 ) {
-  if (!config.enforceConventions) return
-  let prefix: string = `<!--releaseMastermind: Conventions-->${
-      config.enforceConventions?.commentHeader || ''
+  if (!this.config.enforceConventions) return
+  let prefix: string = `<!--releaseMastermind: Conventions-->${this.config.enforceConventions?.commentHeader || ''
     }\r\n\r\n`,
-    suffix: string = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${
-      config.enforceConventions?.commentFooter || ''
-    }`,
+    suffix: string = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${this.config.enforceConventions?.commentFooter || ''
+      }`,
     body: string = prefix + failMessages?.join('\r\n\r\n') + suffix,
     commentList
-  if (CurContext.type !== 'pr') {
-    commentList = await api.issues.comments.list({
-      client,
-      IDNumber: CurContext.context.props.ID,
-      repo
-    })
+  if (this.curContext.type !== 'pr') {
+    commentList = await this.util.api.issues.comments.list(
+      this.curContext.context.props.ID
+    )
   } else {
-    commentList = await api.pullRequests.reviews.list({
-      client,
-      IDNumber: CurContext.context.props.ID,
-      repo
-    })
+    commentList = await this.util.api.pullRequests.reviews.list(
+      this.curContext.context.props.ID
+    )
   }
   let previousComment: number | undefined
   if (commentList) {
@@ -120,5 +106,5 @@ async function createConventionComment(
         previousComment = comment.id
     })
   }
-  respond(CurContext, { client, repo }, success, previousComment, body)
+  this.util.respond(this, success, previousComment, body)
 }

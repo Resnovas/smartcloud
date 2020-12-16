@@ -1,4 +1,5 @@
 import { ProjectProps } from '.'
+import { Issues, Project, PullRequests } from '../../contexts'
 
 const TYPE = 'onColumn'
 
@@ -8,7 +9,11 @@ export interface ConditiononColumn {
   column: string
 }
 
-const onColumn = (condition: ConditiononColumn, pr: ProjectProps) => {
+function onColumn(
+  this: Issues | PullRequests | Project,
+  condition: ConditiononColumn,
+  pr: ProjectProps
+) {
   return (
     pr.localColumn.name == condition.column &&
     pr.project.name == condition.project

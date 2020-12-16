@@ -31,7 +31,7 @@ try {
   local = require('../config.json')
   dryRun = local.GH_ACTION_LOCAL_TEST || false
   showLogs = local.SHOW_LOGS || false
-} catch {}
+} catch { }
 
 const { GITHUB_WORKSPACE = '' } = process.env
 
@@ -57,10 +57,10 @@ async function run() {
       (configInput?.pr || configInput?.issue || configInput?.project
         ? configInput
         : local == undefined
-        ? undefined
-        : require(local.configJSON).releaseMastermind
-        ? require(local.configJSON).releaseMastermind
-        : require(local.configJSON)),
+          ? undefined
+          : require(local.configJSON).releaseMastermind
+            ? require(local.configJSON).releaseMastermind
+            : require(local.configJSON)),
     showLogs,
     dryRun
   }

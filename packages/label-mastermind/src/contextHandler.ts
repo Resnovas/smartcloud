@@ -2,7 +2,7 @@ import { Context } from '@actions/github/lib/context'
 import { loggingData } from '@videndum/utilities'
 import { log } from '.'
 import { Config, Label, Labels } from '../types'
-import { api, ApiProps } from './api'
+import { api, ApiProps } from './utils'
 import {
   IssueContext,
   PRContext,

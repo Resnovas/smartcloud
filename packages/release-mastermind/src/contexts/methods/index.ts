@@ -1,4 +1,3 @@
-import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { Issues, PullRequests } from '..'
 import {
@@ -8,6 +7,7 @@ import {
   PullRequestConfig,
   Runners
 } from '../../../types'
+import { Utils } from '../../utils'
 import {
   CurContext,
   IssueContext,
@@ -29,21 +29,15 @@ export class Contexts {
   curContext: CurContext
   context: ProjectContext | IssueContext | PRContext
   newVersion: Version = {}
-  client: GitHub
-  repo: { owner: string; repo: string }
+  util: Utils
   dryRun: boolean
   constructor(
-    client: GitHub,
-    repo: { owner: string; repo: string },
+    util: Utils,
     runners: Runners,
     configs: Config,
     curContext: CurContext,
     dryRun: boolean
   ) {
-    if (!client) throw new Error('Cannot construct without client')
-    this.client = client
-    if (!repo) throw new Error('Cannot construct without repo')
-    this.repo = repo
     if (!runners) throw new Error('Cannot construct without configs')
     this.runners = runners
     if (!configs)
@@ -57,6 +51,7 @@ export class Contexts {
     this.config = config
     this.newVersion = curContext.context.currentVersion
     this.context = curContext.context
+    this.util = util
     this.dryRun = dryRun
   }
 

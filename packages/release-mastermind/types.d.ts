@@ -66,9 +66,9 @@ interface SharedConfig {
   enforceConventions?: EnforceConventions
   labels?: {
     [key: string]:
-      | IssueConditionConfig
-      | ProjectConditionConfig
-      | PRConditionConfig
+    | IssueConditionConfig
+    | ProjectConditionConfig
+    | PRConditionConfig
   }
 }
 

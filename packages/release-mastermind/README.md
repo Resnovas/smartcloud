@@ -49,9 +49,9 @@ Need reasons to consider using Release Manager?
         - [PRConditionConfig](#prconditionconfig)
     - [Available Conditions](#available-conditions)
       - [Conditional Conditions](#conditional-conditions)
-        - [\$and](#and)
-        - [\$or](#or)
-        - [\$only](#only)
+        - [$and](#and)
+        - [$or](#or)
+        - [$only](#only)
       - [Common Conditions](#common-conditions)
         - [creatorMatches](#creatormatches)
         - [descriptionMatches](#descriptionmatches)
@@ -235,8 +235,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | Option             | Required | Description                                 | Params                                    |
 | ------------------ | -------- | ------------------------------------------- | ----------------------------------------- |
 | Root               | true     | Defines the root of the project             | `string`                                  |
-| projectType        | true     | Defines the type of project                 | `"node"                                   | "other"` |
-| versioning         | false    | Defines the versioning of the project       | `"SemVer"                                 | "other"` |
+| projectType        | true     | Defines the type of project                 | `"node" | "other"`                        |
+| versioning         | false    | Defines the versioning of the project       | `"SemVer" | "other"`                      |
 | prereleaseName     | false    | Defines the name of a prerelease            | `string`                                  |
 | sharedLabelsConfig | false    | Defines labels to use on both PR and Issues | [`SharedLabels`](#sharedlabels)           |
 | pr                 | false    | Defines the configuration for Pull Requests | [`PullRequestConfig`](#pullrequestconfig) |
@@ -260,10 +260,10 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 | Option        | Required | Description                                                             | Params                                                  |
 | ------------- | -------- | ----------------------------------------------------------------------- | ------------------------------------------------------- |
-| onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String                                         | Number ]` |
+| onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String | Number ]`                             |
 | commentHeader | false    | A comment to append to the header of failed comments                    | `string`                                                |
 | commentFooter | false    | A comment to append to the footer of failed comments                    | `string`                                                |
-| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String                                                 | Number` |
+| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String | Number`                                       |
 | Conventions   | true     | The conventions to enforce                                              | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
 
 ##### AssignProject
@@ -278,12 +278,12 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 ##### SharedConventionsConfig
 
-| Option        | Required | Description                                           | Params       |
-| ------------- | -------- | ----------------------------------------------------- | ------------ |
-| requires      | true     | The number of conditions this requires                | `number`     |
-| failedComment | true     | A comment to respond with should this convention fail | `string`     |
+| Option        | Required | Description                                           | Params                          |
+| ------------- | -------- | ----------------------------------------------------- | ------------------------------- |
+| requires      | true     | The number of conditions this requires                | `number`                        |
+| failedComment | true     | A comment to respond with should this convention fail | `string`                        |
 | conditions    | true     | The conditions to check against                       | `Condition[] | "semanticTitle"` |
-| contexts      | false    | (if using `"semanticTitle"`) contexts to use          | `string[]`   |
+| contexts      | false    | (if using `"semanticTitle"`) contexts to use          | `string[]`                      |
 
 Choosing `"semanticTitle"` as the condition will automatically configure your conventions to use semantic conventions. You can add additional context by adding the `contexts` option which enforce only those contexts get used.
 
@@ -303,7 +303,7 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | createTag        | false     | Should this action create a tag?                  | `boolean`                             |
 | createRelease    | false     | Create a github release                           | [`CreateRelease`](#createrelease)     |
 | createMilestones | false     | Create a milestone                                | [`CreateMilestone`](#createmilestone) |
-| createPackages   | false     | Commands to use when creating packages            | `String[]                             | string` |
+| createPackages   | false     | Commands to use when creating packages            | `String[] | string`                   |
 | createChangelog  | false     | Create a changelog                                | [`Changelog`](#changelog)             |
 
 ##### ReleaseLabels
@@ -354,18 +354,18 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### CreateMilestone
 
-| Option    | Required | Description                                              | Params     |
-| --------- | -------- | -------------------------------------------------------- | ---------- |
+| Option    | Required | Description                                              | Params               |
+| --------- | -------- | -------------------------------------------------------- | -------------------- |
 | milestone | true     | The milestone you want to use                            | `"version" | string` |
-| deadline  | false    | The date in which you want to set as the completion date | `string`   |
+| deadline  | false    | The date in which you want to set as the completion date | `string`             |
 
 ##### DuplicateHotfix
 
-| Option      | Required | Description                                    | Params       |
-| ----------- | -------- | ---------------------------------------------- | ------------ |
+| Option      | Required | Description                                    | Params                            |
+| ----------- | -------- | ---------------------------------------------- | --------------------------------- |
 | prName      | true     | What should the pull request be named          | `"unchanged" | "number" | string` |
-| titlePrefix | false    | Should there be a title prefix                 | `string`     |
-| branches    | false    | What banches should have the duplicated hotfix | `string[]`   |
+| titlePrefix | false    | Should there be a title prefix                 | `string`                          |
+| branches    | false    | What banches should have the duplicated hotfix | `string[]`                        |
 
 ##### SyncRemote
 
@@ -388,10 +388,10 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### CreateBranch
 
-| Option       | Required | Description                     | Params   |
-| ------------ | -------- | ------------------------------- | -------- |
-| branchPrefix | false    | Should the branch have a prefix | `string` |
-| branchSuffix | false    | Should the branch have a suffix | `string` |
+| Option       | Required | Description                     | Params                         |
+| ------------ | -------- | ------------------------------- | ------------------------------ |
+| branchPrefix | false    | Should the branch have a prefix | `string`                       |
+| branchSuffix | false    | Should the branch have a suffix | `string`                       |
 | branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
 
 `'title'` - Use the entire title
@@ -420,12 +420,12 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### ProjectCreateBranch
 
-| Option       | Required | Description                     | Params   |
-| ------------ | -------- | ------------------------------- | -------- |
-| onProject    | false    | Which project shoud be used     | `string` |
-| onColumn     | false    | Which column should be used     | `string  | number` |
-| branchPrefix | false    | Should the branch have a prefix | `string` |
-| branchSuffix | false    | Should the branch have a suffix | `string` |
+| Option       | Required | Description                     | Params                         |
+| ------------ | -------- | ------------------------------- | ------------------------------ |
+| onProject    | false    | Which project shoud be used     | `string`                       |
+| onColumn     | false    | Which column should be used     | `string | number`              |
+| branchPrefix | false    | Should the branch have a prefix | `string`                       |
+| branchSuffix | false    | Should the branch have a suffix | `string`                       |
 | branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
 
 `'title'` - Use the entire title
@@ -466,7 +466,7 @@ For complex conditions, you can use conditional options such as `only`, `$and` a
 
 #### Conditional Conditions
 
-##### \$and
+##### $and
 
 Allows conditions to be combined to create more advanced conditions. Would require all conditions to return true otherwise it would fail.
 
@@ -475,18 +475,18 @@ Allows conditions to be combined to create more advanced conditions. Would requi
   "type": "$and",
   "pattern": [
     {
-      "requires": 1,
+      "requires": 1, 
       "conditions": []
     },
     {
-      "requires": 1,
+      "requires": 1, 
       "conditions": []
-    }
+    },
   ]
 }
 ```
 
-##### \$or
+##### $or
 
 Allows conditions to be combined to create more advanced conditions. Would require one conditions to return true otherwise it would fail.
 
@@ -495,18 +495,18 @@ Allows conditions to be combined to create more advanced conditions. Would requi
   "type": "$or",
   "pattern": [
     {
-      "requires": 1,
+      "requires": 1, 
       "conditions": []
     },
     {
-      "requires": 1,
+      "requires": 1, 
       "conditions": []
-    }
+    },
   ]
 }
 ```
 
-##### \$only
+##### $only
 
 Requires only the number specified in `requires` to pass otherwise it fails.
 
@@ -516,13 +516,13 @@ Requires only the number specified in `requires` to pass otherwise it fails.
   "requires": 1,
   "pattern": [
     {
-      "requires": 1,
+      "requires": 1, 
       "conditions": []
     },
     {
-      "requires": 1,
+      "requires": 1, 
       "conditions": []
-    }
+    },
   ]
 }
 ```
@@ -607,7 +607,7 @@ Example:
   "pattern": "/^wip:/i"
 }
 ```
-
+  
 #### Pull Request Conditions
 
 ##### branchMatches

@@ -1,7 +1,6 @@
 import { loggingData } from '@videndum/utilities'
 import { Issues, PullRequests } from '..'
 import { log } from '../..'
-import { api } from '../../api'
 import { evaluator } from '../../evaluator'
 
 export async function assignProject(this: Issues | PullRequests) {
@@ -10,34 +9,29 @@ export async function assignProject(this: Issues | PullRequests) {
     // Get projects
     let projects
     if (remote.user)
-      projects = await api.project.projects.user(
-        { client: this.client, repo: this.repo },
+      projects = await this.util.api.project.projects.user(
         remote.user
       )
     else if (remote.owner && !remote.repo)
-      projects = await api.project.projects.org(
-        { client: this.client, repo: this.repo },
+      projects = await this.util.api.project.projects.org(
         remote.owner
       )
     else if (remote.owner && remote.repo)
-      projects = await api.project.projects.repo(
-        { client: this.client, repo: this.repo },
+      projects = await this.util.api.project.projects.repo(
         remote.owner,
         remote.repo
       )
     else
-      projects = await api.project.projects.repo(
-        { client: this.client, repo: this.repo },
-        this.repo.owner,
-        this.repo.repo
+      projects = await this.util.api.project.projects.repo(
+        this.util.repo.owner,
+        this.util.repo.repo,
       )
     // Get the column
     const project = projects.filter(
       project => project.name === remote.project
     )[0]
     if (!project) throw log(new loggingData('500', 'No project to use'))
-    const columns = await api.project.column.list(
-      { client: this.client, repo: this.repo },
+    const columns = await this.util.api.project.column.list(
       project.id
     )
     if (!columns) throw log(new loggingData('500', 'No columns to use'))
@@ -48,15 +42,14 @@ export async function assignProject(this: Issues | PullRequests) {
 
     const should =
       remote.conditions.length > 0
-        ? evaluator(remote, this.context.props)
+        ? evaluator.call(this, remote, this.context.props)
         : true
 
     if (should) {
       log(new loggingData('100', `Adding to project ${project.name}`))
       !this.dryRun &&
-        (await api.project.card
+        (await this.util.api.project.card
           .create(
-            { client: this.client, repo: this.repo },
             this.context.IDNumber,
             remoteColumn.id,
             'PullRequest'

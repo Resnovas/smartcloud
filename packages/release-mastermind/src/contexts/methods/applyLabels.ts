@@ -13,7 +13,7 @@ export async function applyLabels(this: Issues | PullRequests | Project) {
   )) {
     log(new loggingData('100', `Label: ${labelID}`))
 
-    const shouldHaveLabel = evaluator(conditionsConfig, props)
+    const shouldHaveLabel = evaluator.call(this, conditionsConfig, props)
 
     const labelName = this.configs.labels[labelID]
     if (!labelName)
@@ -36,17 +36,14 @@ export async function applyLabels(this: Issues | PullRequests | Project) {
         labelID
       ]
 
-    await addRemove({
-      client: this.client,
-      curLabels: this.context.props.labels,
+    await this.util.labels.addRemove(
       labelID,
       labelName,
+      this.context.props.ID,
       hasLabel,
-      IDNumber: this.context.props.ID,
-      repo: this.repo,
       shouldHaveLabel,
-      dryRun: this.dryRun
-    }).catch(err => {
+      this.context.props.labels
+    ).catch(err => {
       log(
         new loggingData(
           '500',

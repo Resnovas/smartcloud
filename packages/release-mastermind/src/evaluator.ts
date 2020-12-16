@@ -18,6 +18,7 @@ import {
   ProjectProps,
   PRProps
 } from './conditions'
+import { Issues, PullRequests, Project } from './contexts'
 
 const forConditions = <
   T extends IssueCondition | PRCondition | ProjectCondition
@@ -41,6 +42,7 @@ const forConditions = <
 }
 
 export function evaluator(
+  this: Issues | PullRequests | Project,
   config:
     | PRConditionConfig
     | IssueConditionConfig
@@ -58,12 +60,12 @@ export function evaluator(
   const matches = forConditions(conditions, condition => {
     const handler =
       props.type == 'issue'
-        ? getIssueConditionHandler(condition as IssueCondition)
+        ? getIssueConditionHandler.call(this as Issues, condition as IssueCondition)
         : props.type == 'pr'
-        ? getPRConditionHandler(condition as PRCondition)
-        : getProjectConditionHandler(condition as ProjectCondition)
+          ? getPRConditionHandler.call(this as PullRequests, condition as PRCondition)
+          : getProjectConditionHandler.call(this as Project, condition as ProjectCondition)
     log(new loggingData('100', `The handler is ${handler?.name}`))
-    return handler?.(condition as any, props as any) as boolean
+    return handler?.call(this, condition as any, props as any) as boolean
   })
   log(new loggingData('100', `Matches: ${matches}/${requires}`))
   return matches >= requires
