@@ -19,7 +19,7 @@
   ],
   "license": "GPL-3.0-or-later",
   "scripts": {
-    "postinstall": "lerna bootstrap && chmod 755 extractLabeler.sh",
+    "postinstall": "lerna bootstrap",
     "start": "lerna run start",
     "package": "./extractLabeler.sh && lerna run dev:all"
   },

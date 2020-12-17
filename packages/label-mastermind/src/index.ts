@@ -16,7 +16,7 @@ const L = new Logger({
     enabled: true,
     config: {
       dsn:
-        'https://3ed727f54ce94ff7aca190b01eb17caa@o237244.ingest.sentry.io/5546354'
+        'https://e7dd11f1f35b46048a62a8de2b69fa83@o237244.ingest.sentry.io/5508005'
     }
   }
 })
