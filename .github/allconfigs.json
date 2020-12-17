@@ -2288,6 +2288,7 @@
                   "release",
                   "label",
                   "variable",
+                  "convention",
                   "installer",
                   "deps",
                   "deps-dev"
