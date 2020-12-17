@@ -19,7 +19,7 @@ try {
   process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER
   if (!context.payload.issue && !context.payload.pull_request)
     context = require(local.github_context)
-} catch { }
+} catch {}
 
 export default class releaseMastermind {
   client: GitHub
@@ -275,19 +275,15 @@ export default class releaseMastermind {
       return acc
     }, {})
 
-    await this.util.labels
-      .sync(
-        labels
-      )
-      .catch(err => {
-        log(
-          new loggingData(
-            '500',
-            `Error thrown while handling syncLabels tasks:`,
-            err
-          )
+    await this.util.labels.sync(labels).catch(err => {
+      log(
+        new loggingData(
+          '500',
+          `Error thrown while handling syncLabels tasks:`,
+          err
         )
-      })
+      )
+    })
   }
 
   applyContext(runners: Runners, config: Config, curContext: CurContext) {
@@ -302,26 +298,14 @@ export default class releaseMastermind {
       )
       ctx.run()
     } else if (curContext.type == 'issue') {
-      ctx = new Issues(
-        this.util,
-        runners,
-        config,
-        curContext,
-        this.dryRun
-      )
+      ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
         throw log(
           new loggingData('500', `Error thrown while running context: `, err)
         )
       })
     } else if (curContext.type == 'project') {
-      ctx = new Project(
-        this.util,
-        runners,
-        config,
-        curContext,
-        this.dryRun
-      )
+      ctx = new Project(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
         throw log(
           new loggingData('500', `Error thrown while running context: `, err)

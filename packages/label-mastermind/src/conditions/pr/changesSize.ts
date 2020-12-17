@@ -9,7 +9,11 @@ export interface ConditionChangesSize {
   max?: number
 }
 
-function changesSize(this: Issues | PullRequests | Project, condition: ConditionChangesSize, pr: PRProps) {
+function changesSize(
+  this: Issues | PullRequests | Project,
+  condition: ConditionChangesSize,
+  pr: PRProps
+) {
   if (
     pr.changes >= condition.min &&
     ((condition.max && pr.changes < condition.max) || !condition.max)

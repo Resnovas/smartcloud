@@ -9,7 +9,11 @@ export interface ConditionFilesMatch {
   glob: string
 }
 
-function filesMatch(this: Issues | PullRequests | Project, condition: ConditionFilesMatch, pr: PRProps) {
+function filesMatch(
+  this: Issues | PullRequests | Project,
+  condition: ConditionFilesMatch,
+  pr: PRProps
+) {
   return match(pr.files, condition.glob).length > 0
 }
 

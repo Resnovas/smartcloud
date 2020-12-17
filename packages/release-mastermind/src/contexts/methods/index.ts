@@ -7,7 +7,6 @@ import {
   PullRequestConfig,
   Runners
 } from '../../../types'
-import { Utils } from '../../utils'
 import {
   CurContext,
   IssueContext,
@@ -15,6 +14,7 @@ import {
   ProjectContext,
   Version
 } from '../../conditions'
+import { Utils } from '../../utils'
 import { Project } from '../projects'
 import { applyLabels } from './applyLabels'
 import { assignProject } from './assignProject'

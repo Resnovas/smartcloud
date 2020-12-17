@@ -17,8 +17,9 @@ export async function parse(
 ): Promise<Version> {
   let rawVersion
   if (config.projectType === 'node') {
-    rawVersion = await getNodeVersion.call(this, config.root, ref).catch(
-      err => {
+    rawVersion = await getNodeVersion
+      .call(this, config.root, ref)
+      .catch(err => {
         log(
           new loggingData(
             '500',
@@ -26,8 +27,7 @@ export async function parse(
           )
         )
         throw err
-      }
-    )
+      })
   } else {
     throw new Error("There isn't any version to use")
   }

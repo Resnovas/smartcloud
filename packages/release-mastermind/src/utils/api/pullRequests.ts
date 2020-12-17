@@ -16,7 +16,8 @@ export async function changes(Additions: number, deletions: number) {
 
 export const reviews = {
   async create(
-    this: Utils, IDNumber: number,
+    this: Utils,
+    IDNumber: number,
     body?: string,
     event?: Event,
     comments?: any
@@ -30,11 +31,7 @@ export const reviews = {
     })
     return reviews.data
   },
-  async update(
-    this: Utils, IDNumber: number,
-    review_id: number,
-    body: string
-  ) {
+  async update(this: Utils, IDNumber: number, review_id: number, body: string) {
     const reviews = await this.client.pulls.updateReview({
       ...this.repo,
       pull_number: IDNumber,
@@ -44,7 +41,8 @@ export const reviews = {
     return reviews.data
   },
   async dismiss(
-    this: Utils, IDNumber: number,
+    this: Utils,
+    IDNumber: number,
     review_id: number,
     message: string
   ) {

@@ -8,7 +8,11 @@ export interface ConditionIsDraft {
   value: boolean
 }
 
-function isDraft(this: Issues | PullRequests | Project, condition: ConditionIsDraft, pr: PRProps) {
+function isDraft(
+  this: Issues | PullRequests | Project,
+  condition: ConditionIsDraft,
+  pr: PRProps
+) {
   return pr.isDraft === condition.value
 }
 

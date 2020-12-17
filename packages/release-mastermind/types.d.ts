@@ -1,4 +1,9 @@
-import { Condition, IssueCondition, ProjectCondition } from './src/conditions'
+import {
+  Condition,
+  IssueCondition,
+  PRCondition,
+  ProjectCondition
+} from './src/conditions'
 
 /**
  * Application interfaces
@@ -66,9 +71,9 @@ interface SharedConfig {
   enforceConventions?: EnforceConventions
   labels?: {
     [key: string]:
-    | IssueConditionConfig
-    | ProjectConditionConfig
-    | PRConditionConfig
+      | IssueConditionConfig
+      | ProjectConditionConfig
+      | PRConditionConfig
   }
 }
 
@@ -117,7 +122,7 @@ export interface Labels {
 
 export interface PRConditionConfig {
   requires: number
-  conditions: ProjectCondition[]
+  conditions: PRCondition[]
 }
 
 interface AutomaticApprove {

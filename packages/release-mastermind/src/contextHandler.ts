@@ -2,7 +2,6 @@ import { Context } from '@actions/github/lib/context'
 import { loggingData } from '@videndum/utilities'
 import { log } from '.'
 import { Config, Label, Labels } from '../types'
-import { ApiProps, Utils } from './utils'
 import {
   IssueContext,
   PRContext,
@@ -10,6 +9,7 @@ import {
   Reviews,
   Version
 } from './conditions'
+import { Utils } from './utils'
 
 class ContextHandler {
   /**
@@ -31,7 +31,7 @@ class ContextHandler {
       new loggingData(
         '100',
         `context.payload.pull_request: ` +
-        JSON.stringify(context.payload.pull_request)
+          JSON.stringify(context.payload.pull_request)
       )
     )
 
@@ -40,12 +40,10 @@ class ContextHandler {
       log(new loggingData('500', `Error thrown while parsing labels: `, err))
       throw err
     })
-    const files: string[] = await utils.api.files
-      .list(IDNumber)
-      .catch(err => {
-        log(new loggingData('500', `Error thrown while listing files: `, err))
-        throw err
-      })
+    const files: string[] = await utils.api.files.list(IDNumber).catch(err => {
+      log(new loggingData('500', `Error thrown while listing files: `, err))
+      throw err
+    })
 
     const changes: number = await utils.api.pullRequests
       .changes(pr.additions, pr.deletions)
@@ -153,9 +151,7 @@ class ContextHandler {
 
     if (!project.content_url) throw new Error('No content information to get')
     const issueNumber: number = project.content_url.split('/').pop()
-    const issue = await await utils.api.issues.get(
-      issueNumber,
-    )
+    const issue = await await utils.api.issues.get(issueNumber)
 
     const labels = await this.parseLabels(issue.labels).catch(err => {
       log(new loggingData('500', `Error thrown while parsing labels: `, err))
@@ -176,9 +172,7 @@ class ContextHandler {
       project.project_url.split('/').pop()
     )
     const changes = context.payload.changes
-    const localColumn = await utils.api.project.column.get(
-      project.column_id
-    )
+    const localColumn = await utils.api.project.column.get(project.column_id)
 
     const localCard = await utils.api.project.card.get(project.id)
 

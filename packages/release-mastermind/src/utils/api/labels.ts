@@ -1,11 +1,7 @@
 import { Utils } from '..'
 import { Label, Labels } from '../../../types'
 
-export async function add(
-  this: Utils,
-  IDNumber: number,
-  label: string
-) {
+export async function add(this: Utils, IDNumber: number, label: string) {
   if (!this.dryRun)
     await this.client.issues.addLabels({
       ...this.repo,
@@ -14,18 +10,13 @@ export async function add(
     })
 }
 
-export async function create(
-  this: Utils,
-  label: Label
-) {
+export async function create(this: Utils, label: Label) {
   const color = this.parsingData.formatColor(label.color)
-  if (!this.dryRun) await this.client.issues.createLabel({ ...this.repo, ...label, color })
+  if (!this.dryRun)
+    await this.client.issues.createLabel({ ...this.repo, ...label, color })
 }
 
-export async function del(
-  this: Utils,
-  name: string
-) {
+export async function del(this: Utils, name: string) {
   if (!this.dryRun)
     await this.client.issues.deleteLabel({
       ...this.repo,
@@ -50,11 +41,7 @@ export async function get(this: Utils): Promise<Labels> {
   }, {})
 }
 
-export async function remove(
-  this: Utils,
-  IDNumber: number,
-  label: string
-) {
+export async function remove(this: Utils, IDNumber: number, label: string) {
   if (!this.dryRun)
     await this.client.issues.removeLabel({
       ...this.repo,
@@ -63,10 +50,7 @@ export async function remove(
     })
 }
 
-export async function update(
-  this: Utils,
-  label: Label
-) {
+export async function update(this: Utils, label: Label) {
   const color = this.parsingData.formatColor(label.color)
   if (!this.dryRun)
     await this.client.issues.updateLabel({

@@ -1,4 +1,4 @@
-import { Utils, Tags } from '..'
+import { Tags, Utils } from '..'
 
 export async function get(this: Utils): Promise<Tags> {
   const options = await this.client.repos.listTags({

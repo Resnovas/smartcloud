@@ -2,8 +2,8 @@ import * as core from '@actions/core'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { Config, IssueConfig, Runners } from '../../types'
-import { Utils } from '../utils'
 import { CurContext, IssueContext } from '../conditions'
+import { Utils } from '../utils'
 import { Contexts } from './methods'
 export class Issues extends Contexts {
   context: IssueContext

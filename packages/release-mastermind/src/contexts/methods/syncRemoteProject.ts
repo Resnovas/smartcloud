@@ -25,13 +25,9 @@ export async function syncRemoteProject(this: Project) {
       new loggingData('500', 'There is not a remote to connect.')
     // Get projects
     if (remote.user)
-      projects = await this.util.api.project.projects.user(
-        remote.user
-      )
+      projects = await this.util.api.project.projects.user(remote.user)
     else if (remote.owner && !remote.repo)
-      projects = await this.util.api.project.projects.org(
-        remote.owner
-      )
+      projects = await this.util.api.project.projects.org(remote.owner)
     else if (remote.owner && remote.repo)
       projects = await this.util.api.project.projects.repo(
         remote.owner,
@@ -42,9 +38,7 @@ export async function syncRemoteProject(this: Project) {
     const project = projects.filter(
       project => project.name === remote.project
     )[0]
-    const columns = await this.util.api.project.column.list(
-      project.id
-    )
+    const columns = await this.util.api.project.column.list(project.id)
     if (!columns) throw log(new loggingData('500', 'No column to use'))
     remoteColumn = columns.filter(
       column => column.name === this.context.props.localColumn.name
@@ -53,19 +47,16 @@ export async function syncRemoteProject(this: Project) {
       // Get the cards
       if (this.context.action == 'moved') {
         oldLocalColumn = await this.util.api.project.column.get(
-
           this.context.props.changes.column_id.from
         )
         oldRemoteColumn = columns.filter(
           column => column.name === oldLocalColumn.name
         )[0]
         remoteCard = await this.util.api.project.column.listCards(
-
           oldRemoteColumn.id
         )
       } else {
         remoteCard = await this.util.api.project.column.listCards(
-
           remoteColumn.id
         )
       }
@@ -83,11 +74,7 @@ export async function syncRemoteProject(this: Project) {
       )
     } else if (this.context.action == 'moved') {
       this.util.api.project.card
-        .move(
-
-          remoteCard.id,
-          remoteColumn.id
-        )
+        .move(remoteCard.id, remoteColumn.id)
         .catch(err => {
           throw new loggingData(
             '500',

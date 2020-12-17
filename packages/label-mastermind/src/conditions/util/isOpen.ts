@@ -1,5 +1,5 @@
 import { IssueProps, ProjectProps, PRProps } from '../'
-import { Issues, PullRequests, Project } from '../../contexts'
+import { Issues, Project, PullRequests } from '../../contexts'
 
 const TYPE = 'isOpen'
 
@@ -20,7 +20,9 @@ function isOpen(
 ) {
   return (
     this.util.parsingData.normalize(issue.state) ===
-    this.util.parsingData.normalize(condition.value ? States.Open : States.Closed)
+    this.util.parsingData.normalize(
+      condition.value ? States.Open : States.Closed
+    )
   )
 }
 

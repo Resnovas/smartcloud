@@ -1,5 +1,4 @@
-import { CurContext } from '../conditions'
-import { Issues, PullRequests, Project } from '../contexts'
+import { Issues, Project, PullRequests } from '../contexts'
 
 export function respond(
   this: Issues | PullRequests | Project,
@@ -26,11 +25,7 @@ export function respond(
         previousComment,
         body as string
       )
-    else
-      this.util.api.issues.comments.update(
-        previousComment,
-        body as string
-      )
+    else this.util.api.issues.comments.update(previousComment, body as string)
   } else if (previousComment && success) {
     if (this.curContext.type == 'pr')
       this.util.api.pullRequests.reviews.dismiss(

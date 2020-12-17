@@ -1,4 +1,3 @@
-import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { Utils } from '.'
 import { log } from '..'
@@ -10,23 +9,18 @@ import { formatColor } from './parsingData'
  * @author IvanFon, TGTGamer, jbinda
  * @since 1.0.0
  */
-export async function sync(
-  this: Utils,
-  config: Runners['labels']
-) {
+export async function sync(this: Utils, config: Runners['labels']) {
   /**
    * Syncronises the repo labels
    * !todo Add delete labels
    * @since 2.0.0
    */
   if (!config) throw new Error('Cannot syncronise labels without config')
-  const curLabels: Labels = await this.api.labels
-    .get()
-    .catch(err => {
-      throw log(
-        new loggingData('500', `Error thrown while getting labels: ` + err)
-      )
-    })
+  const curLabels: Labels = await this.api.labels.get().catch(err => {
+    throw log(
+      new loggingData('500', `Error thrown while getting labels: ` + err)
+    )
+  })
   log(new loggingData('100', `curLabels: ${JSON.stringify(curLabels)}`))
   for (const configLabel of Object.values(config)) {
     const label = curLabels[configLabel.name.toLowerCase()]
@@ -50,16 +44,11 @@ export async function sync(
             )})`
           )
         )
-        await this.api.labels
-          .update(configLabel)
-          .catch(err => {
-            log(
-              new loggingData(
-                '500',
-                `Error thrown while updating label: ` + err
-              )
-            )
-          })
+        await this.api.labels.update(configLabel).catch(err => {
+          log(
+            new loggingData('500', `Error thrown while updating label: ` + err)
+          )
+        })
       } else {
         log(
           new loggingData(
@@ -76,13 +65,9 @@ export async function sync(
        */
     } else {
       log(new loggingData('200', `Create ${JSON.stringify(configLabel)}`))
-      await this.api.labels
-        .create(configLabel)
-        .catch(err => {
-          log(
-            new loggingData('500', `Error thrown while creating label: ` + err)
-          )
-        })
+      await this.api.labels.create(configLabel).catch(err => {
+        log(new loggingData('500', `Error thrown while creating label: ` + err))
+      })
     }
   }
 
@@ -90,13 +75,9 @@ export async function sync(
     const label = config[curLabel.name.toLowerCase()]
     if (!label) {
       log(new loggingData('400', `Delete ${JSON.stringify(curLabel)}`))
-      await this.api.labels
-        .del(curLabel.name)
-        .catch(err => {
-          log(
-            new loggingData('500', `Error thrown while deleting label: ` + err)
-          )
-        })
+      await this.api.labels.del(curLabel.name).catch(err => {
+        log(new loggingData('500', `Error thrown while deleting label: ` + err))
+      })
     }
   }
 }
@@ -119,9 +100,10 @@ export async function addRemove(
     return log(
       new loggingData(
         '200',
-        `Can't run add or remove labels if you don't provide ${!curLabels
-          ? `the current labels ${curLabels}`
-          : `the name of the label you want to apply: ${labelName}`
+        `Can't run add or remove labels if you don't provide ${
+          !curLabels
+            ? `the current labels ${curLabels}`
+            : `the name of the label you want to apply: ${labelName}`
         }`
       )
     )
@@ -135,28 +117,20 @@ export async function addRemove(
   )
   if (shouldHaveLabel && !hasLabel) {
     log(new loggingData('200', `Adding label "${labelID}"...`))
-    await this.api.labels
-      .add(IDNumber, labelName)
-      .catch(err => {
-        log(new loggingData('500', `Error thrown while adding labels: ` + err))
-      })
+    await this.api.labels.add(IDNumber, labelName).catch(err => {
+      log(new loggingData('500', `Error thrown while adding labels: ` + err))
+    })
   } else if (!shouldHaveLabel && hasLabel) {
     log(new loggingData('200', `Removing label "${labelID}"...`))
-    await this.api.labels
-      .remove(
-        IDNumber,
-        labelName
-      )
-      .catch(err => {
-        log(
-          new loggingData('500', `Error thrown while removing labels: ` + err)
-        )
-      })
+    await this.api.labels.remove(IDNumber, labelName).catch(err => {
+      log(new loggingData('500', `Error thrown while removing labels: ` + err))
+    })
   } else {
     log(
       new loggingData(
         '200',
-        `No action required for label "${labelID}"${hasLabel ? ' as label is already applied.' : '.'
+        `No action required for label "${labelID}"${
+          hasLabel ? ' as label is already applied.' : '.'
         }`
       )
     )

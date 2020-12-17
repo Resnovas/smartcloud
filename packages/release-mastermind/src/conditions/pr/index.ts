@@ -29,7 +29,10 @@ const handlers = [
   isApproved
 ]
 
-export function getPRConditionHandler(this: Issues | PullRequests | Project, condition: PRCondition) {
+export function getPRConditionHandler(
+  this: Issues | PullRequests | Project,
+  condition: PRCondition
+) {
   const handler = handlers.find(handler => handler[0] === condition.type)
   return handler?.[1]
 }

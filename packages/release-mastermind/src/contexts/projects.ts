@@ -1,10 +1,9 @@
 import * as core from '@actions/core'
-import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { Column, Config, ProjectConfig, Runners } from '../../types'
-import { Utils } from '../utils'
 import { CurContext, ProjectContext } from '../conditions'
+import { Utils } from '../utils'
 import { Contexts } from './methods'
 export class Project extends Contexts {
   context: ProjectContext

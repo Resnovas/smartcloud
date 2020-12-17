@@ -1,5 +1,5 @@
 import { IssueProps, ProjectProps, PRProps } from '../'
-import { Issues, PullRequests, Project } from '../../contexts'
+import { Issues, Project, PullRequests } from '../../contexts'
 
 const TYPE = 'titleMatches'
 

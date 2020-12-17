@@ -1,11 +1,10 @@
 import * as core from '@actions/core'
-import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { Config, PullRequestConfig, Release, Runners } from '../../types'
-import { Utils } from '../utils'
 import { CurContext, PRContext } from '../conditions'
 import { evaluator } from '../evaluator'
+import { Utils } from '../utils'
 import { Contexts } from './methods'
 
 export class PullRequests extends Contexts {
@@ -135,14 +134,17 @@ export class PullRequests extends Contexts {
       if (this.context.props.labels[labels.build]) {
         this.newVersion.semantic.build = +1
       }
-      this.newVersion.name = `${this.newVersion.semantic.major}.${this.newVersion.semantic.minor
-        }.${this.newVersion.semantic.patch}${this.newVersion.semantic.prerelease
+      this.newVersion.name = `${this.newVersion.semantic.major}.${
+        this.newVersion.semantic.minor
+      }.${this.newVersion.semantic.patch}${
+        this.newVersion.semantic.prerelease
           ? `-${this.newVersion.semantic.prerelease}`
           : ''
-        }${this.newVersion.semantic.build
+      }${
+        this.newVersion.semantic.build
           ? `+${this.newVersion.semantic.build}`
           : ''
-        }`
+      }`
       log(new loggingData('100', `New Version is: ${this.newVersion.name}`))
     }
   }

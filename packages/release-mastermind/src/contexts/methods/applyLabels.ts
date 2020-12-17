@@ -2,7 +2,6 @@ import { loggingData } from '@videndum/utilities'
 import { Issues, Project, PullRequests } from '..'
 import { log } from '../..'
 import { evaluator } from '../../evaluator'
-import { addRemove } from '../../utils/labels'
 
 export async function applyLabels(this: Issues | PullRequests | Project) {
   if (!this.config?.labels || !this.configs.labels)
@@ -36,20 +35,22 @@ export async function applyLabels(this: Issues | PullRequests | Project) {
         labelID
       ]
 
-    await this.util.labels.addRemove(
-      labelID,
-      labelName,
-      this.context.props.ID,
-      hasLabel,
-      shouldHaveLabel,
-      this.context.props.labels
-    ).catch(err => {
-      log(
-        new loggingData(
-          '500',
-          `Error thrown while running addRemoveLabel: ` + err
-        )
+    await this.util.labels
+      .addRemove(
+        labelID,
+        labelName,
+        this.context.props.ID,
+        hasLabel,
+        shouldHaveLabel,
+        this.context.props.labels
       )
-    })
+      .catch(err => {
+        log(
+          new loggingData(
+            '500',
+            `Error thrown while running addRemoveLabel: ` + err
+          )
+        )
+      })
   }
 }

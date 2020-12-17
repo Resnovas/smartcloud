@@ -31,7 +31,7 @@ try {
   local = require('../config.json')
   dryRun = local.GH_ACTION_LOCAL_TEST || false
   showLogs = local.SHOW_LOGS || false
-} catch { }
+} catch {}
 
 const { GITHUB_WORKSPACE = '' } = process.env
 
@@ -41,6 +41,13 @@ const { GITHUB_WORKSPACE = '' } = process.env
  * @since 1.0.0
  */
 async function run() {
+  if (dryRun)
+    log(
+      new loggingData(
+        '300',
+        `Release Mastermind is running in local dryrun mode. No Actions will be applyed`
+      )
+    )
   const configInput = JSON.parse(
     core.getInput('configJSON') === '' ? '{}' : core.getInput('configJSON')
   )
@@ -57,10 +64,10 @@ async function run() {
       (configInput?.pr || configInput?.issue || configInput?.project
         ? configInput
         : local == undefined
-          ? undefined
-          : require(local.configJSON).releaseMastermind
-            ? require(local.configJSON).releaseMastermind
-            : require(local.configJSON)),
+        ? undefined
+        : require(local.configJSON).releaseMastermind
+        ? require(local.configJSON).releaseMastermind
+        : require(local.configJSON)),
     showLogs,
     dryRun
   }
@@ -69,7 +76,7 @@ async function run() {
     log(
       new loggingData(
         '800',
-        `Label Mastermind did not complete due to error:`,
+        `Release Mastermind did not complete due to error:`,
         err
       )
     )

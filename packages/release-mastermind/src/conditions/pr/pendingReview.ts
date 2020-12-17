@@ -8,7 +8,11 @@ export interface ConditionPendingReview {
   value: boolean
 }
 
-function pendingReview(this: Issues | PullRequests | Project, condition: ConditionPendingReview, pr: PRProps) {
+function pendingReview(
+  this: Issues | PullRequests | Project,
+  condition: ConditionPendingReview,
+  pr: PRProps
+) {
   return pr.pendingReview === condition.value
 }
 

@@ -4,7 +4,7 @@ import {
   PRConditionConfig,
   ProjectConditionConfig
 } from '../../../types'
-import { Issues, PullRequests, Project } from '../../contexts'
+import { Issues, Project, PullRequests } from '../../contexts'
 import { evaluator } from '../../evaluator'
 const TYPE = '$and'
 

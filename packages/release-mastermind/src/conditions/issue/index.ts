@@ -5,7 +5,10 @@ export type IssueCondition = Condition
 
 const handlers = [...sharedHandlers]
 
-export function getIssueConditionHandler(this: Issues, condition: IssueCondition) {
+export function getIssueConditionHandler(
+  this: Issues,
+  condition: IssueCondition
+) {
   const handler = handlers.find(handler => handler[0] === condition.type)
   return handler?.[1]
 }

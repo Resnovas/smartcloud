@@ -9,13 +9,9 @@ export async function assignProject(this: Issues | PullRequests) {
     // Get projects
     let projects
     if (remote.user)
-      projects = await this.util.api.project.projects.user(
-        remote.user
-      )
+      projects = await this.util.api.project.projects.user(remote.user)
     else if (remote.owner && !remote.repo)
-      projects = await this.util.api.project.projects.org(
-        remote.owner
-      )
+      projects = await this.util.api.project.projects.org(remote.owner)
     else if (remote.owner && remote.repo)
       projects = await this.util.api.project.projects.repo(
         remote.owner,
@@ -24,16 +20,14 @@ export async function assignProject(this: Issues | PullRequests) {
     else
       projects = await this.util.api.project.projects.repo(
         this.util.repo.owner,
-        this.util.repo.repo,
+        this.util.repo.repo
       )
     // Get the column
     const project = projects.filter(
       project => project.name === remote.project
     )[0]
     if (!project) throw log(new loggingData('500', 'No project to use'))
-    const columns = await this.util.api.project.column.list(
-      project.id
-    )
+    const columns = await this.util.api.project.column.list(project.id)
     if (!columns) throw log(new loggingData('500', 'No columns to use'))
     const remoteColumn = columns.filter(
       column => column.name === remote.column
@@ -49,11 +43,7 @@ export async function assignProject(this: Issues | PullRequests) {
       log(new loggingData('100', `Adding to project ${project.name}`))
       !this.dryRun &&
         (await this.util.api.project.card
-          .create(
-            this.context.IDNumber,
-            remoteColumn.id,
-            'PullRequest'
-          )
+          .create(this.context.IDNumber, remoteColumn.id, 'PullRequest')
           .catch(err => {
             log(
               new loggingData(

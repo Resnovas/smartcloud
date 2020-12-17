@@ -9,7 +9,11 @@ export interface ConditionisApproved {
   required?: number
 }
 
-function isApproved(this: Issues | PullRequests | Project, condition: ConditionisApproved, pr: PRProps) {
+function isApproved(
+  this: Issues | PullRequests | Project,
+  condition: ConditionisApproved,
+  pr: PRProps
+) {
   let reviewers: string[] = []
   pr.reviews.forEach(review => {
     if (reviewers.indexOf(review.user.login) == -1)
