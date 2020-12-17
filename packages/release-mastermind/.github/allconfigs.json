@@ -2840,6 +2840,76 @@
       }
     ]
   },
+  "conventionMastermind": {
+    "runners": [
+      {
+        "root": ".",
+        "projectType": "node",
+        "versioning": "SemVer",
+        "prereleaseName": "alpha",
+        "pr": {
+          "enforceConventions": {
+            "conventions": [
+              {
+                "requires": 1,
+                "contexts": [
+                  "workflow",
+                  "release",
+                  "label",
+                  "variable",
+                  "installer",
+                  "deps",
+                  "deps-dev"
+                ],
+                "conditions": "semanticTitle"
+              }
+            ]
+          }
+        },
+        "issue": {
+          "ref": "develop",
+          "enforceConventions": {
+            "conventions": [
+              {
+                "requires": 1,
+                "contexts": [
+                  "workflow",
+                  "release",
+                  "label",
+                  "variable",
+                  "installer",
+                  "deps",
+                  "deps-dev"
+                ],
+                "conditions": "semanticTitle"
+              }
+            ]
+          }
+        },
+        "project": {
+          "ref": "develop",
+          "enforceConventions": {
+            "onColumn": ["Accepted", "Reviewing"],
+            "conventions": [
+              {
+                "requires": 1,
+                "contexts": [
+                  "workflow",
+                  "release",
+                  "label",
+                  "variable",
+                  "installer",
+                  "deps",
+                  "deps-dev"
+                ],
+                "conditions": "semanticTitle"
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
   "slashCommandDispatch": [
     {
       "command": "help",
