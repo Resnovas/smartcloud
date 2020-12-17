@@ -1,26 +1,26 @@
 import * as github from '@actions/github'
-import { ApiProps, IssueApiProps } from '.'
+import { Utils } from '..'
 
 export async function get(
-  { client, repo }: ApiProps,
+  this: Utils,
   file: string,
   ref?: string
 ): Promise<string> {
   /**
    * Checks to see if the settings file is valid
    */
-  let gotdata: any = await client.repos.getContents({
-    owner: repo.owner || github.context.repo.owner,
-    repo: repo.repo || github.context.repo.repo,
+  let gotdata: any = await this.client.repos.getContents({
+    owner: this.repo.owner || github.context.repo.owner,
+    repo: this.repo.repo || github.context.repo.repo,
     ref: ref || 'master',
     path: file
   })
   return Buffer.from(gotdata.data.content, gotdata.data.encoding).toString()
 }
 
-export async function list({ client, IDNumber, repo }: IssueApiProps) {
-  const files = await client.pulls.listFiles({
-    ...repo,
+export async function list(this: Utils, IDNumber: number) {
+  const files = await this.client.pulls.listFiles({
+    ...this.repo,
     pull_number: IDNumber,
     per_page: 100
   })

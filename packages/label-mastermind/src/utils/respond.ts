@@ -1,56 +1,49 @@
-import { api, ApiProps } from '../api'
-import { CurContext } from '../conditions'
+import { Issues, Project, PullRequests } from '../contexts'
 
-export default function respond(
-  CurContext: CurContext,
-  { client, repo }: ApiProps,
+export function respond(
+  this: Issues | PullRequests | Project,
   success: boolean,
   previousComment?: number,
   body?: string
 ) {
   if (!previousComment && !success) {
-    if (CurContext.type == 'pr')
-      api.pullRequests.reviews.create(
-        { client, IDNumber: CurContext.context.IDNumber, repo },
+    if (this.curContext.type == 'pr')
+      this.util.api.pullRequests.reviews.create(
+        this.curContext.context.IDNumber,
         body,
         'REQUEST_CHANGES'
       )
     else
-      api.issues.comments.create(
-        { client, IDNumber: CurContext.context.IDNumber, repo },
+      this.util.api.issues.comments.create(
+        this.curContext.context.IDNumber,
         body as string
       )
   } else if (previousComment && !success) {
-    if (CurContext.type == 'pr')
-      api.pullRequests.reviews.update(
-        { client, IDNumber: CurContext.context.IDNumber, repo },
+    if (this.curContext.type == 'pr')
+      this.util.api.pullRequests.reviews.update(
+        this.curContext.context.IDNumber,
         previousComment,
         body as string
       )
-    else
-      api.issues.comments.update(
-        { client, repo },
-        previousComment,
-        body as string
-      )
+    else this.util.api.issues.comments.update(previousComment, body as string)
   } else if (previousComment && success) {
-    if (CurContext.type == 'pr')
-      api.pullRequests.reviews.dismiss(
-        { client, IDNumber: CurContext.context.IDNumber, repo },
+    if (this.curContext.type == 'pr')
+      this.util.api.pullRequests.reviews.dismiss(
+        this.curContext.context.IDNumber,
         previousComment,
         'Conventions corrected - Review no longer required'
       )
-    else api.issues.comments.delete({ client, repo }, previousComment)
+    else this.util.api.issues.comments.delete(previousComment)
   } else if (!success) {
-    if (CurContext.type == 'pr')
-      api.pullRequests.reviews.create(
-        { client, IDNumber: CurContext.context.IDNumber, repo },
+    if (this.curContext.type == 'pr')
+      this.util.api.pullRequests.reviews.create(
+        this.curContext.context.IDNumber,
         body,
         'REQUEST_CHANGES'
       )
     else
-      api.issues.comments.create(
-        { client, IDNumber: CurContext.context.IDNumber, repo },
+      this.util.api.issues.comments.create(
+        this.curContext.context.IDNumber,
         body as string
       )
   }

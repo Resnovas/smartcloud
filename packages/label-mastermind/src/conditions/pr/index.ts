@@ -1,3 +1,4 @@
+import { Issues, Project, PullRequests } from '../../contexts'
 import { Condition, handlers as sharedHandlers } from '../util'
 import branchMatches, { ConditionBranchMatches } from './branchMatches'
 import changesSize, { ConditionChangesSize } from './changesSize'
@@ -28,7 +29,10 @@ const handlers = [
   isApproved
 ]
 
-export const getPRConditionHandler = (condition: PRCondition) => {
+export function getPRConditionHandler(
+  this: Issues | PullRequests | Project,
+  condition: PRCondition
+) {
   const handler = handlers.find(handler => handler[0] === condition.type)
   return handler?.[1]
 }

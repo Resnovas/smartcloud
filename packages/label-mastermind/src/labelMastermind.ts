@@ -1,13 +1,14 @@
 import fs from 'fs'
+import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github'
-import { Config, Label, Options } from '../types'
+import { Config, Label, Options, Runners } from '../types'
 import { contextHandler } from './contextHandler'
-import { applyIssue, applyPR } from './labelHandler'
 import { CurContext } from './conditions'
 import { log } from '.'
-import { utils } from './utils'
+import { Utils } from './utils'
 import { loggingData } from '@videndum/utilities'
+import { PullRequests, Issues, Project } from './contexts'
 
 let local: any
 let context = github.context
@@ -34,6 +35,7 @@ export default class labelMastermind {
   configPath: Options['configPath']
   dryRun: Options['dryRun']
   repo = context.repo || {}
+  util: Utils
 
   /**
    * @author IvanFon, TGTGamer, jbinda
@@ -43,8 +45,10 @@ export default class labelMastermind {
     log(new loggingData('100', `Superlabeller Constructed: ${options}`))
     this.client = client
     this.opts = options
+    console.log(options.configJSON.runners)
     this.configJSON = options.configJSON
     this.configPath = options.configPath
+    this.util = new Utils({ client, repo: this.repo }, options.dryRun)
     this.dryRun = options.dryRun
   }
 
@@ -81,74 +85,67 @@ export default class labelMastermind {
      * @since 1.1.0
      */
     const configs = await this.processConfig().catch(err => {
-      throw new loggingData(
-        '500',
-        `Error thrown while processing config: `,
-        err
+      throw log(
+        new loggingData('500', `Error thrown while processing config: `, err)
       )
     })
-    if (!configs) {
-      throw new loggingData('500', `No config data.`)
+    if (!configs.runners[0]) {
+      throw log(new loggingData('500', `No config data.`))
     }
-    log(new loggingData('100', `Config: ${JSON.stringify(configs)}`))
-
-    /**
-     * Get the context
-     * @author TGTGamer
-     * @since 1.1.0
-     */
-    const curContext = await this.processContext(configs).catch(err => {
-      throw new loggingData(
-        '500',
-        `Error thrown while processing context: `,
-        err
-      )
-    })
-
-    /**
-     * Combine the Shared & Context.type Configs
-     * @author TGTGamer
-     * @since 1.1.0
-     */
-    for (const config in configs.shared) {
-      if (!configs[curContext.type].labels[config]) {
-        configs[curContext.type].labels[config] = configs.shared[config]
-      }
-    }
-
-    /**
-     * Convert label ID's to Names
-     * @author TGTGamer
-     * @since 1.1.0
-     */
-    const labelIdToName = await Object.entries(configs.labels).reduce(
-      (acc: { [key: string]: string }, cur) => {
+    configs.runners.forEach(async config => {
+      /**
+       * Convert label ID's to Names
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      config.labels = await Object.entries(
+        configs.labels ? configs.labels : []
+      ).reduce((acc: { [key: string]: string }, cur) => {
         acc[cur[0]] = cur[1].name
         return acc
-      },
-      {}
-    )
+      }, {})
 
-    /**
-     * Syncronise the labels
-     * @author TGTGamer
-     * @since 1.1.0
-     */
-    await this.syncLabels(configs).catch(err => {
-      throw new loggingData(
-        '500',
-        `Error thrown while syncronising labels: `,
-        err
+      log(new loggingData('100', `Config: ${JSON.stringify(config)}`))
+
+      /**
+       * Get the context
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      const curContext = await this.processContext(config).catch(err => {
+        throw log(
+          new loggingData('500', `Error thrown while processing context: `, err)
+        )
+      })
+      log(
+        new loggingData('100', `Current Context: ${JSON.stringify(curContext)}`)
       )
-    })
 
-    /**
-     * Apply the context
-     * @author TGTGamer
-     * @since 1.1.0
-     */
-    await this.applyContext(curContext, configs, labelIdToName).catch(err => {
-      throw new loggingData('500', `Error thrown while applying context: `, err)
+      /**
+       * Combine the Shared & Context.type Configs
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      for (const label in config.sharedLabelsConfig) {
+        const ctx = config[curContext.type]?.labels
+        if (ctx && !(label in ctx)) {
+          ctx[label] = config.sharedLabelsConfig[label]
+        }
+      }
+      core.endGroup()
+
+      /**
+       * Apply the context
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      await this.applyContext(configs, config, curContext).catch(err => {
+        throw new loggingData(
+          '500',
+          `Error thrown while applying context: `,
+          err
+        )
+      })
     })
   }
 
@@ -157,12 +154,15 @@ export default class labelMastermind {
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
-  async processConfig(): Promise<Config> {
-    if (!this.configJSON?.labels) {
+  async processConfig(): Promise<Runners> {
+    console.log(this.configJSON.runners)
+    if (!this.configJSON?.runners[0]) {
       if (!fs.existsSync(this.configPath)) {
-        throw new loggingData('500', `config not found at "${this.configPath}"`)
+        throw new Error(`config not found at "${this.configPath}"`)
       }
-      const pathConfig = JSON.parse(fs.readFileSync(this.configPath).toString())
+      const pathConfig = await JSON.parse(
+        fs.readFileSync(this.configPath).toString()
+      )
       if (!pathConfig.labelMastermind) return pathConfig
       else return pathConfig.labelMastermind
     } else {
@@ -185,7 +185,7 @@ export default class labelMastermind {
        * @since 1.0.0
        */
       const ctx = await contextHandler
-        .parsePR({ client: this.client, repo: this.repo }, config, context)
+        .parsePR(this.util, config, context)
         .catch(err => {
           throw new loggingData(
             '500',
@@ -208,7 +208,7 @@ export default class labelMastermind {
        * @since 1.0.0
        */
       const ctx = await contextHandler
-        .parseIssue({ client: this.client, repo: this.repo }, config, context)
+        .parseIssue(this.util, config, context)
         .catch(err => {
           throw new loggingData(
             '500',
@@ -244,29 +244,23 @@ export default class labelMastermind {
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
-  async syncLabels(config: Config) {
-    config.labels = await Object.entries(
+  async syncLabels(config: Runners) {
+    const labels = await Object.entries(
       config.labels ? config.labels : []
     ).reduce((acc: { [key: string]: Label }, cur) => {
       acc[cur[1].name.toLowerCase()] = cur[1]
       return acc
     }, {})
 
-    await utils.labels
-      .sync({
-        client: this.client,
-        repo: this.repo,
-        config: config.labels,
-        dryRun: this.dryRun
-      })
-      .catch((err: { message: string | Error }) => {
-        log(
-          new loggingData(
-            '500',
-            `Error thrown while handling syncLabels tasks: ${err.message}`
-          )
+    await this.util.labels.sync(labels).catch(err => {
+      log(
+        new loggingData(
+          '500',
+          `Error thrown while handling syncLabels tasks:`,
+          err
         )
-      })
+      )
+    })
   }
 
   /**
@@ -274,43 +268,22 @@ export default class labelMastermind {
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
-  async applyContext(
-    curContext: CurContext,
-    config: Config,
-    labelIdToName: { [key: string]: string }
-  ) {
+  async applyContext(runners: Runners, config: Config, curContext: CurContext) {
+    let ctx: PullRequests | Issues | Project
     if (curContext.type === 'pr') {
-      await applyPR({
-        client: this.client,
-        configs: config,
-        config: config.pr,
-        context: curContext.context,
-        labelIdToName,
-        repo: this.repo,
-        dryRun: this.dryRun
-      }).catch((err: { message: string | Error }) => {
-        log(
-          new loggingData(
-            '500',
-            `Error thrown while handling PRLabel tasks: ${err.message}`
-          )
-        )
-      })
+      ctx = new PullRequests(
+        this.util,
+        runners,
+        config,
+        curContext,
+        this.dryRun
+      )
+      ctx.run()
     } else if (curContext.type === 'issue') {
-      await applyIssue({
-        client: this.client,
-        configs: config,
-        config: config.issue,
-        context: curContext.context,
-        labelIdToName,
-        repo: this.repo,
-        dryRun: this.dryRun
-      }).catch((err: { message: string | Error }) => {
-        log(
-          new loggingData(
-            '500',
-            `Error thrown while handling issueLabel tasks: ${err.message}`
-          )
+      ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
+      ctx.run().catch(err => {
+        throw log(
+          new loggingData('500', `Error thrown while running context: `, err)
         )
       })
     }

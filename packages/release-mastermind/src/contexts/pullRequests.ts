@@ -1,20 +1,17 @@
 import * as core from '@actions/core'
-import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { Config, PullRequestConfig, Release, Runners } from '../../types'
-import { api } from '../api'
 import { CurContext, PRContext } from '../conditions'
 import { evaluator } from '../evaluator'
-import { utils } from '../utils'
+import { Utils } from '../utils'
 import { Contexts } from './methods'
 
 export class PullRequests extends Contexts {
   context: PRContext
   config: PullRequestConfig
   constructor(
-    client: GitHub,
-    repo: { owner: string; repo: string },
+    util: Utils,
     runners: Runners,
     configs: Config,
     curContext: CurContext,
@@ -22,7 +19,7 @@ export class PullRequests extends Contexts {
   ) {
     if (curContext.type !== 'pr')
       throw new loggingData('500', 'Cannot construct without issue context')
-    super(client, repo, runners, configs, curContext, dryRun)
+    super(util, runners, configs, curContext, dryRun)
     this.context = curContext.context
     if (!configs.pr) throw new loggingData('500', 'Cannot start without config')
     this.config = configs.pr
@@ -77,8 +74,7 @@ export class PullRequests extends Contexts {
       )
       attempt++
       setTimeout(async () => {
-        this.newVersion = await utils.versioning.parse(
-          { client: this.client, repo: this.repo },
+        this.newVersion = await this.util.versioning.parse(
           this.configs,
           this.config?.ref || this.context.ref
         )
@@ -92,18 +88,14 @@ export class PullRequests extends Contexts {
       throw new loggingData('500', 'Not Able to automatically approve')
     automaticApprove.conventions.forEach(convention => {
       if (!convention.conditions) return
-      if (evaluator(convention, this.context.props)) {
+      if (evaluator.call(this, convention, this.context.props)) {
         log(new loggingData('200', `Automatically Approved Successfully`))
         let body =
           automaticApprove.commentHeader +
           '\n\n Automatically Approved - Will automatically merge shortly! \n\n' +
           automaticApprove.commentFooter
-        api.pullRequests.reviews.create(
-          {
-            client: this.client,
-            IDNumber: this.context.IDNumber,
-            repo: this.repo
-          },
+        this.util.api.pullRequests.reviews.create(
+          this.context.IDNumber,
           body,
           'APPROVE'
         )

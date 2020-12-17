@@ -1,17 +1,15 @@
 import * as core from '@actions/core'
-import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { Column, Config, ProjectConfig, Runners } from '../../types'
-import { api } from '../api'
 import { CurContext, ProjectContext } from '../conditions'
+import { Utils } from '../utils'
 import { Contexts } from './methods'
 export class Project extends Contexts {
   context: ProjectContext
   config: ProjectConfig
   constructor(
-    client: GitHub,
-    repo: { owner: string; repo: string },
+    util: Utils,
     runners: Runners,
     configs: Config,
     curContext: CurContext,
@@ -19,7 +17,7 @@ export class Project extends Contexts {
   ) {
     if (curContext.type !== 'project')
       throw new loggingData('500', 'Cannot construct without issue context')
-    super(client, repo, runners, configs, curContext, dryRun)
+    super(util, runners, configs, curContext, dryRun)
     this.context = curContext.context
     if (!configs.project)
       throw new loggingData('500', 'Cannot start without config')
@@ -81,8 +79,7 @@ export class Project extends Contexts {
     }
   }
   async convertColumnStringsToIDArray(columns: Column[]): Promise<number[]> {
-    const columnList = await api.project.column.list(
-      { client: this.client, repo: this.repo },
+    const columnList = await this.util.api.project.column.list(
       this.context.props.project.id
     )
     return await columns.map(column => {

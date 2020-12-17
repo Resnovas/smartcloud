@@ -1,16 +1,15 @@
 import * as core from '@actions/core'
-import { GitHub } from '@actions/github'
 import { loggingData } from '@videndum/utilities'
 import { log } from '..'
 import { Config, IssueConfig, Runners } from '../../types'
 import { CurContext, IssueContext } from '../conditions'
+import { Utils } from '../utils'
 import { Contexts } from './methods'
 export class Issues extends Contexts {
   context: IssueContext
   config: IssueConfig
   constructor(
-    client: GitHub,
-    repo: { owner: string; repo: string },
+    util: Utils,
     runners: Runners,
     configs: Config,
     curContext: CurContext,
@@ -18,7 +17,7 @@ export class Issues extends Contexts {
   ) {
     if (curContext.type !== 'issue')
       throw new loggingData('500', 'Cannot construct without issue context')
-    super(client, repo, runners, configs, curContext, dryRun)
+    super(util, runners, configs, curContext, dryRun)
     this.context = curContext.context
     if (!configs.issue)
       throw new loggingData('500', 'Cannot start without config')

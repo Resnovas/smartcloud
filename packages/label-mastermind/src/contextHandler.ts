@@ -2,7 +2,6 @@ import { Context } from '@actions/github/lib/context'
 import { loggingData } from '@videndum/utilities'
 import { log } from '.'
 import { Config, Label, Labels } from '../types'
-import { api, ApiProps } from './api'
 import {
   IssueContext,
   PRContext,
@@ -10,7 +9,7 @@ import {
   Reviews,
   Version
 } from './conditions'
-import { utils } from './utils'
+import { Utils } from './utils'
 
 class ContextHandler {
   /**
@@ -19,7 +18,7 @@ class ContextHandler {
    * @since 1.0.0
    */
   async parsePR(
-    { client, repo }: ApiProps,
+    utils: Utils,
     config: Config,
     context: Context
   ): Promise<PRContext | undefined> {
@@ -41,14 +40,12 @@ class ContextHandler {
       log(new loggingData('500', `Error thrown while parsing labels: `, err))
       throw err
     })
-    const files: string[] = await api.files
-      .list({ client, repo, IDNumber })
-      .catch(err => {
-        log(new loggingData('500', `Error thrown while listing files: `, err))
-        throw err
-      })
+    const files: string[] = await utils.api.files.list(IDNumber).catch(err => {
+      log(new loggingData('500', `Error thrown while listing files: `, err))
+      throw err
+    })
 
-    const changes: number = await api.pullRequests
+    const changes: number = await utils.api.pullRequests
       .changes(pr.additions, pr.deletions)
       .catch(err => {
         log(
@@ -57,8 +54,8 @@ class ContextHandler {
         throw err
       })
 
-    const reviews: Reviews = await api.pullRequests.reviews
-      .list({ client, repo, IDNumber })
+    const reviews: Reviews = await utils.api.pullRequests.reviews
+      .list(IDNumber)
       .catch(err => {
         log(
           new loggingData('500', `Error thrown while handling reviews: `, err)
@@ -66,7 +63,7 @@ class ContextHandler {
         throw err
       })
 
-    const pendingReview: boolean = await api.pullRequests.reviews
+    const pendingReview: boolean = await utils.api.pullRequests.reviews
       .pending(reviews.length, pr.requested_reviewers.length)
       .catch(err => {
         log(
@@ -75,7 +72,7 @@ class ContextHandler {
         throw err
       })
 
-    const requestedChanges: number = await api.pullRequests.reviews
+    const requestedChanges: number = await utils.api.pullRequests.reviews
       .requestedChanges(reviews)
       .catch(err => {
         log(
@@ -84,7 +81,7 @@ class ContextHandler {
         throw err
       })
 
-    const approved: number = await api.pullRequests.reviews
+    const approved: number = await utils.api.pullRequests.reviews
       .isApproved(reviews)
       .catch(err => {
         log(
@@ -94,7 +91,7 @@ class ContextHandler {
       })
 
     const currentVersion: Version = await utils.versioning
-      .parse({ client, repo }, config, config.pr.ref)
+      .parse(config, config.pr.ref)
       .catch(err => {
         log(
           new loggingData('500', `Error thrown while parsing versioning: `, err)
@@ -135,7 +132,7 @@ class ContextHandler {
    * @since 1.0.0
    */
   async parseProject(
-    { client, repo }: ApiProps,
+    utils: Utils,
     config: Config,
     context: Context
   ): Promise<ProjectContext | undefined> {
@@ -154,11 +151,7 @@ class ContextHandler {
 
     if (!project.content_url) throw new Error('No content information to get')
     const issueNumber: number = project.content_url.split('/').pop()
-    const issue = await await api.issues.get({
-      client,
-      IDNumber: issueNumber,
-      repo
-    })
+    const issue = await await utils.api.issues.get(issueNumber)
 
     const labels = await this.parseLabels(issue.labels).catch(err => {
       log(new loggingData('500', `Error thrown while parsing labels: `, err))
@@ -166,7 +159,7 @@ class ContextHandler {
     })
 
     const currentVersion: Version = await utils.versioning
-      .parse({ client, repo }, config, config.project.ref)
+      .parse(config, config.project.ref)
       .catch(err => {
         log(
           new loggingData('500', `Error thrown while parsing versioning: `, err)
@@ -175,17 +168,13 @@ class ContextHandler {
       })
 
     let localProject
-    localProject = await api.project.projects.get(
-      { client, repo },
+    localProject = await utils.api.project.projects.get(
       project.project_url.split('/').pop()
     )
     const changes = context.payload.changes
-    const localColumn = await api.project.column.get(
-      { client, repo },
-      project.column_id
-    )
+    const localColumn = await utils.api.project.column.get(project.column_id)
 
-    const localCard = await api.project.card.get({ client, repo }, project.id)
+    const localCard = await utils.api.project.card.get(project.id)
 
     return {
       sha: context.sha,
@@ -215,7 +204,7 @@ class ContextHandler {
    * @since 1.0.0
    */
   async parseIssue(
-    { client, repo }: ApiProps,
+    utils: Utils,
     config: Config,
     context: Context
   ): Promise<IssueContext | undefined> {
@@ -237,7 +226,7 @@ class ContextHandler {
     })
 
     const currentVersion: Version = await utils.versioning
-      .parse({ client, repo }, config, config.issue.ref)
+      .parse(config, config.issue.ref)
       .catch(err => {
         log(
           new loggingData('500', `Error thrown while parsing versioning: `, err)

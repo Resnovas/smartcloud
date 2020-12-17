@@ -1,9 +1,9 @@
-import { Event, IssueApiProps } from '.'
-import { Reviews } from '../conditions'
+import { Event, Utils } from '..'
+import { Reviews } from '../../conditions'
 
-export async function list({ client, IDNumber, repo }: IssueApiProps) {
-  const files = await client.pulls.listFiles({
-    ...repo,
+export async function list(this: Utils, IDNumber: number) {
+  const files = await this.client.pulls.listFiles({
+    ...this.repo,
     pull_number: IDNumber,
     per_page: 100
   })
@@ -16,13 +16,14 @@ export async function changes(Additions: number, deletions: number) {
 
 export const reviews = {
   async create(
-    { client, IDNumber, repo }: IssueApiProps,
+    this: Utils,
+    IDNumber: number,
     body?: string,
     event?: Event,
     comments?: any
   ) {
-    const reviews = await client.pulls.createReview({
-      ...repo,
+    const reviews = await this.client.pulls.createReview({
+      ...this.repo,
       pull_number: IDNumber,
       body,
       event,
@@ -30,13 +31,9 @@ export const reviews = {
     })
     return reviews.data
   },
-  async update(
-    { client, IDNumber, repo }: IssueApiProps,
-    review_id: number,
-    body: string
-  ) {
-    const reviews = await client.pulls.updateReview({
-      ...repo,
+  async update(this: Utils, IDNumber: number, review_id: number, body: string) {
+    const reviews = await this.client.pulls.updateReview({
+      ...this.repo,
       pull_number: IDNumber,
       review_id,
       body
@@ -44,12 +41,13 @@ export const reviews = {
     return reviews.data
   },
   async dismiss(
-    { client, IDNumber, repo }: IssueApiProps,
+    this: Utils,
+    IDNumber: number,
     review_id: number,
     message: string
   ) {
-    const reviews = await client.pulls.dismissReview({
-      ...repo,
+    const reviews = await this.client.pulls.dismissReview({
+      ...this.repo,
       pull_number: IDNumber,
       review_id,
       message
@@ -57,9 +55,9 @@ export const reviews = {
     return reviews.data
   },
 
-  async list({ client, IDNumber, repo }: IssueApiProps) {
-    const reviews = await client.pulls.listReviews({
-      ...repo,
+  async list(this: Utils, IDNumber: number) {
+    const reviews = await this.client.pulls.listReviews({
+      ...this.repo,
       pull_number: IDNumber,
       per_page: 100
     })

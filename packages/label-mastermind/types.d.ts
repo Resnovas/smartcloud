@@ -12,7 +12,7 @@ export interface IssueConditionConfig {
 
 export interface PRConditionConfig {
   requires: number
-  conditions: ProjectCondition[]
+  conditions: PRCondition[]
 }
 
 export interface SharedConfig {
@@ -20,20 +20,17 @@ export interface SharedConfig {
   conditions: Condition[]
 }
 
+export interface Runners {
+  labels?: Labels
+  runners: Config[]
+}
+
 export interface Config {
   projectType: ProjectType
   root: string
   versioning?: VersionType
-  labels: {
-    [key: string]: {
-      name: string
-      color: string
-      description: string
-    }
-  }
-  shared: {
-    [key: string]: SharedConfig
-  }
+  labels?: { [key: string]: string }
+  sharedLabelsConfig: SharedLabels
   issue: IssueConfig
   pr: PullRequestConfig
   project: ProjectConfig
@@ -41,6 +38,13 @@ export interface Config {
   delete_labels: boolean
 }
 
+interface SharedLabels {
+  [key: string]: SharedConditions
+}
+export interface SharedConditions {
+  requires: number
+  conditions: Condition[]
+}
 export interface IssueConfig {
   ref?: string
   labels: {
@@ -75,11 +79,10 @@ export interface Labels {
 
 export interface Options {
   configPath: string
-  configJSON: Config
+  configJSON: Runners
   showLogs: boolean
   dryRun: boolean
 }
 
-export type Runners = Config
 export type ProjectType = 'node' | 'other'
 export type VersionType = 'SemVer'

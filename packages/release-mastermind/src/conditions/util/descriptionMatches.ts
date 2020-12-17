@@ -1,5 +1,5 @@
 import { IssueProps, ProjectProps, PRProps } from '../'
-import { utils } from '../../utils'
+import { Issues, Project, PullRequests } from '../../contexts'
 
 const TYPE = 'descriptionMatches'
 
@@ -8,11 +8,12 @@ export interface ConditionDescriptionMatches {
   pattern: string
 }
 
-const descriptionMatches = (
+function descriptionMatches(
+  this: Issues | PullRequests | Project,
   condition: ConditionDescriptionMatches,
   issue: IssueProps | PRProps | ProjectProps
-) => {
-  const pattern = utils.parsingData.processRegExpPattern(condition.pattern)
+) {
+  const pattern = this.util.parsingData.processRegExpPattern(condition.pattern)
   return pattern.test(issue.description)
 }
 

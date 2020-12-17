@@ -1,4 +1,5 @@
 import { IssueProps, ProjectProps, PRProps } from '../'
+import { Issues, Project, PullRequests } from '../../contexts'
 
 const TYPE = 'hasLabel'
 
@@ -8,10 +9,11 @@ export interface ConditionHasLabel {
   value: boolean
 }
 
-const hasLabel = (
+function hasLabel(
+  this: Issues | PullRequests | Project,
   condition: ConditionHasLabel,
   issue: IssueProps | PRProps | ProjectProps
-) => {
+) {
   return (
     Boolean(issue.labels?.[condition.label.toLowerCase()]) == condition.value
   )

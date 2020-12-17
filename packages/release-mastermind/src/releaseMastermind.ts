@@ -8,7 +8,7 @@ import { Config, Label, Options, Runners } from '../types'
 import { CurContext } from './conditions'
 import { contextHandler } from './contextHandler'
 import { Issues, Project, PullRequests } from './contexts'
-import { utils } from './utils'
+import { Utils } from './utils'
 
 let local: any
 let context = github.context
@@ -28,6 +28,7 @@ export default class releaseMastermind {
   configPath: Options['configPath']
   dryRun: Options['dryRun']
   repo = context.repo || {}
+  util: Utils
 
   constructor(client: GitHub, options: Options) {
     log(new loggingData('100', `Release Mastermind Constructed: ${options}`))
@@ -36,6 +37,7 @@ export default class releaseMastermind {
     this.opts = options
     this.configJSON = options.configJSON
     this.configPath = options.configPath
+    this.util = new Utils({ client, repo: this.repo }, options.dryRun)
     this.dryRun = options.dryRun
   }
 
@@ -174,7 +176,7 @@ export default class releaseMastermind {
        * @since 1.0.0
        */
       const ctx = await contextHandler
-        .parsePR({ client: this.client, repo: this.repo }, config, context)
+        .parsePR(this.util, config, context)
         .catch(err => {
           throw log(
             new loggingData(
@@ -199,7 +201,7 @@ export default class releaseMastermind {
        * @since 1.0.0
        */
       const ctx = await contextHandler
-        .parseIssue({ client: this.client, repo: this.repo }, config, context)
+        .parseIssue(this.util, config, context)
         .catch(err => {
           throw log(
             new loggingData(
@@ -224,7 +226,7 @@ export default class releaseMastermind {
        * @since 1.0.0
        */
       const ctx = await contextHandler
-        .parseProject({ client: this.client, repo: this.repo }, config, context)
+        .parseProject(this.util, config, context)
         .catch(err => {
           log(
             new loggingData(
@@ -273,30 +275,22 @@ export default class releaseMastermind {
       return acc
     }, {})
 
-    await utils.labels
-      .sync({
-        client: this.client,
-        repo: this.repo,
-        config: labels,
-        dryRun: this.dryRun
-      })
-      .catch(err => {
-        log(
-          new loggingData(
-            '500',
-            `Error thrown while handling syncLabels tasks:`,
-            err
-          )
+    await this.util.labels.sync(labels).catch(err => {
+      log(
+        new loggingData(
+          '500',
+          `Error thrown while handling syncLabels tasks:`,
+          err
         )
-      })
+      )
+    })
   }
 
   applyContext(runners: Runners, config: Config, curContext: CurContext) {
     let ctx: PullRequests | Issues | Project
     if (curContext.type == 'pr') {
       ctx = new PullRequests(
-        this.client,
-        this.repo,
+        this.util,
         runners,
         config,
         curContext,
@@ -304,28 +298,14 @@ export default class releaseMastermind {
       )
       ctx.run()
     } else if (curContext.type == 'issue') {
-      ctx = new Issues(
-        this.client,
-        this.repo,
-        runners,
-        config,
-        curContext,
-        this.dryRun
-      )
+      ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
         throw log(
           new loggingData('500', `Error thrown while running context: `, err)
         )
       })
     } else if (curContext.type == 'project') {
-      ctx = new Project(
-        this.client,
-        this.repo,
-        runners,
-        config,
-        curContext,
-        this.dryRun
-      )
+      ctx = new Project(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
         throw log(
           new loggingData('500', `Error thrown while running context: `, err)

@@ -1,8 +1,8 @@
 import { loggingData } from '@videndum/utilities'
 import path from 'path'
+import { Utils } from '.'
 import { log } from '..'
 import { Config } from '../../types'
-import { api, ApiProps } from '../api'
 import { Version } from '../conditions'
 
 /**
@@ -11,14 +11,15 @@ import { Version } from '../conditions'
  * @since 1.0.0
  */
 export async function parse(
-  { client, repo }: ApiProps,
+  this: Utils,
   config: Config,
   ref?: string
 ): Promise<Version> {
   let rawVersion
   if (config.projectType === 'node') {
-    rawVersion = await getNodeVersion({ client, repo }, config.root, ref).catch(
-      err => {
+    rawVersion = await getNodeVersion
+      .call(this, config.root, ref)
+      .catch(err => {
         log(
           new loggingData(
             '500',
@@ -26,8 +27,7 @@ export async function parse(
           )
         )
         throw err
-      }
-    )
+      })
   } else {
     throw new Error("There isn't any version to use")
   }
@@ -48,11 +48,11 @@ export async function parse(
 }
 
 export async function getNodeVersion(
-  { client, repo }: ApiProps,
+  this: Utils,
   root: string,
   ref?: string
 ): Promise<string> {
   const file = path.join(root, '/package.json')
   log(new loggingData('100', `Getting file: ${file}`))
-  return JSON.parse(await api.files.get({ client, repo }, file, ref)).version
+  return JSON.parse(await this.api.files.get(file, ref)).version
 }

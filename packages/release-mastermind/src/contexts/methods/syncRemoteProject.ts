@@ -1,6 +1,5 @@
 import { loggingData } from '@videndum/utilities'
 import { log } from '../..'
-import { api } from '../../api'
 import { Project } from '../projects'
 
 export async function syncRemoteProject(this: Project) {
@@ -26,18 +25,11 @@ export async function syncRemoteProject(this: Project) {
       new loggingData('500', 'There is not a remote to connect.')
     // Get projects
     if (remote.user)
-      projects = await api.project.projects.user(
-        { client: this.client, repo: this.repo },
-        remote.user
-      )
+      projects = await this.util.api.project.projects.user(remote.user)
     else if (remote.owner && !remote.repo)
-      projects = await api.project.projects.org(
-        { client: this.client, repo: this.repo },
-        remote.owner
-      )
+      projects = await this.util.api.project.projects.org(remote.owner)
     else if (remote.owner && remote.repo)
-      projects = await api.project.projects.repo(
-        { client: this.client, repo: this.repo },
+      projects = await this.util.api.project.projects.repo(
         remote.owner,
         remote.repo
       )
@@ -46,10 +38,7 @@ export async function syncRemoteProject(this: Project) {
     const project = projects.filter(
       project => project.name === remote.project
     )[0]
-    const columns = await api.project.column.list(
-      { client: this.client, repo: this.repo },
-      project.id
-    )
+    const columns = await this.util.api.project.column.list(project.id)
     if (!columns) throw log(new loggingData('500', 'No column to use'))
     remoteColumn = columns.filter(
       column => column.name === this.context.props.localColumn.name
@@ -57,20 +46,17 @@ export async function syncRemoteProject(this: Project) {
     if (this.context.action !== 'created') {
       // Get the cards
       if (this.context.action == 'moved') {
-        oldLocalColumn = await api.project.column.get(
-          { client: this.client, repo: this.repo },
+        oldLocalColumn = await this.util.api.project.column.get(
           this.context.props.changes.column_id.from
         )
         oldRemoteColumn = columns.filter(
           column => column.name === oldLocalColumn.name
         )[0]
-        remoteCard = await api.project.column.listCards(
-          { client: this.client, repo: this.repo },
+        remoteCard = await this.util.api.project.column.listCards(
           oldRemoteColumn.id
         )
       } else {
-        remoteCard = await api.project.column.listCards(
-          { client: this.client, repo: this.repo },
+        remoteCard = await this.util.api.project.column.listCards(
           remoteColumn.id
         )
       }
@@ -81,19 +67,14 @@ export async function syncRemoteProject(this: Project) {
         throw log(new loggingData('500', 'No remote card to use'))
     }
     if (this.context.action == 'created' || !remoteCard) {
-      api.project.card.create(
-        { client: this.client, repo: this.repo },
+      this.util.api.project.card.create(
         this.context.IDNumber,
         remoteColumn.id,
         'Issue'
       )
     } else if (this.context.action == 'moved') {
-      api.project.card
-        .move(
-          { client: this.client, repo: this.repo },
-          remoteCard.id,
-          remoteColumn.id
-        )
+      this.util.api.project.card
+        .move(remoteCard.id, remoteColumn.id)
         .catch(err => {
           throw new loggingData(
             '500',

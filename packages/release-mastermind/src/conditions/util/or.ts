@@ -4,6 +4,7 @@ import {
   PRConditionConfig,
   ProjectConditionConfig
 } from '../../../types'
+import { Issues, Project, PullRequests } from '../../contexts'
 import { evaluator } from '../../evaluator'
 const TYPE = '$or'
 
@@ -12,14 +13,15 @@ export interface ConditionOr {
   pattern: [PRConditionConfig | IssueConditionConfig | ProjectConditionConfig]
 }
 
-const or = (
+function or(
+  this: Issues | PullRequests | Project,
   condition: ConditionOr,
   props: IssueProps | PRProps | ProjectProps
-) => {
+) {
   let success: boolean = false
 
   condition.pattern.forEach(condition => {
-    if (evaluator(condition, props)) success = true
+    if (evaluator.call(this, condition, props)) success = true
   })
 
   return success

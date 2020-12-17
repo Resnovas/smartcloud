@@ -41,6 +41,13 @@ const { GITHUB_WORKSPACE = '' } = process.env
  * @since 1.0.0
  */
 async function run() {
+  if (dryRun)
+    log(
+      new loggingData(
+        '300',
+        `Release Mastermind is running in local dryrun mode. No Actions will be applyed`
+      )
+    )
   const configInput = JSON.parse(
     core.getInput('configJSON') === '' ? '{}' : core.getInput('configJSON')
   )
@@ -69,7 +76,7 @@ async function run() {
     log(
       new loggingData(
         '800',
-        `Label Mastermind did not complete due to error:`,
+        `Release Mastermind did not complete due to error:`,
         err
       )
     )
