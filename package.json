@@ -21,7 +21,7 @@
   "scripts": {
     "postinstall": "lerna bootstrap",
     "start": "lerna run start",
-    "package": "./extractLabeler.sh && lerna run dev:all"
+    "package": "gulp && ./extractLabeler.sh && lerna run dev:all"
   },
   "config": {
     "commitizen": {
@@ -38,12 +38,18 @@
     "concurrently": "^5.2.0",
     "conventional-changelog-cli": "^2.1.0",
     "cz-conventional-changelog": "3.3.0",
+    "gulp-cli": "^2.3.0",
+    "gulp-markdown-toc": "^1.1.0",
     "husky": "^4.2.5",
     "lerna": "^3.22.1",
+    "mdinclude": "^0.7.1",
     "prettier": "^2.1.2",
     "prettier-plugin-organize-imports": "^1.1.1",
     "prettier-plugin-pkg": "^0.8.0",
     "prettier-plugin-sh": "^0.6.0"
   },
-  "private": false
+  "private": false,
+  "dependencies": {
+    "gulp": "^4.0.2"
+  }
 }

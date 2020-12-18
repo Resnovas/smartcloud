@@ -1,10 +1,10 @@
-# Available Conditions
+## Available Conditions
 
 For complex conditions, you can use conditional options such as `only`, `$and` and `$or`.
 
-## Conditional Conditions
+### Conditional Conditions
 
-### $and
+#### $and
 
 Allows conditions to be combined to create more advanced conditions. Would require all conditions to return true otherwise it would fail.
 
@@ -24,7 +24,7 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 }
 ```
 
-### $or
+#### $or
 
 Allows conditions to be combined to create more advanced conditions. Would require one conditions to return true otherwise it would fail.
 
@@ -44,7 +44,7 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 }
 ```
 
-### $only
+#### $only
 
 Requires only the number specified in `requires` to pass otherwise it fails.
 
@@ -65,9 +65,9 @@ Requires only the number specified in `requires` to pass otherwise it fails.
 }
 ```
 
-## Common Conditions
+### Common Conditions
 
-### creatorMatches
+#### creatorMatches
 
 Checks if an issue or pull request's creator's username matches a Regex pattern.
 
@@ -80,7 +80,7 @@ Example:
 }
 ```
 
-### descriptionMatches
+#### descriptionMatches
 
 Checks if an issue or pull request's description matches a Regex pattern.
 
@@ -93,7 +93,7 @@ Example:
 }
 ```
 
-### hasLabel
+#### hasLabel
 
 Checks if an issue or pull request has a specific label applied.
 
@@ -107,7 +107,7 @@ Example:
 }
 ```
 
-### isLocked
+#### isLocked
 
 Checks if an issue or pull request is locked.
 
@@ -120,7 +120,7 @@ Example:
 }
 ```
 
-### isOpen
+#### isOpen
 
 Checks if an issue or pull request is open or closed.
 
@@ -133,7 +133,7 @@ Example:
 }
 ```
 
-### titleMatches
+#### titleMatches
 
 Checks if an issue or pull request's title matches a Regex pattern.
 
@@ -146,9 +146,9 @@ Example:
 }
 ```
   
-## Pull Request Conditions
+### Pull Request Conditions
 
-### branchMatches
+#### branchMatches
 
 Checks if branch name matches a Regex pattern.
 
@@ -161,7 +161,7 @@ Example:
 }
 ```
 
-### changesSize
+#### changesSize
 
 Checks if an pull request's changes against `min` & `max` values. Note: if `max` is `undefined` assumed value is `unlimited`
 
@@ -175,7 +175,7 @@ Example:
 }
 ```
 
-### filesMatch
+#### filesMatch
 
 Checks if the files modified in the pull request match a glob.
 
@@ -190,7 +190,7 @@ Example:
 }
 ```
 
-### isApproved
+#### isApproved
 
 Checks if a pull request has requested a review.
 
@@ -204,7 +204,7 @@ Example:
 }
 ```
 
-### isDraft
+#### isDraft
 
 Checks if a pull request is a draft.
 
@@ -217,7 +217,7 @@ Example:
 }
 ```
 
-### pendingReview
+#### pendingReview
 
 Checks if a pull request has requested a review.
 
@@ -230,7 +230,7 @@ Example:
 }
 ```
 
-### requestedChanges
+#### requestedChanges
 
 Checks if a pull request has requested a review.
 
@@ -243,4 +243,4 @@ Example:
 }
 ```
 
-## Issue Conditions
+### Issue Conditions
