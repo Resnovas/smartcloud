@@ -13,65 +13,66 @@ Need reasons to consider using Release Manager?
 
 ## Index
 
-- [Mastermind Collection](#mastermind-collection)
-  - [Index](#index)
-  - [Features](#features)
-  - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-)
-    - [Why not GitHub Issues?](#why-not-github-issues)
-  - [Backlog & Contributing](#backlog--contributing)
-  - [Running Locally & Developing](#running-locally--developing)
-    - [Prerequisities](#prerequisities)
-    - [Developing](#developing)
-    - [Running locally](#running-locally)
-  - [Getting Started](#getting-started)
-    - [Automatic setup via CLI](#automatic-setup-via-cli)
-    - [Manual setup](#manual-setup)
-    - [Using Regex Patterns](#using-regex-patterns)
-    - [All configuration options](#all-configuration-options)
-      - [Runners](#runners)
-      - [PullRequestConfig](#pullrequestconfig)
-        - [EnforceConventions](#enforceconventions)
-        - [AssignProject](#assignproject)
-        - [SharedConventionsConfig](#sharedconventionsconfig)
-        - [AutomaticApprove](#automaticapprove)
-        - [Release](#release)
-        - [ReleaseLabels](#releaselabels)
-        - [CreateRelease](#createrelease)
-        - [Changelog](#changelog)
-          - [Sections](#sections)
-        - [CreateMilestone](#createmilestone)
-        - [DuplicateHotfix](#duplicatehotfix)
-        - [SyncRemote](#syncremote)
-      - [IssueConfig](#issueconfig)
-        - [CreateBranch](#createbranch)
-      - [ProjectConfig](#projectconfig)
-        - [ExProjects](#exprojects)
-        - [ProjectCreateBranch](#projectcreatebranch)
-        - [Milestones](#milestones)
-        - [SharedLabels](#sharedlabels)
-        - [PRConditionConfig](#prconditionconfig)
-    - [Available Conditions](#available-conditions)
-      - [Conditional Conditions](#conditional-conditions)
-        - [\$and](#and)
-        - [\$or](#or)
-        - [\$only](#only)
-      - [Common Conditions](#common-conditions)
-        - [creatorMatches](#creatormatches)
-        - [descriptionMatches](#descriptionmatches)
-        - [hasLabel](#haslabel)
-        - [isLocked](#islocked)
-        - [isOpen](#isopen)
-        - [titleMatches](#titlematches)
-      - [Pull Request Conditions](#pull-request-conditions)
-        - [branchMatches](#branchmatches)
-        - [changesSize](#changessize)
-        - [filesMatch](#filesmatch)
-        - [isApproved](#isapproved)
-        - [isDraft](#isdraft)
-        - [pendingReview](#pendingreview)
-        - [requestedChanges](#requestedchanges)
-      - [Issue Conditions](#issue-conditions)
-  - [Final Note](#final-note)
+<!-- toc -->
+
+- [Features](#features)
+- [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
+  * [Why not GitHub Issues?](#why-not-github-issues)
+- [Backlog & Contributing](#backlog--contributing)
+- [Running Locally & Developing](#running-locally--developing)
+  * [Prerequisities](#prerequisities)
+  * [Developing](#developing)
+  * [Running locally](#running-locally)
+- [Getting Started](#getting-started)
+  * [Automatic setup via CLI](#automatic-setup-via-cli)
+  * [Manual setup](#manual-setup)
+  * [All configuration options](#all-configuration-options)
+    + [Runners](#runners)
+    + [PullRequestConfig](#pullrequestconfig)
+      - [EnforceConventions](#enforceconventions)
+      - [AssignProject](#assignproject)
+      - [SharedConventionsConfig](#sharedconventionsconfig)
+      - [AutomaticApprove](#automaticapprove)
+      - [Release](#release)
+      - [ReleaseLabels](#releaselabels)
+      - [CreateRelease](#createrelease)
+      - [Changelog](#changelog)
+        * [Sections](#sections)
+      - [CreateMilestone](#createmilestone)
+      - [DuplicateHotfix](#duplicatehotfix)
+      - [SyncRemote](#syncremote)
+    + [IssueConfig](#issueconfig)
+      - [CreateBranch](#createbranch)
+    + [ProjectConfig](#projectconfig)
+      - [ExProjects](#exprojects)
+      - [ProjectCreateBranch](#projectcreatebranch)
+      - [Milestones](#milestones)
+    + [Typings](#typings)
+  * [Using Regex Patterns](#using-regex-patterns)
+- [Available Conditions](#available-conditions)
+  * [Common Conditions](#common-conditions)
+    + [$and](#and)
+    + [creatorMatches](#creatormatches)
+    + [descriptionMatches](#descriptionmatches)
+    + [hasLabel](#haslabel)
+    + [isLocked](#islocked)
+    + [isOpen](#isopen)
+    + [$only](#only)
+    + [$or](#or)
+  * [Pull Request Conditions](#pull-request-conditions)
+    + [branchMatches](#branchmatches)
+    + [changesSize](#changessize)
+    + [filesMatch](#filesmatch)
+    + [isApproved](#isapproved)
+    + [isDraft](#isdraft)
+    + [pendingReview](#pendingreview)
+    + [requestedChanges](#requestedchanges)
+  * [Issue Conditions](#issue-conditions)
+  * [Project Conditions](#project-conditions)
+    + [onColumn](#oncolumn)
+- [Final Note](#final-note)
+
+<!-- tocstop -->
 
 ## Features
 
@@ -90,7 +91,7 @@ Need reasons to consider using Release Manager?
 - Create milestones automatically - Automatically create milestones when a new release is published.
 - Automatically maintain `main` and `dev` branches - Create pull requests from `dev` to `main` and automatically approve them based on config.
 - Automatically syncronise branches or folders with remote repository.
-
+- 
 ## How to get support 👨‍👩‍👧‍👦
 
 For **Features Requests**, **Q&A**, **Show & Tell** and **Discussions** please use **[our discussions page](https://github.com/Videndum/action-masterminds/discussions)** 🚑.
@@ -145,92 +146,1416 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 > [!IMPORTANT]
 > It is **Extremely** important to understand while using this template, most of the code within `.github/` will automatically update within a new pull request whenever the [template repository](https://github.com/Videndum/Universal-GitAction-Workflows) is updated.
 
-<!-- ### Automatic setup (Using Repository Template)
-
-Setting up our actions shouldn't take long, it would defeat the purpose. Simplest way to get started is to click that `Use this template` button! Our template will automatically be built by Github, which will trigger our workflows which cleanup and setup everything for you.
-
-[Use this template!](https://github.com/Videndum/workflow-mastermind/generate) -->
-
 ### Automatic setup via CLI
 
 [coming soon]
 
 ### Manual setup
 
-Create a new Github Actions workflow at `.github/workflows/releaseMastermind.yml`:
+Create a new Github Actions workflow at `.github/workflows/main.yml`:
 
 _Note: `actions/checkout` must be run first so that the release action can find your config file._
+
+<details>
+    <summary><b>main.yml</b></summary>
 
 ```yaml
 on:
   issues:
+    types: [opened, edited, closed, reopened]
   pull_request:
+    types: [opened, edited, closed, reopened, synchronize]
   project_card:
+    types: [created, moved, deleted]
 
 jobs:
-  release:
+  run:
     runs-on: ubuntu-latest
-    name: Mastermind behind all realse actions
     steps:
       - uses: actions/checkout@v2
-      - uses: Videndum/release-mastermind@latest
+      - uses: ./
         with:
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
-          config: .github/allconfigs.json
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-Now create the labeler config file at `.github/labels.json`:
+</details>
+
+Now create the config file at `.github/config.json`:
+
+<details>
+    <summary><b>Our config.json (very long)</b></summary>
 
 ```json
 {
   "labels": {
-    "example": {
-      "name": "example",
-      "colour": "#00ff00",
-      "description": "Example label"
+    "abandoned": {
+      "name": "Status - Abandoned",
+      "color": "CFD3D7",
+      "description": "This issue / pull request has been abandon"
+    },
+    "available": {
+      "name": "Status - Available",
+      "color": "CFD3D7",
+      "description": "This issue is available for either Developers or Community contributors to develop"
+    },
+    "blocked": {
+      "name": "Status - Blocked",
+      "color": "CFD3D7",
+      "description": "Another issue is blocking the development of this issue"
+    },
+    "completed": {
+      "name": "Status - Completed",
+      "color": "CFD3D7",
+      "description": "Development has finished and been merged for this issue"
+    },
+    "progress": {
+      "name": "Status - In Progress",
+      "color": "CFD3D7",
+      "description": "Development is underway for this issue"
+    },
+    "hold": {
+      "name": "Status - On Hold",
+      "color": "CFD3D7",
+      "description": "The developers have decided to hold the development of this request"
+    },
+    "pending": {
+      "name": "Status - Pending",
+      "color": "CFD3D7",
+      "description": "The developers have approved development of this request."
+    },
+    "review": {
+      "name": "Status - Review Needed",
+      "color": "CFD3D7",
+      "description": "This pull request is waiting on review"
+    },
+    "revision": {
+      "name": "Status - Revision Needed",
+      "color": "CFD3D7",
+      "description": "This pull request has been reviewed and requires revision"
+    },
+    "doNotDevelop": {
+      "name": "Status - Do not develop",
+      "color": "CFD3D7",
+      "description": "This wont be worked on by DevOPS or Community contributor"
+    },
+    "stale": {
+      "name": "Status - Stale",
+      "color": "CFD3D7",
+      "description": "This issue has been automatically marked as stale because it has not had recent activite"
+    },
+    "chore": {
+      "name": "Type - Chore",
+      "color": "0075CA",
+      "description": "Changes to the build process or auxiliary tools and libraries such as documentation generation"
+    },
+    "bug": {
+      "name": "Type - Bug",
+      "color": "0075CA",
+      "description": "A possible bug"
+    },
+    "maintenance": {
+      "name": "Type - Maintenance",
+      "color": "0075CA",
+      "description": "Changes to maintain the project"
+    },
+    "discussion": {
+      "name": "Type - Discussion",
+      "color": "0075CA",
+      "description": "A conversation about something"
+    },
+    "documentation": {
+      "name": "Type - Documentation",
+      "color": "0075CA",
+      "description": "Changes to the documentation"
+    },
+    "feature": {
+      "name": "Type - Feature",
+      "color": "0075CA",
+      "description": "A new feature"
+    },
+    "enhancement": {
+      "name": "Type - Enhancement",
+      "color": "0075CA",
+      "description": "Improving a feature"
+    },
+    "fix": {
+      "name": "Type - Fix",
+      "color": "0075CA",
+      "description": "A bug fix"
+    },
+    "optimisation": {
+      "name": "Type - Optimisation",
+      "color": "0075CA",
+      "description": "A code change that improves performance"
+    },
+    "refactor": {
+      "name": "Type - Refactor",
+      "color": "0075CA",
+      "description": "A code change that neither fixes a bug nor adds a feature"
+    },
+    "revert": {
+      "name": "Type - Revert",
+      "color": "0075CA",
+      "description": "Removes & Discards a previous change as error"
+    },
+    "deprecated": {
+      "name": "Type - Deprecated",
+      "color": "0075CA",
+      "description": "Marks functionality which is no longer needed"
+    },
+    "removal": {
+      "name": "Type - Removal",
+      "color": "0075CA",
+      "description": "Removes previous functionality which is no longer needed"
+    },
+    "style": {
+      "name": "Type - Style",
+      "color": "0075CA",
+      "description": "Changes that do not affect the meaning of the code (white-space formatting missing semi-colons etc)"
+    },
+    "dependences": {
+      "name": "Type - Dependences",
+      "color": "0075CA",
+      "description": "Changes that affect the dependences"
+    },
+    "workflow": {
+      "name": "Context - workflows",
+      "color": "f9cea2",
+      "description": "Related to ./.github/workflows"
+    },
+    "releaseMastermind": {
+      "name": "Context - Release Mastermind",
+      "color": "f9cea2",
+      "description": "Related to @videndum/release-mastermind"
+    },
+    "labelMastermind": {
+      "name": "Context - Label Mastermind",
+      "color": "f9cea2",
+      "description": "Related to @videndum/label-mastermind"
+    },
+    "variableMastermind": {
+      "name": "Context - Variable Mastermind",
+      "color": "f9cea2",
+      "description": "Related to @videndum/variable-mastermind"
+    },
+    "installer": {
+      "name": "Context - Installer",
+      "color": "f9cea2",
+      "description": "Related to @videndum/action-masterminds installer"
+    },
+    "devOpsAccepted": {
+      "name": "DevOps - Accepted",
+      "color": "172875",
+      "description": "DevOPS are planning"
+    },
+    "devOpsCompleted": {
+      "name": "DevOps - Completed",
+      "color": "172875",
+      "description": "DevOPS have complete"
+    },
+    "devOpsDeploying": {
+      "name": "DevOps - Deploying",
+      "color": "172875",
+      "description": "DevOPS are deploying to latest"
+    },
+    "devOpsDeveloping": {
+      "name": "DevOps - Developing",
+      "color": "172875",
+      "description": "DevOPS are Developing"
+    },
+    "devOpsRejected": {
+      "name": "DevOps - Rejected",
+      "color": "172875",
+      "description": "DevOPS wont continue"
+    },
+    "devOpsReviewing": {
+      "name": "DevOps - Reviewing",
+      "color": "172875",
+      "description": "DevOPS awaiting review"
+    },
+    "devOpsStaging": {
+      "name": "DevOps - Staging",
+      "color": "172875",
+      "description": "DevOPS deployed to Staging"
+    },
+    "devOpsTesting": {
+      "name": "DevOps - Testing",
+      "color": "172875",
+      "description": "DevOPS deployed to Testing"
+    },
+    "comOpsAccepted": {
+      "name": "ComOps - Accepted",
+      "color": "bfdadc",
+      "description": "A community contributor is planning to work on this issue"
+    },
+    "comOpsCompleted": {
+      "name": "ComOps - Completed",
+      "color": "bfdadc",
+      "description": "The contributor has completed this issue and handed over to the developers to stage & deploy"
+    },
+    "comOpsDeveloping": {
+      "name": "ComOps - Developing",
+      "color": "bfdadc",
+      "description": "The contributor is developing this issue"
+    },
+    "comOpsAwaiting Review": {
+      "name": "ComOps - Awaiting Review",
+      "color": "bfdadc",
+      "description": "The contributor is awaiting review"
+    },
+    "comOpsTesting": {
+      "name": "ComOps - Testing",
+      "color": "bfdadc",
+      "description": "The contributor is awaiting testing results"
+    },
+    "android": {
+      "name": "Platform - Android",
+      "color": "E0BE84"
+    },
+    "aws": {
+      "name": "Platform - AWS",
+      "color": "E0BE84"
+    },
+    "google": {
+      "name": "Platform - Google Cloud",
+      "color": "E0BE84"
+    },
+    "ios": {
+      "name": "Platform - IOS",
+      "color": "E0BE84"
+    },
+    "ubuntu": {
+      "name": "Platform - Ubuntu",
+      "color": "E0BE84"
+    },
+    "fedora": {
+      "name": "Platform - Fedora",
+      "color": "E0BE84"
+    },
+    "debian": {
+      "name": "Platform - Debian",
+      "color": "E0BE84"
+    },
+    "macos": {
+      "name": "Platform - MacOS",
+      "color": "E0BE84"
+    },
+    "windows": {
+      "name": "Platform - Windows",
+      "color": "E0BE84"
+    },
+    "platformOther": {
+      "name": "Platform - Other",
+      "color": "E0BE84"
+    },
+    "priorityLow": {
+      "name": "Priority - Low",
+      "color": "8de8b3",
+      "description": "This bug isn't a high priority for the next release"
+    },
+    "priorityMedium": {
+      "name": "Priority - Medium",
+      "color": "8de8b3",
+      "description": "This bug affects more than 10% of users and should be patched before the next major release"
+    },
+    "priorityHigh": {
+      "name": "Priority - High",
+      "color": "8de8b3",
+      "description": "This bug affects more than 25% of users and should be patched before the next minor release"
+    },
+    "priorityCritical": {
+      "name": "Priority - Critical",
+      "color": "8de8b3",
+      "description": "This bug affects more than 50% of users and should be patched before any new features are added"
+    },
+    "xs": {
+      "name": "Size - XS",
+      "color": "d4c5f9",
+      "description": "Less than 10 lines changed"
+    },
+    "s": {
+      "name": "Size - S",
+      "color": "d4c5f9",
+      "description": "More than 10 lines changed"
+    },
+    "m": {
+      "name": "Size - M",
+      "color": "d4c5f9",
+      "description": "More than 30 lines changed"
+    },
+    "l": {
+      "name": "Size - L",
+      "color": "d4c5f9",
+      "description": "More than 100 lines changed"
+    },
+    "xl": {
+      "name": "Size - XL",
+      "color": "d4c5f9",
+      "description": "More than 500 lines changed"
+    },
+    "xxl": {
+      "name": "Size - XXL",
+      "color": "d4c5f9",
+      "description": "More than 1000 lines changed"
+    },
+    "fixConfirmed": {
+      "name": "Fix - Confirmed",
+      "color": "D73A4A",
+      "description": "This fix has been confirmed"
+    },
+    "bugConfirmed": {
+      "name": "Bug - Confirmed",
+      "color": "D73A4A",
+      "description": "This bug has been confirmed"
+    },
+    "new": {
+      "name": "Bug - New",
+      "color": "D73A4A",
+      "description": "This bug is new"
+    },
+    "fixed": {
+      "name": "Bug - Fixed",
+      "color": "D73A4A",
+      "description": "This bug has been fixed"
+    },
+    "claSigned": {
+      "name": "CLA - Signed",
+      "color": "dd6127",
+      "description": "Contributor License Agreement has been signed"
+    },
+    "claUnsigned": {
+      "name": "CLA - Unsigned",
+      "color": "dd6127",
+      "description": "Contributor License Agreement has not been signed"
+    },
+    "claNot Required": {
+      "name": "CLA - Not Required",
+      "color": "dd6127",
+      "description": "Contributor License Agreement not required"
+    },
+    "major": {
+      "name": "Versioning - Major",
+      "color": "e580c8",
+      "description": "Major version to be incremented due to of backwards incompatible changes are introduced"
+    },
+    "minor": {
+      "name": "Versioning - Minor",
+      "color": "e580c8",
+      "description": "Minor version to be incremented due to substantial new functionality or improvements are introduced"
+    },
+    "patch": {
+      "name": "Versioning - Patch",
+      "color": "e580c8",
+      "description": "Patch version to be incremented due to backwards compatible bug fixes are introduced."
+    },
+    "prerelease": {
+      "name": "Versioning - Prerelease",
+      "color": "e580c8",
+      "description": "Prerelease of the next version."
+    },
+    "build": {
+      "name": "Versioning - Build",
+      "color": "e580c8",
+      "description": "A build to represent dependencies updates and insignificant changes."
+    },
+    "breaking": {
+      "name": "Versioning - BREAKING",
+      "color": "e580c8",
+      "description": "A breaking change"
+    },
+    "securityFix": {
+      "name": "security fix",
+      "color": "D1260F",
+      "description": "A Security Fix"
+    },
+    "securityVulnerability": {
+      "name": "security vulnerability",
+      "color": "D1260F",
+      "description": "A Security vulnerability"
+    },
+    "duplicate": {
+      "name": "Duplicate",
+      "color": "d4c5f9",
+      "description": "A Duplicate of another issue/pull"
+    },
+    "help": {
+      "name": "Help wanted",
+      "color": "d4c5f9",
+      "description": "Help is needed to continue"
+    },
+    "rebase": {
+      "name": "Needs rebase",
+      "color": "d4c5f9",
+      "description": "This request needs to be rebased"
+    },
+    "wip": {
+      "name": "Work in progress",
+      "color": "d4c5f9",
+      "description": "This pull request is a wip"
+    },
+    "moreInfo": {
+      "name": "More information needed",
+      "color": "d4c5f9",
+      "description": "Requires more information before it can continue"
+    },
+    "firstIssue": {
+      "name": "Good first issue",
+      "color": "d4c5f9",
+      "description": "A Good issue for first time github users"
+    },
+    "firstTimers": {
+      "name": "First Timers",
+      "color": "d4c5f9",
+      "description": "A Good issue for first time github users"
+    },
+    "skipChangelog": {
+      "name": "skip-changelog",
+      "color": "d4c5f9",
+      "description": "Skip the changelog"
     }
   },
-  "issue": {
-    "example": {
-      "requires": 2,
-      "conditions": [
-        {
-          "type": "titleMatches",
-          "pattern": "example"
+  "runners": [
+    {
+      "root": ".",
+      "projectType": "node",
+      "versioning": "SemVer",
+      "prereleaseName": "alpha",
+      "sharedLabelsConfig": {
+        "bug": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^bug(\\(.*\\))?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/(created|new|opened|made)( an| a)? bug/i"
+            }
+          ]
         },
-        {
-          "type": "isOpen"
+        "chore": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^chore(\\(.*\\))?:/i"
+            }
+          ]
+        },
+        "optimisation": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^opt(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^optimisation(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
+            }
+          ]
+        },
+        "style": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^style(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
+            }
+          ]
+        },
+        "refactor": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^ref(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^refactor(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
+            }
+          ]
+        },
+        "revert": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^revert(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
+            }
+          ]
+        },
+        "deprecated": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^dep(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^deprecated(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
+            }
+          ]
+        },
+        "removal": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^removal(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
+            }
+          ]
+        },
+        "discussion": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^discussion(\\(.*\\))?:/i"
+            }
+          ]
+        },
+        "documentation": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^docs(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^documentation(\\(.*\\))?:/i"
+            }
+          ]
+        },
+        "feature": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^feat(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^enhance(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^feature(\\(.*\\))?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^enhancement(\\(.*\\))?:/i"
+            }
+          ]
+        },
+        "fix": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^fix(\\(.*\\))?:/i"
+            }
+          ]
+        },
+        "workflow": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(workflow\\):/i"
+            }
+          ]
+        },
+        "releaseMastermind": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(release\\):/i"
+            }
+          ]
+        },
+        "labelMastermind": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(label\\):/i"
+            }
+          ]
+        },
+        "variableMastermind": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(variable\\):/i"
+            }
+          ]
+        },
+        "installer": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?action-masterminds.*/im"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(installer\\):/i"
+            }
+          ]
+        },
+        "priorityCritical": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+            }
+          ]
         }
-      ]
-    }
-  },
-  "pr": {
-    "example": {
-      "requires": 1,
-      "conditions": [
-        {
-          "type": "isDraft",
-          "value": false
+      },
+      "pr": {
+        "manageRelease": {
+          "version": "bump",
+          "labels": {
+            "prerelease": "Versioning - Prerelease",
+            "build": "Versioning - Build",
+            "patch": "Versioning - Patch",
+            "minor": "Versioning - Minor",
+            "major": "Versioning - Major",
+            "breaking": "Versioning - Breaking"
+          },
+          "createTag": true,
+          "createRelease": true,
+          "createMilestone": {},
+          "createPackages": "npm publish",
+          "createChangelog": {
+            "includeIssues": true,
+            "sections": [
+              {
+                "title": "Features Effectuated",
+                "PRlabels": [
+                  "Type - Feature"
+                ],
+                "issueLabels": [],
+                "includeCommitter": true,
+                "linkPR": true
+              },
+              {
+                "title": "Bugs Squashed",
+                "PRlabels": [
+                  "Type - Fix"
+                ],
+                "issueLabels": [],
+                "includeCommitter": true,
+                "linkPR": true
+              },
+              {
+                "title": "Maintenance & Dusting",
+                "PRlabels": [
+                  "Type - Maintenance",
+                  "Type - Style",
+                  "Type - Documentation",
+                  "Type - Enhancement",
+                  "Type - Optimisation",
+                  "Type - Refactor"
+                ],
+                "issueLabels": [],
+                "includeCommitter": true,
+                "linkPR": true
+              },
+              {
+                "title": "Abolishment",
+                "PRlabels": [
+                  "Type - Revert",
+                  "Type - deprecated",
+                  "Type - Removal"
+                ],
+                "issueLabels": [],
+                "includeCommitter": true,
+                "linkPR": true
+              },
+              {
+                "title": "Confession Time",
+                "PRlabels": [],
+                "issueLabels": [
+                  "Bug - Confirmed"
+                ],
+                "includeCommitter": true,
+                "linkPR": true
+              }
+            ]
+          },
+          "conditions": {}
+        },
+        "enforceConventions": {
+          "conventions": [
+            {
+              "requires": 1,
+              "contexts": [
+                "workflow",
+                "release",
+                "label",
+                "variable",
+                "convention",
+                "installer",
+                "deps",
+                "deps-dev"
+              ],
+              "conditions": "semanticTitle"
+            }
+          ]
+        },
+        "automaticApprove": {
+          "conventions": [
+            {
+              "requires": 1,
+              "conditions": [
+                {}
+              ]
+            }
+          ]
+        },
+        "duplicateHotfix": {},
+        "createMilestone": {},
+        "syncRemote": {},
+        "assignProject": [
+          {
+            "project": "Developer Operations",
+            "column": "Reviewing",
+            "requires": 0,
+            "conditions": []
+          }
+        ],
+        "labels": {
+          "xs": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "changesSize",
+                "min": 0,
+                "max": 10
+              }
+            ]
+          },
+          "s": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "changesSize",
+                "min": 10,
+                "max": 30
+              }
+            ]
+          },
+          "m": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "changesSize",
+                "min": 40,
+                "max": 100
+              }
+            ]
+          },
+          "l": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "changesSize",
+                "min": 100,
+                "max": 500
+              }
+            ]
+          },
+          "xl": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "changesSize",
+                "min": 500,
+                "max": 1000
+              }
+            ]
+          },
+          "xxl": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "changesSize",
+                "min": 1000
+              }
+            ]
+          },
+          "fixConfirmed": {
+            "requires": 6,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have fixed on a clean installation/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have fixed on a stable build/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have fixed on a development build/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have included logs or screenshots/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have linked any related/im"
+              }
+            ]
+          },
+          "devOpsReviewing": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "pendingReview",
+                "value": true
+              }
+            ]
+          },
+          "devOpsRejected": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "requestedChanges",
+                "value": true
+              }
+            ]
+          }
         }
-      ]
+      },
+      "issue": {
+        "ref": "develop",
+        "enforceConventions": {
+          "conventions": [
+            {
+              "requires": 1,
+              "contexts": [
+                "workflow",
+                "release",
+                "label",
+                "variable",
+                "installer",
+                "deps",
+                "deps-dev"
+              ],
+              "conditions": "semanticTitle"
+            }
+          ]
+        },
+        "assignProject": [
+          {
+            "project": "Developer Operations",
+            "column": "Requested",
+            "requires": 1,
+            "conditions": []
+          },
+          {
+            "project": "Issues",
+            "column": "New",
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "hasLabel",
+                "label": "Type - Bug",
+                "value": true
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^bug(\\(.*\\))?:/i"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/(created|new|opened|made)( an| a)? bug/i"
+              }
+            ]
+          }
+        ],
+        "assignColumn": {},
+        "createBranch": {},
+        "labels": {
+          "android": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*android/im"
+              }
+            ]
+          },
+          "aws": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*aws/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*amazon web service/im"
+              }
+            ]
+          },
+          "google": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*google/im"
+              }
+            ]
+          },
+          "ios": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*ios/im"
+              }
+            ]
+          },
+          "ubuntu": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*ubuntu/im"
+              }
+            ]
+          },
+          "fedora": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*fedora/im"
+              }
+            ]
+          },
+          "debian": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*debian/im"
+              }
+            ]
+          },
+          "macos": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*macos/im"
+              }
+            ]
+          },
+          "windows": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- platform:.*windows/im"
+              }
+            ]
+          },
+          "bugConfirmed": {
+            "requires": 8,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] bug Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have reproduced on my application version/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have reproduced on a clean installation/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have reproduced on a development build/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have included logs or screenshots/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have contacted support/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have asked the community/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have linked any related/im"
+              }
+            ]
+          },
+          "fixConfirmed": {
+            "requires": 6,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have fixed on a clean installation/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have fixed on a stable build/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have fixed on a development build/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have included logs or screenshots/im"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- \\[x\\] have linked any related/im"
+              }
+            ]
+          }
+        }
+      },
+      "project": {
+        "ref": "develop",
+        "enforceConventions": {
+          "onColumn": [
+            "Accepted",
+            "Reviewing"
+          ],
+          "conventions": [
+            {
+              "requires": 1,
+              "contexts": [
+                "workflow",
+                "release",
+                "label",
+                "variable",
+                "installer",
+                "deps",
+                "deps-dev"
+              ],
+              "conditions": "semanticTitle"
+            }
+          ]
+        },
+        "syncRemote": [
+          {
+            "localProject": "Developer Operations",
+            "owner": "Videndum",
+            "project": "Developer Operations"
+          },
+          {
+            "localProject": "Issues",
+            "owner": "Videndum",
+            "project": "Issues"
+          }
+        ],
+        "openBranch": {},
+        "assignMilestone": {},
+        "labels": {
+          "available": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Requested"
+              }
+            ]
+          },
+          "pending": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Accepted"
+              }
+            ]
+          },
+          "progress": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "In Progress"
+              },
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Testing"
+              }
+            ]
+          },
+          "review": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Reviewing"
+              }
+            ]
+          },
+          "completed": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Completed"
+              }
+            ]
+          },
+          "doNotDevelop": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Rejected"
+              }
+            ]
+          },
+          "devOpsAccepted": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Accepted"
+              }
+            ]
+          },
+          "devOpsDeveloping": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "In Progress"
+              }
+            ]
+          },
+          "devOpsTesting": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Testing"
+              }
+            ]
+          },
+          "devOpsReviewing": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Reviewing"
+              }
+            ]
+          },
+          "devOpsStaging": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Staging"
+              }
+            ]
+          },
+          "devOpsCompleted": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Completed"
+              }
+            ]
+          },
+          "devOpsRejected": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Developer Operations",
+                "column": "Rejected"
+              }
+            ]
+          },
+          "priorityLow": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Issues",
+                "column": "Low Priority"
+              }
+            ]
+          },
+          "priorityMedium": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Issues",
+                "column": "Medium Priority"
+              }
+            ]
+          },
+          "priorityHigh": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Issues",
+                "column": "High Priority"
+              }
+            ]
+          },
+          "priorityCritical": {
+            "requires": 2,
+            "conditions": [
+              {
+                "type": "onColumn",
+                "project": "Issues",
+                "column": "High Priority"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+              }
+            ]
+          }
+        }
+      }
     }
-  },
-  "skip_labeling": true,
-  "delete_labels": true
+  ]
 }
 ```
 
-Be sure that Github Actions is enabled for in your repository's settings. Release Mastermind will now run on your issues, projects and pull requests.
+</details>
 
-### Using Regex Patterns
-
-Many conditions use regular expressions (usually with a `pattern` parameter).
-Since these regular expressions are passed in through JSON strings, there are
-some things to pay attention to.
-
-Special characters must be double escaped: `pattern: "\\W+$"` is equivalent to the Regex: `/\W+$/`.
-
-If you want to use flags, use the following format: `pattern: "/^wip:/i"` is equivalent to the Regex: `/^wip:/i`.
+Be sure that Github Actions is enabled for in your repository's settings. The action will now run on your issues, projects and pull requests.
 
 ### All configuration options
 
@@ -248,8 +1573,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | Option             | Required | Description                                 | Params                                    |
 | ------------------ | -------- | ------------------------------------------- | ----------------------------------------- |
 | Root               | true     | Defines the root of the project             | `string`                                  |
-| projectType        | true     | Defines the type of project                 | `"node"                                   | "other"` |
-| versioning         | false    | Defines the versioning of the project       | `"SemVer"                                 | "other"` |
+| projectType        | true     | Defines the type of project                 | `"node" | "other"`                        |
+| versioning         | false    | Defines the versioning of the project       | `"SemVer" | "other"`                      |
 | prereleaseName     | false    | Defines the name of a prerelease            | `string`                                  |
 | sharedLabelsConfig | false    | Defines labels to use on both PR and Issues | [`SharedLabels`](#sharedlabels)           |
 | pr                 | false    | Defines the configuration for Pull Requests | [`PullRequestConfig`](#pullrequestconfig) |
@@ -273,10 +1598,10 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 | Option        | Required | Description                                                             | Params                                                  |
 | ------------- | -------- | ----------------------------------------------------------------------- | ------------------------------------------------------- |
-| onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String                                         | Number ]` |
+| onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String | Number ]`                             |
 | commentHeader | false    | A comment to append to the header of failed comments                    | `string`                                                |
 | commentFooter | false    | A comment to append to the footer of failed comments                    | `string`                                                |
-| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String                                                 | Number` |
+| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String | Number`                                       |
 | Conventions   | true     | The conventions to enforce                                              | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
 
 ##### AssignProject
@@ -291,12 +1616,12 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 ##### SharedConventionsConfig
 
-| Option        | Required | Description                                           | Params       |
-| ------------- | -------- | ----------------------------------------------------- | ------------ |
-| requires      | true     | The number of conditions this requires                | `number`     |
-| failedComment | true     | A comment to respond with should this convention fail | `string`     |
+| Option        | Required | Description                                           | Params                          |
+| ------------- | -------- | ----------------------------------------------------- | ------------------------------- |
+| requires      | true     | The number of conditions this requires                | `number`                        |
+| failedComment | true     | A comment to respond with should this convention fail | `string`                        |
 | conditions    | true     | The conditions to check against                       | `Condition[] | "semanticTitle"` |
-| contexts      | false    | (if using `"semanticTitle"`) contexts to use          | `string[]`   |
+| contexts      | false    | (if using `"semanticTitle"`) contexts to use          | `string[]`                      |
 
 Choosing `"semanticTitle"` as the condition will automatically configure your conventions to use semantic conventions. You can add additional context by adding the `contexts` option which enforce only those contexts get used.
 
@@ -316,7 +1641,7 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | createTag        | false     | Should this action create a tag?                  | `boolean`                             |
 | createRelease    | false     | Create a github release                           | [`CreateRelease`](#createrelease)     |
 | createMilestones | false     | Create a milestone                                | [`CreateMilestone`](#createmilestone) |
-| createPackages   | false     | Commands to use when creating packages            | `String[]                             | string` |
+| createPackages   | false     | Commands to use when creating packages            | `String[] | string`                   |
 | createChangelog  | false     | Create a changelog                                | [`Changelog`](#changelog)             |
 
 ##### ReleaseLabels
@@ -367,18 +1692,18 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### CreateMilestone
 
-| Option    | Required | Description                                              | Params     |
-| --------- | -------- | -------------------------------------------------------- | ---------- |
+| Option    | Required | Description                                              | Params               |
+| --------- | -------- | -------------------------------------------------------- | -------------------- |
 | milestone | true     | The milestone you want to use                            | `"version" | string` |
-| deadline  | false    | The date in which you want to set as the completion date | `string`   |
+| deadline  | false    | The date in which you want to set as the completion date | `string`             |
 
 ##### DuplicateHotfix
 
-| Option      | Required | Description                                    | Params       |
-| ----------- | -------- | ---------------------------------------------- | ------------ |
+| Option      | Required | Description                                    | Params                            |
+| ----------- | -------- | ---------------------------------------------- | --------------------------------- |
 | prName      | true     | What should the pull request be named          | `"unchanged" | "number" | string` |
-| titlePrefix | false    | Should there be a title prefix                 | `string`     |
-| branches    | false    | What banches should have the duplicated hotfix | `string[]`   |
+| titlePrefix | false    | Should there be a title prefix                 | `string`                          |
+| branches    | false    | What banches should have the duplicated hotfix | `string[]`                        |
 
 ##### SyncRemote
 
@@ -401,10 +1726,10 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### CreateBranch
 
-| Option       | Required | Description                     | Params   |
-| ------------ | -------- | ------------------------------- | -------- |
-| branchPrefix | false    | Should the branch have a prefix | `string` |
-| branchSuffix | false    | Should the branch have a suffix | `string` |
+| Option       | Required | Description                     | Params                         |
+| ------------ | -------- | ------------------------------- | ------------------------------ |
+| branchPrefix | false    | Should the branch have a prefix | `string`                       |
+| branchSuffix | false    | Should the branch have a suffix | `string`                       |
 | branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
 
 `'title'` - Use the entire title
@@ -433,12 +1758,12 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### ProjectCreateBranch
 
-| Option       | Required | Description                     | Params   |
-| ------------ | -------- | ------------------------------- | -------- |
-| onProject    | false    | Which project shoud be used     | `string` |
-| onColumn     | false    | Which column should be used     | `string  | number` |
-| branchPrefix | false    | Should the branch have a prefix | `string` |
-| branchSuffix | false    | Should the branch have a suffix | `string` |
+| Option       | Required | Description                     | Params                         |
+| ------------ | -------- | ------------------------------- | ------------------------------ |
+| onProject    | false    | Which project shoud be used     | `string`                       |
+| onColumn     | false    | Which column should be used     | `string | number`              |
+| branchPrefix | false    | Should the branch have a prefix | `string`                       |
+| branchSuffix | false    | Should the branch have a suffix | `string`                       |
 | branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
 
 `'title'` - Use the entire title
@@ -452,34 +1777,270 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | onColumn     | true     | Which column should be used    | `string`   |
 | ignoreLabels | false    | Labels which should be ignored | `string[]` |
 
-##### SharedLabels
 
-```ts
+#### Typings
+
+<details>
+    <summary><b>Types</b></summary>
+
+```typescript
+import {
+  Condition,
+  IssueCondition,
+  PRCondition,
+  ProjectCondition
+} from './src/conditions'
+
+/**
+ * Application interfaces
+ */
+
+export interface Options {
+  configPath: string
+  configJSON: Runners
+  showLogs: boolean
+  dryRun: boolean
+}
+
+export interface Runners {
+  labels?: Labels
+  runners: Config[]
+}
+
+export interface Config {
+  projectType: ProjectType
+  root: string
+  versioning?: VersionType
+  retryLimit?: number
+  prereleaseName?: string
+  labels?: { [key: string]: string }
+  sharedLabelsConfig?: SharedLabels
+  pr?: PullRequestConfig
+  issue?: IssueConfig
+  project?: ProjectConfig
+}
+
+/**
+ * Config types
+ */
+
+export type ProjectType = 'node' | 'other'
+export type VersionType = 'SemVer'
 interface SharedLabels {
   [key: string]: SharedConditions
 }
-interface SharedConditions {
+
+export interface PullRequestConfig extends SharedConfig {
+  assignProject?: AssignProject[]
+  automaticApprove?: AutomaticApprove
+  manageRelease?: Release
+  duplicateHotfix?: { [title: string]: DuplicateHotfix }
+  syncRemote?: SyncRemote[]
+}
+
+export interface IssueConfig extends SharedConfig {
+  assignProject?: AssignProject[]
+  createBranch?: { [label: string]: CreateBranch }
+}
+
+export interface ProjectConfig extends SharedConfig {
+  syncRemote?: ExProjects[]
+  openBranch?: ProjectCreateBranch
+  assignMilestone?: { [milestone: string]: Milestones }
+}
+
+/**
+ * shared types
+ */
+interface SharedConfig {
+  ref?: string
+  enforceConventions?: EnforceConventions
+  labels?: {
+    [key: string]:
+      | IssueConditionConfig
+      | ProjectConditionConfig
+      | PRConditionConfig
+  }
+}
+
+interface SharedConventionConditions {
+  requires: number
+  conditions: Condition[] | string
+}
+export interface SharedConditions {
   requires: number
   conditions: Condition[]
 }
-```
 
-##### PRConditionConfig
+export interface SharedConventionsConfig extends SharedConventionConditions {
+  failedComment: string
+  contexts?: string[]
+}
 
-```ts
+interface CreateBranch {
+  branchPrefix?: string
+  branchSuffix?: string
+  branchName: 'title' | 'short' | 'number'
+}
+
+interface EnforceConventions {
+  onColumn?: Column[]
+  commentHeader?: string
+  commentFooter?: string
+  moveToColumn?: string
+  conventions: SharedConventionsConfig[]
+}
+
+export type Column = string | number
+export interface Label {
+  name: string
+  description: string
+  color: string
+}
+
+export interface Labels {
+  [key: string]: Label
+}
+
+/**
+ * Pull Request Config types
+ */
+
 export interface PRConditionConfig {
   requires: number
   conditions: PRCondition[]
 }
+
+interface AutomaticApprove {
+  commentHeader?: string
+  commentFooter?: string
+  conventions: SharedConventionsConfig[]
+}
+
+export interface Release extends PRConditionConfig {
+  labels?: {
+    build: string
+    prerelease: string
+    patch: string
+    minor: string
+    major: string
+    breaking?: string
+  }
+  createTag?: boolean
+  createRelease?: CreateRelease
+  createMilestone?: CreateMilestone
+  createPackages?: string[] | string
+  createChangelog?: Changelog
+}
+
+interface DuplicateHotfix {
+  prName: 'unchanged' | 'number' | string
+  titlePrefix?: string
+  branches: string[]
+}
+interface SyncRemote {
+  localBranch: string
+  remoteBranch: string
+  localPath: string
+  remotePath: string
+  conditions: SharedConditions[]
+}
+
+interface ReleaseChanges {
+  includeIssues?: boolean
+  sections?: Sections[]
+}
+
+interface Sections {
+  title: string
+  body?: string
+  PRlabels: string[]
+  issueLabels?: string[]
+  includeCommitter?: boolean
+  linkPR?: boolean
+}
+
+interface CreateRelease extends ReleaseChanges {
+  tagName?: string
+  tagPrefix?: string
+  releaseName?: string
+  releaseNamePrefix?: string
+  releaseNameSuffix?: string
+  draft?: boolean
+  prerelease?: boolean
+  useChangelog?: boolean
+}
+interface Changelog extends ReleaseChanges {
+  title?: string
+  body?: string
+}
+
+interface CreateMilestone {
+  milestone: 'version' | string
+  deadline?: string
+}
+
+/**
+ * Issue Config types
+ */
+export interface IssueConditionConfig {
+  requires: number
+  conditions: IssueCondition[]
+}
+
+interface AssignProject extends IssueConditionConfig {
+  owner?: string
+  user?: string
+  repo?: string
+  project: string
+  column: string
+}
+
+/**
+ * Project Config types
+ */
+
+export interface ProjectConditionConfig {
+  requires: number
+  conditions: ProjectCondition[]
+}
+
+interface ExProjects {
+  localProject: string
+  owner?: string
+  user?: string
+  repo?: string
+  project: string
+}
+interface ProjectCreateBranch extends CreateBranch {
+  onProject?: string
+  onColumn?: string
+}
+
+interface Milestones {
+  onColumn: string
+  ignoreLabels?: string[]
+}
 ```
 
-### Available Conditions
+</details>
+### Using Regex Patterns
 
-For complex conditions, you can use conditional options such as `only`, `$and` and `$or`.
+Many conditions use regular expressions (usually with a `pattern` parameter).
+Since these regular expressions are passed in through JSON strings, there are
+some things to pay attention to.
 
-#### Conditional Conditions
+Special characters must be double escaped: `pattern: "\\W+$"` is equivalent to the Regex: `/\W+$/`.
 
-##### \$and
+If you want to use flags, use the following format: `pattern: "/^wip:/i"` is equivalent to the Regex: `/^wip:/i`.
+
+## Available Conditions
+
+For complex conditions, you can use conditional options such as `only`, `$and` and `$or`. They can be found within the common conditions section. 
+
+### Common Conditions
+
+#### $and
 
 Allows conditions to be combined to create more advanced conditions. Would require all conditions to return true otherwise it would fail.
 
@@ -488,61 +2049,18 @@ Allows conditions to be combined to create more advanced conditions. Would requi
   "type": "$and",
   "pattern": [
     {
-      "requires": 1,
+      "requires": 1, 
       "conditions": []
     },
     {
-      "requires": 1,
+      "requires": 1, 
       "conditions": []
-    }
+    },
   ]
 }
 ```
 
-##### \$or
-
-Allows conditions to be combined to create more advanced conditions. Would require one conditions to return true otherwise it would fail.
-
-```json
-{
-  "type": "$or",
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
-}
-```
-
-##### \$only
-
-Requires only the number specified in `requires` to pass otherwise it fails.
-
-```json
-{
-  "type": "$only",
-  "requires": 1,
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
-}
-```
-
-#### Common Conditions
-
-##### creatorMatches
+#### creatorMatches
 
 Checks if an issue or pull request's creator's username matches a Regex pattern.
 
@@ -555,7 +2073,7 @@ Example:
 }
 ```
 
-##### descriptionMatches
+#### descriptionMatches
 
 Checks if an issue or pull request's description matches a Regex pattern.
 
@@ -568,7 +2086,7 @@ Example:
 }
 ```
 
-##### hasLabel
+#### hasLabel
 
 Checks if an issue or pull request has a specific label applied.
 
@@ -582,7 +2100,7 @@ Example:
 }
 ```
 
-##### isLocked
+#### isLocked
 
 Checks if an issue or pull request is locked.
 
@@ -595,7 +2113,7 @@ Example:
 }
 ```
 
-##### isOpen
+#### isOpen
 
 Checks if an issue or pull request is open or closed.
 
@@ -608,22 +2126,51 @@ Example:
 }
 ```
 
-##### titleMatches
+#### $only
 
-Checks if an issue or pull request's title matches a Regex pattern.
-
-Example:
+Requires only the number specified in `requires` to pass otherwise it fails.
 
 ```json
 {
-  "type": "titleMatches",
-  "pattern": "/^wip:/i"
+  "type": "$only",
+  "requires": 1,
+  "pattern": [
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+  ]
 }
 ```
 
-#### Pull Request Conditions
+#### $or
 
-##### branchMatches
+Allows conditions to be combined to create more advanced conditions. Would require one conditions to return true otherwise it would fail.
+
+```json
+{
+  "type": "$or",
+  "pattern": [
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+    {
+      "requires": 1, 
+      "conditions": []
+    },
+  ]
+}
+```
+
+
+### Pull Request Conditions
+
+#### branchMatches
 
 Checks if branch name matches a Regex pattern.
 
@@ -636,7 +2183,7 @@ Example:
 }
 ```
 
-##### changesSize
+#### changesSize
 
 Checks if an pull request's changes against `min` & `max` values. Note: if `max` is `undefined` assumed value is `unlimited`
 
@@ -650,7 +2197,7 @@ Example:
 }
 ```
 
-##### filesMatch
+#### filesMatch
 
 Checks if the files modified in the pull request match a glob.
 
@@ -665,7 +2212,7 @@ Example:
 }
 ```
 
-##### isApproved
+#### isApproved
 
 Checks if a pull request has requested a review.
 
@@ -679,7 +2226,7 @@ Example:
 }
 ```
 
-##### isDraft
+#### isDraft
 
 Checks if a pull request is a draft.
 
@@ -692,7 +2239,7 @@ Example:
 }
 ```
 
-##### pendingReview
+#### pendingReview
 
 Checks if a pull request has requested a review.
 
@@ -705,7 +2252,7 @@ Example:
 }
 ```
 
-##### requestedChanges
+#### requestedChanges
 
 Checks if a pull request has requested a review.
 
@@ -718,7 +2265,23 @@ Example:
 }
 ```
 
-#### Issue Conditions
+### Issue Conditions
+
+
+### Project Conditions
+
+#### onColumn
+
+Checks if branch name matches a Regex pattern.
+
+Example:
+
+```json
+{
+  "type": "branchMatches",
+  "pattern": "^bugfix\\/"
+}
+```
 
 ## Final Note
 
