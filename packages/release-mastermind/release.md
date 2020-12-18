@@ -17,18 +17,18 @@ Need reasons to consider using Release Manager?
 
 - [Features](#features)
 - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
-  * [Why not GitHub Issues?](#why-not-github-issues)
+  - [Why not GitHub Issues?](#why-not-github-issues)
 - [Backlog & Contributing](#backlog--contributing)
 - [Running Locally & Developing](#running-locally--developing)
-  * [Prerequisities](#prerequisities)
-  * [Developing](#developing)
-  * [Running locally](#running-locally)
+  - [Prerequisities](#prerequisities)
+  - [Developing](#developing)
+  - [Running locally](#running-locally)
 - [Getting Started](#getting-started)
-  * [Automatic setup via CLI](#automatic-setup-via-cli)
-  * [Manual setup](#manual-setup)
-  * [All configuration options](#all-configuration-options)
-    + [Runners](#runners)
-    + [PullRequestConfig](#pullrequestconfig)
+  - [Automatic setup via CLI](#automatic-setup-via-cli)
+  - [Manual setup](#manual-setup)
+  - [All configuration options](#all-configuration-options)
+    - [Runners](#runners)
+    - [PullRequestConfig](#pullrequestconfig)
       - [EnforceConventions](#enforceconventions)
       - [AssignProject](#assignproject)
       - [SharedConventionsConfig](#sharedconventionsconfig)
@@ -37,39 +37,39 @@ Need reasons to consider using Release Manager?
       - [ReleaseLabels](#releaselabels)
       - [CreateRelease](#createrelease)
       - [Changelog](#changelog)
-        * [Sections](#sections)
+        - [Sections](#sections)
       - [CreateMilestone](#createmilestone)
       - [DuplicateHotfix](#duplicatehotfix)
       - [SyncRemote](#syncremote)
-    + [IssueConfig](#issueconfig)
+    - [IssueConfig](#issueconfig)
       - [CreateBranch](#createbranch)
-    + [ProjectConfig](#projectconfig)
+    - [ProjectConfig](#projectconfig)
       - [ExProjects](#exprojects)
       - [ProjectCreateBranch](#projectcreatebranch)
       - [Milestones](#milestones)
-    + [Typings](#typings)
-  * [Using Regex Patterns](#using-regex-patterns)
+    - [Typings](#typings)
+  - [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
-  * [Conditional Conditions](#conditional-conditions)
-    + [$and](#and)
-    + [$or](#or)
-    + [$only](#only)
-  * [Common Conditions](#common-conditions)
-    + [creatorMatches](#creatormatches)
-    + [descriptionMatches](#descriptionmatches)
-    + [hasLabel](#haslabel)
-    + [isLocked](#islocked)
-    + [isOpen](#isopen)
-    + [titleMatches](#titlematches)
-  * [Pull Request Conditions](#pull-request-conditions)
-    + [branchMatches](#branchmatches)
-    + [changesSize](#changessize)
-    + [filesMatch](#filesmatch)
-    + [isApproved](#isapproved)
-    + [isDraft](#isdraft)
-    + [pendingReview](#pendingreview)
-    + [requestedChanges](#requestedchanges)
-  * [Issue Conditions](#issue-conditions)
+  - [Conditional Conditions](#conditional-conditions)
+    - [\$and](#and)
+    - [\$or](#or)
+    - [\$only](#only)
+  - [Common Conditions](#common-conditions)
+    - [creatorMatches](#creatormatches)
+    - [descriptionMatches](#descriptionmatches)
+    - [hasLabel](#haslabel)
+    - [isLocked](#islocked)
+    - [isOpen](#isopen)
+    - [titleMatches](#titlematches)
+  - [Pull Request Conditions](#pull-request-conditions)
+    - [branchMatches](#branchmatches)
+    - [changesSize](#changessize)
+    - [filesMatch](#filesmatch)
+    - [isApproved](#isapproved)
+    - [isDraft](#isdraft)
+    - [pendingReview](#pendingreview)
+    - [requestedChanges](#requestedchanges)
+  - [Issue Conditions](#issue-conditions)
 - [Final Note](#final-note)
 
 <!-- tocstop -->
@@ -113,6 +113,7 @@ Thank you for taking an interst in contributing. We have created development con
 For more information on how to contribute, please read the [contributing guidelines](docs/contributing/README.md).
 
 Our backlog can be found on [Github](https://github.com/Videndum/action-masterminds/projects/1)
+
 ## Running Locally & Developing
 
 Setting up local running is simple, however we **MUST** warn that building / packaging while using local scripts can cause your GITHUB_TOKEN to be included within the package. To avoid this happening. you **MUST** follow the steps correctly. We will not be held responsible for any leeked personal tokens.
@@ -148,6 +149,7 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 ### Automatic setup via CLI
 
 [coming soon]
+
 ### Manual setup
 
 Create a new Github Actions workflow at `.github/workflows/action.yml`:
@@ -223,6 +225,7 @@ Due to the nature of this project. Most of the options have been documented as t
 | ------- | -------- | ------------------------------------------ | ----------------------- |
 | labels  | false    | Defines all the labels within the repo     | `Labels`                |
 | runners | true     | Defines the configuration for each project | [`Runners[]`](#runners) |
+
 #### Runners
 
 You can have multiple runners, which allows for configuration for monorepo projects.
@@ -230,13 +233,14 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | Option             | Required | Description                                 | Params                                    |
 | ------------------ | -------- | ------------------------------------------- | ----------------------------------------- |
 | Root               | true     | Defines the root of the project             | `string`                                  |
-| projectType        | true     | Defines the type of project                 | `"node" | "other"`                        |
-| versioning         | false    | Defines the versioning of the project       | `"SemVer" | "other"`                      |
+| projectType        | true     | Defines the type of project                 | `"node"                                   | "other"` |
+| versioning         | false    | Defines the versioning of the project       | `"SemVer"                                 | "other"` |
 | prereleaseName     | false    | Defines the name of a prerelease            | `string`                                  |
 | sharedLabelsConfig | false    | Defines labels to use on both PR and Issues | [`SharedLabels`](#sharedlabels)           |
 | pr                 | false    | Defines the configuration for Pull Requests | [`PullRequestConfig`](#pullrequestconfig) |
 | issue              | false    | Defines the configuration for issues        | [`IssueConfig`](#issueconfig)             |
 | project            | false    | Defines the configuration for projects      | [`ProjectConfig`](#projectconfig)         |
+
 #### PullRequestConfig
 
 | Option             | Required | Description                                   | Params                                                   |
@@ -254,11 +258,12 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 | Option        | Required | Description                                                             | Params                                                  |
 | ------------- | -------- | ----------------------------------------------------------------------- | ------------------------------------------------------- |
-| onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String | Number ]`                             |
+| onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String                                         | Number ]` |
 | commentHeader | false    | A comment to append to the header of failed comments                    | `string`                                                |
 | commentFooter | false    | A comment to append to the footer of failed comments                    | `string`                                                |
-| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String | Number`                                       |
+| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String                                                 | Number` |
 | Conventions   | true     | The conventions to enforce                                              | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
+
 ##### AssignProject
 
 | Option  | Required | Description                                                    | Params   |
@@ -271,14 +276,15 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 ##### SharedConventionsConfig
 
-| Option        | Required | Description                                           | Params                          |
-| ------------- | -------- | ----------------------------------------------------- | ------------------------------- |
-| requires      | true     | The number of conditions this requires                | `number`                        |
-| failedComment | true     | A comment to respond with should this convention fail | `string`                        |
+| Option        | Required | Description                                           | Params       |
+| ------------- | -------- | ----------------------------------------------------- | ------------ |
+| requires      | true     | The number of conditions this requires                | `number`     |
+| failedComment | true     | A comment to respond with should this convention fail | `string`     |
 | conditions    | true     | The conditions to check against                       | `Condition[] | "semanticTitle"` |
-| contexts      | false    | (if using `"semanticTitle"`) contexts to use          | `string[]`                      |
+| contexts      | false    | (if using `"semanticTitle"`) contexts to use          | `string[]`   |
 
 Choosing `"semanticTitle"` as the condition will automatically configure your conventions to use semantic conventions. You can add additional context by adding the `contexts` option which enforce only those contexts get used.
+
 ##### AutomaticApprove
 
 | Option        | Required | Description                                          | Params                                                  |
@@ -295,7 +301,7 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | createTag        | false     | Should this action create a tag?                  | `boolean`                             |
 | createRelease    | false     | Create a github release                           | [`CreateRelease`](#createrelease)     |
 | createMilestones | false     | Create a milestone                                | [`CreateMilestone`](#createmilestone) |
-| createPackages   | false     | Commands to use when creating packages            | `String[] | string`                   |
+| createPackages   | false     | Commands to use when creating packages            | `String[]                             | string` |
 | createChangelog  | false     | Create a changelog                                | [`Changelog`](#changelog)             |
 
 ##### ReleaseLabels
@@ -346,18 +352,19 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### CreateMilestone
 
-| Option    | Required | Description                                              | Params               |
-| --------- | -------- | -------------------------------------------------------- | -------------------- |
+| Option    | Required | Description                                              | Params     |
+| --------- | -------- | -------------------------------------------------------- | ---------- |
 | milestone | true     | The milestone you want to use                            | `"version" | string` |
-| deadline  | false    | The date in which you want to set as the completion date | `string`             |
+| deadline  | false    | The date in which you want to set as the completion date | `string`   |
 
 ##### DuplicateHotfix
 
-| Option      | Required | Description                                    | Params                            |
-| ----------- | -------- | ---------------------------------------------- | --------------------------------- |
+| Option      | Required | Description                                    | Params       |
+| ----------- | -------- | ---------------------------------------------- | ------------ |
 | prName      | true     | What should the pull request be named          | `"unchanged" | "number" | string` |
-| titlePrefix | false    | Should there be a title prefix                 | `string`                          |
-| branches    | false    | What banches should have the duplicated hotfix | `string[]`                        |
+| titlePrefix | false    | Should there be a title prefix                 | `string`     |
+| branches    | false    | What banches should have the duplicated hotfix | `string[]`   |
+
 ##### SyncRemote
 
 | Option       | Required | Description                        | Params   |
@@ -366,6 +373,7 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | remoteBranch | true     | Which branch should be syncronised | `string` |
 | localPath    | true     | Which path should be synconised    | `string` |
 | remotePath   | true     | Which path should be syncronised   | `string` |
+
 #### IssueConfig
 
 | Option             | Required | Description                                    | Params                                                   |
@@ -378,15 +386,16 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### CreateBranch
 
-| Option       | Required | Description                     | Params                         |
-| ------------ | -------- | ------------------------------- | ------------------------------ |
-| branchPrefix | false    | Should the branch have a prefix | `string`                       |
-| branchSuffix | false    | Should the branch have a suffix | `string`                       |
+| Option       | Required | Description                     | Params   |
+| ------------ | -------- | ------------------------------- | -------- |
+| branchPrefix | false    | Should the branch have a prefix | `string` |
+| branchSuffix | false    | Should the branch have a suffix | `string` |
 | branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
 
 `'title'` - Use the entire title
 `'short'` - Use the first 3 words
 `'number'` - Use the issue number
+
 #### ProjectConfig
 
 | Option             | Required | Description                                    | Params                                                   |
@@ -406,19 +415,21 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | user    | false    | The user which owns the project (user)                         | `string` |
 | repo    | false    | The repo which contains teh project (requires owner to be set) | `string` |
 | project | true     | The name of the project to assign                              | `string` |
+
 ##### ProjectCreateBranch
 
-| Option       | Required | Description                     | Params                         |
-| ------------ | -------- | ------------------------------- | ------------------------------ |
-| onProject    | false    | Which project shoud be used     | `string`                       |
-| onColumn     | false    | Which column should be used     | `string | number`              |
-| branchPrefix | false    | Should the branch have a prefix | `string`                       |
-| branchSuffix | false    | Should the branch have a suffix | `string`                       |
+| Option       | Required | Description                     | Params   |
+| ------------ | -------- | ------------------------------- | -------- |
+| onProject    | false    | Which project shoud be used     | `string` |
+| onColumn     | false    | Which column should be used     | `string  | number` |
+| branchPrefix | false    | Should the branch have a prefix | `string` |
+| branchSuffix | false    | Should the branch have a suffix | `string` |
 | branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
 
 `'title'` - Use the entire title
 `'short'` - Use the first 3 words
 `'number'` - Use the issue number
+
 ##### Milestones
 
 | Option       | Required | Description                    | Params     |
@@ -682,13 +693,14 @@ some things to pay attention to.
 Special characters must be double escaped: `pattern: "\\W+$"` is equivalent to the Regex: `/\W+$/`.
 
 If you want to use flags, use the following format: `pattern: "/^wip:/i"` is equivalent to the Regex: `/^wip:/i`.
+
 ## Available Conditions
 
 For complex conditions, you can use conditional options such as `only`, `$and` and `$or`.
 
 ### Conditional Conditions
 
-#### $and
+#### \$and
 
 Allows conditions to be combined to create more advanced conditions. Would require all conditions to return true otherwise it would fail.
 
@@ -697,18 +709,18 @@ Allows conditions to be combined to create more advanced conditions. Would requi
   "type": "$and",
   "pattern": [
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
     },
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
-    },
+    }
   ]
 }
 ```
 
-#### $or
+#### \$or
 
 Allows conditions to be combined to create more advanced conditions. Would require one conditions to return true otherwise it would fail.
 
@@ -717,18 +729,18 @@ Allows conditions to be combined to create more advanced conditions. Would requi
   "type": "$or",
   "pattern": [
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
     },
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
-    },
+    }
   ]
 }
 ```
 
-#### $only
+#### \$only
 
 Requires only the number specified in `requires` to pass otherwise it fails.
 
@@ -738,13 +750,13 @@ Requires only the number specified in `requires` to pass otherwise it fails.
   "requires": 1,
   "pattern": [
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
     },
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
-    },
+    }
   ]
 }
 ```
@@ -829,7 +841,7 @@ Example:
   "pattern": "/^wip:/i"
 }
 ```
-  
+
 ### Pull Request Conditions
 
 #### branchMatches

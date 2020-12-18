@@ -1,6 +1,8 @@
 #!/bin/bash
+yes | cp -R -i docs/output/release.md README.md
+
 # Copy the files to release-mastermind
-yes | cp -R -i README.md packages/release-mastermind/
+yes | cp -R -i docs/output/release.md packages/release-mastermind/
 yes | cp -R -i .github/allconfigs.json packages/release-mastermind/.github/
 
 # Copy the files to label-mastermind
