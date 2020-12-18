@@ -440,7 +440,7 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 #### Typings
 
 <details>
-    <summary><b>Types</b></summery>
+    <summary><b>Types</b></summary>
 
 ```typescript
 import {
