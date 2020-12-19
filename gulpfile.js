@@ -30,8 +30,7 @@ function copyDocs() {
 }
 
 function copyConditions() {
-    return src('packages/release-mastermind/src/conditions/**/*', { base: "." })
-        .pipe(dest('packages/release-mastermind/src/conditions'))
+    return src('packages/release-mastermind/src/conditions/**/*')
         .pipe(dest('packages/label-mastermind/src/conditions'))
         .pipe(dest('packages/convention-mastermind/src/conditions'))
 }
@@ -50,11 +49,25 @@ function copyTemplates() {
         .pipe(dest('packages/convention-mastermind'))
 }
 
+function createAllConfig() {
+    return src('.github/config/*.json')
+        .pipe(jsonConfig())
+        .pipe(jsonFmt(jsonFmt.PRETTY))
+        .pipe(rename(function (path) {
+            path.basename = "allConfigs";
+        }))
+        .pipe(dest('.github/'))
+}
+
 function release() {
     return src('packages/release-mastermind/.github/config/*.json')
         .pipe(jsonConfig())
         .pipe(jsonFmt(jsonFmt.PRETTY))
         .pipe(dest('packages/release-mastermind/.github/'))
+        .pipe(rename(function (path) {
+            path.basename = "release-mastermind";
+        }))
+        .pipe(dest('.github/config'))
 }
 
 function convention() {
@@ -62,6 +75,10 @@ function convention() {
         .pipe(jsonConfig())
         .pipe(jsonFmt(jsonFmt.PRETTY))
         .pipe(dest('packages/convention-mastermind/.github/'))
+        .pipe(rename(function (path) {
+            path.basename = "convention-mastermind";
+        }))
+        .pipe(dest('.github/config'))
 }
 
 function copyLabels() {
@@ -69,6 +86,10 @@ function copyLabels() {
         .pipe(jsonConfig())
         .pipe(jsonFmt(jsonFmt.PRETTY))
         .pipe(dest('packages/label-mastermind/.github/'))
+        .pipe(rename(function (path) {
+            path.basename = "label-mastermind";
+        }))
+        .pipe(dest('.github/config'))
 }
 
 function createReadMe() {
@@ -81,4 +102,4 @@ function createReadMe() {
         .pipe(dest('packages/'));
 }
 
-exports.default = series(createSetup, createConditions, parallel(copyDocs, copyConditions, copyLabels, copyTemplates), parallel(release, convention), createReadMe);
+exports.default = series(createSetup, createConditions, parallel(copyDocs, copyConditions, copyLabels, copyTemplates), parallel(release, convention), createAllConfig, createReadMe);
