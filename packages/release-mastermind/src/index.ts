@@ -2,7 +2,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { Logger, loggingData } from '@videndum/utilities'
 import path from 'path'
-import releaseMastermind from './releaseMastermind'
+import releaseMastermind from './action'
 const L = new Logger({
   console: { enabled: false },
   sentry: {

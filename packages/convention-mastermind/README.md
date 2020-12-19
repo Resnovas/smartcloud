@@ -151,47 +151,7 @@ Now create the config file at `.github/config.json`:
     "projectType": "node",
     "versioning": "SemVer",
     "prereleaseName": "alpha",
-    "pr": {
-      "enforceConventions": {
-        "conventions": [
-          {
-            "requires": 1,
-            "contexts": [
-              "workflow",
-              "release",
-              "label",
-              "variable",
-              "installer",
-              "deps",
-              "deps-dev"
-            ],
-            "conditions": "semanticTitle"
-          }
-        ]
-      }
-    },
-    "issue": {
-      "ref": "develop",
-      "enforceConventions": {
-        "conventions": [
-          {
-            "requires": 1,
-            "contexts": [
-              "workflow",
-              "release",
-              "label",
-              "variable",
-              "installer",
-              "deps",
-              "deps-dev"
-            ],
-            "conditions": "semanticTitle"
-          }
-        ]
-      }
-    },
-    "project": {
-      "ref": "develop",
+    "sharedConfig": {
       "enforceConventions": {
         "onColumn": ["Accepted", "Reviewing"],
         "conventions": [
@@ -329,6 +289,7 @@ export interface Config {
   projectType: ProjectType
   root: string
   versioning?: VersionType
+  sharedConfig: SharedConfig
   issue: IssueConfig
   pr: PullRequestConfig
   project: ProjectConfig

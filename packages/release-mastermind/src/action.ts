@@ -1,14 +1,14 @@
-import fs from 'fs'
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github'
-import { Config, Label, Options, Runners } from '../types'
-import { contextHandler } from './contextHandler'
-import { CurContext } from './conditions'
-import { log } from '.'
-import { Utils } from './utils'
 import { loggingData } from '@videndum/utilities'
-import { PullRequests, Issues, Project } from './contexts'
+import fs from 'fs'
+import { log } from '.'
+import { Config, Label, Options, Runners } from '../types'
+import { CurContext } from './conditions'
+import { contextHandler } from './contextHandler'
+import { Issues, Project, PullRequests } from './contexts'
+import { Utils } from './utils'
 
 let local: any
 let context = github.context
@@ -21,14 +21,7 @@ try {
     context = require(local.github_context)
 } catch {}
 
-/**
- * Super Labeler
- * @method Run The function called by ./index to run the Action
- * @method _log Logging to console
- * @author IvanFon, TGTGamer
- * @since 1.0.0
- */
-export default class conventionMastermind {
+export default class releaseMastermind {
   client: GitHub
   opts: Options
   configJSON: Options['configJSON']
@@ -37,26 +30,17 @@ export default class conventionMastermind {
   repo = context.repo || {}
   util: Utils
 
-  /**
-   * @author IvanFon, TGTGamer, jbinda
-   * @since 1.0.0
-   */
   constructor(client: GitHub, options: Options) {
-    log(new loggingData('100', `Superlabeller Constructed: ${options}`))
+    log(new loggingData('100', `Release Mastermind Constructed: ${options}`))
+    core.startGroup('Setup Phase')
     this.client = client
     this.opts = options
-    console.log(options.configJSON.runners)
     this.configJSON = options.configJSON
     this.configPath = options.configPath
     this.util = new Utils({ client, repo: this.repo }, options.dryRun)
     this.dryRun = options.dryRun
   }
 
-  /**
-   * Runs the Action
-   * @author IvanFon, TGTGamer, jbinda
-   * @since 1.0.0
-   */
   async run() {
     if (this.dryRun) this.repo.repo = process.env.GITHUB_REPOSITORY || 'Unknown'
     if (this.dryRun)
@@ -78,12 +62,13 @@ export default class conventionMastermind {
         )}`
       )
     )
-
     /**
      * Process the config
      * @author TGTGamer
      * @since 1.1.0
      */
+    log(new loggingData('100', `Config: ${JSON.stringify(this.configJSON)}`))
+
     const configs = await this.processConfig().catch(err => {
       throw log(
         new loggingData('500', `Error thrown while processing config: `, err)
@@ -92,7 +77,38 @@ export default class conventionMastermind {
     if (!configs.runners[0]) {
       throw log(new loggingData('500', `No config data.`))
     }
+
+    if (configs.labels) {
+      /**
+       * Syncronise the labels
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      await this.syncLabels(configs).catch(err => {
+        throw log(
+          new loggingData(
+            '100',
+            `Error thrown while syncronising labels: `,
+            err
+          )
+        )
+      })
+    }
+
+    // Run each release manager
     configs.runners.forEach(async config => {
+      /**
+       * Convert label ID's to Names
+       * @author TGTGamer
+       * @since 1.1.0
+       */
+      config.labels = await Object.entries(
+        configs.labels ? configs.labels : []
+      ).reduce((acc: { [key: string]: string }, cur) => {
+        acc[cur[0]] = cur[1].name
+        return acc
+      }, {})
+
       log(new loggingData('100', `Config: ${JSON.stringify(config)}`))
 
       /**
@@ -108,20 +124,29 @@ export default class conventionMastermind {
       log(
         new loggingData('100', `Current Context: ${JSON.stringify(curContext)}`)
       )
-      core.endGroup()
 
       /**
-       * Apply the context
+       * Combine the Shared & Context.type Configs
        * @author TGTGamer
        * @since 1.1.0
        */
-      await this.applyContext(configs, config, curContext).catch(err => {
-        throw new loggingData(
-          '500',
-          `Error thrown while applying context: `,
-          err
-        )
-      })
+
+      for (const action in config.sharedConfig) {
+        const ctx = config[curContext.type]
+        if (!ctx) return
+        if (action == 'labels') {
+          for (const label in config.sharedConfig.labels) {
+            if (ctx.labels && !(label in ctx)) {
+              config[curContext.type]!.labels![label] =
+                config.sharedConfig.labels[label]
+            }
+          }
+        } else if (action == 'enforceConventions') {
+          ctx[action] = config.sharedConfig[action]
+        }
+      }
+      core.endGroup()
+      this.applyContext(configs, config, curContext)
     })
   }
 
@@ -131,7 +156,6 @@ export default class conventionMastermind {
    * @since 1.0.0
    */
   async processConfig(): Promise<Runners> {
-    console.log(this.configJSON.runners)
     if (!this.configJSON?.runners[0]) {
       if (!fs.existsSync(this.configPath)) {
         throw new Error(`config not found at "${this.configPath}"`)
@@ -139,8 +163,8 @@ export default class conventionMastermind {
       const pathConfig = await JSON.parse(
         fs.readFileSync(this.configPath).toString()
       )
-      if (!pathConfig.conventionMastermind) return pathConfig
-      else return pathConfig.conventionMastermind
+      if (!pathConfig.releaseMastermind) return pathConfig
+      else return pathConfig.releaseMastermind
     } else {
       return this.configJSON
     }
@@ -163,10 +187,12 @@ export default class conventionMastermind {
       const ctx = await contextHandler
         .parsePR(this.util, config, context)
         .catch(err => {
-          throw new loggingData(
-            '500',
-            `Error thrown while parsing PR context: `,
-            err
+          throw log(
+            new loggingData(
+              '500',
+              `Error thrown while parsing PR context: `,
+              err
+            )
           )
         })
       if (!ctx) {
@@ -186,19 +212,47 @@ export default class conventionMastermind {
       const ctx = await contextHandler
         .parseIssue(this.util, config, context)
         .catch(err => {
-          throw new loggingData(
-            '500',
-            `Error thrown while parsing issue context: `,
-            err
+          throw log(
+            new loggingData(
+              '500',
+              `Error thrown while parsing issue context: ` + err
+            )
           )
         })
       if (!ctx) {
-        throw new loggingData('500', 'Issue not found on context')
+        throw new Error('Issue not found on context')
       }
       log(new loggingData('100', `issue context: ${JSON.stringify(ctx)}`))
 
       curContext = {
         type: 'issue',
+        context: ctx
+      }
+    } else if (context.payload.project_card) {
+      /**
+       * Project Context
+       * @author TGTGamer
+       * @since 1.0.0
+       */
+      const ctx = await contextHandler
+        .parseProject(this.util, config, context)
+        .catch(err => {
+          log(
+            new loggingData(
+              '500',
+              `Error thrown while parsing Project context: `,
+              err
+            )
+          )
+          return err
+        })
+      if (!ctx) {
+        throw new Error('Issue not found on context')
+      }
+      log(new loggingData('100', `issue context: ${JSON.stringify(ctx)}`))
+
+      curContext = {
+        type: 'project',
         context: ctx
       }
     } else {
@@ -207,22 +261,43 @@ export default class conventionMastermind {
        * @author TGTGamer
        * @since 1.1.0
        */
-      throw new loggingData(
-        '300',
-        `There is no context to parse: ${JSON.stringify(context.payload)}`
+      throw log(
+        new loggingData(
+          '300',
+          `There is no context to parse: ${JSON.stringify(context.payload)}`
+        )
       )
     }
     return curContext
   }
 
   /**
-   * Apply context
+   * Syncronise labels to repository
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
-  async applyContext(runners: Runners, config: Config, curContext: CurContext) {
+  async syncLabels(config: Runners) {
+    const labels = await Object.entries(
+      config.labels ? config.labels : []
+    ).reduce((acc: { [key: string]: Label }, cur) => {
+      acc[cur[1].name.toLowerCase()] = cur[1]
+      return acc
+    }, {})
+
+    await this.util.labels.sync(labels).catch(err => {
+      log(
+        new loggingData(
+          '500',
+          `Error thrown while handling syncLabels tasks:`,
+          err
+        )
+      )
+    })
+  }
+
+  applyContext(runners: Runners, config: Config, curContext: CurContext) {
     let ctx: PullRequests | Issues | Project
-    if (curContext.type === 'pr') {
+    if (curContext.type == 'pr') {
       ctx = new PullRequests(
         this.util,
         runners,
@@ -231,8 +306,15 @@ export default class conventionMastermind {
         this.dryRun
       )
       ctx.run()
-    } else if (curContext.type === 'issue') {
+    } else if (curContext.type == 'issue') {
       ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
+      ctx.run().catch(err => {
+        throw log(
+          new loggingData('500', `Error thrown while running context: `, err)
+        )
+      })
+    } else if (curContext.type == 'project') {
+      ctx = new Project(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
         throw log(
           new loggingData('500', `Error thrown while running context: `, err)

@@ -28,7 +28,7 @@ try {
  * @author IvanFon, TGTGamer
  * @since 1.0.0
  */
-export default class labelMastermind {
+export default class conventionMastermind {
   client: GitHub
   opts: Options
   configJSON: Options['configJSON']
@@ -93,20 +93,7 @@ export default class labelMastermind {
       throw log(new loggingData('500', `No config data.`))
     }
     configs.runners.forEach(async config => {
-      /**
-       * Convert label ID's to Names
-       * @author TGTGamer
-       * @since 1.1.0
-       */
-      config.labels = await Object.entries(
-        configs.labels ? configs.labels : []
-      ).reduce((acc: { [key: string]: string }, cur) => {
-        acc[cur[0]] = cur[1].name
-        return acc
-      }, {})
-
       log(new loggingData('100', `Config: ${JSON.stringify(config)}`))
-
       /**
        * Get the context
        * @author TGTGamer
@@ -126,12 +113,13 @@ export default class labelMastermind {
        * @author TGTGamer
        * @since 1.1.0
        */
-      for (const label in config.sharedLabelsConfig) {
-        const ctx = config[curContext.type]?.labels
-        if (ctx && !(label in ctx)) {
-          ctx[label] = config.sharedLabelsConfig[label]
+
+      for (const action in config.sharedConfig) {
+        if (action == 'enforceConventions') {
+          config[curContext.type][action] = config.sharedConfig[action]
         }
       }
+
       core.endGroup()
 
       /**
@@ -163,8 +151,8 @@ export default class labelMastermind {
       const pathConfig = await JSON.parse(
         fs.readFileSync(this.configPath).toString()
       )
-      if (!pathConfig.labelMastermind) return pathConfig
-      else return pathConfig.labelMastermind
+      if (!pathConfig.conventionMastermind) return pathConfig
+      else return pathConfig.conventionMastermind
     } else {
       return this.configJSON
     }
@@ -240,31 +228,7 @@ export default class labelMastermind {
   }
 
   /**
-   * Syncronise labels to repository
-   * @author IvanFon, TGTGamer, jbinda
-   * @since 1.0.0
-   */
-  async syncLabels(config: Runners) {
-    const labels = await Object.entries(
-      config.labels ? config.labels : []
-    ).reduce((acc: { [key: string]: Label }, cur) => {
-      acc[cur[1].name.toLowerCase()] = cur[1]
-      return acc
-    }, {})
-
-    await this.util.labels.sync(labels).catch(err => {
-      log(
-        new loggingData(
-          '500',
-          `Error thrown while handling syncLabels tasks:`,
-          err
-        )
-      )
-    })
-  }
-
-  /**
-   * Apply labels to context
+   * Apply context
    * @author IvanFon, TGTGamer, jbinda
    * @since 1.0.0
    */
