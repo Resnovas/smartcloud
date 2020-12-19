@@ -54,7 +54,7 @@ function createAllConfig() {
         .pipe(jsonConfig())
         .pipe(jsonFmt(jsonFmt.PRETTY))
         .pipe(rename(function (path) {
-            path.basename = "allConfigs";
+            path.basename = "allconfigs";
         }))
         .pipe(dest('.github/'))
 }
@@ -65,7 +65,7 @@ function release() {
         .pipe(jsonFmt(jsonFmt.PRETTY))
         .pipe(dest('packages/release-mastermind/.github/'))
         .pipe(rename(function (path) {
-            path.basename = "release-mastermind";
+            path.basename = "releaseMastermind";
         }))
         .pipe(dest('.github/config'))
 }
@@ -76,7 +76,7 @@ function convention() {
         .pipe(jsonFmt(jsonFmt.PRETTY))
         .pipe(dest('packages/convention-mastermind/.github/'))
         .pipe(rename(function (path) {
-            path.basename = "convention-mastermind";
+            path.basename = "conventionMastermind";
         }))
         .pipe(dest('.github/config'))
 }
@@ -87,7 +87,7 @@ function copyLabels() {
         .pipe(jsonFmt(jsonFmt.PRETTY))
         .pipe(dest('packages/label-mastermind/.github/'))
         .pipe(rename(function (path) {
-            path.basename = "label-mastermind";
+            path.basename = "labelMastermind";
         }))
         .pipe(dest('.github/config'))
 }

@@ -1,5 +1,5 @@
 {
-  "convention-mastermind": {
+  "conventionMastermind": {
     "labels": {
       "abandoned": {
         "name": "Status - Abandoned",
@@ -499,7 +499,7 @@
       }
     ]
   },
-  "label-mastermind": {
+  "labelMastermind": {
     "labels": {
       "abandoned": {
         "name": "Status - Abandoned",
@@ -1670,7 +1670,7 @@
       }
     ]
   },
-  "release-mastermind": {
+  "releaseMastermind": {
     "labels": {
       "abandoned": {
         "name": "Status - Abandoned",
