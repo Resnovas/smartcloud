@@ -396,6 +396,7 @@ export type Column = string | number
 ```
 
 </details>
+
 ### Using Regex Patterns
 
 Many conditions use regular expressions (usually with a `pattern` parameter).

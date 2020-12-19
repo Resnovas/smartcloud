@@ -77,8 +77,10 @@ Be sure that Github Actions is enabled for in your repository's settings. The ac
 <!-- #code types.d.ts -->
 
 </details>
+
 <!-- #include docs/readme/components/regex.md -->
 <!-- #include src/conditions/index.md -->
+
 ## Final Note
 
 Thank you for taking the time to look through this repository. If you have liked what you have found, please would you favourite & share. Ideally I would like to get a community behind this project which can ensure that it is maintained, updated and improved as GitActions get more suffisticated.

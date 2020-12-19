@@ -43,7 +43,11 @@ export async function assignProject(this: Issues | PullRequests) {
       log(new loggingData('100', `Adding to project ${project.name}`))
       !this.dryRun &&
         (await this.util.api.project.card
-          .create(this.context.IDNumber, remoteColumn.id, 'PullRequest')
+          .create(
+            this.context.IDNumber,
+            remoteColumn.id,
+            this.context.props.type == 'pr' ? 'PullRequest' : 'Issue'
+          )
           .catch(err => {
             log(
               new loggingData(
