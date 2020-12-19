@@ -1,0 +1,65 @@
+{
+  "folders": [
+    {
+      "name": "⚙️ @videndum/workflow-mastermind",
+      "path": "packages\\workflow-mastermind"
+    },
+    {
+      "name": "⚙️ @videndum/variable-mastermind",
+      "path": "packages\\variable-mastermind"
+    },
+    {
+      "name": "⚙️ @Videndum/release-mastermind",
+      "path": "packages\\release-mastermind"
+    },
+    {
+      "name": "🦸‍♂️ @Videndum/convention-mastermind",
+      "path": "packages\\convention-mastermind"
+    },
+    {
+      "name": "🦸‍♂️ @Videndum/label-mastermind",
+      "path": "packages\\label-mastermind"
+    },
+    {
+      "name": "🌱 @videndum/action-masterminds",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "peacock.color": "#1857a4",
+    "workbench.colorCustomizations": {
+      "activityBar.activeBackground": "#1f6fd0",
+      "activityBar.activeBorder": "#ee90bb",
+      "activityBar.background": "#1f6fd0",
+      "activityBar.foreground": "#e7e7e7",
+      "activityBar.inactiveForeground": "#e7e7e799",
+      "statusBar.background": "#1857a4",
+      "statusBar.foreground": "#e7e7e7",
+      "statusBarItem.hoverBackground": "#1f6fd0",
+      "titleBar.activeBackground": "#1857a4",
+      "titleBar.activeForeground": "#e7e7e7",
+      "titleBar.inactiveBackground": "#1857a499",
+      "titleBar.inactiveForeground": "#e7e7e799",
+      "activityBarBadge.background": "#ee90bb",
+      "activityBarBadge.foreground": "#15202b"
+    },
+    "peacock.remoteColor": "#1857a4",
+    "discord.enabled": true,
+    "xd.lastPackage": "/d:/Repositories/devspace"
+  },
+  "extensions": {
+    "recommendations": [
+      "aaron-bond.better-comments",
+      "coenraads.bracket-pair-colorizer-2",
+      "vsls-contrib.codetour",
+      "bierner.github-markdown-preview",
+      "yzhang.markdown-all-in-one",
+      "davidanson.vscode-markdownlint",
+      "pkief.material-icon-theme",
+      "leizongmin.node-module-intellisense",
+      "johnpapa.vscode-peacock",
+      "redhat.vscode-yaml",
+      "visualstudioexptteam.vscodeintellicode"
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+name: Cron stale Management
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+
+jobs:
+  # Automatically labels all pull requests based on changed files
+  labeler:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Get Configurations
+        uses: ./packages/release-mastermind/
+        with:
+          GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
+          config: .github/allconfigs.json

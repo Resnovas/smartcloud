@@ -1586,6 +1586,7 @@ interface Milestones {
 ```
 
 </details>
+
 ### Using Regex Patterns
 
 Many conditions use regular expressions (usually with a `pattern` parameter).
@@ -1848,6 +1849,7 @@ Example:
   "column": "New"
 }
 ```
+
 
 
 ## Final Note
