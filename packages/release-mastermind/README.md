@@ -1160,7 +1160,7 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String / Number ]`                             |
 | commentHeader | false    | A comment to append to the header of failed comments                    | `string`                                                |
 | commentFooter | false    | A comment to append to the footer of failed comments                    | `string`                                                |
-| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String                                                 | Number` |
+| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String / Number`                                       |
 | Conventions   | true     | The conventions to enforce                                              | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
 
 ##### AssignProject
@@ -1275,13 +1275,13 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 #### IssueConfig
 
-| Option             | Required | Description                                    | Params                                                   |
-| ------------------ | -------- | ---------------------------------------------- | -------------------------------------------------------- |
-| ref                | false    | Overrides the reference                        | `string`                                                 |
-| enforceConventions | false    | Enforces conventions                           | [`EnforceConventions`](#enforceconventions)              |
-| labels             | false    | Apply labels automatically                     | [`[Key: string]: PRConditionConfig`](#prconditionconfig) |
-| assignProject      | false    | Automatically assign to projects               | [`AssignProject[]`](#assignproject)                      |
-| createBranch       | false    | Automatically create branches on configuration | [`[label: string]: CreateBranch`](#createbranch)         |
+| Option             | Required | Description                                    | Params                                                         |
+| ------------------ | -------- | ---------------------------------------------- | -------------------------------------------------------------- |
+| ref                | false    | Overrides the reference                        | `string`                                                       |
+| enforceConventions | false    | Enforces conventions                           | [`EnforceConventions`](#enforceconventions)                    |
+| labels             | false    | Apply labels automatically                     | [`[Key: string]: IssueConditionConfig`](#issueconditionconfig) |
+| assignProject      | false    | Automatically assign to projects               | [`AssignProject[]`](#assignproject)                            |
+| createBranch       | false    | Automatically create branches on configuration | [`[label: string]: CreateBranch`](#createbranch)               |
 
 ##### CreateBranch
 
@@ -1297,14 +1297,14 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 #### ProjectConfig
 
-| Option             | Required | Description                                    | Params                                                   |
-| ------------------ | -------- | ---------------------------------------------- | -------------------------------------------------------- |
-| ref                | false    | Overrides the reference                        | `string`                                                 |
-| enforceConventions | false    | Enforces conventions                           | [`EnforceConventions`](#enforceconventions)              |
-| labels             | false    | Apply labels automatically                     | [`[Key: string]: PRConditionConfig`](#prconditionconfig) |
-| syncRemote         | false    | Syncronise remote projects (e.g. org projects) | [`ExProjects[]`](#exprojects)                            |
-| openBranch         | false    | Create Branch based on config                  | [`ProjectCreateBranch`](#projectcreatebranch)            |
-| assignMilestone    | false    | Automatically assign to milestones             | [`[milestone: string]: Milestones`](#milestones)         |
+| Option             | Required | Description                                    | Params                                                             |
+| ------------------ | -------- | ---------------------------------------------- | ------------------------------------------------------------------ |
+| ref                | false    | Overrides the reference                        | `string`                                                           |
+| enforceConventions | false    | Enforces conventions                           | [`EnforceConventions`](#enforceconventions)                        |
+| labels             | false    | Apply labels automatically                     | [`[Key: string]: ProjectConditionConfig`](#projectconditionconfig) |
+| syncRemote         | false    | Syncronise remote projects (e.g. org projects) | [`ExProjects[]`](#exprojects)                                      |
+| openBranch         | false    | Create Branch based on config                  | [`ProjectCreateBranch`](#projectcreatebranch)                      |
+| assignMilestone    | false    | Automatically assign to milestones             | [`[milestone: string]: Milestones`](#milestones)                   |
 
 ##### ExProjects
 

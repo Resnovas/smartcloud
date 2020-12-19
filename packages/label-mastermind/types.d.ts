@@ -26,8 +26,8 @@ export interface Runners {
 }
 
 export interface Config {
-  projectType: ProjectType
   root: string
+  projectType: ProjectType
   versioning?: VersionType
   labels?: { [key: string]: string }
   sharedLabelsConfig: SharedLabels

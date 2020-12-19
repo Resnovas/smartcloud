@@ -18,25 +18,12 @@ The super-powered convention enforment for Github Actions, with complex customis
   - [Manual setup](#manual-setup)
   - [All configuration options](#all-configuration-options)
     - [Runners](#runners)
-    - [PullRequestConfig](#pullrequestconfig)
-      - [EnforceConventions](#enforceconventions)
-      - [AssignProject](#assignproject)
-      - [SharedConventionsConfig](#sharedconventionsconfig)
-      - [AutomaticApprove](#automaticapprove)
-      - [Release](#release)
-      - [ReleaseLabels](#releaselabels)
-      - [CreateRelease](#createrelease)
-      - [Changelog](#changelog)
-        - [Sections](#sections)
-      - [CreateMilestone](#createmilestone)
-      - [DuplicateHotfix](#duplicatehotfix)
-      - [SyncRemote](#syncremote)
     - [IssueConfig](#issueconfig)
-      - [CreateBranch](#createbranch)
     - [ProjectConfig](#projectconfig)
-      - [ExProjects](#exprojects)
-      - [ProjectCreateBranch](#projectcreatebranch)
-      - [Milestones](#milestones)
+    - [PullRequestConfig](#pullrequestconfig)
+    - [PullRequestConfig](#pullrequestconfig-1)
+      - [EnforceConventions](#enforceconventions)
+      - [SharedConventionsConfig](#sharedconventionsconfig)
     - [Typings](#typings)
   - [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
@@ -256,18 +243,33 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | issue              | false    | Defines the configuration for issues        | [`IssueConfig`](#issueconfig)             |
 | project            | false    | Defines the configuration for projects      | [`ProjectConfig`](#projectconfig)         |
 
+#### IssueConfig
+
+| Option             | Required | Description             | Params                                      |
+| ------------------ | -------- | ----------------------- | ------------------------------------------- |
+| ref                | false    | Overrides the reference | `string`                                    |
+| enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
+
+#### ProjectConfig
+
+| Option             | Required | Description             | Params                                      |
+| ------------------ | -------- | ----------------------- | ------------------------------------------- |
+| ref                | false    | Overrides the reference | `string`                                    |
+| enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
+
 #### PullRequestConfig
 
-| Option             | Required | Description                                   | Params                                                   |
-| ------------------ | -------- | --------------------------------------------- | -------------------------------------------------------- |
-| ref                | false    | Overrides the reference                       | `string`                                                 |
-| enforceConventions | false    | Enforces conventions                          | [`EnforceConventions`](#enforceconventions)              |
-| labels             | false    | Apply labels automatically                    | [`[Key: string]: PRConditionConfig`](#prconditionconfig) |
-| automaticApprove   | false    | Automatically approved PR based on conditions | [`AutomaticApprove`](#automaticapprove)                  |
-| manageRelease      | false    | Manage releases                               | [`Release`](#release)                                    |
-| duplicateHotfix    | false    | Duplicate a hotfix to the `main` branch       | [`[title: string]: DuplicateHotfix`](#duplicatehotfix)   |
-| syncRemote         | false    | Syncronise a remote repository                | [`SyncRemote[]`](#syncremote)                            |
-| assignProject      | false    | Automatically assign to projects              | [`AssignProject[]`](#assignproject)                      |
+| Option             | Required | Description             | Params                                      |
+| ------------------ | -------- | ----------------------- | ------------------------------------------- |
+| ref                | false    | Overrides the reference | `string`                                    |
+| enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
+
+#### PullRequestConfig
+
+| Option             | Required | Description             | Params                                      |
+| ------------------ | -------- | ----------------------- | ------------------------------------------- |
+| ref                | false    | Overrides the reference | `string`                                    |
+| enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
 
 ##### EnforceConventions
 
@@ -276,18 +278,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String / Number ]`                             |
 | commentHeader | false    | A comment to append to the header of failed comments                    | `string`                                                |
 | commentFooter | false    | A comment to append to the footer of failed comments                    | `string`                                                |
-| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String                                                 | Number` |
+| moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String / Number`                                       |
 | Conventions   | true     | The conventions to enforce                                              | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
-
-##### AssignProject
-
-| Option  | Required | Description                                                    | Params   |
-| ------- | -------- | -------------------------------------------------------------- | -------- |
-| owner   | false    | The owner of the project (organisation)                        | `string` |
-| user    | false    | The user which owns the project (user)                         | `string` |
-| repo    | false    | The repo which contains teh project (requires owner to be set) | `string` |
-| project | true     | The name of the project to assign                              | `string` |
-| column  | true     | The column within the project to assign                        | `string` |
 
 ##### SharedConventionsConfig
 
@@ -299,158 +291,6 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | contexts      | false    | (if using `"semanticTitle"`) contexts to use          | `string[]`                      |
 
 Choosing `"semanticTitle"` as the condition will automatically configure your conventions to use semantic conventions. You can add additional context by adding the `contexts` option which enforce only those contexts get used.
-
-##### AutomaticApprove
-
-| Option        | Required | Description                                          | Params                                                  |
-| ------------- | -------- | ---------------------------------------------------- | ------------------------------------------------------- |
-| commentHeader | false    | A comment to append to the header of failed comments | `string`                                                |
-| commentFooter | false    | A comment to append to the footer of failed comments | `string`                                                |
-| Conventions   | true     | The conventions to enforce                           | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
-
-##### Release
-
-| Option           | Required  | Description                                       | Params                                |
-| ---------------- | --------- | ------------------------------------------------- | ------------------------------------- |
-| labels           | sometimes | Defines the labels to use within automation tasks | [`ReleaseLabels`](#releaselabels)     |
-| createTag        | false     | Should this action create a tag?                  | `boolean`                             |
-| createRelease    | false     | Create a github release                           | [`CreateRelease`](#createrelease)     |
-| createMilestones | false     | Create a milestone                                | [`CreateMilestone`](#createmilestone) |
-| createPackages   | false     | Commands to use when creating packages            | `String[] / string`                   |
-| createChangelog  | false     | Create a changelog                                | [`Changelog`](#changelog)             |
-
-##### ReleaseLabels
-
-| Option     | Required | Description                                                                                                              | Params   |
-| ---------- | -------- | ------------------------------------------------------------------------------------------------------------------------ | -------- |
-| build      | true     | A tag to represent dependencies updates and insignificant changes                                                        | `string` |
-| prerelease | true     | A tag to represent a prerelease of the next version.                                                                     | `string` |
-| patch      | true     | A tag to represent a Patch version to be incremented due to backwards compatible bug fixes are introduced.               | `string` |
-| minor      | true     | A tag to represent a Minor version to be incremented due to substantial new functionality or improvements are introduced | `string` |
-| major      | true     | A tag to represent a Major version to be incremented due to of backwards incompatible changes are introduced             | `string` |
-| breaking   | true     | A tag to represent a breaking change                                                                                     | `string` |
-
-##### CreateRelease
-
-| Option            | Required | Description                                        | Params                    |
-| ----------------- | -------- | -------------------------------------------------- | ------------------------- |
-| includeIssues     | false    | Should issues be included in release               | `boolean`                 |
-| sections          | false    | The sections configureation                        | [`Sections[]`](#sections) |
-| tagName           | false    | The name of the tag to create                      | `string`                  |
-| tagPrefix         | false    | The prefix before the tagName                      | `string`                  |
-| releaseName       | false    | The name of the release                            | `string`                  |
-| releaseNamePrefix | false    | The prefix before the releaseName                  | `string`                  |
-| releaseNameSuffix | false    | The Suffex before the releaseName                  | `string`                  |
-| draft             | false    | Should the release be draft                        | `boolean`                 |
-| prerelease        | false    | Should the release be a prerelease                 | `boolean`                 |
-| useChangelog      | false    | Should the release use the changelog configuration | `boolean`                 |
-
-##### Changelog
-
-| Option        | Required | Description                                 | Params                    |
-| ------------- | -------- | ------------------------------------------- | ------------------------- |
-| includeIssues | false    | Should issues be included in release        | `boolean`                 |
-| sections      | false    | The sections configureation                 | [`Sections[]`](#sections) |
-| title         | false    | The title for the changelog                 | `string`                  |
-| body          | false    | The changelog body which should be included | `string`                  |
-
-###### Sections
-
-| Option           | Required | Description                           | Params     |
-| ---------------- | -------- | ------------------------------------- | ---------- |
-| title            | true     | The title of section                  | `string`   |
-| body             | false    | A body to add to this section         | `string`   |
-| PRlabels         | true     | The pull request labels to include    | `string[]` |
-| issueLabels      | false    | The issue labels to include           | `string[]` |
-| includeCommitter | false    | Should include the committer username | `boolean`  |
-| linkPR           | false    | Should link the pull request          | `boolean`  |
-
-##### CreateMilestone
-
-| Option    | Required | Description                                              | Params               |
-| --------- | -------- | -------------------------------------------------------- | -------------------- |
-| milestone | true     | The milestone you want to use                            | `"version" / string` |
-| deadline  | false    | The date in which you want to set as the completion date | `string`             |
-
-##### DuplicateHotfix
-
-| Option      | Required | Description                                    | Params                            |
-| ----------- | -------- | ---------------------------------------------- | --------------------------------- |
-| prName      | true     | What should the pull request be named          | `"unchanged" / "number" / string` |
-| titlePrefix | false    | Should there be a title prefix                 | `string`                          |
-| branches    | false    | What banches should have the duplicated hotfix | `string[]`                        |
-
-##### SyncRemote
-
-| Option       | Required | Description                        | Params   |
-| ------------ | -------- | ---------------------------------- | -------- |
-| localBranch  | true     | Which branch should be syncronised | `string` |
-| remoteBranch | true     | Which branch should be syncronised | `string` |
-| localPath    | true     | Which path should be synconised    | `string` |
-| remotePath   | true     | Which path should be syncronised   | `string` |
-
-#### IssueConfig
-
-| Option             | Required | Description                                    | Params                                                   |
-| ------------------ | -------- | ---------------------------------------------- | -------------------------------------------------------- |
-| ref                | false    | Overrides the reference                        | `string`                                                 |
-| enforceConventions | false    | Enforces conventions                           | [`EnforceConventions`](#enforceconventions)              |
-| labels             | false    | Apply labels automatically                     | [`[Key: string]: PRConditionConfig`](#prconditionconfig) |
-| assignProject      | false    | Automatically assign to projects               | [`AssignProject[]`](#assignproject)                      |
-| createBranch       | false    | Automatically create branches on configuration | [`[label: string]: CreateBranch`](#createbranch)         |
-
-##### CreateBranch
-
-| Option       | Required | Description                     | Params   |
-| ------------ | -------- | ------------------------------- | -------- |
-| branchPrefix | false    | Should the branch have a prefix | `string` |
-| branchSuffix | false    | Should the branch have a suffix | `string` |
-| branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
-
-`'title'` - Use the entire title
-`'short'` - Use the first 3 words
-`'number'` - Use the issue number
-
-#### ProjectConfig
-
-| Option             | Required | Description                                    | Params                                                   |
-| ------------------ | -------- | ---------------------------------------------- | -------------------------------------------------------- |
-| ref                | false    | Overrides the reference                        | `string`                                                 |
-| enforceConventions | false    | Enforces conventions                           | [`EnforceConventions`](#enforceconventions)              |
-| labels             | false    | Apply labels automatically                     | [`[Key: string]: PRConditionConfig`](#prconditionconfig) |
-| syncRemote         | false    | Syncronise remote projects (e.g. org projects) | [`ExProjects[]`](#exprojects)                            |
-| openBranch         | false    | Create Branch based on config                  | [`ProjectCreateBranch`](#projectcreatebranch)            |
-| assignMilestone    | false    | Automatically assign to milestones             | [`[milestone: string]: Milestones`](#milestones)         |
-
-##### ExProjects
-
-| Option  | Required | Description                                                    | Params   |
-| ------- | -------- | -------------------------------------------------------------- | -------- |
-| owner   | false    | The owner of the project (organisation)                        | `string` |
-| user    | false    | The user which owns the project (user)                         | `string` |
-| repo    | false    | The repo which contains teh project (requires owner to be set) | `string` |
-| project | true     | The name of the project to assign                              | `string` |
-
-##### ProjectCreateBranch
-
-| Option       | Required | Description                     | Params                         |
-| ------------ | -------- | ------------------------------- | ------------------------------ |
-| onProject    | false    | Which project shoud be used     | `string`                       |
-| onColumn     | false    | Which column should be used     | `string / number`              |
-| branchPrefix | false    | Should the branch have a prefix | `string`                       |
-| branchSuffix | false    | Should the branch have a suffix | `string`                       |
-| branchName   | false    | Branch name                     | `'title' / 'short' / 'number'` |
-
-`'title'` - Use the entire title
-`'short'` - Use the first 3 words
-`'number'` - Use the issue number
-
-##### Milestones
-
-| Option       | Required | Description                    | Params     |
-| ------------ | -------- | ------------------------------ | ---------- |
-| onColumn     | true     | Which column should be used    | `string`   |
-| ignoreLabels | false    | Labels which should be ignored | `string[]` |
 
 #### Typings
 
