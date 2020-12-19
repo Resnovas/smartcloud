@@ -1,10 +1,10 @@
 ## Available Conditions
 
-For complex conditions, you can use conditional options such as `only`, `$and` and `$or`. They can be found within the common conditions section. 
+For complex conditions, you can use conditional options such as `only`, `$and` and `$or`. They can be found within the common conditions section.
 
 ### Common Conditions
 
-#### $and
+#### \$and
 
 Allows conditions to be combined to create more advanced conditions. Would require all conditions to return true otherwise it would fail.
 
@@ -13,13 +13,13 @@ Allows conditions to be combined to create more advanced conditions. Would requi
   "type": "$and",
   "pattern": [
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
     },
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
-    },
+    }
   ]
 }
 ```
@@ -90,7 +90,7 @@ Example:
 }
 ```
 
-#### $only
+#### \$only
 
 Requires only the number specified in `requires` to pass otherwise it fails.
 
@@ -100,18 +100,18 @@ Requires only the number specified in `requires` to pass otherwise it fails.
   "requires": 1,
   "pattern": [
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
     },
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
-    },
+    }
   ]
 }
 ```
 
-#### $or
+#### \$or
 
 Allows conditions to be combined to create more advanced conditions. Would require one conditions to return true otherwise it would fail.
 
@@ -120,17 +120,16 @@ Allows conditions to be combined to create more advanced conditions. Would requi
   "type": "$or",
   "pattern": [
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
     },
     {
-      "requires": 1, 
+      "requires": 1,
       "conditions": []
-    },
+    }
   ]
 }
 ```
-
 
 ### Pull Request Conditions
 
@@ -230,7 +229,6 @@ Example:
 ```
 
 ### Issue Conditions
-
 
 ### Project Conditions
 

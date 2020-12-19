@@ -41,6 +41,7 @@ Include:
 <!-- Please tell us what devices should be able to do the feature. Please note that some devices may have differing capabilities depending on OS version. -->
 
 <!-- Please delete all information not relivent-->
+
 - Version: [e.g. 22]
 - Platform: [e.g. macOS, Google Cloud, ubuntu 18.04]
 - Browser: [e.g. stock browser, safari]
@@ -49,7 +50,6 @@ Include:
 - Docker Version: [e.g. Docker version 19.03.12, build 48a66213fe]
 - Package(s): [e.g. @videndum/release-mastermind]
 - URL: [e.g. https://console.smartcloud.gg/admin]
-
 
 ### What does success look like, and how can we measure
 

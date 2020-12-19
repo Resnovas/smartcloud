@@ -1,23 +1,10 @@
-# Label Collection
+# Convention Collection
 
-The super-powered labeler for Github Actions, with complex customisable conditions for PR, Issues and Projects.
+The super-powered convention enforment for Github Actions, with complex customisable conditions for PR, Issues and Projects.
 
 ## Index
 
 <!-- toc -->
-
-## Features
-
-Label Mastermind is capable of the following:
-
-- Create, Update, Delete Labels declaratively from Config file or JSON String
-- Apply Labels based on conditions:
-  - Pull Releases
-  - Issues
-  - Project Cards
-
-Label Mastermind is designed to work in combination with other Videndum Studios Projects. Check out our [Universal Workflows Project](https://github.com/Videndum/Universal-GitAction-Workflows)
-
 <!-- #include docs/readme/components/support.md -->
 <!-- #include docs/readme/components/backlog.md -->
 <!-- #include docs/readme/components/runningLocally.md -->

@@ -23,16 +23,6 @@
     "start": "lerna run start",
     "package": "gulp && lerna run dev:all"
   },
-  "config": {
-    "commitizen": {
-      "path": "cz-conventional-changelog"
-    }
-  },
-  "husky": {
-    "hooks": {
-      "prepare-commit-msg": "exec < /dev/tty && git cz --hook || true"
-    }
-  },
   "devDependencies": {
     "commitizen": "^4.2.1",
     "concurrently": "^5.2.0",

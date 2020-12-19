@@ -474,10 +474,7 @@
       "project": {
         "ref": "develop",
         "enforceConventions": {
-          "onColumn": [
-            "Accepted",
-            "Reviewing"
-          ],
+          "onColumn": ["Accepted", "Reviewing"],
           "conventions": [
             {
               "requires": 1,

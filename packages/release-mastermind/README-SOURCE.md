@@ -32,16 +32,17 @@ Need reasons to consider using Release Manager?
 - Create milestones automatically - Automatically create milestones when a new release is published.
 - Automatically maintain `main` and `dev` branches - Create pull requests from `dev` to `main` and automatically approve them based on config.
 - Automatically syncronise branches or folders with remote repository.
-- 
-<!-- #include docs/readme/components/support.md -->
-<!-- #include docs/readme/components/backlog.md -->
-<!-- #include docs/readme/components/runningLocally.md -->
+- <!-- #include docs/readme/components/support.md -->
+  <!-- #include docs/readme/components/backlog.md -->
+  <!-- #include docs/readme/components/runningLocally.md -->
+
 ## Getting Started
 
 > [!IMPORTANT]
 > It is **Extremely** important to understand while using this template, most of the code within `.github/` will automatically update within a new pull request whenever the [template repository](https://github.com/Videndum/Universal-GitAction-Workflows) is updated.
 
 <!-- #include docs/readme/components/setup/automaticSetup.md -->
+
 ### Manual setup
 
 Create a new Github Actions workflow at `.github/workflows/main.yml`:
@@ -58,15 +59,16 @@ _Note: `actions/checkout` must be run first so that the release action can find 
 Now create the config file at `.github/config.json`:
 
 <details>
-    <summary><b>Our config.json (very long)</b></summary>
+    <summary><b>Our runners config (Very Long)</b></summary>
 
-<!-- #code .github/config.json -->
+<!-- #code .github/config/runners.json -->
 
 </details>
 
 Be sure that Github Actions is enabled for in your repository's settings. The action will now run on your issues, projects and pull requests.
 
 <!-- #include docs/readme/components/setup/releaseConfig.md -->
+
 #### Typings
 
 <details>

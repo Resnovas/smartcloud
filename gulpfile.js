@@ -102,4 +102,14 @@ function createReadMe() {
         .pipe(dest('packages/'));
 }
 
-exports.default = series(createSetup, createConditions, parallel(copyDocs, copyConditions, copyLabels, copyTemplates), parallel(release, convention), createAllConfig, createReadMe);
+function createreadme() {
+    return src('README-SOURCE.md')
+        .pipe(mdinclude())
+        .pipe(toc())
+        .pipe(rename(function (path) {
+            path.basename = "README";
+        }))
+        .pipe(dest('.'));
+}
+
+exports.default = series(createSetup, createConditions, parallel(copyDocs, copyConditions, copyLabels, copyTemplates), parallel(release, convention), createAllConfig, createReadMe, createreadme);
