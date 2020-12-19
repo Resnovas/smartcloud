@@ -150,10 +150,40 @@
       "color": "f9cea2",
       "description": "Related to @videndum/variable-mastermind"
     },
+    "condition": {
+      "name": "Context - Conditions",
+      "color": "f9cea2",
+      "description": "Related to action conditions"
+    },
+    "api": {
+      "name": "Context - API",
+      "color": "f9cea2",
+      "description": "Related to action API"
+    },
+    "contexts": {
+      "name": "Context - Contexts",
+      "color": "f9cea2",
+      "description": "Related to action Contexts"
+    },
+    "util": {
+      "name": "Context - Util",
+      "color": "f9cea2",
+      "description": "Related to action Utilities"
+    },
     "installer": {
       "name": "Context - Installer",
       "color": "f9cea2",
-      "description": "Related to @videndum/action-masterminds installer"
+      "description": "Related to action installer & automatic configuration tools"
+    },
+    "deps": {
+      "name": "Context - Dependencies",
+      "color": "f9cea2",
+      "description": "Related to depenencies"
+    },
+    "depsDev": {
+      "name": "Context - Dependencies",
+      "color": "f9cea2",
+      "description": "Related to developer depenencies"
     },
     "devOpsAccepted": {
       "name": "DevOps - Accepted",
@@ -432,288 +462,361 @@
       "projectType": "node",
       "versioning": "SemVer",
       "prereleaseName": "alpha",
-      "sharedLabelsConfig": {
-        "bug": {
-          "requires": 1,
-          "conditions": [
+      "sharedConfig": {
+        "enforceConventions": {
+          "onColumn": ["Accepted", "Reviewing"],
+          "conventions": [
             {
-              "type": "titleMatches",
-              "pattern": "/^bug(\\(.*\\))?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/(created|new|opened|made)( an| a)? bug/i"
+              "requires": 1,
+              "contexts": [
+                "workflow",
+                "release",
+                "label",
+                "variable",
+                "condition",
+                "api",
+                "util",
+                "installer",
+                "deps",
+                "deps-dev"
+              ],
+              "conditions": "semanticTitle"
             }
           ]
         },
-        "chore": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^chore(\\(.*\\))?:/i"
-            }
-          ]
-        },
-        "optimisation": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^opt(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^optimisation(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
-            }
-          ]
-        },
-        "style": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^style(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
-            }
-          ]
-        },
-        "refactor": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^ref(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^refactor(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
-            }
-          ]
-        },
-        "revert": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^revert(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
-            }
-          ]
-        },
-        "deprecated": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^dep(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^deprecated(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
-            }
-          ]
-        },
-        "removal": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^removal(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
-            }
-          ]
-        },
-        "discussion": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^discussion(\\(.*\\))?:/i"
-            }
-          ]
-        },
-        "documentation": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^docs(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^documentation(\\(.*\\))?:/i"
-            }
-          ]
-        },
-        "feature": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^feat(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^enhance(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^feature(\\(.*\\))?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^enhancement(\\(.*\\))?:/i"
-            }
-          ]
-        },
-        "fix": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^fix(\\(.*\\))?:/i"
-            }
-          ]
-        },
-        "workflow": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(workflow\\):/i"
-            }
-          ]
-        },
-        "releaseMastermind": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(release\\):/i"
-            }
-          ]
-        },
-        "labelMastermind": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(label\\):/i"
-            }
-          ]
-        },
-        "variableMastermind": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(variable\\):/i"
-            }
-          ]
-        },
-        "installer": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?action-masterminds.*/im"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(installer\\):/i"
-            }
-          ]
-        },
-        "priorityCritical": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
-            }
-          ]
+        "labels": {
+          "bug": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^bug(\\(.*\\))?:/i"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/(created|new|opened|made)( an| a)? bug/i"
+              }
+            ]
+          },
+          "chore": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^chore(\\(.*\\))?:/i"
+              }
+            ]
+          },
+          "optimisation": {
+            "requires": 2,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^opt(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^optimisation(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maint(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maintenance(\\(.*\\))?:/i"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
+              }
+            ]
+          },
+          "style": {
+            "requires": 2,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^style(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maint(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maintenance(\\(.*\\))?:/i"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
+              }
+            ]
+          },
+          "refactor": {
+            "requires": 2,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^ref(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^refactor(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maint(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maintenance(\\(.*\\))?:/i"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
+              }
+            ]
+          },
+          "revert": {
+            "requires": 2,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^revert(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maint(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maintenance(\\(.*\\))?:/i"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
+              }
+            ]
+          },
+          "deprecated": {
+            "requires": 2,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^dep(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^deprecated(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maint(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maintenance(\\(.*\\))?:/i"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
+              }
+            ]
+          },
+          "removal": {
+            "requires": 2,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^removal(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maint(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^maintenance(\\(.*\\))?:/i"
+              },
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
+              }
+            ]
+          },
+          "discussion": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^discussion(\\(.*\\))?:/i"
+              }
+            ]
+          },
+          "documentation": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^docs(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^documentation(\\(.*\\))?:/i"
+              }
+            ]
+          },
+          "feature": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^feat(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^enhance(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^feature(\\(.*\\))?:/i"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^enhancement(\\(.*\\))?:/i"
+              }
+            ]
+          },
+          "fix": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^fix(\\(.*\\))?:/i"
+              }
+            ]
+          },
+          "workflow": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(workflow\\):/i"
+              }
+            ]
+          },
+          "releaseMastermind": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(release\\):/i"
+              }
+            ]
+          },
+          "labelMastermind": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(label\\):/i"
+              }
+            ]
+          },
+          "variableMastermind": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "descriptionMatches",
+                "pattern": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
+              },
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(variable\\):/i"
+              }
+            ]
+          },
+          "conditions": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(condition\\):/i"
+              }
+            ]
+          },
+          "api": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(api\\):/i"
+              }
+            ]
+          },
+          "contexts": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(contexts\\):/i"
+              }
+            ]
+          },
+          "util": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(util\\):/i"
+              }
+            ]
+          },
+          "installer": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(installer\\):/i"
+              }
+            ]
+          },
+          "deps": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(deps\\):/i"
+              }
+            ]
+          },
+          "depsDev": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "/^.*\\(deps-dev\\):/i"
+              }
+            ]
+          },
+          "priorityCritical": {
+            "requires": 1,
+            "conditions": [
+              {
+                "type": "titleMatches",
+                "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+              }
+            ]
+          }
         }
       },
       "pr": {
@@ -783,24 +886,6 @@
             ]
           },
           "conditions": {}
-        },
-        "enforceConventions": {
-          "conventions": [
-            {
-              "requires": 1,
-              "contexts": [
-                "workflow",
-                "release",
-                "label",
-                "variable",
-                "convention",
-                "installer",
-                "deps",
-                "deps-dev"
-              ],
-              "conditions": "semanticTitle"
-            }
-          ]
         },
         "automaticApprove": {
           "conventions": [
@@ -931,24 +1016,6 @@
         }
       },
       "issue": {
-        "ref": "develop",
-        "enforceConventions": {
-          "conventions": [
-            {
-              "requires": 1,
-              "contexts": [
-                "workflow",
-                "release",
-                "label",
-                "variable",
-                "installer",
-                "deps",
-                "deps-dev"
-              ],
-              "conditions": "semanticTitle"
-            }
-          ]
-        },
         "assignProject": [
           {
             "project": "Developer Operations",
@@ -1134,25 +1201,6 @@
         }
       },
       "project": {
-        "ref": "develop",
-        "enforceConventions": {
-          "onColumn": ["Accepted", "Reviewing"],
-          "conventions": [
-            {
-              "requires": 1,
-              "contexts": [
-                "workflow",
-                "release",
-                "label",
-                "variable",
-                "installer",
-                "deps",
-                "deps-dev"
-              ],
-              "conditions": "semanticTitle"
-            }
-          ]
-        },
         "syncRemote": [
           {
             "localProject": "Developer Operations",

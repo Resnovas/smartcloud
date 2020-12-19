@@ -149,10 +149,40 @@
     "color": "f9cea2",
     "description": "Related to @videndum/variable-mastermind"
   },
+  "condition": {
+    "name": "Context - Conditions",
+    "color": "f9cea2",
+    "description": "Related to action conditions"
+  },
+  "api": {
+    "name": "Context - API",
+    "color": "f9cea2",
+    "description": "Related to action API"
+  },
+  "contexts": {
+    "name": "Context - Contexts",
+    "color": "f9cea2",
+    "description": "Related to action Contexts"
+  },
+  "util": {
+    "name": "Context - Util",
+    "color": "f9cea2",
+    "description": "Related to action Utilities"
+  },
   "installer": {
     "name": "Context - Installer",
     "color": "f9cea2",
-    "description": "Related to @videndum/action-masterminds installer"
+    "description": "Related to action installer & automatic configuration tools"
+  },
+  "deps": {
+    "name": "Context - Dependencies",
+    "color": "f9cea2",
+    "description": "Related to depenencies"
+  },
+  "depsDev": {
+    "name": "Context - Dependencies",
+    "color": "f9cea2",
+    "description": "Related to developer depenencies"
   },
   "devOpsAccepted": {
     "name": "DevOps - Accepted",

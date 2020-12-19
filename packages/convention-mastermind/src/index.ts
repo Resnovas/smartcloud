@@ -8,7 +8,7 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { Options, Config, Runners } from '../types'
 import path from 'path'
-import conventionMastermind from './conventionMastermind'
+import conventionMastermind from './action'
 import { Logger, loggingData } from '@videndum/utilities'
 const L = new Logger({
   console: { enabled: false },

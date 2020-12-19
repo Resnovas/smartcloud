@@ -29,6 +29,7 @@ export interface Config {
   projectType: ProjectType
   root: string
   versioning?: VersionType
+  sharedConfig: SharedConfig
   issue: IssueConfig
   pr: PullRequestConfig
   project: ProjectConfig

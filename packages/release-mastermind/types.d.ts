@@ -28,7 +28,7 @@ export interface Config {
   retryLimit?: number
   prereleaseName?: string
   labels?: { [key: string]: string }
-  sharedLabelsConfig?: SharedLabels
+  sharedConfig?: SharedConfig
   pr?: PullRequestConfig
   issue?: IssueConfig
   project?: ProjectConfig
@@ -40,9 +40,6 @@ export interface Config {
 
 export type ProjectType = 'node' | 'other'
 export type VersionType = 'SemVer'
-interface SharedLabels {
-  [key: string]: SharedConditions
-}
 
 export interface PullRequestConfig extends SharedConfig {
   assignProject?: AssignProject[]
@@ -74,6 +71,7 @@ interface SharedConfig {
       | IssueConditionConfig
       | ProjectConditionConfig
       | PRConditionConfig
+      | SharedConditions
   }
 }
 
