@@ -1299,14 +1299,15 @@ Example:
 
 #### onColumn
 
-Checks if branch name matches a Regex pattern.
+Checks if the card is in the specified column.
 
 Example:
 
 ```json
 {
-  "type": "branchMatches",
-  "pattern": "^bugfix\\/"
+  "type": "onColumn",
+  "project": "Isuues",
+  "column": "New"
 }
 ```
 
