@@ -2382,7 +2382,7 @@
                 }
               ]
             },
-            "conditions": {
+            "condition": {
               "requires": 1,
               "conditions": [
                 {

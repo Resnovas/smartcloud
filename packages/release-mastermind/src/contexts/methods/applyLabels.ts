@@ -18,7 +18,7 @@ export async function applyLabels(this: Issues | PullRequests | Project) {
     if (!labelName)
       throw new loggingData(
         '500',
-        `Can't find configuration for ${labelID} within labels. Check spelling and that it exists`
+        `Can't find configuration for "${labelID}" within labels. Check spelling and that it exists`
       )
     const hasLabel = Boolean(
       this.context.props.labels?.[labelName.toLowerCase()]

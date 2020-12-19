@@ -476,7 +476,7 @@ Now create the config file at `.github/config.json`:
             }
           ]
         },
-        "conditions": {
+        "condition": {
           "requires": 1,
           "conditions": [
             {
