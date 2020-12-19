@@ -1,0 +1,12 @@
+[
+    {
+        "command": "help",
+        "permission": "none",
+        "issue_type": "both"
+    },
+    {
+        "command": "rebase",
+        "permission": "admin",
+        "issue_type": "pull-request"
+    }
+]
