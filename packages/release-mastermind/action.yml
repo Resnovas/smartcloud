@@ -10,7 +10,7 @@ inputs:
     required: true
   config:
     description: 'Config file path'
-    default: '.github/labels.json'
+    default: '.github/config.json'
     required: false
   configJSON:
     description: 'JSON string with configuration data'

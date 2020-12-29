@@ -110,7 +110,7 @@ export class PullRequests extends Contexts {
   bumpVersion(labels: Release['labels']) {
     if (!labels || !this.context.props.labels) return
     if (
-      (this.configs.versioning == 'SemVer' ||
+      (this.configs.versioning.type == 'SemVer' ||
         this.configs.versioning == undefined) &&
       this.newVersion.semantic
     ) {

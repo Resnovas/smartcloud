@@ -6,13 +6,16 @@ import { evaluator } from '../../evaluator'
 export async function applyLabels(this: Issues | PullRequests | Project) {
   if (!this.config?.labels || !this.configs.labels)
     throw new loggingData('500', 'Config is required to add labels')
-  const { props } = this.context
   for (const [labelID, conditionsConfig] of Object.entries(
     this.config.labels
   )) {
     log(new loggingData('100', `Label: ${labelID}`))
 
-    const shouldHaveLabel = evaluator.call(this, conditionsConfig, props)
+    const shouldHaveLabel = evaluator.call(
+      this,
+      conditionsConfig,
+      this.context.props
+    )
 
     const labelName = this.configs.labels[labelID]
     if (!labelName)

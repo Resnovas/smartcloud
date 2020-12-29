@@ -28,6 +28,7 @@ Need reasons to consider using Release Manager?
   * [Manual setup](#manual-setup)
   * [All configuration options](#all-configuration-options)
     + [Runners](#runners)
+      - [Versioning](#versioning)
     + [PullRequestConfig](#pullrequestconfig)
       - [EnforceConventions](#enforceconventions)
       - [AssignProject](#assignproject)
@@ -190,8 +191,10 @@ Now create the config file at `.github/config.json`:
 [
   {
     "root": ".",
-    "projectType": "node",
-    "versioning": "SemVer",
+    "versioning": {
+      "source": "milestones",
+      "type": "SemVer"
+    },
     "prereleaseName": "alpha",
     "sharedConfig": {
       "enforceConventions": {
@@ -1153,12 +1156,19 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | ------------------ | -------- | ------------------------------------------- | ----------------------------------------- |
 | Root               | true     | Defines the root of the project             | `string`                                  |
 | projectType        | true     | Defines the type of project                 | `"node" / "other"`                        |
-| versioning         | false    | Defines the versioning of the project       | `"SemVer" / "other"`                      |
+| versioning         | true     | Defines the versioning of the project       | [`Versioning`](#versioning)               |
 | prereleaseName     | false    | Defines the name of a prerelease            | `string`                                  |
 | sharedLabelsConfig | false    | Defines labels to use on both PR and Issues | [`SharedLabels`](#sharedlabels)           |
 | pr                 | false    | Defines the configuration for Pull Requests | [`PullRequestConfig`](#pullrequestconfig) |
 | issue              | false    | Defines the configuration for issues        | [`IssueConfig`](#issueconfig)             |
 | project            | false    | Defines the configuration for projects      | [`ProjectConfig`](#projectconfig)         |
+
+##### Versioning
+
+| Option | Required | Description                           | Params                           |
+| ------ | -------- | ------------------------------------- | -------------------------------- |
+| source | true     | Defines the source for versioning     | `"node" / "milestones" / string` |
+| type   | false    | Defines the versioning of the project | `"SemVer" / "other"`             |
 
 #### PullRequestConfig
 
@@ -1388,9 +1398,11 @@ export interface Runners {
 }
 
 export interface Config {
-  projectType: ProjectType
   root: string
-  versioning?: VersionType
+  versioning: {
+    source: VersionSource
+    type?: VersionType
+  }
   retryLimit?: number
   prereleaseName?: string
   labels?: { [key: string]: string }
@@ -1404,7 +1416,7 @@ export interface Config {
  * Config types
  */
 
-export type ProjectType = 'node' | 'other'
+export type VersionSource = 'node' | 'milestones' | string
 export type VersionType = 'SemVer'
 
 export interface PullRequestConfig extends SharedConfig {
@@ -1872,5 +1884,5 @@ Example:
 
 Thank you for taking the time to look through this repository. If you have liked what you have found, please would you favourite & share. Ideally I would like to get a community behind this project which can ensure that it is maintained, updated and improved as GitActions get more suffisticated.
 
-This project took heavy infulence from [IvanFon/super-labeler-action](https://github.com/IvanFon/super-labeler-action) which we are actively maintaining on our fork here: [Videndum/forked-super-labeler-action](https://github.com/Videndum/forked-super-labeler-action). We invite any of the team who worked on his project to come onboard with our version and intend to continue maintaining for a significant while.
+This project took heavy infulence from [IvanFon/super-labeler-action](https://github.com/IvanFon/super-labeler-action) which we are actively maintaining on our fork here: [Videndum/label-mastermind](https://github.com/Videndum/label-mastermind). We invite any of the team who worked on his project to come onboard with our version and intend to continue maintaining for a significant while.
 
