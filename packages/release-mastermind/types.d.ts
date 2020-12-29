@@ -22,9 +22,11 @@ export interface Runners {
 }
 
 export interface Config {
-  projectType: ProjectType
   root: string
-  versioning?: VersionType
+  versioning: {
+    source: VersionSource
+    type?: VersionType
+  }
   retryLimit?: number
   prereleaseName?: string
   labels?: { [key: string]: string }
@@ -38,7 +40,7 @@ export interface Config {
  * Config types
  */
 
-export type ProjectType = 'node' | 'other'
+export type VersionSource = 'node' | 'milestones' | string
 export type VersionType = 'SemVer'
 
 export interface PullRequestConfig extends SharedConfig {

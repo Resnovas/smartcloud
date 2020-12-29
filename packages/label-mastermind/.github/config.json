@@ -429,8 +429,10 @@
   "runners": [
     {
       "root": ".",
-      "projectType": "node",
-      "versioning": "SemVer",
+      "versioning": {
+        "source": "milestones",
+        "type": "SemVer"
+      },
       "prereleaseName": "alpha",
       "sharedConfig": {
         "labels": {

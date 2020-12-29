@@ -31,7 +31,12 @@ export default class releaseMastermind {
   util: Utils
 
   constructor(client: GitHub, options: Options) {
-    log(new loggingData('100', `Release Mastermind Constructed: ${options}`))
+    log(
+      new loggingData(
+        '100',
+        `Release Mastermind Constructed: ${options.toString()}`
+      )
+    )
     core.startGroup('Setup Phase')
     this.client = client
     this.opts = options

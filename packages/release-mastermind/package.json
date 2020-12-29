@@ -2,12 +2,9 @@
   "name": "@videndum/convential-pr-releases",
   "version": "0.0.0-alpha+1564",
   "description": "",
-  "repository": {
-    "type": "",
-    "url": ""
-  },
-  "author": "",
-  "license": "",
+  "repository": "git@github.com:videndum/release-mastermind.git",
+  "author": "Jonathan Stevens <jonathan@videndum.studio>",
+  "license": "GPL-3.0",
   "private": true,
   "main": "lib/index.js",
   "directories": {

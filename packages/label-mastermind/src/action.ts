@@ -42,10 +42,14 @@ export default class labelMastermind {
    * @since 1.0.0
    */
   constructor(client: GitHub, options: Options) {
-    log(new loggingData('100', `Superlabeller Constructed: ${options}`))
+    log(
+      new loggingData(
+        '100',
+        `Label Mastermind Constructed: ${options.toString()}`
+      )
+    )
     this.client = client
     this.opts = options
-    console.log(options.configJSON.runners)
     this.configJSON = options.configJSON
     this.configPath = options.configPath
     this.util = new Utils({ client, repo: this.repo }, options.dryRun)
@@ -163,7 +167,6 @@ export default class labelMastermind {
    * @since 1.0.0
    */
   async processConfig(): Promise<Runners> {
-    console.log(this.configJSON.runners)
     if (!this.configJSON?.runners[0]) {
       if (!fs.existsSync(this.configPath)) {
         throw new Error(`config not found at "${this.configPath}"`)
