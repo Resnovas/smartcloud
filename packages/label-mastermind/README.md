@@ -8,45 +8,45 @@ The super-powered labeler for Github Actions, with complex customisable conditio
 
 - [Features](#features)
 - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
-  - [Why not GitHub Issues?](#why-not-github-issues)
+  * [Why not GitHub Issues?](#why-not-github-issues)
 - [Backlog & Contributing](#backlog--contributing)
 - [Running Locally & Developing](#running-locally--developing)
-  - [Prerequisities](#prerequisities)
-  - [Developing](#developing)
-  - [Running locally](#running-locally)
+  * [Prerequisities](#prerequisities)
+  * [Developing](#developing)
+  * [Running locally](#running-locally)
 - [Getting Started](#getting-started)
-  - [Automatic setup via CLI](#automatic-setup-via-cli)
-  - [Manual setup](#manual-setup)
-  - [All configuration options](#all-configuration-options)
-    - [Runners](#runners)
+  * [Automatic setup via CLI](#automatic-setup-via-cli)
+  * [Manual setup](#manual-setup)
+  * [All configuration options](#all-configuration-options)
+    + [Runners](#runners)
       - [Versioning](#versioning)
-    - [IssueConfig](#issueconfig)
-    - [ProjectConfig](#projectconfig)
-    - [PullRequestConfig](#pullrequestconfig)
-    - [PullRequestConfig](#pullrequestconfig-1)
-    - [Typings](#typings)
-  - [Using Regex Patterns](#using-regex-patterns)
+    + [IssueConfig](#issueconfig)
+    + [ProjectConfig](#projectconfig)
+    + [PullRequestConfig](#pullrequestconfig)
+    + [PullRequestConfig](#pullrequestconfig-1)
+    + [Typings](#typings)
+  * [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
-  - [Common Conditions](#common-conditions)
-    - [\$and](#and)
-    - [creatorMatches](#creatormatches)
-    - [descriptionMatches](#descriptionmatches)
-    - [hasLabel](#haslabel)
-    - [isLocked](#islocked)
-    - [isOpen](#isopen)
-    - [\$only](#only)
-    - [\$or](#or)
-  - [Pull Request Conditions](#pull-request-conditions)
-    - [branchMatches](#branchmatches)
-    - [changesSize](#changessize)
-    - [filesMatch](#filesmatch)
-    - [isApproved](#isapproved)
-    - [isDraft](#isdraft)
-    - [pendingReview](#pendingreview)
-    - [requestedChanges](#requestedchanges)
-  - [Issue Conditions](#issue-conditions)
-  - [Project Conditions](#project-conditions)
-    - [onColumn](#oncolumn)
+  * [Common Conditions](#common-conditions)
+    + [\$and](#and)
+    + [creatorMatches](#creatormatches)
+    + [descriptionMatches](#descriptionmatches)
+    + [hasLabel](#haslabel)
+    + [isLocked](#islocked)
+    + [isOpen](#isopen)
+    + [\$only](#only)
+    + [\$or](#or)
+  * [Pull Request Conditions](#pull-request-conditions)
+    + [branchMatches](#branchmatches)
+    + [changesSize](#changessize)
+    + [filesMatch](#filesmatch)
+    + [isApproved](#isapproved)
+    + [isDraft](#isdraft)
+    + [pendingReview](#pendingreview)
+    + [requestedChanges](#requestedchanges)
+  * [Issue Conditions](#issue-conditions)
+  * [Project Conditions](#project-conditions)
+    + [onColumn](#oncolumn)
 - [Final Note](#final-note)
 
 <!-- tocstop -->
@@ -112,6 +112,7 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 6. Modify the `./config.sample.json` to contain your `GITHUB_TOKEN` and rename to `./config.json`
 7. Run the script using `yarn dev:run` or `npm run dev:run`
 
+
 ## Getting Started
 
 > [!IMPORTANT]
@@ -120,6 +121,7 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 ### Automatic setup via CLI
 
 [coming soon]
+
 
 ### Manual setup
 
@@ -968,32 +970,32 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | ref    | false    | Overrides the reference    | `string`                                                 |
 | labels | false    | Apply labels automatically | [`[Key: string]: PRConditionConfig`](#prconditionconfig) |
 
+
+
 #### Typings
 
 <details>
     <summary><b>Types</b></summary>
 
-```typescript
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+import { IssueConfig, ProjectConfig, PullRequestConfig, SharedConfig } from '.'
 import {
+  Condition,
   IssueCondition,
   PRCondition,
-  Condition,
   ProjectCondition
-} from './src/conditions/'
+} from '../src/conditions'
 
-export interface IssueConditionConfig {
-  requires: number
-  conditions: IssueCondition[]
-}
+/**
+ * Application interfaces
+ */
 
-export interface PRConditionConfig {
-  requires: number
-  conditions: PRCondition[]
-}
-
-export interface SharedConfig {
-  requires: number
-  conditions: Condition[]
+export interface Options {
+  configPath: string
+  configJSON: Runners
+  showLogs: boolean
+  dryRun: boolean
+  fillEmpty: boolean
 }
 
 export interface Runners {
@@ -1003,48 +1005,31 @@ export interface Runners {
 
 export interface Config {
   root: string
-  projectType: ProjectType
-  versioning?: VersionType
-  labels?: { [key: string]: string }
-  sharedConfig: {
-    labels: SharedLabels
+  versioning: {
+    source: VersionSource
+    type?: VersionType
   }
-  issue: IssueConfig
-  pr: PullRequestConfig
-  project: ProjectConfig
-  skip_labeling: string
-  delete_labels: boolean
+  retryLimit?: number
+  prereleaseName?: string
+  labels?: { [key: string]: string }
+  sharedConfig?: SharedConfig
+  pr?: PullRequestConfig
+  issue?: IssueConfig
+  project?: ProjectConfig
 }
 
-interface SharedLabels {
-  [key: string]: SharedConditions
-}
+/**
+ * Config types
+ */
+
+export type VersionSource = 'node' | 'milestones' | string
+export type VersionType = 'SemVer'
+
 export interface SharedConditions {
   requires: number
   conditions: Condition[]
 }
-export interface IssueConfig {
-  ref?: string
-  labels: {
-    [key: string]: IssueConditionConfig
-  }
-}
-export interface PullRequestConfig {
-  ref?: string
-  labels: {
-    [key: string]: PRConditionConfig
-  }
-}
-export interface ProjectConfig {
-  ref?: string
-  labels: {
-    [key: string]: SharedConfig
-  }
-}
-export interface ProjectConditionConfig {
-  requires: number
-  conditions: ProjectCondition[]
-}
+
 export interface Label {
   name: string
   description: string
@@ -1055,15 +1040,59 @@ export interface Labels {
   [key: string]: Label
 }
 
-export interface Options {
-  configPath: string
-  configJSON: Runners
-  showLogs: boolean
-  dryRun: boolean
+export interface PRConditionConfig {
+  requires: number
+  conditions: PRCondition[]
 }
 
-export type ProjectType = 'node' | 'other'
-export type VersionType = 'SemVer'
+export interface IssueConditionConfig {
+  requires: number
+  conditions: IssueCondition[]
+}
+
+export interface ProjectConditionConfig {
+  requires: number
+  conditions: ProjectCondition[]
+}
+```
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+export * from './global'
+export * from './local'
+```
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+import { SharedConditions, IssueConditionConfig, PRConditionConfig } from ".";
+import { Condition } from "../src/conditions";
+
+export interface SharedLabels {
+    [key: string]: SharedConditions
+}
+export interface IssueConfig {
+    ref?: string
+    labels?: {
+        [key: string]: IssueConditionConfig
+    }
+}
+export interface PullRequestConfig {
+    ref?: string
+    labels?: {
+        [key: string]: PRConditionConfig
+    }
+}
+export interface ProjectConfig {
+    ref?: string
+    labels?: {
+        [key: string]: SharedLabelConfig
+    }
+}
+
+export interface SharedLabelConfig {
+    requires: number
+    conditions: Condition[]
+}
+
+export interface SharedConfig {
+    labels?: SharedLabels
+}
 ```
 
 </details>
@@ -1211,6 +1240,8 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 }
 ```
 
+
+
 ### Pull Request Conditions
 
 #### branchMatches
@@ -1308,7 +1339,10 @@ Example:
 }
 ```
 
+
 ### Issue Conditions
+
+
 
 ### Project Conditions
 
@@ -1325,6 +1359,8 @@ Example:
   "column": "New"
 }
 ```
+
+
 
 ## Final Note
 

@@ -39,7 +39,6 @@ insert debug output here
 ## Device Information
 
 <!-- Please delete all information not relivent-->
-
 - Version: [e.g. 22]
 - Platform: [e.g. macOS, Google Cloud, ubuntu 18.04]
 - Browser: [e.g. stock browser, safari]

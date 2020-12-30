@@ -1,22 +1,15 @@
-/**
- * Runs the Action
- * @author IvanFon, TGTGamer, jbinda
- * @since 1.0.0
- */
-
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import { Options, Config, Runners } from '../types'
-import path from 'path'
-import labelMastermind from './action'
 import { Logger, loggingData } from '@videndum/utilities'
+import path from 'path'
+import { Options } from '../types'
+import Action from './action'
 const L = new Logger({
   console: { enabled: false },
   sentry: {
-    enabled: true,
+    enabled: process.env.NPM_PACKAGE_SENTRY ? true : false,
     config: {
-      dsn:
-        'https://e7dd11f1f35b46048a62a8de2b69fa83@o237244.ingest.sentry.io/5508005'
+      dsn: process.env.NPM_PACKAGE_SENTRY!
     }
   }
 })
@@ -47,12 +40,12 @@ const { GITHUB_WORKSPACE = '' } = process.env
  * @author TGTGamer
  * @since 1.0.0
  */
-function run() {
+async function run() {
   if (dryRun)
     log(
       new loggingData(
         '300',
-        `Label Mastermind is running in local dryrun mode. No labels will be applyed`
+        `${process.env.NPM_PACKAGE_NAME} is running in local dryrun mode. No Actions will be applyed`
       )
     )
   const configInput = JSON.parse(
@@ -64,26 +57,28 @@ function run() {
   if (!GITHUB_TOKEN) {
     return core.setFailed('No Token provided')
   }
-  const options = {
+  const fillEmpty = Boolean(core.getInput('fillEmpty') || local.FILL)
+  const options: Options = {
     configPath: path.join(GITHUB_WORKSPACE, core.getInput('config')),
     configJSON:
-      configInput.labelMastermind ||
+      configInput.releaseMastermind ||
       (configInput?.pr || configInput?.issue || configInput?.project
         ? configInput
         : local == undefined
         ? undefined
-        : require(local.configJSON).labelMastermind
-        ? require(local.configJSON).labelMastermind
+        : require(local.configJSON).releaseMastermind
+        ? require(local.configJSON).releaseMastermind
         : require(local.configJSON)),
     showLogs,
-    dryRun
+    dryRun,
+    fillEmpty
   }
-  const action = new labelMastermind(new github.GitHub(GITHUB_TOKEN), options)
+  const action = new Action(new github.GitHub(GITHUB_TOKEN), options)
   action.run().catch(err => {
     log(
       new loggingData(
         '800',
-        `Label Mastermind did not complete due to error:`,
+        `${process.env.NPM_PACKAGE_NAME} did not complete due to error:`,
         err
       )
     )

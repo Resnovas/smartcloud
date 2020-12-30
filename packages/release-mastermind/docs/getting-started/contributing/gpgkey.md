@@ -33,7 +33,7 @@ We suggest using this method of GPG key setup to reduce the amount of keys you n
 3. Now that you’ve imported the key into GPG, you need to modify the key to include your email address. This is done by invoking the `gpg --edit-key` command, with a unique identifier for your key. I found using the `<username>@keybase.io` address worked nicely.
 
    ```shell
-   gpg --edit-key <username >@keybase.io
+   gpg --edit-key <username>@keybase.io
    ```
 
    This command will get you into the `gpg>` prompt, and from there you need to run the `adduid` command. It will prompt for your `Real name` and `Email address` (feel free to leave `Comment` empty). Once you’ve provided your name and email, confirm using the `O` and then `save` to close the `gpg>` prompt.

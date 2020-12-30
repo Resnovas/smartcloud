@@ -74,7 +74,7 @@ Be sure that Github Actions is enabled for in your repository's settings. The ac
 <details>
     <summary><b>Types</b></summary>
 
-<!-- #code types.d.ts -->
+<!-- #code types/*.d.ts -->
 
 </details>
 
