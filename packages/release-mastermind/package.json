@@ -1,5 +1,5 @@
 {
-  "name": "@videndum/convential-pr-releases",
+  "name": "@videndum/release-mastermind",
   "version": "0.0.0-alpha+1564",
   "description": "",
   "repository": "git@github.com:videndum/release-mastermind.git",
@@ -23,7 +23,7 @@
     "dev:format": "prettier --config .prettier.json --write .",
     "dev:format-check": "prettier --config .prettier.json --check .",
     "dev:package": "npm run dev:tsc && ncc build --source-map",
-    "dev:run": "npm run dev:tsc && npm run dev:format && node lib/index.js",
+    "dev:run": "npm run dev:tsc && node lib/index.js",
     "dev:test": "jest --json --outputFile=result.json --testLocationInResults",
     "dev:tsc": "tsc -p tsconfig.json",
     "run": "node lib/index.js",
@@ -49,5 +49,6 @@
     "prettier-standard": "^16.4.1",
     "ts-jest": "^26.4.3",
     "typescript": "^4.0.5"
-  }
+  },
+  "sentry": "https://3ed727f54ce94ff7aca190b01eb17caa@o237244.ingest.sentry.io/5546354"
 }

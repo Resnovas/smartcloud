@@ -19,14 +19,15 @@ try {
   process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER
   if (!context.payload.issue && !context.payload.pull_request)
     context = require(local.github_context)
-} catch {}
+} catch { }
 
-export default class releaseMastermind {
+export default class Action {
   client: GitHub
   opts: Options
   configJSON: Options['configJSON']
   configPath: Options['configPath']
   dryRun: Options['dryRun']
+  fillEmpty: Options['fillEmpty']
   repo = context.repo || {}
   util: Utils
 
@@ -42,8 +43,9 @@ export default class releaseMastermind {
     this.opts = options
     this.configJSON = options.configJSON
     this.configPath = options.configPath
-    this.util = new Utils({ client, repo: this.repo }, options.dryRun)
+    this.util = new Utils({ client, repo: this.repo }, { dryRun: options.dryRun, skipDelete: options.skipDelete })
     this.dryRun = options.dryRun
+    this.fillEmpty = options.fillEmpty
   }
 
   async run() {
@@ -137,17 +139,20 @@ export default class releaseMastermind {
        */
 
       for (const action in config.sharedConfig) {
-        const ctx = config[curContext.type]
-        if (!ctx) return
+        if (!config[curContext.type] && !this.fillEmpty) return
+        else if (!config[curContext.type]) config[curContext.type] = {}
         if (action == 'labels') {
           for (const label in config.sharedConfig.labels) {
-            if (ctx.labels && !(label in ctx)) {
+            if (
+              config[curContext.type]!.labels &&
+              !(label in config[curContext.type]!)
+            ) {
               config[curContext.type]!.labels![label] =
                 config.sharedConfig.labels[label]
             }
           }
         } else if (action == 'enforceConventions') {
-          ctx[action] = config.sharedConfig[action]
+          config[curContext.type]![action] = config.sharedConfig[action]
         }
       }
       core.endGroup()

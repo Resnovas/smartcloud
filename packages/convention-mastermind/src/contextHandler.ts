@@ -23,7 +23,7 @@ class ContextHandler {
     context: Context
   ): Promise<PRContext | undefined> {
     const pr = context.payload.pull_request
-    if (!pr || !config.pr) {
+    if (!pr) {
       return
     }
 
@@ -31,7 +31,7 @@ class ContextHandler {
       new loggingData(
         '100',
         `context.payload.pull_request: ` +
-          JSON.stringify(context.payload.pull_request)
+        JSON.stringify(context.payload.pull_request)
       )
     )
 
@@ -91,7 +91,7 @@ class ContextHandler {
       })
 
     const currentVersion: Version = await utils.versioning
-      .parse(config, config.pr.ref)
+      .parse(config, config.pr?.ref)
       .catch(err => {
         log(
           new loggingData('500', `Error thrown while parsing versioning: `, err)
@@ -137,7 +137,7 @@ class ContextHandler {
     context: Context
   ): Promise<ProjectContext | undefined> {
     const project = context.payload.project_card
-    if (!project || !config.project) {
+    if (!project) {
       return
     }
     log(
@@ -159,7 +159,7 @@ class ContextHandler {
     })
 
     const currentVersion: Version = await utils.versioning
-      .parse(config, config.project.ref)
+      .parse(config, config.project?.ref)
       .catch(err => {
         log(
           new loggingData('500', `Error thrown while parsing versioning: `, err)
@@ -209,7 +209,7 @@ class ContextHandler {
     context: Context
   ): Promise<IssueContext | undefined> {
     const issue = context.payload.issue
-    if (!issue || !config.issue) {
+    if (!issue) {
       return
     }
 
@@ -226,7 +226,7 @@ class ContextHandler {
     })
 
     const currentVersion: Version = await utils.versioning
-      .parse(config, config.issue.ref)
+      .parse(config, config.issue?.ref)
       .catch(err => {
         log(
           new loggingData('500', `Error thrown while parsing versioning: `, err)

@@ -12,7 +12,6 @@ context example: bug(installer): {your title here}
 ## Describe the fix
 
 Addresses bug: #{number}
-
 <!-- A clear and concise description of what the fix is. -->
 
 ### Expected behaviour
@@ -26,7 +25,6 @@ Addresses bug: #{number}
 ## Device Information
 
 <!-- Please delete all information not relivent-->
-
 - Version: [e.g. 22]
 - Platform: [e.g. macOS, Google Cloud, ubuntu 18.04]
 - Browser: [e.g. stock browser, safari]

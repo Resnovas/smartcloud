@@ -19,7 +19,7 @@ try {
   process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER
   if (!context.payload.issue && !context.payload.pull_request)
     context = require(local.github_context)
-} catch {}
+} catch { }
 
 /**
  * Super Labeler
@@ -28,12 +28,13 @@ try {
  * @author IvanFon, TGTGamer
  * @since 1.0.0
  */
-export default class conventionMastermind {
+export default class Action {
   client: GitHub
   opts: Options
   configJSON: Options['configJSON']
   configPath: Options['configPath']
   dryRun: Options['dryRun']
+  fillEmpty: Options['fillEmpty']
   repo = context.repo || {}
   util: Utils
 
@@ -52,8 +53,9 @@ export default class conventionMastermind {
     this.opts = options
     this.configJSON = options.configJSON
     this.configPath = options.configPath
-    this.util = new Utils({ client, repo: this.repo }, options.dryRun)
+    this.util = new Utils({ client, repo: this.repo }, { dryRun: options.dryRun, skipDelete: options.skipDelete })
     this.dryRun = options.dryRun
+    this.fillEmpty = options.fillEmpty
   }
 
   /**
@@ -119,8 +121,10 @@ export default class conventionMastermind {
        */
 
       for (const action in config.sharedConfig) {
+        if (!config[curContext.type] && !this.fillEmpty) return
+        else if (!config[curContext.type]) config[curContext.type] = {}
         if (action == 'enforceConventions') {
-          config[curContext.type][action] = config.sharedConfig[action]
+          config[curContext.type]![action] = config.sharedConfig[action]
         }
       }
 
@@ -134,7 +138,7 @@ export default class conventionMastermind {
       await this.applyContext(configs, config, curContext).catch(err => {
         throw new loggingData(
           '500',
-          `Error thrown while applying context: `,
+          `Error thrown while applying context: ${err}`,
           err
         )
       })
@@ -245,13 +249,13 @@ export default class conventionMastermind {
         curContext,
         this.dryRun
       )
-      ctx.run()
+      ctx.run().catch(err => {
+        throw new loggingData('500', `Error thrown while running context: `, err)
+      })
     } else if (curContext.type === 'issue') {
       ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
-        throw log(
-          new loggingData('500', `Error thrown while running context: `, err)
-        )
+        throw new loggingData('500', `Error thrown while running context: `, err)
       })
     }
   }

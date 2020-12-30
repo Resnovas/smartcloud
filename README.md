@@ -26,6 +26,7 @@ Need reasons to consider using Release Manager?
 - [Getting Started](#getting-started)
   * [Automatic setup via CLI](#automatic-setup-via-cli)
   * [Manual setup](#manual-setup)
+    + [Workflow Options](#workflow-options)
   * [All configuration options](#all-configuration-options)
     + [Runners](#runners)
       - [Versioning](#versioning)
@@ -1139,6 +1140,16 @@ Now create the config file at `.github/config.json`:
 
 Be sure that Github Actions is enabled for in your repository's settings. The action will now run on your issues, projects and pull requests.
 
+#### Workflow Options
+
+| Option       | Required | Description                                          | Default                 |
+| ------------ | -------- | ---------------------------------------------------- | ----------------------- |
+| GITHUB_TOKEN | true     | Your github token or PAT                             | `N/A`                   |
+| config       | false    | The config file to use                               | `".github/config.json"` |
+| configJSON   | false    | "JSON string with config data"                       | `N/A`                   |
+| fillEmpty    | false    | Fill Empty context configuration with shared configs | `true`                  |
+| skipDelete   | false    | Skip deleting labels from repository                 | `false`                 |
+
 ### All configuration options
 
 Due to the nature of this project. Most of the options have been documented as tables of information for your convinience. However Where this isn't partically helpful or easy to do, we have used the `Typing` from our typescript files to showcase the option.
@@ -1373,13 +1384,14 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 <details>
     <summary><b>Types</b></summary>
 
-```typescript
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+import { IssueConfig, ProjectConfig, PullRequestConfig, SharedConfig } from '.'
 import {
   Condition,
   IssueCondition,
   PRCondition,
   ProjectCondition
-} from './src/conditions'
+} from '../src/conditions'
 
 /**
  * Application interfaces
@@ -1390,6 +1402,8 @@ export interface Options {
   configJSON: Runners
   showLogs: boolean
   dryRun: boolean
+  fillEmpty: boolean
+  skipDelete: boolean
 }
 
 export interface Runners {
@@ -1419,6 +1433,49 @@ export interface Config {
 export type VersionSource = 'node' | 'milestones' | string
 export type VersionType = 'SemVer'
 
+export interface SharedConditions {
+  requires: number
+  conditions: Condition[]
+}
+
+export interface Label {
+  name: string
+  description: string
+  color: string
+}
+
+export interface Labels {
+  [key: string]: Label
+}
+
+export interface PRConditionConfig {
+  requires: number
+  conditions: PRCondition[]
+}
+
+export interface IssueConditionConfig {
+  requires: number
+  conditions: IssueCondition[]
+}
+
+export interface ProjectConditionConfig {
+  requires: number
+  conditions: ProjectCondition[]
+}
+```
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+export * from './global'
+export * from './local'
+```
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+import {
+  IssueConditionConfig,
+  PRConditionConfig,
+  ProjectConditionConfig,
+  SharedConditions
+} from '.'
+import { Condition } from '../src/conditions'
+
 export interface PullRequestConfig extends SharedConfig {
   assignProject?: AssignProject[]
   automaticApprove?: AutomaticApprove
@@ -1438,10 +1495,7 @@ export interface ProjectConfig extends SharedConfig {
   assignMilestone?: { [milestone: string]: Milestones }
 }
 
-/**
- * shared types
- */
-interface SharedConfig {
+export interface SharedConfig {
   ref?: string
   enforceConventions?: EnforceConventions
   labels?: {
@@ -1453,27 +1507,22 @@ interface SharedConfig {
   }
 }
 
-interface SharedConventionConditions {
+export interface SharedConventionConditions {
   requires: number
   conditions: Condition[] | string
 }
-export interface SharedConditions {
-  requires: number
-  conditions: Condition[]
-}
-
 export interface SharedConventionsConfig extends SharedConventionConditions {
   failedComment: string
   contexts?: string[]
 }
 
-interface CreateBranch {
+export interface CreateBranch {
   branchPrefix?: string
   branchSuffix?: string
   branchName: 'title' | 'short' | 'number'
 }
 
-interface EnforceConventions {
+export interface EnforceConventions {
   onColumn?: Column[]
   commentHeader?: string
   commentFooter?: string
@@ -1481,27 +1530,7 @@ interface EnforceConventions {
   conventions: SharedConventionsConfig[]
 }
 
-export type Column = string | number
-export interface Label {
-  name: string
-  description: string
-  color: string
-}
-
-export interface Labels {
-  [key: string]: Label
-}
-
-/**
- * Pull Request Config types
- */
-
-export interface PRConditionConfig {
-  requires: number
-  conditions: PRCondition[]
-}
-
-interface AutomaticApprove {
+export interface AutomaticApprove {
   commentHeader?: string
   commentFooter?: string
   conventions: SharedConventionsConfig[]
@@ -1523,12 +1552,12 @@ export interface Release extends PRConditionConfig {
   createChangelog?: Changelog
 }
 
-interface DuplicateHotfix {
+export interface DuplicateHotfix {
   prName: 'unchanged' | 'number' | string
   titlePrefix?: string
   branches: string[]
 }
-interface SyncRemote {
+export interface SyncRemote {
   localBranch: string
   remoteBranch: string
   localPath: string
@@ -1536,12 +1565,12 @@ interface SyncRemote {
   conditions: SharedConditions[]
 }
 
-interface ReleaseChanges {
+export interface ReleaseChanges {
   includeIssues?: boolean
   sections?: Sections[]
 }
 
-interface Sections {
+export interface Sections {
   title: string
   body?: string
   PRlabels: string[]
@@ -1550,7 +1579,7 @@ interface Sections {
   linkPR?: boolean
 }
 
-interface CreateRelease extends ReleaseChanges {
+export interface CreateRelease extends ReleaseChanges {
   tagName?: string
   tagPrefix?: string
   releaseName?: string
@@ -1560,23 +1589,17 @@ interface CreateRelease extends ReleaseChanges {
   prerelease?: boolean
   useChangelog?: boolean
 }
-interface Changelog extends ReleaseChanges {
+export interface Changelog extends ReleaseChanges {
   title?: string
   body?: string
 }
 
-interface CreateMilestone {
+export interface CreateMilestone {
   milestone: 'version' | string
   deadline?: string
 }
 
-/**
- * Issue Config types
- */
-export interface IssueConditionConfig {
-  requires: number
-  conditions: IssueCondition[]
-}
+export type Column = string | number
 
 interface AssignProject extends IssueConditionConfig {
   owner?: string
@@ -1584,15 +1607,6 @@ interface AssignProject extends IssueConditionConfig {
   repo?: string
   project: string
   column: string
-}
-
-/**
- * Project Config types
- */
-
-export interface ProjectConditionConfig {
-  requires: number
-  conditions: ProjectCondition[]
 }
 
 interface ExProjects {

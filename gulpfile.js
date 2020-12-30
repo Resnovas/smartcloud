@@ -4,6 +4,8 @@ const jsonConfig = require('gulp-json-config');
 const rename = require("gulp-rename");
 const jsonFmt = require("gulp-json-fmt");
 const { src, dest, series, parallel } = require('gulp');
+const exec = require('gulp-exec');
+const log = require('fancy-log');
 
 function createSetup() {
     return src('docs/components/setup/*.md')
@@ -34,6 +36,21 @@ function copyConditions() {
         .pipe(dest('packages/label-mastermind/src/conditions'))
         .pipe(dest('packages/convention-mastermind/src/conditions'))
 }
+function copyIndex() {
+    return src('packages/release-mastermind/src/index.ts')
+        .pipe(dest('packages/label-mastermind/src'))
+        .pipe(dest('packages/convention-mastermind/src'))
+}
+function copyUtils() {
+    return src('packages/release-mastermind/src/utils/**/*')
+        .pipe(dest('packages/label-mastermind/src/utils'))
+        .pipe(dest('packages/convention-mastermind/src/utils'))
+}
+function copyTypes() {
+    return src('packages/release-mastermind/types/global.d.ts')
+        .pipe(dest('packages/label-mastermind/types'))
+        .pipe(dest('packages/convention-mastermind/types'))
+}
 
 function copyLabels() {
     return src('.github/labels.json', { base: "." })
@@ -60,6 +77,9 @@ function createAllConfig() {
 }
 
 function release() {
+    return releaseConfig()
+}
+function releaseConfig() {
     return src('packages/release-mastermind/.github/config/*.json')
         .pipe(jsonConfig())
         .pipe(jsonFmt(jsonFmt.PRETTY))
@@ -71,6 +91,9 @@ function release() {
 }
 
 function convention() {
+    return conventionConfig()
+}
+function conventionConfig() {
     return src('packages/convention-mastermind/.github/config/*.json')
         .pipe(jsonConfig())
         .pipe(jsonFmt(jsonFmt.PRETTY))
@@ -80,8 +103,10 @@ function convention() {
         }))
         .pipe(dest('.github/config'))
 }
-
-function copyLabels() {
+function labels() {
+    return labelsConfig()
+}
+function labelsConfig() {
     return src('packages/label-mastermind/.github/config/*.json')
         .pipe(jsonConfig())
         .pipe(jsonFmt(jsonFmt.PRETTY))
@@ -112,4 +137,76 @@ function createreadme() {
         .pipe(dest('.'));
 }
 
-exports.default = series(createSetup, createConditions, parallel(copyDocs, copyConditions, copyLabels, copyTemplates), parallel(release, convention), createAllConfig, createReadMe, createreadme);
+function copyConfig() {
+    return src('config.json')
+        .pipe(dest('packages/release-mastermind'))
+        .pipe(dest('packages/label-mastermind'))
+        .pipe(dest('packages/convention-mastermind'))
+}
+function copyContextIssue() {
+    return src('contexts/issue.json')
+        .pipe(rename(function (path) {
+            path.basename = "context";
+        }))
+        .pipe(dest('packages/release-mastermind'))
+        .pipe(dest('packages/label-mastermind'))
+        .pipe(dest('packages/convention-mastermind'))
+}
+function copyContextPR() {
+    return src('contexts/pr.json')
+        .pipe(rename(function (path) {
+            path.basename = "context";
+        }))
+        .pipe(dest('packages/release-mastermind'))
+        .pipe(dest('packages/label-mastermind'))
+        .pipe(dest('packages/convention-mastermind'))
+}
+function copyContextProject() {
+    return src('contexts/project.json')
+        .pipe(rename(function (path) {
+            path.basename = "context";
+        }))
+        .pipe(dest('packages/release-mastermind'))
+        .pipe(dest('packages/label-mastermind'))
+        .pipe(dest('packages/convention-mastermind'))
+}
+
+function test() {
+    return src('./packages/**/README-SOURCE.md')
+        .pipe(rename(function (path) {
+            path.basename = path.dirname;
+            path.dirname = "";
+            path.extname = "";
+        }))
+        .pipe(exec(file => `cd ${file.path} && npm run dev:run`))
+        .pipe(exec.reporter({ stdout: false }));
+}
+
+function cleanup() {
+    return src('./packages/**/README-SOURCE.md')
+        .pipe(rename(function (path) {
+            path.basename = path.dirname;
+            path.dirname = "";
+            path.extname = "";
+        }))
+        .pipe(exec(file => `cd ${file.path} && del config.json context.json`))
+        .pipe(exec.reporter());
+}
+
+exports.default = series(
+    parallel(createSetup, createConditions),
+    parallel(copyIndex, copyDocs, copyConditions, copyLabels, copyTypes, copyUtils, copyTemplates),
+    parallel(release, convention, labels),
+    series(
+        parallel(copyConfig, copyContextIssue),
+        test,
+        copyContextPR,
+        test,
+        copyContextProject,
+        test,
+        cleanup
+    ),
+    createAllConfig,
+    createReadMe,
+    createreadme
+);

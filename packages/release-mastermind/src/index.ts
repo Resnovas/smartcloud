@@ -2,14 +2,14 @@ import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { Logger, loggingData } from '@videndum/utilities'
 import path from 'path'
-import releaseMastermind from './action'
+import { Options } from '../types'
+import Action from './action'
 const L = new Logger({
   console: { enabled: false },
   sentry: {
-    enabled: true,
+    enabled: process.env.NPM_PACKAGE_SENTRY ? true : false,
     config: {
-      dsn:
-        'https://3ed727f54ce94ff7aca190b01eb17caa@o237244.ingest.sentry.io/5546354'
+      dsn: process.env.NPM_PACKAGE_SENTRY!
     }
   }
 })
@@ -31,7 +31,7 @@ try {
   local = require('../config.json')
   dryRun = local.GH_ACTION_LOCAL_TEST || false
   showLogs = local.SHOW_LOGS || false
-} catch {}
+} catch { }
 
 const { GITHUB_WORKSPACE = '' } = process.env
 
@@ -45,7 +45,7 @@ async function run() {
     log(
       new loggingData(
         '300',
-        `Release Mastermind is running in local dryrun mode. No Actions will be applyed`
+        `${process.env.NPM_PACKAGE_NAME} is running in local dryrun mode. No Actions will be applyed`
       )
     )
   const configInput = JSON.parse(
@@ -57,26 +57,30 @@ async function run() {
   if (!GITHUB_TOKEN) {
     return core.setFailed('No Token provided')
   }
-  const options = {
+  const fillEmpty = Boolean(core.getInput('fillEmpty') || local.FILL)
+  const skipDelete = Boolean(core.getInput('skipDelete') || local.FILL)
+  const options: Options = {
     configPath: path.join(GITHUB_WORKSPACE, core.getInput('config')),
     configJSON:
       configInput.releaseMastermind ||
       (configInput?.pr || configInput?.issue || configInput?.project
         ? configInput
         : local == undefined
-        ? undefined
-        : require(local.configJSON).releaseMastermind
-        ? require(local.configJSON).releaseMastermind
-        : require(local.configJSON)),
+          ? undefined
+          : require(local.configJSON).releaseMastermind
+            ? require(local.configJSON).releaseMastermind
+            : require(local.configJSON)),
     showLogs,
-    dryRun
+    dryRun,
+    fillEmpty,
+    skipDelete
   }
-  const action = new releaseMastermind(new github.GitHub(GITHUB_TOKEN), options)
+  const action = new Action(new github.GitHub(GITHUB_TOKEN), options)
   action.run().catch(err => {
     log(
       new loggingData(
         '800',
-        `Release Mastermind did not complete due to error:`,
+        `${process.env.NPM_PACKAGE_NAME} did not complete due to error:`,
         err
       )
     )

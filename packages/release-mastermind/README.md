@@ -17,19 +17,20 @@ Need reasons to consider using Release Manager?
 
 - [Features](#features)
 - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
-  - [Why not GitHub Issues?](#why-not-github-issues)
+  * [Why not GitHub Issues?](#why-not-github-issues)
 - [Backlog & Contributing](#backlog--contributing)
 - [Running Locally & Developing](#running-locally--developing)
-  - [Prerequisities](#prerequisities)
-  - [Developing](#developing)
-  - [Running locally](#running-locally)
+  * [Prerequisities](#prerequisities)
+  * [Developing](#developing)
+  * [Running locally](#running-locally)
 - [Getting Started](#getting-started)
-  - [Automatic setup via CLI](#automatic-setup-via-cli)
-  - [Manual setup](#manual-setup)
-  - [All configuration options](#all-configuration-options)
-    - [Runners](#runners)
+  * [Automatic setup via CLI](#automatic-setup-via-cli)
+  * [Manual setup](#manual-setup)
+    + [Workflow Options](#workflow-options)
+  * [All configuration options](#all-configuration-options)
+    + [Runners](#runners)
       - [Versioning](#versioning)
-    - [PullRequestConfig](#pullrequestconfig)
+    + [PullRequestConfig](#pullrequestconfig)
       - [EnforceConventions](#enforceconventions)
       - [AssignProject](#assignproject)
       - [SharedConventionsConfig](#sharedconventionsconfig)
@@ -38,39 +39,39 @@ Need reasons to consider using Release Manager?
       - [ReleaseLabels](#releaselabels)
       - [CreateRelease](#createrelease)
       - [Changelog](#changelog)
-        - [Sections](#sections)
+        * [Sections](#sections)
       - [CreateMilestone](#createmilestone)
       - [DuplicateHotfix](#duplicatehotfix)
       - [SyncRemote](#syncremote)
-    - [IssueConfig](#issueconfig)
+    + [IssueConfig](#issueconfig)
       - [CreateBranch](#createbranch)
-    - [ProjectConfig](#projectconfig)
+    + [ProjectConfig](#projectconfig)
       - [ExProjects](#exprojects)
       - [ProjectCreateBranch](#projectcreatebranch)
       - [Milestones](#milestones)
-    - [Typings](#typings)
-  - [Using Regex Patterns](#using-regex-patterns)
+    + [Typings](#typings)
+  * [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
-  - [Common Conditions](#common-conditions)
-    - [\$and](#and)
-    - [creatorMatches](#creatormatches)
-    - [descriptionMatches](#descriptionmatches)
-    - [hasLabel](#haslabel)
-    - [isLocked](#islocked)
-    - [isOpen](#isopen)
-    - [\$only](#only)
-    - [\$or](#or)
-  - [Pull Request Conditions](#pull-request-conditions)
-    - [branchMatches](#branchmatches)
-    - [changesSize](#changessize)
-    - [filesMatch](#filesmatch)
-    - [isApproved](#isapproved)
-    - [isDraft](#isdraft)
-    - [pendingReview](#pendingreview)
-    - [requestedChanges](#requestedchanges)
-  - [Issue Conditions](#issue-conditions)
-  - [Project Conditions](#project-conditions)
-    - [onColumn](#oncolumn)
+  * [Common Conditions](#common-conditions)
+    + [\$and](#and)
+    + [creatorMatches](#creatormatches)
+    + [descriptionMatches](#descriptionmatches)
+    + [hasLabel](#haslabel)
+    + [isLocked](#islocked)
+    + [isOpen](#isopen)
+    + [\$only](#only)
+    + [\$or](#or)
+  * [Pull Request Conditions](#pull-request-conditions)
+    + [branchMatches](#branchmatches)
+    + [changesSize](#changessize)
+    + [filesMatch](#filesmatch)
+    + [isApproved](#isapproved)
+    + [isDraft](#isdraft)
+    + [pendingReview](#pendingreview)
+    + [requestedChanges](#requestedchanges)
+  * [Issue Conditions](#issue-conditions)
+  * [Project Conditions](#project-conditions)
+    + [onColumn](#oncolumn)
 - [Final Note](#final-note)
 
 <!-- tocstop -->
@@ -106,7 +107,7 @@ GitHub is our office, it's the place where our development and contributor teams
 
 With the discussion page, you can leverage the knowledge of our wider community to get help with any problems you are having. Please keep in mind that this project is open-source, support is provided by the goodwill of our wonderful community members.
 
-## Backlog & Contributing
+  ## Backlog & Contributing
 
 Thank you for taking an interst in contributing. We have created development containers (`.devcontainer`) to allow you to jump straight in with coding. We even went through the hassle of setting up step by step guides using [CodeTour](https://github.com/vsls-contrib/codetour). Everything is configured and ready to go, all you need to do is use one of the supported platforms: [VSCode](https://code.visualstudio.com/docs/remote/remote-overview) | [Github Codespaces](https://github.com/features/codespaces)
 
@@ -114,7 +115,7 @@ For more information on how to contribute, please read the [contributing guideli
 
 Our backlog can be found on [Github](https://github.com/Videndum/action-masterminds/projects/1)
 
-## Running Locally & Developing
+  ## Running Locally & Developing
 
 Setting up local running is simple, however we **MUST** warn that building / packaging while using local scripts can cause your GITHUB_TOKEN to be included within the package. To avoid this happening. you **MUST** follow the steps correctly. We will not be held responsible for any leeked personal tokens.
 
@@ -141,6 +142,7 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 6. Modify the `./config.sample.json` to contain your `GITHUB_TOKEN` and rename to `./config.json`
 7. Run the script using `yarn dev:run` or `npm run dev:run`
 
+
 ## Getting Started
 
 > [!IMPORTANT]
@@ -149,6 +151,7 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 ### Automatic setup via CLI
 
 [coming soon]
+
 
 ### Manual setup
 
@@ -1137,6 +1140,16 @@ Now create the config file at `.github/config.json`:
 
 Be sure that Github Actions is enabled for in your repository's settings. The action will now run on your issues, projects and pull requests.
 
+#### Workflow Options
+
+| Option       | Required | Description                                          | Default                 |
+| ------------ | -------- | ---------------------------------------------------- | ----------------------- |
+| GITHUB_TOKEN | true     | Your github token or PAT                             | `N/A`                   |
+| config       | false    | The config file to use                               | `".github/config.json"` |
+| configJSON   | false    | "JSON string with config data"                       | `N/A`                   |
+| fillEmpty    | false    | Fill Empty context configuration with shared configs | `true`                  |
+| skipDelete   | false    | Skip deleting labels from repository                 | `false`                 |
+
 ### All configuration options
 
 Due to the nature of this project. Most of the options have been documented as tables of information for your convinience. However Where this isn't partically helpful or easy to do, we have used the `Typing` from our typescript files to showcase the option.
@@ -1313,10 +1326,10 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### CreateBranch
 
-| Option       | Required | Description                     | Params   |
-| ------------ | -------- | ------------------------------- | -------- | ------- | --------- |
-| branchPrefix | false    | Should the branch have a prefix | `string` |
-| branchSuffix | false    | Should the branch have a suffix | `string` |
+| Option       | Required | Description                     | Params                         |
+| ------------ | -------- | ------------------------------- | ------------------------------ |
+| branchPrefix | false    | Should the branch have a prefix | `string`                       |
+| branchSuffix | false    | Should the branch have a suffix | `string`                       |
 | branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
 
 `'title'` - Use the entire title
@@ -1364,18 +1377,21 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | onColumn     | true     | Which column should be used    | `string`   |
 | ignoreLabels | false    | Labels which should be ignored | `string[]` |
 
+
+
 #### Typings
 
 <details>
     <summary><b>Types</b></summary>
 
-```typescript
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+import { IssueConfig, ProjectConfig, PullRequestConfig, SharedConfig } from '.'
 import {
   Condition,
   IssueCondition,
   PRCondition,
   ProjectCondition
-} from './src/conditions'
+} from '../src/conditions'
 
 /**
  * Application interfaces
@@ -1386,6 +1402,8 @@ export interface Options {
   configJSON: Runners
   showLogs: boolean
   dryRun: boolean
+  fillEmpty: boolean
+  skipDelete: boolean
 }
 
 export interface Runners {
@@ -1415,6 +1433,49 @@ export interface Config {
 export type VersionSource = 'node' | 'milestones' | string
 export type VersionType = 'SemVer'
 
+export interface SharedConditions {
+  requires: number
+  conditions: Condition[]
+}
+
+export interface Label {
+  name: string
+  description: string
+  color: string
+}
+
+export interface Labels {
+  [key: string]: Label
+}
+
+export interface PRConditionConfig {
+  requires: number
+  conditions: PRCondition[]
+}
+
+export interface IssueConditionConfig {
+  requires: number
+  conditions: IssueCondition[]
+}
+
+export interface ProjectConditionConfig {
+  requires: number
+  conditions: ProjectCondition[]
+}
+```
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+export * from './global'
+export * from './local'
+```
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+import {
+  IssueConditionConfig,
+  PRConditionConfig,
+  ProjectConditionConfig,
+  SharedConditions
+} from '.'
+import { Condition } from '../src/conditions'
+
 export interface PullRequestConfig extends SharedConfig {
   assignProject?: AssignProject[]
   automaticApprove?: AutomaticApprove
@@ -1434,10 +1495,7 @@ export interface ProjectConfig extends SharedConfig {
   assignMilestone?: { [milestone: string]: Milestones }
 }
 
-/**
- * shared types
- */
-interface SharedConfig {
+export interface SharedConfig {
   ref?: string
   enforceConventions?: EnforceConventions
   labels?: {
@@ -1449,27 +1507,22 @@ interface SharedConfig {
   }
 }
 
-interface SharedConventionConditions {
+export interface SharedConventionConditions {
   requires: number
   conditions: Condition[] | string
 }
-export interface SharedConditions {
-  requires: number
-  conditions: Condition[]
-}
-
 export interface SharedConventionsConfig extends SharedConventionConditions {
   failedComment: string
   contexts?: string[]
 }
 
-interface CreateBranch {
+export interface CreateBranch {
   branchPrefix?: string
   branchSuffix?: string
   branchName: 'title' | 'short' | 'number'
 }
 
-interface EnforceConventions {
+export interface EnforceConventions {
   onColumn?: Column[]
   commentHeader?: string
   commentFooter?: string
@@ -1477,27 +1530,7 @@ interface EnforceConventions {
   conventions: SharedConventionsConfig[]
 }
 
-export type Column = string | number
-export interface Label {
-  name: string
-  description: string
-  color: string
-}
-
-export interface Labels {
-  [key: string]: Label
-}
-
-/**
- * Pull Request Config types
- */
-
-export interface PRConditionConfig {
-  requires: number
-  conditions: PRCondition[]
-}
-
-interface AutomaticApprove {
+export interface AutomaticApprove {
   commentHeader?: string
   commentFooter?: string
   conventions: SharedConventionsConfig[]
@@ -1519,12 +1552,12 @@ export interface Release extends PRConditionConfig {
   createChangelog?: Changelog
 }
 
-interface DuplicateHotfix {
+export interface DuplicateHotfix {
   prName: 'unchanged' | 'number' | string
   titlePrefix?: string
   branches: string[]
 }
-interface SyncRemote {
+export interface SyncRemote {
   localBranch: string
   remoteBranch: string
   localPath: string
@@ -1532,12 +1565,12 @@ interface SyncRemote {
   conditions: SharedConditions[]
 }
 
-interface ReleaseChanges {
+export interface ReleaseChanges {
   includeIssues?: boolean
   sections?: Sections[]
 }
 
-interface Sections {
+export interface Sections {
   title: string
   body?: string
   PRlabels: string[]
@@ -1546,7 +1579,7 @@ interface Sections {
   linkPR?: boolean
 }
 
-interface CreateRelease extends ReleaseChanges {
+export interface CreateRelease extends ReleaseChanges {
   tagName?: string
   tagPrefix?: string
   releaseName?: string
@@ -1556,23 +1589,17 @@ interface CreateRelease extends ReleaseChanges {
   prerelease?: boolean
   useChangelog?: boolean
 }
-interface Changelog extends ReleaseChanges {
+export interface Changelog extends ReleaseChanges {
   title?: string
   body?: string
 }
 
-interface CreateMilestone {
+export interface CreateMilestone {
   milestone: 'version' | string
   deadline?: string
 }
 
-/**
- * Issue Config types
- */
-export interface IssueConditionConfig {
-  requires: number
-  conditions: IssueCondition[]
-}
+export type Column = string | number
 
 interface AssignProject extends IssueConditionConfig {
   owner?: string
@@ -1580,15 +1607,6 @@ interface AssignProject extends IssueConditionConfig {
   repo?: string
   project: string
   column: string
-}
-
-/**
- * Project Config types
- */
-
-export interface ProjectConditionConfig {
-  requires: number
-  conditions: ProjectCondition[]
 }
 
 interface ExProjects {
@@ -1754,6 +1772,8 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 }
 ```
 
+
+
 ### Pull Request Conditions
 
 #### branchMatches
@@ -1851,7 +1871,10 @@ Example:
 }
 ```
 
+
 ### Issue Conditions
+
+
 
 ### Project Conditions
 
@@ -1868,6 +1891,8 @@ Example:
   "column": "New"
 }
 ```
+
+
 
 ## Final Note
 

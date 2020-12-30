@@ -7,47 +7,48 @@ The super-powered convention enforment for Github Actions, with complex customis
 <!-- toc -->
 
 - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
-  - [Why not GitHub Issues?](#why-not-github-issues)
+  * [Why not GitHub Issues?](#why-not-github-issues)
 - [Backlog & Contributing](#backlog--contributing)
 - [Running Locally & Developing](#running-locally--developing)
-  - [Prerequisities](#prerequisities)
-  - [Developing](#developing)
-  - [Running locally](#running-locally)
+  * [Prerequisities](#prerequisities)
+  * [Developing](#developing)
+  * [Running locally](#running-locally)
 - [Getting Started](#getting-started)
-  - [Automatic setup via CLI](#automatic-setup-via-cli)
-  - [Manual setup](#manual-setup)
-  - [All configuration options](#all-configuration-options)
-    - [Runners](#runners)
+  * [Automatic setup via CLI](#automatic-setup-via-cli)
+  * [Manual setup](#manual-setup)
+    + [Workflow Options](#workflow-options)
+  * [All configuration options](#all-configuration-options)
+    + [Runners](#runners)
       - [Versioning](#versioning)
-    - [IssueConfig](#issueconfig)
-    - [ProjectConfig](#projectconfig)
-    - [PullRequestConfig](#pullrequestconfig)
-    - [PullRequestConfig](#pullrequestconfig-1)
+    + [IssueConfig](#issueconfig)
+    + [ProjectConfig](#projectconfig)
+    + [PullRequestConfig](#pullrequestconfig)
+    + [PullRequestConfig](#pullrequestconfig-1)
       - [EnforceConventions](#enforceconventions)
       - [SharedConventionsConfig](#sharedconventionsconfig)
-    - [Typings](#typings)
-  - [Using Regex Patterns](#using-regex-patterns)
+    + [Typings](#typings)
+  * [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
-  - [Common Conditions](#common-conditions)
-    - [\$and](#and)
-    - [creatorMatches](#creatormatches)
-    - [descriptionMatches](#descriptionmatches)
-    - [hasLabel](#haslabel)
-    - [isLocked](#islocked)
-    - [isOpen](#isopen)
-    - [\$only](#only)
-    - [\$or](#or)
-  - [Pull Request Conditions](#pull-request-conditions)
-    - [branchMatches](#branchmatches)
-    - [changesSize](#changessize)
-    - [filesMatch](#filesmatch)
-    - [isApproved](#isapproved)
-    - [isDraft](#isdraft)
-    - [pendingReview](#pendingreview)
-    - [requestedChanges](#requestedchanges)
-  - [Issue Conditions](#issue-conditions)
-  - [Project Conditions](#project-conditions)
-    - [onColumn](#oncolumn)
+  * [Common Conditions](#common-conditions)
+    + [\$and](#and)
+    + [creatorMatches](#creatormatches)
+    + [descriptionMatches](#descriptionmatches)
+    + [hasLabel](#haslabel)
+    + [isLocked](#islocked)
+    + [isOpen](#isopen)
+    + [\$only](#only)
+    + [\$or](#or)
+  * [Pull Request Conditions](#pull-request-conditions)
+    + [branchMatches](#branchmatches)
+    + [changesSize](#changessize)
+    + [filesMatch](#filesmatch)
+    + [isApproved](#isapproved)
+    + [isDraft](#isdraft)
+    + [pendingReview](#pendingreview)
+    + [requestedChanges](#requestedchanges)
+  * [Issue Conditions](#issue-conditions)
+  * [Project Conditions](#project-conditions)
+    + [onColumn](#oncolumn)
 - [Final Note](#final-note)
 
 <!-- tocstop -->
@@ -101,6 +102,7 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 6. Modify the `./config.sample.json` to contain your `GITHUB_TOKEN` and rename to `./config.json`
 7. Run the script using `yarn dev:run` or `npm run dev:run`
 
+
 ## Getting Started
 
 > [!IMPORTANT]
@@ -109,6 +111,7 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 ### Automatic setup via CLI
 
 [coming soon]
+
 
 ### Manual setup
 
@@ -181,6 +184,16 @@ Now create the config file at `.github/config.json`:
 </details>
 
 Be sure that Github Actions is enabled for in your repository's settings. The action will now run on your issues, projects and pull requests.
+
+#### Workflow Options
+
+| Option       | Required | Description                                          | Default                 |
+| ------------ | -------- | ---------------------------------------------------- | ----------------------- |
+| GITHUB_TOKEN | true     | Your github token or PAT                             | `N/A`                   |
+| config       | false    | The config file to use                               | `".github/config.json"` |
+| configJSON   | false    | "JSON string with config data"                       | `N/A`                   |
+| fillEmpty    | false    | Fill Empty context configuration with shared configs | `true`                  |
+| skipDelete   | false    | Skip deleting labels from repository                 | `false`                 |
 
 ### All configuration options
 
@@ -262,32 +275,33 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 Choosing `"semanticTitle"` as the condition will automatically configure your conventions to use semantic conventions. You can add additional context by adding the `contexts` option which enforce only those contexts get used.
 
+
+
 #### Typings
 
 <details>
     <summary><b>Types</b></summary>
 
-```typescript
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+import { IssueConfig, ProjectConfig, PullRequestConfig, SharedConfig } from '.'
 import {
+  Condition,
   IssueCondition,
   PRCondition,
-  Condition,
   ProjectCondition
-} from './src/conditions/'
+} from '../src/conditions'
 
-export interface IssueConditionConfig {
-  requires: number
-  conditions: IssueCondition[]
-}
+/**
+ * Application interfaces
+ */
 
-export interface PRConditionConfig {
-  requires: number
-  conditions: PRCondition[]
-}
-
-export interface SharedConfig {
-  requires: number
-  conditions: Condition[]
+export interface Options {
+  configPath: string
+  configJSON: Runners
+  showLogs: boolean
+  dryRun: boolean
+  fillEmpty: boolean
+  skipDelete: boolean
 }
 
 export interface Runners {
@@ -296,36 +310,32 @@ export interface Runners {
 }
 
 export interface Config {
-  projectType: ProjectType
   root: string
-  versioning?: VersionType
-  sharedConfig: SharedConfig
-  issue: IssueConfig
-  pr: PullRequestConfig
-  project: ProjectConfig
-  skip_labeling: string
-  delete_labels: boolean
+  versioning: {
+    source: VersionSource
+    type?: VersionType
+  }
+  retryLimit?: number
+  prereleaseName?: string
+  labels?: { [key: string]: string }
+  sharedConfig?: SharedConfig
+  pr?: PullRequestConfig
+  issue?: IssueConfig
+  project?: ProjectConfig
 }
 
-interface SharedLabels {
-  [key: string]: SharedConditions
-}
+/**
+ * Config types
+ */
+
+export type VersionSource = 'node' | 'milestones' | string
+export type VersionType = 'SemVer'
+
 export interface SharedConditions {
   requires: number
   conditions: Condition[]
 }
-export interface IssueConfig extends SharedConfig {}
-export interface PullRequestConfig extends SharedConfig {}
-export interface ProjectConfig extends SharedConfig {}
 
-interface SharedConfig {
-  ref?: string
-  enforceConventions?: EnforceConventions
-}
-export interface ProjectConditionConfig {
-  requires: number
-  conditions: ProjectCondition[]
-}
 export interface Label {
   name: string
   description: string
@@ -336,34 +346,66 @@ export interface Labels {
   [key: string]: Label
 }
 
-export interface Options {
-  configPath: string
-  configJSON: Runners
-  showLogs: boolean
-  dryRun: boolean
+export interface PRConditionConfig {
+  requires: number
+  conditions: PRCondition[]
 }
 
-interface EnforceConventions {
-  onColumn?: Column[]
-  commentHeader?: string
-  commentFooter?: string
-  moveToColumn?: string
-  conventions: SharedConventionsConfig[]
+export interface IssueConditionConfig {
+  requires: number
+  conditions: IssueCondition[]
+}
+
+export interface ProjectConditionConfig {
+  requires: number
+  conditions: ProjectCondition[]
+}
+```
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+export * from './global'
+export * from './local'
+```
+```types/global.d.ts,types/index.d.ts,types/local.d.ts
+import { SharedConditions } from ".";
+import { Condition } from "../src/conditions";
+
+export interface SharedLabels {
+    [key: string]: SharedConditions
+}
+
+export interface IssueConfig extends SharedConfig { }
+export interface PullRequestConfig extends SharedConfig { }
+export interface ProjectConfig extends SharedConfig { }
+
+export interface SharedConfig {
+    ref?: string
+    enforceConventions?: EnforceConventions
+}
+
+export interface EnforceConventions {
+    onColumn?: Column[]
+    commentHeader?: string
+    commentFooter?: string
+    moveToColumn?: string
+    conventions: SharedConventionsConfig[]
 }
 
 export interface SharedConventionsConfig extends SharedConventionConditions {
-  failedComment: string
-  contexts?: string[]
+    failedComment: string
+    contexts?: string[]
 }
 
-interface SharedConventionConditions {
-  requires: number
-  conditions: Condition[] | string
+export interface SharedConventionConditions {
+    requires: number
+    conditions: Condition[] | string
 }
 
-export type ProjectType = 'node' | 'other'
-export type VersionType = 'SemVer'
-export type Column = string | number
+type Column = string | number
+
+export interface SharedLabelConfig {
+    requires: number
+    conditions: Condition[]
+}
 ```
 
 </details>
@@ -511,6 +553,8 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 }
 ```
 
+
+
 ### Pull Request Conditions
 
 #### branchMatches
@@ -608,7 +652,10 @@ Example:
 }
 ```
 
+
 ### Issue Conditions
+
+
 
 ### Project Conditions
 
@@ -625,6 +672,8 @@ Example:
   "column": "New"
 }
 ```
+
+
 
 ## Final Note
 
