@@ -31,7 +31,7 @@ try {
   local = require('../config.json')
   dryRun = local.GH_ACTION_LOCAL_TEST || false
   showLogs = local.SHOW_LOGS || false
-} catch {}
+} catch { }
 
 const { GITHUB_WORKSPACE = '' } = process.env
 
@@ -58,6 +58,7 @@ async function run() {
     return core.setFailed('No Token provided')
   }
   const fillEmpty = Boolean(core.getInput('fillEmpty') || local.FILL)
+  const skipDelete = Boolean(core.getInput('skipDelete') || local.FILL)
   const options: Options = {
     configPath: path.join(GITHUB_WORKSPACE, core.getInput('config')),
     configJSON:
@@ -65,13 +66,14 @@ async function run() {
       (configInput?.pr || configInput?.issue || configInput?.project
         ? configInput
         : local == undefined
-        ? undefined
-        : require(local.configJSON).releaseMastermind
-        ? require(local.configJSON).releaseMastermind
-        : require(local.configJSON)),
+          ? undefined
+          : require(local.configJSON).releaseMastermind
+            ? require(local.configJSON).releaseMastermind
+            : require(local.configJSON)),
     showLogs,
     dryRun,
-    fillEmpty
+    fillEmpty,
+    skipDelete
   }
   const action = new Action(new github.GitHub(GITHUB_TOKEN), options)
   action.run().catch(err => {

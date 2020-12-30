@@ -53,7 +53,7 @@ export default class Action {
     this.opts = options
     this.configJSON = options.configJSON
     this.configPath = options.configPath
-    this.util = new Utils({ client, repo: this.repo }, options.dryRun)
+    this.util = new Utils({ client, repo: this.repo }, { dryRun: options.dryRun, skipDelete: options.skipDelete })
     this.dryRun = options.dryRun
     this.fillEmpty = options.fillEmpty
   }

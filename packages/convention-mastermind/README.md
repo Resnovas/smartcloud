@@ -16,6 +16,7 @@ The super-powered convention enforment for Github Actions, with complex customis
 - [Getting Started](#getting-started)
   * [Automatic setup via CLI](#automatic-setup-via-cli)
   * [Manual setup](#manual-setup)
+    + [Workflow Options](#workflow-options)
   * [All configuration options](#all-configuration-options)
     + [Runners](#runners)
       - [Versioning](#versioning)
@@ -184,6 +185,16 @@ Now create the config file at `.github/config.json`:
 
 Be sure that Github Actions is enabled for in your repository's settings. The action will now run on your issues, projects and pull requests.
 
+#### Workflow Options
+
+| Option       | Required | Description                                          | Default                 |
+| ------------ | -------- | ---------------------------------------------------- | ----------------------- |
+| GITHUB_TOKEN | true     | Your github token or PAT                             | `N/A`                   |
+| config       | false    | The config file to use                               | `".github/config.json"` |
+| configJSON   | false    | "JSON string with config data"                       | `N/A`                   |
+| fillEmpty    | false    | Fill Empty context configuration with shared configs | `true`                  |
+| skipDelete   | false    | Skip deleting labels from repository                 | `false`                 |
+
 ### All configuration options
 
 Due to the nature of this project. Most of the options have been documented as tables of information for your convinience. However Where this isn't partically helpful or easy to do, we have used the `Typing` from our typescript files to showcase the option.
@@ -290,6 +301,7 @@ export interface Options {
   showLogs: boolean
   dryRun: boolean
   fillEmpty: boolean
+  skipDelete: boolean
 }
 
 export interface Runners {

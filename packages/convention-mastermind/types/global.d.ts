@@ -16,6 +16,7 @@ export interface Options {
   showLogs: boolean
   dryRun: boolean
   fillEmpty: boolean
+  skipDelete: boolean
 }
 
 export interface Runners {
