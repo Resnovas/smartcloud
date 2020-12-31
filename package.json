@@ -21,7 +21,7 @@
   "scripts": {
     "postinstall": "lerna bootstrap",
     "start": "lerna run start",
-    "package": "gulp && lerna run dev:all"
+    "package": "gulp"
   },
   "devDependencies": {
     "commitizen": "^4.2.1",
