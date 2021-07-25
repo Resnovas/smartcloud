@@ -32,7 +32,7 @@
     "@actions/core": "^1.2.6",
     "@actions/github": "^4.0.0",
     "@octokit/core": "^3.2.1",
-    "octonode": "^0.9.5",
+    "octonode": "^0.10.2",
     "tweetsodium": "^0.0.5"
   },
   "devDependencies": {
@@ -45,7 +45,7 @@
     "js-yaml": "^3.14.0",
     "prettier": "^2.1.2",
     "prettier-plugin-organize-imports": "^1.1.1",
-    "prettier-plugin-pkg": "^0.8.0",
+    "prettier-plugin-pkg": "^0.10.0",
     "prettier-plugin-sh": "^0.6.0",
     "prettier-standard": "^16.4.1",
     "ts-jest": "^26.4.4",
