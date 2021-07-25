@@ -39,7 +39,7 @@
     "mdinclude": "^0.7.1",
     "prettier": "^2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
-    "prettier-plugin-pkg": "^0.8.0",
+    "prettier-plugin-pkg": "^0.10.0",
     "prettier-plugin-sh": "^0.6.0"
   },
   "private": false,
