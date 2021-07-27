@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { loggingData } from '@videndum/utilities'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
 import { log } from '..'
 import { Config, PullRequestConfig, Release, Runners } from '../../types'
 import { CurContext, PRContext } from '../conditions'
@@ -18,10 +18,10 @@ export class PullRequests extends Contexts {
     dryRun: boolean
   ) {
     if (curContext.type !== 'pr')
-      throw new loggingData('500', 'Cannot construct without issue context')
+      throw new LoggingDataClass(LoggingLevels.error, 'Cannot construct without issue context')
     super(util, runners, configs, curContext, dryRun)
     this.context = curContext.context
-    if (!configs.pr) throw new loggingData('500', 'Cannot start without config')
+    if (!configs.pr) throw new LoggingDataClass(LoggingLevels.error, 'Cannot start without config')
     this.config = configs.pr
   }
 
@@ -39,11 +39,11 @@ export class PullRequests extends Contexts {
       if (enforceConventionsSuccess) {
         if (this.config.labels)
           await this.applyLabels(this).catch(err => {
-            log(new loggingData('500', 'Error applying labels', err))
+            log(LoggingLevels.error, 'Error applying labels', err)
           })
         if (this.config.assignProject)
           await this.assignProject(this).catch(err => {
-            log(new loggingData('500', 'Error assigning projects', err))
+            log(LoggingLevels.error, 'Error assigning projects', err)
           })
         // if (this.config.automaticApprove)
         //   await this.automaticApprove(this.config.automaticApprove)
@@ -60,17 +60,13 @@ export class PullRequests extends Contexts {
       if (attempt > 3) {
         core.endGroup()
         throw log(
-          new loggingData(
-            '800',
+          LoggingLevels.emergency,
             `Pull Request actions failed. Terminating job.`
           )
-        )
       }
       log(
-        new loggingData(
-          '400',
+        LoggingLevels.warn,
           `Pull Request Actions failed with "${err}", retrying in ${seconds} seconds....`
-        )
       )
       attempt++
       setTimeout(async () => {
@@ -85,11 +81,11 @@ export class PullRequests extends Contexts {
 
   automaticApprove(automaticApprove: PullRequestConfig['automaticApprove']) {
     if (!automaticApprove || !automaticApprove.conventions)
-      throw new loggingData('500', 'Not Able to automatically approve')
+      throw new LoggingDataClass(LoggingLevels.error, 'Not Able to automatically approve')
     automaticApprove.conventions.forEach(convention => {
       if (!convention.conditions) return
       if (evaluator.call(this, convention, this.context.props)) {
-        log(new loggingData('200', `Automatically Approved Successfully`))
+        log(LoggingLevels.info, `Automatically Approved Successfully`)
         let body =
           automaticApprove.commentHeader +
           '\n\n Automatically Approved - Will automatically merge shortly! \n\n' +
@@ -145,7 +141,7 @@ export class PullRequests extends Contexts {
           ? `+${this.newVersion.semantic.build}`
           : ''
       }`
-      log(new loggingData('100', `New Version is: ${this.newVersion.name}`))
+      log(LoggingLevels.debug, `New Version is: ${this.newVersion.name}`)
     }
   }
 }

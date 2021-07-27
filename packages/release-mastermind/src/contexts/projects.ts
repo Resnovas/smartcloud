@@ -1,6 +1,6 @@
 import * as core from '@actions/core'
-import { loggingData } from '@videndum/utilities'
 import { log } from '..'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
 import { Column, Config, ProjectConfig, Runners } from '../../types'
 import { CurContext, ProjectContext } from '../conditions'
 import { Utils } from '../utils'
@@ -16,17 +16,21 @@ export class Project extends Contexts {
     dryRun: boolean
   ) {
     if (curContext.type !== 'project')
-      throw new loggingData('500', 'Cannot construct without issue context')
+      throw new LoggingDataClass(LoggingLevels.error, 'Cannot construct without issue context')
     super(util, runners, configs, curContext, dryRun)
     this.context = curContext.context
     if (!configs.project)
-      throw new loggingData('500', 'Cannot start without config')
+      throw new LoggingDataClass(LoggingLevels.error, 'Cannot start without config')
     this.config = configs.project
   }
 
   async run(attempt?: number) {
     if (!this.config)
-      throw new loggingData('500', 'Cannot start without config')
+      throw new LoggingDataClass(LoggingLevels.error, 'Cannot start without config')
+    if (!attempt) {
+      attempt = 1
+      core.startGroup('project Actions')
+    }
     if (!attempt) {
       attempt = 1
       core.startGroup('project Actions')
@@ -51,11 +55,11 @@ export class Project extends Contexts {
         // some code
         if (this.config.labels)
           await this.applyLabels(this).catch(err => {
-            log(new loggingData('500', 'Error applying labels', err))
+            log(LoggingLevels.error, 'Error applying labels', err)
           })
         if (this.config.syncRemote)
           await this.syncRemoteProject(this).catch(err => {
-            log(new loggingData('500', 'Error syncing remote project', err))
+            log(LoggingLevels.error, 'Error syncing remote project', err)
           })
         core.endGroup()
       }
@@ -63,15 +67,15 @@ export class Project extends Contexts {
       if (attempt > 3) {
         core.endGroup()
         throw log(
-          new loggingData('800', `project actions failed. Terminating job.`)
-        )
+          LoggingLevels.emergency, `project actions failed. Terminating job.`)
+        
       }
       log(
-        new loggingData(
-          '400',
+        
+          LoggingLevels.warn,
           `project Actions failed with "${err}", retrying in ${seconds} seconds....`
         )
-      )
+      
       attempt++
       setTimeout(async () => {
         this.run(attempt)
@@ -90,8 +94,8 @@ export class Project extends Contexts {
             columnID = value.id
         })
         if (!columnID)
-          throw new loggingData(
-            '500',
+          throw new LoggingDataClass(
+            LoggingLevels.error,
             `${column} doesn't exist on this project`
           )
         return columnID

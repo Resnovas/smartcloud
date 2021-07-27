@@ -1,15 +1,15 @@
-import { loggingData } from '@videndum/utilities'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
 import { Issues, Project, PullRequests } from '..'
 import { log } from '../..'
 import { evaluator } from '../../evaluator'
 
 export async function applyLabels(this: Issues | PullRequests | Project) {
   if (!this.config?.labels || !this.configs.labels)
-    throw new loggingData('500', 'Config is required to add labels')
+    throw new LoggingDataClass(LoggingLevels.error, 'Config is required to add labels')
   for (const [labelID, conditionsConfig] of Object.entries(
     this.config.labels
   )) {
-    log(new loggingData('100', `Label: ${labelID}`))
+    log(LoggingLevels.debug, `Label: ${labelID}`)
 
     const shouldHaveLabel = evaluator.call(
       this,
@@ -19,8 +19,7 @@ export async function applyLabels(this: Issues | PullRequests | Project) {
 
     const labelName = this.configs.labels[labelID]
     if (!labelName)
-      throw new loggingData(
-        '500',
+      throw new LoggingDataClass(LoggingLevels.error,
         `Can't find configuration for "${labelID}" within labels. Check spelling and that it exists`
       )
     const hasLabel = Boolean(
@@ -49,10 +48,8 @@ export async function applyLabels(this: Issues | PullRequests | Project) {
       )
       .catch(err => {
         log(
-          new loggingData(
-            '500',
+          LoggingLevels.error,
             `Error thrown while running addRemoveLabel: ` + err
-          )
         )
       })
   }

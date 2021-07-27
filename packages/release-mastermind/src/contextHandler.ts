@@ -1,5 +1,5 @@
 import { Context } from '@actions/github/lib/context'
-import { loggingData } from '@videndum/utilities'
+import { LoggingLevels } from '@videndum/utilities'
 import { log } from '.'
 import { Config, Label, Labels } from '../types'
 import {
@@ -28,20 +28,19 @@ class ContextHandler {
     }
 
     log(
-      new loggingData(
-        '100',
+      
+        LoggingLevels.debug,
         `context.payload.pull_request: ` +
           JSON.stringify(context.payload.pull_request)
-      )
     )
 
     const IDNumber = pr.number
     const labels = await this.parseLabels(pr.labels).catch(err => {
-      log(new loggingData('500', `Error thrown while parsing labels: `, err))
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
       throw err
     })
     const files: string[] = await utils.api.files.list(IDNumber).catch(err => {
-      log(new loggingData('500', `Error thrown while listing files: `, err))
+      log(LoggingLevels.error, `Error thrown while listing files: `, err)
       throw err
     })
 
@@ -49,8 +48,7 @@ class ContextHandler {
       .changes(pr.additions, pr.deletions)
       .catch(err => {
         log(
-          new loggingData('500', `Error thrown while handling changes: `, err)
-        )
+          LoggingLevels.error, `Error thrown while handling changes: `, err)
         throw err
       })
 
@@ -58,8 +56,7 @@ class ContextHandler {
       .list(IDNumber)
       .catch(err => {
         log(
-          new loggingData('500', `Error thrown while handling reviews: `, err)
-        )
+          LoggingLevels.error, `Error thrown while handling reviews: `, err)
         throw err
       })
 
@@ -67,8 +64,7 @@ class ContextHandler {
       .pending(reviews.length, pr.requested_reviewers.length)
       .catch(err => {
         log(
-          new loggingData('500', `Error thrown while handling reviews: `, err)
-        )
+          LoggingLevels.error, `Error thrown while handling reviews: `, err)
         throw err
       })
 
@@ -76,8 +72,7 @@ class ContextHandler {
       .requestedChanges(reviews)
       .catch(err => {
         log(
-          new loggingData('500', `Error thrown while handling reviews: `, err)
-        )
+          LoggingLevels.error, `Error thrown while handling reviews: `, err)
         throw err
       })
 
@@ -85,8 +80,7 @@ class ContextHandler {
       .isApproved(reviews)
       .catch(err => {
         log(
-          new loggingData('500', `Error thrown while handling reviews: `, err)
-        )
+          LoggingLevels.error, `Error thrown while handling reviews: `, err)
         throw err
       })
 
@@ -94,8 +88,7 @@ class ContextHandler {
       .parse(config, config.pr?.ref)
       .catch(err => {
         log(
-          new loggingData('500', `Error thrown while parsing versioning: `, err)
-        )
+          LoggingLevels.error, `Error thrown while parsing versioning: `, err)
         throw err
       })
 
@@ -141,20 +134,19 @@ class ContextHandler {
       return
     }
     log(
-      new loggingData(
-        '100',
+      
+        LoggingLevels.debug,
         `context.payload.project_card: ${JSON.stringify(
           context.payload.project_card
         )}`
       )
-    )
 
     if (!project.content_url) throw new Error('No content information to get')
     const issueNumber: number = project.content_url.split('/').pop()
     const issue = await await utils.api.issues.get(issueNumber)
 
     const labels = await this.parseLabels(issue.labels).catch(err => {
-      log(new loggingData('500', `Error thrown while parsing labels: `, err))
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
       throw err
     })
 
@@ -162,8 +154,7 @@ class ContextHandler {
       .parse(config, config.project?.ref)
       .catch(err => {
         log(
-          new loggingData('500', `Error thrown while parsing versioning: `, err)
-        )
+          LoggingLevels.error, `Error thrown while parsing versioning: `, err)
         throw err
       })
 
@@ -214,14 +205,13 @@ class ContextHandler {
     }
 
     log(
-      new loggingData(
-        '100',
+      
+        LoggingLevels.debug,
         `context.payload.issue: ` + JSON.stringify(context.payload.issue)
       )
-    )
 
     const labels = await this.parseLabels(issue.labels).catch(err => {
-      log(new loggingData('500', `Error thrown while parsing labels: `, err))
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
       throw err
     })
 
@@ -229,8 +219,7 @@ class ContextHandler {
       .parse(config, config.issue?.ref)
       .catch(err => {
         log(
-          new loggingData('500', `Error thrown while parsing versioning: `, err)
-        )
+          LoggingLevels.error, `Error thrown while parsing versioning: `, err)
         throw err
       })
 

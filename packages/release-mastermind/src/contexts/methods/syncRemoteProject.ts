@@ -1,4 +1,4 @@
-import { loggingData } from '@videndum/utilities'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
 import { log } from '../..'
 import { Project } from '../projects'
 
@@ -22,7 +22,7 @@ export async function syncRemoteProject(this: Project) {
     let projects = undefined
 
     if (!(remote.owner || remote.user) || !remote.project)
-      new loggingData('500', 'There is not a remote to connect.')
+      throw new LoggingDataClass(LoggingLevels.error, 'There is not a remote to connect.')
     // Get projects
     if (remote.user)
       projects = await this.util.api.project.projects.user(remote.user)
@@ -33,13 +33,13 @@ export async function syncRemoteProject(this: Project) {
         remote.owner,
         remote.repo
       )
-    if (!projects) throw log(new loggingData('500', 'No project to use'))
+    if (!projects) throw log(LoggingLevels.error, 'No project to use')
     // Get the column
     const project = projects.filter(
       project => project.name === remote.project
     )[0]
     const columns = await this.util.api.project.column.list(project.id)
-    if (!columns) throw log(new loggingData('500', 'No column to use'))
+    if (!columns) throw log(LoggingLevels.error, 'No column to use')
     remoteColumn = columns.filter(
       column => column.name === this.context.props.localColumn.name
     )[0]
@@ -64,7 +64,7 @@ export async function syncRemoteProject(this: Project) {
         card => card.content_url === this.context.props.localCard.content_url
       )[0]
       if (!remoteCard)
-        throw log(new loggingData('500', 'No remote card to use'))
+        throw log(LoggingLevels.error, 'No remote card to use')
     }
     if (this.context.action == 'created' || !remoteCard) {
       this.util.api.project.card.create(
@@ -76,13 +76,11 @@ export async function syncRemoteProject(this: Project) {
       this.util.api.project.card
         .move(remoteCard.id, remoteColumn.id)
         .catch(err => {
-          throw new loggingData(
-            '500',
+          throw LoggingLevels.error,
             'Error while attempting to move card',
             err
-          )
         })
-      log(new loggingData('200', 'Successfully moved card to new column'))
+      log(LoggingLevels.info, 'Successfully moved card to new column')
     } else if (this.context.action == 'edited') {
       // TODO: Need to workout the correct specification for this
     } else if (this.context.action == 'deleted') {

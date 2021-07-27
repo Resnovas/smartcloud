@@ -1,7 +1,7 @@
 import * as core from '@actions/core'
-import { loggingData } from '@videndum/utilities'
 import { Issues, Project, PullRequests } from '..'
 import { log } from '../..'
+import { LoggingLevels } from '../../../../../../utilities/lib'
 import { Condition } from '../../conditions'
 import { evaluator } from '../../evaluator'
 import { semantic } from '../../utils/helper/semantic'
@@ -59,10 +59,8 @@ export function enforce(this: Issues | PullRequests | Project) {
     return false
   }
   log(
-    new loggingData(
-      '200',
+      LoggingLevels.info,
       `All conventions successfully enforced. Moving to next step`
-    )
   )
   !this.dryRun && createConventionComment.call(this, true)
   return true

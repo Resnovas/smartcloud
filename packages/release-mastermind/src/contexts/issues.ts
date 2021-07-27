@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { loggingData } from '@videndum/utilities'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
 import { log } from '..'
 import { Config, IssueConfig, Runners } from '../../types'
 import { CurContext, IssueContext } from '../conditions'
@@ -16,17 +16,17 @@ export class Issues extends Contexts {
     dryRun: boolean
   ) {
     if (curContext.type !== 'issue')
-      throw new loggingData('500', 'Cannot construct without issue context')
+      throw new LoggingDataClass(LoggingLevels.error, 'Cannot construct without issue context')
     super(util, runners, configs, curContext, dryRun)
     this.context = curContext.context
     if (!configs.issue)
-      throw new loggingData('500', 'Cannot start without config')
+      throw new LoggingDataClass(LoggingLevels.error, 'Cannot start without config')
     this.config = configs.issue
   }
 
   async run(attempt?: number) {
     if (!this.config)
-      throw new loggingData('500', 'Cannot start without config')
+      throw new LoggingDataClass(LoggingLevels.warn, 'Cannot start without config')
     if (!attempt) {
       attempt = 1
       core.startGroup('Issue Actions')
@@ -39,24 +39,22 @@ export class Issues extends Contexts {
       if (enforceConventionsSuccess) {
         if (this.config.labels)
           await this.applyLabels(this).catch(err => {
-            log(new loggingData('500', 'Error applying label', err))
+            log(LoggingLevels.error, 'Error applying label', err)
           })
         if (this.config.assignProject)
           await this.assignProject(this).catch(err => {
-            log(new loggingData('500', 'Error assigning projects', err))
+            log(LoggingLevels.error, 'Error assigning projects', err)
           })
         core.endGroup()
       }
     } catch (err) {
       if (attempt > 3) {
         core.endGroup()
-        throw new loggingData('800', `Issue actions failed. Terminating job.`)
+        throw new LoggingDataClass(LoggingLevels.emergency, `Issue actions failed. Terminating job.`)
       }
       log(
-        new loggingData(
-          '400',
+          LoggingLevels.warn,
           `Issue Actions failed with "${err}", retrying in ${seconds} seconds....`
-        )
       )
       attempt++
       setTimeout(async () => {

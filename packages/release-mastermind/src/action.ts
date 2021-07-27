@@ -1,9 +1,9 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
 import { GitHub } from '@actions/github'
-import { loggingData } from '@videndum/utilities'
 import fs from 'fs'
 import { log } from '.'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
 import { Config, Label, Options, Runners } from '../types'
 import { CurContext } from './conditions'
 import { contextHandler } from './contextHandler'
@@ -33,10 +33,9 @@ export default class Action {
 
   constructor(client: GitHub, options: Options) {
     log(
-      new loggingData(
-        '100',
+      
+        LoggingLevels.debug,
         `Release Mastermind Constructed: ${options.toString()}`
-      )
     )
     core.startGroup('Setup Phase')
     this.client = client
@@ -53,7 +52,7 @@ export default class Action {
     if (this.dryRun)
       this.repo.owner = process.env.GITHUB_REPOSITORY_OWNER || 'Unknown'
     log(
-      new loggingData('100', `Repo data: ${this.repo.owner}/${this.repo.repo}`)
+      LoggingLevels.debug, `Repo data: ${this.repo.owner}/${this.repo.repo}`
     )
 
     /**
@@ -62,27 +61,25 @@ export default class Action {
      * @since 1.0.0
      */
     log(
-      new loggingData(
-        '100',
+      
+        LoggingLevels.debug,
         `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
           context
         )}`
       )
-    )
     /**
      * Process the config
      * @author TGTGamer
      * @since 1.1.0
      */
-    log(new loggingData('100', `Config: ${JSON.stringify(this.configJSON)}`))
+    log(LoggingLevels.debug, `Config: ${JSON.stringify(this.configJSON)}`)
 
     const configs = await this.processConfig().catch(err => {
       throw log(
-        new loggingData('500', `Error thrown while processing config: `, err)
-      )
+        LoggingLevels.error, `Error thrown while processing config: `, err)
     })
     if (!configs.runners[0]) {
-      throw log(new loggingData('500', `No config data.`))
+      throw log(LoggingLevels.error, `No config data.`)
     }
 
     if (configs.labels) {
@@ -93,12 +90,11 @@ export default class Action {
        */
       await this.syncLabels(configs).catch(err => {
         throw log(
-          new loggingData(
-            '100',
+          
+            LoggingLevels.debug,
             `Error thrown while syncronising labels: `,
             err
           )
-        )
       })
     }
 
@@ -109,14 +105,14 @@ export default class Action {
        * @author TGTGamer
        * @since 1.1.0
        */
-      config.labels = await Object.entries(
+      config.labels = Object.entries(
         configs.labels ? configs.labels : []
-      ).reduce((acc: { [key: string]: string }, cur) => {
+      ).reduce((acc: { [key: string]: string} , cur) => {
         acc[cur[0]] = cur[1].name
         return acc
       }, {})
 
-      log(new loggingData('100', `Config: ${JSON.stringify(config)}`))
+      log(LoggingLevels.debug, `Config: ${JSON.stringify(config)}`)
 
       /**
        * Get the context
@@ -125,12 +121,10 @@ export default class Action {
        */
       const curContext = await this.processContext(config).catch(err => {
         throw log(
-          new loggingData('500', `Error thrown while processing context: `, err)
-        )
+          LoggingLevels.error, `Error thrown while processing context: `, err)
       })
       log(
-        new loggingData('100', `Current Context: ${JSON.stringify(curContext)}`)
-      )
+        LoggingLevels.debug, `Current Context: ${JSON.stringify(curContext)}`)
 
       /**
        * Combine the Shared & Context.type Configs
@@ -198,17 +192,16 @@ export default class Action {
         .parsePR(this.util, config, context)
         .catch(err => {
           throw log(
-            new loggingData(
-              '500',
+            
+              LoggingLevels.error,
               `Error thrown while parsing PR context: `,
               err
             )
-          )
         })
       if (!ctx) {
-        throw new loggingData('500', 'Pull Request not found on context')
+        throw new LoggingDataClass(LoggingLevels.error, 'Pull Request not found on context')
       }
-      log(new loggingData('100', `PR context: ${JSON.stringify(ctx)}`))
+      log(LoggingLevels.debug, `PR context: ${JSON.stringify(ctx)}`)
       curContext = {
         type: 'pr',
         context: ctx
@@ -223,16 +216,15 @@ export default class Action {
         .parseIssue(this.util, config, context)
         .catch(err => {
           throw log(
-            new loggingData(
-              '500',
+            
+              LoggingLevels.error,
               `Error thrown while parsing issue context: ` + err
             )
-          )
         })
       if (!ctx) {
         throw new Error('Issue not found on context')
       }
-      log(new loggingData('100', `issue context: ${JSON.stringify(ctx)}`))
+      log(LoggingLevels.debug, `issue context: ${JSON.stringify(ctx)}`)
 
       curContext = {
         type: 'issue',
@@ -248,18 +240,17 @@ export default class Action {
         .parseProject(this.util, config, context)
         .catch(err => {
           log(
-            new loggingData(
-              '500',
+            
+              LoggingLevels.error,
               `Error thrown while parsing Project context: `,
               err
             )
-          )
           return err
         })
       if (!ctx) {
         throw new Error('Issue not found on context')
       }
-      log(new loggingData('100', `issue context: ${JSON.stringify(ctx)}`))
+      log(LoggingLevels.debug, `issue context: ${JSON.stringify(ctx)}`)
 
       curContext = {
         type: 'project',
@@ -272,11 +263,10 @@ export default class Action {
        * @since 1.1.0
        */
       throw log(
-        new loggingData(
-          '300',
+        
+          LoggingLevels.notice,
           `There is no context to parse: ${JSON.stringify(context.payload)}`
         )
-      )
     }
     return curContext
   }
@@ -287,21 +277,20 @@ export default class Action {
    * @since 1.0.0
    */
   async syncLabels(config: Runners) {
-    const labels = await Object.entries(
+    const labels = Object.entries(
       config.labels ? config.labels : []
-    ).reduce((acc: { [key: string]: Label }, cur) => {
+    ).reduce((acc: { [key: string]: Label} , cur) => {
       acc[cur[1].name.toLowerCase()] = cur[1]
       return acc
     }, {})
 
     await this.util.labels.sync(labels).catch(err => {
       log(
-        new loggingData(
-          '500',
+        
+          LoggingLevels.error,
           `Error thrown while handling syncLabels tasks:`,
           err
         )
-      )
     })
   }
 
@@ -320,15 +309,13 @@ export default class Action {
       ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
         throw log(
-          new loggingData('500', `Error thrown while running context: `, err)
-        )
+          LoggingLevels.error, `Error thrown while running context: `, err)
       })
     } else if (curContext.type == 'project') {
       ctx = new Project(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
         throw log(
-          new loggingData('500', `Error thrown while running context: `, err)
-        )
+          LoggingLevels.error, `Error thrown while running context: `, err)
       })
     }
   }

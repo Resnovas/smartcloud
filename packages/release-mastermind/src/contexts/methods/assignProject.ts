@@ -1,4 +1,4 @@
-import { loggingData } from '@videndum/utilities'
+import { LoggingLevels } from '@videndum/utilities'
 import { Issues, PullRequests } from '..'
 import { log } from '../..'
 import { evaluator } from '../../evaluator'
@@ -26,13 +26,13 @@ export async function assignProject(this: Issues | PullRequests) {
     const project = projects.filter(
       project => project.name === remote.project
     )[0]
-    if (!project) throw log(new loggingData('500', 'No project to use'))
+    if (!project) throw log(LoggingLevels.error, 'No project to use')
     const columns = await this.util.api.project.column.list(project.id)
-    if (!columns) throw log(new loggingData('500', 'No columns to use'))
+    if (!columns) throw log(LoggingLevels.error, 'No columns to use')
     const remoteColumn = columns.filter(
       column => column.name === remote.column
     )[0]
-    if (!remoteColumn) throw log(new loggingData('500', 'No column to use'))
+    if (!remoteColumn) throw log(LoggingLevels.error, 'No column to use')
 
     const should =
       remote.conditions.length > 0
@@ -40,7 +40,7 @@ export async function assignProject(this: Issues | PullRequests) {
         : true
 
     if (should) {
-      log(new loggingData('100', `Adding to project ${project.name}`))
+      log(LoggingLevels.debug, `Adding to project ${project.name}`)
       !this.dryRun &&
         (await this.util.api.project.card
           .create(
@@ -50,12 +50,12 @@ export async function assignProject(this: Issues | PullRequests) {
           )
           .catch(err => {
             log(
-              new loggingData(
-                '500',
+              
+                LoggingLevels.error,
                 `New error thrown when attempting to add to project "${project.name}"`,
                 err
               )
-            )
+            
           }))
     }
   })

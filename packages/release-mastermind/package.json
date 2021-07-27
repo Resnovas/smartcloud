@@ -31,8 +31,8 @@
   },
   "dependencies": {
     "@actions/core": "^1.2.6",
-    "@actions/github": "^5.0.0",
-    "@videndum/utilities": "^1.0.0-alpha.8"
+    "@actions/github": "~2.1.1",
+    "@videndum/utilities": "^1.0.0-alpha.16"
   },
   "devDependencies": {
     "@types/jest": "^26.0.15",
