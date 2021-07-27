@@ -3091,19 +3091,7 @@ glob@7.1.4:
     once "^1.3.0"
     path-is-absolute "^1.0.0"
 
-glob@^7.0.0, glob@^7.1.1, glob@^7.1.2, glob@^7.1.3, glob@^7.1.4:
-  version "7.1.6"
-  resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.6.tgz#141f33b81a7c2492e125594307480c46679278a6"
-  integrity sha512-LwaxwyZ72Lk7vZINtNNrywX0ZuLyStrdDtabefZKAY5ZGJhVtgdznluResxNmPitE0SAO+O26sWTHeKSI2wMBA==
-  dependencies:
-    fs.realpath "^1.0.0"
-    inflight "^1.0.4"
-    inherits "2"
-    minimatch "^3.0.4"
-    once "^1.3.0"
-    path-is-absolute "^1.0.0"
-
-glob@^7.1.6:
+glob@^7.0.0, glob@^7.1.1, glob@^7.1.2, glob@^7.1.3, glob@^7.1.4, glob@^7.1.6:
   version "7.1.7"
   resolved "https://registry.yarnpkg.com/glob/-/glob-7.1.7.tgz#3b193e9233f01d42d0b3f78294bbeeb418f94a90"
   integrity sha512-OvD9ENzPLbegENnYP5UUfJIirTg4+XwMWGaQfQTY0JenxNvvIKP3U3/tAQSPIu/lHxXYSZmpXlUHeqAIdKzBLQ==
@@ -4227,7 +4215,7 @@ lodash.templatesettings@^4.0.0:
   dependencies:
     lodash._reinterpolate "^3.0.0"
 
-lodash@^4.17.0, lodash@^4.17.12, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.7.0:
+lodash@^4.17.12, lodash@^4.17.15, lodash@^4.17.19, lodash@^4.17.20, lodash@^4.17.21, lodash@^4.7.0:
   version "4.17.21"
   resolved "https://registry.yarnpkg.com/lodash/-/lodash-4.17.21.tgz#679591c564c3bffaae8454cf0b3df370c3d6911c"
   integrity sha512-v2kDEe57lecTulaDIuNTPy3Ry4gLGJ6Z1O3vE1krgXZNrsQ+LFTGHVxVjcXPs17LhbZVGedAJv8XZ1tvj5FvSg==
@@ -4388,13 +4376,13 @@ math-random@^1.0.1:
   integrity sha512-rUxjysqif/BZQH2yhd5Aaq7vXMSx9NdEsQcyA07uEzIvxgI7zIr33gGsh+RU0/XjmQpCW7RsVof1vlkvQVCK5A==
 
 mdinclude@^0.7.1:
-  version "0.7.1"
-  resolved "https://registry.yarnpkg.com/mdinclude/-/mdinclude-0.7.1.tgz#85dd07802110db48d63270a54d440d64e60048bf"
-  integrity sha512-TO5mC7tPou05WnrPbdDQfNx00PXsbezl6WLz6v/TT+oVs428R3lGkjYGDeUgAPM4HvX3IjD6UUptbPJ7kbwqng==
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/mdinclude/-/mdinclude-0.7.2.tgz#703672fec7de27416d8073bed0f521b3ba1dacef"
+  integrity sha512-0K57GBFu2aoFKqLROpt7sQMSDW0vlyqzl7wLwPmcKFB5vEo0UHIqTX5ZnGht5vT3QsRcc7FWfgUjH0nAjxM1/A==
   dependencies:
     glob "^7.1.2"
     gulp-text-simple "^0.5.0"
-    lodash "^4.17.0"
+    lodash "^4.17.21"
 
 meow@^3.3.0:
   version "3.7.0"
