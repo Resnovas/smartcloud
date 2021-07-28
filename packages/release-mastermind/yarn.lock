@@ -75,7 +75,7 @@
   resolved "https://registry.yarnpkg.com/@babel/generator/-/generator-7.12.10.tgz#2b188fc329fb8e4f762181703beffc0fe6df3460"
   integrity sha512-6mCdfhWgmqLdtTkhXjnIz0LcdVCd26wS2JXRtj2XY0u5klDsXBREA/pG5NVOuVnF2LUrBGNFtQkIqqTbblg0ww==
   dependencies:
-    "@babel/types" "^7.14.8"
+    "@babel/types" "^7.12.10"
     jsesc "^2.5.1"
     source-map "^0.5.0"
 
@@ -401,6 +401,7 @@
     "@babel/types" "^7.12.10"
     debug "^4.1.0"
     globals "^11.1.0"
+    lodash "^4.17.19"
 
 "@babel/traverse@^7.14.5", "@babel/traverse@^7.14.8", "@babel/traverse@^7.7.2":
   version "7.14.8"
@@ -422,7 +423,8 @@
   resolved "https://registry.yarnpkg.com/@babel/types/-/types-7.12.10.tgz#7965e4a7260b26f09c56bcfcb0498af1f6d9b260"
   integrity sha512-sf6wboJV5mGyip2hIpDSKsr80RszPinEFjsHTalMxZAZkoQ2/2yQzxlcFN52SJqsyPfLtPmenL4g2KB3KJXPDw==
   dependencies:
-    "@babel/helper-validator-identifier" "^7.14.8"
+    "@babel/helper-validator-identifier" "^7.10.4"
+    lodash "^4.17.19"
     to-fast-properties "^2.0.0"
 
 "@babel/types@^7.14.5", "@babel/types@^7.14.8":
@@ -1399,10 +1401,10 @@
   resolved "https://registry.yarnpkg.com/@vercel/ncc/-/ncc-0.26.2.tgz#d0799374eb8618e48cc0841c82793b5b670c9219"
   integrity sha512-qdajZzkGn62Ry+v7bmTSd7Qza2BVjEBuCcGpxCV5Y+ANa6d//BzByMkODmYQAhAXOg6kiAgVpbnfsd/At3PWQA==
 
-"@videndum/utilities@^1.0.0-alpha.16":
-  version "1.0.0-alpha.16"
-  resolved "https://registry.yarnpkg.com/@videndum/utilities/-/utilities-1.0.0-alpha.16.tgz#d6ff141e431732033463322f5c872215a131ec7a"
-  integrity sha512-W06eGTLBoBMQJI8FZhzgdMU8mlZiF9H7/nq42207uwbIWioLRN8YNbXJIVJGabnnokv7GExQovTbgK5rZmSXIg==
+"@videndum/utilities@^1.0.0-alpha.17":
+  version "1.0.0-alpha.17"
+  resolved "https://registry.yarnpkg.com/@videndum/utilities/-/utilities-1.0.0-alpha.17.tgz#23cb5e1c9c8406ff0b13029b3284b5d6f07ca2d5"
+  integrity sha512-04OPPcm86k+6LrXn8oXbsXgpbowm8XasM1TOR376I9OBj9Xl+lefF4E6wqRlg+HkMgpSxsWp/zVvqAdCuZ/QIA==
   dependencies:
     "@google-cloud/logging" "^9.3.0"
     "@sentry/integrations" "^5.27.6"

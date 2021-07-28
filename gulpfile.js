@@ -210,8 +210,8 @@ const testall = series(
     test,
     copyContextPR,
     test,
-    copyContextProject,
-    test,
+    // copyContextProject,
+    // test,
     cleanup
 );
 

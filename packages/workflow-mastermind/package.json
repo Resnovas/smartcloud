@@ -2,6 +2,7 @@
   "name": "@videndum/github-actions",
   "version": "",
   "description": "",
+  "private": true,
   "repository": {
     "type": "",
     "url": ""
@@ -14,7 +15,6 @@
   "author": "",
   "contributors": [],
   "license": "",
-  "private": true,
   "main": "",
   "directories": {
     "lib": "",
@@ -23,7 +23,6 @@
   },
   "keywords": [],
   "scripts": {},
-  "dependencies": {},
   "devDependencies": {
     "prettier-plugin-organize-imports": "^2.3.3",
     "prettier-plugin-pkg": "^0.10.0",

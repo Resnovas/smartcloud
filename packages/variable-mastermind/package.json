@@ -1,6 +1,6 @@
 {
   "name": "@videndum/github-secrets",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "",
   "repository": {
     "type": "",
@@ -8,7 +8,6 @@
   },
   "author": "",
   "license": "",
-  "private": true,
   "main": "lib/main.js",
   "directories": {
     "lib": "./lib",
