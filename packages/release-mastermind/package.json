@@ -1,11 +1,10 @@
 {
   "name": "@videndum/release-mastermind",
-  "version": "0.0.0-alpha.1",
+  "version": "0.0.0-alpha.4",
   "description": "",
   "repository": "git@github.com:videndum/release-mastermind.git",
   "author": "Jonathan Stevens <jonathan@videndum.studio>",
   "license": "GPL-3.0",
-  "private": true,
   "main": "lib/index.js",
   "directories": {
     "lib": "./lib",
