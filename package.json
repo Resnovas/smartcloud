@@ -23,9 +23,8 @@
     "start": "npm run dev:start",
     "package": "gulp package",
     "test": "gulp testall",
-    "dev:build": "gulp && npm run v:pre && git add . && cz",
     "dev:format-scripts": "prettier --config .prettier.json --write .",
-    "dev:start": "npm run dev:build && node lib/index.js",
+    "dev:start": "gulp && npm run v:pre && git add . && cz",
     "v:graduate:release": "lerna version --conventional-commits --conventional-graduate=@videndum/release-mastermind",
     "v:pre": "lerna version --conventional-commits --no-git-tag-version"
   },
@@ -50,5 +49,10 @@
   },
   "private": false,
   "dependencies": {
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/@instructure/cz-lerna-changelog"
+    }
   }
 }
