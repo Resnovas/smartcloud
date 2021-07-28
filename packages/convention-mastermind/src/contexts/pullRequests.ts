@@ -1,5 +1,5 @@
 import * as core from '@actions/core'
-import { loggingData } from '@videndum/utilities'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
 import { log } from '..'
 import { Config, PullRequestConfig, Runners } from '../../types'
 import { CurContext, PRContext } from '../conditions'
@@ -17,10 +17,17 @@ export class PullRequests extends Contexts {
     dryRun: boolean
   ) {
     if (curContext.type !== 'pr')
-      throw new loggingData('500', 'Cannot construct without issue context')
+      throw new LoggingDataClass(
+        LoggingLevels.error,
+        'Cannot construct without issue context'
+      )
     super(util, runners, configs, curContext, dryRun)
     this.context = curContext.context
-    if (!configs.pr) throw new loggingData('500', 'Cannot start without config')
+    if (!configs.pr)
+      throw new LoggingDataClass(
+        LoggingLevels.error,
+        'Cannot start without config'
+      )
     this.config = configs.pr
   }
 
@@ -38,17 +45,13 @@ export class PullRequests extends Contexts {
       if (attempt > 3) {
         core.endGroup()
         throw log(
-          new loggingData(
-            '800',
-            `Pull Request actions failed. Terminating job.`
-          )
+          LoggingLevels.emergency,
+          `Pull Request actions failed. Terminating job.`
         )
       }
       log(
-        new loggingData(
-          '400',
-          `Pull Request Actions failed with "${err}", retrying in ${seconds} seconds....`
-        )
+        LoggingLevels.error,
+        `Pull Request Actions failed with "${err}", retrying in ${seconds} seconds....`
       )
       attempt++
       setTimeout(async () => {

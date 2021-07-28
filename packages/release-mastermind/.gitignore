@@ -1,5 +1,9 @@
 # Dependency directory
 node_modules
+docs/output
+config.json
+context.json
+contexts/*.json
 
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore
 # Logs

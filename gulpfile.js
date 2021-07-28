@@ -193,20 +193,24 @@ function cleanup() {
         .pipe(exec.reporter());
 }
 
+const testall = series(
+    parallel(copyConfig, copyContextIssue),
+    test,
+    copyContextPR,
+    test,
+    // copyContextProject,
+    // test,
+    cleanup
+);
+
 exports.default = series(
     parallel(createSetup, createConditions),
     parallel(copyIndex, copyDocs, copyConditions, copyLabels, copyTypes, copyUtils, copyTemplates),
     parallel(release, convention, labels),
-    series(
-        parallel(copyConfig, copyContextIssue),
-        test,
-        copyContextPR,
-        test,
-        copyContextProject,
-        test,
-        cleanup
-    ),
+    testall,
     createAllConfig,
     createReadMe,
     createreadme
-);
+)
+
+exports.testall = testall

@@ -69,12 +69,12 @@ async function run() {
     return core.setFailed('No Token provided')
   }
   const fillEmpty = Boolean(core.getInput('fillEmpty') || local.FILL)
-  const skipDelete = Boolean(core.getInput('skipDelete') || local.FILL)
+  const skipDelete = Boolean(core.getInput('skipDelete') || local.SKIPDELETE)
   const options: Options = {
     configPath: path.join(GITHUB_WORKSPACE, core.getInput('config')),
     configJSON:
       configInput.releaseMastermind ||
-      (configInput?.pr || configInput?.issue || configInput?.project
+      (configInput.pr || configInput.issue || configInput.project
         ? configInput
         : local == undefined
           ? undefined

@@ -7,7 +7,7 @@ import { contextHandler } from './contextHandler'
 import { CurContext } from './conditions'
 import { log } from '.'
 import { Utils } from './utils'
-import { loggingData } from '@videndum/utilities'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
 import { PullRequests, Issues, Project } from './contexts'
 
 let local: any
@@ -19,7 +19,7 @@ try {
   process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER
   if (!context.payload.issue && !context.payload.pull_request)
     context = require(local.github_context)
-} catch { }
+} catch {}
 
 /**
  * Super Labeler
@@ -44,16 +44,17 @@ export default class Action {
    */
   constructor(client: GitHub, options: Options) {
     log(
-      new loggingData(
-        '100',
-        `Convention Mastermind Constructed: ${options.toString()}`
-      )
+      LoggingLevels.debug,
+      `Convention Mastermind Constructed: ${options.toString()}`
     )
     this.client = client
     this.opts = options
     this.configJSON = options.configJSON
     this.configPath = options.configPath
-    this.util = new Utils({ client, repo: this.repo }, { dryRun: options.dryRun, skipDelete: options.skipDelete })
+    this.util = new Utils(
+      { client, repo: this.repo },
+      { dryRun: options.dryRun, skipDelete: options.skipDelete }
+    )
     this.dryRun = options.dryRun
     this.fillEmpty = options.fillEmpty
   }
@@ -67,9 +68,7 @@ export default class Action {
     if (this.dryRun) this.repo.repo = process.env.GITHUB_REPOSITORY || 'Unknown'
     if (this.dryRun)
       this.repo.owner = process.env.GITHUB_REPOSITORY_OWNER || 'Unknown'
-    log(
-      new loggingData('100', `Repo data: ${this.repo.owner}/${this.repo.repo}`)
-    )
+    log(LoggingLevels.debug, `Repo data: ${this.repo.owner}/${this.repo.repo}`)
 
     /**
      * Capture and log context to debug for Local Running
@@ -77,12 +76,10 @@ export default class Action {
      * @since 1.0.0
      */
     log(
-      new loggingData(
-        '100',
-        `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
-          context
-        )}`
-      )
+      LoggingLevels.debug,
+      `Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
+        context
+      )}`
     )
 
     /**
@@ -92,14 +89,16 @@ export default class Action {
      */
     const configs = await this.processConfig().catch(err => {
       throw log(
-        new loggingData('500', `Error thrown while processing config: `, err)
+        LoggingLevels.debug,
+        `Error thrown while processing config: `,
+        err
       )
     })
     if (!configs.runners[0]) {
-      throw log(new loggingData('500', `No config data.`))
+      throw log(LoggingLevels.debug, `No config data.`)
     }
     configs.runners.forEach(async config => {
-      log(new loggingData('100', `Config: ${JSON.stringify(config)}`))
+      log(LoggingLevels.debug, `Config: ${JSON.stringify(config)}`)
       /**
        * Get the context
        * @author TGTGamer
@@ -107,12 +106,12 @@ export default class Action {
        */
       const curContext = await this.processContext(config).catch(err => {
         throw log(
-          new loggingData('500', `Error thrown while processing context: `, err)
+          LoggingLevels.debug,
+          `Error thrown while processing context: `,
+          err
         )
       })
-      log(
-        new loggingData('100', `Current Context: ${JSON.stringify(curContext)}`)
-      )
+      log(LoggingLevels.debug, `Current Context: ${JSON.stringify(curContext)}`)
 
       /**
        * Combine the Shared & Context.type Configs
@@ -136,8 +135,8 @@ export default class Action {
        * @since 1.1.0
        */
       await this.applyContext(configs, config, curContext).catch(err => {
-        throw new loggingData(
-          '500',
+        throw new LoggingDataClass(
+          LoggingLevels.debug,
           `Error thrown while applying context: ${err}`,
           err
         )
@@ -182,16 +181,19 @@ export default class Action {
       const ctx = await contextHandler
         .parsePR(this.util, config, context)
         .catch(err => {
-          throw new loggingData(
-            '500',
+          throw new LoggingDataClass(
+            LoggingLevels.debug,
             `Error thrown while parsing PR context: `,
             err
           )
         })
       if (!ctx) {
-        throw new loggingData('500', 'Pull Request not found on context')
+        throw new LoggingDataClass(
+          LoggingLevels.debug,
+          'Pull Request not found on context'
+        )
       }
-      log(new loggingData('100', `PR context: ${JSON.stringify(ctx)}`))
+      log(LoggingLevels.debug, `PR context: ${JSON.stringify(ctx)}`)
       curContext = {
         type: 'pr',
         context: ctx
@@ -205,19 +207,47 @@ export default class Action {
       const ctx = await contextHandler
         .parseIssue(this.util, config, context)
         .catch(err => {
-          throw new loggingData(
-            '500',
+          throw new LoggingDataClass(
+            LoggingLevels.debug,
             `Error thrown while parsing issue context: `,
             err
           )
         })
       if (!ctx) {
-        throw new loggingData('500', 'Issue not found on context')
+        throw new LoggingDataClass(
+          LoggingLevels.debug,
+          'Issue not found on context'
+        )
       }
-      log(new loggingData('100', `issue context: ${JSON.stringify(ctx)}`))
+      log(LoggingLevels.debug, `issue context: ${JSON.stringify(ctx)}`)
 
       curContext = {
         type: 'issue',
+        context: ctx
+      }
+    } else if (context.payload.project_card) {
+      /**
+       * Project Context
+       * @author TGTGamer
+       * @since 1.0.0
+       */
+      const ctx = await contextHandler
+        .parseProject(this.util, config, context)
+        .catch(err => {
+          log(
+            LoggingLevels.error,
+            `Error thrown while parsing Project context: `,
+            err
+          )
+          return err
+        })
+      if (!ctx) {
+        throw new Error('Issue not found on context')
+      }
+      log(LoggingLevels.debug, `issue context: ${JSON.stringify(ctx)}`)
+
+      curContext = {
+        type: 'project',
         context: ctx
       }
     } else {
@@ -226,8 +256,8 @@ export default class Action {
        * @author TGTGamer
        * @since 1.1.0
        */
-      throw new loggingData(
-        '300',
+      throw new LoggingDataClass(
+        LoggingLevels.notice,
         `There is no context to parse: ${JSON.stringify(context.payload)}`
       )
     }
@@ -250,12 +280,20 @@ export default class Action {
         this.dryRun
       )
       ctx.run().catch(err => {
-        throw new loggingData('500', `Error thrown while running context: `, err)
+        throw new LoggingDataClass(
+          LoggingLevels.debug,
+          `Error thrown while running context: `,
+          err
+        )
       })
     } else if (curContext.type === 'issue') {
       ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
       ctx.run().catch(err => {
-        throw new loggingData('500', `Error thrown while running context: `, err)
+        throw new LoggingDataClass(
+          LoggingLevels.debug,
+          `Error thrown while running context: `,
+          err
+        )
       })
     }
   }

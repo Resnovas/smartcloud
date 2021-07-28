@@ -88,6 +88,8 @@ export default class Action {
        * @author TGTGamer
        * @since 1.1.0
        */
+      core.startGroup('label Actions')
+      log(LoggingLevels.debug, `Attempting to apply labels`)
       await this.syncLabels(configs).catch(err => {
         throw log(
           
@@ -96,6 +98,7 @@ export default class Action {
             err
           )
       })
+      core.endGroup()
     }
 
     // Run each release manager
