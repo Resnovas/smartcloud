@@ -4,9 +4,6 @@
   "packages": [
     "packages/*"
   ],
-  "changelogPreset": {
-    "name": "conventionalcommits"
-  },
   "ignoreChanges": [
     "**/__fixtures__/**",
     "**/__tests__/**",

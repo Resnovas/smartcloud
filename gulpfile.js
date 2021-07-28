@@ -205,14 +205,14 @@ function package() {
 }
 
 const testall = series(
-    package,
     parallel(copyConfig, copyContextIssue),
     test,
     copyContextPR,
     test,
     // copyContextProject,
     // test,
-    cleanup
+    cleanup,
+    package
 );
 
 exports.default = series(

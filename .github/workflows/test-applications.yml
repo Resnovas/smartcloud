@@ -26,5 +26,5 @@ jobs:
       - uses: ./packages/release-mastermind/
         with:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
-          config: .github/config/releaseMastermind.json
+          config: .github/config/labelMastermind.json
           dryRun: true
