@@ -1005,10 +1005,10 @@
   resolved "https://registry.yarnpkg.com/@vercel/ncc/-/ncc-0.26.1.tgz#457f13c8f207f5e74d19944b6797f4708c02359f"
   integrity sha512-iVhYAL/rpHgjO88GkDHNVNrp7WTfMFBbeWXNgwaDPMv5rDI4hNOAM0u+Zhtbs42XBQE6EccNaY6UDb/tm1+dhg==
 
-"@videndum/utilities@^1.0.0-alpha.16":
-  version "1.0.0-alpha.16"
-  resolved "https://registry.yarnpkg.com/@videndum/utilities/-/utilities-1.0.0-alpha.16.tgz#d6ff141e431732033463322f5c872215a131ec7a"
-  integrity sha512-W06eGTLBoBMQJI8FZhzgdMU8mlZiF9H7/nq42207uwbIWioLRN8YNbXJIVJGabnnokv7GExQovTbgK5rZmSXIg==
+"@videndum/utilities@^1.0.0-alpha.17":
+  version "1.0.0-alpha.17"
+  resolved "https://registry.yarnpkg.com/@videndum/utilities/-/utilities-1.0.0-alpha.17.tgz#23cb5e1c9c8406ff0b13029b3284b5d6f07ca2d5"
+  integrity sha512-04OPPcm86k+6LrXn8oXbsXgpbowm8XasM1TOR376I9OBj9Xl+lefF4E6wqRlg+HkMgpSxsWp/zVvqAdCuZ/QIA==
   dependencies:
     "@google-cloud/logging" "^9.3.0"
     "@sentry/integrations" "^5.27.6"
@@ -4642,9 +4642,9 @@ write-file-atomic@^3.0.0:
     typedarray-to-buffer "^3.1.5"
 
 ws@^7.2.3:
-  version "7.3.1"
-  resolved "https://registry.yarnpkg.com/ws/-/ws-7.3.1.tgz#d0547bf67f7ce4f12a72dfe31262c68d7dc551c8"
-  integrity sha512-D3RuNkynyHmEJIpD2qrgVkc9DQ23OrN/moAwZX4L8DfvszsJxpjQuUq3LMx6HoYji9fbIOBY18XWBsAux1ZZUA==
+  version "7.5.3"
+  resolved "https://registry.yarnpkg.com/ws/-/ws-7.5.3.tgz#160835b63c7d97bfab418fc1b8a9fced2ac01a74"
+  integrity sha512-kQ/dHIzuLrS6Je9+uv81ueZomEwH0qVYstcAQ4/Z93K8zeko9gtAbttJWzoC5ukqXY1PpoouV3+VSOqEAFt5wg==
 
 xml-name-validator@^3.0.0:
   version "3.0.0"
