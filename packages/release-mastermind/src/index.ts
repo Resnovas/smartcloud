@@ -42,7 +42,7 @@ let showLogs: boolean = false
 
 try {
   local = require('../config.json')
-  dryRun = local.GH_ACTION_LOCAL_TEST || false
+  dryRun = local.GH_ACTION_LOCAL_TEST || core.getInput('dryRun') || false
   showLogs = local.SHOW_LOGS || false
 } catch { }
 

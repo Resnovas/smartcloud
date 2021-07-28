@@ -1,6 +1,6 @@
 {
   "name": "convention-mastermind",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "The super-powered convention enforcer for Github Actions, with complex, customisable conditions for PR, Issues and Projects",
   "main": "src/index.ts",
   "repository": "git@github.com:videndum/convention-mastermind.git",
@@ -31,8 +31,8 @@
   },
   "devDependencies": {
     "@types/jest": "^26.0.10",
-    "@types/node": "^16.4.2",
     "@types/minimatch": "^3.0.3",
+    "@types/node": "^16.4.2",
     "@vercel/ncc": "^0.26.1",
     "jest": "^26.3.0",
     "prettier": "^2.1.2",

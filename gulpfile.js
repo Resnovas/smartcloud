@@ -189,11 +189,23 @@ function cleanup() {
             path.dirname = "";
             path.extname = "";
         }))
-        .pipe(exec(file => `cd ${file.path} && del config.json context.json && npm run dev:package`))
+        .pipe(exec(file => `cd ${file.path} && del config.json context.json`))
+        .pipe(exec.reporter());
+}
+
+function package() {
+    return src('./packages/**/README-SOURCE.md')
+        .pipe(rename(function (path) {
+            path.basename = path.dirname;
+            path.dirname = "";
+            path.extname = "";
+        }))
+        .pipe(exec(file => `cd ${file.path} && npm run dev:package`))
         .pipe(exec.reporter());
 }
 
 const testall = series(
+    package,
     parallel(copyConfig, copyContextIssue),
     test,
     copyContextPR,
@@ -214,3 +226,4 @@ exports.default = series(
 )
 
 exports.testall = testall
+exports.package = package
