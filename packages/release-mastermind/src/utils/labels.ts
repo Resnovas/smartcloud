@@ -30,6 +30,7 @@ export async function sync(this: Utils, config: Runners['labels']) {
      * @since 1.0.0
      */
     if (label) {
+      log(LoggingLevels.debug, `Color match? ${label.color} => ${formatColor(configLabel.color)}`)
       if (
         (label.description !== configLabel.description &&
           configLabel.description !== undefined) ||
@@ -66,7 +67,7 @@ export async function sync(this: Utils, config: Runners['labels']) {
   }
 
   if (this.skipDelete) {
-    log(LoggingLevels.error, 'Skipping deletion of labels')
+    log(LoggingLevels.warn, 'Skipping deletion of labels')
   } else {
     for (const curLabel of Object.values(curLabels)) {
       const label = config[curLabel.name.toLowerCase()]
