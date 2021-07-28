@@ -42,7 +42,7 @@ export function enforce(this: Issues | PullRequests | Project) {
         } using one of the valid options:\r\n\r\n Types: ` +
         semantic.join(', ') +
         (convention.contexts
-          ? `\r\n\r\n Contexts: ${convention.contexts?.join(', ')}`
+          ? `\r\n\r\n Contexts: ${convention.contexts.join(', ')}`
           : '')
       convention.conditions = conditions
     }
@@ -73,10 +73,10 @@ async function createConventionComment(
 ) {
   if (!this.config.enforceConventions) return
   let prefix: string = `<!--releaseMastermind: Conventions-->${
-      this.config.enforceConventions?.commentHeader || ''
+      this.config.enforceConventions.commentHeader || ''
     }\r\n\r\n`,
     suffix: string = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${
-      this.config.enforceConventions?.commentFooter || ''
+      this.config.enforceConventions.commentFooter || ''
     }`,
     body: string = prefix + failMessages?.join('\r\n\r\n') + suffix,
     commentList

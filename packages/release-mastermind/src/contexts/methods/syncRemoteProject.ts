@@ -76,9 +76,10 @@ export async function syncRemoteProject(this: Project) {
       this.util.api.project.card
         .move(remoteCard.id, remoteColumn.id)
         .catch(err => {
-          throw LoggingLevels.error,
+          throw new LoggingDataClass(LoggingLevels.error,
             'Error while attempting to move card',
             err
+          )
         })
       log(LoggingLevels.info, 'Successfully moved card to new column')
     } else if (this.context.action == 'edited') {

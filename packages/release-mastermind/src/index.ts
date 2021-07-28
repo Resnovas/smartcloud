@@ -74,7 +74,7 @@ async function run() {
     configPath: path.join(GITHUB_WORKSPACE, core.getInput('config')),
     configJSON:
       configInput.releaseMastermind ||
-      (configInput?.pr || configInput?.issue || configInput?.project
+      (configInput.pr || configInput.issue || configInput.project
         ? configInput
         : local == undefined
           ? undefined
