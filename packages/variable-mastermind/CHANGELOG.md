@@ -3,6 +3,36 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+# 0.4.0-alpha.4 (2021-08-03)
+
+
+### Bug Fixes
+
+* Deprecating set-env and add-path commands 472a91e
+* **label-mastermind,@videndum/release-mastermind:** label capitalisation adjustments ab59810
+* **label:** attempt to fix labeler issues cdf67ac, closes #166
+* **release:** external project (#60) 63c1d7e, closes #60 #59
+* **release:** project not found 9d8dea7
+* **util:** versioning error #84 (#85) d3cafb4, closes #84 #85 #84
+* **workflow:** typo in project assign config 3045f8c
+
+
+### Features
+
+* allconfigs 447486e
+* **convention-mastermind,@videndum/release-mastermind:** convention updates to allow for multiple conventions 504279b
+* **convention:** extract conventions (#64) 7a0add9, closes #64
+* **label:** onColumn (#53) bdb6d09, closes #53
+
+
+### Reverts
+
+* cb7b372add75730e3b57c2caee6a7ec7cca8516d 51a1ef9
+
+
+
+
+
 # 0.4.0-alpha.3 (2021-08-03)
 
 
