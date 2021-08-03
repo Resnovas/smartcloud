@@ -9,8 +9,21 @@ jobs:
   misc:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    strategy:
+      matrix:
+        node-version: [12.x, 14.x, 16.x]
     steps:
       - uses: actions/checkout@v2.3.4
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Push all configs
+        run: |
+          npm install
+          npm run lerna:git
+
       - name: Get Configurations
         uses: ./packages/variable-mastermind/
         with:
