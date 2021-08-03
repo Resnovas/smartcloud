@@ -1,6 +1,6 @@
 {
   "name": "@videndum/release-mastermind",
-  "version": "0.0.0-alpha.5",
+  "version": "0.0.0-alpha.6",
   "description": "",
   "repository": "git@github.com:videndum/release-mastermind.git",
   "author": "Jonathan Stevens <jonathan@videndum.studio>",
@@ -26,7 +26,8 @@
     "dev:test": "jest --json --outputFile=result.json --testLocationInResults",
     "dev:tsc": "tsc -p tsconfig.json",
     "run": "node lib/index.js",
-    "test": "jest"
+    "test": "jest",
+    "git": "git add . && git commit -m \"chore: Bump Version & Changelog from @videndum/action-masterminds\" -s && git push"
   },
   "dependencies": {
     "@actions/core": "^1.2.6",

@@ -32,7 +32,7 @@ export function enforce(this: Issues | PullRequests | Project) {
         convention.contexts.forEach(pattern => {
           conditions.push({
             type: 'titleMatches',
-            pattern: `/\\(${pattern}\\):/i`
+            pattern: `/\\(.*${pattern}.*\\):/i`
           })
         })
       }

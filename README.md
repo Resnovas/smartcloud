@@ -204,10 +204,11 @@ Now create the config file at `.github/config.json`:
           {
             "requires": 1,
             "contexts": [
-              "workflow",
-              "release",
-              "label",
-              "variable",
+              "@videndum/workflow-mastermind",
+              "@videndum/release-mastermind",
+              "@videndum/label-mastermind",
+              "@videndum/variable-mastermind",
+              "@videndum/convention-mastermind",
               "condition",
               "api",
               "util",
@@ -437,7 +438,7 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\(workflow\\):/i"
+              "pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\):/i"
             }
           ]
         },
@@ -450,7 +451,7 @@ Now create the config file at `.github/config.json`:
             },
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\(release\\):/i"
+              "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\):/i"
             }
           ]
         },
@@ -463,7 +464,7 @@ Now create the config file at `.github/config.json`:
             },
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\(label\\):/i"
+              "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\):/i"
             }
           ]
         },
@@ -476,7 +477,7 @@ Now create the config file at `.github/config.json`:
             },
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\(variable\\):/i"
+              "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\):/i"
             }
           ]
         },

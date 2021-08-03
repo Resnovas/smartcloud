@@ -474,10 +474,11 @@
             {
               "requires": 1,
               "contexts": [
-                "workflow",
-                "release",
-                "label",
-                "variable",
+                "@videndum/workflow-mastermind",
+                "@videndum/release-mastermind",
+                "@videndum/label-mastermind",
+                "@videndum/variable-mastermind",
+                "@videndum/convention-mastermind",
                 "condition",
                 "api",
                 "util",
@@ -707,7 +708,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(workflow\\):/i"
+                "pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\):/i"
               }
             ]
           },
@@ -720,7 +721,7 @@
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(release\\):/i"
+                "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\):/i"
               }
             ]
           },
@@ -733,7 +734,7 @@
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(label\\):/i"
+                "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\):/i"
               }
             ]
           },
@@ -746,7 +747,7 @@
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(variable\\):/i"
+                "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\):/i"
               }
             ]
           },
