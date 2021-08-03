@@ -1,6 +1,6 @@
 {
   "name": "convention-mastermind",
-  "version": "1.4.0-alpha.1",
+  "version": "1.4.0-alpha.2",
   "description": "The super-powered convention enforcer for Github Actions, with complex, customisable conditions for PR, Issues and Projects",
   "main": "src/index.ts",
   "repository": "git@github.com:videndum/convention-mastermind.git",
