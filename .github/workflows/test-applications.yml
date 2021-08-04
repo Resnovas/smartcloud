@@ -7,9 +7,8 @@ jobs:
   convention-mastermind:
     name: Convention Mastermind
     runs-on: ubuntu-latest
-#     if: ${{ github.event.review.state == 'approved'}}
+    if: ${{ github.event.review.state == 'approved'}}
     steps:
-      - run: echo ${{toJSON(github.event)}}
       - uses: actions/checkout@v2.3.4
       
       - uses: ./packages/convention-mastermind/
