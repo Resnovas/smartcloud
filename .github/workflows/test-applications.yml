@@ -2,6 +2,9 @@ name: Test Actions
 on:
   pull_request:
     types: [opened, edited, closed, reopened, synchronize]
+    
+  pull_request_review: 
+    types: [submitted]
 
 jobs:
   convention-mastermind:
