@@ -1,11 +1,11 @@
-import { PRProps } from ".";
-import { Issues, Project, PullRequests } from "../../contexts";
+import { PRProps } from '.'
+import { Issues, Project, PullRequests } from '../../contexts'
 
-const TYPE = "pendingReview";
+const TYPE = 'pendingReview'
 
 export interface ConditionPendingReview {
-  type: typeof TYPE;
-  value: boolean;
+  type: typeof TYPE
+  value: boolean
 }
 
 function pendingReview(
@@ -13,7 +13,7 @@ function pendingReview(
   condition: ConditionPendingReview,
   pr: PRProps
 ) {
-  return pr.pendingReview === condition.value;
+  return pr.pendingReview === condition.value
 }
 
-export default [TYPE, pendingReview] as const;
+export default [TYPE, pendingReview] as const

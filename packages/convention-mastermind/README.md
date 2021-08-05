@@ -7,50 +7,50 @@ The super-powered convention enforment for Github Actions, with complex customis
 <!-- toc -->
 
 - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
-  * [Why not GitHub Issues?](#why-not-github-issues)
+  - [Why not GitHub Issues?](#why-not-github-issues)
 - [Backlog & Contributing](#backlog--contributing)
 - [Running Locally & Developing](#running-locally--developing)
-  * [Prerequisities](#prerequisities)
-  * [Developing](#developing)
-  * [Running locally](#running-locally)
+  - [Prerequisities](#prerequisities)
+  - [Developing](#developing)
+  - [Running locally](#running-locally)
 - [Getting Started](#getting-started)
-  * [Automatic setup via CLI](#automatic-setup-via-cli)
-  * [Manual setup](#manual-setup)
-    + [Workflow Options](#workflow-options)
-  * [All configuration options](#all-configuration-options)
-    + [Runners](#runners)
+  - [Automatic setup via CLI](#automatic-setup-via-cli)
+  - [Manual setup](#manual-setup)
+    - [Workflow Options](#workflow-options)
+  - [All configuration options](#all-configuration-options)
+    - [Runners](#runners)
       - [Versioning](#versioning)
-    + [IssueConfig](#issueconfig)
-    + [ProjectConfig](#projectconfig)
-    + [PullRequestConfig](#pullrequestconfig)
-    + [PullRequestConfig](#pullrequestconfig-1)
+    - [IssueConfig](#issueconfig)
+    - [ProjectConfig](#projectconfig)
+    - [PullRequestConfig](#pullrequestconfig)
+    - [PullRequestConfig](#pullrequestconfig-1)
       - [EnforceConventions](#enforceconventions)
       - [SharedConventionsConfig](#sharedconventionsconfig)
-    + [Typings](#typings)
-  * [Using Regex Patterns](#using-regex-patterns)
+    - [Typings](#typings)
+  - [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
-  * [Common Conditions](#common-conditions)
-    + [\$and](#and)
-    + [creatorMatches](#creatormatches)
-    + [descriptionMatches](#descriptionmatches)
-    + [hasLabel](#haslabel)
-    + [isAbandoned](#isabandoned)
-    + [isLocked](#islocked)
-    + [isOpen](#isopen)
-    + [isStale](#isstale)
-    + [\$only](#only)
-    + [\$or](#or)
-  * [Pull Request Conditions](#pull-request-conditions)
-    + [branchMatches](#branchmatches)
-    + [changesSize](#changessize)
-    + [filesMatch](#filesmatch)
-    + [isApproved](#isapproved)
-    + [isDraft](#isdraft)
-    + [pendingReview](#pendingreview)
-    + [requestedChanges](#requestedchanges)
-  * [Issue Conditions](#issue-conditions)
-  * [Project Conditions](#project-conditions)
-    + [onColumn](#oncolumn)
+  - [Common Conditions](#common-conditions)
+    - [\$and](#and)
+    - [creatorMatches](#creatormatches)
+    - [descriptionMatches](#descriptionmatches)
+    - [hasLabel](#haslabel)
+    - [isAbandoned](#isabandoned)
+    - [isLocked](#islocked)
+    - [isOpen](#isopen)
+    - [isStale](#isstale)
+    - [\$only](#only)
+    - [\$or](#or)
+  - [Pull Request Conditions](#pull-request-conditions)
+    - [branchMatches](#branchmatches)
+    - [changesSize](#changessize)
+    - [filesMatch](#filesmatch)
+    - [isApproved](#isapproved)
+    - [isDraft](#isdraft)
+    - [pendingReview](#pendingreview)
+    - [requestedChanges](#requestedchanges)
+  - [Issue Conditions](#issue-conditions)
+  - [Project Conditions](#project-conditions)
+    - [onColumn](#oncolumn)
 - [Final Note](#final-note)
 
 <!-- tocstop -->
@@ -104,7 +104,6 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 6. Modify the `./config.sample.json` to contain your `GITHUB_TOKEN` and rename to `./config.json`
 7. Run the script using `yarn dev:run` or `npm run dev:run`
 
-
 ## Getting Started
 
 > [!IMPORTANT]
@@ -113,7 +112,6 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 ### Automatic setup via CLI
 
 [coming soon]
-
 
 ### Manual setup
 
@@ -277,8 +275,6 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 Choosing `"semanticTitle"` as the condition will automatically configure your conventions to use semantic conventions. You can add additional context by adding the `contexts` option which enforce only those contexts get used.
 
-
-
 #### Typings
 
 <details>
@@ -307,7 +303,6 @@ export interface Options {
   skipDelete: boolean
   repo?: Repo
 }
-
 
 export interface Runners {
   labels?: Labels
@@ -391,11 +386,13 @@ export interface ProjectConfig extends SharedConfig {
   assignMilestone?: { [milestone: string]: Milestones }
 }
 
-export interface ScheduleConfig extends SharedConfig {
-  
-}
+export interface ScheduleConfig extends SharedConfig {}
 
-export type SharedConfigIndex = "ref" | "enforceConventions" | "labels" | "stale"
+export type SharedConfigIndex =
+  | 'ref'
+  | 'enforceConventions'
+  | 'labels'
+  | 'stale'
 
 export interface SharedConfig {
   ref?: string
@@ -442,11 +439,11 @@ export interface Stale {
 }
 
 export interface StaleConfig extends SharedConditions {
-    days: number
-    comment?: string
-    resolve?: string
-    commentHeader?: string
-    commentFooter?: string
+  days: number
+  comment?: string
+  resolve?: string
+  commentHeader?: string
+  commentFooter?: string
 }
 
 export interface AbanondedConfig extends StaleConfig {
@@ -460,7 +457,7 @@ export interface AutomaticApprove {
   commentFooter?: string
   conventions: SharedConventionsConfig[]
 }
-  
+
 export interface Release extends PRConditionConfig {
   labels?: {
     build: string
@@ -723,8 +720,6 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 }
 ```
 
-
-
 ### Pull Request Conditions
 
 #### branchMatches
@@ -822,10 +817,7 @@ Example:
 }
 ```
 
-
 ### Issue Conditions
-
-
 
 ### Project Conditions
 
@@ -842,8 +834,6 @@ Example:
   "column": "New"
 }
 ```
-
-
 
 ## Final Note
 

@@ -1,11 +1,11 @@
-import { PRProps } from ".";
-import { Issues, Project, PullRequests } from "../../contexts";
+import { PRProps } from '.'
+import { Issues, Project, PullRequests } from '../../contexts'
 
-const TYPE = "isDraft";
+const TYPE = 'isDraft'
 
 export interface ConditionIsDraft {
-  type: typeof TYPE;
-  value: boolean;
+  type: typeof TYPE
+  value: boolean
 }
 
 function isDraft(
@@ -13,7 +13,7 @@ function isDraft(
   condition: ConditionIsDraft,
   pr: PRProps
 ) {
-  return pr.isDraft === condition.value;
+  return pr.isDraft === condition.value
 }
 
-export default [TYPE, isDraft] as const;
+export default [TYPE, isDraft] as const

@@ -23,7 +23,7 @@
     "start": "npm run dev:run",
     "package": "gulp package",
     "test": "gulp testall",
-    "dev:format-scripts": "prettier --config .prettier.json --write .",
+    "dev:format": "prettier --config .prettier.json --write .",
     "dev:run": "gulp && git add . && cz",
     "v:graduate": "lerna version --conventional-commits --conventional-graduate && npm run git",
     "v:graduate:convention": "lerna version --conventional-commits --conventional-graduate=@videndum/convention-mastermind && npm run git",
@@ -51,7 +51,8 @@
     "prettier-plugin-organize-imports": "^1.1.1",
     "prettier-plugin-pkg": "^0.8.0",
     "@instructure/cz-lerna-changelog": "^8.6.0",
-    "commitizen": "^4.2.4"
+    "commitizen": "^4.2.4",
+    "typescript": "^4.0.5"
   },
   "private": false,
   "dependencies": {

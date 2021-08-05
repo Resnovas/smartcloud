@@ -8,6 +8,17 @@ const exec = require('gulp-exec');
 const log = require('fancy-log');
 
 class Copy {
+    static format () {
+        return src('./packages/**/README-SOURCE.md')
+            .pipe(rename(function (path) {
+                path.basename = path.dirname;
+                path.dirname = "";
+                path.extname = "";
+            }))
+            .pipe(exec(file => `cd ${file.path} && npm run dev:format`))
+            .pipe(exec.reporter({ stdout: false }));
+    }
+
     static docs() {
         return src('docs/**/*', { base: "." })
             .pipe(dest('packages/release-mastermind/'))

@@ -1,12 +1,12 @@
-import { ProjectProps } from ".";
-import { Issues, Project, PullRequests } from "../../contexts";
+import { ProjectProps } from '.'
+import { Issues, Project, PullRequests } from '../../contexts'
 
-const TYPE = "onColumn";
+const TYPE = 'onColumn'
 
 export interface ConditiononColumn {
-  type: typeof TYPE;
-  project: string;
-  column: string;
+  type: typeof TYPE
+  project: string
+  column: string
 }
 
 function onColumn(
@@ -17,7 +17,7 @@ function onColumn(
   return (
     pr.localColumn.name == condition.column &&
     pr.project.name == condition.project
-  );
+  )
 }
 
-export default [TYPE, onColumn] as const;
+export default [TYPE, onColumn] as const

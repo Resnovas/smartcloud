@@ -508,7 +508,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^bug(\\(.*\\))?:/i"
+                "pattern": "/^bug(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "descriptionMatches",
@@ -521,7 +521,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^chore(\\(.*\\))?:/i"
+                "pattern": "/^chore(\\(.*\\))?(!)?:/i"
               }
             ]
           },
@@ -530,19 +530,19 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^opt(\\(.*\\))?:/i"
+                "pattern": "/^opt(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^optimisation(\\(.*\\))?:/i"
+                "pattern": "/^optimisation(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
+                "pattern": "/^maint(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
+                "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "descriptionMatches",
@@ -555,15 +555,15 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^style(\\(.*\\))?:/i"
+                "pattern": "/^style(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
+                "pattern": "/^maint(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
+                "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "descriptionMatches",
@@ -576,19 +576,19 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^ref(\\(.*\\))?:/i"
+                "pattern": "/^ref(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^refactor(\\(.*\\))?:/i"
+                "pattern": "/^refactor(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
+                "pattern": "/^maint(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
+                "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "descriptionMatches",
@@ -601,15 +601,15 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^revert(\\(.*\\))?:/i"
+                "pattern": "/^revert(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
+                "pattern": "/^maint(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
+                "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "descriptionMatches",
@@ -622,19 +622,19 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^dep(\\(.*\\))?:/i"
+                "pattern": "/^dep(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^deprecated(\\(.*\\))?:/i"
+                "pattern": "/^deprecated(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
+                "pattern": "/^maint(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
+                "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "descriptionMatches",
@@ -647,15 +647,15 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^removal(\\(.*\\))?:/i"
+                "pattern": "/^removal(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
+                "pattern": "/^maint(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
+                "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "descriptionMatches",
@@ -668,7 +668,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^discussion(\\(.*\\))?:/i"
+                "pattern": "/^discussion(\\(.*\\))?(!)?:/i"
               }
             ]
           },
@@ -677,11 +677,11 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^docs(\\(.*\\))?:/i"
+                "pattern": "/^docs(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^documentation(\\(.*\\))?:/i"
+                "pattern": "/^documentation(\\(.*\\))?(!)?:/i"
               }
             ]
           },
@@ -690,19 +690,19 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^feat(\\(.*\\))?:/i"
+                "pattern": "/^feat(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^enhance(\\(.*\\))?:/i"
+                "pattern": "/^enhance(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^feature(\\(.*\\))?:/i"
+                "pattern": "/^feature(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^enhancement(\\(.*\\))?:/i"
+                "pattern": "/^enhancement(\\(.*\\))?(!)?:/i"
               }
             ]
           },
@@ -711,7 +711,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^fix(\\(.*\\))?:/i"
+                "pattern": "/^fix(\\(.*\\))?(!)?:/i"
               }
             ]
           },
@@ -720,7 +720,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\):/i"
+                "pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\)(!)?:/i"
               }
             ]
           },
@@ -733,7 +733,7 @@
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\):/i"
+                "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\)(!)?:/i"
               }
             ]
           },
@@ -746,7 +746,7 @@
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\):/i"
+                "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\)(!)?:/i"
               }
             ]
           },
@@ -759,7 +759,7 @@
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\):/i"
+                "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\)(!)?:/i"
               }
             ]
           },
@@ -768,7 +768,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(condition\\):/i"
+                "pattern": "/^.*\\(condition\\)(!)?:/i"
               }
             ]
           },
@@ -777,7 +777,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(api\\):/i"
+                "pattern": "/^.*\\(api\\)(!)?:/i"
               }
             ]
           },
@@ -786,7 +786,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(contexts\\):/i"
+                "pattern": "/^.*\\(contexts\\)(!)?:/i"
               }
             ]
           },
@@ -795,7 +795,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(util\\):/i"
+                "pattern": "/^.*\\(util\\)(!)?:/i"
               }
             ]
           },
@@ -804,7 +804,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(installer\\):/i"
+                "pattern": "/^.*\\(installer\\)(!)?:/i"
               }
             ]
           },
@@ -813,7 +813,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(deps\\):/i"
+                "pattern": "/^.*\\(deps\\)(!)?:/i"
               }
             ]
           },
@@ -822,7 +822,7 @@
             "conditions": [
               {
                 "type": "titleMatches",
-                "pattern": "/^.*\\(deps-dev\\):/i"
+                "pattern": "/^.*\\(deps-dev\\)(!)?:/i"
               }
             ]
           },
@@ -1061,7 +1061,7 @@
               },
               {
                 "type": "titleMatches",
-                "pattern": "/^bug(\\(.*\\))?:/i"
+                "pattern": "/^bug(\\(.*\\))?(!)?:/i"
               },
               {
                 "type": "descriptionMatches",

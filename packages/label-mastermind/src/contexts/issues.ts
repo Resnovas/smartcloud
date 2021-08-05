@@ -1,14 +1,14 @@
-import * as core from "@actions/core";
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities";
-import { Context } from "vm";
-import { log } from "..";
-import { Config, IssueConfig, Runners } from "../../types";
-import { CurContext, IssueContext, Version } from "../conditions";
-import { Utils } from "../utils";
-import { Contexts } from "./methods";
+import * as core from '@actions/core'
+import { LoggingDataClass, LoggingLevels } from '@videndum/utilities'
+import { Context } from 'vm'
+import { log } from '..'
+import { Config, IssueConfig, Runners } from '../../types'
+import { CurContext, IssueContext, Version } from '../conditions'
+import { Utils } from '../utils'
+import { Contexts } from './methods'
 export class Issues extends Contexts {
-  context: IssueContext;
-  config: IssueConfig;
+  context: IssueContext
+  config: IssueConfig
   constructor(
     util: Utils,
     runners: Runners,
@@ -16,19 +16,19 @@ export class Issues extends Contexts {
     curContext: CurContext,
     dryRun: boolean
   ) {
-    if (curContext.type !== "issue")
+    if (curContext.type !== 'issue')
       throw new LoggingDataClass(
         LoggingLevels.error,
-        "Cannot construct without issue context"
-      );
-    super(util, runners, configs, curContext, dryRun);
-    this.context = curContext.context;
+        'Cannot construct without issue context'
+      )
+    super(util, runners, configs, curContext, dryRun)
+    this.context = curContext.context
     if (!configs.issue)
       throw new LoggingDataClass(
         LoggingLevels.error,
-        "Cannot start without config"
-      );
-    this.config = configs.issue;
+        'Cannot start without config'
+      )
+    this.config = configs.issue
   }
 
   /**
@@ -41,31 +41,27 @@ export class Issues extends Contexts {
     config: Config,
     context: Context
   ): Promise<IssueContext | undefined> {
-    const issue = context.payload.issue;
+    const issue = context.payload.issue
     if (!issue) {
-      return;
+      return
     }
 
     log(
       LoggingLevels.debug,
       `context.payload.issue: ` + JSON.stringify(context.payload.issue)
-    );
+    )
 
-    const labels = await utils.parsingData.labels(issue.labels).catch((err) => {
-      log(LoggingLevels.error, `Error thrown while parsing labels: `, err);
-      throw err;
-    });
+    const labels = await utils.parsingData.labels(issue.labels).catch(err => {
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
+      throw err
+    })
 
     const currentVersion: Version = await utils.versioning
       .parse(config, config.issue?.ref)
-      .catch((err) => {
-        log(
-          LoggingLevels.error,
-          `Error thrown while parsing versioning: `,
-          err
-        );
-        throw err;
-      });
+      .catch(err => {
+        log(LoggingLevels.error, `Error thrown while parsing versioning: `, err)
+        throw err
+      })
 
     return {
       sha: context.sha,
@@ -73,63 +69,63 @@ export class Issues extends Contexts {
       currentVersion,
       IDNumber: context.payload.issue?.id,
       props: {
-        type: "issue",
+        type: 'issue',
         ID: issue.number,
         creator: issue.user.login,
-        description: issue.body || "",
+        description: issue.body || '',
         locked: issue.locked,
         state: issue.state,
         labels,
-        title: issue.title,
-      },
-    };
+        title: issue.title
+      }
+    }
   }
 
   async run(attempt?: number) {
     if (!this.config)
       throw new LoggingDataClass(
         LoggingLevels.warn,
-        "Cannot start without config"
-      );
+        'Cannot start without config'
+      )
     if (!attempt) {
-      attempt = 1;
-      core.startGroup("Issue Actions");
+      attempt = 1
+      core.startGroup('Issue Actions')
     }
     let seconds = attempt * 10,
-      enforceConventionsSuccess: boolean = true;
+      enforceConventionsSuccess: boolean = true
     try {
-      if (this.config.enforceConventions && this.util.shouldRun("convention"))
-        enforceConventionsSuccess = await this.conventions.enforce(this);
+      if (this.config.enforceConventions && this.util.shouldRun('convention'))
+        enforceConventionsSuccess = await this.conventions.enforce(this)
 
       if (enforceConventionsSuccess) {
-        if (this.config.labels && this.util.shouldRun("label"))
-          await this.applyLabels(this).catch((err) => {
-            log(LoggingLevels.error, "Error applying label", err);
-          });
+        if (this.config.labels && this.util.shouldRun('label'))
+          await this.applyLabels(this).catch(err => {
+            log(LoggingLevels.error, 'Error applying label', err)
+          })
 
-        if (this.config.assignProject && this.util.shouldRun("release"))
-          await this.assignProject(this).catch((err) => {
-            log(LoggingLevels.error, "Error assigning projects", err);
-          });
+        if (this.config.assignProject && this.util.shouldRun('release'))
+          await this.assignProject(this).catch(err => {
+            log(LoggingLevels.error, 'Error assigning projects', err)
+          })
 
-        core.endGroup();
+        core.endGroup()
       }
     } catch (err) {
       if (attempt > 3) {
-        core.endGroup();
+        core.endGroup()
         throw new LoggingDataClass(
           LoggingLevels.emergency,
           `Issue actions failed. Terminating job.`
-        );
+        )
       }
       log(
         LoggingLevels.warn,
         `Issue Actions failed with "${err}", retrying in ${seconds} seconds....`
-      );
-      attempt++;
+      )
+      attempt++
       setTimeout(async () => {
-        this.run(attempt);
-      }, seconds * 1000);
+        this.run(attempt)
+      }, seconds * 1000)
     }
   }
 }

@@ -21,7 +21,6 @@ export interface Options {
   repo?: Repo
 }
 
-
 export interface Runners {
   labels?: Labels
   runners: Config[]
@@ -104,11 +103,13 @@ export interface ProjectConfig extends SharedConfig {
   assignMilestone?: { [milestone: string]: Milestones }
 }
 
-export interface ScheduleConfig extends SharedConfig {
-  
-}
+export interface ScheduleConfig extends SharedConfig {}
 
-export type SharedConfigIndex = "ref" | "enforceConventions" | "labels" | "stale"
+export type SharedConfigIndex =
+  | 'ref'
+  | 'enforceConventions'
+  | 'labels'
+  | 'stale'
 
 export interface SharedConfig {
   ref?: string
@@ -155,11 +156,11 @@ export interface Stale {
 }
 
 export interface StaleConfig extends SharedConditions {
-    days: number
-    comment?: string
-    resolve?: string
-    commentHeader?: string
-    commentFooter?: string
+  days: number
+  comment?: string
+  resolve?: string
+  commentHeader?: string
+  commentFooter?: string
 }
 
 export interface AbanondedConfig extends StaleConfig {
@@ -173,7 +174,7 @@ export interface AutomaticApprove {
   commentFooter?: string
   conventions: SharedConventionsConfig[]
 }
-  
+
 export interface Release extends PRConditionConfig {
   labels?: {
     build: string

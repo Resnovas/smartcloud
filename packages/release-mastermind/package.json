@@ -25,9 +25,9 @@
     "dev:run": "npm run dev:tsc && node lib/index.js",
     "dev:test": "jest --json --outputFile=result.json --testLocationInResults",
     "dev:tsc": "tsc -p tsconfig.json",
+    "git": "git add . && git commit -m \"chore: Bump Version & Changelog from @videndum/action-masterminds\" -s && git push",
     "run": "node lib/index.js",
-    "test": "jest",
-    "git": "git add . && git commit -m \"chore: Bump Version & Changelog from @videndum/action-masterminds\" -s && git push"
+    "test": "jest"
   },
   "dependencies": {
     "@actions/core": "^1.2.6",

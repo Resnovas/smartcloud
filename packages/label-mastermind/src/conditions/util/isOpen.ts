@@ -1,15 +1,15 @@
-import { UtilProps, UtilThis } from "../";
+import { UtilProps, UtilThis } from '../'
 
-const TYPE = "isOpen";
+const TYPE = 'isOpen'
 
 enum States {
-  Open = "OPEN",
-  Closed = "CLOSED",
+  Open = 'OPEN',
+  Closed = 'CLOSED'
 }
 
 export interface ConditionIsOpen {
-  type: typeof TYPE;
-  value: boolean;
+  type: typeof TYPE
+  value: boolean
 }
 
 function isOpen(this: UtilThis, condition: ConditionIsOpen, issue: UtilProps) {
@@ -18,7 +18,7 @@ function isOpen(this: UtilThis, condition: ConditionIsOpen, issue: UtilProps) {
     this.util.parsingData.normalize(
       condition.value ? States.Open : States.Closed
     )
-  );
+  )
 }
 
-export default [TYPE, isOpen] as const;
+export default [TYPE, isOpen] as const

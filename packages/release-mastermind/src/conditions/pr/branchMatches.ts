@@ -1,11 +1,11 @@
-import { PRProps } from ".";
-import { Issues, Project, PullRequests } from "../../contexts";
+import { PRProps } from '.'
+import { Issues, Project, PullRequests } from '../../contexts'
 
-const TYPE = "branchMatches";
+const TYPE = 'branchMatches'
 
 export interface ConditionBranchMatches {
-  type: typeof TYPE;
-  pattern: string;
+  type: typeof TYPE
+  pattern: string
 }
 
 function branchMatches(
@@ -13,8 +13,8 @@ function branchMatches(
   condition: ConditionBranchMatches,
   pr: PRProps
 ) {
-  const pattern = this.util.parsingData.processRegExpPattern(condition.pattern);
-  return pattern.test(pr.branch);
+  const pattern = this.util.parsingData.processRegExpPattern(condition.pattern)
+  return pattern.test(pr.branch)
 }
 
-export default [TYPE, branchMatches] as const;
+export default [TYPE, branchMatches] as const

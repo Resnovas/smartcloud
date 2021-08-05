@@ -1,11 +1,7 @@
-const mdinclude = require('mdinclude');
-const toc = require('gulp-markdown-toc');
 const jsonConfig = require('gulp-json-config');
 const rename = require("gulp-rename");
 const jsonFmt = require("gulp-json-fmt");
-const { src, dest, series, parallel } = require('gulp');
-const exec = require('gulp-exec');
-const log = require('fancy-log');
+const { src, dest } = require('gulp');
 
 class Configs {
     static allConfig() {

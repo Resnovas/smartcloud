@@ -15,7 +15,7 @@ class Testing {
                 path.dirname = "";
                 path.extname = "";
             }))
-            .pipe(exec(file => `cd ${file.path} && npm run dev:run`))
+            .pipe(exec(file => `cd ${file.path} && npm run run`))
             .pipe(exec.reporter({ stdout: false }));
     }
 

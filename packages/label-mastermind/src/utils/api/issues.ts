@@ -1,12 +1,12 @@
-import { Utils } from "..";
+import { Utils } from '..'
 
 export async function get(this: Utils, IDNumber: number) {
   return (
     await this.client.issues.get({
       ...this.repo,
-      issue_number: IDNumber,
+      issue_number: IDNumber
     })
-  ).data;
+  ).data
 }
 export async function list(
   this: Utils,
@@ -14,12 +14,12 @@ export async function list(
     state,
     sort,
     direction,
-    page,
+    page
   }: {
-    state?: "open" | "closed" | "all";
-    sort?: "created" | "updated" | "comments";
-    direction?: "asc" | "desc";
-    page?: number;
+    state?: 'open' | 'closed' | 'all'
+    sort?: 'created' | 'updated' | 'comments'
+    direction?: 'asc' | 'desc'
+    page?: number
   }
 ) {
   return (
@@ -29,9 +29,9 @@ export async function list(
       sort,
       direction,
       page,
-      per_page: 100,
+      per_page: 100
     })
-  ).data;
+  ).data
 }
 
 export const comments = {
@@ -39,42 +39,42 @@ export const comments = {
     return (
       await this.client.issues.listComments({
         ...this.repo,
-        issue_number: IDNumber,
+        issue_number: IDNumber
       })
-    ).data;
+    ).data
   },
   async get(this: Utils, comment_id: number) {
     return (
       await this.client.issues.getComment({
         ...this.repo,
-        comment_id,
+        comment_id
       })
-    ).data;
+    ).data
   },
   async create(this: Utils, IDNumber: number, body: string) {
     return (
       await this.client.issues.createComment({
         ...this.repo,
         issue_number: IDNumber,
-        body,
+        body
       })
-    ).data;
+    ).data
   },
   async update(this: Utils, comment_id: number, body: string) {
     return (
       await this.client.issues.updateComment({
         ...this.repo,
         comment_id,
-        body,
+        body
       })
-    ).data;
+    ).data
   },
   async delete(this: Utils, comment_id: number) {
     return (
       await this.client.issues.deleteComment({
         ...this.repo,
-        comment_id,
+        comment_id
       })
-    ).data;
-  },
-};
+    ).data
+  }
+}

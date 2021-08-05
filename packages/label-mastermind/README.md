@@ -8,48 +8,48 @@ The super-powered labeler for Github Actions, with complex customisable conditio
 
 - [Features](#features)
 - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
-  * [Why not GitHub Issues?](#why-not-github-issues)
+  - [Why not GitHub Issues?](#why-not-github-issues)
 - [Backlog & Contributing](#backlog--contributing)
 - [Running Locally & Developing](#running-locally--developing)
-  * [Prerequisities](#prerequisities)
-  * [Developing](#developing)
-  * [Running locally](#running-locally)
+  - [Prerequisities](#prerequisities)
+  - [Developing](#developing)
+  - [Running locally](#running-locally)
 - [Getting Started](#getting-started)
-  * [Automatic setup via CLI](#automatic-setup-via-cli)
-  * [Manual setup](#manual-setup)
-    + [Workflow Options](#workflow-options)
-  * [All configuration options](#all-configuration-options)
-    + [Runners](#runners)
+  - [Automatic setup via CLI](#automatic-setup-via-cli)
+  - [Manual setup](#manual-setup)
+    - [Workflow Options](#workflow-options)
+  - [All configuration options](#all-configuration-options)
+    - [Runners](#runners)
       - [Versioning](#versioning)
-    + [IssueConfig](#issueconfig)
-    + [ProjectConfig](#projectconfig)
-    + [PullRequestConfig](#pullrequestconfig)
-    + [PullRequestConfig](#pullrequestconfig-1)
-    + [Typings](#typings)
-  * [Using Regex Patterns](#using-regex-patterns)
+    - [IssueConfig](#issueconfig)
+    - [ProjectConfig](#projectconfig)
+    - [PullRequestConfig](#pullrequestconfig)
+    - [PullRequestConfig](#pullrequestconfig-1)
+    - [Typings](#typings)
+  - [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
-  * [Common Conditions](#common-conditions)
-    + [\$and](#and)
-    + [creatorMatches](#creatormatches)
-    + [descriptionMatches](#descriptionmatches)
-    + [hasLabel](#haslabel)
-    + [isAbandoned](#isabandoned)
-    + [isLocked](#islocked)
-    + [isOpen](#isopen)
-    + [isStale](#isstale)
-    + [\$only](#only)
-    + [\$or](#or)
-  * [Pull Request Conditions](#pull-request-conditions)
-    + [branchMatches](#branchmatches)
-    + [changesSize](#changessize)
-    + [filesMatch](#filesmatch)
-    + [isApproved](#isapproved)
-    + [isDraft](#isdraft)
-    + [pendingReview](#pendingreview)
-    + [requestedChanges](#requestedchanges)
-  * [Issue Conditions](#issue-conditions)
-  * [Project Conditions](#project-conditions)
-    + [onColumn](#oncolumn)
+  - [Common Conditions](#common-conditions)
+    - [\$and](#and)
+    - [creatorMatches](#creatormatches)
+    - [descriptionMatches](#descriptionmatches)
+    - [hasLabel](#haslabel)
+    - [isAbandoned](#isabandoned)
+    - [isLocked](#islocked)
+    - [isOpen](#isopen)
+    - [isStale](#isstale)
+    - [\$only](#only)
+    - [\$or](#or)
+  - [Pull Request Conditions](#pull-request-conditions)
+    - [branchMatches](#branchmatches)
+    - [changesSize](#changessize)
+    - [filesMatch](#filesmatch)
+    - [isApproved](#isapproved)
+    - [isDraft](#isdraft)
+    - [pendingReview](#pendingreview)
+    - [requestedChanges](#requestedchanges)
+  - [Issue Conditions](#issue-conditions)
+  - [Project Conditions](#project-conditions)
+    - [onColumn](#oncolumn)
 - [Final Note](#final-note)
 
 <!-- tocstop -->
@@ -115,7 +115,6 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 6. Modify the `./config.sample.json` to contain your `GITHUB_TOKEN` and rename to `./config.json`
 7. Run the script using `yarn dev:run` or `npm run dev:run`
 
-
 ## Getting Started
 
 > [!IMPORTANT]
@@ -124,7 +123,6 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 ### Automatic setup via CLI
 
 [coming soon]
-
 
 ### Manual setup
 
@@ -177,7 +175,7 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^bug(\\(.*\\))?:/i"
+              "pattern": "/^bug(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "descriptionMatches",
@@ -190,7 +188,7 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^chore(\\(.*\\))?:/i"
+              "pattern": "/^chore(\\(.*\\))?(!)?:/i"
             }
           ]
         },
@@ -199,19 +197,19 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^opt(\\(.*\\))?:/i"
+              "pattern": "/^opt(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^optimisation(\\(.*\\))?:/i"
+              "pattern": "/^optimisation(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "descriptionMatches",
@@ -224,15 +222,15 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^style(\\(.*\\))?:/i"
+              "pattern": "/^style(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "descriptionMatches",
@@ -245,19 +243,19 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^ref(\\(.*\\))?:/i"
+              "pattern": "/^ref(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^refactor(\\(.*\\))?:/i"
+              "pattern": "/^refactor(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "descriptionMatches",
@@ -270,15 +268,15 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^revert(\\(.*\\))?:/i"
+              "pattern": "/^revert(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "descriptionMatches",
@@ -291,19 +289,19 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^dep(\\(.*\\))?:/i"
+              "pattern": "/^dep(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^deprecated(\\(.*\\))?:/i"
+              "pattern": "/^deprecated(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "descriptionMatches",
@@ -316,15 +314,15 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^removal(\\(.*\\))?:/i"
+              "pattern": "/^removal(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?:/i"
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?:/i"
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "descriptionMatches",
@@ -337,7 +335,7 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^discussion(\\(.*\\))?:/i"
+              "pattern": "/^discussion(\\(.*\\))?(!)?:/i"
             }
           ]
         },
@@ -346,11 +344,11 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^docs(\\(.*\\))?:/i"
+              "pattern": "/^docs(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^documentation(\\(.*\\))?:/i"
+              "pattern": "/^documentation(\\(.*\\))?(!)?:/i"
             }
           ]
         },
@@ -359,19 +357,19 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^feat(\\(.*\\))?:/i"
+              "pattern": "/^feat(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^enhance(\\(.*\\))?:/i"
+              "pattern": "/^enhance(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^feature(\\(.*\\))?:/i"
+              "pattern": "/^feature(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "titleMatches",
-              "pattern": "/^enhancement(\\(.*\\))?:/i"
+              "pattern": "/^enhancement(\\(.*\\))?(!)?:/i"
             }
           ]
         },
@@ -380,7 +378,7 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^fix(\\(.*\\))?:/i"
+              "pattern": "/^fix(\\(.*\\))?(!)?:/i"
             }
           ]
         },
@@ -389,7 +387,7 @@ Now create the config file at `.github/config.json`:
           "conditions": [
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\(workflow\\):/i"
+              "pattern": "/^.*\\(workflow\\)(!)?:/i"
             }
           ]
         },
@@ -402,7 +400,7 @@ Now create the config file at `.github/config.json`:
             },
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\):/i"
+              "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\)(!)?:/i"
             }
           ]
         },
@@ -415,7 +413,7 @@ Now create the config file at `.github/config.json`:
             },
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\):/i"
+              "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\)(!)?:/i"
             }
           ]
         },
@@ -428,7 +426,7 @@ Now create the config file at `.github/config.json`:
             },
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\):/i"
+              "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\)(!)?:/i"
             }
           ]
         },
@@ -441,7 +439,7 @@ Now create the config file at `.github/config.json`:
             },
             {
               "type": "titleMatches",
-              "pattern": "/^.*\\(installer\\):/i"
+              "pattern": "/^.*\\(installer\\)(!)?:/i"
             }
           ]
         },
@@ -983,8 +981,6 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | ref    | false    | Overrides the reference    | `string`                                                 |
 | labels | false    | Apply labels automatically | [`[Key: string]: PRConditionConfig`](#prconditionconfig) |
 
-
-
 #### Typings
 
 <details>
@@ -1013,7 +1009,6 @@ export interface Options {
   skipDelete: boolean
   repo?: Repo
 }
-
 
 export interface Runners {
   labels?: Labels
@@ -1097,11 +1092,13 @@ export interface ProjectConfig extends SharedConfig {
   assignMilestone?: { [milestone: string]: Milestones }
 }
 
-export interface ScheduleConfig extends SharedConfig {
-  
-}
+export interface ScheduleConfig extends SharedConfig {}
 
-export type SharedConfigIndex = "ref" | "enforceConventions" | "labels" | "stale"
+export type SharedConfigIndex =
+  | 'ref'
+  | 'enforceConventions'
+  | 'labels'
+  | 'stale'
 
 export interface SharedConfig {
   ref?: string
@@ -1148,11 +1145,11 @@ export interface Stale {
 }
 
 export interface StaleConfig extends SharedConditions {
-    days: number
-    comment?: string
-    resolve?: string
-    commentHeader?: string
-    commentFooter?: string
+  days: number
+  comment?: string
+  resolve?: string
+  commentHeader?: string
+  commentFooter?: string
 }
 
 export interface AbanondedConfig extends StaleConfig {
@@ -1166,7 +1163,7 @@ export interface AutomaticApprove {
   commentFooter?: string
   conventions: SharedConventionsConfig[]
 }
-  
+
 export interface Release extends PRConditionConfig {
   labels?: {
     build: string
@@ -1429,8 +1426,6 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 }
 ```
 
-
-
 ### Pull Request Conditions
 
 #### branchMatches
@@ -1528,10 +1523,7 @@ Example:
 }
 ```
 
-
 ### Issue Conditions
-
-
 
 ### Project Conditions
 
@@ -1548,8 +1540,6 @@ Example:
   "column": "New"
 }
 ```
-
-
 
 ## Final Note
 

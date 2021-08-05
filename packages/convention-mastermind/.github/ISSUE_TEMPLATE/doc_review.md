@@ -12,6 +12,7 @@ context example: bug(installer): {your title here}
 ## Problem to solve
 
 <!-- Please delete all information not relivent-->
+
 - What product or feature(s) affected?
 - What docs or doc section involved? Include links or paths.
 - Is there a problem with a specific document, or a feature/process that's not addressed sufficiently in docs?
@@ -27,6 +28,7 @@ context example: bug(installer): {your title here}
 ## References
 
 <!-- Please delete all information not relivent-->
+
 Related Pull Request(s):
 Related issue(s):
 

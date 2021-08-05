@@ -17,20 +17,20 @@ Need reasons to consider using Release Manager?
 
 - [Features](#features)
 - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
-  * [Why not GitHub Issues?](#why-not-github-issues)
+  - [Why not GitHub Issues?](#why-not-github-issues)
 - [Backlog & Contributing](#backlog--contributing)
 - [Running Locally & Developing](#running-locally--developing)
-  * [Prerequisities](#prerequisities)
-  * [Developing](#developing)
-  * [Running locally](#running-locally)
+  - [Prerequisities](#prerequisities)
+  - [Developing](#developing)
+  - [Running locally](#running-locally)
 - [Getting Started](#getting-started)
-  * [Automatic setup via CLI](#automatic-setup-via-cli)
-  * [Manual setup](#manual-setup)
-    + [Workflow Options](#workflow-options)
-  * [All configuration options](#all-configuration-options)
-    + [Runners](#runners)
+  - [Automatic setup via CLI](#automatic-setup-via-cli)
+  - [Manual setup](#manual-setup)
+    - [Workflow Options](#workflow-options)
+  - [All configuration options](#all-configuration-options)
+    - [Runners](#runners)
       - [Versioning](#versioning)
-    + [PullRequestConfig](#pullrequestconfig)
+    - [PullRequestConfig](#pullrequestconfig)
       - [EnforceConventions](#enforceconventions)
       - [AssignProject](#assignproject)
       - [SharedConventionsConfig](#sharedconventionsconfig)
@@ -39,41 +39,41 @@ Need reasons to consider using Release Manager?
       - [ReleaseLabels](#releaselabels)
       - [CreateRelease](#createrelease)
       - [Changelog](#changelog)
-        * [Sections](#sections)
+        - [Sections](#sections)
       - [CreateMilestone](#createmilestone)
       - [DuplicateHotfix](#duplicatehotfix)
       - [SyncRemote](#syncremote)
-    + [IssueConfig](#issueconfig)
+    - [IssueConfig](#issueconfig)
       - [CreateBranch](#createbranch)
-    + [ProjectConfig](#projectconfig)
+    - [ProjectConfig](#projectconfig)
       - [ExProjects](#exprojects)
       - [ProjectCreateBranch](#projectcreatebranch)
       - [Milestones](#milestones)
-    + [Typings](#typings)
-  * [Using Regex Patterns](#using-regex-patterns)
+    - [Typings](#typings)
+  - [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
-  * [Common Conditions](#common-conditions)
-    + [\$and](#and)
-    + [creatorMatches](#creatormatches)
-    + [descriptionMatches](#descriptionmatches)
-    + [hasLabel](#haslabel)
-    + [isAbandoned](#isabandoned)
-    + [isLocked](#islocked)
-    + [isOpen](#isopen)
-    + [isStale](#isstale)
-    + [\$only](#only)
-    + [\$or](#or)
-  * [Pull Request Conditions](#pull-request-conditions)
-    + [branchMatches](#branchmatches)
-    + [changesSize](#changessize)
-    + [filesMatch](#filesmatch)
-    + [isApproved](#isapproved)
-    + [isDraft](#isdraft)
-    + [pendingReview](#pendingreview)
-    + [requestedChanges](#requestedchanges)
-  * [Issue Conditions](#issue-conditions)
-  * [Project Conditions](#project-conditions)
-    + [onColumn](#oncolumn)
+  - [Common Conditions](#common-conditions)
+    - [\$and](#and)
+    - [creatorMatches](#creatormatches)
+    - [descriptionMatches](#descriptionmatches)
+    - [hasLabel](#haslabel)
+    - [isAbandoned](#isabandoned)
+    - [isLocked](#islocked)
+    - [isOpen](#isopen)
+    - [isStale](#isstale)
+    - [\$only](#only)
+    - [\$or](#or)
+  - [Pull Request Conditions](#pull-request-conditions)
+    - [branchMatches](#branchmatches)
+    - [changesSize](#changessize)
+    - [filesMatch](#filesmatch)
+    - [isApproved](#isapproved)
+    - [isDraft](#isdraft)
+    - [pendingReview](#pendingreview)
+    - [requestedChanges](#requestedchanges)
+  - [Issue Conditions](#issue-conditions)
+  - [Project Conditions](#project-conditions)
+    - [onColumn](#oncolumn)
 - [Final Note](#final-note)
 
 <!-- tocstop -->
@@ -109,7 +109,7 @@ GitHub is our office, it's the place where our development and contributor teams
 
 With the discussion page, you can leverage the knowledge of our wider community to get help with any problems you are having. Please keep in mind that this project is open-source, support is provided by the goodwill of our wonderful community members.
 
-  ## Backlog & Contributing
+## Backlog & Contributing
 
 Thank you for taking an interst in contributing. We have created development containers (`.devcontainer`) to allow you to jump straight in with coding. We even went through the hassle of setting up step by step guides using [CodeTour](https://github.com/vsls-contrib/codetour). Everything is configured and ready to go, all you need to do is use one of the supported platforms: [VSCode](https://code.visualstudio.com/docs/remote/remote-overview) | [Github Codespaces](https://github.com/features/codespaces)
 
@@ -117,7 +117,7 @@ For more information on how to contribute, please read the [contributing guideli
 
 Our backlog can be found on [Github](https://github.com/Videndum/action-masterminds/projects/1)
 
-  ## Running Locally & Developing
+## Running Locally & Developing
 
 Setting up local running is simple, however we **MUST** warn that building / packaging while using local scripts can cause your GITHUB_TOKEN to be included within the package. To avoid this happening. you **MUST** follow the steps correctly. We will not be held responsible for any leeked personal tokens.
 
@@ -144,7 +144,6 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 6. Modify the `./config.sample.json` to contain your `GITHUB_TOKEN` and rename to `./config.json`
 7. Run the script using `yarn dev:run` or `npm run dev:run`
 
-
 ## Getting Started
 
 > [!IMPORTANT]
@@ -153,7 +152,6 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 ### Automatic setup via CLI
 
 [coming soon]
-
 
 ### Manual setup
 
@@ -173,7 +171,7 @@ on:
     types: [opened, edited, closed, reopened, synchronize]
   project_card:
     types: [created, moved, deleted]
-  schedule: [cron: "0 * * * *"]
+  schedule: [cron: '0 * * * *']
 
 jobs:
   release-mastermind:
@@ -183,7 +181,7 @@ jobs:
       - uses: actions/checkout@v2.3.4
       - uses: ./
         with:
-          GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
+          GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
           config: .github/allconfigs.json
 ```
 
@@ -204,378 +202,375 @@ Now create the config file at `.github/config.json`:
     },
     "prereleaseName": "alpha",
     "sharedConfig": {
+      "stale": {
+        "staleLabel": "stale",
         "stale": {
-          "staleLabel": "stale",
-          "stale": {
-            "days": 60,
-            "comment": "This has been automatically marked as stale by the bot."
-          },
-          "abandoned": {
-            "days": 30,
-            "label": "abandoned",
-            "comment": "This has been automatically marked as abandoned by the bot."
-          }
+          "days": 60,
+          "comment": "This has been automatically marked as stale by the bot."
         },
-        "enforceConventions": {
-          "onColumn": [
-            "Accepted",
-            "Reviewing"
-          ],
-          "conventions": [
+        "abandoned": {
+          "days": 30,
+          "label": "abandoned",
+          "comment": "This has been automatically marked as abandoned by the bot."
+        }
+      },
+      "enforceConventions": {
+        "onColumn": ["Accepted", "Reviewing"],
+        "conventions": [
+          {
+            "requires": 1,
+            "contexts": [
+              "@videndum/workflow-mastermind",
+              "@videndum/release-mastermind",
+              "@videndum/label-mastermind",
+              "@videndum/variable-mastermind",
+              "@videndum/convention-mastermind",
+              "condition",
+              "api",
+              "util",
+              "installer",
+              "deps",
+              "deps-dev"
+            ],
+            "conditions": "semanticTitle"
+          }
+        ]
+      },
+      "labels": {
+        "bug": {
+          "requires": 1,
+          "conditions": [
             {
-              "requires": 1,
-              "contexts": [
-                "@videndum/workflow-mastermind",
-                "@videndum/release-mastermind",
-                "@videndum/label-mastermind",
-                "@videndum/variable-mastermind",
-                "@videndum/convention-mastermind",
-                "condition",
-                "api",
-                "util",
-                "installer",
-                "deps",
-                "deps-dev"
-              ],
-              "conditions": "semanticTitle"
+              "type": "titleMatches",
+              "pattern": "/^bug(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/(created|new|opened|made)( an| a)? bug/i"
             }
           ]
         },
-        "labels": {
-          "bug": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^bug(\\(.*\\))?:/i"
-              },
-              {
-                "type": "descriptionMatches",
-                "pattern": "/(created|new|opened|made)( an| a)? bug/i"
-              }
-            ]
-          },
-          "chore": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^chore(\\(.*\\))?:/i"
-              }
-            ]
-          },
-          "optimisation": {
-            "requires": 2,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^opt(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^optimisation(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
-              },
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
-              }
-            ]
-          },
-          "style": {
-            "requires": 2,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^style(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
-              },
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
-              }
-            ]
-          },
-          "refactor": {
-            "requires": 2,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^ref(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^refactor(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
-              },
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
-              }
-            ]
-          },
-          "revert": {
-            "requires": 2,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^revert(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
-              },
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
-              }
-            ]
-          },
-          "deprecated": {
-            "requires": 2,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^dep(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^deprecated(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
-              },
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
-              }
-            ]
-          },
-          "removal": {
-            "requires": 2,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^removal(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maint(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^maintenance(\\(.*\\))?:/i"
-              },
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
-              }
-            ]
-          },
-          "discussion": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^discussion(\\(.*\\))?:/i"
-              }
-            ]
-          },
-          "documentation": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^docs(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^documentation(\\(.*\\))?:/i"
-              }
-            ]
-          },
-          "feature": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^feat(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^enhance(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^feature(\\(.*\\))?:/i"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^enhancement(\\(.*\\))?:/i"
-              }
-            ]
-          },
-          "fix": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^fix(\\(.*\\))?:/i"
-              }
-            ]
-          },
-          "workflow": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\):/i"
-              }
-            ]
-          },
-          "releaseMastermind": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\):/i"
-              }
-            ]
-          },
-          "labelMastermind": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\):/i"
-              }
-            ]
-          },
-          "variableMastermind": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "descriptionMatches",
-                "pattern": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
-              },
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\):/i"
-              }
-            ]
-          },
-          "condition": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\(condition\\):/i"
-              }
-            ]
-          },
-          "api": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\(api\\):/i"
-              }
-            ]
-          },
-          "contexts": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\(contexts\\):/i"
-              }
-            ]
-          },
-          "util": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\(util\\):/i"
-              }
-            ]
-          },
-          "installer": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\(installer\\):/i"
-              }
-            ]
-          },
-          "deps": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\(deps\\):/i"
-              }
-            ]
-          },
-          "depsDev": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "/^.*\\(deps-dev\\):/i"
-              }
-            ]
-          },
-          "priorityCritical": {
-            "requires": 1,
-            "conditions": [
-              {
-                "type": "titleMatches",
-                "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
-              }
-            ]
-          }
+        "chore": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^chore(\\(.*\\))?(!)?:/i"
+            }
+          ]
+        },
+        "optimisation": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^opt(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^optimisation(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
+            }
+          ]
+        },
+        "style": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^style(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
+            }
+          ]
+        },
+        "refactor": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^ref(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^refactor(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
+            }
+          ]
+        },
+        "revert": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^revert(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
+            }
+          ]
+        },
+        "deprecated": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^dep(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^deprecated(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
+            }
+          ]
+        },
+        "removal": {
+          "requires": 2,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^removal(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
+            }
+          ]
+        },
+        "discussion": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^discussion(\\(.*\\))?(!)?:/i"
+            }
+          ]
+        },
+        "documentation": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^docs(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^documentation(\\(.*\\))?(!)?:/i"
+            }
+          ]
+        },
+        "feature": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^feat(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^enhance(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^feature(\\(.*\\))?(!)?:/i"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^enhancement(\\(.*\\))?(!)?:/i"
+            }
+          ]
+        },
+        "fix": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^fix(\\(.*\\))?(!)?:/i"
+            }
+          ]
+        },
+        "workflow": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\)(!)?:/i"
+            }
+          ]
+        },
+        "releaseMastermind": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\)(!)?:/i"
+            }
+          ]
+        },
+        "labelMastermind": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\)(!)?:/i"
+            }
+          ]
+        },
+        "variableMastermind": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "descriptionMatches",
+              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
+            },
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\)(!)?:/i"
+            }
+          ]
+        },
+        "condition": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(condition\\)(!)?:/i"
+            }
+          ]
+        },
+        "api": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(api\\)(!)?:/i"
+            }
+          ]
+        },
+        "contexts": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(contexts\\)(!)?:/i"
+            }
+          ]
+        },
+        "util": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(util\\)(!)?:/i"
+            }
+          ]
+        },
+        "installer": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(installer\\)(!)?:/i"
+            }
+          ]
+        },
+        "deps": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(deps\\)(!)?:/i"
+            }
+          ]
+        },
+        "depsDev": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "/^.*\\(deps-dev\\)(!)?:/i"
+            }
+          ]
+        },
+        "priorityCritical": {
+          "requires": 1,
+          "conditions": [
+            {
+              "type": "titleMatches",
+              "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+            }
+          ]
         }
-      },
+      }
+    },
     "pr": {
       "manageRelease": {
         "version": "bump",
@@ -792,7 +787,7 @@ Now create the config file at `.github/config.json`:
             },
             {
               "type": "titleMatches",
-              "pattern": "/^bug(\\(.*\\))?:/i"
+              "pattern": "/^bug(\\(.*\\))?(!)?:/i"
             },
             {
               "type": "descriptionMatches",
@@ -1154,9 +1149,7 @@ Now create the config file at `.github/config.json`:
         }
       }
     },
-    "schedule": {
-      
-    }
+    "schedule": {}
   }
 ]
 ```
@@ -1351,10 +1344,10 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 
 ##### CreateBranch
 
-| Option       | Required | Description                     | Params                         |
-| ------------ | -------- | ------------------------------- | ------------------------------ |
-| branchPrefix | false    | Should the branch have a prefix | `string`                       |
-| branchSuffix | false    | Should the branch have a suffix | `string`                       |
+| Option       | Required | Description                     | Params   |
+| ------------ | -------- | ------------------------------- | -------- | ------- | --------- |
+| branchPrefix | false    | Should the branch have a prefix | `string` |
+| branchSuffix | false    | Should the branch have a suffix | `string` |
 | branchName   | false    | Branch name                     | `'title' | 'short' | 'number'` |
 
 `'title'` - Use the entire title
@@ -1402,8 +1395,6 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | onColumn     | true     | Which column should be used    | `string`   |
 | ignoreLabels | false    | Labels which should be ignored | `string[]` |
 
-
-
 #### Typings
 
 <details>
@@ -1432,7 +1423,6 @@ export interface Options {
   skipDelete: boolean
   repo?: Repo
 }
-
 
 export interface Runners {
   labels?: Labels
@@ -1516,11 +1506,13 @@ export interface ProjectConfig extends SharedConfig {
   assignMilestone?: { [milestone: string]: Milestones }
 }
 
-export interface ScheduleConfig extends SharedConfig {
-  
-}
+export interface ScheduleConfig extends SharedConfig {}
 
-export type SharedConfigIndex = "ref" | "enforceConventions" | "labels" | "stale"
+export type SharedConfigIndex =
+  | 'ref'
+  | 'enforceConventions'
+  | 'labels'
+  | 'stale'
 
 export interface SharedConfig {
   ref?: string
@@ -1567,11 +1559,11 @@ export interface Stale {
 }
 
 export interface StaleConfig extends SharedConditions {
-    days: number
-    comment?: string
-    resolve?: string
-    commentHeader?: string
-    commentFooter?: string
+  days: number
+  comment?: string
+  resolve?: string
+  commentHeader?: string
+  commentFooter?: string
 }
 
 export interface AbanondedConfig extends StaleConfig {
@@ -1585,7 +1577,7 @@ export interface AutomaticApprove {
   commentFooter?: string
   conventions: SharedConventionsConfig[]
 }
-  
+
 export interface Release extends PRConditionConfig {
   labels?: {
     build: string
@@ -1848,8 +1840,6 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 }
 ```
 
-
-
 ### Pull Request Conditions
 
 #### branchMatches
@@ -1947,10 +1937,7 @@ Example:
 }
 ```
 
-
 ### Issue Conditions
-
-
 
 ### Project Conditions
 
@@ -1967,8 +1954,6 @@ Example:
   "column": "New"
 }
 ```
-
-
 
 ## Final Note
 

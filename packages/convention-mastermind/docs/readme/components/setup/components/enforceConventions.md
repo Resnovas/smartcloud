@@ -1,7 +1,7 @@
 ##### EnforceConventions
 
 | Option        | Required | Description                                                             | Params                                                  |
-| ------------- | -------- | ----------------------------------------------------------------------- | ------------------------------------------------------- |
+| ------------- | -------- | ----------------------------------------------------------------------- | ------------------------------------------------------- | ------- |
 | onColumn      | false    | (if project card ) Which column should trigger this action              | `column[ String / Number ]`                             |
 | commentHeader | false    | A comment to append to the header of failed comments                    | `string`                                                |
 | commentFooter | false    | A comment to append to the footer of failed comments                    | `string`                                                |

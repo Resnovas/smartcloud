@@ -1,15 +1,15 @@
-import and, { ConditionAnd } from "./and";
-import creatorMatches, { ConditionCreatorMatches } from "./creatorMatches";
+import and, { ConditionAnd } from './and'
+import creatorMatches, { ConditionCreatorMatches } from './creatorMatches'
 import descriptionMatches, {
-  ConditionDescriptionMatches,
-} from "./descriptionMatches";
-import hasLabel, { ConditionHasLabel } from "./hasLabel";
-import isAbandoned, { ConditionIsAbandoned } from "./isAbandoned";
-import isOpen, { ConditionIsOpen } from "./isOpen";
-import isStale, { ConditionIsStale } from "./isStale";
-import only, { ConditionOnlyOne } from "./only";
-import or, { ConditionOr } from "./or";
-import titleMatches, { ConditionTitleMatches } from "./titleMatches";
+  ConditionDescriptionMatches
+} from './descriptionMatches'
+import hasLabel, { ConditionHasLabel } from './hasLabel'
+import isAbandoned, { ConditionIsAbandoned } from './isAbandoned'
+import isOpen, { ConditionIsOpen } from './isOpen'
+import isStale, { ConditionIsStale } from './isStale'
+import only, { ConditionOnlyOne } from './only'
+import or, { ConditionOr } from './or'
+import titleMatches, { ConditionTitleMatches } from './titleMatches'
 
 export type Condition =
   | ConditionCreatorMatches
@@ -21,7 +21,7 @@ export type Condition =
   | ConditionIsAbandoned
   | ConditionOr
   | ConditionAnd
-  | ConditionOnlyOne;
+  | ConditionOnlyOne
 
 export const handlers = [
   creatorMatches,
@@ -33,5 +33,5 @@ export const handlers = [
   titleMatches,
   and,
   or,
-  only,
-];
+  only
+]
