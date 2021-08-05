@@ -20,7 +20,7 @@
   "license": "GPL-3.0-or-later",
   "scripts": {
     "postinstall": "lerna bootstrap",
-    "start": "npm run dev:start",
+    "start": "npm run dev:run",
     "package": "gulp package",
     "test": "gulp testall",
     "dev:format-scripts": "prettier --config .prettier.json --write .",
