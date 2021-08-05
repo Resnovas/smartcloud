@@ -64,15 +64,15 @@ Example:
 }
 ```
 
-#### isOpen
+#### isAbandoned
 
-Checks if an issue or pull request is stale.
+Checks if an issue or pull request is abandoned.
 
 Example:
 
 ```json
 {
-  "type": "isStale",
+  "type": "isAbandoned",
   "stale": 30
 }
 ```
@@ -103,7 +103,7 @@ Example:
 }
 ```
 
-#### isOpen
+#### isStale
 
 Checks if an issue or pull request is stale.
 

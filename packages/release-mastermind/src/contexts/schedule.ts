@@ -1,4 +1,5 @@
 import * as core from "@actions/core";
+import { Context } from "@actions/github/lib/context";
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities";
 import { log } from "..";
 import { Config, Runners, ScheduleConfig } from "../../types";
@@ -30,6 +31,22 @@ export class Schedule extends Contexts {
         "Cannot start without config"
       );
     this.config = configs.schedule;
+  }
+
+  /**
+   * Parse the Schedule Context
+   * @author TGTGamer
+   * @since 1.0.0
+   */
+
+  static async parse(
+    context: Context
+  ): Promise<ScheduleContext | undefined> {
+    return {
+      ref: context.ref,
+      sha: context.sha,
+      action: context.payload.action as string,
+    };
   }
 
   async run(attempt?: number) {
@@ -76,7 +93,7 @@ export class Schedule extends Contexts {
           LoggingLevels.debug,
           `Testing issue: ${issue.id} - ${issue.title} - ${issue.html_url} - Last updated: ${issue.updated_at}`
         );
-        if (this.config.stale)
+        if (this.config.stale && this.util.shouldRun("label"))
           await this.checkStale(this).catch((err) => {
             log(LoggingLevels.error, "Error checking stale", err);
           });
@@ -86,7 +103,7 @@ export class Schedule extends Contexts {
             this.config.labels
           )}`
         );
-        if (this.config.labels)
+        if (this.config.labels && this.util.shouldRun("label"))
           await this.applyLabels(this).catch((err) => {
             log(LoggingLevels.error, "Error applying label", err);
           });

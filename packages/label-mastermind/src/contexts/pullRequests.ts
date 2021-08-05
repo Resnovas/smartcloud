@@ -1,8 +1,9 @@
 import * as core from "@actions/core";
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities";
+import { Context } from "vm";
 import { log } from "..";
 import { Config, PullRequestConfig, Release, Runners } from "../../types";
-import { CurContext, PRContext } from "../conditions";
+import { CurContext, PRContext, Reviews, Version } from "../conditions";
 import { evaluator } from "../evaluator";
 import { Utils } from "../utils";
 import { Contexts } from "./methods";
@@ -30,6 +31,112 @@ export class PullRequests extends Contexts {
         "Cannot start without config"
       );
     this.config = configs.pr;
+  }
+
+/**
+   * Parse the PR Context
+   * @author IvanFon, TGTGamer, jbinda
+   * @since 1.0.0
+   */
+  static async parse(
+    utils: Utils,
+    config: Config,
+    context: Context
+  ): Promise<PRContext | undefined> {
+    const pr = context.payload.pull_request;
+    if (!pr) {
+      return;
+    }
+
+    log(
+      LoggingLevels.debug,
+      `context.payload.pull_request: ` +
+        JSON.stringify(context.payload.pull_request)
+    );
+
+    const IDNumber = pr.number;
+    const labels = await utils.parsingData.labels(pr.labels).catch((err) => {
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err);
+      throw err;
+    });
+    const files: string[] = await utils.api.files
+      .list(IDNumber)
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while listing files: `, err);
+        throw err;
+      });
+
+    const changes: number = await utils.api.pullRequests
+      .changes(pr.additions, pr.deletions)
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling changes: `, err);
+        throw err;
+      });
+
+    const reviews: Reviews = await utils.api.pullRequests.reviews
+      .list(IDNumber)
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling reviews: `, err);
+        throw err;
+      });
+
+    const pendingReview: boolean = await utils.api.pullRequests.reviews
+      .pending(reviews.length, pr.requested_reviewers.length)
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling reviews: `, err);
+        throw err;
+      });
+
+    const requestedChanges: number = await utils.api.pullRequests.reviews
+      .requestedChanges(reviews)
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling reviews: `, err);
+        throw err;
+      });
+
+    const approved: number = await utils.api.pullRequests.reviews
+      .isApproved(reviews)
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling reviews: `, err);
+        throw err;
+      });
+
+    const currentVersion: Version = await utils.versioning
+      .parse(config, config.pr?.ref)
+      .catch((err) => {
+        log(
+          LoggingLevels.error,
+          `Error thrown while parsing versioning: `,
+          err
+        );
+        throw err;
+      });
+
+    return {
+      ref: pr.base.ref,
+      sha: context.sha,
+      action: context.payload.action as string,
+      currentVersion,
+      IDNumber: context.payload.pull_request?.id,
+      props: {
+        type: "pr",
+        ID: IDNumber,
+        branch: pr.head.ref,
+        creator: pr.user.login,
+        description: pr.body || "",
+        isDraft: pr.draft,
+        locked: pr.locked,
+        state: pr.state,
+        title: pr.title,
+        files,
+        changes,
+        reviews,
+        labels,
+        pendingReview,
+        requestedChanges,
+        approved,
+      },
+    };
   }
 
   async run(attempt?: number) {

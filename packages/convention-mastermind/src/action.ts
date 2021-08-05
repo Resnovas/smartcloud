@@ -6,7 +6,6 @@ import fs from "fs";
 import { log } from ".";
 import { Config, Label, Options, Runners, SharedConfigIndex } from "../types";
 import { CurContext } from "./conditions";
-import { contextHandler } from "./contextHandler";
 import { Issues, Project, PullRequests, Schedule } from "./contexts";
 import { Utils } from "./utils";
 
@@ -207,8 +206,8 @@ export default class Action {
        * @author IvanFon, TGTGamer, jbinda
        * @since 1.0.0
        */
-      const ctx = await contextHandler
-        .parsePR(this.util, config, context)
+      const ctx = await PullRequests
+        .parse(this.util, config, context)
         .catch((err) => {
           throw log(
             LoggingLevels.error,
@@ -233,8 +232,8 @@ export default class Action {
        * @author IvanFon, TGTGamer, jbinda
        * @since 1.0.0
        */
-      const ctx = await contextHandler
-        .parseIssue(this.util, config, context)
+      const ctx = await Issues
+        .parse(this.util, config, context)
         .catch((err) => {
           throw log(
             LoggingLevels.error,
@@ -256,8 +255,8 @@ export default class Action {
        * @author TGTGamer
        * @since 1.0.0
        */
-      const ctx = await contextHandler
-        .parseProject(this.util, config, context)
+      const ctx = await Project
+        .parse(this.util, config, context)
         .catch((err) => {
           log(
             LoggingLevels.error,
@@ -281,8 +280,8 @@ export default class Action {
        * @author TGTGamer
        * @since 1.0.0
        */
-      const ctx = await contextHandler
-        .parseSchedule(context)
+      const ctx = await Schedule
+        .parse(context)
         .catch((err) => {
           log(
             LoggingLevels.error,

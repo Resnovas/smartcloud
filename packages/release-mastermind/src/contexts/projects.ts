@@ -1,8 +1,9 @@
 import * as core from "@actions/core";
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities";
+import { Context } from "vm";
 import { log } from "..";
 import { Column, Config, ProjectConfig, Runners } from "../../types";
-import { CurContext, ProjectContext } from "../conditions";
+import { CurContext, ProjectContext, Version } from "../conditions";
 import { Utils } from "../utils";
 import { Contexts } from "./methods";
 export class Project extends Contexts {
@@ -28,6 +29,79 @@ export class Project extends Contexts {
         "Cannot start without config"
       );
     this.config = configs.project;
+  }
+
+  /**
+   * Parse the Project Context
+   * @author IvanFon, TGTGamer, jbinda
+   * @since 1.0.0
+   */
+  static async parse(
+    utils: Utils,
+    config: Config,
+    context: Context
+  ): Promise<ProjectContext | undefined> {
+    const project = context.payload.project_card;
+    if (!project) {
+      return;
+    }
+    log(
+      LoggingLevels.debug,
+      `context.payload.project_card: ${JSON.stringify(
+        context.payload.project_card
+      )}`
+    );
+
+    if (!project.content_url) throw new Error("No content information to get");
+    const issueNumber: number = project.content_url.split("/").pop();
+    const issue = await await utils.api.issues.get(issueNumber);
+
+    const labels = await utils.parsingData.labels(issue.labels).catch((err) => {
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err);
+      throw err;
+    });
+
+    const currentVersion: Version = await utils.versioning
+      .parse(config, config.project?.ref)
+      .catch((err) => {
+        log(
+          LoggingLevels.error,
+          `Error thrown while parsing versioning: `,
+          err
+        );
+        throw err;
+      });
+
+    let localProject;
+    localProject = await utils.api.project.projects.get(
+      project.project_url.split("/").pop()
+    );
+    const changes = context.payload.changes;
+    const localColumn = await utils.api.project.column.get(project.column_id);
+
+    const localCard = await utils.api.project.card.get(project.id);
+
+    return {
+      sha: context.sha,
+      action: context.payload.action as string,
+      currentVersion,
+      IDNumber: issue.id,
+      props: {
+        type: "project",
+        ID: issue.number,
+        creator: issue.user.login,
+        description: issue.body || "",
+        locked: issue.locked,
+        state: issue.state as ProjectContext["props"]["state"],
+        title: issue.title,
+        project: localProject,
+        column_id: project.column_id,
+        localColumn,
+        localCard,
+        changes,
+        labels,
+      },
+    };
   }
 
   async run(attempt?: number) {

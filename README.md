@@ -181,7 +181,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.4
-      - uses: ./packages/release-mastermind/
+      - uses: ./
         with:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
           config: .github/allconfigs.json

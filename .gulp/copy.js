@@ -65,12 +65,6 @@ class Copy {
             .pipe(dest('packages/convention-mastermind/src/contexts'))
     }
 
-    static handler() {
-        return src('packages/release-mastermind/src/contextHandler.ts')
-            .pipe(dest('packages/label-mastermind/src'))
-            .pipe(dest('packages/convention-mastermind/src'))
-    }
-
     static templates() {
     return src('.github/ISSUE_TEMPLATE/**/*', { base: "." })
         .pipe(dest('packages/release-mastermind'))

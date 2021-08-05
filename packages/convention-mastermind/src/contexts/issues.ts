@@ -1,8 +1,9 @@
 import * as core from "@actions/core";
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities";
+import { Context } from "vm";
 import { log } from "..";
 import { Config, IssueConfig, Runners } from "../../types";
-import { CurContext, IssueContext } from "../conditions";
+import { CurContext, IssueContext, Version } from "../conditions";
 import { Utils } from "../utils";
 import { Contexts } from "./methods";
 export class Issues extends Contexts {
@@ -28,6 +29,60 @@ export class Issues extends Contexts {
         "Cannot start without config"
       );
     this.config = configs.issue;
+  }
+
+  /**
+   * Parse the Issue Context
+   * @author IvanFon, TGTGamer, jbinda
+   * @since 1.0.0
+   */
+  static async parse(
+    utils: Utils,
+    config: Config,
+    context: Context
+  ): Promise<IssueContext | undefined> {
+    const issue = context.payload.issue;
+    if (!issue) {
+      return;
+    }
+
+    log(
+      LoggingLevels.debug,
+      `context.payload.issue: ` + JSON.stringify(context.payload.issue)
+    );
+
+    const labels = await utils.parsingData.labels(issue.labels).catch((err) => {
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err);
+      throw err;
+    });
+
+    const currentVersion: Version = await utils.versioning
+      .parse(config, config.issue?.ref)
+      .catch((err) => {
+        log(
+          LoggingLevels.error,
+          `Error thrown while parsing versioning: `,
+          err
+        );
+        throw err;
+      });
+
+    return {
+      sha: context.sha,
+      action: context.payload.action as string,
+      currentVersion,
+      IDNumber: context.payload.issue?.id,
+      props: {
+        type: "issue",
+        ID: issue.number,
+        creator: issue.user.login,
+        description: issue.body || "",
+        locked: issue.locked,
+        state: issue.state,
+        labels,
+        title: issue.title,
+      },
+    };
   }
 
   async run(attempt?: number) {

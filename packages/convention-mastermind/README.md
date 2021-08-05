@@ -34,10 +34,10 @@ The super-powered convention enforment for Github Actions, with complex customis
     + [creatorMatches](#creatormatches)
     + [descriptionMatches](#descriptionmatches)
     + [hasLabel](#haslabel)
-    + [isOpen](#isopen)
+    + [isAbandoned](#isabandoned)
     + [isLocked](#islocked)
-    + [isOpen](#isopen-1)
-    + [isOpen](#isopen-2)
+    + [isOpen](#isopen)
+    + [isStale](#isstale)
     + [\$only](#only)
     + [\$or](#or)
   * [Pull Request Conditions](#pull-request-conditions)
@@ -630,15 +630,15 @@ Example:
 }
 ```
 
-#### isOpen
+#### isAbandoned
 
-Checks if an issue or pull request is stale.
+Checks if an issue or pull request is abandoned.
 
 Example:
 
 ```json
 {
-  "type": "isStale",
+  "type": "isAbandoned",
   "stale": 30
 }
 ```
@@ -669,7 +669,7 @@ Example:
 }
 ```
 
-#### isOpen
+#### isStale
 
 Checks if an issue or pull request is stale.
 
