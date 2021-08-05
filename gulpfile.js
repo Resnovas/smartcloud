@@ -31,7 +31,7 @@ const testall = series(
 );
 
 exports.default = series(
-    parallel(Copy.index, Copy.action, Copy.evaluator, Copy.contexts, Copy.docs, Copy.conditions, Copy.labels, Copy.types, Copy.utils, Copy.templates),
+    parallel(Copy.prettier, Copy.tsconfig, Copy.index, Copy.action, Copy.evaluator, Copy.contexts, Copy.docs, Copy.conditions, Copy.labels, Copy.types, Copy.utils, Copy.templates),
     parallel(Configs.release, Configs.convention, Configs.labels),
     Copy.format,
     testall,

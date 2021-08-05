@@ -1,3 +1,5 @@
+<!-- @format -->
+
 | Option  | Required | Description                                | Params                  |
 | ------- | -------- | ------------------------------------------ | ----------------------- |
 | labels  | false    | Defines all the labels within the repo     | `Labels`                |

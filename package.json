@@ -21,6 +21,7 @@
   "scripts": {
     "postinstall": "lerna bootstrap",
     "start": "npm run dev:run",
+    "gulp": "gulp",
     "package": "gulp package",
     "test": "gulp testall",
     "dev:format": "prettier --config .prettier.json --write .",
@@ -34,12 +35,14 @@
     "git": "git add . && git commit -m \"chore: Bump Version & Changelog\" -s && git push"
   },
   "devDependencies": {
-    "fancy-log": "^1.3.3",
+    "@instructure/cz-lerna-changelog": "^8.6.0",
+    "commitizen": "^4.2.4",
     "concurrently": "^6.2.0",
+    "fancy-log": "^1.3.3",
     "gulp": "^4.0.2",
-    "gulp-exec": "^5.0.0",
     "gulp-cli": "^2.3.0",
     "gulp-copy": "^4.0.1",
+    "gulp-exec": "^5.0.0",
     "gulp-json-config": "^2.0.3",
     "gulp-json-fmt": "^1.0.1",
     "gulp-markdown-toc": "^1.1.0",
@@ -50,13 +53,11 @@
     "prettier": "^2.2.1",
     "prettier-plugin-organize-imports": "^1.1.1",
     "prettier-plugin-pkg": "^0.8.0",
-    "@instructure/cz-lerna-changelog": "^8.6.0",
-    "commitizen": "^4.2.4",
-    "typescript": "^4.0.5"
+    "typescript": "^4.0.5",
+    "typescript-json-schema": "^0.50.1"
   },
   "private": false,
-  "dependencies": {
-  },
+  "dependencies": {},
   "config": {
     "commitizen": {
       "path": "./node_modules/@instructure/cz-lerna-changelog"

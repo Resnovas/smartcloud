@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Contributing
 
 First off, thank you for considering contributing to this project.

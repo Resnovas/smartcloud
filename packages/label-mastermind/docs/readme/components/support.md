@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ## How to get support 👨‍👩‍👧‍👦
 
 For **Features Requests**, **Q&A**, **Show & Tell** and **Discussions** please use **[our discussions page](https://github.com/Videndum/action-masterminds/discussions)** 🚑.

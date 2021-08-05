@@ -19,6 +19,22 @@ class Copy {
             .pipe(exec.reporter({ stdout: false }));
     }
 
+    static prettier() {
+        return src('.prettier.json', { base: "." })
+            .pipe(dest('packages/release-mastermind/'))
+            .pipe(dest('packages/workflow-mastermind/'))
+            .pipe(dest('packages/variable-mastermind/'))
+            .pipe(dest('packages/convention-mastermind/'))
+            .pipe(dest('packages/label-mastermind/'))
+    }
+    static tsconfig() {
+        return src('tsconfig.json', { base: "." })
+            .pipe(dest('packages/release-mastermind/'))
+            .pipe(dest('packages/workflow-mastermind/'))
+            .pipe(dest('packages/variable-mastermind/'))
+            .pipe(dest('packages/convention-mastermind/'))
+            .pipe(dest('packages/label-mastermind/'))
+    }
     static docs() {
         return src('docs/**/*', { base: "." })
             .pipe(dest('packages/release-mastermind/'))

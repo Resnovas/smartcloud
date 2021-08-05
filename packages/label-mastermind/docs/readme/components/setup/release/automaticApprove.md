@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ##### AutomaticApprove
 
 | Option        | Required | Description                                          | Params                                                  |

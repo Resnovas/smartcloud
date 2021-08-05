@@ -1,3 +1,5 @@
+<!-- @format -->
+
 #### PullRequestConfig
 
 | Option             | Required | Description             | Params                                      |

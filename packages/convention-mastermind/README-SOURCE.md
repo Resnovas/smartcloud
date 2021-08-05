@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Convention Collection
 
 The super-powered convention enforment for Github Actions, with complex customisable conditions for PR, Issues and Projects.

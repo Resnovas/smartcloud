@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ##### Changelog
 
 | Option        | Required | Description                                 | Params                    |

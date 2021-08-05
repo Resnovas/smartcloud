@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Signing Git with GPG using Keybase
 
 This tutorial was originally writen by [Stephen Rees-Carter](https://stephenreescarter.net/signing-git-commits-with-a-keybase-gpg-key/)

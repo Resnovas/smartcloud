@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ### Using Regex Patterns
 
 Many conditions use regular expressions (usually with a `pattern` parameter).

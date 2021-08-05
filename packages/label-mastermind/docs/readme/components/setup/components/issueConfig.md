@@ -1,3 +1,5 @@
+<!-- @format -->
+
 #### IssueConfig
 
 | Option             | Required | Description                                    | Params                                                   |

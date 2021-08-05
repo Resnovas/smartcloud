@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Security Policy
 
 ## Supported Versions

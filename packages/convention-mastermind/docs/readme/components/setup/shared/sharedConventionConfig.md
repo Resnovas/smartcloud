@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ##### SharedConventionsConfig
 
 | Option        | Required | Description                                           | Params                          |

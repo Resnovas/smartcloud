@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Mastermind Collection
 
 Welcome to the Github Action Mastermind collection. This is the mono-repository for Videndum's collection of superpowered actions. This collection is built to work together as an universal tool for Github Project management. For simplicity, our main tool - Release Mastermind - incorporates all our other tools within one simple action, which can be used in all your workflows to manage all your common tasks.
@@ -95,7 +97,9 @@ Need reasons to consider using Release Manager?
 - Create milestones automatically - Automatically create milestones when a new release is published.
 - Automatically maintain `main` and `dev` branches - Create pull requests from `dev` to `main` and automatically approve them based on config.
 - Automatically syncronise branches or folders with remote repository.
-- ## How to get support 👨‍👩‍👧‍👦
+- <!-- @format -->
+
+## How to get support 👨‍👩‍👧‍👦
 
 For **Features Requests**, **Q&A**, **Show & Tell** and **Discussions** please use **[our discussions page](https://github.com/Videndum/action-masterminds/discussions)** 🚑.
 
@@ -109,7 +113,9 @@ GitHub is our office, it's the place where our development and contributor teams
 
 With the discussion page, you can leverage the knowledge of our wider community to get help with any problems you are having. Please keep in mind that this project is open-source, support is provided by the goodwill of our wonderful community members.
 
-  ## Backlog & Contributing
+  <!-- @format -->
+
+## Backlog & Contributing
 
 Thank you for taking an interst in contributing. We have created development containers (`.devcontainer`) to allow you to jump straight in with coding. We even went through the hassle of setting up step by step guides using [CodeTour](https://github.com/vsls-contrib/codetour). Everything is configured and ready to go, all you need to do is use one of the supported platforms: [VSCode](https://code.visualstudio.com/docs/remote/remote-overview) | [Github Codespaces](https://github.com/features/codespaces)
 
@@ -117,7 +123,9 @@ For more information on how to contribute, please read the [contributing guideli
 
 Our backlog can be found on [Github](https://github.com/Videndum/action-masterminds/projects/1)
 
-  ## Running Locally & Developing
+  <!-- @format -->
+
+## Running Locally & Developing
 
 Setting up local running is simple, however we **MUST** warn that building / packaging while using local scripts can cause your GITHUB_TOKEN to be included within the package. To avoid this happening. you **MUST** follow the steps correctly. We will not be held responsible for any leeked personal tokens.
 
@@ -150,6 +158,8 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 > [!IMPORTANT]
 > It is **Extremely** important to understand while using this template, most of the code within `.github/` will automatically update within a new pull request whenever the [template repository](https://github.com/Videndum/Universal-GitAction-Workflows) is updated.
 
+<!-- @format -->
+
 ### Automatic setup via CLI
 
 [coming soon]
@@ -165,6 +175,8 @@ _Note: `actions/checkout` must be run first so that the release action can find 
     <summary><b>main.yml</b></summary>
 
 ```yaml
+# @format
+
 name: Project Management
 on:
   issues:
@@ -173,7 +185,7 @@ on:
     types: [opened, edited, closed, reopened, synchronize]
   project_card:
     types: [created, moved, deleted]
-  schedule: [cron: '0 * * * *']
+  schedule: [cron: "0 * * * *"]
 
 jobs:
   release-mastermind:
@@ -183,7 +195,7 @@ jobs:
       - uses: actions/checkout@v2.3.4
       - uses: ./
         with:
-          GITHUB_TOKEN: '${{ secrets.BOT_TOKEN }}'
+          GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
           config: .github/allconfigs.json
 ```
 
@@ -196,969 +208,971 @@ Now create the config file at `.github/config.json`:
 
 ```json
 [
-  {
-    "root": ".",
-    "versioning": {
-      "source": "milestones",
-      "type": "SemVer"
-    },
-    "prereleaseName": "alpha",
-    "sharedConfig": {
-      "stale": {
-        "staleLabel": "stale",
-        "stale": {
-          "days": 60,
-          "comment": "This has been automatically marked as stale by the bot."
-        },
-        "abandoned": {
-          "days": 30,
-          "label": "abandoned",
-          "comment": "This has been automatically marked as abandoned by the bot."
-        }
-      },
-      "enforceConventions": {
-        "onColumn": ["Accepted", "Reviewing"],
-        "conventions": [
-          {
-            "requires": 1,
-            "contexts": [
-              "@videndum/workflow-mastermind",
-              "@videndum/release-mastermind",
-              "@videndum/label-mastermind",
-              "@videndum/variable-mastermind",
-              "@videndum/convention-mastermind",
-              "condition",
-              "api",
-              "util",
-              "installer",
-              "deps",
-              "deps-dev"
-            ],
-            "conditions": "semanticTitle"
-          }
-        ]
-      },
-      "labels": {
-        "bug": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^bug(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/(created|new|opened|made)( an| a)? bug/i"
-            }
-          ]
-        },
-        "chore": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^chore(\\(.*\\))?(!)?:/i"
-            }
-          ]
-        },
-        "optimisation": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^opt(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^optimisation(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
-            }
-          ]
-        },
-        "style": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^style(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
-            }
-          ]
-        },
-        "refactor": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^ref(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^refactor(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
-            }
-          ]
-        },
-        "revert": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^revert(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
-            }
-          ]
-        },
-        "deprecated": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^dep(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^deprecated(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
-            }
-          ]
-        },
-        "removal": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^removal(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maint(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
-            }
-          ]
-        },
-        "discussion": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^discussion(\\(.*\\))?(!)?:/i"
-            }
-          ]
-        },
-        "documentation": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^docs(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^documentation(\\(.*\\))?(!)?:/i"
-            }
-          ]
-        },
-        "feature": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^feat(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^enhance(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^feature(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^enhancement(\\(.*\\))?(!)?:/i"
-            }
-          ]
-        },
-        "fix": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^fix(\\(.*\\))?(!)?:/i"
-            }
-          ]
-        },
-        "workflow": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\)(!)?:/i"
-            }
-          ]
-        },
-        "releaseMastermind": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\((@videndum\\/)?release-mastermind\\)(!)?:/i"
-            }
-          ]
-        },
-        "labelMastermind": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\((@videndum\\/)?label-mastermind\\)(!)?:/i"
-            }
-          ]
-        },
-        "variableMastermind": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\)(!)?:/i"
-            }
-          ]
-        },
-        "condition": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(condition\\)(!)?:/i"
-            }
-          ]
-        },
-        "api": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(api\\)(!)?:/i"
-            }
-          ]
-        },
-        "contexts": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(contexts\\)(!)?:/i"
-            }
-          ]
-        },
-        "util": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(util\\)(!)?:/i"
-            }
-          ]
-        },
-        "installer": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(installer\\)(!)?:/i"
-            }
-          ]
-        },
-        "deps": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(deps\\)(!)?:/i"
-            }
-          ]
-        },
-        "depsDev": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "/^.*\\(deps-dev\\)(!)?:/i"
-            }
-          ]
-        },
-        "priorityCritical": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "titleMatches",
-              "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
-            }
-          ]
-        }
-      }
-    },
-    "pr": {
-      "manageRelease": {
-        "version": "bump",
-        "labels": {
-          "prerelease": "Versioning - Prerelease",
-          "build": "Versioning - Build",
-          "patch": "Versioning - Patch",
-          "minor": "Versioning - Minor",
-          "major": "Versioning - Major",
-          "breaking": "Versioning - Breaking"
-        },
-        "createTag": true,
-        "createRelease": true,
-        "createMilestone": {},
-        "createPackages": "npm publish",
-        "createChangelog": {
-          "includeIssues": true,
-          "sections": [
-            {
-              "title": "Features Effectuated",
-              "PRlabels": ["Type - Feature"],
-              "issueLabels": [],
-              "includeCommitter": true,
-              "linkPR": true
-            },
-            {
-              "title": "Bugs Squashed",
-              "PRlabels": ["Type - Fix"],
-              "issueLabels": [],
-              "includeCommitter": true,
-              "linkPR": true
-            },
-            {
-              "title": "Maintenance & Dusting",
-              "PRlabels": [
-                "Type - Maintenance",
-                "Type - Style",
-                "Type - Documentation",
-                "Type - Enhancement",
-                "Type - Optimisation",
-                "Type - Refactor"
-              ],
-              "issueLabels": [],
-              "includeCommitter": true,
-              "linkPR": true
-            },
-            {
-              "title": "Abolishment",
-              "PRlabels": [
-                "Type - Revert",
-                "Type - deprecated",
-                "Type - Removal"
-              ],
-              "issueLabels": [],
-              "includeCommitter": true,
-              "linkPR": true
-            },
-            {
-              "title": "Confession Time",
-              "PRlabels": [],
-              "issueLabels": ["Bug - Confirmed"],
-              "includeCommitter": true,
-              "linkPR": true
-            }
-          ]
-        },
-        "conditions": {}
-      },
-      "automaticApprove": {
-        "conventions": [
-          {
-            "requires": 1,
-            "conditions": [{}]
-          }
-        ]
-      },
-      "duplicateHotfix": {},
-      "createMilestone": {},
-      "syncRemote": {},
-      "assignProject": [
-        {
-          "project": "Developer Operations",
-          "column": "Reviewing",
-          "requires": 0,
-          "conditions": []
-        }
-      ],
-      "labels": {
-        "xs": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "changesSize",
-              "min": 0,
-              "max": 10
-            }
-          ]
-        },
-        "s": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "changesSize",
-              "min": 10,
-              "max": 30
-            }
-          ]
-        },
-        "m": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "changesSize",
-              "min": 40,
-              "max": 100
-            }
-          ]
-        },
-        "l": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "changesSize",
-              "min": 100,
-              "max": 500
-            }
-          ]
-        },
-        "xl": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "changesSize",
-              "min": 500,
-              "max": 1000
-            }
-          ]
-        },
-        "xxl": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "changesSize",
-              "min": 1000
-            }
-          ]
-        },
-        "fixConfirmed": {
-          "requires": 6,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have fixed on a clean installation/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have fixed on a stable build/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have fixed on a development build/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have included logs or screenshots/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have linked any related/im"
-            }
-          ]
-        },
-        "devOpsReviewing": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "pendingReview",
-              "value": true
-            }
-          ]
-        },
-        "devOpsRejected": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "requestedChanges",
-              "value": true
-            }
-          ]
-        }
-      }
-    },
-    "issue": {
-      "assignProject": [
-        {
-          "project": "Developer Operations",
-          "column": "Requested",
-          "requires": 1,
-          "conditions": []
-        },
-        {
-          "project": "Issues",
-          "column": "New",
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "hasLabel",
-              "label": "Type - Bug",
-              "value": true
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "/^bug(\\(.*\\))?(!)?:/i"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/(created|new|opened|made)( an| a)? bug/i"
-            }
-          ]
-        }
-      ],
-      "assignColumn": {},
-      "createBranch": {},
-      "labels": {
-        "android": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*android/im"
-            }
-          ]
-        },
-        "aws": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*aws/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*amazon web service/im"
-            }
-          ]
-        },
-        "google": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*google/im"
-            }
-          ]
-        },
-        "ios": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*ios/im"
-            }
-          ]
-        },
-        "ubuntu": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*ubuntu/im"
-            }
-          ]
-        },
-        "fedora": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*fedora/im"
-            }
-          ]
-        },
-        "debian": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*debian/im"
-            }
-          ]
-        },
-        "macos": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*macos/im"
-            }
-          ]
-        },
-        "windows": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- platform:.*windows/im"
-            }
-          ]
-        },
-        "bugConfirmed": {
-          "requires": 8,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] bug Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have reproduced on my application version/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have reproduced on a clean installation/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have reproduced on a development build/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have included logs or screenshots/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have contacted support/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have asked the community/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have linked any related/im"
-            }
-          ]
-        },
-        "fixConfirmed": {
-          "requires": 6,
-          "conditions": [
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have fixed on a clean installation/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have fixed on a stable build/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have fixed on a development build/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have included logs or screenshots/im"
-            },
-            {
-              "type": "descriptionMatches",
-              "pattern": "/^- \\[x\\] have linked any related/im"
-            }
-          ]
-        }
-      }
-    },
-    "project": {
-      "syncRemote": [
-        {
-          "localProject": "Developer Operations",
-          "owner": "Videndum",
-          "project": "Developer Operations"
-        },
-        {
-          "localProject": "Issues",
-          "owner": "Videndum",
-          "project": "Issues"
-        }
-      ],
-      "openBranch": {},
-      "assignMilestone": {},
-      "labels": {
-        "available": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Requested"
-            }
-          ]
-        },
-        "pending": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Accepted"
-            }
-          ]
-        },
-        "progress": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "In Progress"
-            },
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Testing"
-            }
-          ]
-        },
-        "review": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Reviewing"
-            }
-          ]
-        },
-        "completed": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Completed"
-            }
-          ]
-        },
-        "doNotDevelop": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Rejected"
-            }
-          ]
-        },
-        "devOpsAccepted": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Accepted"
-            }
-          ]
-        },
-        "devOpsDeveloping": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "In Progress"
-            }
-          ]
-        },
-        "devOpsTesting": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Testing"
-            }
-          ]
-        },
-        "devOpsReviewing": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Reviewing"
-            }
-          ]
-        },
-        "devOpsStaging": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Staging"
-            }
-          ]
-        },
-        "devOpsCompleted": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Completed"
-            }
-          ]
-        },
-        "devOpsRejected": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Developer Operations",
-              "column": "Rejected"
-            }
-          ]
-        },
-        "priorityLow": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Issues",
-              "column": "Low Priority"
-            }
-          ]
-        },
-        "priorityMedium": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Issues",
-              "column": "Medium Priority"
-            }
-          ]
-        },
-        "priorityHigh": {
-          "requires": 1,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Issues",
-              "column": "High Priority"
-            }
-          ]
-        },
-        "priorityCritical": {
-          "requires": 2,
-          "conditions": [
-            {
-              "type": "onColumn",
-              "project": "Issues",
-              "column": "High Priority"
-            },
-            {
-              "type": "titleMatches",
-              "pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
-            }
-          ]
-        }
-      }
-    },
-    "schedule": {}
-  }
+	{
+		"root": ".",
+		"versioning": {
+			"source": "milestones",
+			"type": "SemVer"
+		},
+		"prereleaseName": "alpha",
+		"sharedConfig": {
+			"stale": {
+				"staleLabel": "stale",
+				"stale": {
+					"days": 60,
+					"comment": "This has been automatically marked as stale by the bot."
+				},
+				"abandoned": {
+					"days": 30,
+					"label": "abandoned",
+					"comment": "This has been automatically marked as abandoned by the bot."
+				}
+			},
+			"enforceConventions": {
+				"onColumn": ["Accepted", "Reviewing"],
+				"conventions": [
+					{
+						"requires": 1,
+						"contexts": [
+							"@videndum/workflow-mastermind",
+							"@videndum/release-mastermind",
+							"@videndum/label-mastermind",
+							"@videndum/variable-mastermind",
+							"@videndum/convention-mastermind",
+							"condition",
+							"api",
+							"util",
+							"installer",
+							"deps",
+							"deps-dev"
+						],
+						"conditions": "semanticTitle"
+					}
+				]
+			},
+			"labels": {
+				"bug": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^bug(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/(created|new|opened|made)( an| a)? bug/i"
+						}
+					]
+				},
+				"chore": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^chore(\\(.*\\))?(!)?:/i"
+						}
+					]
+				},
+				"optimisation": {
+					"requires": 2,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^opt(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^optimisation(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
+						}
+					]
+				},
+				"style": {
+					"requires": 2,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^style(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
+						}
+					]
+				},
+				"refactor": {
+					"requires": 2,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^ref(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^refactor(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
+						}
+					]
+				},
+				"revert": {
+					"requires": 2,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^revert(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
+						}
+					]
+				},
+				"deprecated": {
+					"requires": 2,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^dep(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^deprecated(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
+						}
+					]
+				},
+				"removal": {
+					"requires": 2,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^removal(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
+						}
+					]
+				},
+				"discussion": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^discussion(\\(.*\\))?(!)?:/i"
+						}
+					]
+				},
+				"documentation": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^docs(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^documentation(\\(.*\\))?(!)?:/i"
+						}
+					]
+				},
+				"feature": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^feat(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^enhance(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^feature(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^enhancement(\\(.*\\))?(!)?:/i"
+						}
+					]
+				},
+				"fix": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^fix(\\(.*\\))?(!)?:/i"
+						}
+					]
+				},
+				"workflow": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\)(!)?:/i"
+						}
+					]
+				},
+				"releaseMastermind": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\((@videndum\\/)?release-mastermind\\)(!)?:/i"
+						}
+					]
+				},
+				"labelMastermind": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\((@videndum\\/)?label-mastermind\\)(!)?:/i"
+						}
+					]
+				},
+				"variableMastermind": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\)(!)?:/i"
+						}
+					]
+				},
+				"condition": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\(condition\\)(!)?:/i"
+						}
+					]
+				},
+				"api": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\(api\\)(!)?:/i"
+						}
+					]
+				},
+				"contexts": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\(contexts\\)(!)?:/i"
+						}
+					]
+				},
+				"util": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\(util\\)(!)?:/i"
+						}
+					]
+				},
+				"installer": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\(installer\\)(!)?:/i"
+						}
+					]
+				},
+				"deps": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\(deps\\)(!)?:/i"
+						}
+					]
+				},
+				"depsDev": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "/^.*\\(deps-dev\\)(!)?:/i"
+						}
+					]
+				},
+				"priorityCritical": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "titleMatches",
+							"pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+						}
+					]
+				}
+			}
+		},
+		"pr": {
+			"manageRelease": {
+				"version": "bump",
+				"labels": {
+					"prerelease": "Versioning - Prerelease",
+					"build": "Versioning - Build",
+					"patch": "Versioning - Patch",
+					"minor": "Versioning - Minor",
+					"major": "Versioning - Major",
+					"breaking": "Versioning - Breaking"
+				},
+				"createTag": true,
+				"createRelease": true,
+				"createMilestone": {},
+				"createPackages": "npm publish",
+				"createChangelog": {
+					"includeIssues": true,
+					"sections": [
+						{
+							"title": "Features Effectuated",
+							"PRlabels": ["Type - Feature"],
+							"issueLabels": [],
+							"includeCommitter": true,
+							"linkPR": true
+						},
+						{
+							"title": "Bugs Squashed",
+							"PRlabels": ["Type - Fix"],
+							"issueLabels": [],
+							"includeCommitter": true,
+							"linkPR": true
+						},
+						{
+							"title": "Maintenance & Dusting",
+							"PRlabels": [
+								"Type - Maintenance",
+								"Type - Style",
+								"Type - Documentation",
+								"Type - Enhancement",
+								"Type - Optimisation",
+								"Type - Refactor"
+							],
+							"issueLabels": [],
+							"includeCommitter": true,
+							"linkPR": true
+						},
+						{
+							"title": "Abolishment",
+							"PRlabels": [
+								"Type - Revert",
+								"Type - deprecated",
+								"Type - Removal"
+							],
+							"issueLabels": [],
+							"includeCommitter": true,
+							"linkPR": true
+						},
+						{
+							"title": "Confession Time",
+							"PRlabels": [],
+							"issueLabels": ["Bug - Confirmed"],
+							"includeCommitter": true,
+							"linkPR": true
+						}
+					]
+				},
+				"conditions": {}
+			},
+			"automaticApprove": {
+				"conventions": [
+					{
+						"requires": 1,
+						"conditions": [{}]
+					}
+				]
+			},
+			"duplicateHotfix": {},
+			"createMilestone": {},
+			"syncRemote": {},
+			"assignProject": [
+				{
+					"project": "Developer Operations",
+					"column": "Reviewing",
+					"requires": 0,
+					"conditions": []
+				}
+			],
+			"labels": {
+				"xs": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "changesSize",
+							"min": 0,
+							"max": 10
+						}
+					]
+				},
+				"s": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "changesSize",
+							"min": 10,
+							"max": 30
+						}
+					]
+				},
+				"m": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "changesSize",
+							"min": 40,
+							"max": 100
+						}
+					]
+				},
+				"l": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "changesSize",
+							"min": 100,
+							"max": 500
+						}
+					]
+				},
+				"xl": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "changesSize",
+							"min": 500,
+							"max": 1000
+						}
+					]
+				},
+				"xxl": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "changesSize",
+							"min": 1000
+						}
+					]
+				},
+				"fixConfirmed": {
+					"requires": 6,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have fixed on a clean installation/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have fixed on a stable build/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have fixed on a development build/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have included logs or screenshots/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have linked any related/im"
+						}
+					]
+				},
+				"devOpsReviewing": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "pendingReview",
+							"value": true
+						}
+					]
+				},
+				"devOpsRejected": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "requestedChanges",
+							"value": true
+						}
+					]
+				}
+			}
+		},
+		"issue": {
+			"assignProject": [
+				{
+					"project": "Developer Operations",
+					"column": "Requested",
+					"requires": 1,
+					"conditions": []
+				},
+				{
+					"project": "Issues",
+					"column": "New",
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "hasLabel",
+							"label": "Type - Bug",
+							"value": true
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "/^bug(\\(.*\\))?(!)?:/i"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/(created|new|opened|made)( an| a)? bug/i"
+						}
+					]
+				}
+			],
+			"assignColumn": {},
+			"createBranch": {},
+			"labels": {
+				"android": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*android/im"
+						}
+					]
+				},
+				"aws": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*aws/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*amazon web service/im"
+						}
+					]
+				},
+				"google": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*google/im"
+						}
+					]
+				},
+				"ios": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*ios/im"
+						}
+					]
+				},
+				"ubuntu": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*ubuntu/im"
+						}
+					]
+				},
+				"fedora": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*fedora/im"
+						}
+					]
+				},
+				"debian": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*debian/im"
+						}
+					]
+				},
+				"macos": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*macos/im"
+						}
+					]
+				},
+				"windows": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- platform:.*windows/im"
+						}
+					]
+				},
+				"bugConfirmed": {
+					"requires": 8,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] bug Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have reproduced on my application version/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have reproduced on a clean installation/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have reproduced on a development build/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have included logs or screenshots/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have contacted support/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have asked the community/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have linked any related/im"
+						}
+					]
+				},
+				"fixConfirmed": {
+					"requires": 6,
+					"conditions": [
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have fixed on a clean installation/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have fixed on a stable build/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have fixed on a development build/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have included logs or screenshots/im"
+						},
+						{
+							"type": "descriptionMatches",
+							"pattern": "/^- \\[x\\] have linked any related/im"
+						}
+					]
+				}
+			}
+		},
+		"project": {
+			"syncRemote": [
+				{
+					"localProject": "Developer Operations",
+					"owner": "Videndum",
+					"project": "Developer Operations"
+				},
+				{
+					"localProject": "Issues",
+					"owner": "Videndum",
+					"project": "Issues"
+				}
+			],
+			"openBranch": {},
+			"assignMilestone": {},
+			"labels": {
+				"available": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Requested"
+						}
+					]
+				},
+				"pending": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Accepted"
+						}
+					]
+				},
+				"progress": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "In Progress"
+						},
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Testing"
+						}
+					]
+				},
+				"review": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Reviewing"
+						}
+					]
+				},
+				"completed": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Completed"
+						}
+					]
+				},
+				"doNotDevelop": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Rejected"
+						}
+					]
+				},
+				"devOpsAccepted": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Accepted"
+						}
+					]
+				},
+				"devOpsDeveloping": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "In Progress"
+						}
+					]
+				},
+				"devOpsTesting": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Testing"
+						}
+					]
+				},
+				"devOpsReviewing": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Reviewing"
+						}
+					]
+				},
+				"devOpsStaging": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Staging"
+						}
+					]
+				},
+				"devOpsCompleted": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Completed"
+						}
+					]
+				},
+				"devOpsRejected": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Developer Operations",
+							"column": "Rejected"
+						}
+					]
+				},
+				"priorityLow": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Issues",
+							"column": "Low Priority"
+						}
+					]
+				},
+				"priorityMedium": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Issues",
+							"column": "Medium Priority"
+						}
+					]
+				},
+				"priorityHigh": {
+					"requires": 1,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Issues",
+							"column": "High Priority"
+						}
+					]
+				},
+				"priorityCritical": {
+					"requires": 2,
+					"conditions": [
+						{
+							"type": "onColumn",
+							"project": "Issues",
+							"column": "High Priority"
+						},
+						{
+							"type": "titleMatches",
+							"pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+						}
+					]
+				}
+			}
+		},
+		"schedule": {}
+	}
 ]
 ```
 
 </details>
 
 Be sure that Github Actions is enabled for in your repository's settings. The action will now run on your issues, projects and pull requests.
+
+<!-- @format -->
 
 #### Workflow Options
 
@@ -1170,14 +1184,20 @@ Be sure that Github Actions is enabled for in your repository's settings. The ac
 | fillEmpty    | false    | Fill Empty context configuration with shared configs | `true`                  |
 | skipDelete   | false    | Skip deleting labels from repository                 | `false`                 |
 
+<!-- @format -->
+
 ### All configuration options
 
 Due to the nature of this project. Most of the options have been documented as tables of information for your convinience. However Where this isn't partically helpful or easy to do, we have used the `Typing` from our typescript files to showcase the option.
+
+<!-- @format -->
 
 | Option  | Required | Description                                | Params                  |
 | ------- | -------- | ------------------------------------------ | ----------------------- |
 | labels  | false    | Defines all the labels within the repo     | `Labels`                |
 | runners | true     | Defines the configuration for each project | [`Runners[]`](#runners) |
+
+<!-- @format -->
 
 #### Runners
 
@@ -1201,6 +1221,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | source | true     | Defines the source for versioning     | `"node" / "milestones" / string` |
 | type   | false    | Defines the versioning of the project | `"SemVer" / "other"`             |
 
+<!-- @format -->
+
 #### PullRequestConfig
 
 | Option             | Required | Description                                   | Params                                                   |
@@ -1214,6 +1236,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | syncRemote         | false    | Syncronise a remote repository                | [`SyncRemote[]`](#syncremote)                            |
 | assignProject      | false    | Automatically assign to projects              | [`AssignProject[]`](#assignproject)                      |
 
+<!-- @format -->
+
 ##### EnforceConventions
 
 | Option        | Required | Description                                                             | Params                                                  |
@@ -1224,6 +1248,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String / Number`                                       |
 | Conventions   | true     | The conventions to enforce                                              | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
 
+<!-- @format -->
+
 ##### AssignProject
 
 | Option  | Required | Description                                                    | Params   |
@@ -1233,6 +1259,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | repo    | false    | The repo which contains teh project (requires owner to be set) | `string` |
 | project | true     | The name of the project to assign                              | `string` |
 | column  | true     | The column within the project to assign                        | `string` |
+
+<!-- @format -->
 
 ##### SharedConventionsConfig
 
@@ -1245,6 +1273,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 
 Choosing `"semanticTitle"` as the condition will automatically configure your conventions to use semantic conventions. You can add additional context by adding the `contexts` option which enforce only those contexts get used.
 
+<!-- @format -->
+
 ##### AutomaticApprove
 
 | Option        | Required | Description                                          | Params                                                  |
@@ -1252,6 +1282,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | commentHeader | false    | A comment to append to the header of failed comments | `string`                                                |
 | commentFooter | false    | A comment to append to the footer of failed comments | `string`                                                |
 | Conventions   | true     | The conventions to enforce                           | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
+
+<!-- @format -->
 
 ##### Release
 
@@ -1264,6 +1296,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | createPackages   | false     | Commands to use when creating packages            | `String[] / string`                   |
 | createChangelog  | false     | Create a changelog                                | [`Changelog`](#changelog)             |
 
+<!-- @format -->
+
 ##### ReleaseLabels
 
 | Option     | Required | Description                                                                                                              | Params   |
@@ -1274,6 +1308,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | minor      | true     | A tag to represent a Minor version to be incremented due to substantial new functionality or improvements are introduced | `string` |
 | major      | true     | A tag to represent a Major version to be incremented due to of backwards incompatible changes are introduced             | `string` |
 | breaking   | true     | A tag to represent a breaking change                                                                                     | `string` |
+
+<!-- @format -->
 
 ##### CreateRelease
 
@@ -1290,6 +1326,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | prerelease        | false    | Should the release be a prerelease                 | `boolean`                 |
 | useChangelog      | false    | Should the release use the changelog configuration | `boolean`                 |
 
+<!-- @format -->
+
 ##### Changelog
 
 | Option        | Required | Description                                 | Params                    |
@@ -1298,6 +1336,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | sections      | false    | The sections configureation                 | [`Sections[]`](#sections) |
 | title         | false    | The title for the changelog                 | `string`                  |
 | body          | false    | The changelog body which should be included | `string`                  |
+
+<!-- @format -->
 
 ###### Sections
 
@@ -1310,12 +1350,16 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | includeCommitter | false    | Should include the committer username | `boolean`  |
 | linkPR           | false    | Should link the pull request          | `boolean`  |
 
+<!-- @format -->
+
 ##### CreateMilestone
 
 | Option    | Required | Description                                              | Params               |
 | --------- | -------- | -------------------------------------------------------- | -------------------- |
 | milestone | true     | The milestone you want to use                            | `"version" / string` |
 | deadline  | false    | The date in which you want to set as the completion date | `string`             |
+
+<!-- @format -->
 
 ##### DuplicateHotfix
 
@@ -1324,6 +1368,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | prName      | true     | What should the pull request be named          | `"unchanged" / "number" / string` |
 | titlePrefix | false    | Should there be a title prefix                 | `string`                          |
 | branches    | false    | What banches should have the duplicated hotfix | `string[]`                        |
+
+<!-- @format -->
 
 ##### SyncRemote
 
@@ -1334,6 +1380,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | localPath    | true     | Which path should be synconised    | `string` |
 | remotePath   | true     | Which path should be syncronised   | `string` |
 
+<!-- @format -->
+
 #### IssueConfig
 
 | Option             | Required | Description                                    | Params                                                         |
@@ -1343,6 +1391,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | labels             | false    | Apply labels automatically                     | [`[Key: string]: IssueConditionConfig`](#issueconditionconfig) |
 | assignProject      | false    | Automatically assign to projects               | [`AssignProject[]`](#assignproject)                            |
 | createBranch       | false    | Automatically create branches on configuration | [`[label: string]: CreateBranch`](#createbranch)               |
+
+<!-- @format -->
 
 ##### CreateBranch
 
@@ -1356,6 +1406,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 `'short'` - Use the first 3 words
 `'number'` - Use the issue number
 
+<!-- @format -->
+
 #### ProjectConfig
 
 | Option             | Required | Description                                    | Params                                                             |
@@ -1367,6 +1419,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | openBranch         | false    | Create Branch based on config                  | [`ProjectCreateBranch`](#projectcreatebranch)                      |
 | assignMilestone    | false    | Automatically assign to milestones             | [`[milestone: string]: Milestones`](#milestones)                   |
 
+<!-- @format -->
+
 ##### ExProjects
 
 | Option  | Required | Description                                                    | Params   |
@@ -1375,6 +1429,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | user    | false    | The user which owns the project (user)                         | `string` |
 | repo    | false    | The repo which contains teh project (requires owner to be set) | `string` |
 | project | true     | The name of the project to assign                              | `string` |
+
+<!-- @format -->
 
 ##### ProjectCreateBranch
 
@@ -1389,6 +1445,8 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 `'title'` - Use the entire title
 `'short'` - Use the first 3 words
 `'number'` - Use the issue number
+
+<!-- @format -->
 
 ##### Milestones
 
@@ -1405,275 +1463,279 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
     <summary><b>Types</b></summary>
 
 ```types/index.d.ts
+/** @format */
+
 import {
-  Condition,
-  IssueCondition,
-  PRCondition,
-  ProjectCondition,
-  ScheduleCondition
-} from '../src/conditions'
-import { Repo } from '../src/utils'
+	Condition,
+	IssueCondition,
+	PRCondition,
+	ProjectCondition,
+	ScheduleCondition
+} from "../src/conditions"
+import { Repo } from "../src/utils"
 
 /**
  * Application interfaces
  */
 
 export interface Options {
-  configPath: string
-  configJSON: Runners
-  showLogs: boolean
-  dryRun: boolean
-  fillEmpty: boolean
-  skipDelete: boolean
-  repo?: Repo
+	configPath: string
+	configJSON: Runners
+	showLogs: boolean
+	dryRun: boolean
+	fillEmpty: boolean
+	skipDelete: boolean
+	repo?: Repo
 }
 
 export interface Runners {
-  labels?: Labels
-  runners: Config[]
+	labels?: Labels
+	runners: Config[]
 }
 
 export interface Config {
-  root: string
-  versioning: {
-    source: VersionSource
-    type?: VersionType
-  }
-  retryLimit?: number
-  prereleaseName?: string
-  labels?: { [key: string]: string }
-  sharedConfig?: SharedConfig
-  pr?: PullRequestConfig
-  issue?: IssueConfig
-  project?: ProjectConfig
-  schedule?: ScheduleConfig
+	root: string
+	versioning: {
+		source: VersionSource
+		type?: VersionType
+	}
+	retryLimit?: number
+	prereleaseName?: string
+	labels?: { [key: string]: string }
+	sharedConfig?: SharedConfig
+	pr?: PullRequestConfig
+	issue?: IssueConfig
+	project?: ProjectConfig
+	schedule?: ScheduleConfig
 }
 
 /**
  * Config types
  */
 
-export type VersionSource = 'node' | 'milestones' | string
-export type VersionType = 'SemVer'
+export type VersionSource = "node" | "milestones" | string
+export type VersionType = "SemVer"
 
 export interface SharedConditions {
-  requires: number
-  conditions: Condition[]
+	requires: number
+	conditions: Condition[]
 }
 
 export interface Label {
-  name: string
-  description: string
-  color: string
+	name: string
+	description: string
+	color: string
 }
 
 export interface Labels {
-  [key: string]: Label
+	[key: string]: Label
 }
 
 export interface PRConditionConfig {
-  requires: number
-  conditions: PRCondition[]
+	requires: number
+	conditions: PRCondition[]
 }
 
 export interface IssueConditionConfig {
-  requires: number
-  conditions: IssueCondition[]
+	requires: number
+	conditions: IssueCondition[]
 }
 
 export interface ProjectConditionConfig {
-  requires: number
-  conditions: ProjectCondition[]
+	requires: number
+	conditions: ProjectCondition[]
 }
 
 export interface ScheduleConditionConfig {
-  requires: number
-  conditions: ScheduleCondition[]
+	requires: number
+	conditions: ScheduleCondition[]
 }
 
 export interface PullRequestConfig extends SharedConfig {
-  assignProject?: AssignProject[]
-  automaticApprove?: AutomaticApprove
-  manageRelease?: Release
-  duplicateHotfix?: { [title: string]: DuplicateHotfix }
-  syncRemote?: SyncRemote[]
+	assignProject?: AssignProject[]
+	automaticApprove?: AutomaticApprove
+	manageRelease?: Release
+	duplicateHotfix?: { [title: string]: DuplicateHotfix }
+	syncRemote?: SyncRemote[]
 }
 
 export interface IssueConfig extends SharedConfig {
-  assignProject?: AssignProject[]
-  createBranch?: { [label: string]: CreateBranch }
+	assignProject?: AssignProject[]
+	createBranch?: { [label: string]: CreateBranch }
 }
 
 export interface ProjectConfig extends SharedConfig {
-  syncRemote?: ExProjects[]
-  openBranch?: ProjectCreateBranch
-  assignMilestone?: { [milestone: string]: Milestones }
+	syncRemote?: ExProjects[]
+	openBranch?: ProjectCreateBranch
+	assignMilestone?: { [milestone: string]: Milestones }
 }
 
 export interface ScheduleConfig extends SharedConfig {}
 
 export type SharedConfigIndex =
-  | 'ref'
-  | 'enforceConventions'
-  | 'labels'
-  | 'stale'
+	| "ref"
+	| "enforceConventions"
+	| "labels"
+	| "stale"
 
 export interface SharedConfig {
-  ref?: string
-  enforceConventions?: EnforceConventions
-  stale?: Stale
-  labels?: {
-    [key: string]:
-      | IssueConditionConfig
-      | ProjectConditionConfig
-      | PRConditionConfig
-      | ScheduleConditionConfig
-      | SharedConditions
-  }
+	ref?: string
+	enforceConventions?: EnforceConventions
+	stale?: Stale
+	labels?: {
+		[key: string]:
+			| IssueConditionConfig
+			| ProjectConditionConfig
+			| PRConditionConfig
+			| ScheduleConditionConfig
+			| SharedConditions
+	}
 }
 
 export interface SharedConventionConditions {
-  requires: number
-  conditions: Condition[] | string
+	requires: number
+	conditions: Condition[] | string
 }
 export interface SharedConventionsConfig extends SharedConventionConditions {
-  failedComment: string
-  contexts?: string[]
+	failedComment: string
+	contexts?: string[]
 }
 
 export interface CreateBranch {
-  branchPrefix?: string
-  branchSuffix?: string
-  branchName: 'title' | 'short' | 'number'
+	branchPrefix?: string
+	branchSuffix?: string
+	branchName: "title" | "short" | "number"
 }
 
 export interface EnforceConventions {
-  onColumn?: Column[]
-  commentHeader?: string
-  commentFooter?: string
-  moveToColumn?: string
-  conventions: SharedConventionsConfig[]
+	onColumn?: Column[]
+	commentHeader?: string
+	commentFooter?: string
+	moveToColumn?: string
+	conventions: SharedConventionsConfig[]
 }
 
 export interface Stale {
-  staleLabel: string
-  stale?: StaleConfig
-  abandoned?: AbanondedConfig
-  conditions?: SharedConditions[]
+	staleLabel: string
+	stale?: StaleConfig
+	abandoned?: AbanondedConfig
+	conditions?: SharedConditions[]
 }
 
 export interface StaleConfig extends SharedConditions {
-  days: number
-  comment?: string
-  resolve?: string
-  commentHeader?: string
-  commentFooter?: string
+	days: number
+	comment?: string
+	resolve?: string
+	commentHeader?: string
+	commentFooter?: string
 }
 
 export interface AbanondedConfig extends StaleConfig {
-  close?: boolean
-  lock?: boolean
-  label: string
+	close?: boolean
+	lock?: boolean
+	label: string
 }
 
 export interface AutomaticApprove {
-  commentHeader?: string
-  commentFooter?: string
-  conventions: SharedConventionsConfig[]
+	commentHeader?: string
+	commentFooter?: string
+	conventions: SharedConventionsConfig[]
 }
 
 export interface Release extends PRConditionConfig {
-  labels?: {
-    build: string
-    prerelease: string
-    patch: string
-    minor: string
-    major: string
-    breaking?: string
-  }
-  createTag?: boolean
-  createRelease?: CreateRelease
-  createMilestone?: CreateMilestone
-  createPackages?: string[] | string
-  createChangelog?: Changelog
+	labels?: {
+		build: string
+		prerelease: string
+		patch: string
+		minor: string
+		major: string
+		breaking?: string
+	}
+	createTag?: boolean
+	createRelease?: CreateRelease
+	createMilestone?: CreateMilestone
+	createPackages?: string[] | string
+	createChangelog?: Changelog
 }
 
 export interface DuplicateHotfix {
-  prName: 'unchanged' | 'number' | string
-  titlePrefix?: string
-  branches: string[]
+	prName: "unchanged" | "number" | string
+	titlePrefix?: string
+	branches: string[]
 }
 export interface SyncRemote {
-  localBranch: string
-  remoteBranch: string
-  localPath: string
-  remotePath: string
-  conditions: SharedConditions[]
+	localBranch: string
+	remoteBranch: string
+	localPath: string
+	remotePath: string
+	conditions: SharedConditions[]
 }
 
 export interface ReleaseChanges {
-  includeIssues?: boolean
-  sections?: Sections[]
+	includeIssues?: boolean
+	sections?: Sections[]
 }
 
 export interface Sections {
-  title: string
-  body?: string
-  PRlabels: string[]
-  issueLabels?: string[]
-  includeCommitter?: boolean
-  linkPR?: boolean
+	title: string
+	body?: string
+	PRlabels: string[]
+	issueLabels?: string[]
+	includeCommitter?: boolean
+	linkPR?: boolean
 }
 
 export interface CreateRelease extends ReleaseChanges {
-  tagName?: string
-  tagPrefix?: string
-  releaseName?: string
-  releaseNamePrefix?: string
-  releaseNameSuffix?: string
-  draft?: boolean
-  prerelease?: boolean
-  useChangelog?: boolean
+	tagName?: string
+	tagPrefix?: string
+	releaseName?: string
+	releaseNamePrefix?: string
+	releaseNameSuffix?: string
+	draft?: boolean
+	prerelease?: boolean
+	useChangelog?: boolean
 }
 export interface Changelog extends ReleaseChanges {
-  title?: string
-  body?: string
+	title?: string
+	body?: string
 }
 
 export interface CreateMilestone {
-  milestone: 'version' | string
-  deadline?: string
+	milestone: "version" | string
+	deadline?: string
 }
 
 export type Column = string | number
 
 interface AssignProject extends IssueConditionConfig {
-  owner?: string
-  user?: string
-  repo?: string
-  project: string
-  column: string
+	owner?: string
+	user?: string
+	repo?: string
+	project: string
+	column: string
 }
 
 interface ExProjects {
-  localProject: string
-  owner?: string
-  user?: string
-  repo?: string
-  project: string
+	localProject: string
+	owner?: string
+	user?: string
+	repo?: string
+	project: string
 }
 interface ProjectCreateBranch extends CreateBranch {
-  onProject?: string
-  onColumn?: string
+	onProject?: string
+	onColumn?: string
 }
 
 interface Milestones {
-  onColumn: string
-  ignoreLabels?: string[]
+	onColumn: string
+	ignoreLabels?: string[]
 }
 ```
 
 </details>
+
+<!-- @format -->
 
 ### Using Regex Patterns
 
@@ -1685,11 +1747,15 @@ Special characters must be double escaped: `pattern: "\\W+$"` is equivalent to t
 
 If you want to use flags, use the following format: `pattern: "/^wip:/i"` is equivalent to the Regex: `/^wip:/i`.
 
+<!-- @format -->
+
 ## Available Conditions
 
 For complex conditions, you can use conditional options such as `only`, `$and` and `$or`. They can be found within the common conditions section.
 
 ### Common Conditions
+
+<!-- @format -->
 
 #### \$and
 
@@ -1697,19 +1763,21 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 
 ```json
 {
-  "type": "$and",
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$and",
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
+
+<!-- @format -->
 
 #### creatorMatches
 
@@ -1719,10 +1787,12 @@ Example:
 
 ```json
 {
-  "type": "creatorMatches",
-  "pattern": "^foo"
+	"type": "creatorMatches",
+	"pattern": "^foo"
 }
 ```
+
+<!-- @format -->
 
 #### descriptionMatches
 
@@ -1732,10 +1802,12 @@ Example:
 
 ```json
 {
-  "type": "descriptionMatches",
-  "pattern": "foo.*bar"
+	"type": "descriptionMatches",
+	"pattern": "foo.*bar"
 }
 ```
+
+<!-- @format -->
 
 #### hasLabel
 
@@ -1745,11 +1817,13 @@ Example:
 
 ```json
 {
-  "type": "hasLabel",
-  "label": "Type - Bug",
-  "value": "false"
+	"type": "hasLabel",
+	"label": "Type - Bug",
+	"value": "false"
 }
 ```
+
+<!-- @format -->
 
 #### isAbandoned
 
@@ -1759,10 +1833,12 @@ Example:
 
 ```json
 {
-  "type": "isAbandoned",
-  "stale": 30
+	"type": "isAbandoned",
+	"stale": 30
 }
 ```
+
+<!-- @format -->
 
 #### isLocked
 
@@ -1772,10 +1848,12 @@ Example:
 
 ```json
 {
-  "type": "isLocked",
-  "value": true
+	"type": "isLocked",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### isOpen
 
@@ -1785,10 +1863,12 @@ Example:
 
 ```json
 {
-  "type": "isOpen",
-  "value": true
+	"type": "isOpen",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### isStale
 
@@ -1798,10 +1878,12 @@ Example:
 
 ```json
 {
-  "type": "isStale",
-  "stale": 30
+	"type": "isStale",
+	"stale": 30
 }
 ```
+
+<!-- @format -->
 
 #### \$only
 
@@ -1809,20 +1891,22 @@ Requires only the number specified in `requires` to pass otherwise it fails.
 
 ```json
 {
-  "type": "$only",
-  "requires": 1,
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$only",
+	"requires": 1,
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
+
+<!-- @format -->
 
 #### \$or
 
@@ -1830,23 +1914,26 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 
 ```json
 {
-  "type": "$or",
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$or",
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
 
+<!-- @format -->
 
 
 ### Pull Request Conditions
+
+<!-- @format -->
 
 #### branchMatches
 
@@ -1856,10 +1943,12 @@ Example:
 
 ```json
 {
-  "type": "branchMatches",
-  "pattern": "^bugfix\\/"
+	"type": "branchMatches",
+	"pattern": "^bugfix\\/"
 }
 ```
+
+<!-- @format -->
 
 #### changesSize
 
@@ -1869,11 +1958,13 @@ Example:
 
 ```json
 {
-  "type": "changesSize",
-  "min": 0,
-  "max": 100
+	"type": "changesSize",
+	"min": 0,
+	"max": 100
 }
 ```
+
+<!-- @format -->
 
 #### filesMatch
 
@@ -1885,10 +1976,12 @@ Example:
 
 ```json
 {
-  "type": "filesMatch",
-  "glob": "src/foo/**/*"
+	"type": "filesMatch",
+	"glob": "src/foo/**/*"
 }
 ```
+
+<!-- @format -->
 
 #### isApproved
 
@@ -1898,11 +1991,13 @@ Example:
 
 ```json
 {
-  "type": "isApproved",
-  "value": true,
-  "required": 1
+	"type": "isApproved",
+	"value": true,
+	"required": 1
 }
 ```
+
+<!-- @format -->
 
 #### isDraft
 
@@ -1912,10 +2007,12 @@ Example:
 
 ```json
 {
-  "type": "isDraft",
-  "value": true
+	"type": "isDraft",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### pendingReview
 
@@ -1925,10 +2022,12 @@ Example:
 
 ```json
 {
-  "type": "pendingReview",
-  "value": true
+	"type": "pendingReview",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### requestedChanges
 
@@ -1938,8 +2037,8 @@ Example:
 
 ```json
 {
-  "type": "requestedChanges",
-  "value": true
+	"type": "requestedChanges",
+	"value": true
 }
 ```
 
@@ -1950,6 +2049,8 @@ Example:
 
 ### Project Conditions
 
+<!-- @format -->
+
 #### onColumn
 
 Checks if the card is in the specified column.
@@ -1958,9 +2059,9 @@ Example:
 
 ```json
 {
-  "type": "onColumn",
-  "project": "Isuues",
-  "column": "New"
+	"type": "onColumn",
+	"project": "Isuues",
+	"column": "New"
 }
 ```
 

@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ##### DuplicateHotfix
 
 | Option      | Required | Description                                    | Params                            |

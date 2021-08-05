@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ## Running Locally & Developing
 
 Setting up local running is simple, however we **MUST** warn that building / packaging while using local scripts can cause your GITHUB_TOKEN to be included within the package. To avoid this happening. you **MUST** follow the steps correctly. We will not be held responsible for any leeked personal tokens.

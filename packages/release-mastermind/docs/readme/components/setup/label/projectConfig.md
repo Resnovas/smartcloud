@@ -1,3 +1,5 @@
+<!-- @format -->
+
 #### ProjectConfig
 
 | Option | Required | Description                | Params                                                             |

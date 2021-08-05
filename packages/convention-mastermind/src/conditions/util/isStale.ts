@@ -1,22 +1,24 @@
-import { UtilProps, UtilThis } from '..'
+/** @format */
 
-const TYPE = 'isStale'
+import { UtilProps, UtilThis } from ".."
+
+const TYPE = "isStale"
 
 export interface ConditionIsStale {
-  type: typeof TYPE
-  value: number
+	type: typeof TYPE
+	value: number
 }
 
 function isStale(
-  this: UtilThis,
-  condition: ConditionIsStale,
-  issue: UtilProps
+	this: UtilThis,
+	condition: ConditionIsStale,
+	issue: UtilProps
 ) {
-  if (!issue.lastUpdated) return false
-  const last = new Date(issue.lastUpdated)
-  last.setDate(last.getDate() + condition.value)
-  const now = new Date()
-  return last >= now
+	if (!issue.lastUpdated) return false
+	const last = new Date(issue.lastUpdated)
+	last.setDate(last.getDate() + condition.value)
+	const now = new Date()
+	return last >= now
 }
 
 export default [TYPE, isStale] as const

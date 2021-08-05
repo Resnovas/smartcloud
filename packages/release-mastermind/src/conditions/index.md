@@ -1,8 +1,12 @@
+<!-- @format -->
+
 ## Available Conditions
 
 For complex conditions, you can use conditional options such as `only`, `$and` and `$or`. They can be found within the common conditions section.
 
 ### Common Conditions
+
+<!-- @format -->
 
 #### \$and
 
@@ -10,19 +14,21 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 
 ```json
 {
-  "type": "$and",
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$and",
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
+
+<!-- @format -->
 
 #### creatorMatches
 
@@ -32,10 +38,12 @@ Example:
 
 ```json
 {
-  "type": "creatorMatches",
-  "pattern": "^foo"
+	"type": "creatorMatches",
+	"pattern": "^foo"
 }
 ```
+
+<!-- @format -->
 
 #### descriptionMatches
 
@@ -45,10 +53,12 @@ Example:
 
 ```json
 {
-  "type": "descriptionMatches",
-  "pattern": "foo.*bar"
+	"type": "descriptionMatches",
+	"pattern": "foo.*bar"
 }
 ```
+
+<!-- @format -->
 
 #### hasLabel
 
@@ -58,11 +68,13 @@ Example:
 
 ```json
 {
-  "type": "hasLabel",
-  "label": "Type - Bug",
-  "value": "false"
+	"type": "hasLabel",
+	"label": "Type - Bug",
+	"value": "false"
 }
 ```
+
+<!-- @format -->
 
 #### isAbandoned
 
@@ -72,10 +84,12 @@ Example:
 
 ```json
 {
-  "type": "isAbandoned",
-  "stale": 30
+	"type": "isAbandoned",
+	"stale": 30
 }
 ```
+
+<!-- @format -->
 
 #### isLocked
 
@@ -85,10 +99,12 @@ Example:
 
 ```json
 {
-  "type": "isLocked",
-  "value": true
+	"type": "isLocked",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### isOpen
 
@@ -98,10 +114,12 @@ Example:
 
 ```json
 {
-  "type": "isOpen",
-  "value": true
+	"type": "isOpen",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### isStale
 
@@ -111,10 +129,12 @@ Example:
 
 ```json
 {
-  "type": "isStale",
-  "stale": 30
+	"type": "isStale",
+	"stale": 30
 }
 ```
+
+<!-- @format -->
 
 #### \$only
 
@@ -122,20 +142,22 @@ Requires only the number specified in `requires` to pass otherwise it fails.
 
 ```json
 {
-  "type": "$only",
-  "requires": 1,
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$only",
+	"requires": 1,
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
+
+<!-- @format -->
 
 #### \$or
 
@@ -143,21 +165,25 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 
 ```json
 {
-  "type": "$or",
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$or",
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
 
+<!-- @format -->
+
 ### Pull Request Conditions
+
+<!-- @format -->
 
 #### branchMatches
 
@@ -167,10 +193,12 @@ Example:
 
 ```json
 {
-  "type": "branchMatches",
-  "pattern": "^bugfix\\/"
+	"type": "branchMatches",
+	"pattern": "^bugfix\\/"
 }
 ```
+
+<!-- @format -->
 
 #### changesSize
 
@@ -180,11 +208,13 @@ Example:
 
 ```json
 {
-  "type": "changesSize",
-  "min": 0,
-  "max": 100
+	"type": "changesSize",
+	"min": 0,
+	"max": 100
 }
 ```
+
+<!-- @format -->
 
 #### filesMatch
 
@@ -196,10 +226,12 @@ Example:
 
 ```json
 {
-  "type": "filesMatch",
-  "glob": "src/foo/**/*"
+	"type": "filesMatch",
+	"glob": "src/foo/**/*"
 }
 ```
+
+<!-- @format -->
 
 #### isApproved
 
@@ -209,11 +241,13 @@ Example:
 
 ```json
 {
-  "type": "isApproved",
-  "value": true,
-  "required": 1
+	"type": "isApproved",
+	"value": true,
+	"required": 1
 }
 ```
+
+<!-- @format -->
 
 #### isDraft
 
@@ -223,10 +257,12 @@ Example:
 
 ```json
 {
-  "type": "isDraft",
-  "value": true
+	"type": "isDraft",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### pendingReview
 
@@ -236,10 +272,12 @@ Example:
 
 ```json
 {
-  "type": "pendingReview",
-  "value": true
+	"type": "pendingReview",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### requestedChanges
 
@@ -249,14 +287,16 @@ Example:
 
 ```json
 {
-  "type": "requestedChanges",
-  "value": true
+	"type": "requestedChanges",
+	"value": true
 }
 ```
 
 ### Issue Conditions
 
 ### Project Conditions
+
+<!-- @format -->
 
 #### onColumn
 
@@ -266,8 +306,8 @@ Example:
 
 ```json
 {
-  "type": "onColumn",
-  "project": "Isuues",
-  "column": "New"
+	"type": "onColumn",
+	"project": "Isuues",
+	"column": "New"
 }
 ```

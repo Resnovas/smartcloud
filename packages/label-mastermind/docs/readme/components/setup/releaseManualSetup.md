@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ### Manual setup
 
 Create a new Github Actions workflow at `.github/workflows/action.yml`:
@@ -18,7 +20,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: Videndum/release-mastermind@latest
         with:
-          github-token: '${{ secrets.GITHUB_TOKEN }}'
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
           config: .github/allconfigs.json
 ```
 
@@ -26,40 +28,40 @@ Now create the config file at `.github/config.json`:
 
 ```json
 {
-  "labels": {
-    "example": {
-      "name": "example",
-      "colour": "#00ff00",
-      "description": "Example label"
-    }
-  },
-  "issue": {
-    "example": {
-      "requires": 2,
-      "conditions": [
-        {
-          "type": "titleMatches",
-          "pattern": "example"
-        },
-        {
-          "type": "isOpen"
-        }
-      ]
-    }
-  },
-  "pr": {
-    "example": {
-      "requires": 1,
-      "conditions": [
-        {
-          "type": "isDraft",
-          "value": false
-        }
-      ]
-    }
-  },
-  "skip_labeling": true,
-  "delete_labels": true
+	"labels": {
+		"example": {
+			"name": "example",
+			"colour": "#00ff00",
+			"description": "Example label"
+		}
+	},
+	"issue": {
+		"example": {
+			"requires": 2,
+			"conditions": [
+				{
+					"type": "titleMatches",
+					"pattern": "example"
+				},
+				{
+					"type": "isOpen"
+				}
+			]
+		}
+	},
+	"pr": {
+		"example": {
+			"requires": 1,
+			"conditions": [
+				{
+					"type": "isDraft",
+					"value": false
+				}
+			]
+		}
+	},
+	"skip_labeling": true,
+	"delete_labels": true
 }
 ```
 

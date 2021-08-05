@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Convention Collection
 
 The super-powered convention enforment for Github Actions, with complex customisable conditions for PR, Issues and Projects.
@@ -55,6 +57,8 @@ The super-powered convention enforment for Github Actions, with complex customis
 
 <!-- tocstop -->
 
+<!-- @format -->
+
 ## How to get support 👨‍👩‍👧‍👦
 
 For **Features Requests**, **Q&A**, **Show & Tell** and **Discussions** please use **[our discussions page](https://github.com/Videndum/action-masterminds/discussions)** 🚑.
@@ -69,6 +73,8 @@ GitHub is our office, it's the place where our development and contributor teams
 
 With the discussion page, you can leverage the knowledge of our wider community to get help with any problems you are having. Please keep in mind that this project is open-source, support is provided by the goodwill of our wonderful community members.
 
+<!-- @format -->
+
 ## Backlog & Contributing
 
 Thank you for taking an interst in contributing. We have created development containers (`.devcontainer`) to allow you to jump straight in with coding. We even went through the hassle of setting up step by step guides using [CodeTour](https://github.com/vsls-contrib/codetour). Everything is configured and ready to go, all you need to do is use one of the supported platforms: [VSCode](https://code.visualstudio.com/docs/remote/remote-overview) | [Github Codespaces](https://github.com/features/codespaces)
@@ -76,6 +82,8 @@ Thank you for taking an interst in contributing. We have created development con
 For more information on how to contribute, please read the [contributing guidelines](docs/contributing/README.md).
 
 Our backlog can be found on [Github](https://github.com/Videndum/action-masterminds/projects/1)
+
+<!-- @format -->
 
 ## Running Locally & Developing
 
@@ -109,6 +117,8 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 > [!IMPORTANT]
 > It is **Extremely** important to understand while using this template, most of the code within `.github/` will automatically update within a new pull request whenever the [template repository](https://github.com/Videndum/Universal-GitAction-Workflows) is updated.
 
+<!-- @format -->
+
 ### Automatic setup via CLI
 
 [coming soon]
@@ -123,6 +133,8 @@ _Note: `actions/checkout` must be run first so that the release action can find 
     <summary><b>main.yml</b></summary>
 
 ```yaml
+# @format
+
 on:
   issues:
     types: [opened, edited, closed, reopened]
@@ -150,40 +162,42 @@ Now create the config file at `.github/config.json`:
 
 ```json
 [
-  {
-    "root": ".",
-    "versioning": {
-      "source": "milestones",
-      "type": "SemVer"
-    },
-    "prereleaseName": "alpha",
-    "sharedConfig": {
-      "enforceConventions": {
-        "onColumn": ["Accepted", "Reviewing"],
-        "conventions": [
-          {
-            "requires": 1,
-            "contexts": [
-              "workflow",
-              "release",
-              "label",
-              "variable",
-              "installer",
-              "deps",
-              "deps-dev"
-            ],
-            "conditions": "semanticTitle"
-          }
-        ]
-      }
-    }
-  }
+	{
+		"root": ".",
+		"versioning": {
+			"source": "milestones",
+			"type": "SemVer"
+		},
+		"prereleaseName": "alpha",
+		"sharedConfig": {
+			"enforceConventions": {
+				"onColumn": ["Accepted", "Reviewing"],
+				"conventions": [
+					{
+						"requires": 1,
+						"contexts": [
+							"workflow",
+							"release",
+							"label",
+							"variable",
+							"installer",
+							"deps",
+							"deps-dev"
+						],
+						"conditions": "semanticTitle"
+					}
+				]
+			}
+		}
+	}
 ]
 ```
 
 </details>
 
 Be sure that Github Actions is enabled for in your repository's settings. The action will now run on your issues, projects and pull requests.
+
+<!-- @format -->
 
 #### Workflow Options
 
@@ -195,14 +209,20 @@ Be sure that Github Actions is enabled for in your repository's settings. The ac
 | fillEmpty    | false    | Fill Empty context configuration with shared configs | `true`                  |
 | skipDelete   | false    | Skip deleting labels from repository                 | `false`                 |
 
+<!-- @format -->
+
 ### All configuration options
 
 Due to the nature of this project. Most of the options have been documented as tables of information for your convinience. However Where this isn't partically helpful or easy to do, we have used the `Typing` from our typescript files to showcase the option.
+
+<!-- @format -->
 
 | Option  | Required | Description                                | Params                  |
 | ------- | -------- | ------------------------------------------ | ----------------------- |
 | labels  | false    | Defines all the labels within the repo     | `Labels`                |
 | runners | true     | Defines the configuration for each project | [`Runners[]`](#runners) |
+
+<!-- @format -->
 
 #### Runners
 
@@ -226,12 +246,16 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | source | true     | Defines the source for versioning     | `"node" / "milestones" / string` |
 | type   | false    | Defines the versioning of the project | `"SemVer" / "other"`             |
 
+<!-- @format -->
+
 #### IssueConfig
 
 | Option             | Required | Description             | Params                                      |
 | ------------------ | -------- | ----------------------- | ------------------------------------------- |
 | ref                | false    | Overrides the reference | `string`                                    |
 | enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
+
+<!-- @format -->
 
 #### ProjectConfig
 
@@ -240,12 +264,7 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | ref                | false    | Overrides the reference | `string`                                    |
 | enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
 
-#### PullRequestConfig
-
-| Option             | Required | Description             | Params                                      |
-| ------------------ | -------- | ----------------------- | ------------------------------------------- |
-| ref                | false    | Overrides the reference | `string`                                    |
-| enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
+<!-- @format -->
 
 #### PullRequestConfig
 
@@ -253,6 +272,17 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | ------------------ | -------- | ----------------------- | ------------------------------------------- |
 | ref                | false    | Overrides the reference | `string`                                    |
 | enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
+
+<!-- @format -->
+
+#### PullRequestConfig
+
+| Option             | Required | Description             | Params                                      |
+| ------------------ | -------- | ----------------------- | ------------------------------------------- |
+| ref                | false    | Overrides the reference | `string`                                    |
+| enforceConventions | false    | Enforces conventions    | [`EnforceConventions`](#enforceconventions) |
+
+<!-- @format -->
 
 ##### EnforceConventions
 
@@ -263,6 +293,8 @@ You can have multiple runners, which allows for configuration for monorepo proje
 | commentFooter | false    | A comment to append to the footer of failed comments                    | `string`                                                |
 | moveToColumn  | false    | (if project card) Optionally move the card to another column on failure | `String / Number`                                       |
 | Conventions   | true     | The conventions to enforce                                              | [`SharedConventionsConfig[]`](#sharedconventionsconfig) |
+
+<!-- @format -->
 
 ##### SharedConventionsConfig
 
@@ -281,275 +313,279 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
     <summary><b>Types</b></summary>
 
 ```types/index.d.ts
+/** @format */
+
 import {
-  Condition,
-  IssueCondition,
-  PRCondition,
-  ProjectCondition,
-  ScheduleCondition
-} from '../src/conditions'
-import { Repo } from '../src/utils'
+	Condition,
+	IssueCondition,
+	PRCondition,
+	ProjectCondition,
+	ScheduleCondition
+} from "../src/conditions"
+import { Repo } from "../src/utils"
 
 /**
  * Application interfaces
  */
 
 export interface Options {
-  configPath: string
-  configJSON: Runners
-  showLogs: boolean
-  dryRun: boolean
-  fillEmpty: boolean
-  skipDelete: boolean
-  repo?: Repo
+	configPath: string
+	configJSON: Runners
+	showLogs: boolean
+	dryRun: boolean
+	fillEmpty: boolean
+	skipDelete: boolean
+	repo?: Repo
 }
 
 export interface Runners {
-  labels?: Labels
-  runners: Config[]
+	labels?: Labels
+	runners: Config[]
 }
 
 export interface Config {
-  root: string
-  versioning: {
-    source: VersionSource
-    type?: VersionType
-  }
-  retryLimit?: number
-  prereleaseName?: string
-  labels?: { [key: string]: string }
-  sharedConfig?: SharedConfig
-  pr?: PullRequestConfig
-  issue?: IssueConfig
-  project?: ProjectConfig
-  schedule?: ScheduleConfig
+	root: string
+	versioning: {
+		source: VersionSource
+		type?: VersionType
+	}
+	retryLimit?: number
+	prereleaseName?: string
+	labels?: { [key: string]: string }
+	sharedConfig?: SharedConfig
+	pr?: PullRequestConfig
+	issue?: IssueConfig
+	project?: ProjectConfig
+	schedule?: ScheduleConfig
 }
 
 /**
  * Config types
  */
 
-export type VersionSource = 'node' | 'milestones' | string
-export type VersionType = 'SemVer'
+export type VersionSource = "node" | "milestones" | string
+export type VersionType = "SemVer"
 
 export interface SharedConditions {
-  requires: number
-  conditions: Condition[]
+	requires: number
+	conditions: Condition[]
 }
 
 export interface Label {
-  name: string
-  description: string
-  color: string
+	name: string
+	description: string
+	color: string
 }
 
 export interface Labels {
-  [key: string]: Label
+	[key: string]: Label
 }
 
 export interface PRConditionConfig {
-  requires: number
-  conditions: PRCondition[]
+	requires: number
+	conditions: PRCondition[]
 }
 
 export interface IssueConditionConfig {
-  requires: number
-  conditions: IssueCondition[]
+	requires: number
+	conditions: IssueCondition[]
 }
 
 export interface ProjectConditionConfig {
-  requires: number
-  conditions: ProjectCondition[]
+	requires: number
+	conditions: ProjectCondition[]
 }
 
 export interface ScheduleConditionConfig {
-  requires: number
-  conditions: ScheduleCondition[]
+	requires: number
+	conditions: ScheduleCondition[]
 }
 
 export interface PullRequestConfig extends SharedConfig {
-  assignProject?: AssignProject[]
-  automaticApprove?: AutomaticApprove
-  manageRelease?: Release
-  duplicateHotfix?: { [title: string]: DuplicateHotfix }
-  syncRemote?: SyncRemote[]
+	assignProject?: AssignProject[]
+	automaticApprove?: AutomaticApprove
+	manageRelease?: Release
+	duplicateHotfix?: { [title: string]: DuplicateHotfix }
+	syncRemote?: SyncRemote[]
 }
 
 export interface IssueConfig extends SharedConfig {
-  assignProject?: AssignProject[]
-  createBranch?: { [label: string]: CreateBranch }
+	assignProject?: AssignProject[]
+	createBranch?: { [label: string]: CreateBranch }
 }
 
 export interface ProjectConfig extends SharedConfig {
-  syncRemote?: ExProjects[]
-  openBranch?: ProjectCreateBranch
-  assignMilestone?: { [milestone: string]: Milestones }
+	syncRemote?: ExProjects[]
+	openBranch?: ProjectCreateBranch
+	assignMilestone?: { [milestone: string]: Milestones }
 }
 
 export interface ScheduleConfig extends SharedConfig {}
 
 export type SharedConfigIndex =
-  | 'ref'
-  | 'enforceConventions'
-  | 'labels'
-  | 'stale'
+	| "ref"
+	| "enforceConventions"
+	| "labels"
+	| "stale"
 
 export interface SharedConfig {
-  ref?: string
-  enforceConventions?: EnforceConventions
-  stale?: Stale
-  labels?: {
-    [key: string]:
-      | IssueConditionConfig
-      | ProjectConditionConfig
-      | PRConditionConfig
-      | ScheduleConditionConfig
-      | SharedConditions
-  }
+	ref?: string
+	enforceConventions?: EnforceConventions
+	stale?: Stale
+	labels?: {
+		[key: string]:
+			| IssueConditionConfig
+			| ProjectConditionConfig
+			| PRConditionConfig
+			| ScheduleConditionConfig
+			| SharedConditions
+	}
 }
 
 export interface SharedConventionConditions {
-  requires: number
-  conditions: Condition[] | string
+	requires: number
+	conditions: Condition[] | string
 }
 export interface SharedConventionsConfig extends SharedConventionConditions {
-  failedComment: string
-  contexts?: string[]
+	failedComment: string
+	contexts?: string[]
 }
 
 export interface CreateBranch {
-  branchPrefix?: string
-  branchSuffix?: string
-  branchName: 'title' | 'short' | 'number'
+	branchPrefix?: string
+	branchSuffix?: string
+	branchName: "title" | "short" | "number"
 }
 
 export interface EnforceConventions {
-  onColumn?: Column[]
-  commentHeader?: string
-  commentFooter?: string
-  moveToColumn?: string
-  conventions: SharedConventionsConfig[]
+	onColumn?: Column[]
+	commentHeader?: string
+	commentFooter?: string
+	moveToColumn?: string
+	conventions: SharedConventionsConfig[]
 }
 
 export interface Stale {
-  staleLabel: string
-  stale?: StaleConfig
-  abandoned?: AbanondedConfig
-  conditions?: SharedConditions[]
+	staleLabel: string
+	stale?: StaleConfig
+	abandoned?: AbanondedConfig
+	conditions?: SharedConditions[]
 }
 
 export interface StaleConfig extends SharedConditions {
-  days: number
-  comment?: string
-  resolve?: string
-  commentHeader?: string
-  commentFooter?: string
+	days: number
+	comment?: string
+	resolve?: string
+	commentHeader?: string
+	commentFooter?: string
 }
 
 export interface AbanondedConfig extends StaleConfig {
-  close?: boolean
-  lock?: boolean
-  label: string
+	close?: boolean
+	lock?: boolean
+	label: string
 }
 
 export interface AutomaticApprove {
-  commentHeader?: string
-  commentFooter?: string
-  conventions: SharedConventionsConfig[]
+	commentHeader?: string
+	commentFooter?: string
+	conventions: SharedConventionsConfig[]
 }
 
 export interface Release extends PRConditionConfig {
-  labels?: {
-    build: string
-    prerelease: string
-    patch: string
-    minor: string
-    major: string
-    breaking?: string
-  }
-  createTag?: boolean
-  createRelease?: CreateRelease
-  createMilestone?: CreateMilestone
-  createPackages?: string[] | string
-  createChangelog?: Changelog
+	labels?: {
+		build: string
+		prerelease: string
+		patch: string
+		minor: string
+		major: string
+		breaking?: string
+	}
+	createTag?: boolean
+	createRelease?: CreateRelease
+	createMilestone?: CreateMilestone
+	createPackages?: string[] | string
+	createChangelog?: Changelog
 }
 
 export interface DuplicateHotfix {
-  prName: 'unchanged' | 'number' | string
-  titlePrefix?: string
-  branches: string[]
+	prName: "unchanged" | "number" | string
+	titlePrefix?: string
+	branches: string[]
 }
 export interface SyncRemote {
-  localBranch: string
-  remoteBranch: string
-  localPath: string
-  remotePath: string
-  conditions: SharedConditions[]
+	localBranch: string
+	remoteBranch: string
+	localPath: string
+	remotePath: string
+	conditions: SharedConditions[]
 }
 
 export interface ReleaseChanges {
-  includeIssues?: boolean
-  sections?: Sections[]
+	includeIssues?: boolean
+	sections?: Sections[]
 }
 
 export interface Sections {
-  title: string
-  body?: string
-  PRlabels: string[]
-  issueLabels?: string[]
-  includeCommitter?: boolean
-  linkPR?: boolean
+	title: string
+	body?: string
+	PRlabels: string[]
+	issueLabels?: string[]
+	includeCommitter?: boolean
+	linkPR?: boolean
 }
 
 export interface CreateRelease extends ReleaseChanges {
-  tagName?: string
-  tagPrefix?: string
-  releaseName?: string
-  releaseNamePrefix?: string
-  releaseNameSuffix?: string
-  draft?: boolean
-  prerelease?: boolean
-  useChangelog?: boolean
+	tagName?: string
+	tagPrefix?: string
+	releaseName?: string
+	releaseNamePrefix?: string
+	releaseNameSuffix?: string
+	draft?: boolean
+	prerelease?: boolean
+	useChangelog?: boolean
 }
 export interface Changelog extends ReleaseChanges {
-  title?: string
-  body?: string
+	title?: string
+	body?: string
 }
 
 export interface CreateMilestone {
-  milestone: 'version' | string
-  deadline?: string
+	milestone: "version" | string
+	deadline?: string
 }
 
 export type Column = string | number
 
 interface AssignProject extends IssueConditionConfig {
-  owner?: string
-  user?: string
-  repo?: string
-  project: string
-  column: string
+	owner?: string
+	user?: string
+	repo?: string
+	project: string
+	column: string
 }
 
 interface ExProjects {
-  localProject: string
-  owner?: string
-  user?: string
-  repo?: string
-  project: string
+	localProject: string
+	owner?: string
+	user?: string
+	repo?: string
+	project: string
 }
 interface ProjectCreateBranch extends CreateBranch {
-  onProject?: string
-  onColumn?: string
+	onProject?: string
+	onColumn?: string
 }
 
 interface Milestones {
-  onColumn: string
-  ignoreLabels?: string[]
+	onColumn: string
+	ignoreLabels?: string[]
 }
 ```
 
 </details>
+
+<!-- @format -->
 
 ### Using Regex Patterns
 
@@ -561,11 +597,15 @@ Special characters must be double escaped: `pattern: "\\W+$"` is equivalent to t
 
 If you want to use flags, use the following format: `pattern: "/^wip:/i"` is equivalent to the Regex: `/^wip:/i`.
 
+<!-- @format -->
+
 ## Available Conditions
 
 For complex conditions, you can use conditional options such as `only`, `$and` and `$or`. They can be found within the common conditions section.
 
 ### Common Conditions
+
+<!-- @format -->
 
 #### \$and
 
@@ -573,19 +613,21 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 
 ```json
 {
-  "type": "$and",
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$and",
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
+
+<!-- @format -->
 
 #### creatorMatches
 
@@ -595,10 +637,12 @@ Example:
 
 ```json
 {
-  "type": "creatorMatches",
-  "pattern": "^foo"
+	"type": "creatorMatches",
+	"pattern": "^foo"
 }
 ```
+
+<!-- @format -->
 
 #### descriptionMatches
 
@@ -608,10 +652,12 @@ Example:
 
 ```json
 {
-  "type": "descriptionMatches",
-  "pattern": "foo.*bar"
+	"type": "descriptionMatches",
+	"pattern": "foo.*bar"
 }
 ```
+
+<!-- @format -->
 
 #### hasLabel
 
@@ -621,11 +667,13 @@ Example:
 
 ```json
 {
-  "type": "hasLabel",
-  "label": "Type - Bug",
-  "value": "false"
+	"type": "hasLabel",
+	"label": "Type - Bug",
+	"value": "false"
 }
 ```
+
+<!-- @format -->
 
 #### isAbandoned
 
@@ -635,10 +683,12 @@ Example:
 
 ```json
 {
-  "type": "isAbandoned",
-  "stale": 30
+	"type": "isAbandoned",
+	"stale": 30
 }
 ```
+
+<!-- @format -->
 
 #### isLocked
 
@@ -648,10 +698,12 @@ Example:
 
 ```json
 {
-  "type": "isLocked",
-  "value": true
+	"type": "isLocked",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### isOpen
 
@@ -661,10 +713,12 @@ Example:
 
 ```json
 {
-  "type": "isOpen",
-  "value": true
+	"type": "isOpen",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### isStale
 
@@ -674,10 +728,12 @@ Example:
 
 ```json
 {
-  "type": "isStale",
-  "stale": 30
+	"type": "isStale",
+	"stale": 30
 }
 ```
+
+<!-- @format -->
 
 #### \$only
 
@@ -685,20 +741,22 @@ Requires only the number specified in `requires` to pass otherwise it fails.
 
 ```json
 {
-  "type": "$only",
-  "requires": 1,
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$only",
+	"requires": 1,
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
+
+<!-- @format -->
 
 #### \$or
 
@@ -706,21 +764,25 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 
 ```json
 {
-  "type": "$or",
-  "pattern": [
-    {
-      "requires": 1,
-      "conditions": []
-    },
-    {
-      "requires": 1,
-      "conditions": []
-    }
-  ]
+	"type": "$or",
+	"pattern": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
 }
 ```
 
+<!-- @format -->
+
 ### Pull Request Conditions
+
+<!-- @format -->
 
 #### branchMatches
 
@@ -730,10 +792,12 @@ Example:
 
 ```json
 {
-  "type": "branchMatches",
-  "pattern": "^bugfix\\/"
+	"type": "branchMatches",
+	"pattern": "^bugfix\\/"
 }
 ```
+
+<!-- @format -->
 
 #### changesSize
 
@@ -743,11 +807,13 @@ Example:
 
 ```json
 {
-  "type": "changesSize",
-  "min": 0,
-  "max": 100
+	"type": "changesSize",
+	"min": 0,
+	"max": 100
 }
 ```
+
+<!-- @format -->
 
 #### filesMatch
 
@@ -759,10 +825,12 @@ Example:
 
 ```json
 {
-  "type": "filesMatch",
-  "glob": "src/foo/**/*"
+	"type": "filesMatch",
+	"glob": "src/foo/**/*"
 }
 ```
+
+<!-- @format -->
 
 #### isApproved
 
@@ -772,11 +840,13 @@ Example:
 
 ```json
 {
-  "type": "isApproved",
-  "value": true,
-  "required": 1
+	"type": "isApproved",
+	"value": true,
+	"required": 1
 }
 ```
+
+<!-- @format -->
 
 #### isDraft
 
@@ -786,10 +856,12 @@ Example:
 
 ```json
 {
-  "type": "isDraft",
-  "value": true
+	"type": "isDraft",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### pendingReview
 
@@ -799,10 +871,12 @@ Example:
 
 ```json
 {
-  "type": "pendingReview",
-  "value": true
+	"type": "pendingReview",
+	"value": true
 }
 ```
+
+<!-- @format -->
 
 #### requestedChanges
 
@@ -812,14 +886,16 @@ Example:
 
 ```json
 {
-  "type": "requestedChanges",
-  "value": true
+	"type": "requestedChanges",
+	"value": true
 }
 ```
 
 ### Issue Conditions
 
 ### Project Conditions
+
+<!-- @format -->
 
 #### onColumn
 
@@ -829,9 +905,9 @@ Example:
 
 ```json
 {
-  "type": "onColumn",
-  "project": "Isuues",
-  "column": "New"
+	"type": "onColumn",
+	"project": "Isuues",
+	"column": "New"
 }
 ```
 

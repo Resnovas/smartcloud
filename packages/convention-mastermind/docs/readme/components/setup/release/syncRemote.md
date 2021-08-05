@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ##### SyncRemote
 
 | Option       | Required | Description                        | Params   |

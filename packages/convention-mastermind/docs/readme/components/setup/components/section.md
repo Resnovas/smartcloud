@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ###### Sections
 
 | Option           | Required | Description                           | Params     |

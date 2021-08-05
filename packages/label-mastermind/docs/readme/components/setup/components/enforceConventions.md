@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ##### EnforceConventions
 
 | Option        | Required | Description                                                             | Params                                                  |
