@@ -1,20 +1,19 @@
-import { IssueProps, ProjectProps, PRProps } from '../'
-import { Issues, Project, PullRequests } from '../../contexts'
+import { UtilProps, UtilThis } from "../";
 
-const TYPE = 'descriptionMatches'
+const TYPE = "descriptionMatches";
 
 export interface ConditionDescriptionMatches {
-  type: typeof TYPE
-  pattern: string
+  type: typeof TYPE;
+  pattern: string;
 }
 
 function descriptionMatches(
-  this: Issues | PullRequests | Project,
+  this: UtilThis,
   condition: ConditionDescriptionMatches,
-  issue: IssueProps | PRProps | ProjectProps
+  issue: UtilProps
 ) {
-  const pattern = this.util.parsingData.processRegExpPattern(condition.pattern)
-  return pattern.test(issue.description)
+  const pattern = this.util.parsingData.processRegExpPattern(condition.pattern);
+  return pattern.test(issue.description);
 }
 
-export default [TYPE, descriptionMatches] as const
+export default [TYPE, descriptionMatches] as const;

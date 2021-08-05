@@ -1,12 +1,12 @@
-import { PRProps } from '.'
-import { Issues, Project, PullRequests } from '../../contexts'
+import { PRProps } from ".";
+import { Issues, Project, PullRequests } from "../../contexts";
 
-const TYPE = 'changesSize'
+const TYPE = "changesSize";
 
 export interface ConditionChangesSize {
-  type: typeof TYPE
-  min: number
-  max?: number
+  type: typeof TYPE;
+  min: number;
+  max?: number;
 }
 
 function changesSize(
@@ -18,9 +18,9 @@ function changesSize(
     pr.changes >= condition.min &&
     ((condition.max && pr.changes < condition.max) || !condition.max)
   ) {
-    return true
+    return true;
   }
-  return false
+  return false;
 }
 
-export default [TYPE, changesSize] as const
+export default [TYPE, changesSize] as const;

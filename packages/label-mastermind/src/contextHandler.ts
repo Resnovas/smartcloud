@@ -1,15 +1,16 @@
-import { Context } from '@actions/github/lib/context'
-import { LoggingLevels } from '@videndum/utilities'
-import { log } from '.'
-import { Config, Label, Labels } from '../types'
+import { Context } from "@actions/github/lib/context";
+import { LoggingLevels } from "@videndum/utilities";
+import { log } from ".";
+import { Config } from "../types";
 import {
   IssueContext,
   PRContext,
   ProjectContext,
   Reviews,
-  Version
-} from './conditions'
-import { Utils } from './utils'
+  ScheduleContext,
+  Version,
+} from "./conditions";
+import { Utils } from "./utils";
 
 class ContextHandler {
   /**
@@ -22,69 +23,74 @@ class ContextHandler {
     config: Config,
     context: Context
   ): Promise<PRContext | undefined> {
-    const pr = context.payload.pull_request
-    if (!pr || !config.pr) {
-      return
+    const pr = context.payload.pull_request;
+    if (!pr) {
+      return;
     }
 
     log(
       LoggingLevels.debug,
       `context.payload.pull_request: ` +
         JSON.stringify(context.payload.pull_request)
-    )
+    );
 
-    const IDNumber = pr.number
-    const labels = await this.parseLabels(pr.labels).catch(err => {
-      log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
-      throw err
-    })
-    const files: string[] = await utils.api.files.list(IDNumber).catch(err => {
-      log(LoggingLevels.error, `Error thrown while listing files: `, err)
-      throw err
-    })
+    const IDNumber = pr.number;
+    const labels = await utils.parsingData.labels(pr.labels).catch((err) => {
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err);
+      throw err;
+    });
+    const files: string[] = await utils.api.files
+      .list(IDNumber)
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while listing files: `, err);
+        throw err;
+      });
 
     const changes: number = await utils.api.pullRequests
       .changes(pr.additions, pr.deletions)
-      .catch(err => {
-        log(LoggingLevels.error, `Error thrown while handling changes: `, err)
-
-        throw err
-      })
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling changes: `, err);
+        throw err;
+      });
 
     const reviews: Reviews = await utils.api.pullRequests.reviews
       .list(IDNumber)
-      .catch(err => {
-        log(LoggingLevels.error, `Error thrown while handling reviews: `, err)
-        throw err
-      })
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling reviews: `, err);
+        throw err;
+      });
 
     const pendingReview: boolean = await utils.api.pullRequests.reviews
       .pending(reviews.length, pr.requested_reviewers.length)
-      .catch(err => {
-        log(LoggingLevels.error, `Error thrown while handling reviews: `, err)
-        throw err
-      })
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling reviews: `, err);
+        throw err;
+      });
 
     const requestedChanges: number = await utils.api.pullRequests.reviews
       .requestedChanges(reviews)
-      .catch(err => {
-        log(LoggingLevels.error, `Error thrown while handling reviews: `, err)
-        throw err
-      })
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling reviews: `, err);
+        throw err;
+      });
 
     const approved: number = await utils.api.pullRequests.reviews
       .isApproved(reviews)
-      .catch(err => {
-        log(LoggingLevels.error, `Error thrown while handling reviews: `, err)
-        throw err
-      })
+      .catch((err) => {
+        log(LoggingLevels.error, `Error thrown while handling reviews: `, err);
+        throw err;
+      });
 
     const currentVersion: Version = await utils.versioning
-      .parse(config, config.pr.ref)
-      .catch(err => {
-        log(LoggingLevels.error, `Error thrown while parsing versioning: `, err)
-        throw err
-      })
+      .parse(config, config.pr?.ref)
+      .catch((err) => {
+        log(
+          LoggingLevels.error,
+          `Error thrown while parsing versioning: `,
+          err
+        );
+        throw err;
+      });
 
     return {
       ref: pr.base.ref,
@@ -93,11 +99,11 @@ class ContextHandler {
       currentVersion,
       IDNumber: context.payload.pull_request?.id,
       props: {
-        type: 'pr',
+        type: "pr",
         ID: IDNumber,
         branch: pr.head.ref,
         creator: pr.user.login,
-        description: pr.body || '',
+        description: pr.body || "",
         isDraft: pr.draft,
         locked: pr.locked,
         state: pr.state,
@@ -108,9 +114,9 @@ class ContextHandler {
         labels,
         pendingReview,
         requestedChanges,
-        approved
-      }
-    }
+        approved,
+      },
+    };
   }
 
   /**
@@ -123,41 +129,45 @@ class ContextHandler {
     config: Config,
     context: Context
   ): Promise<ProjectContext | undefined> {
-    const project = context.payload.project_card
-    if (!project || !config.project) {
-      return
+    const project = context.payload.project_card;
+    if (!project) {
+      return;
     }
     log(
       LoggingLevels.debug,
       `context.payload.project_card: ${JSON.stringify(
         context.payload.project_card
       )}`
-    )
+    );
 
-    if (!project.content_url) throw new Error('No content information to get')
-    const issueNumber: number = project.content_url.split('/').pop()
-    const issue = await await utils.api.issues.get(issueNumber)
+    if (!project.content_url) throw new Error("No content information to get");
+    const issueNumber: number = project.content_url.split("/").pop();
+    const issue = await await utils.api.issues.get(issueNumber);
 
-    const labels = await this.parseLabels(issue.labels).catch(err => {
-      log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
-      throw err
-    })
+    const labels = await utils.parsingData.labels(issue.labels).catch((err) => {
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err);
+      throw err;
+    });
 
     const currentVersion: Version = await utils.versioning
-      .parse(config, config.project.ref)
-      .catch(err => {
-        log(LoggingLevels.error, `Error thrown while parsing versioning: `, err)
-        throw err
-      })
+      .parse(config, config.project?.ref)
+      .catch((err) => {
+        log(
+          LoggingLevels.error,
+          `Error thrown while parsing versioning: `,
+          err
+        );
+        throw err;
+      });
 
-    let localProject
+    let localProject;
     localProject = await utils.api.project.projects.get(
-      project.project_url.split('/').pop()
-    )
-    const changes = context.payload.changes
-    const localColumn = await utils.api.project.column.get(project.column_id)
+      project.project_url.split("/").pop()
+    );
+    const changes = context.payload.changes;
+    const localColumn = await utils.api.project.column.get(project.column_id);
 
-    const localCard = await utils.api.project.card.get(project.id)
+    const localCard = await utils.api.project.card.get(project.id);
 
     return {
       sha: context.sha,
@@ -165,21 +175,21 @@ class ContextHandler {
       currentVersion,
       IDNumber: issue.id,
       props: {
-        type: 'project',
+        type: "project",
         ID: issue.number,
         creator: issue.user.login,
-        description: issue.body || '',
+        description: issue.body || "",
         locked: issue.locked,
-        state: issue.state as ProjectContext['props']['state'],
+        state: issue.state as ProjectContext["props"]["state"],
         title: issue.title,
         project: localProject,
         column_id: project.column_id,
         localColumn,
         localCard,
         changes,
-        labels
-      }
-    }
+        labels,
+      },
+    };
   }
   /**
    * Parse the Issue Context
@@ -191,27 +201,31 @@ class ContextHandler {
     config: Config,
     context: Context
   ): Promise<IssueContext | undefined> {
-    const issue = context.payload.issue
-    if (!issue || !config.issue) {
-      return
+    const issue = context.payload.issue;
+    if (!issue) {
+      return;
     }
 
     log(
       LoggingLevels.debug,
       `context.payload.issue: ` + JSON.stringify(context.payload.issue)
-    )
+    );
 
-    const labels = await this.parseLabels(issue.labels).catch(err => {
-      log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
-      throw err
-    })
+    const labels = await utils.parsingData.labels(issue.labels).catch((err) => {
+      log(LoggingLevels.error, `Error thrown while parsing labels: `, err);
+      throw err;
+    });
 
     const currentVersion: Version = await utils.versioning
-      .parse(config, config.issue.ref)
-      .catch(err => {
-        log(LoggingLevels.error, `Error thrown while parsing versioning: `, err)
-        throw err
-      })
+      .parse(config, config.issue?.ref)
+      .catch((err) => {
+        log(
+          LoggingLevels.error,
+          `Error thrown while parsing versioning: `,
+          err
+        );
+        throw err;
+      });
 
     return {
       sha: context.sha,
@@ -219,32 +233,33 @@ class ContextHandler {
       currentVersion,
       IDNumber: context.payload.issue?.id,
       props: {
-        type: 'issue',
+        type: "issue",
         ID: issue.number,
         creator: issue.user.login,
-        description: issue.body || '',
+        description: issue.body || "",
         locked: issue.locked,
         state: issue.state,
         labels,
-        title: issue.title
-      }
-    }
+        title: issue.title,
+      },
+    };
   }
 
   /**
-   * Parse the labels
-   * @author IvanFon, TGTGamer, jbinda
+   * Parse the Schedule Context
+   * @author TGTGamer
    * @since 1.0.0
    */
-  async parseLabels(labels: any): Promise<Labels | undefined> {
-    if (!Array.isArray(labels)) {
-      return
-    }
-    return labels.reduce((acc: { [key: string]: Label }, cur) => {
-      acc[cur.name.toLowerCase()] = cur
-      return acc
-    }, {})
+
+  async parseSchedule(
+    context: Context
+  ): Promise<ScheduleContext | undefined> {
+    return {
+      ref: context.ref,
+      sha: context.sha,
+      action: context.payload.action as string,
+    };
   }
 }
 
-export const contextHandler = new ContextHandler()
+export const contextHandler = new ContextHandler();

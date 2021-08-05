@@ -1,12 +1,12 @@
-import { match } from 'minimatch'
-import { PRProps } from '.'
-import { Issues, Project, PullRequests } from '../../contexts'
+import { match } from "minimatch";
+import { PRProps } from ".";
+import { Issues, Project, PullRequests } from "../../contexts";
 
-const TYPE = 'filesMatch'
+const TYPE = "filesMatch";
 
 export interface ConditionFilesMatch {
-  type: typeof TYPE
-  glob: string
+  type: typeof TYPE;
+  glob: string;
 }
 
 function filesMatch(
@@ -14,7 +14,7 @@ function filesMatch(
   condition: ConditionFilesMatch,
   pr: PRProps
 ) {
-  return match(pr.files, condition.glob).length > 0
+  return match(pr.files, condition.glob).length > 0;
 }
 
-export default [TYPE, filesMatch] as const
+export default [TYPE, filesMatch] as const;

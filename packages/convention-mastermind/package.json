@@ -1,5 +1,5 @@
 {
-  "name": "convention-mastermind",
+  "name": "@videndum/convention-mastermind",
   "version": "1.4.0-alpha.4",
   "description": "The super-powered convention enforcer for Github Actions, with complex, customisable conditions for PR, Issues and Projects",
   "main": "src/index.ts",
@@ -26,18 +26,22 @@
   "dependencies": {
     "@actions/core": "^1.2.6",
     "@actions/github": "~2.1.1",
-    "@videndum/utilities": "^1.0.0-alpha.17",
-    "minimatch": "^3.0.4",
-    "minimist": "^1.2.5"
+    "@videndum/utilities": "^1.0.0-alpha.17"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.10",
-    "@types/minimatch": "^3.0.3",
+    "@types/jest": "^26.0.15",
     "@types/node": "^16.4.2",
+    "@types/nodegit": "^0.27.3",
     "@vercel/ncc": "^0.29.0",
-    "jest": "^26.3.0",
-    "prettier": "^2.1.2",
-    "ts-jest": "^26.1.4",
-    "typescript": "^4.1.3"
+    "eslint-plugin-github": "^4.1.1",
+    "jest": "^26.6.1",
+    "jest-circus": "^27.0.6",
+    "js-yaml": "^4.1.0",
+    "prettier-plugin-organize-imports": "^2.3.3",
+    "prettier-plugin-pkg": "^0.10.0",
+    "prettier-plugin-sh": "^0.7.1",
+    "prettier-standard": "^16.4.1",
+    "ts-jest": "^26.4.3",
+    "typescript": "^4.0.5"
   }
 }

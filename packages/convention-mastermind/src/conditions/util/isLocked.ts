@@ -1,19 +1,18 @@
-import { IssueProps, ProjectProps, PRProps } from '..'
-import { Issues, Project, PullRequests } from '../../contexts'
+import { UtilProps, UtilThis } from "..";
 
-const TYPE = 'isLocked'
+const TYPE = "isLocked";
 
 export interface ConditionIsLocked {
-  type: typeof TYPE
-  value: boolean
+  type: typeof TYPE;
+  value: boolean;
 }
 
 function isLocked(
-  this: Issues | PullRequests | Project,
+  this: UtilThis,
   condition: ConditionIsLocked,
-  issue: IssueProps | PRProps | ProjectProps
+  issue: UtilProps
 ) {
-  return condition.value == issue.locked
+  return condition.value == issue.locked;
 }
 
-export default [TYPE, isLocked] as const
+export default [TYPE, isLocked] as const;

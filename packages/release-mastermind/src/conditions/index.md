@@ -64,6 +64,19 @@ Example:
 }
 ```
 
+#### isAbandoned
+
+Checks if an issue or pull request is abandoned.
+
+Example:
+
+```json
+{
+  "type": "isAbandoned",
+  "stale": 30
+}
+```
+
 #### isLocked
 
 Checks if an issue or pull request is locked.
@@ -87,6 +100,19 @@ Example:
 {
   "type": "isOpen",
   "value": true
+}
+```
+
+#### isStale
+
+Checks if an issue or pull request is stale.
+
+Example:
+
+```json
+{
+  "type": "isStale",
+  "stale": 30
 }
 ```
 

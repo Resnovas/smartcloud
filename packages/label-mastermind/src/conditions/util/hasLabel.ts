@@ -1,22 +1,21 @@
-import { IssueProps, ProjectProps, PRProps } from '../'
-import { Issues, Project, PullRequests } from '../../contexts'
+import { UtilProps, UtilThis } from "../";
 
-const TYPE = 'hasLabel'
+const TYPE = "hasLabel";
 
 export interface ConditionHasLabel {
-  type: typeof TYPE
-  label: string
-  value: boolean
+  type: typeof TYPE;
+  label: string;
+  value: boolean;
 }
 
 function hasLabel(
-  this: Issues | PullRequests | Project,
+  this: UtilThis,
   condition: ConditionHasLabel,
-  issue: IssueProps | PRProps | ProjectProps
+  issue: UtilProps
 ) {
   return (
     Boolean(issue.labels?.[condition.label.toLowerCase()]) == condition.value
-  )
+  );
 }
 
-export default [TYPE, hasLabel] as const
+export default [TYPE, hasLabel] as const;

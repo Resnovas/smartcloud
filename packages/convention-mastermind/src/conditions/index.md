@@ -64,6 +64,19 @@ Example:
 }
 ```
 
+#### isOpen
+
+Checks if an issue or pull request is stale.
+
+Example:
+
+```json
+{
+  "type": "isStale",
+  "stale": 30
+}
+```
+
 #### isLocked
 
 Checks if an issue or pull request is locked.
@@ -87,6 +100,19 @@ Example:
 {
   "type": "isOpen",
   "value": true
+}
+```
+
+#### isOpen
+
+Checks if an issue or pull request is stale.
+
+Example:
+
+```json
+{
+  "type": "isStale",
+  "stale": 30
 }
 ```
 
