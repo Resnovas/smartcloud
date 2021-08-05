@@ -465,6 +465,18 @@
       },
       "prereleaseName": "alpha",
       "sharedConfig": {
+        "stale": {
+          "staleLabel": "stale",
+          "stale": {
+            "days": 60,
+            "comment": "This has been automatically marked as stale by the bot."
+          },
+          "abandoned": {
+            "days": 30,
+            "label": "abandoned",
+            "comment": "This has been automatically marked as abandoned by the bot."
+          }
+        },
         "enforceConventions": {
           "onColumn": [
             "Accepted",
@@ -1410,7 +1422,8 @@
             ]
           }
         }
-      }
+      },
+      "schedule": {}
     }
   ]
 }
