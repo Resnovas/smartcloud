@@ -45,7 +45,7 @@ export interface Config {
 }
 
 /**
- * Config types
+ * Config types.
  */
 
 export type VersionSource = "node" | "milestones" | string
