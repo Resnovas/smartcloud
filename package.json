@@ -25,7 +25,10 @@
     "test": "gulp testall",
     "dev:format-scripts": "prettier --config .prettier.json --write .",
     "dev:run": "gulp && git add . && cz",
-    "v:graduate:release": "lerna version --conventional-commits --conventional-graduate=@videndum/release-mastermind",
+    "v:graduate": "lerna version --conventional-commits --conventional-graduate && npm run git",
+    "v:graduate:convention": "lerna version --conventional-commits --conventional-graduate=@videndum/convention-mastermind && npm run git",
+    "v:graduate:label": "lerna version --conventional-commits --conventional-graduate=@videndum/label-mastermind && npm run git",
+    "v:graduate:release": "lerna version --conventional-commits --conventional-graduate=@videndum/release-mastermind && npm run git",
     "v:pre": "lerna version --conventional-commits --conventional-prerelease --no-git-tag-version && npm run git",
     "lerna:git": "lerna run --no-bail git --parallel",
     "git": "git add . && git commit -m \"chore: Bump Version & Changelog\" -s && git push"
