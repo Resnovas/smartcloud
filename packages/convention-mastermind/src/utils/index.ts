@@ -1,36 +1,47 @@
-import * as github from '@actions/github'
-import { Config, Label, Labels, Runners } from '../../types'
-import { Reviews } from '../conditions'
-import { Issues, Project, PullRequests } from '../contexts/'
-import * as APIFiles from './api/files'
-import * as APIIssues from './api/issues'
-import * as APILabels from './api/labels'
-import * as APIProject from './api/project'
-import * as APIPullRequests from './api/pullRequests'
-import * as APITag from './api/tags'
-import * as UtilLabels from './labels'
-import * as UtilParsingData from './parsingData'
-import * as UtilRespond from './respond'
-import * as UtilVersioning from './versioning'
+import * as github from "@actions/github";
+import { Config, Label, Runners } from "../../types";
+import { Reviews, UtilThis } from "../conditions";
+import * as APIFiles from "./api/files";
+import * as APIIssues from "./api/issues";
+import * as APILabels from "./api/labels";
+import * as APIProject from "./api/project";
+import * as APIPullRequests from "./api/pullRequests";
+import * as APITag from "./api/tags";
+import * as UtilLabels from "./labels";
+import * as UtilParsingData from "./parsingData";
+import * as UtilRespond from "./respond";
+import * as UtilVersioning from "./versioning";
 
 export class Utils {
-  client: github.GitHub
-  repo: Repo
-  dryRun: boolean
-  skipDelete: boolean
-  constructor(props: ApiProps, options: { dryRun: boolean, skipDelete: boolean }) {
-    this.client = props.client
-    this.repo = props.repo
-    this.dryRun = options.dryRun
-    this.skipDelete = options.skipDelete
+  client: github.GitHub;
+  repo: Repo;
+  dryRun: boolean;
+  skipDelete: boolean;
+  constructor(
+    props: ApiProps,
+    options: { dryRun: boolean; skipDelete: boolean }
+  ) {
+    this.client = props.client;
+    this.repo = props.repo;
+    this.dryRun = options.dryRun;
+    this.skipDelete = options.skipDelete;
   }
   api = {
     files: {
       get: (file: string, ref?: string) => APIFiles.get.call(this, file, ref),
-      list: (IDNumber: number) => APIFiles.list.call(this, IDNumber)
+      list: (IDNumber: number) => APIFiles.list.call(this, IDNumber),
     },
     issues: {
       get: (IDNumber: number) => APIIssues.get.call(this, IDNumber),
+      list: ({
+        state,
+        sort,
+        direction,
+      }: {
+        state?: "open" | "closed" | "all";
+        sort?: "created" | "updated" | "comments";
+        direction?: "asc" | "desc";
+      }) => APIIssues.list.call(this, { state, sort, direction }),
       comments: {
         list: (IDNumber: number) =>
           APIIssues.comments.list.call(this, IDNumber),
@@ -40,8 +51,8 @@ export class Utils {
         update: (comment_id: number, body: string) =>
           APIIssues.comments.update.call(this, comment_id, body),
         delete: (comment_id: number) =>
-          APIIssues.comments.delete.call(this, comment_id)
-      }
+          APIIssues.comments.delete.call(this, comment_id),
+      },
     },
     labels: {
       add: (IDNumber: number, label: string) =>
@@ -51,7 +62,8 @@ export class Utils {
       get: () => APILabels.get.call(this),
       remove: (IDNumber: number, label: string) =>
         APILabels.remove.call(this, IDNumber, label),
-      update: (current_name: string, label: Label) => APILabels.update.call(this, current_name, label)
+      update: (current_name: string, label: Label) =>
+        APILabels.update.call(this, current_name, label),
     },
     project: {
       column: {
@@ -59,14 +71,14 @@ export class Utils {
           APIProject.column.list.call(this, project_id),
         get: (column_id: number) => APIProject.column.get.call(this, column_id),
         listCards: (column_id: number) =>
-          APIProject.column.listCards.call(this, column_id)
+          APIProject.column.listCards.call(this, column_id),
       },
       card: {
         get: (card_id: number) => APIProject.card.get.call(this, card_id),
         create: (
           content_id: number,
           column_id: number,
-          content_type?: 'Issue' | 'PullRequest'
+          content_type?: "Issue" | "PullRequest"
         ) =>
           APIProject.card.create.call(
             this,
@@ -75,7 +87,7 @@ export class Utils {
             content_type
           ),
         move: (card_id: number, column_id: number) =>
-          APIProject.card.move.call(this, card_id, column_id)
+          APIProject.card.move.call(this, card_id, column_id),
       },
       projects: {
         get: (project_id: number) =>
@@ -83,8 +95,8 @@ export class Utils {
         org: (org: string) => APIProject.projects.org.call(this, org),
         user: (user: string) => APIProject.projects.user.call(this, user),
         repo: (owner: string, repo: string) =>
-          APIProject.projects.repo.call(this, owner, repo)
-      }
+          APIProject.projects.repo.call(this, owner, repo),
+      },
     },
     pullRequests: {
       list: (IDNumber: number) => APIPullRequests.list.call(this, IDNumber),
@@ -120,58 +132,78 @@ export class Utils {
         isApproved: (reviews: Reviews) =>
           APIPullRequests.reviews.isApproved(reviews),
         pending: (reviews: number, requested_reviews: number) =>
-          APIPullRequests.reviews.pending(reviews, requested_reviews)
-      }
+          APIPullRequests.reviews.pending(reviews, requested_reviews),
+      },
     },
     tags: {
-      get: () => APITag.get.call(this)
-    }
-  }
+      get: () => APITag.get.call(this),
+    },
+  };
   labels = {
-    sync: (config: Runners['labels']) => UtilLabels.sync.call(this, config),
+    sync: (config: Runners["labels"]) => UtilLabels.sync.call(this, config),
     addRemove: (
-      labelID: string,
       labelName: string,
       IDNumber: number,
       hasLabel: boolean,
-      shouldHaveLabel: boolean,
-      curLabels?: Labels
+      shouldHaveLabel: boolean
     ) =>
       UtilLabels.addRemove.call(
         this,
-        curLabels,
-        labelID,
         labelName,
         IDNumber,
         hasLabel,
         shouldHaveLabel
-      )
-  }
+      ),
+  };
   parsingData = {
     formatColor: (color: string) => UtilParsingData.formatColor(color),
     processRegExpPattern: (pattern: string) =>
       UtilParsingData.processRegExpPattern(pattern),
-    normalize: (text: string) => UtilParsingData.normalize(text)
-  }
+    normalize: (text: string) => UtilParsingData.normalize(text),
+    labels: async (labels: any) => UtilParsingData.parseLabels(labels),
+  };
+
   respond = (
-    that: Issues | PullRequests | Project,
+    that: UtilThis,
     success: boolean,
     previousComment?: number,
     body?: string
-  ) => UtilRespond.respond.call(that, success, previousComment, body)
+  ) => UtilRespond.respond.call(that, success, previousComment, body);
   versioning = {
     parse: (config: Config, ref?: string) =>
-      UtilVersioning.parse.call(this, config, ref)
-  }
+      UtilVersioning.parse.call(this, config, ref),
+  };
+
+  shouldRun = (type: functionality) => {
+    // get the package name
+    let pack = process.env.NPM_PACKAGE_NAME as packages;
+    if (!pack) pack = require("../../package.json").name as packages;
+
+    // Test the fucntion against package
+
+    if (pack == "@videndum/release-mastermind") return true;
+    else if (pack == "@videndum/convention-mastermind" && type == "convention")
+      return true;
+    else if (pack == "@videndum/label-mastermind" && type == "label")
+      return true;
+    else return false;
+  };
 }
 export interface Repo {
-  owner: string
-  repo: string
+  owner: string;
+  repo: string;
 }
 export interface ApiProps {
-  client: github.GitHub
-  repo: Repo
+  client: github.GitHub;
+  repo: Repo;
 }
 
-export type Event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT'
-export type Tags = string[]
+export type functionality = "release" | "convention" | "label";
+export type packages =
+  | "@videndum/release-mastermind"
+  | "@videndum/label-mastermind"
+  | "@videndum/convention-mastermind"
+  | undefined;
+
+export type Event = "REQUEST_CHANGES" | "APPROVE" | "COMMENT";
+export type Tags = string[];
