@@ -87,7 +87,7 @@ export async function checkStale(
 					label: config.abandoned.label
 				})
 
-			if (!config.abandoned.requires) config.abandoned.requires = 1
+      if (!config.abandoned.requires) {config.abandoned.requires = 1}
 			else config.abandoned.requires++
 		}
 
