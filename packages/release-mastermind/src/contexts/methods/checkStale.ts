@@ -88,7 +88,7 @@ export async function checkStale(
 				})
 
       if (!config.abandoned.requires) {config.abandoned.requires = 1}
-			else config.abandoned.requires++
+      else {config.abandoned.requires++}
 		}
 
 		// Check to see if the issue is abandoned using the evaluation function
