@@ -18,8 +18,11 @@
 		"dev:format-check": "prettier --config .prettier.json --check .",
 		"dev:package": "tsc && ncc build --source-map",
 		"dev:run": "tsc && node lib/index.js",
+		"dev:schema": "typescript-json-schema ./tsconfig.json Runners -o schema.json  --propOrder --defaultProps --titles --topRef --refs --required",
 		"dev:test": "jest --json --outputFile=result.json --testLocationInResults",
 		"git": "git add . && git commit -m \"chore: Bump Version & Changelog from @videndum/action-masterminds\" -s && git push",
+		"postdev:schema": "typescript-json-schema ./tsconfig.json Labels -o schema/labels.json  --propOrder --defaultProps --titles --topRef --refs --required",
+		"predev:schema": "typescript-json-schema ./tsconfig.json Config -o schema/configs.json  --propOrder --defaultProps --titles --topRef --refs --required",
 		"run": "node lib/index.js",
 		"test": "jest"
 	},
@@ -42,6 +45,7 @@
 		"prettier-plugin-sh": "^0.7.1",
 		"prettier-standard": "^16.4.1",
 		"ts-jest": "^26.4.3",
-		"typescript": "^4.0.5"
+		"typescript": "^4.0.5",
+		"typescript-json-schema": "^0.50.1"
 	}
 }

@@ -207,6 +207,7 @@ Now create the config file at `.github/config.json`:
 ```json
 [
 	{
+		"$schema": "../../schema/configs.json",
 		"root": ".",
 		"versioning": {
 			"source": "milestones",

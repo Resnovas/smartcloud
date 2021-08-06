@@ -1,0 +1,36 @@
+{
+	"$ref": "#/definitions/Labels",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"definitions": {
+		"Label": {
+			"defaultProperties": [],
+			"properties": {
+				"color": {
+					"title": "color",
+					"type": "string"
+				},
+				"description": {
+					"title": "description",
+					"type": "string"
+				},
+				"name": {
+					"title": "name",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["name", "description", "color"],
+			"required": ["color", "description", "name"],
+			"title": "Label",
+			"type": "object"
+		},
+		"Labels": {
+			"additionalProperties": {
+				"$ref": "#/definitions/Label"
+			},
+			"defaultProperties": [],
+			"propertyOrder": [],
+			"title": "Labels",
+			"type": "object"
+		}
+	}
+}

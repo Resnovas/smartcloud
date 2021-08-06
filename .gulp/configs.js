@@ -2,8 +2,20 @@ const jsonConfig = require('gulp-json-config');
 const rename = require("gulp-rename");
 const jsonFmt = require("gulp-json-fmt");
 const { src, dest } = require('gulp');
+const exec = require('gulp-exec');
 
 class Configs {
+
+    static schema() {
+        return src('./packages/**/README-SOURCE.md')
+            .pipe(rename(function (path) {
+                path.basename = path.dirname;
+                path.dirname = "";
+                path.extname = "";
+            }))
+            .pipe(exec(file => `cd ${file.path} && npm run dev:schema`))
+            .pipe(exec.reporter({ stdout: false }));
+    }
     static allConfig() {
         return src('.github/config/*.json')
             .pipe(jsonConfig())

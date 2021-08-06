@@ -93,7 +93,7 @@ async function createConventionComment(
 		previousComment: number | undefined
 
 	if (commentList) {
-		commentList.forEach((comment) => {
+		commentList.forEach((comment: any) => {
 			if (
 				comment.body.includes(prefix) &&
 				(!("state" in comment) || comment.state !== "DISMISSED")

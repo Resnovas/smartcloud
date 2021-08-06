@@ -1,0 +1,1791 @@
+{
+	"$ref": "#/definitions/Config",
+	"$schema": "http://json-schema.org/draft-07/schema#",
+	"definitions": {
+		"AbanondedConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"close": {
+					"title": "close",
+					"type": "boolean"
+				},
+				"comment": {
+					"title": "comment",
+					"type": "string"
+				},
+				"commentFooter": {
+					"title": "commentFooter",
+					"type": "string"
+				},
+				"commentHeader": {
+					"title": "commentHeader",
+					"type": "string"
+				},
+				"conditions": {
+					"items": {
+						"$ref": "#/definitions/Condition"
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"days": {
+					"title": "days",
+					"type": "number"
+				},
+				"label": {
+					"title": "label",
+					"type": "string"
+				},
+				"lock": {
+					"title": "lock",
+					"type": "boolean"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				},
+				"resolve": {
+					"title": "resolve",
+					"type": "string"
+				}
+			},
+			"propertyOrder": [
+				"close",
+				"lock",
+				"label",
+				"days",
+				"comment",
+				"resolve",
+				"commentHeader",
+				"commentFooter",
+				"requires",
+				"conditions"
+			],
+			"required": ["conditions", "days", "label", "requires"],
+			"title": "AbanondedConfig",
+			"type": "object"
+		},
+		"AssignProject": {
+			"defaultProperties": [],
+			"properties": {
+				"column": {
+					"title": "column",
+					"type": "string"
+				},
+				"conditions": {
+					"items": {
+						"$ref": "#/definitions/Condition"
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"owner": {
+					"title": "owner",
+					"type": "string"
+				},
+				"project": {
+					"title": "project",
+					"type": "string"
+				},
+				"repo": {
+					"title": "repo",
+					"type": "string"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				},
+				"user": {
+					"title": "user",
+					"type": "string"
+				}
+			},
+			"propertyOrder": [
+				"owner",
+				"user",
+				"repo",
+				"project",
+				"column",
+				"requires",
+				"conditions"
+			],
+			"required": ["column", "conditions", "project", "requires"],
+			"title": "AssignProject",
+			"type": "object"
+		},
+		"AutomaticApprove": {
+			"defaultProperties": [],
+			"properties": {
+				"commentFooter": {
+					"title": "commentFooter",
+					"type": "string"
+				},
+				"commentHeader": {
+					"title": "commentHeader",
+					"type": "string"
+				},
+				"conventions": {
+					"items": {
+						"$ref": "#/definitions/SharedConventionsConfig"
+					},
+					"title": "conventions",
+					"type": "array"
+				}
+			},
+			"propertyOrder": ["commentHeader", "commentFooter", "conventions"],
+			"required": ["conventions"],
+			"title": "AutomaticApprove",
+			"type": "object"
+		},
+		"Changelog": {
+			"defaultProperties": [],
+			"properties": {
+				"body": {
+					"title": "body",
+					"type": "string"
+				},
+				"includeIssues": {
+					"title": "includeIssues",
+					"type": "boolean"
+				},
+				"sections": {
+					"items": {
+						"$ref": "#/definitions/Sections"
+					},
+					"title": "sections",
+					"type": "array"
+				},
+				"title": {
+					"title": "title",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["title", "body", "includeIssues", "sections"],
+			"title": "Changelog",
+			"type": "object"
+		},
+		"Condition": {
+			"anyOf": [
+				{
+					"$ref": "#/definitions/ConditionAnd"
+				},
+				{
+					"$ref": "#/definitions/ConditionCreatorMatches"
+				},
+				{
+					"$ref": "#/definitions/ConditionDescriptionMatches"
+				},
+				{
+					"$ref": "#/definitions/ConditionHasLabel"
+				},
+				{
+					"$ref": "#/definitions/ConditionIsAbandoned"
+				},
+				{
+					"$ref": "#/definitions/ConditionIsOpen"
+				},
+				{
+					"$ref": "#/definitions/ConditionIsStale"
+				},
+				{
+					"$ref": "#/definitions/ConditionOnlyOne"
+				},
+				{
+					"$ref": "#/definitions/ConditionOr"
+				},
+				{
+					"$ref": "#/definitions/ConditionTitleMatches"
+				}
+			],
+			"title": "Condition"
+		},
+		"ConditionAnd": {
+			"defaultProperties": [],
+			"properties": {
+				"pattern": {
+					"items": [
+						{
+							"anyOf": [
+								{
+									"$ref": "#/definitions/PRConditionConfig"
+								},
+								{
+									"$ref": "#/definitions/IssueConditionConfig"
+								},
+								{
+									"$ref": "#/definitions/ProjectConditionConfig"
+								}
+							]
+						}
+					],
+					"maxItems": 1,
+					"minItems": 1,
+					"title": "pattern",
+					"type": "array"
+				},
+				"type": {
+					"enum": ["$and"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "pattern"],
+			"required": ["pattern", "type"],
+			"title": "ConditionAnd",
+			"type": "object"
+		},
+		"ConditionBranchMatches": {
+			"defaultProperties": [],
+			"properties": {
+				"pattern": {
+					"title": "pattern",
+					"type": "string"
+				},
+				"type": {
+					"enum": ["branchMatches"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "pattern"],
+			"required": ["pattern", "type"],
+			"title": "ConditionBranchMatches",
+			"type": "object"
+		},
+		"ConditionChangesSize": {
+			"defaultProperties": [],
+			"properties": {
+				"max": {
+					"title": "max",
+					"type": "number"
+				},
+				"min": {
+					"title": "min",
+					"type": "number"
+				},
+				"type": {
+					"enum": ["changesSize"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "min", "max"],
+			"required": ["min", "type"],
+			"title": "ConditionChangesSize",
+			"type": "object"
+		},
+		"ConditionCreatorMatches": {
+			"defaultProperties": [],
+			"properties": {
+				"pattern": {
+					"title": "pattern",
+					"type": "string"
+				},
+				"type": {
+					"enum": ["creatorMatches"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "pattern"],
+			"required": ["pattern", "type"],
+			"title": "ConditionCreatorMatches",
+			"type": "object"
+		},
+		"ConditionDescriptionMatches": {
+			"defaultProperties": [],
+			"properties": {
+				"pattern": {
+					"title": "pattern",
+					"type": "string"
+				},
+				"type": {
+					"enum": ["descriptionMatches"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "pattern"],
+			"required": ["pattern", "type"],
+			"title": "ConditionDescriptionMatches",
+			"type": "object"
+		},
+		"ConditionFilesMatch": {
+			"defaultProperties": [],
+			"properties": {
+				"glob": {
+					"title": "glob",
+					"type": "string"
+				},
+				"type": {
+					"enum": ["filesMatch"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "glob"],
+			"required": ["glob", "type"],
+			"title": "ConditionFilesMatch",
+			"type": "object"
+		},
+		"ConditionHasLabel": {
+			"defaultProperties": [],
+			"properties": {
+				"label": {
+					"title": "label",
+					"type": "string"
+				},
+				"type": {
+					"enum": ["hasLabel"],
+					"title": "type",
+					"type": "string"
+				},
+				"value": {
+					"title": "value",
+					"type": "boolean"
+				}
+			},
+			"propertyOrder": ["type", "label", "value"],
+			"required": ["label", "type", "value"],
+			"title": "ConditionHasLabel",
+			"type": "object"
+		},
+		"ConditionIsAbandoned": {
+			"defaultProperties": [],
+			"properties": {
+				"label": {
+					"title": "label",
+					"type": "string"
+				},
+				"type": {
+					"enum": ["isAbandoned"],
+					"title": "type",
+					"type": "string"
+				},
+				"value": {
+					"title": "value",
+					"type": "number"
+				}
+			},
+			"propertyOrder": ["type", "value", "label"],
+			"required": ["label", "type", "value"],
+			"title": "ConditionIsAbandoned",
+			"type": "object"
+		},
+		"ConditionIsDraft": {
+			"defaultProperties": [],
+			"properties": {
+				"type": {
+					"enum": ["isDraft"],
+					"title": "type",
+					"type": "string"
+				},
+				"value": {
+					"title": "value",
+					"type": "boolean"
+				}
+			},
+			"propertyOrder": ["type", "value"],
+			"required": ["type", "value"],
+			"title": "ConditionIsDraft",
+			"type": "object"
+		},
+		"ConditionIsOpen": {
+			"defaultProperties": [],
+			"properties": {
+				"type": {
+					"enum": ["isOpen"],
+					"title": "type",
+					"type": "string"
+				},
+				"value": {
+					"title": "value",
+					"type": "boolean"
+				}
+			},
+			"propertyOrder": ["type", "value"],
+			"required": ["type", "value"],
+			"title": "ConditionIsOpen",
+			"type": "object"
+		},
+		"ConditionIsStale": {
+			"defaultProperties": [],
+			"properties": {
+				"type": {
+					"enum": ["isStale"],
+					"title": "type",
+					"type": "string"
+				},
+				"value": {
+					"title": "value",
+					"type": "number"
+				}
+			},
+			"propertyOrder": ["type", "value"],
+			"required": ["type", "value"],
+			"title": "ConditionIsStale",
+			"type": "object"
+		},
+		"ConditionOnlyOne": {
+			"defaultProperties": [],
+			"properties": {
+				"pattern": {
+					"items": [
+						{
+							"anyOf": [
+								{
+									"$ref": "#/definitions/PRConditionConfig"
+								},
+								{
+									"$ref": "#/definitions/IssueConditionConfig"
+								},
+								{
+									"$ref": "#/definitions/ProjectConditionConfig"
+								}
+							]
+						}
+					],
+					"maxItems": 1,
+					"minItems": 1,
+					"title": "pattern",
+					"type": "array"
+				},
+				"required": {
+					"title": "required",
+					"type": "number"
+				},
+				"type": {
+					"enum": ["$only"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["required", "type", "pattern"],
+			"required": ["pattern", "required", "type"],
+			"title": "ConditionOnlyOne",
+			"type": "object"
+		},
+		"ConditionOr": {
+			"defaultProperties": [],
+			"properties": {
+				"pattern": {
+					"items": [
+						{
+							"anyOf": [
+								{
+									"$ref": "#/definitions/PRConditionConfig"
+								},
+								{
+									"$ref": "#/definitions/IssueConditionConfig"
+								},
+								{
+									"$ref": "#/definitions/ProjectConditionConfig"
+								}
+							]
+						}
+					],
+					"maxItems": 1,
+					"minItems": 1,
+					"title": "pattern",
+					"type": "array"
+				},
+				"type": {
+					"enum": ["$or"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "pattern"],
+			"required": ["pattern", "type"],
+			"title": "ConditionOr",
+			"type": "object"
+		},
+		"ConditionPendingReview": {
+			"defaultProperties": [],
+			"properties": {
+				"type": {
+					"enum": ["pendingReview"],
+					"title": "type",
+					"type": "string"
+				},
+				"value": {
+					"title": "value",
+					"type": "boolean"
+				}
+			},
+			"propertyOrder": ["type", "value"],
+			"required": ["type", "value"],
+			"title": "ConditionPendingReview",
+			"type": "object"
+		},
+		"ConditionRequestedChanges": {
+			"defaultProperties": [],
+			"properties": {
+				"type": {
+					"enum": ["requestedChanges"],
+					"title": "type",
+					"type": "string"
+				},
+				"value": {
+					"title": "value",
+					"type": "boolean"
+				}
+			},
+			"propertyOrder": ["type", "value"],
+			"required": ["type", "value"],
+			"title": "ConditionRequestedChanges",
+			"type": "object"
+		},
+		"ConditionTitleMatches": {
+			"defaultProperties": [],
+			"properties": {
+				"pattern": {
+					"title": "pattern",
+					"type": "string"
+				},
+				"type": {
+					"enum": ["titleMatches"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "pattern"],
+			"required": ["pattern", "type"],
+			"title": "ConditionTitleMatches",
+			"type": "object"
+		},
+		"ConditionisApproved": {
+			"defaultProperties": [],
+			"properties": {
+				"required": {
+					"title": "required",
+					"type": "number"
+				},
+				"type": {
+					"enum": ["isApproved"],
+					"title": "type",
+					"type": "string"
+				},
+				"value": {
+					"title": "value",
+					"type": "boolean"
+				}
+			},
+			"propertyOrder": ["type", "value", "required"],
+			"required": ["type", "value"],
+			"title": "ConditionisApproved",
+			"type": "object"
+		},
+		"ConditiononColumn": {
+			"defaultProperties": [],
+			"properties": {
+				"column": {
+					"title": "column",
+					"type": "string"
+				},
+				"project": {
+					"title": "project",
+					"type": "string"
+				},
+				"type": {
+					"enum": ["onColumn"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["type", "project", "column"],
+			"required": ["column", "project", "type"],
+			"title": "ConditiononColumn",
+			"type": "object"
+		},
+		"Config": {
+			"defaultProperties": [],
+			"properties": {
+				"issue": {
+					"$ref": "#/definitions/IssueConfig",
+					"title": "issue"
+				},
+				"labels": {
+					"additionalProperties": {
+						"type": "string"
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "labels",
+					"type": "object"
+				},
+				"pr": {
+					"$ref": "#/definitions/PullRequestConfig",
+					"title": "pr"
+				},
+				"prereleaseName": {
+					"title": "prereleaseName",
+					"type": "string"
+				},
+				"project": {
+					"$ref": "#/definitions/ProjectConfig",
+					"title": "project"
+				},
+				"retryLimit": {
+					"title": "retryLimit",
+					"type": "number"
+				},
+				"root": {
+					"title": "root",
+					"type": "string"
+				},
+				"schedule": {
+					"$ref": "#/definitions/ScheduleConfig",
+					"title": "schedule"
+				},
+				"sharedConfig": {
+					"$ref": "#/definitions/SharedConfig",
+					"title": "sharedConfig"
+				},
+				"versioning": {
+					"defaultProperties": [],
+					"properties": {
+						"source": {
+							"description": "Config types",
+							"title": "source",
+							"type": "string"
+						},
+						"type": {
+							"enum": ["SemVer"],
+							"title": "type",
+							"type": "string"
+						}
+					},
+					"propertyOrder": ["source", "type"],
+					"required": ["source"],
+					"title": "versioning",
+					"type": "object"
+				}
+			},
+			"propertyOrder": [
+				"root",
+				"versioning",
+				"retryLimit",
+				"prereleaseName",
+				"labels",
+				"sharedConfig",
+				"pr",
+				"issue",
+				"project",
+				"schedule"
+			],
+			"required": ["root", "versioning"],
+			"title": "Config",
+			"type": "object"
+		},
+		"CreateBranch": {
+			"defaultProperties": [],
+			"properties": {
+				"branchName": {
+					"enum": ["number", "short", "title"],
+					"title": "branchName",
+					"type": "string"
+				},
+				"branchPrefix": {
+					"title": "branchPrefix",
+					"type": "string"
+				},
+				"branchSuffix": {
+					"title": "branchSuffix",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["branchPrefix", "branchSuffix", "branchName"],
+			"required": ["branchName"],
+			"title": "CreateBranch",
+			"type": "object"
+		},
+		"CreateMilestone": {
+			"defaultProperties": [],
+			"properties": {
+				"deadline": {
+					"title": "deadline",
+					"type": "string"
+				},
+				"milestone": {
+					"title": "milestone",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["milestone", "deadline"],
+			"required": ["milestone"],
+			"title": "CreateMilestone",
+			"type": "object"
+		},
+		"CreateRelease": {
+			"defaultProperties": [],
+			"properties": {
+				"draft": {
+					"title": "draft",
+					"type": "boolean"
+				},
+				"includeIssues": {
+					"title": "includeIssues",
+					"type": "boolean"
+				},
+				"prerelease": {
+					"title": "prerelease",
+					"type": "boolean"
+				},
+				"releaseName": {
+					"title": "releaseName",
+					"type": "string"
+				},
+				"releaseNamePrefix": {
+					"title": "releaseNamePrefix",
+					"type": "string"
+				},
+				"releaseNameSuffix": {
+					"title": "releaseNameSuffix",
+					"type": "string"
+				},
+				"sections": {
+					"items": {
+						"$ref": "#/definitions/Sections"
+					},
+					"title": "sections",
+					"type": "array"
+				},
+				"tagName": {
+					"title": "tagName",
+					"type": "string"
+				},
+				"tagPrefix": {
+					"title": "tagPrefix",
+					"type": "string"
+				},
+				"useChangelog": {
+					"title": "useChangelog",
+					"type": "boolean"
+				}
+			},
+			"propertyOrder": [
+				"tagName",
+				"tagPrefix",
+				"releaseName",
+				"releaseNamePrefix",
+				"releaseNameSuffix",
+				"draft",
+				"prerelease",
+				"useChangelog",
+				"includeIssues",
+				"sections"
+			],
+			"title": "CreateRelease",
+			"type": "object"
+		},
+		"DuplicateHotfix": {
+			"defaultProperties": [],
+			"properties": {
+				"branches": {
+					"items": {
+						"type": "string"
+					},
+					"title": "branches",
+					"type": "array"
+				},
+				"prName": {
+					"title": "prName",
+					"type": "string"
+				},
+				"titlePrefix": {
+					"title": "titlePrefix",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["prName", "titlePrefix", "branches"],
+			"required": ["branches", "prName"],
+			"title": "DuplicateHotfix",
+			"type": "object"
+		},
+		"EnforceConventions": {
+			"defaultProperties": [],
+			"properties": {
+				"commentFooter": {
+					"title": "commentFooter",
+					"type": "string"
+				},
+				"commentHeader": {
+					"title": "commentHeader",
+					"type": "string"
+				},
+				"conventions": {
+					"items": {
+						"$ref": "#/definitions/SharedConventionsConfig"
+					},
+					"title": "conventions",
+					"type": "array"
+				},
+				"moveToColumn": {
+					"title": "moveToColumn",
+					"type": "string"
+				},
+				"onColumn": {
+					"items": {
+						"type": ["string", "number"]
+					},
+					"title": "onColumn",
+					"type": "array"
+				}
+			},
+			"propertyOrder": [
+				"onColumn",
+				"commentHeader",
+				"commentFooter",
+				"moveToColumn",
+				"conventions"
+			],
+			"required": ["conventions"],
+			"title": "EnforceConventions",
+			"type": "object"
+		},
+		"ExProjects": {
+			"defaultProperties": [],
+			"properties": {
+				"localProject": {
+					"title": "localProject",
+					"type": "string"
+				},
+				"owner": {
+					"title": "owner",
+					"type": "string"
+				},
+				"project": {
+					"title": "project",
+					"type": "string"
+				},
+				"repo": {
+					"title": "repo",
+					"type": "string"
+				},
+				"user": {
+					"title": "user",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["localProject", "owner", "user", "repo", "project"],
+			"required": ["localProject", "project"],
+			"title": "ExProjects",
+			"type": "object"
+		},
+		"IssueConditionConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"conditions": {
+					"items": {
+						"$ref": "#/definitions/Condition"
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				}
+			},
+			"propertyOrder": ["requires", "conditions"],
+			"required": ["conditions", "requires"],
+			"title": "IssueConditionConfig",
+			"type": "object"
+		},
+		"IssueConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"assignProject": {
+					"items": {
+						"$ref": "#/definitions/AssignProject"
+					},
+					"title": "assignProject",
+					"type": "array"
+				},
+				"createBranch": {
+					"additionalProperties": {
+						"$ref": "#/definitions/CreateBranch"
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "createBranch",
+					"type": "object"
+				},
+				"enforceConventions": {
+					"$ref": "#/definitions/EnforceConventions",
+					"title": "enforceConventions"
+				},
+				"labels": {
+					"additionalProperties": {
+						"anyOf": [
+							{
+								"$ref": "#/definitions/SharedConditions"
+							},
+							{
+								"$ref": "#/definitions/PRConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ProjectConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ScheduleConditionConfig"
+							}
+						]
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "labels",
+					"type": "object"
+				},
+				"ref": {
+					"title": "ref",
+					"type": "string"
+				},
+				"stale": {
+					"$ref": "#/definitions/Stale",
+					"title": "stale"
+				}
+			},
+			"propertyOrder": [
+				"assignProject",
+				"createBranch",
+				"ref",
+				"enforceConventions",
+				"stale",
+				"labels"
+			],
+			"title": "IssueConfig",
+			"type": "object"
+		},
+		"Milestones": {
+			"defaultProperties": [],
+			"properties": {
+				"ignoreLabels": {
+					"items": {
+						"type": "string"
+					},
+					"title": "ignoreLabels",
+					"type": "array"
+				},
+				"onColumn": {
+					"title": "onColumn",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["onColumn", "ignoreLabels"],
+			"required": ["onColumn"],
+			"title": "Milestones",
+			"type": "object"
+		},
+		"PRConditionConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"conditions": {
+					"items": {
+						"anyOf": [
+							{
+								"$ref": "#/definitions/ConditionAnd"
+							},
+							{
+								"$ref": "#/definitions/ConditionCreatorMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionDescriptionMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionHasLabel"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsAbandoned"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsOpen"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsStale"
+							},
+							{
+								"$ref": "#/definitions/ConditionOnlyOne"
+							},
+							{
+								"$ref": "#/definitions/ConditionOr"
+							},
+							{
+								"$ref": "#/definitions/ConditionTitleMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionBranchMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionChangesSize"
+							},
+							{
+								"$ref": "#/definitions/ConditionFilesMatch"
+							},
+							{
+								"$ref": "#/definitions/ConditionisApproved"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsDraft"
+							},
+							{
+								"$ref": "#/definitions/ConditionPendingReview"
+							},
+							{
+								"$ref": "#/definitions/ConditionRequestedChanges"
+							}
+						]
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				}
+			},
+			"propertyOrder": ["requires", "conditions"],
+			"required": ["conditions", "requires"],
+			"title": "PRConditionConfig",
+			"type": "object"
+		},
+		"ProjectConditionConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"conditions": {
+					"items": {
+						"anyOf": [
+							{
+								"$ref": "#/definitions/ConditionAnd"
+							},
+							{
+								"$ref": "#/definitions/ConditionCreatorMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionDescriptionMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionHasLabel"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsAbandoned"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsOpen"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsStale"
+							},
+							{
+								"$ref": "#/definitions/ConditionOnlyOne"
+							},
+							{
+								"$ref": "#/definitions/ConditionOr"
+							},
+							{
+								"$ref": "#/definitions/ConditionTitleMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditiononColumn"
+							}
+						]
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				}
+			},
+			"propertyOrder": ["requires", "conditions"],
+			"required": ["conditions", "requires"],
+			"title": "ProjectConditionConfig",
+			"type": "object"
+		},
+		"ProjectConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"assignMilestone": {
+					"additionalProperties": {
+						"$ref": "#/definitions/Milestones"
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "assignMilestone",
+					"type": "object"
+				},
+				"enforceConventions": {
+					"$ref": "#/definitions/EnforceConventions",
+					"title": "enforceConventions"
+				},
+				"labels": {
+					"additionalProperties": {
+						"anyOf": [
+							{
+								"$ref": "#/definitions/SharedConditions"
+							},
+							{
+								"$ref": "#/definitions/PRConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ProjectConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ScheduleConditionConfig"
+							}
+						]
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "labels",
+					"type": "object"
+				},
+				"openBranch": {
+					"$ref": "#/definitions/ProjectCreateBranch",
+					"title": "openBranch"
+				},
+				"ref": {
+					"title": "ref",
+					"type": "string"
+				},
+				"stale": {
+					"$ref": "#/definitions/Stale",
+					"title": "stale"
+				},
+				"syncRemote": {
+					"items": {
+						"$ref": "#/definitions/ExProjects"
+					},
+					"title": "syncRemote",
+					"type": "array"
+				}
+			},
+			"propertyOrder": [
+				"syncRemote",
+				"openBranch",
+				"assignMilestone",
+				"ref",
+				"enforceConventions",
+				"stale",
+				"labels"
+			],
+			"title": "ProjectConfig",
+			"type": "object"
+		},
+		"ProjectCreateBranch": {
+			"defaultProperties": [],
+			"properties": {
+				"branchName": {
+					"enum": ["number", "short", "title"],
+					"title": "branchName",
+					"type": "string"
+				},
+				"branchPrefix": {
+					"title": "branchPrefix",
+					"type": "string"
+				},
+				"branchSuffix": {
+					"title": "branchSuffix",
+					"type": "string"
+				},
+				"onColumn": {
+					"title": "onColumn",
+					"type": "string"
+				},
+				"onProject": {
+					"title": "onProject",
+					"type": "string"
+				}
+			},
+			"propertyOrder": [
+				"onProject",
+				"onColumn",
+				"branchPrefix",
+				"branchSuffix",
+				"branchName"
+			],
+			"required": ["branchName"],
+			"title": "ProjectCreateBranch",
+			"type": "object"
+		},
+		"PullRequestConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"assignProject": {
+					"items": {
+						"$ref": "#/definitions/AssignProject"
+					},
+					"title": "assignProject",
+					"type": "array"
+				},
+				"automaticApprove": {
+					"$ref": "#/definitions/AutomaticApprove",
+					"title": "automaticApprove"
+				},
+				"duplicateHotfix": {
+					"additionalProperties": {
+						"$ref": "#/definitions/DuplicateHotfix"
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "duplicateHotfix",
+					"type": "object"
+				},
+				"enforceConventions": {
+					"$ref": "#/definitions/EnforceConventions",
+					"title": "enforceConventions"
+				},
+				"labels": {
+					"additionalProperties": {
+						"anyOf": [
+							{
+								"$ref": "#/definitions/SharedConditions"
+							},
+							{
+								"$ref": "#/definitions/PRConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ProjectConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ScheduleConditionConfig"
+							}
+						]
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "labels",
+					"type": "object"
+				},
+				"manageRelease": {
+					"$ref": "#/definitions/Release",
+					"title": "manageRelease"
+				},
+				"ref": {
+					"title": "ref",
+					"type": "string"
+				},
+				"stale": {
+					"$ref": "#/definitions/Stale",
+					"title": "stale"
+				},
+				"syncRemote": {
+					"items": {
+						"$ref": "#/definitions/SyncRemote"
+					},
+					"title": "syncRemote",
+					"type": "array"
+				}
+			},
+			"propertyOrder": [
+				"assignProject",
+				"automaticApprove",
+				"manageRelease",
+				"duplicateHotfix",
+				"syncRemote",
+				"ref",
+				"enforceConventions",
+				"stale",
+				"labels"
+			],
+			"title": "PullRequestConfig",
+			"type": "object"
+		},
+		"Release": {
+			"defaultProperties": [],
+			"properties": {
+				"conditions": {
+					"items": {
+						"anyOf": [
+							{
+								"$ref": "#/definitions/ConditionAnd"
+							},
+							{
+								"$ref": "#/definitions/ConditionCreatorMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionDescriptionMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionHasLabel"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsAbandoned"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsOpen"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsStale"
+							},
+							{
+								"$ref": "#/definitions/ConditionOnlyOne"
+							},
+							{
+								"$ref": "#/definitions/ConditionOr"
+							},
+							{
+								"$ref": "#/definitions/ConditionTitleMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionBranchMatches"
+							},
+							{
+								"$ref": "#/definitions/ConditionChangesSize"
+							},
+							{
+								"$ref": "#/definitions/ConditionFilesMatch"
+							},
+							{
+								"$ref": "#/definitions/ConditionisApproved"
+							},
+							{
+								"$ref": "#/definitions/ConditionIsDraft"
+							},
+							{
+								"$ref": "#/definitions/ConditionPendingReview"
+							},
+							{
+								"$ref": "#/definitions/ConditionRequestedChanges"
+							}
+						]
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"createChangelog": {
+					"$ref": "#/definitions/Changelog",
+					"title": "createChangelog"
+				},
+				"createMilestone": {
+					"$ref": "#/definitions/CreateMilestone",
+					"title": "createMilestone"
+				},
+				"createPackages": {
+					"anyOf": [
+						{
+							"items": {
+								"type": "string"
+							},
+							"type": "array"
+						},
+						{
+							"type": "string"
+						}
+					],
+					"title": "createPackages"
+				},
+				"createRelease": {
+					"$ref": "#/definitions/CreateRelease",
+					"title": "createRelease"
+				},
+				"createTag": {
+					"title": "createTag",
+					"type": "boolean"
+				},
+				"labels": {
+					"defaultProperties": [],
+					"properties": {
+						"breaking": {
+							"title": "breaking",
+							"type": "string"
+						},
+						"build": {
+							"title": "build",
+							"type": "string"
+						},
+						"major": {
+							"title": "major",
+							"type": "string"
+						},
+						"minor": {
+							"title": "minor",
+							"type": "string"
+						},
+						"patch": {
+							"title": "patch",
+							"type": "string"
+						},
+						"prerelease": {
+							"title": "prerelease",
+							"type": "string"
+						}
+					},
+					"propertyOrder": [
+						"build",
+						"prerelease",
+						"patch",
+						"minor",
+						"major",
+						"breaking"
+					],
+					"required": ["build", "major", "minor", "patch", "prerelease"],
+					"title": "labels",
+					"type": "object"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				}
+			},
+			"propertyOrder": [
+				"labels",
+				"createTag",
+				"createRelease",
+				"createMilestone",
+				"createPackages",
+				"createChangelog",
+				"requires",
+				"conditions"
+			],
+			"required": ["conditions", "requires"],
+			"title": "Release",
+			"type": "object"
+		},
+		"ScheduleConditionConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"conditions": {
+					"items": {
+						"$ref": "#/definitions/Condition"
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				}
+			},
+			"propertyOrder": ["requires", "conditions"],
+			"required": ["conditions", "requires"],
+			"title": "ScheduleConditionConfig",
+			"type": "object"
+		},
+		"ScheduleConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"enforceConventions": {
+					"$ref": "#/definitions/EnforceConventions",
+					"title": "enforceConventions"
+				},
+				"labels": {
+					"additionalProperties": {
+						"anyOf": [
+							{
+								"$ref": "#/definitions/SharedConditions"
+							},
+							{
+								"$ref": "#/definitions/PRConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ProjectConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ScheduleConditionConfig"
+							}
+						]
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "labels",
+					"type": "object"
+				},
+				"ref": {
+					"title": "ref",
+					"type": "string"
+				},
+				"stale": {
+					"$ref": "#/definitions/Stale",
+					"title": "stale"
+				}
+			},
+			"propertyOrder": ["ref", "enforceConventions", "stale", "labels"],
+			"title": "ScheduleConfig",
+			"type": "object"
+		},
+		"Sections": {
+			"defaultProperties": [],
+			"properties": {
+				"PRlabels": {
+					"items": {
+						"type": "string"
+					},
+					"title": "PRlabels",
+					"type": "array"
+				},
+				"body": {
+					"title": "body",
+					"type": "string"
+				},
+				"includeCommitter": {
+					"title": "includeCommitter",
+					"type": "boolean"
+				},
+				"issueLabels": {
+					"items": {
+						"type": "string"
+					},
+					"title": "issueLabels",
+					"type": "array"
+				},
+				"linkPR": {
+					"title": "linkPR",
+					"type": "boolean"
+				},
+				"title": {
+					"title": "title",
+					"type": "string"
+				}
+			},
+			"propertyOrder": [
+				"title",
+				"body",
+				"PRlabels",
+				"issueLabels",
+				"includeCommitter",
+				"linkPR"
+			],
+			"required": ["PRlabels", "title"],
+			"title": "Sections",
+			"type": "object"
+		},
+		"SharedConditions": {
+			"defaultProperties": [],
+			"properties": {
+				"conditions": {
+					"items": {
+						"$ref": "#/definitions/Condition"
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				}
+			},
+			"propertyOrder": ["requires", "conditions"],
+			"required": ["conditions", "requires"],
+			"title": "SharedConditions",
+			"type": "object"
+		},
+		"SharedConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"enforceConventions": {
+					"$ref": "#/definitions/EnforceConventions",
+					"title": "enforceConventions"
+				},
+				"labels": {
+					"additionalProperties": {
+						"anyOf": [
+							{
+								"$ref": "#/definitions/SharedConditions"
+							},
+							{
+								"$ref": "#/definitions/PRConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ProjectConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/ScheduleConditionConfig"
+							}
+						]
+					},
+					"defaultProperties": [],
+					"propertyOrder": [],
+					"title": "labels",
+					"type": "object"
+				},
+				"ref": {
+					"title": "ref",
+					"type": "string"
+				},
+				"stale": {
+					"$ref": "#/definitions/Stale",
+					"title": "stale"
+				}
+			},
+			"propertyOrder": ["ref", "enforceConventions", "stale", "labels"],
+			"title": "SharedConfig",
+			"type": "object"
+		},
+		"SharedConventionsConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"conditions": {
+					"anyOf": [
+						{
+							"items": {
+								"$ref": "#/definitions/Condition"
+							},
+							"type": "array"
+						},
+						{
+							"type": "string"
+						}
+					],
+					"title": "conditions"
+				},
+				"contexts": {
+					"items": {
+						"type": "string"
+					},
+					"title": "contexts",
+					"type": "array"
+				},
+				"failedComment": {
+					"title": "failedComment",
+					"type": "string"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				}
+			},
+			"propertyOrder": ["failedComment", "contexts", "requires", "conditions"],
+			"required": ["conditions", "failedComment", "requires"],
+			"title": "SharedConventionsConfig",
+			"type": "object"
+		},
+		"Stale": {
+			"defaultProperties": [],
+			"properties": {
+				"abandoned": {
+					"$ref": "#/definitions/AbanondedConfig",
+					"title": "abandoned"
+				},
+				"conditions": {
+					"items": {
+						"$ref": "#/definitions/SharedConditions"
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"stale": {
+					"$ref": "#/definitions/StaleConfig",
+					"title": "stale"
+				},
+				"staleLabel": {
+					"title": "staleLabel",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["staleLabel", "stale", "abandoned", "conditions"],
+			"required": ["staleLabel"],
+			"title": "Stale",
+			"type": "object"
+		},
+		"StaleConfig": {
+			"defaultProperties": [],
+			"properties": {
+				"comment": {
+					"title": "comment",
+					"type": "string"
+				},
+				"commentFooter": {
+					"title": "commentFooter",
+					"type": "string"
+				},
+				"commentHeader": {
+					"title": "commentHeader",
+					"type": "string"
+				},
+				"conditions": {
+					"items": {
+						"$ref": "#/definitions/Condition"
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"days": {
+					"title": "days",
+					"type": "number"
+				},
+				"requires": {
+					"title": "requires",
+					"type": "number"
+				},
+				"resolve": {
+					"title": "resolve",
+					"type": "string"
+				}
+			},
+			"propertyOrder": [
+				"days",
+				"comment",
+				"resolve",
+				"commentHeader",
+				"commentFooter",
+				"requires",
+				"conditions"
+			],
+			"required": ["conditions", "days", "requires"],
+			"title": "StaleConfig",
+			"type": "object"
+		},
+		"SyncRemote": {
+			"defaultProperties": [],
+			"properties": {
+				"conditions": {
+					"items": {
+						"$ref": "#/definitions/SharedConditions"
+					},
+					"title": "conditions",
+					"type": "array"
+				},
+				"localBranch": {
+					"title": "localBranch",
+					"type": "string"
+				},
+				"localPath": {
+					"title": "localPath",
+					"type": "string"
+				},
+				"remoteBranch": {
+					"title": "remoteBranch",
+					"type": "string"
+				},
+				"remotePath": {
+					"title": "remotePath",
+					"type": "string"
+				}
+			},
+			"propertyOrder": [
+				"localBranch",
+				"remoteBranch",
+				"localPath",
+				"remotePath",
+				"conditions"
+			],
+			"required": [
+				"conditions",
+				"localBranch",
+				"localPath",
+				"remoteBranch",
+				"remotePath"
+			],
+			"title": "SyncRemote",
+			"type": "object"
+		}
+	}
+}

@@ -29,6 +29,7 @@
     "prettier-plugin-organize-imports": "^2.3.3",
     "prettier-plugin-pkg": "^0.10.0",
     "prettier-plugin-sh": "^0.7.1",
-    "prettier-standard": "^16.4.1"
+    "prettier-standard": "^16.4.1",
+    "typescript-json-schema": "^0.50.1"
   }
 }

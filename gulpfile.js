@@ -34,6 +34,7 @@ exports.default = series(
     parallel(Copy.prettier, Copy.tsconfig, Copy.index, Copy.action, Copy.evaluator, Copy.contexts, Copy.docs, Copy.conditions, Copy.labels, Copy.types, Copy.utils, Copy.templates),
     parallel(Configs.release, Configs.convention, Configs.labels),
     Copy.format,
+    Configs.schema,
     testall,
     Configs.allConfig,
     parallel(Markdown.setup, Markdown.conditions),
