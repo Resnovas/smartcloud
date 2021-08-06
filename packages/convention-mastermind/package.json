@@ -1,6 +1,6 @@
 {
 	"name": "@videndum/convention-mastermind",
-	"version": "2.0.0-alpha.1",
+	"version": "2.0.0-alpha.2",
 	"description": "The super-powered convention enforcer for Github Actions, with complex, customisable conditions for PR, Issues and Projects",
 	"repository": "git@github.com:videndum/convention-mastermind.git",
 	"author": "Jonathan Stevens <jonathan@videndum.studio>",
