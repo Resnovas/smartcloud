@@ -80,9 +80,6 @@ export async function checkStale(
 	if (!this.context.props) throw new Error("Context Props must exist")
 	const StaleLabel = this.configs.labels?.[config.staleLabel]
 	if (!StaleLabel) throw new Error("Stale Label must exist")
-	const hasStale = Boolean(
-		this.context.props.labels?.[StaleLabel.toLowerCase()]
-	)
 
 	if (config.stale) {
 		log(
@@ -117,13 +114,13 @@ export async function checkStale(
 
 		// If stale run the rest of the actions
 		if (stale)
-			// Apply the stale label
-			this.util.labels.addRemove(
-				StaleLabel,
-				this.context.props.ID,
-				hasStale,
-				stale
-			)
+			if (this.config.labels && !this.config.labels[StaleLabel])
+				// Apply the stale label
+				this.config.labels[StaleLabel] = {
+					conditions: config.stale.conditions,
+					requires: 1
+				}
+
 		// Create the stale comment
 		!this.dryRun && createComment.call(this, config.stale, stale)
 	}
@@ -152,8 +149,11 @@ export async function checkStale(
 					label: config.abandoned.label
 				})
 
-			if (!config.abandoned.requires) config.abandoned.requires = 1
-			else config.abandoned.requires++
+			if (!config.abandoned.requires) {
+				config.abandoned.requires = 1
+			} else {
+				config.abandoned.requires++
+			}
 		}
 
 		// Check to see if the issue is abandoned using the evaluation function
@@ -167,14 +167,12 @@ export async function checkStale(
 		if (!AbandonedLabel) throw new Error("Stale Label must exist")
 
 		if (abandoned && AbandonedLabel)
-			// Apply the stale label
-			this.util.labels.addRemove(
-				AbandonedLabel,
-				this.context.props.ID,
-				hasStale,
-				abandoned
-			)
-
+			if (this.config.labels && !this.config.labels[AbandonedLabel])
+				// Apply the stale label
+				this.config.labels[AbandonedLabel] = {
+					conditions: config.abandoned.conditions,
+					requires: 1
+				}
 		// Create the abandoned comment
 		!this.dryRun && createComment.call(this, config.abandoned, abandoned)
 	}
