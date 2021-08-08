@@ -71,7 +71,7 @@ export const reviews = {
 	},
 
 	async requestedChanges(reviews: Reviews) {
-		let changes: number = 0
+		let changes = 0
 		reviews.forEach((review) => {
 			if (review.state == "CHANGES_REQUESTED") changes++
 		})
@@ -79,7 +79,7 @@ export const reviews = {
 	},
 
 	async isApproved(reviews: Reviews) {
-		let approved: number = 0
+		let approved = 0
 		reviews.forEach((review) => {
 			if (review.state == "APPROVED") approved++
 		})

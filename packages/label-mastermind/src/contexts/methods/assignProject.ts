@@ -3,8 +3,36 @@
 import { LoggingLevels } from "@videndum/utilities"
 import { Issues, PullRequests } from ".."
 import { log } from "../.."
+import { IssueConditionConfig } from "../../conditions"
 import { evaluator } from "../../evaluator"
 
+/**
+ * Assign project configuration
+ */
+export interface AssignProject extends IssueConditionConfig {
+	/**
+	 * The owner of the project
+	 */
+	owner?: string
+	/**
+	 * The user of the project
+	 */
+	user?: string
+	/**
+	 * The repository name
+	 * @requires owner
+	 */
+	repo?: string
+	/**
+	 * The project to use
+	 * @requires owner|user|repo
+	 */
+	project: string
+	/**
+	 * The column to use
+	 */
+	column: string
+}
 export async function assignProject(this: Issues | PullRequests) {
 	if (!this.config?.assignProject) return
 	this.config.assignProject.forEach(async (remote) => {

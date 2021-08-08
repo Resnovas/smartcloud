@@ -1,13 +1,40 @@
 /** @format */
 
 import * as core from "@actions/core"
+import { Context } from "@actions/github/lib/context"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
-import { Context } from "vm"
-import { log } from ".."
-import { Column, Config, ProjectConfig, Runners } from "../../types"
+import { Config, Runners, SharedConfig } from "../action"
 import { CurContext, ProjectContext, Version } from "../conditions"
 import { Utils } from "../utils"
-import { Contexts } from "./methods"
+import { Contexts, log } from "./methods"
+import { Column } from "./methods/conventions"
+import { ProjectCreateBranch } from "./methods/createBranch"
+import { Milestones } from "./methods/handleMilestone"
+import { ExProjects } from "./methods/syncRemoteProject"
+
+/**
+ * The project configuration
+ */
+export interface ProjectConfig extends SharedConfig {
+	/**
+	 * Syncronise remote repository configuration.
+	 */
+	syncRemote?: ExProjects[]
+	/**
+	 * Open branch configuration
+	 */
+	openBranch?: ProjectCreateBranch
+	/**
+	 * Assign to milestone configuration
+	 */
+	assignMilestone?: {
+		[milestone: string]: Milestones
+	}
+}
+/**
+ * The project class.
+ * @private
+ */
 export class Project extends Contexts {
 	context: ProjectContext
 	config: ProjectConfig
@@ -116,8 +143,8 @@ export class Project extends Contexts {
 			attempt = 1
 			core.startGroup("project Actions")
 		}
-		let seconds = attempt * 10,
-			enforceConventionsSuccess: boolean = true
+		const seconds = attempt * 10
+		let enforceConventionsSuccess = true
 
 		try {
 			if (this.config.enforceConventions && this.util.shouldRun("convention")) {
@@ -147,7 +174,7 @@ export class Project extends Contexts {
 				core.endGroup()
 			}
 		} catch (err) {
-			if (attempt > 3) {
+			if (attempt > this.retryLimit) {
 				core.endGroup()
 				throw log(
 					LoggingLevels.emergency,

@@ -8,6 +8,10 @@ export type ProjectCondition = Condition | ConditiononColumn
 
 const handlers = [...sharedHandlers, onColumn]
 
+/**
+ * The project condition handler.
+ * @private
+ */
 export function getProjectConditionHandler(
 	this: Issues | PullRequests | Project,
 	condition: ProjectCondition

@@ -6,33 +6,54 @@ export * from "./pr"
 export * from "./project"
 export * from "./schedule"
 export * from "./util"
-import { Labels } from "../../types"
-import { Issues, Project, PullRequests, Schedule } from "../contexts"
 
+import { Labels } from "../action"
+import { Issues, Project, PullRequests, Schedule } from "../contexts"
+import { IssueCondition } from "./issue"
+import { PRCondition } from "./pr"
+import { ProjectCondition } from "./project"
+import { ScheduleCondition } from "./schedule"
+import { Condition } from "./util"
+
+/**
+ * @private
+ */
 export type CurContext =
 	| { type: "pr"; context: PRContext }
 	| { type: "issue"; context: IssueContext }
 	| { type: "project"; context: ProjectContext }
 	| { type: "schedule"; context: ScheduleContext }
 
+/**
+ * @private
+ */
 export interface PRContext extends GeneralContext {
 	currentVersion: Version
 	IDNumber: number
 	props: PRProps
 }
 
+/**
+ * @private
+ */
 export interface IssueContext extends GeneralContext {
 	currentVersion: Version
 	IDNumber: number
 	props: IssueProps
 }
 
+/**
+ * @private
+ */
 export interface ProjectContext extends GeneralContext {
 	currentVersion: Version
 	IDNumber: number
 	props: ProjectProps
 }
 
+/**
+ * @private
+ */
 export interface ScheduleContext extends GeneralContext {
 	props?: ScheduleProps
 }
@@ -42,6 +63,9 @@ interface GeneralContext {
 	action: string
 }
 
+/**
+ * @private
+ */
 interface Props {
 	creator: string
 	description: string
@@ -53,6 +77,10 @@ interface Props {
 	type: "issue" | "pr" | "project"
 	lastUpdated?: string
 }
+
+/**
+ * @private
+ */
 export interface PRProps extends Props {
 	branch: string
 	isDraft: boolean
@@ -63,7 +91,15 @@ export interface PRProps extends Props {
 	approved: number
 	changes: number
 }
-export interface IssueProps extends Props {}
+
+/**
+ * @private
+ */
+export type IssueProps = Props
+
+/**
+ * @private
+ */
 export interface ProjectProps extends Props {
 	project: any
 	column_id: number
@@ -76,8 +112,14 @@ export interface ProjectProps extends Props {
 	}
 }
 
-export interface ScheduleProps extends Props {}
+/**
+ * @private
+ */
+export type ScheduleProps = Props
 
+/**
+ * @private
+ */
 export interface Version {
 	name?: string
 	semantic?: {
@@ -89,7 +131,14 @@ export interface Version {
 	}
 }
 
+/**
+ * @private
+ */
 export type Reviews = Review[]
+
+/**
+ * @private
+ */
 export interface Review {
 	id?: number
 	node_id?: string
@@ -104,6 +153,9 @@ export interface Review {
 	commit_id?: string
 }
 
+/**
+ * @private
+ */
 interface localCard {
 	archived: boolean
 	column_url: string
@@ -118,6 +170,9 @@ interface localCard {
 	url: string
 }
 
+/**
+ * @private
+ */
 interface localColumn {
 	name: any
 	cards_url: string
@@ -128,6 +183,97 @@ interface localColumn {
 	updated_at: string
 	url: string
 }
-
+/**
+ * This instead of manually requiring this
+ * @private
+ */
 export type UtilThis = Issues | PullRequests | Project | Schedule
+/**
+ * Props used instead of manually requiring props
+ * @private
+ */
 export type UtilProps = IssueProps | PRProps | ProjectProps | ScheduleProps
+
+/**
+ * Shared conditions used by all types of events.
+ */
+export interface SharedConditions {
+	/**
+	 * The number of requires needed for this to succeed
+	 */
+	requires: number
+	/**
+	 * The conditions required for this to succeed
+	 */
+	conditions: Condition[]
+}
+
+/**
+ * Conventions to use
+ */
+export interface SharedConventionConditions {
+	/**
+	 * The number of requires needed for this to succeed
+	 */
+	requires: number
+	/**
+	 * The conditions required for this to succeed. You can use the "semanticTitle" to automatically apply thses conditions
+	 */
+	conditions: Condition[] | string
+}
+
+/**
+ * The PR condition configuration
+ */
+export interface PRConditionConfig {
+	/**
+	 * The number of requires needed for this to succeed
+	 */
+	requires: number
+	/**
+	 * The conditions required for this to succeed
+	 */
+	conditions: PRCondition[]
+}
+
+/**
+ * The Issue condition configuration
+ */
+export interface IssueConditionConfig {
+	/**
+	 * The number of requires needed for this to succeed
+	 */
+	requires: number
+	/**
+	 * The conditions required for this to succeed
+	 */
+	conditions: IssueCondition[]
+}
+
+/**
+ * The Project condition configuration
+ */
+export interface ProjectConditionConfig {
+	/**
+	 * The number of requires needed for this to succeed
+	 */
+	requires: number
+	/**
+	 * The conditions required for this to succeed
+	 */
+	conditions: ProjectCondition[]
+}
+
+/**
+ * The Schedule condition configuration
+ */
+export interface ScheduleConditionConfig {
+	/**
+	 * The number of requires needed for this to succeed
+	 */
+	requires: number
+	/**
+	 * The conditions required for this to succeed
+	 */
+	conditions: ScheduleCondition[]
+}

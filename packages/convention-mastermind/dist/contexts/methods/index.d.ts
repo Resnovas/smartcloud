@@ -1,5 +1,5 @@
 import { Issues, Project, PullRequests, Schedule } from "..";
-import { Config, IssueConfig, ProjectConfig, PullRequestConfig, Runners } from "../../../types";
+;
 import { CurContext, IssueContext, PRContext, ProjectContext, ScheduleContext, UtilThis, Version } from "../../conditions";
 import { Utils } from "../../utils";
 export { log } from "../..";

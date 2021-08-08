@@ -1,13 +1,34 @@
 /** @format */
 
 import * as core from "@actions/core"
+import { Context } from "@actions/github/lib/context"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
-import { Context } from "vm"
 import { log } from ".."
-import { Config, IssueConfig, Runners } from "../../types"
+import { Config, Runners, SharedConfig } from "../action"
 import { CurContext, IssueContext, Version } from "../conditions"
 import { Utils } from "../utils"
 import { Contexts } from "./methods"
+import { AssignProject } from "./methods/assignProject"
+import { CreateBranch } from "./methods/createBranch"
+
+/**
+ * The issue configuration
+ */
+export interface IssueConfig extends SharedConfig {
+	/**
+	 * Assign project configuration.
+	 */
+	assignProject?: AssignProject[]
+	/**
+	 * Open branch configuration
+	 */
+	createBranch?: { [label: string]: CreateBranch }
+}
+
+/**
+ * The issue class.
+ * @private
+ */
 export class Issues extends Contexts {
 	context: IssueContext
 	config: IssueConfig
@@ -94,7 +115,7 @@ export class Issues extends Contexts {
 			core.startGroup("Issue Actions")
 		}
 		let seconds = attempt * 10,
-			enforceConventionsSuccess: boolean = true
+			enforceConventionsSuccess = true
 		try {
 			if (this.config.enforceConventions && this.util.shouldRun("convention"))
 				enforceConventionsSuccess = await this.conventions.enforce(this)
@@ -113,7 +134,7 @@ export class Issues extends Contexts {
 				core.endGroup()
 			}
 		} catch (err) {
-			if (attempt > 3) {
+			if (attempt > this.retryLimit) {
 				core.endGroup()
 				throw new LoggingDataClass(
 					LoggingLevels.emergency,

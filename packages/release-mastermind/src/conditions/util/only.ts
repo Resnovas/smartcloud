@@ -1,11 +1,12 @@
 /** @format */
 
-import { UtilProps, UtilThis } from ".."
 import {
 	IssueConditionConfig,
 	PRConditionConfig,
-	ProjectConditionConfig
-} from "../../../types"
+	ProjectConditionConfig,
+	UtilProps,
+	UtilThis
+} from ".."
 import { evaluator } from "../../evaluator"
 
 const TYPE = "$only"
@@ -17,7 +18,7 @@ export interface ConditionOnlyOne {
 }
 
 function only(this: UtilThis, condition: ConditionOnlyOne, props: UtilProps) {
-	let success: number = 0
+	let success = 0
 
 	condition.pattern.forEach((condition) => {
 		if (evaluator.call(this, condition, props)) success++

@@ -5,7 +5,8 @@
 	"repository": "git@github.com:videndum/label-mastermind.git",
 	"author": "Jonathan Stevens <jonathan@videndum.studio>",
 	"license": "GPL-3.0",
-	"main": "src/index.ts",
+	"main": "lib/index.js",
+	"typings": "./lib/index.d.ts",
 	"directories": {
 		"lib": "./lib",
 		"doc": "./docs",

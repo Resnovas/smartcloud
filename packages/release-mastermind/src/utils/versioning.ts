@@ -4,7 +4,7 @@ import { LoggingLevels } from "@videndum/utilities"
 import path from "path"
 import { Utils } from "."
 import { log } from ".."
-import { Config } from "../../types"
+import { Config } from "../action"
 import { Version } from "../conditions"
 
 /**
@@ -18,6 +18,7 @@ export async function parse(
 	ref?: string
 ): Promise<Version> {
 	let rawVersion
+	if (!config.root) config.root = "master"
 	if (config.versioning?.source == "node") {
 		rawVersion = await getNodeVersion
 			.call(this, config.root, ref)
@@ -37,12 +38,12 @@ export async function parse(
 
 	if (!rawVersion) rawVersion = "0.0.0"
 	if (config.versioning?.type == "SemVer" || !config.versioning.type) {
-		let SemVer = rawVersion.split(".")
-		let plus = SemVer[2]?.split("+")
-		let patch = plus?.[0]?.split("-")?.[0]
+		const SemVer = rawVersion.split(".")
+		const plus = SemVer[2]?.split("+")
+		const patch = plus?.[0]?.split("-")?.[0]
 		if (!SemVer || !SemVer[0] || !SemVer[1] || !SemVer[2] || !patch)
 			throw new Error("SemVer versioning is not valid")
-		let versioning: Version["semantic"] = {
+		const versioning: Version["semantic"] = {
 			major: +SemVer[0],
 			minor: +SemVer[1],
 			patch: +patch,

@@ -4,12 +4,42 @@ import * as core from "@actions/core"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
 import { Context } from "vm"
 import { log } from ".."
-import { Config, PullRequestConfig, Release, Runners } from "../../types"
+import { Config, Runners, SharedConfig } from "../action"
 import { CurContext, PRContext, Reviews, Version } from "../conditions"
 import { evaluator } from "../evaluator"
 import { Utils } from "../utils"
 import { Contexts } from "./methods"
+import { AssignProject } from "./methods/assignProject"
+import { AutomaticApprove } from "./methods/autoApprove"
+import { Release } from "./methods/release"
+import { SyncRemote } from "./methods/syncRemoteRepo"
 
+/**
+ * The Pull Request configuration
+ */
+export interface PullRequestConfig extends SharedConfig {
+	/**
+	 *  The project assignment configuration.
+	 */
+	assignProject?: AssignProject[]
+	/**
+	 * The automatic approval configuration
+	 */
+	automaticApprove?: AutomaticApprove
+	/**
+	 * The release management configuration.
+	 */
+	manageRelease?: Release
+	/**
+	 * Syncronise remote repository configuration.
+	 */
+	syncRemote?: SyncRemote[]
+}
+
+/**
+ * The pull request class.
+ * @private
+ */
 export class PullRequests extends Contexts {
 	context: PRContext
 	config: PullRequestConfig
@@ -143,8 +173,9 @@ export class PullRequests extends Contexts {
 			attempt = 1
 			core.startGroup("Pull Request Actions")
 		}
-		let seconds = attempt * 10,
-			enforceConventionsSuccess: boolean = true
+		const seconds = attempt * 10
+		let enforceConventionsSuccess = true
+
 		try {
 			if (this.config.enforceConventions && this.util.shouldRun("convention"))
 				enforceConventionsSuccess = await this.conventions.enforce(this)
@@ -169,7 +200,7 @@ export class PullRequests extends Contexts {
 				core.endGroup()
 			}
 		} catch (err) {
-			if (attempt > 3) {
+			if (attempt > this.retryLimit) {
 				core.endGroup()
 				throw log(
 					LoggingLevels.emergency,
@@ -201,7 +232,7 @@ export class PullRequests extends Contexts {
 			if (!convention.conditions) return
 			if (evaluator.call(this, convention, this.context.props)) {
 				log(LoggingLevels.info, `Automatically Approved Successfully`)
-				let body =
+				const body =
 					automaticApprove.commentHeader +
 					"\n\n Automatically Approved - Will automatically merge shortly! \n\n" +
 					automaticApprove.commentFooter
@@ -221,8 +252,7 @@ export class PullRequests extends Contexts {
 	bumpVersion(labels: Release["labels"]) {
 		if (!labels || !this.context.props.labels) return
 		if (
-			(this.configs.versioning.type == "SemVer" ||
-				this.configs.versioning == undefined) &&
+			(!this.configs.versioning || this.configs.versioning.type == "SemVer") &&
 			this.newVersion.semantic
 		) {
 			if (
@@ -239,7 +269,7 @@ export class PullRequests extends Contexts {
 			if (this.context.props.labels[labels.prerelease]) {
 				this.newVersion.semantic.prerelease =
 					this.newVersion.semantic.prerelease ||
-					this.configs.prereleaseName ||
+					this.configs.versioning?.prereleaseName ||
 					"prerelease"
 			}
 			if (this.context.props.labels[labels.build]) {

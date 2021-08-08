@@ -2,16 +2,7 @@
 
 # Mastermind Collection
 
-Welcome to the Github Action Mastermind collection. This is the mono-repository for Videndum's collection of superpowered actions. This collection is built to work together as an universal tool for Github Project management. For simplicity, our main tool - Release Mastermind - incorporates all our other tools within one simple action, which can be used in all your workflows to manage all your common tasks.
 
-We designed this tool because the community tools either didn't have the features we wanted, or are not maintained. We wanted to create a single action which could do everything, or nothing, dependent on the configuration. This tool does exactly that, you choose how much or how little you want it to do...
-
-Need reasons to consider using Release Manager?
-
-- Everything is configured from either JSON or YAML files found within your `.github` folder for the repository. One file = no clutter.
-- Automates all common tasks within a single action - Reduce the size of your workflow files
-- Actively maintained - This project is actively maintained as it's the backbone of all our projects
-- Works on any repository - No permissions required, simply use a Personal Access Token
 
 ## Index
 
@@ -97,7 +88,8 @@ Need reasons to consider using Release Manager?
 - Create milestones automatically - Automatically create milestones when a new release is published.
 - Automatically maintain `main` and `dev` branches - Create pull requests from `dev` to `main` and automatically approve them based on config.
 - Automatically syncronise branches or folders with remote repository.
-- <!-- @format -->
+
+<!-- @format -->
 
 ## How to get support 👨‍👩‍👧‍👦
 
@@ -113,7 +105,7 @@ GitHub is our office, it's the place where our development and contributor teams
 
 With the discussion page, you can leverage the knowledge of our wider community to get help with any problems you are having. Please keep in mind that this project is open-source, support is provided by the goodwill of our wonderful community members.
 
-  <!-- @format -->
+<!-- @format -->
 
 ## Backlog & Contributing
 
@@ -123,7 +115,7 @@ For more information on how to contribute, please read the [contributing guideli
 
 Our backlog can be found on [Github](https://github.com/Videndum/action-masterminds/projects/1)
 
-  <!-- @format -->
+<!-- @format -->
 
 ## Running Locally & Developing
 

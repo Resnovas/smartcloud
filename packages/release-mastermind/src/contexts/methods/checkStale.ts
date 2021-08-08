@@ -3,9 +3,74 @@
 import { LoggingLevels } from "@videndum/utilities"
 import { Issues, Project, PullRequests, Schedule } from ".."
 import { log } from "../.."
-import { AbanondedConfig, StaleConfig } from "../../../types"
-import { UtilThis } from "../../conditions"
+import { SharedConditions, UtilThis } from "../../conditions"
 import { evaluator } from "../../evaluator"
+
+/**
+ * The stale configuration
+ */
+export interface Stale {
+	/**
+	 * The label to use for stale issues
+	 */
+	staleLabel: string
+	/**
+	 * The stale configuration to use
+	 */
+	stale?: StaleConfig
+	/**
+	 * The abanonded configuration to use
+	 */
+	abandoned?: AbanondedConfig
+	/**
+	 * The conditions to use when checking stale
+	 */
+	conditions?: SharedConditions[]
+}
+
+/**
+ * The stale configuration
+ */
+export interface StaleConfig extends SharedConditions {
+	/**
+	 * The days to consider stale
+	 */
+	days: number
+	/**
+	 * The comment to append to the stale issue
+	 */
+	comment?: string
+	/**
+	 * The comment to switch when resolved
+	 */
+	resolve?: string
+	/**
+	 * The comment to append to the header
+	 */
+	commentHeader?: string
+	/**
+	 * The comment to append to the footer
+	 */
+	commentFooter?: string
+}
+
+/**
+ * The abanonded configuration
+ */
+export interface AbanondedConfig extends StaleConfig {
+	/**
+	 * Should the abanonded issue be closed
+	 */
+	close?: boolean
+	/**
+	 * Should the abanonded issue be locked
+	 */
+	lock?: boolean
+	/**
+	 * The label to use for abanonded issues
+	 */
+	label: string
+}
 
 export async function checkStale(
 	this: Issues | PullRequests | Project | Schedule
@@ -120,10 +185,10 @@ async function createComment(
 	config: AbanondedConfig | StaleConfig,
 	isStale: boolean
 ) {
-	let prefix: string = `<!--releaseMastermind: Stale-->${
+	let prefix = `<!--releaseMastermind: Stale-->${
 			config.commentHeader || ""
 		}\r\n\r\n`,
-		suffix: string = `\r\n\r\n----------\r\n\r\nSimply comment, assign or modify this issue to remove the stale status \r\n\r\n${
+		suffix = `\r\n\r\n----------\r\n\r\nSimply comment, assign or modify this issue to remove the stale status \r\n\r\n${
 			config.commentFooter || ""
 		}`,
 		body: string =

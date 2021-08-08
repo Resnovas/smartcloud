@@ -10,9 +10,19 @@ import {
 	LogReturn
 } from "@videndum/utilities"
 import path from "path"
-import { Options } from "../types"
-import Action from "./action"
+import Action, { Runners } from "./action"
 import { Repo } from "./utils"
+export * from "./action"
+export * from "./conditions"
+export * from "./contexts"
+export * from "./evaluator"
+export * from "./utils"
+
+/**
+ * Logging system used throughout the package.
+ * @private
+ */
+
 const L = new Logger({
 	logger: {
 		console: { enabled: false },
@@ -24,6 +34,10 @@ const L = new Logger({
 		}
 	}
 })
+/**
+ * Logging function used throught the package.
+ * @private
+ */
 export async function log(
 	name: LoggingLevels,
 	message: string,
@@ -41,7 +55,7 @@ export async function log(
 
 let local: any = undefined
 let dryRun: boolean
-let showLogs: boolean = false
+let showLogs = false
 let repo: Repo | undefined = undefined
 
 try {
@@ -53,7 +67,9 @@ try {
 			repo: local.GITHUB_REPOSITORY,
 			owner: local.GITHUB_REPOSITORY_OWNER
 		} || undefined
-} catch {}
+} catch (err) {
+	log(LoggingLevels.emergency, err.message, { errors: err })
+}
 
 const { GITHUB_WORKSPACE = "" } = process.env
 
@@ -87,9 +103,11 @@ async function run() {
 				? configInput
 				: local == undefined
 				? undefined
-				: require(local.configJSON).releaseMastermind
+				: /* eslint-disable @typescript-eslint/no-var-requires */
+				require(local.configJSON).releaseMastermind
 				? require(local.configJSON).releaseMastermind
 				: require(local.configJSON)),
+		/* eslint-enable @typescript-eslint/no-var-requires */
 		showLogs,
 		dryRun,
 		fillEmpty,
@@ -106,3 +124,37 @@ async function run() {
 	})
 }
 run()
+
+/**
+ * The application options used within Github Actions workflows
+ */
+export interface Options {
+	/**
+	 * The path to find the config
+	 */
+	configPath: string
+	/**
+	 * The json configuration object
+	 */
+	configJSON: Runners
+	/**
+	 * Should show logs?
+	 */
+	showLogs: boolean
+	/**
+	 * should dry run?
+	 */
+	dryRun: boolean
+	/**
+	 * Should fill empty values?
+	 */
+	fillEmpty: boolean
+	/**
+	 * Should skip delete of labels
+	 */
+	skipDelete: boolean
+	/**
+	 * The repo to use
+	 */
+	repo?: Repo
+}

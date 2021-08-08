@@ -1,6 +1,6 @@
 [
 	{
-		"$schema": "../../schema/configs.json",
+		"$schema": "../../../schema/configs.json",
 		"root": ".",
 		"versioning": {
 			"source": "milestones",

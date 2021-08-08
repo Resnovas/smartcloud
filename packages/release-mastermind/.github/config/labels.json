@@ -1,8 +1,9 @@
 {
+	"$schema": "../../schema/labels.json",
 	"abandoned": {
 		"name": "Status - Abandoned",
 		"color": "CFD3D7",
-		"description": "This issue / pull request has been abandon"
+		"description": "This issue/pull request has been abandon"
 	},
 	"available": {
 		"name": "Status - Available",
@@ -17,7 +18,7 @@
 	"completed": {
 		"name": "Status - Completed",
 		"color": "CFD3D7",
-		"description": "Development has finished and been merged for this issue"
+		"description": "Development has finished and had merged for this issue"
 	},
 	"progress": {
 		"name": "Status - In Progress",
@@ -32,7 +33,7 @@
 	"pending": {
 		"name": "Status - Pending",
 		"color": "CFD3D7",
-		"description": "The developers have approved development of this request."
+		"description": "The developers have approved the development of this request"
 	},
 	"review": {
 		"name": "Status - Review Needed",
@@ -47,12 +48,12 @@
 	"doNotDevelop": {
 		"name": "Status - Do not develop",
 		"color": "CFD3D7",
-		"description": "This wont be worked on by DevOPS or Community contributor"
+		"description": "Development by DevOps or Community contributor shall not happen"
 	},
 	"stale": {
 		"name": "Status - Stale",
 		"color": "CFD3D7",
-		"description": "This issue has been automatically marked as stale because it has not had recent activite"
+		"description": "This issue has been automatically marked as stale because it has not had recent activity"
 	},
 	"chore": {
 		"name": "Type - Chore",
@@ -107,7 +108,7 @@
 	"revert": {
 		"name": "Type - Revert",
 		"color": "0075CA",
-		"description": "Removes & Discards a previous change as error"
+		"description": "Removes & Discards a previous change as an error"
 	},
 	"deprecated": {
 		"name": "Type - Deprecated",
@@ -122,7 +123,7 @@
 	"style": {
 		"name": "Type - Style",
 		"color": "0075CA",
-		"description": "Changes that do not affect the meaning of the code (white-space formatting missing semi-colons etc)"
+		"description": "Changes that do not affect the meaning of the code (white-space formatting missing semi-colons)"
 	},
 	"dependences": {
 		"name": "Type - Dependences",
@@ -182,7 +183,7 @@
 	"depsDev": {
 		"name": "Context - Dependencies",
 		"color": "f9cea2",
-		"description": "Related to developer depenencies"
+		"description": "Related to developer dependencies"
 	},
 	"devOpsAccepted": {
 		"name": "DevOps - Accepted",
@@ -197,7 +198,7 @@
 	"devOpsDeploying": {
 		"name": "DevOps - Deploying",
 		"color": "172875",
-		"description": "DevOPS are deploying to latest"
+		"description": "DevOps is deploying to latest"
 	},
 	"devOpsDeveloping": {
 		"name": "DevOps - Developing",
@@ -377,27 +378,27 @@
 	"major": {
 		"name": "Versioning - Major",
 		"color": "e580c8",
-		"description": "Major version to be incremented due to of backwards incompatible changes are introduced"
+		"description": "Major version increment due to backwards-incompatible changes"
 	},
 	"minor": {
 		"name": "Versioning - Minor",
 		"color": "e580c8",
-		"description": "Minor version to be incremented due to substantial new functionality or improvements are introduced"
+		"description": "Minor version increment due to substantial new functionality or improvements"
 	},
 	"patch": {
 		"name": "Versioning - Patch",
 		"color": "e580c8",
-		"description": "Patch version to be incremented due to backwards compatible bug fixes are introduced."
+		"description": "Patch version increment due to backwards-compatible bug fixes"
 	},
 	"prerelease": {
 		"name": "Versioning - Prerelease",
 		"color": "e580c8",
-		"description": "Prerelease of the next version."
+		"description": "Prerelease of the next version"
 	},
 	"build": {
 		"name": "Versioning - Build",
 		"color": "e580c8",
-		"description": "A build to represent dependencies updates and insignificant changes."
+		"description": "A build to represent dependencies updates and insignificant changes"
 	},
 	"breaking": {
 		"name": "Versioning - BREAKING",
@@ -442,12 +443,12 @@
 	"firstIssue": {
 		"name": "Good first issue",
 		"color": "d4c5f9",
-		"description": "A Good issue for first time github users"
+		"description": "A Good issue for first-time GitHub users"
 	},
 	"firstTimers": {
 		"name": "First Timers",
 		"color": "d4c5f9",
-		"description": "A Good issue for first time github users"
+		"description": "A Good issue for first-time GitHub users"
 	},
 	"skipChangelog": {
 		"name": "skip-changelog",

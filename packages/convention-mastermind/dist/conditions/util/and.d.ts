@@ -1,5 +1,5 @@
 import { UtilProps, UtilThis } from "../";
-import { IssueConditionConfig, PRConditionConfig, ProjectConditionConfig } from "../../../types";
+;
 declare const TYPE = "$and";
 export interface ConditionAnd {
     type: typeof TYPE;

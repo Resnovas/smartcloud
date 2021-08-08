@@ -1,6 +1,6 @@
 /** @format */
 
-import { Label, Labels } from "../../types"
+import { Label, Labels } from "../action"
 
 /**
  * Formats the hex color code to ensure no hash (#) is included

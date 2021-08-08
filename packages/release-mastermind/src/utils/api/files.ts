@@ -11,7 +11,7 @@ export async function get(
 	/**
 	 * Checks to see if the settings file is valid
 	 */
-	let gotdata: any = await this.client.repos.getContents({
+	const gotdata: any = await this.client.repos.getContents({
 		owner: this.repo.owner || github.context.repo.owner,
 		repo: this.repo.repo || github.context.repo.repo,
 		ref: ref || "master",

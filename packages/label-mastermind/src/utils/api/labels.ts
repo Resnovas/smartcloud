@@ -1,7 +1,7 @@
 /** @format */
 
 import { Utils } from ".."
-import { Label, Labels } from "../../../types"
+import { Label, Labels } from "../../action"
 
 export async function add(this: Utils, IDNumber: number, label: string) {
 	if (!this.dryRun)

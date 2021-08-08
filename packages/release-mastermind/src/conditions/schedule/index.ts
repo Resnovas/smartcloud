@@ -7,6 +7,10 @@ export type ScheduleCondition = Condition
 
 const handlers = [...sharedHandlers]
 
+/**
+ * The schedule condition handler.
+ * @private
+ */
 export function getScheduleConditionHandler(
 	this: Schedule,
 	condition: ScheduleCondition

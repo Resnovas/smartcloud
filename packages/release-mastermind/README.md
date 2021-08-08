@@ -113,7 +113,7 @@ GitHub is our office, it's the place where our development and contributor teams
 
 With the discussion page, you can leverage the knowledge of our wider community to get help with any problems you are having. Please keep in mind that this project is open-source, support is provided by the goodwill of our wonderful community members.
 
-  <!-- @format -->
+<!-- @format -->
 
 ## Backlog & Contributing
 
@@ -123,7 +123,7 @@ For more information on how to contribute, please read the [contributing guideli
 
 Our backlog can be found on [Github](https://github.com/Videndum/action-masterminds/projects/1)
 
-  <!-- @format -->
+<!-- @format -->
 
 ## Running Locally & Developing
 

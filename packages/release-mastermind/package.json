@@ -5,7 +5,11 @@
 	"repository": "git@github.com:videndum/release-mastermind.git",
 	"author": "Jonathan Stevens <jonathan@videndum.studio>",
 	"license": "GPL-3.0",
+	"engines": {
+		"node": ">=15"
+	},
 	"main": "lib/index.js",
+	"typings": "./lib/index.d.ts",
 	"directories": {
 		"lib": "./lib",
 		"doc": "./docs",
@@ -21,7 +25,7 @@
 		"dev:all": "npm run dev:package && npm run dev:format",
 		"dev:format": "prettier --config .prettier.json --write .",
 		"dev:format-check": "prettier --config .prettier.json --check .",
-		"dev:package": "npm run dev:tsc && ncc build --source-map",
+		"dev:package": "npm run dev:tsc && ncc build --source-map --target es2021 --minify",
 		"dev:run": "npm run dev:tsc && node lib/index.js",
 		"dev:schema": "typescript-json-schema ./tsconfig.json Runners -o schema.json  --propOrder --defaultProps --titles --topRef --refs --required",
 		"dev:test": "jest --json --outputFile=result.json --testLocationInResults",
@@ -35,14 +39,24 @@
 	"dependencies": {
 		"@actions/core": "^1.2.6",
 		"@actions/github": "~2.1.1",
-		"@videndum/utilities": "^1.0.0-alpha.17"
+		"@videndum/utilities": "^1.0.0-alpha.17",
+		"ts-json-schema-generator": "^0.95.0"
 	},
 	"devDependencies": {
 		"@types/jest": "^26.0.15",
 		"@types/node": "^16.4.2",
 		"@types/nodegit": "^0.27.3",
+		"@typescript-eslint/eslint-plugin": "^4.29.0",
+		"@typescript-eslint/parser": "^4.29.0",
 		"@vercel/ncc": "^0.29.0",
+		"docusaurus-plugin-typedoc": "^0.15.3",
+		"eslint": "^7.32.0",
+		"eslint-config-prettier": "^8.3.0",
+		"eslint-plugin-eslint-comments": "^3.2.0",
 		"eslint-plugin-github": "^4.1.1",
+		"eslint-plugin-import": "^2.23.4",
+		"eslint-plugin-node": "^11.1.0",
+		"eslint-plugin-tsdoc": "^0.2.14",
 		"jest": "^26.6.1",
 		"jest-circus": "^27.0.6",
 		"js-yaml": "^4.1.0",
@@ -51,8 +65,9 @@
 		"prettier-plugin-sh": "^0.7.1",
 		"prettier-standard": "^16.4.1",
 		"ts-jest": "^26.4.3",
-		"typescript": "^4.0.5",
+		"typedoc": "^0.21.5",
+		"typedoc-plugin-markdown": "^3.10.4",
+		"typescript": "^4.3.5",
 		"typescript-json-schema": "^0.50.1"
-	},
-	"sentry": "https://3ed727f54ce94ff7aca190b01eb17caa@o237244.ingest.sentry.io/5546354"
+	}
 }

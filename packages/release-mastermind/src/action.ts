@@ -5,11 +5,178 @@ import * as github from "@actions/github"
 import { GitHub } from "@actions/github"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
 import fs from "fs"
-import { log } from "."
-import { Config, Label, Options, Runners, SharedConfigIndex } from "../types"
-import { CurContext } from "./conditions"
-import { Issues, Project, PullRequests, Schedule } from "./contexts"
+import { log, Options } from "."
+import {
+	CurContext,
+	IssueConditionConfig,
+	PRConditionConfig,
+	ProjectConditionConfig,
+	ScheduleConditionConfig,
+	SharedConditions
+} from "./conditions"
+import {
+	IssueConfig,
+	Issues,
+	Project,
+	ProjectConfig,
+	PullRequestConfig,
+	PullRequests,
+	Schedule,
+	ScheduleConfig
+} from "./contexts"
+import { Stale } from "./contexts/methods/checkStale"
+import { EnforceConventions } from "./contexts/methods/conventions"
 import { Utils } from "./utils"
+
+export interface Runners {
+	/**
+	 * The labels configuration.
+	 */
+	labels?: Labels
+	/**
+	 * The runners configuration.
+	 */
+	runners: Config[]
+}
+
+export interface Config {
+	/**
+	 * The root branch used to check configuration settings against.
+	 */
+	root?: string
+	/**
+	 * Versioning configuration used for release management.
+	 */
+	versioning?: {
+		/**
+		 * Version source used to determine the version.
+		 */
+		source: VersionSource
+		/**
+		 * Version Type to change how versioning is handled.
+		 */
+		type?: VersionType
+		/**
+		 * If version is a pre-release, this is the version name to use.
+		 */
+		prereleaseName?: string
+	}
+	/**
+	 * Maximum number of attempts before stopping.
+	 * @default 3
+	 */
+	retryLimit?: number
+	/**
+	 * The labels used by our internal tools.
+	 * @private
+	 */
+	labels?: {
+		[key: string]: string
+	}
+	/**
+	 * Shared configurations, merged with the PR, Issue, Project and Schedule configurations.
+	 */
+	sharedConfig?: SharedConfig
+	/**
+	 * The pull request configurations.
+	 */
+	pr?: PullRequestConfig
+	/**
+	 * The issue configurations.
+	 */
+	issue?: IssueConfig
+	/**
+	 * The project configurations.
+	 */
+	project?: ProjectConfig
+	/**
+	 * The schedule configurations.
+	 */
+	schedule?: ScheduleConfig
+}
+
+/**
+ * The shared configuration Index
+ * @private
+ */
+export type SharedConfigIndex =
+	| "ref"
+	| "enforceConventions"
+	| "labels"
+	| "stale"
+
+/**
+ * The shared configuration
+ */
+export interface SharedConfig {
+	/**
+	 * The reference used internally
+	 */
+	ref?: string
+	/**
+	 * 	The enforceConventions configuration
+	 */
+	enforceConventions?: EnforceConventions
+	/**
+	 *	The stale configuration
+	 */
+	stale?: Stale
+	/**
+	 * The labels to be applied
+	 */
+	labels?: {
+		[key: string]:
+			| IssueConditionConfig
+			| ProjectConditionConfig
+			| PRConditionConfig
+			| ScheduleConditionConfig
+			| SharedConditions
+	}
+}
+
+/**
+ * The labels configuration.
+ * @param name The name as appears on github
+ * @param description A description of the label
+ * @param color The color of the label
+ */
+export interface Label {
+	/**
+	 * The name as appears on github
+	 */
+	name: string
+	/**
+	 * A description of the label
+	 */
+	description: string
+	/**
+	 * The color of the label
+	 */
+	color: string
+}
+
+/**
+ *	An array of labels.
+ */
+export interface Labels {
+	/**
+	 * And identifiable label name as the key, followed by the label configuration.
+	 * @example "bug": {name: "bug", description: "A bug has been found", color: "red"
+	 */
+	[key: string]: Label
+}
+/**
+ * The version source.
+ * Node: A node project, our package will use the package.json to determine the version.
+ * Milestones: Utilises the Github Milestone API to determine the version.
+ * String: A string to use as the version.
+ */
+export type VersionSource = "node" | "milestones" | string
+
+/**
+ * The version number type. This is used to determine how versioning is handled. SemVer is the default.
+ */
+export type VersionType = "SemVer"
 
 let local: any
 let context = github.context
@@ -21,7 +188,10 @@ try {
 	if (!context.payload.issue && !context.payload.pull_request)
 		context = require(local.github_context)
 } catch {}
-
+/**
+ * The action to run.
+ * @private
+ */
 export default class Action {
 	client: GitHub
 	opts: Options
@@ -144,7 +314,7 @@ export default class Action {
 			 * @since 1.1.0
 			 */
 
-			for (let a in config.sharedConfig) {
+			for (const a in config.sharedConfig) {
 				const action = a as SharedConfigIndex
 				if (!action || (!config[curContext.type] && !this.fillEmpty)) return
 				else if (!config[curContext.type]) config[curContext.type] = {}
@@ -318,6 +488,7 @@ export default class Action {
 	async syncLabels(config: Runners) {
 		const labels = Object.entries(config.labels ? config.labels : []).reduce(
 			(acc: { [key: string]: Label }, cur) => {
+				if (cur[0] === "$schema") return acc
 				acc[cur[1].name.toLowerCase()] = cur[1]
 				return acc
 			},

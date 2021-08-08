@@ -4,24 +4,30 @@
 	"definitions": {
 		"AbanondedConfig": {
 			"defaultProperties": [],
+			"description": "The abanonded configuration",
 			"properties": {
 				"close": {
+					"description": "Should the abanonded issue be closed",
 					"title": "close",
 					"type": "boolean"
 				},
 				"comment": {
+					"description": "The comment to append to the stale issue",
 					"title": "comment",
 					"type": "string"
 				},
 				"commentFooter": {
+					"description": "The comment to append to the footer",
 					"title": "commentFooter",
 					"type": "string"
 				},
 				"commentHeader": {
+					"description": "The comment to append to the header",
 					"title": "commentHeader",
 					"type": "string"
 				},
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
@@ -29,22 +35,27 @@
 					"type": "array"
 				},
 				"days": {
+					"description": "The days to consider stale",
 					"title": "days",
 					"type": "number"
 				},
 				"label": {
+					"description": "The label to use for abanonded issues",
 					"title": "label",
 					"type": "string"
 				},
 				"lock": {
+					"description": "Should the abanonded issue be locked",
 					"title": "lock",
 					"type": "boolean"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				},
 				"resolve": {
+					"description": "The comment to switch when resolved",
 					"title": "resolve",
 					"type": "string"
 				}
@@ -67,12 +78,15 @@
 		},
 		"AssignProject": {
 			"defaultProperties": [],
+			"description": "Assign project configuration",
 			"properties": {
 				"column": {
+					"description": "The column to use",
 					"title": "column",
 					"type": "string"
 				},
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
@@ -80,22 +94,27 @@
 					"type": "array"
 				},
 				"owner": {
+					"description": "The owner of the project",
 					"title": "owner",
 					"type": "string"
 				},
 				"project": {
+					"description": "The project to use",
 					"title": "project",
 					"type": "string"
 				},
 				"repo": {
+					"description": "The repository name",
 					"title": "repo",
 					"type": "string"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				},
 				"user": {
+					"description": "The user of the project",
 					"title": "user",
 					"type": "string"
 				}
@@ -115,16 +134,20 @@
 		},
 		"AutomaticApprove": {
 			"defaultProperties": [],
+			"description": "Automatic Approval configuration",
 			"properties": {
 				"commentFooter": {
+					"description": "The comment to append to the footer",
 					"title": "commentFooter",
 					"type": "string"
 				},
 				"commentHeader": {
+					"description": "The comment to append to the header",
 					"title": "commentHeader",
 					"type": "string"
 				},
 				"conventions": {
+					"description": "The conventions to use when approving",
 					"items": {
 						"$ref": "#/definitions/SharedConventionsConfig"
 					},
@@ -139,16 +162,20 @@
 		},
 		"Changelog": {
 			"defaultProperties": [],
+			"description": "Changelog",
 			"properties": {
 				"body": {
+					"description": "The changelog body (before the sections)",
 					"title": "body",
 					"type": "string"
 				},
 				"includeIssues": {
+					"description": "Should include issues?",
 					"title": "includeIssues",
 					"type": "boolean"
 				},
 				"sections": {
+					"description": "The section configuration",
 					"items": {
 						"$ref": "#/definitions/Sections"
 					},
@@ -156,6 +183,7 @@
 					"type": "array"
 				},
 				"title": {
+					"description": "The changelog title",
 					"title": "title",
 					"type": "string"
 				}
@@ -603,6 +631,7 @@
 			"properties": {
 				"issue": {
 					"$ref": "#/definitions/IssueConfig",
+					"description": "The issue configurations.",
 					"title": "issue"
 				},
 				"labels": {
@@ -610,53 +639,64 @@
 						"type": "string"
 					},
 					"defaultProperties": [],
+					"description": "The labels used by our internal tools.",
 					"propertyOrder": [],
 					"title": "labels",
 					"type": "object"
 				},
 				"pr": {
 					"$ref": "#/definitions/PullRequestConfig",
+					"description": "The pull request configurations.",
 					"title": "pr"
-				},
-				"prereleaseName": {
-					"title": "prereleaseName",
-					"type": "string"
 				},
 				"project": {
 					"$ref": "#/definitions/ProjectConfig",
+					"description": "The project configurations.",
 					"title": "project"
 				},
 				"retryLimit": {
+					"default": 3,
+					"description": "Maximum number of attempts before stopping.",
 					"title": "retryLimit",
 					"type": "number"
 				},
 				"root": {
+					"description": "The root branch used to check configuration settings against.",
 					"title": "root",
 					"type": "string"
 				},
 				"schedule": {
-					"$ref": "#/definitions/ScheduleConfig",
+					"$ref": "#/definitions/SharedConfig",
+					"description": "The schedule configurations.",
 					"title": "schedule"
 				},
 				"sharedConfig": {
 					"$ref": "#/definitions/SharedConfig",
+					"description": "Shared configurations, merged with the PR, Issue, Project and Schedule configurations.",
 					"title": "sharedConfig"
 				},
 				"versioning": {
 					"defaultProperties": [],
+					"description": "Versioning configuration used for release management.",
 					"properties": {
+						"prereleaseName": {
+							"description": "If version is a pre-release, this is the version name to use.",
+							"title": "prereleaseName",
+							"type": "string"
+						},
 						"source": {
-							"description": "Config types",
+							"description": "Version source used to determine the version.",
 							"title": "source",
 							"type": "string"
 						},
 						"type": {
+							"description": "Version Type to change how versioning is handled.",
 							"enum": ["SemVer"],
 							"title": "type",
 							"type": "string"
 						}
 					},
-					"propertyOrder": ["source", "type"],
+					"propertyOrder": ["source", "type", "prereleaseName"],
 					"required": ["source"],
 					"title": "versioning",
 					"type": "object"
@@ -666,7 +706,6 @@
 				"root",
 				"versioning",
 				"retryLimit",
-				"prereleaseName",
 				"labels",
 				"sharedConfig",
 				"pr",
@@ -674,23 +713,26 @@
 				"project",
 				"schedule"
 			],
-			"required": ["root", "versioning"],
 			"title": "Config",
 			"type": "object"
 		},
 		"CreateBranch": {
 			"defaultProperties": [],
+			"description": "Create branch configuration",
 			"properties": {
 				"branchName": {
+					"description": "The branch name type",
 					"enum": ["number", "short", "title"],
 					"title": "branchName",
 					"type": "string"
 				},
 				"branchPrefix": {
+					"description": "The branch prefix",
 					"title": "branchPrefix",
 					"type": "string"
 				},
 				"branchSuffix": {
+					"description": "The branch suffix",
 					"title": "branchSuffix",
 					"type": "string"
 				}
@@ -702,12 +744,15 @@
 		},
 		"CreateMilestone": {
 			"defaultProperties": [],
+			"description": "Create Milestones",
 			"properties": {
 				"deadline": {
+					"description": "The date in which you want to set as the completion date",
 					"title": "deadline",
 					"type": "string"
 				},
 				"milestone": {
+					"description": "The milestone you want to use",
 					"title": "milestone",
 					"type": "string"
 				}
@@ -719,32 +764,40 @@
 		},
 		"CreateRelease": {
 			"defaultProperties": [],
+			"description": "The create release configuration",
 			"properties": {
 				"draft": {
+					"description": "Should be a draft?",
 					"title": "draft",
 					"type": "boolean"
 				},
 				"includeIssues": {
+					"description": "Should include issues?",
 					"title": "includeIssues",
 					"type": "boolean"
 				},
 				"prerelease": {
+					"description": "Should release be a prerelease?",
 					"title": "prerelease",
 					"type": "boolean"
 				},
 				"releaseName": {
+					"description": "The name of the release to create",
 					"title": "releaseName",
 					"type": "string"
 				},
 				"releaseNamePrefix": {
+					"description": "The prefix before the releaseName",
 					"title": "releaseNamePrefix",
 					"type": "string"
 				},
 				"releaseNameSuffix": {
+					"description": "The sufix to add to the release name",
 					"title": "releaseNameSuffix",
 					"type": "string"
 				},
 				"sections": {
+					"description": "The section configuration",
 					"items": {
 						"$ref": "#/definitions/Sections"
 					},
@@ -752,14 +805,17 @@
 					"type": "array"
 				},
 				"tagName": {
+					"description": "The name of the tag to create",
 					"title": "tagName",
 					"type": "string"
 				},
 				"tagPrefix": {
+					"description": "The prefix before the tagName",
 					"title": "tagPrefix",
 					"type": "string"
 				},
 				"useChangelog": {
+					"description": "Should the release use the generated changelog?",
 					"title": "useChangelog",
 					"type": "boolean"
 				}
@@ -779,42 +835,21 @@
 			"title": "CreateRelease",
 			"type": "object"
 		},
-		"DuplicateHotfix": {
-			"defaultProperties": [],
-			"properties": {
-				"branches": {
-					"items": {
-						"type": "string"
-					},
-					"title": "branches",
-					"type": "array"
-				},
-				"prName": {
-					"title": "prName",
-					"type": "string"
-				},
-				"titlePrefix": {
-					"title": "titlePrefix",
-					"type": "string"
-				}
-			},
-			"propertyOrder": ["prName", "titlePrefix", "branches"],
-			"required": ["branches", "prName"],
-			"title": "DuplicateHotfix",
-			"type": "object"
-		},
 		"EnforceConventions": {
 			"defaultProperties": [],
 			"properties": {
 				"commentFooter": {
+					"description": "The comment to append to the footer",
 					"title": "commentFooter",
 					"type": "string"
 				},
 				"commentHeader": {
+					"description": "The comment to append to the header",
 					"title": "commentHeader",
 					"type": "string"
 				},
 				"conventions": {
+					"description": "The conventions to enforce",
 					"items": {
 						"$ref": "#/definitions/SharedConventionsConfig"
 					},
@@ -822,11 +857,14 @@
 					"type": "array"
 				},
 				"moveToColumn": {
+					"description": "The column to move if fails",
 					"title": "moveToColumn",
 					"type": "string"
 				},
 				"onColumn": {
+					"description": "The columns to enforce conventions",
 					"items": {
+						"description": "The enforce conventions configuration",
 						"type": ["string", "number"]
 					},
 					"title": "onColumn",
@@ -846,24 +884,30 @@
 		},
 		"ExProjects": {
 			"defaultProperties": [],
+			"description": "External projects configuration",
 			"properties": {
 				"localProject": {
+					"description": "The local project to sync",
 					"title": "localProject",
 					"type": "string"
 				},
 				"owner": {
+					"description": "The owner of the project",
 					"title": "owner",
 					"type": "string"
 				},
 				"project": {
+					"description": "The project to use",
 					"title": "project",
 					"type": "string"
 				},
 				"repo": {
+					"description": "The repository name",
 					"title": "repo",
 					"type": "string"
 				},
 				"user": {
+					"description": "The user of the project",
 					"title": "user",
 					"type": "string"
 				}
@@ -875,8 +919,10 @@
 		},
 		"IssueConditionConfig": {
 			"defaultProperties": [],
+			"description": "The Issue condition configuration",
 			"properties": {
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
@@ -884,6 +930,7 @@
 					"type": "array"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				}
@@ -895,8 +942,10 @@
 		},
 		"IssueConfig": {
 			"defaultProperties": [],
+			"description": "The issue configuration",
 			"properties": {
 				"assignProject": {
+					"description": "Assign project configuration.",
 					"items": {
 						"$ref": "#/definitions/AssignProject"
 					},
@@ -908,25 +957,27 @@
 						"$ref": "#/definitions/CreateBranch"
 					},
 					"defaultProperties": [],
+					"description": "Open branch configuration",
 					"propertyOrder": [],
 					"title": "createBranch",
 					"type": "object"
 				},
 				"enforceConventions": {
 					"$ref": "#/definitions/EnforceConventions",
+					"description": "The enforceConventions configuration",
 					"title": "enforceConventions"
 				},
 				"labels": {
 					"additionalProperties": {
 						"anyOf": [
 							{
-								"$ref": "#/definitions/SharedConditions"
-							},
-							{
 								"$ref": "#/definitions/PRConditionConfig"
 							},
 							{
 								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/SharedConditions"
 							},
 							{
 								"$ref": "#/definitions/ProjectConditionConfig"
@@ -937,16 +988,19 @@
 						]
 					},
 					"defaultProperties": [],
+					"description": "The labels to be applied",
 					"propertyOrder": [],
 					"title": "labels",
 					"type": "object"
 				},
 				"ref": {
+					"description": "The reference used internally",
 					"title": "ref",
 					"type": "string"
 				},
 				"stale": {
 					"$ref": "#/definitions/Stale",
+					"description": "The stale configuration",
 					"title": "stale"
 				}
 			},
@@ -963,16 +1017,20 @@
 		},
 		"Label": {
 			"defaultProperties": [],
+			"description": "The labels configuration.",
 			"properties": {
 				"color": {
+					"description": "The color of the label",
 					"title": "color",
 					"type": "string"
 				},
 				"description": {
+					"description": "A description of the label",
 					"title": "description",
 					"type": "string"
 				},
 				"name": {
+					"description": "The name as appears on github",
 					"title": "name",
 					"type": "string"
 				}
@@ -987,14 +1045,17 @@
 				"$ref": "#/definitions/Label"
 			},
 			"defaultProperties": [],
+			"description": "An array of labels.",
 			"propertyOrder": [],
 			"title": "Labels",
 			"type": "object"
 		},
 		"Milestones": {
 			"defaultProperties": [],
+			"description": "Assign to milestone based on project",
 			"properties": {
 				"ignoreLabels": {
+					"description": "Which labels should e ignored?",
 					"items": {
 						"type": "string"
 					},
@@ -1002,6 +1063,7 @@
 					"type": "array"
 				},
 				"onColumn": {
+					"description": "Which column o use",
 					"title": "onColumn",
 					"type": "string"
 				}
@@ -1013,8 +1075,10 @@
 		},
 		"PRConditionConfig": {
 			"defaultProperties": [],
+			"description": "The PR condition configuration",
 			"properties": {
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"anyOf": [
 							{
@@ -1074,6 +1138,7 @@
 					"type": "array"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				}
@@ -1085,8 +1150,10 @@
 		},
 		"ProjectConditionConfig": {
 			"defaultProperties": [],
+			"description": "The Project condition configuration",
 			"properties": {
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"anyOf": [
 							{
@@ -1128,6 +1195,7 @@
 					"type": "array"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				}
@@ -1139,31 +1207,34 @@
 		},
 		"ProjectConfig": {
 			"defaultProperties": [],
+			"description": "The project configuration",
 			"properties": {
 				"assignMilestone": {
 					"additionalProperties": {
 						"$ref": "#/definitions/Milestones"
 					},
 					"defaultProperties": [],
+					"description": "Assign to milestone configuration",
 					"propertyOrder": [],
 					"title": "assignMilestone",
 					"type": "object"
 				},
 				"enforceConventions": {
 					"$ref": "#/definitions/EnforceConventions",
+					"description": "The enforceConventions configuration",
 					"title": "enforceConventions"
 				},
 				"labels": {
 					"additionalProperties": {
 						"anyOf": [
 							{
-								"$ref": "#/definitions/SharedConditions"
-							},
-							{
 								"$ref": "#/definitions/PRConditionConfig"
 							},
 							{
 								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/SharedConditions"
 							},
 							{
 								"$ref": "#/definitions/ProjectConditionConfig"
@@ -1174,23 +1245,28 @@
 						]
 					},
 					"defaultProperties": [],
+					"description": "The labels to be applied",
 					"propertyOrder": [],
 					"title": "labels",
 					"type": "object"
 				},
 				"openBranch": {
 					"$ref": "#/definitions/ProjectCreateBranch",
+					"description": "Open branch configuration",
 					"title": "openBranch"
 				},
 				"ref": {
+					"description": "The reference used internally",
 					"title": "ref",
 					"type": "string"
 				},
 				"stale": {
 					"$ref": "#/definitions/Stale",
+					"description": "The stale configuration",
 					"title": "stale"
 				},
 				"syncRemote": {
+					"description": "Syncronise remote repository configuration.",
 					"items": {
 						"$ref": "#/definitions/ExProjects"
 					},
@@ -1212,25 +1288,31 @@
 		},
 		"ProjectCreateBranch": {
 			"defaultProperties": [],
+			"description": "Create branch on project configuration",
 			"properties": {
 				"branchName": {
+					"description": "The branch name type",
 					"enum": ["number", "short", "title"],
 					"title": "branchName",
 					"type": "string"
 				},
 				"branchPrefix": {
+					"description": "The branch prefix",
 					"title": "branchPrefix",
 					"type": "string"
 				},
 				"branchSuffix": {
+					"description": "The branch suffix",
 					"title": "branchSuffix",
 					"type": "string"
 				},
 				"onColumn": {
+					"description": "Column to use",
 					"title": "onColumn",
 					"type": "string"
 				},
 				"onProject": {
+					"description": "Project to use",
 					"title": "onProject",
 					"type": "string"
 				}
@@ -1248,8 +1330,10 @@
 		},
 		"PullRequestConfig": {
 			"defaultProperties": [],
+			"description": "The Pull Request configuration",
 			"properties": {
 				"assignProject": {
+					"description": "The project assignment configuration.",
 					"items": {
 						"$ref": "#/definitions/AssignProject"
 					},
@@ -1258,32 +1342,25 @@
 				},
 				"automaticApprove": {
 					"$ref": "#/definitions/AutomaticApprove",
+					"description": "The automatic approval configuration",
 					"title": "automaticApprove"
-				},
-				"duplicateHotfix": {
-					"additionalProperties": {
-						"$ref": "#/definitions/DuplicateHotfix"
-					},
-					"defaultProperties": [],
-					"propertyOrder": [],
-					"title": "duplicateHotfix",
-					"type": "object"
 				},
 				"enforceConventions": {
 					"$ref": "#/definitions/EnforceConventions",
+					"description": "The enforceConventions configuration",
 					"title": "enforceConventions"
 				},
 				"labels": {
 					"additionalProperties": {
 						"anyOf": [
 							{
-								"$ref": "#/definitions/SharedConditions"
-							},
-							{
 								"$ref": "#/definitions/PRConditionConfig"
 							},
 							{
 								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/SharedConditions"
 							},
 							{
 								"$ref": "#/definitions/ProjectConditionConfig"
@@ -1294,23 +1371,28 @@
 						]
 					},
 					"defaultProperties": [],
+					"description": "The labels to be applied",
 					"propertyOrder": [],
 					"title": "labels",
 					"type": "object"
 				},
 				"manageRelease": {
 					"$ref": "#/definitions/Release",
+					"description": "The release management configuration.",
 					"title": "manageRelease"
 				},
 				"ref": {
+					"description": "The reference used internally",
 					"title": "ref",
 					"type": "string"
 				},
 				"stale": {
 					"$ref": "#/definitions/Stale",
+					"description": "The stale configuration",
 					"title": "stale"
 				},
 				"syncRemote": {
+					"description": "Syncronise remote repository configuration.",
 					"items": {
 						"$ref": "#/definitions/SyncRemote"
 					},
@@ -1322,7 +1404,6 @@
 				"assignProject",
 				"automaticApprove",
 				"manageRelease",
-				"duplicateHotfix",
 				"syncRemote",
 				"ref",
 				"enforceConventions",
@@ -1334,8 +1415,10 @@
 		},
 		"Release": {
 			"defaultProperties": [],
+			"description": "The release configuration",
 			"properties": {
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"anyOf": [
 							{
@@ -1396,10 +1479,12 @@
 				},
 				"createChangelog": {
 					"$ref": "#/definitions/Changelog",
+					"description": "Should the release create a changelog?",
 					"title": "createChangelog"
 				},
 				"createMilestone": {
 					"$ref": "#/definitions/CreateMilestone",
+					"description": "Should the release create the next milestone?",
 					"title": "createMilestone"
 				},
 				"createPackages": {
@@ -1414,40 +1499,50 @@
 							"type": "string"
 						}
 					],
+					"description": "Should the release create a Github Package?",
 					"title": "createPackages"
 				},
 				"createRelease": {
 					"$ref": "#/definitions/CreateRelease",
+					"description": "Should the release create a Github Release?",
 					"title": "createRelease"
 				},
 				"createTag": {
+					"description": "Should the release create a tag?",
 					"title": "createTag",
 					"type": "boolean"
 				},
 				"labels": {
 					"defaultProperties": [],
+					"description": "The labels to use to detect release type (semantic release)",
 					"properties": {
 						"breaking": {
+							"description": "The label to use to mark a breaking change",
 							"title": "breaking",
 							"type": "string"
 						},
 						"build": {
+							"description": "The label to use to mark a build",
 							"title": "build",
 							"type": "string"
 						},
 						"major": {
+							"description": "The label to use to mark a major",
 							"title": "major",
 							"type": "string"
 						},
 						"minor": {
+							"description": "The label to use to mark a minor",
 							"title": "minor",
 							"type": "string"
 						},
 						"patch": {
+							"description": "The label to use to mark a patch",
 							"title": "patch",
 							"type": "string"
 						},
 						"prerelease": {
+							"description": "The label to use to mark a prerelease",
 							"title": "prerelease",
 							"type": "string"
 						}
@@ -1465,6 +1560,7 @@
 					"type": "object"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				}
@@ -1488,9 +1584,11 @@
 			"properties": {
 				"labels": {
 					"$ref": "#/definitions/Labels",
+					"description": "The labels configuration.",
 					"title": "labels"
 				},
 				"runners": {
+					"description": "The runners configuration.",
 					"items": {
 						"$ref": "#/definitions/Config"
 					},
@@ -1505,8 +1603,10 @@
 		},
 		"ScheduleConditionConfig": {
 			"defaultProperties": [],
+			"description": "The Schedule condition configuration",
 			"properties": {
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
@@ -1514,6 +1614,7 @@
 					"type": "array"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				}
@@ -1523,55 +1624,12 @@
 			"title": "ScheduleConditionConfig",
 			"type": "object"
 		},
-		"ScheduleConfig": {
-			"defaultProperties": [],
-			"properties": {
-				"enforceConventions": {
-					"$ref": "#/definitions/EnforceConventions",
-					"title": "enforceConventions"
-				},
-				"labels": {
-					"additionalProperties": {
-						"anyOf": [
-							{
-								"$ref": "#/definitions/SharedConditions"
-							},
-							{
-								"$ref": "#/definitions/PRConditionConfig"
-							},
-							{
-								"$ref": "#/definitions/IssueConditionConfig"
-							},
-							{
-								"$ref": "#/definitions/ProjectConditionConfig"
-							},
-							{
-								"$ref": "#/definitions/ScheduleConditionConfig"
-							}
-						]
-					},
-					"defaultProperties": [],
-					"propertyOrder": [],
-					"title": "labels",
-					"type": "object"
-				},
-				"ref": {
-					"title": "ref",
-					"type": "string"
-				},
-				"stale": {
-					"$ref": "#/definitions/Stale",
-					"title": "stale"
-				}
-			},
-			"propertyOrder": ["ref", "enforceConventions", "stale", "labels"],
-			"title": "ScheduleConfig",
-			"type": "object"
-		},
 		"Sections": {
 			"defaultProperties": [],
+			"description": "The section configuration",
 			"properties": {
 				"PRlabels": {
+					"description": "The pull request labels to include",
 					"items": {
 						"type": "string"
 					},
@@ -1579,14 +1637,17 @@
 					"type": "array"
 				},
 				"body": {
+					"description": "The body of this section",
 					"title": "body",
 					"type": "string"
 				},
 				"includeCommitter": {
+					"description": "Should include the committer username?",
 					"title": "includeCommitter",
 					"type": "boolean"
 				},
 				"issueLabels": {
+					"description": "The issue labels to include",
 					"items": {
 						"type": "string"
 					},
@@ -1594,10 +1655,12 @@
 					"type": "array"
 				},
 				"linkPR": {
+					"description": "Should link the Pull Request?",
 					"title": "linkPR",
 					"type": "boolean"
 				},
 				"title": {
+					"description": "The title of this section",
 					"title": "title",
 					"type": "string"
 				}
@@ -1616,8 +1679,10 @@
 		},
 		"SharedConditions": {
 			"defaultProperties": [],
+			"description": "Shared conditions used by all types of events.",
 			"properties": {
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
@@ -1625,6 +1690,7 @@
 					"type": "array"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				}
@@ -1636,22 +1702,24 @@
 		},
 		"SharedConfig": {
 			"defaultProperties": [],
+			"description": "The shared configuration",
 			"properties": {
 				"enforceConventions": {
 					"$ref": "#/definitions/EnforceConventions",
+					"description": "The enforceConventions configuration",
 					"title": "enforceConventions"
 				},
 				"labels": {
 					"additionalProperties": {
 						"anyOf": [
 							{
-								"$ref": "#/definitions/SharedConditions"
-							},
-							{
 								"$ref": "#/definitions/PRConditionConfig"
 							},
 							{
 								"$ref": "#/definitions/IssueConditionConfig"
+							},
+							{
+								"$ref": "#/definitions/SharedConditions"
 							},
 							{
 								"$ref": "#/definitions/ProjectConditionConfig"
@@ -1662,16 +1730,19 @@
 						]
 					},
 					"defaultProperties": [],
+					"description": "The labels to be applied",
 					"propertyOrder": [],
 					"title": "labels",
 					"type": "object"
 				},
 				"ref": {
+					"description": "The reference used internally",
 					"title": "ref",
 					"type": "string"
 				},
 				"stale": {
 					"$ref": "#/definitions/Stale",
+					"description": "The stale configuration",
 					"title": "stale"
 				}
 			},
@@ -1694,9 +1765,11 @@
 							"type": "string"
 						}
 					],
+					"description": "The conditions required for this to succeed. You can use the \"semanticTitle\" to automatically apply thses conditions",
 					"title": "conditions"
 				},
 				"contexts": {
+					"description": "The contexts to use. Use this in combernation with \"semanticTitle\"",
 					"items": {
 						"type": "string"
 					},
@@ -1704,10 +1777,12 @@
 					"type": "array"
 				},
 				"failedComment": {
+					"description": "The failed comment to use",
 					"title": "failedComment",
 					"type": "string"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				}
@@ -1719,12 +1794,15 @@
 		},
 		"Stale": {
 			"defaultProperties": [],
+			"description": "The stale configuration",
 			"properties": {
 				"abandoned": {
 					"$ref": "#/definitions/AbanondedConfig",
+					"description": "The abanonded configuration to use",
 					"title": "abandoned"
 				},
 				"conditions": {
+					"description": "The conditions to use when checking stale",
 					"items": {
 						"$ref": "#/definitions/SharedConditions"
 					},
@@ -1733,9 +1811,11 @@
 				},
 				"stale": {
 					"$ref": "#/definitions/StaleConfig",
+					"description": "The stale configuration to use",
 					"title": "stale"
 				},
 				"staleLabel": {
+					"description": "The label to use for stale issues",
 					"title": "staleLabel",
 					"type": "string"
 				}
@@ -1747,20 +1827,25 @@
 		},
 		"StaleConfig": {
 			"defaultProperties": [],
+			"description": "The stale configuration",
 			"properties": {
 				"comment": {
+					"description": "The comment to append to the stale issue",
 					"title": "comment",
 					"type": "string"
 				},
 				"commentFooter": {
+					"description": "The comment to append to the footer",
 					"title": "commentFooter",
 					"type": "string"
 				},
 				"commentHeader": {
+					"description": "The comment to append to the header",
 					"title": "commentHeader",
 					"type": "string"
 				},
 				"conditions": {
+					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
@@ -1768,14 +1853,17 @@
 					"type": "array"
 				},
 				"days": {
+					"description": "The days to consider stale",
 					"title": "days",
 					"type": "number"
 				},
 				"requires": {
+					"description": "The number of requires needed for this to succeed",
 					"title": "requires",
 					"type": "number"
 				},
 				"resolve": {
+					"description": "The comment to switch when resolved",
 					"title": "resolve",
 					"type": "string"
 				}
@@ -1795,8 +1883,10 @@
 		},
 		"SyncRemote": {
 			"defaultProperties": [],
+			"description": "Sync Remote configuration",
 			"properties": {
 				"conditions": {
+					"description": "The conditions to use when syncing",
 					"items": {
 						"$ref": "#/definitions/SharedConditions"
 					},
@@ -1804,18 +1894,22 @@
 					"type": "array"
 				},
 				"localBranch": {
+					"description": "local branch to sync",
 					"title": "localBranch",
 					"type": "string"
 				},
 				"localPath": {
+					"description": "The path to the local files to sync",
 					"title": "localPath",
 					"type": "string"
 				},
 				"remoteBranch": {
+					"description": "remote branch to sync",
 					"title": "remoteBranch",
 					"type": "string"
 				},
 				"remotePath": {
+					"description": "The path to the remote file destination",
 					"title": "remotePath",
 					"type": "string"
 				}

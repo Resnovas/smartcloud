@@ -16,7 +16,7 @@ function isApproved(
 	condition: ConditionisApproved,
 	pr: PRProps
 ) {
-	let reviewers: string[] = []
+	const reviewers: string[] = []
 	pr.reviews.forEach((review) => {
 		if (reviewers.indexOf(review.user.login) == -1)
 			reviewers.push(review.user.login)

@@ -4,16 +4,20 @@
 	"definitions": {
 		"Label": {
 			"defaultProperties": [],
+			"description": "The labels configuration.",
 			"properties": {
 				"color": {
+					"description": "The color of the label",
 					"title": "color",
 					"type": "string"
 				},
 				"description": {
+					"description": "A description of the label",
 					"title": "description",
 					"type": "string"
 				},
 				"name": {
+					"description": "The name as appears on github",
 					"title": "name",
 					"type": "string"
 				}
@@ -28,6 +32,7 @@
 				"$ref": "#/definitions/Label"
 			},
 			"defaultProperties": [],
+			"description": "An array of labels.",
 			"propertyOrder": [],
 			"title": "Labels",
 			"type": "object"

@@ -3,7 +3,7 @@
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
 import { Utils } from "."
 import { log } from ".."
-import { Labels, Runners } from "../../types"
+import { Labels, Runners } from "../action"
 import { formatColor } from "./parsingData"
 
 /**

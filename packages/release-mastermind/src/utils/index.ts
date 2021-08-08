@@ -1,7 +1,7 @@
 /** @format */
 
 import * as github from "@actions/github"
-import { Config, Label, Runners } from "../../types"
+import { Config, Label, Runners } from "../action"
 import { Reviews, UtilThis } from "../conditions"
 import * as APIFiles from "./api/files"
 import * as APIIssues from "./api/issues"
@@ -13,7 +13,10 @@ import * as UtilLabels from "./labels"
 import * as UtilParsingData from "./parsingData"
 import * as UtilRespond from "./respond"
 import * as UtilVersioning from "./versioning"
-
+/**
+ * The util class.
+ * @private
+ */
 export class Utils {
 	client: github.GitHub
 	repo: Repo
@@ -179,6 +182,8 @@ export class Utils {
 	shouldRun = (type: functionality) => {
 		// get the package name
 		let pack = process.env.NPM_PACKAGE_NAME as packages
+
+		/*eslint-disable-next-line @typescript-eslint/no-var-requires */
 		if (!pack) pack = require("../../package.json").name as packages
 
 		// Test the fucntion against package

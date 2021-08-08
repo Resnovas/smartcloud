@@ -13,6 +13,9 @@ import only, { ConditionOnlyOne } from "./only"
 import or, { ConditionOr } from "./or"
 import titleMatches, { ConditionTitleMatches } from "./titleMatches"
 
+/**
+ * @private
+ */
 export type Condition =
 	| ConditionCreatorMatches
 	| ConditionDescriptionMatches
@@ -25,6 +28,10 @@ export type Condition =
 	| ConditionAnd
 	| ConditionOnlyOne
 
+/**
+ * The utility condition handler.
+ * @private
+ */
 export const handlers = [
 	creatorMatches,
 	descriptionMatches,

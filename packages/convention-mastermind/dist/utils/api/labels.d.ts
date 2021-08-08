@@ -1,5 +1,5 @@
 import { Utils } from "..";
-import { Label, Labels } from "../../../types";
+;
 export declare function add(this: Utils, IDNumber: number, label: string): Promise<void>;
 export declare function create(this: Utils, label: Label): Promise<void>;
 export declare function del(this: Utils, name: string): Promise<void>;

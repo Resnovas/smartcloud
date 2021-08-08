@@ -4,14 +4,25 @@ import * as core from "@actions/core"
 import { Context } from "@actions/github/lib/context"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
 import { log } from ".."
-import { Config, Runners, ScheduleConfig } from "../../types"
+import { Config, Runners, SharedConfig } from "../action"
 import { CurContext, ScheduleContext } from "../conditions"
 import { Utils } from "../utils"
 import { Contexts } from "./methods"
+
+/**
+ * The schedule configuration
+ */
+export type ScheduleConfig = SharedConfig
+
+/**
+ * The schedule class.
+ * @private
+ */
 export class Schedule extends Contexts {
 	context: ScheduleContext
 	ctx: ScheduleContext
 	config: ScheduleConfig
+
 	constructor(
 		util: Utils,
 		runners: Runners,
@@ -59,7 +70,7 @@ export class Schedule extends Contexts {
 			attempt = 1
 			core.startGroup("Schedule Actions")
 		}
-		let seconds = attempt * 10
+		const seconds = attempt * 10
 		try {
 			const issues = await this.util.api.issues.list({})
 			issues.forEach(async (issue) => {
@@ -106,7 +117,7 @@ export class Schedule extends Contexts {
 			})
 			core.endGroup()
 		} catch (err) {
-			if (attempt > 3) {
+			if (attempt > this.retryLimit) {
 				core.endGroup()
 				throw new LoggingDataClass(
 					LoggingLevels.emergency,

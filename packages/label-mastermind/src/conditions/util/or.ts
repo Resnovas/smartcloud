@@ -1,11 +1,12 @@
 /** @format */
 
-import { UtilProps, UtilThis } from "../"
 import {
 	IssueConditionConfig,
 	PRConditionConfig,
-	ProjectConditionConfig
-} from "../../../types"
+	ProjectConditionConfig,
+	UtilProps,
+	UtilThis
+} from "../"
 import { evaluator } from "../../evaluator"
 const TYPE = "$or"
 
@@ -15,7 +16,7 @@ export interface ConditionOr {
 }
 
 function or(this: UtilThis, condition: ConditionOr, props: UtilProps) {
-	let success: boolean = false
+	let success = false
 
 	condition.pattern.forEach((condition) => {
 		if (evaluator.call(this, condition, props)) success = true

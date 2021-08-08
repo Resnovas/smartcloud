@@ -4,9 +4,49 @@ import * as core from "@actions/core"
 import { LoggingLevels } from "@videndum/utilities"
 import { Issues, Project, PullRequests } from ".."
 import { log } from "../.."
-import { Condition } from "../../conditions"
+import { Condition, SharedConventionConditions } from "../../conditions"
 import { evaluator } from "../../evaluator"
 import { semantic } from "../../utils/helper/semantic"
+
+/**
+ * The enforce conventions configuration
+ */
+
+export type Column = string | number
+export interface EnforceConventions {
+	/**
+	 * The columns to enforce conventions
+	 */
+	onColumn?: Column[]
+	/**
+	 * The comment to append to the header
+	 */
+	commentHeader?: string
+	/**
+	 * The comment to append to the footer
+	 */
+	commentFooter?: string
+	/**
+	 * The column to move if fails
+	 */
+	moveToColumn?: string
+	/**
+	 * The conventions to enforce
+	 */
+	conventions: SharedConventionsConfig[]
+}
+
+export interface SharedConventionsConfig extends SharedConventionConditions {
+	/**
+	 * The failed comment to use
+	 */
+	failedComment: string
+	/**
+	 * The contexts to use. Use this in combernation with "semanticTitle"
+	 * @requires conditions: "semanticTitle"
+	 */
+	contexts?: string[]
+}
 
 export function enforce(this: Issues | PullRequests | Project) {
 	if (
@@ -22,7 +62,7 @@ export function enforce(this: Issues | PullRequests | Project) {
 		required++
 		if (convention.conditions == "semanticTitle") {
 			convention.requires = 1
-			let conditions: Condition[] = []
+			const conditions: Condition[] = []
 			semantic.forEach((pattern) => {
 				conditions.push({
 					type: "titleMatches",
@@ -74,8 +114,8 @@ async function createConventionComment(
 	failMessages?: string[]
 ) {
 	if (!this.config.enforceConventions) return
-	let prefix: string = `<!--releaseMastermind: Conventions-->`,
-		suffix: string = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${
+	let prefix = `<!--releaseMastermind: Conventions-->`,
+		suffix = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${
 			this.config.enforceConventions.commentFooter || ""
 		}`,
 		body: string =
