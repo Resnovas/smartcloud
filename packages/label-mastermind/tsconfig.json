@@ -3,9 +3,11 @@
 		// Configs
 		"rootDir": "src",
 		"outDir": "lib",
+		"declaration": true,
 		"sourceMap": true,
+		"declarationMap": true,
 		// Compile
-		"target": "es6",
+		"target": "ESNEXT",
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"resolveJsonModule": true,
@@ -34,5 +36,8 @@
 		"noUncheckedIndexedAccess": true,
 		"noUnusedParameters": true
 	},
-	"exclude": ["node_modules", "**/*.test.ts"]
+	"exclude": ["node_modules", "**/*.test.ts", "lib", "dist"],
+	"typedocOptions": {
+		"readme": "none"
+	}
 }

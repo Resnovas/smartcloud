@@ -30,8 +30,9 @@ class Copy {
             .pipe(dest('packages/convention-mastermind/'))
             .pipe(dest('packages/label-mastermind/'))
     }
-    static docs() {
-        return src('docs/**/*', { base: "." })
+
+    static eslintrc() {
+        return src('.eslintrc.js', { base: "." })
             .pipe(dest('packages/release-mastermind/'))
             .pipe(dest('packages/workflow-mastermind/'))
             .pipe(dest('packages/variable-mastermind/'))
@@ -50,6 +51,16 @@ class Copy {
         return src('packages/release-mastermind/src/conditions/**/*')
             .pipe(dest('packages/label-mastermind/src/conditions'))
             .pipe(dest('packages/convention-mastermind/src/conditions'))
+    }
+
+    static schema() {
+        return src('packages/release-mastermind/schema.json')
+            .pipe(dest('./'))
+    }
+
+    static schemafolder() {
+        return src('packages/release-mastermind/schema/*.json')
+            .pipe(dest('./schema'))
     }
 
     static index() {
@@ -73,12 +84,6 @@ class Copy {
         return src('packages/release-mastermind/src/utils/**/*')
             .pipe(dest('packages/label-mastermind/src/utils'))
             .pipe(dest('packages/convention-mastermind/src/utils'))
-    }
-
-    static types() {
-        return src('packages/release-mastermind/types/index.d.ts')
-            .pipe(dest('packages/label-mastermind/types'))
-            .pipe(dest('packages/convention-mastermind/types'))
     }
 
     static contexts() {

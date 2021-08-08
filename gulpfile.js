@@ -1,47 +1,67 @@
-const rename = require("gulp-rename");
-const { src, series, parallel } = require('gulp');
-const exec = require('gulp-exec');
-const { Copy } = require('./.gulp/copy')
-const { Markdown } = require('./.gulp/markdown')
-const { Testing } = require('./.gulp/testing')
-const { Configs } = require('./.gulp/configs')
+/** @format */
+
+const rename = require("gulp-rename")
+const { src, series, parallel } = require("gulp")
+const exec = require("gulp-exec")
+const { Copy } = require("./.gulp/copy")
+const { Markdown } = require("./.gulp/markdown")
+const { Testing } = require("./.gulp/testing")
+const { Configs } = require("./.gulp/configs")
 
 function package() {
-    return src('./packages/**/README-SOURCE.md')
-        .pipe(rename(function (path) {
-            path.basename = path.dirname;
-            path.dirname = "";
-            path.extname = "";
-        }))
-        .pipe(exec(file => `cd ${file.path} && npm run dev:package`))
-        .pipe(exec.reporter());
+	return src("./packages/**/README-SOURCE.md")
+		.pipe(
+			rename(function (path) {
+				path.basename = path.dirname
+				path.dirname = ""
+				path.extname = ""
+			})
+		)
+		.pipe(exec((file) => `cd ${file.path} && npm run dev:package`))
+		.pipe(exec.reporter())
 }
 
+const copy = parallel(
+	Copy.prettier,
+	Copy.tsconfig,
+	Copy.index,
+	Copy.action,
+	Copy.evaluator,
+	Copy.contexts,
+	Copy.conditions,
+	Copy.labels,
+	Copy.utils,
+	Copy.templates
+)
+const config = parallel(Configs.release, Configs.convention, Configs.labels)
 const testall = series(
-    parallel(Testing.copy.config, Testing.copy.context.issue),
-    Testing.run,
-    Testing.copy.context.pr,
-    Testing.run,
-    // Testing.copy.context.project,
-    // Testing.run,
-    Testing.copy.context.schedule,
-    Testing.run,
-    Testing.cleanup,
-    package
-);
-
-exports.default = series(
-    parallel(Copy.prettier, Copy.tsconfig, Copy.index, Copy.action, Copy.evaluator, Copy.contexts, Copy.docs, Copy.conditions, Copy.labels, Copy.types, Copy.utils, Copy.templates),
-    parallel(Configs.release, Configs.convention, Configs.labels),
-    Copy.format,
-    Configs.schema,
-    testall,
-    Configs.allConfig,
-    parallel(Markdown.setup, Markdown.conditions),
-    Markdown.packageReadme,
-    Markdown.readme,
-    Copy.format,
+	parallel(Testing.copy.config, Testing.copy.context.issue),
+	Testing.run,
+	Testing.copy.context.pr,
+	Testing.run,
+	// Testing.copy.context.project,
+	// Testing.run,
+	Testing.copy.context.schedule,
+	Testing.run,
+	Testing.cleanup,
+	package
 )
 
+exports.default = series(
+	copy,
+	config,
+	Copy.format,
+	Configs.schema,
+	parallel(Copy.schema, Copy.schemafolder),
+	testall,
+	Configs.allConfig,
+	// parallel(Markdown.setup, Markdown.conditions),
+	// Markdown.packageReadme,
+	// Markdown.readme,
+	Copy.format
+)
+
+exports.copy = copy
+exports.config = config
 exports.testall = testall
 exports.package = package
