@@ -1,18 +1,18 @@
 {
-  "permalink": "/action-masterminds/changelog/hola",
+  "permalink": "/action-masterminds/es/changelog/hola",
   "source": "@site/changelog/2019-05-28-hola.md",
   "title": "Hola",
   "description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque elementum dignissim ultricies. Fusce rhoncus ipsum tempor eros aliquam consequat. Lorem ipsum dolor sit amet",
   "date": "2019-05-28T00:00:00.000Z",
-  "formattedDate": "May 28, 2019",
+  "formattedDate": "28 de mayo de 2019",
   "tags": [
     {
       "label": "hola",
-      "permalink": "/action-masterminds/changelog/tags/hola"
+      "permalink": "/action-masterminds/es/changelog/tags/hola"
     },
     {
       "label": "docusaurus",
-      "permalink": "/action-masterminds/changelog/tags/docusaurus"
+      "permalink": "/action-masterminds/es/changelog/tags/docusaurus"
     }
   ],
   "readingTime": 0.12,

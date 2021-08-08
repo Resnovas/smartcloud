@@ -2,7 +2,7 @@ export default {
   "title": "Action Masterminds",
   "tagline": "Superpowered Github Actions",
   "url": "https://videndum.github.io",
-  "baseUrl": "/action-masterminds/",
+  "baseUrl": "/action-masterminds/es/",
   "onBrokenLinks": "throw",
   "onBrokenMarkdownLinks": "warn",
   "favicon": "img/favicon.ico",

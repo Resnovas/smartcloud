@@ -2,8 +2,8 @@
 id: "modules"
 title: "@videndum/release-mastermind"
 sidebar_label: "Exports"
-slug: "/release-mastermind"
 sidebar_position: 0.5
+custom_edit_url: null
 ---
 
 ## Interfaces

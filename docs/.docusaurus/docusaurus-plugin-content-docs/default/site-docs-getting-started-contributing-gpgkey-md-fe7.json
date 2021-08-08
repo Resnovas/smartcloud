@@ -7,7 +7,7 @@
   "source": "@site/docs/getting-started/contributing/gpgkey.md",
   "sourceDirName": "getting-started/contributing",
   "slug": "/getting-started/contributing/gpgkey",
-  "permalink": "/action-masterminds/docs/getting-started/contributing/gpgkey",
+  "permalink": "/action-masterminds/es/docs/getting-started/contributing/gpgkey",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/gpgkey.md",
   "version": "current",
   "sidebarPosition": 3,
@@ -17,10 +17,10 @@
   "sidebar": "getting",
   "previous": {
     "title": "Code of Conduct",
-    "permalink": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT"
+    "permalink": "/action-masterminds/es/docs/getting-started/contributing/CODE_OF_CONDUCT"
   },
   "next": {
     "title": "Running Locally & Developing",
-    "permalink": "/action-masterminds/docs/getting-started/contributing/runningLocally"
+    "permalink": "/action-masterminds/es/docs/getting-started/contributing/runningLocally"
   }
 }

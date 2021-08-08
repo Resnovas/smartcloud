@@ -7,7 +7,7 @@
   "source": "@site/docs/release-mastermind/interfaces/IssueConfig.md",
   "sourceDirName": "release-mastermind/interfaces",
   "slug": "/release-mastermind/interfaces/IssueConfig",
-  "permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig",
+  "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/IssueConfig",
   "editUrl": null,
   "version": "current",
   "sidebarPosition": 0,
@@ -21,10 +21,10 @@
   "sidebar": "release",
   "previous": {
     "title": "IssueConditionConfig",
-    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig"
+    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/IssueConditionConfig"
   },
   "next": {
     "title": "Label",
-    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/Label"
+    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/Label"
   }
 }

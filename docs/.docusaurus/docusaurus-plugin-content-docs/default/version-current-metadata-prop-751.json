@@ -9,17 +9,17 @@
       {
         "type": "link",
         "label": "Intro",
-        "href": "/action-masterminds/docs/getting-started"
+        "href": "/action-masterminds/es/docs/getting-started"
       },
       {
         "type": "link",
         "label": "Manual setup",
-        "href": "/action-masterminds/docs/getting-started/setup"
+        "href": "/action-masterminds/es/docs/getting-started/setup"
       },
       {
         "type": "link",
         "label": "Backlog",
-        "href": "/action-masterminds/docs/getting-started/backlog"
+        "href": "/action-masterminds/es/docs/getting-started/backlog"
       },
       {
         "type": "category",
@@ -28,7 +28,7 @@
           {
             "type": "link",
             "label": "Using Regex",
-            "href": "/action-masterminds/docs/getting-started/features/regex"
+            "href": "/action-masterminds/es/docs/getting-started/features/regex"
           }
         ],
         "collapsible": true,
@@ -41,27 +41,27 @@
           {
             "type": "link",
             "label": "Code of Conduct",
-            "href": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT"
+            "href": "/action-masterminds/es/docs/getting-started/contributing/CODE_OF_CONDUCT"
           },
           {
             "type": "link",
             "label": "Signing Git with GPG using Keybase",
-            "href": "/action-masterminds/docs/getting-started/contributing/gpgkey"
+            "href": "/action-masterminds/es/docs/getting-started/contributing/gpgkey"
           },
           {
             "type": "link",
             "label": "Running Locally & Developing",
-            "href": "/action-masterminds/docs/getting-started/contributing/runningLocally"
+            "href": "/action-masterminds/es/docs/getting-started/contributing/runningLocally"
           },
           {
             "type": "link",
             "label": "Code review process",
-            "href": "/action-masterminds/docs/getting-started/contributing/code-review-process"
+            "href": "/action-masterminds/es/docs/getting-started/contributing/code-review-process"
           },
           {
             "type": "link",
             "label": "Security Disclosures",
-            "href": "/action-masterminds/docs/getting-started/contributing/security"
+            "href": "/action-masterminds/es/docs/getting-started/contributing/security"
           },
           {
             "type": "category",
@@ -70,37 +70,37 @@
               {
                 "type": "link",
                 "label": "Start Contributing",
-                "href": "/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
+                "href": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
               },
               {
                 "type": "link",
                 "label": "External Contributions Workflow",
-                "href": "/action-masterminds/docs/getting-started/contributing/Start Contributing/external"
+                "href": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/external"
               },
               {
                 "type": "link",
                 "label": "Internal Contributions Workflow",
-                "href": "/action-masterminds/docs/getting-started/contributing/Start Contributing/internal"
+                "href": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/internal"
               },
               {
                 "type": "link",
                 "label": "Branch Names",
-                "href": "/action-masterminds/docs/getting-started/contributing/Start Contributing/branch"
+                "href": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/branch"
               },
               {
                 "type": "link",
                 "label": "Contribution Types",
-                "href": "/action-masterminds/docs/getting-started/contributing/Start Contributing/types"
+                "href": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/types"
               },
               {
                 "type": "link",
                 "label": "Your First Contribution",
-                "href": "/action-masterminds/docs/getting-started/contributing/Start Contributing/first"
+                "href": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/first"
               },
               {
                 "type": "link",
                 "label": "Understanding Labels",
-                "href": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels"
+                "href": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/labels"
               }
             ],
             "collapsed": true,
@@ -113,19 +113,24 @@
       {
         "type": "link",
         "label": "Support 👨‍👩‍👧‍👦",
-        "href": "/action-masterminds/docs/getting-started/support"
+        "href": "/action-masterminds/es/docs/getting-started/support"
       },
       {
         "type": "link",
         "label": "Contributors",
-        "href": "/action-masterminds/docs/getting-started/contributors"
+        "href": "/action-masterminds/es/docs/getting-started/contributors"
       }
     ],
     "release": [
       {
         "type": "link",
+        "label": "Readme",
+        "href": "/action-masterminds/es/docs/release-mastermind"
+      },
+      {
+        "type": "link",
         "label": "Exports",
-        "href": "/action-masterminds/docs/release-mastermind"
+        "href": "/action-masterminds/es/docs/release-mastermind/modules"
       },
       {
         "type": "category",
@@ -134,87 +139,87 @@
           {
             "type": "link",
             "label": "ApiProps",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/ApiProps"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/ApiProps"
           },
           {
             "type": "link",
             "label": "Config",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/Config"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/Config"
           },
           {
             "type": "link",
             "label": "IssueConditionConfig",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/IssueConditionConfig"
           },
           {
             "type": "link",
             "label": "IssueConfig",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/IssueConfig"
           },
           {
             "type": "link",
             "label": "Label",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/Label"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/Label"
           },
           {
             "type": "link",
             "label": "Labels",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/Labels"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/Labels"
           },
           {
             "type": "link",
             "label": "Options",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/Options"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/Options"
           },
           {
             "type": "link",
             "label": "PRConditionConfig",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/PRConditionConfig"
           },
           {
             "type": "link",
             "label": "ProjectConditionConfig",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/ProjectConditionConfig"
           },
           {
             "type": "link",
             "label": "ProjectConfig",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/ProjectConfig"
           },
           {
             "type": "link",
             "label": "PullRequestConfig",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/PullRequestConfig"
           },
           {
             "type": "link",
             "label": "Repo",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/Repo"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/Repo"
           },
           {
             "type": "link",
             "label": "Runners",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/Runners"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/Runners"
           },
           {
             "type": "link",
             "label": "ScheduleConditionConfig",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/ScheduleConditionConfig"
           },
           {
             "type": "link",
             "label": "SharedConditions",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/SharedConditions"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/SharedConditions"
           },
           {
             "type": "link",
             "label": "SharedConfig",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/SharedConfig"
           },
           {
             "type": "link",
             "label": "SharedConventionConditions",
-            "href": "/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions"
+            "href": "/action-masterminds/es/docs/release-mastermind/interfaces/SharedConventionConditions"
           }
         ],
         "collapsed": true,

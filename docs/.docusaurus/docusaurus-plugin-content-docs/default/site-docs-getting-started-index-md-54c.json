@@ -7,7 +7,7 @@
   "source": "@site/docs/getting-started/index.md",
   "sourceDirName": "getting-started",
   "slug": "/getting-started",
-  "permalink": "/action-masterminds/docs/getting-started",
+  "permalink": "/action-masterminds/es/docs/getting-started",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/index.md",
   "version": "current",
   "frontMatter": {
@@ -19,6 +19,6 @@
   "sidebar": "getting",
   "next": {
     "title": "Manual setup",
-    "permalink": "/action-masterminds/docs/getting-started/setup"
+    "permalink": "/action-masterminds/es/docs/getting-started/setup"
   }
 }

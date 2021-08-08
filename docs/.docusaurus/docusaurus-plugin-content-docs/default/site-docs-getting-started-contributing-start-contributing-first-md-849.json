@@ -7,7 +7,7 @@
   "source": "@site/docs/getting-started/contributing/Start Contributing/first.md",
   "sourceDirName": "getting-started/contributing/Start Contributing",
   "slug": "/getting-started/contributing/Start Contributing/first",
-  "permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/first",
+  "permalink": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/first",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/first.md",
   "version": "current",
   "sidebarPosition": 3,
@@ -17,10 +17,10 @@
   "sidebar": "getting",
   "previous": {
     "title": "Contribution Types",
-    "permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/types"
+    "permalink": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/types"
   },
   "next": {
     "title": "Understanding Labels",
-    "permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels"
+    "permalink": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/labels"
   }
 }

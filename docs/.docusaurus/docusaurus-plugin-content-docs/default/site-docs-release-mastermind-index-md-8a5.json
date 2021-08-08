@@ -7,7 +7,7 @@
   "source": "@site/docs/release-mastermind/index.md",
   "sourceDirName": "release-mastermind",
   "slug": "/release-mastermind",
-  "permalink": "/action-masterminds/docs/release-mastermind",
+  "permalink": "/action-masterminds/es/docs/release-mastermind",
   "editUrl": null,
   "version": "current",
   "sidebarPosition": 0,
@@ -22,6 +22,6 @@
   "sidebar": "release",
   "next": {
     "title": "Exports",
-    "permalink": "/action-masterminds/docs/release-mastermind"
+    "permalink": "/action-masterminds/es/docs/release-mastermind/modules"
   }
 }

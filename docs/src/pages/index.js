@@ -67,7 +67,7 @@ export default function Home() {
           <h1>{siteConfig.title}</h1>
           <p>{siteConfig.tagline}</p>
           <div className={styles.buttons}>
-            <Link to={useBaseUrl('docs/')}>Get Started</Link>
+            <Link to={useBaseUrl('docs/getting-started')}>Get Started</Link>
           </div>
         </header>
         <main>

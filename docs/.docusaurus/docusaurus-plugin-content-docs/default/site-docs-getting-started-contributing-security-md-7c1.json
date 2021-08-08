@@ -7,7 +7,7 @@
   "source": "@site/docs/getting-started/contributing/security.md",
   "sourceDirName": "getting-started/contributing",
   "slug": "/getting-started/contributing/security",
-  "permalink": "/action-masterminds/docs/getting-started/contributing/security",
+  "permalink": "/action-masterminds/es/docs/getting-started/contributing/security",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/security.md",
   "version": "current",
   "sidebarPosition": 4,
@@ -17,10 +17,10 @@
   "sidebar": "getting",
   "previous": {
     "title": "Code review process",
-    "permalink": "/action-masterminds/docs/getting-started/contributing/code-review-process"
+    "permalink": "/action-masterminds/es/docs/getting-started/contributing/code-review-process"
   },
   "next": {
     "title": "Start Contributing",
-    "permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
+    "permalink": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
   }
 }

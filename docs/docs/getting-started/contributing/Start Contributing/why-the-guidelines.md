@@ -16,12 +16,12 @@ Following these guidelines helps to communicate that you respect the time of the
 
 ## Contributor License Agreement {#contributor-license-agreement}
 
-We have a Contributor License Agreement which can be found at [`{root}/docs/getting-started/contributing/agreement.md`](./AGREEMENT.md). It is required for [Standard Contributions](contribution-types.md#std) and [Major Contributions](contribution-types.md#major).
+We have a Contributor License Agreement which can be found at [`{root}/docs/getting-started/contributing/agreement.md`](../CODE_OF_CONDUCT.md). It is required for [Standard Contributions](./types) and [Major Contributions](./types).
 
 ## Responsibilities {#responsibilities}
 
 - Ensure cross-platform compatibility for every change that's accepted.
-- Ensure that code meets all [requirements](contribution-types.md)
+- Ensure that code meets all [requirements](types)
 - Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
 - Ensure each contribution is created on its own branch to ensure we can follow [Semantic Versioning](http://semver.org/)
 - Be welcoming to newcomers and encourage diverse new contributors from all backgrounds

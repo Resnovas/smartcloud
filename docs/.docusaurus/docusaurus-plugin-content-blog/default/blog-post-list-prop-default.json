@@ -3,23 +3,23 @@
   "items": [
     {
       "title": "Blog Plugin",
-      "permalink": "/action-masterminds/blog/2020/04/14/blog-plugin"
+      "permalink": "/action-masterminds/es/blog/2020/04/14/blog-plugin"
     },
     {
       "title": "A large blog post",
-      "permalink": "/action-masterminds/blog/2020/04/14/large-blog-post"
+      "permalink": "/action-masterminds/es/blog/2020/04/14/large-blog-post"
     },
     {
       "title": "Welcome",
-      "permalink": "/action-masterminds/blog/welcome"
+      "permalink": "/action-masterminds/es/blog/welcome"
     },
     {
       "title": "Hello",
-      "permalink": "/action-masterminds/blog/hello-world"
+      "permalink": "/action-masterminds/es/blog/hello-world"
     },
     {
       "title": "Hola",
-      "permalink": "/action-masterminds/blog/hola"
+      "permalink": "/action-masterminds/es/blog/hola"
     }
   ]
 }

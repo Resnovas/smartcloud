@@ -7,7 +7,7 @@
   "source": "@site/docs/getting-started/contributing/CODE_OF_CONDUCT.md",
   "sourceDirName": "getting-started/contributing",
   "slug": "/getting-started/contributing/CODE_OF_CONDUCT",
-  "permalink": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT",
+  "permalink": "/action-masterminds/es/docs/getting-started/contributing/CODE_OF_CONDUCT",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/CODE_OF_CONDUCT.md",
   "version": "current",
   "sidebarPosition": 1,
@@ -19,10 +19,10 @@
   "sidebar": "getting",
   "previous": {
     "title": "Using Regex",
-    "permalink": "/action-masterminds/docs/getting-started/features/regex"
+    "permalink": "/action-masterminds/es/docs/getting-started/features/regex"
   },
   "next": {
     "title": "Signing Git with GPG using Keybase",
-    "permalink": "/action-masterminds/docs/getting-started/contributing/gpgkey"
+    "permalink": "/action-masterminds/es/docs/getting-started/contributing/gpgkey"
   }
 }

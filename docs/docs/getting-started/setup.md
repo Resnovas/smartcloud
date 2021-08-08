@@ -73,4 +73,4 @@ Be sure that Github Actions is enabled for in your repository's settings.
 
 ## How to configure?
 
-We are working on a couple of automated ways to configure this action, and will be releasing them shortly (Fall 2021). In the mean time you can checkout our extensive documentation found on our [website](a) and [our configuration page](../release-mastermind/interfaces/Config)
+We are working on a couple of automated ways to configure this action, and will be releasing them shortly (Fall 2021). In the mean time you can checkout our extensive documentation found on our [website](https://videndum.github.io/action-masterminds) and [our configuration page](../release-mastermind/interfaces/Config)
