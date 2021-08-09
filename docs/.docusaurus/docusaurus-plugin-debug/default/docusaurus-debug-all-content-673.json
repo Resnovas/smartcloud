@@ -120,6 +120,11 @@
             "release": [
               {
                 "type": "doc",
+                "id": "release-mastermind/index",
+                "label": "Readme"
+              },
+              {
+                "type": "doc",
                 "id": "release-mastermind/modules",
                 "label": "Exports"
               },
@@ -675,6 +680,33 @@
               }
             },
             {
+              "unversionedId": "release-mastermind/index",
+              "id": "release-mastermind/index",
+              "isDocsHomePage": false,
+              "title": "@videndum/release-mastermind",
+              "description": "",
+              "source": "@site/docs/release-mastermind/index.md",
+              "sourceDirName": "release-mastermind",
+              "slug": "/release-mastermind",
+              "permalink": "/action-masterminds/docs/release-mastermind",
+              "editUrl": null,
+              "version": "current",
+              "sidebarPosition": 0,
+              "frontMatter": {
+                "id": "index",
+                "title": "@videndum/release-mastermind",
+                "slug": "/release-mastermind",
+                "sidebar_label": "Readme",
+                "sidebar_position": 0,
+                "custom_edit_url": null
+              },
+              "sidebar": "release",
+              "next": {
+                "title": "Exports",
+                "permalink": "/action-masterminds/docs/release-mastermind/modules"
+              }
+            },
+            {
               "unversionedId": "release-mastermind/interfaces/ApiProps",
               "id": "release-mastermind/interfaces/ApiProps",
               "isDocsHomePage": false,
@@ -697,7 +729,7 @@
               "sidebar": "release",
               "previous": {
                 "title": "Exports",
-                "permalink": "/action-masterminds/docs/release-mastermind"
+                "permalink": "/action-masterminds/docs/release-mastermind/modules"
               },
               "next": {
                 "title": "Config",
@@ -1188,19 +1220,23 @@
               "description": "Interfaces",
               "source": "@site/docs/release-mastermind/modules.md",
               "sourceDirName": "release-mastermind",
-              "slug": "/release-mastermind",
-              "permalink": "/action-masterminds/docs/release-mastermind",
-              "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/release-mastermind/modules.md",
+              "slug": "/release-mastermind/modules",
+              "permalink": "/action-masterminds/docs/release-mastermind/modules",
+              "editUrl": null,
               "version": "current",
               "sidebarPosition": 0.5,
               "frontMatter": {
                 "id": "modules",
                 "title": "@videndum/release-mastermind",
                 "sidebar_label": "Exports",
-                "slug": "/release-mastermind",
-                "sidebar_position": 0.5
+                "sidebar_position": 0.5,
+                "custom_edit_url": null
               },
               "sidebar": "release",
+              "previous": {
+                "title": "Readme",
+                "permalink": "/action-masterminds/docs/release-mastermind"
+              },
               "next": {
                 "title": "ApiProps",
                 "permalink": "/action-masterminds/docs/release-mastermind/interfaces/ApiProps"

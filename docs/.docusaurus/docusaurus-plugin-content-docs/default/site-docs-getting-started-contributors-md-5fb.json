@@ -7,13 +7,13 @@
   "source": "@site/docs/getting-started/contributors.md",
   "sourceDirName": "getting-started",
   "slug": "/getting-started/contributors",
-  "permalink": "/action-masterminds/es/docs/getting-started/contributors",
+  "permalink": "/action-masterminds/docs/getting-started/contributors",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributors.md",
   "version": "current",
   "frontMatter": {},
   "sidebar": "getting",
   "previous": {
     "title": "Support 👨‍👩‍👧‍👦",
-    "permalink": "/action-masterminds/es/docs/getting-started/support"
+    "permalink": "/action-masterminds/docs/getting-started/support"
   }
 }

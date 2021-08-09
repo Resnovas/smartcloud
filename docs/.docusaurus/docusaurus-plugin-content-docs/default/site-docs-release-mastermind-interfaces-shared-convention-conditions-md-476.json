@@ -7,7 +7,7 @@
   "source": "@site/docs/release-mastermind/interfaces/SharedConventionConditions.md",
   "sourceDirName": "release-mastermind/interfaces",
   "slug": "/release-mastermind/interfaces/SharedConventionConditions",
-  "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/SharedConventionConditions",
+  "permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions",
   "editUrl": null,
   "version": "current",
   "sidebarPosition": 0,
@@ -21,6 +21,6 @@
   "sidebar": "release",
   "previous": {
     "title": "SharedConfig",
-    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/SharedConfig"
+    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig"
   }
 }

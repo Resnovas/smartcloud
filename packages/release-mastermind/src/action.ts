@@ -1,8 +1,8 @@
 /** @format */
 
 import * as core from "@actions/core"
-import * as github from "@actions/github"
-import { GitHub } from "@actions/github"
+import { context as Context } from "@actions/github"
+import { GitHub } from "@actions/github/lib/utils"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
 import fs from "fs"
 import { log, Options } from "."
@@ -148,7 +148,7 @@ export interface Label {
 	/**
 	 * A description of the label
 	 */
-	description: string
+	description?: string
 	/**
 	 * The color of the label
 	 */
@@ -178,8 +178,13 @@ export type VersionSource = "node" | "milestones" | string
  */
 export type VersionType = "SemVer"
 
+/**
+ * @private
+ */
+export type Github = InstanceType<typeof GitHub>
+
 let local: any
-let context = github.context
+let context = Context
 
 try {
 	local = require("../config.json")
@@ -193,7 +198,7 @@ try {
  * @private
  */
 export default class Action {
-	client: GitHub
+	client: Github
 	opts: Options
 	configJSON: Options["configJSON"]
 	configPath: Options["configPath"]
@@ -202,7 +207,7 @@ export default class Action {
 	repo = context.repo || {}
 	util: Utils
 
-	constructor(client: GitHub, options: Options) {
+	constructor(client: Github, options: Options) {
 		log(
 			LoggingLevels.debug,
 			`Release Mastermind Constructed: ${options.toString()}`
@@ -505,43 +510,26 @@ export default class Action {
 	}
 
 	applyContext(runners: Runners, config: Config, curContext: CurContext) {
-		let ctx: PullRequests | Issues | Project | Schedule
-		if (curContext.type == "pr") {
-			ctx = new PullRequests(
-				this.util,
-				runners,
-				config,
-				curContext,
-				this.dryRun
+		let ctx: PullRequests | Issues | Project | Schedule | undefined =
+			curContext.type == "pr"
+				? new PullRequests(this.util, runners, config, curContext, this.dryRun)
+				: curContext.type == "issue"
+				? new Issues(this.util, runners, config, curContext, this.dryRun)
+				: curContext.type == "project"
+				? new Project(this.util, runners, config, curContext, this.dryRun)
+				: curContext.type == "schedule"
+				? new Schedule(this.util, runners, config, curContext, this.dryRun)
+				: undefined
+
+		if (!ctx)
+			throw new LoggingDataClass(LoggingLevels.error, "Context not found")
+
+		ctx.run().catch((err) => {
+			throw log(
+				LoggingLevels.error,
+				`Error thrown while running context: `,
+				err
 			)
-			ctx.run()
-		} else if (curContext.type == "issue") {
-			ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
-			ctx.run().catch((err) => {
-				throw log(
-					LoggingLevels.error,
-					`Error thrown while running context: `,
-					err
-				)
-			})
-		} else if (curContext.type == "project") {
-			ctx = new Project(this.util, runners, config, curContext, this.dryRun)
-			ctx.run().catch((err) => {
-				throw log(
-					LoggingLevels.error,
-					`Error thrown while running context: `,
-					err
-				)
-			})
-		} else if (curContext.type == "schedule") {
-			ctx = new Schedule(this.util, runners, config, curContext, this.dryRun)
-			ctx.run().catch((err) => {
-				throw log(
-					LoggingLevels.error,
-					`Error thrown while running context: `,
-					err
-				)
-			})
-		}
+		})
 	}
 }

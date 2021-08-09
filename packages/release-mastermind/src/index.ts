@@ -1,7 +1,7 @@
 /** @format */
 
 import * as core from "@actions/core"
-import * as github from "@actions/github"
+import {getOctokit} from '@actions/github'
 import {
 	Logger,
 	LoggingDataClass,
@@ -114,7 +114,7 @@ async function run() {
 		skipDelete,
 		repo
 	}
-	const action = new Action(new github.GitHub(GITHUB_TOKEN), options)
+	const action = new Action(getOctokit(GITHUB_TOKEN), options)
 	action.run().catch((err) => {
 		log(
 			LoggingLevels.emergency,

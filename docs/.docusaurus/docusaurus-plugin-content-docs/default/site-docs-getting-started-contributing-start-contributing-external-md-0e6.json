@@ -7,7 +7,7 @@
   "source": "@site/docs/getting-started/contributing/Start Contributing/external.md",
   "sourceDirName": "getting-started/contributing/Start Contributing",
   "slug": "/getting-started/contributing/Start Contributing/external",
-  "permalink": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/external",
+  "permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/external",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/external.md",
   "version": "current",
   "sidebarPosition": 1,
@@ -17,10 +17,10 @@
   "sidebar": "getting",
   "previous": {
     "title": "Start Contributing",
-    "permalink": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
+    "permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
   },
   "next": {
     "title": "Internal Contributions Workflow",
-    "permalink": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/internal"
+    "permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/internal"
   }
 }

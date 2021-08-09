@@ -7,7 +7,7 @@
   "source": "@site/docs/release-mastermind/interfaces/Repo.md",
   "sourceDirName": "release-mastermind/interfaces",
   "slug": "/release-mastermind/interfaces/Repo",
-  "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/Repo",
+  "permalink": "/action-masterminds/docs/release-mastermind/interfaces/Repo",
   "editUrl": null,
   "version": "current",
   "sidebarPosition": 0,
@@ -21,10 +21,10 @@
   "sidebar": "release",
   "previous": {
     "title": "PullRequestConfig",
-    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/PullRequestConfig"
+    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig"
   },
   "next": {
     "title": "Runners",
-    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/Runners"
+    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners"
   }
 }

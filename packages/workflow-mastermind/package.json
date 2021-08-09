@@ -31,5 +31,8 @@
     "prettier-plugin-sh": "^0.7.1",
     "prettier-standard": "^16.4.1",
     "typescript-json-schema": "^0.50.1"
+  },
+  "dependencies": {
+    "@actions/github": "^5.0.0"
   }
 }

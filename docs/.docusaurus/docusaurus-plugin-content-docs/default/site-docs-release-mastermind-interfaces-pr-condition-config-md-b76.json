@@ -7,7 +7,7 @@
   "source": "@site/docs/release-mastermind/interfaces/PRConditionConfig.md",
   "sourceDirName": "release-mastermind/interfaces",
   "slug": "/release-mastermind/interfaces/PRConditionConfig",
-  "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/PRConditionConfig",
+  "permalink": "/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig",
   "editUrl": null,
   "version": "current",
   "sidebarPosition": 0,
@@ -21,10 +21,10 @@
   "sidebar": "release",
   "previous": {
     "title": "Options",
-    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/Options"
+    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/Options"
   },
   "next": {
     "title": "ProjectConditionConfig",
-    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/ProjectConditionConfig"
+    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig"
   }
 }

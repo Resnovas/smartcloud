@@ -7,17 +7,17 @@
   "source": "@site/docs/getting-started/backlog.md",
   "sourceDirName": "getting-started",
   "slug": "/getting-started/backlog",
-  "permalink": "/action-masterminds/es/docs/getting-started/backlog",
+  "permalink": "/action-masterminds/docs/getting-started/backlog",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/backlog.md",
   "version": "current",
   "frontMatter": {},
   "sidebar": "getting",
   "previous": {
     "title": "Manual setup",
-    "permalink": "/action-masterminds/es/docs/getting-started/setup"
+    "permalink": "/action-masterminds/docs/getting-started/setup"
   },
   "next": {
     "title": "Using Regex",
-    "permalink": "/action-masterminds/es/docs/getting-started/features/regex"
+    "permalink": "/action-masterminds/docs/getting-started/features/regex"
   }
 }

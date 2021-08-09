@@ -4,7 +4,7 @@ import { Event, Utils } from ".."
 import { Reviews } from "../../conditions"
 
 export async function list(this: Utils, IDNumber: number) {
-	const files = await this.client.pulls.listFiles({
+	const files = await this.client.rest.pulls.listFiles({
 		...this.repo,
 		pull_number: IDNumber,
 		per_page: 100
@@ -24,7 +24,7 @@ export const reviews = {
 		event?: Event,
 		comments?: any
 	) {
-		const reviews = await this.client.pulls.createReview({
+		const reviews = await this.client.rest.pulls.createReview({
 			...this.repo,
 			pull_number: IDNumber,
 			body,
@@ -34,7 +34,7 @@ export const reviews = {
 		return reviews.data
 	},
 	async update(this: Utils, IDNumber: number, review_id: number, body: string) {
-		const reviews = await this.client.pulls.updateReview({
+		const reviews = await this.client.rest.pulls.updateReview({
 			...this.repo,
 			pull_number: IDNumber,
 			review_id,
@@ -48,7 +48,7 @@ export const reviews = {
 		review_id: number,
 		message: string
 	) {
-		const reviews = await this.client.pulls.dismissReview({
+		const reviews = await this.client.rest.pulls.dismissReview({
 			...this.repo,
 			pull_number: IDNumber,
 			review_id,
@@ -58,7 +58,7 @@ export const reviews = {
 	},
 
 	async list(this: Utils, IDNumber: number) {
-		const reviews = await this.client.pulls.listReviews({
+		const reviews = await this.client.rest.pulls.listReviews({
 			...this.repo,
 			pull_number: IDNumber,
 			per_page: 100

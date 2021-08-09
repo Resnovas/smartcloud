@@ -7,17 +7,17 @@
   "source": "@site/docs/getting-started/support.md",
   "sourceDirName": "getting-started",
   "slug": "/getting-started/support",
-  "permalink": "/action-masterminds/es/docs/getting-started/support",
+  "permalink": "/action-masterminds/docs/getting-started/support",
   "editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/support.md",
   "version": "current",
   "frontMatter": {},
   "sidebar": "getting",
   "previous": {
     "title": "Understanding Labels",
-    "permalink": "/action-masterminds/es/docs/getting-started/contributing/Start Contributing/labels"
+    "permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels"
   },
   "next": {
     "title": "Contributors",
-    "permalink": "/action-masterminds/es/docs/getting-started/contributors"
+    "permalink": "/action-masterminds/docs/getting-started/contributors"
   }
 }

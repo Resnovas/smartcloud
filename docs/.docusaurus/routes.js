@@ -4,323 +4,358 @@ import ComponentCreator from '@docusaurus/ComponentCreator';
 
 export default [
   {
-    path: '/action-masterminds/es/',
-    component: ComponentCreator('/action-masterminds/es/','6ec'),
+    path: '/action-masterminds/',
+    component: ComponentCreator('/action-masterminds/','ff1'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog',
-    component: ComponentCreator('/action-masterminds/es/blog','ff7'),
+    path: '/action-masterminds/__docusaurus/debug',
+    component: ComponentCreator('/action-masterminds/__docusaurus/debug','4d5'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/2020/04/14/blog-plugin',
-    component: ComponentCreator('/action-masterminds/es/blog/2020/04/14/blog-plugin','afd'),
+    path: '/action-masterminds/__docusaurus/debug/config',
+    component: ComponentCreator('/action-masterminds/__docusaurus/debug/config','b42'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/2020/04/14/large-blog-post',
-    component: ComponentCreator('/action-masterminds/es/blog/2020/04/14/large-blog-post','23b'),
+    path: '/action-masterminds/__docusaurus/debug/content',
+    component: ComponentCreator('/action-masterminds/__docusaurus/debug/content','832'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/hello-world',
-    component: ComponentCreator('/action-masterminds/es/blog/hello-world','2f0'),
+    path: '/action-masterminds/__docusaurus/debug/globalData',
+    component: ComponentCreator('/action-masterminds/__docusaurus/debug/globalData','99f'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/hola',
-    component: ComponentCreator('/action-masterminds/es/blog/hola','753'),
+    path: '/action-masterminds/__docusaurus/debug/metadata',
+    component: ComponentCreator('/action-masterminds/__docusaurus/debug/metadata','383'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/tags',
-    component: ComponentCreator('/action-masterminds/es/blog/tags','78d'),
+    path: '/action-masterminds/__docusaurus/debug/registry',
+    component: ComponentCreator('/action-masterminds/__docusaurus/debug/registry','4d0'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/tags/blog',
-    component: ComponentCreator('/action-masterminds/es/blog/tags/blog','294'),
+    path: '/action-masterminds/__docusaurus/debug/routes',
+    component: ComponentCreator('/action-masterminds/__docusaurus/debug/routes','6ad'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/tags/docusaurus',
-    component: ComponentCreator('/action-masterminds/es/blog/tags/docusaurus','a01'),
+    path: '/action-masterminds/blog',
+    component: ComponentCreator('/action-masterminds/blog','f4d'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/tags/facebook',
-    component: ComponentCreator('/action-masterminds/es/blog/tags/facebook','e99'),
+    path: '/action-masterminds/blog/2020/04/14/blog-plugin',
+    component: ComponentCreator('/action-masterminds/blog/2020/04/14/blog-plugin','f54'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/tags/hello',
-    component: ComponentCreator('/action-masterminds/es/blog/tags/hello','4ba'),
+    path: '/action-masterminds/blog/2020/04/14/large-blog-post',
+    component: ComponentCreator('/action-masterminds/blog/2020/04/14/large-blog-post','cf0'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/tags/hola',
-    component: ComponentCreator('/action-masterminds/es/blog/tags/hola','2e7'),
+    path: '/action-masterminds/blog/hello-world',
+    component: ComponentCreator('/action-masterminds/blog/hello-world','142'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/blog/welcome',
-    component: ComponentCreator('/action-masterminds/es/blog/welcome','855'),
+    path: '/action-masterminds/blog/hola',
+    component: ComponentCreator('/action-masterminds/blog/hola','0ea'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/changelog',
-    component: ComponentCreator('/action-masterminds/es/changelog','88f'),
+    path: '/action-masterminds/blog/tags',
+    component: ComponentCreator('/action-masterminds/blog/tags','07b'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/changelog/hola',
-    component: ComponentCreator('/action-masterminds/es/changelog/hola','431'),
+    path: '/action-masterminds/blog/tags/blog',
+    component: ComponentCreator('/action-masterminds/blog/tags/blog','a5b'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/changelog/tags',
-    component: ComponentCreator('/action-masterminds/es/changelog/tags','272'),
+    path: '/action-masterminds/blog/tags/docusaurus',
+    component: ComponentCreator('/action-masterminds/blog/tags/docusaurus','46c'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/changelog/tags/docusaurus',
-    component: ComponentCreator('/action-masterminds/es/changelog/tags/docusaurus','db5'),
+    path: '/action-masterminds/blog/tags/facebook',
+    component: ComponentCreator('/action-masterminds/blog/tags/facebook','291'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/changelog/tags/hola',
-    component: ComponentCreator('/action-masterminds/es/changelog/tags/hola','25e'),
+    path: '/action-masterminds/blog/tags/hello',
+    component: ComponentCreator('/action-masterminds/blog/tags/hello','df4'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/markdown-page',
-    component: ComponentCreator('/action-masterminds/es/markdown-page','eca'),
+    path: '/action-masterminds/blog/tags/hola',
+    component: ComponentCreator('/action-masterminds/blog/tags/hola','4da'),
     exact: true
   },
   {
-    path: '/action-masterminds/es/docs',
-    component: ComponentCreator('/action-masterminds/es/docs','d2e'),
+    path: '/action-masterminds/blog/welcome',
+    component: ComponentCreator('/action-masterminds/blog/welcome','7ef'),
+    exact: true
+  },
+  {
+    path: '/action-masterminds/changelog',
+    component: ComponentCreator('/action-masterminds/changelog','fbd'),
+    exact: true
+  },
+  {
+    path: '/action-masterminds/changelog/hola',
+    component: ComponentCreator('/action-masterminds/changelog/hola','457'),
+    exact: true
+  },
+  {
+    path: '/action-masterminds/changelog/tags',
+    component: ComponentCreator('/action-masterminds/changelog/tags','f40'),
+    exact: true
+  },
+  {
+    path: '/action-masterminds/changelog/tags/docusaurus',
+    component: ComponentCreator('/action-masterminds/changelog/tags/docusaurus','856'),
+    exact: true
+  },
+  {
+    path: '/action-masterminds/changelog/tags/hola',
+    component: ComponentCreator('/action-masterminds/changelog/tags/hola','3be'),
+    exact: true
+  },
+  {
+    path: '/action-masterminds/markdown-page',
+    component: ComponentCreator('/action-masterminds/markdown-page','54a'),
+    exact: true
+  },
+  {
+    path: '/action-masterminds/docs',
+    component: ComponentCreator('/action-masterminds/docs','c0d'),
     routes: [
       {
-        path: '/action-masterminds/es/docs/getting-started',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started','53b'),
+        path: '/action-masterminds/docs/getting-started',
+        component: ComponentCreator('/action-masterminds/docs/getting-started','1c1'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/backlog',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/backlog','a48'),
+        path: '/action-masterminds/docs/getting-started/backlog',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/backlog','5bc'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/CODE_OF_CONDUCT',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/CODE_OF_CONDUCT','1f1'),
+        path: '/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT','c9b'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/code-review-process',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/code-review-process','348'),
+        path: '/action-masterminds/docs/getting-started/contributing/code-review-process',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/code-review-process','842'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/gpgkey',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/gpgkey','1aa'),
+        path: '/action-masterminds/docs/getting-started/contributing/gpgkey',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/gpgkey','195'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/runningLocally',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/runningLocally','bda'),
+        path: '/action-masterminds/docs/getting-started/contributing/runningLocally',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/runningLocally','7c9'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/security',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/security','ceb'),
+        path: '/action-masterminds/docs/getting-started/contributing/security',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/security','8c0'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/Start Contributing/branch',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/Start Contributing/branch','334'),
+        path: '/action-masterminds/docs/getting-started/contributing/Start Contributing/branch',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/Start Contributing/branch','f30'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/Start Contributing/external',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/Start Contributing/external','60b'),
+        path: '/action-masterminds/docs/getting-started/contributing/Start Contributing/external',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/Start Contributing/external','a1a'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/Start Contributing/first',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/Start Contributing/first','f43'),
+        path: '/action-masterminds/docs/getting-started/contributing/Start Contributing/first',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/Start Contributing/first','1ed'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/Start Contributing/internal',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/Start Contributing/internal','3d3'),
+        path: '/action-masterminds/docs/getting-started/contributing/Start Contributing/internal',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/Start Contributing/internal','b09'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/Start Contributing/labels',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/Start Contributing/labels','769'),
+        path: '/action-masterminds/docs/getting-started/contributing/Start Contributing/labels',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/Start Contributing/labels','0ce'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/Start Contributing/types',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/Start Contributing/types','ef2'),
+        path: '/action-masterminds/docs/getting-started/contributing/Start Contributing/types',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/Start Contributing/types','9ae'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributing/Start Contributing/why-the-guidelines',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributing/Start Contributing/why-the-guidelines','503'),
+        path: '/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines','906'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/contributors',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/contributors','319'),
+        path: '/action-masterminds/docs/getting-started/contributors',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/contributors','cd4'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/features/regex',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/features/regex','548'),
+        path: '/action-masterminds/docs/getting-started/features/regex',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/features/regex','909'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/setup',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/setup','c34'),
+        path: '/action-masterminds/docs/getting-started/setup',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/setup','45d'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/getting-started/support',
-        component: ComponentCreator('/action-masterminds/es/docs/getting-started/support','573'),
+        path: '/action-masterminds/docs/getting-started/support',
+        component: ComponentCreator('/action-masterminds/docs/getting-started/support','309'),
         exact: true,
         'sidebar': "getting"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind','8b1'),
+        path: '/action-masterminds/docs/release-mastermind',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind','810'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/ApiProps',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/ApiProps','310'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/ApiProps',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/ApiProps','00a'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/Config',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/Config','50d'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/Config',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/Config','1fc'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/IssueConditionConfig',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/IssueConditionConfig','fcd'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig','f08'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/IssueConfig',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/IssueConfig','712'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/IssueConfig',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/IssueConfig','cd6'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/Label',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/Label','7c8'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/Label',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/Label','b3b'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/Labels',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/Labels','950'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/Labels',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/Labels','4d7'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/Options',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/Options','6b8'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/Options',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/Options','2cf'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/PRConditionConfig',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/PRConditionConfig','3ec'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig','da3'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/ProjectConditionConfig',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/ProjectConditionConfig','50b'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig','d84'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/ProjectConfig',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/ProjectConfig','d55'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig','52b'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/PullRequestConfig',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/PullRequestConfig','be7'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig','6a1'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/Repo',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/Repo','2a9'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/Repo',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/Repo','4ff'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/Runners',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/Runners','cb9'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/Runners',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/Runners','7c8'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/ScheduleConditionConfig',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/ScheduleConditionConfig','2fb'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig','c6b'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/SharedConditions',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/SharedConditions','693'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/SharedConditions',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/SharedConditions','893'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/SharedConfig',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/SharedConfig','473'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/SharedConfig',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/SharedConfig','9d8'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/interfaces/SharedConventionConditions',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/interfaces/SharedConventionConditions','006'),
+        path: '/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions','f90'),
         exact: true,
         'sidebar': "release"
       },
       {
-        path: '/action-masterminds/es/docs/release-mastermind/modules',
-        component: ComponentCreator('/action-masterminds/es/docs/release-mastermind/modules','09d'),
+        path: '/action-masterminds/docs/release-mastermind/modules',
+        component: ComponentCreator('/action-masterminds/docs/release-mastermind/modules','a9c'),
         exact: true,
         'sidebar': "release"
       }

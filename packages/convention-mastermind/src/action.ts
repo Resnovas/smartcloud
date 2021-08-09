@@ -1,8 +1,7 @@
 /** @format */
 
 import * as core from "@actions/core"
-import * as github from "@actions/github"
-import { GitHub } from "@actions/github"
+import { context as Context, GitHub } from "@actions/github"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
 import fs from "fs"
 import { log, Options } from "."
@@ -179,7 +178,7 @@ export type VersionSource = "node" | "milestones" | string
 export type VersionType = "SemVer"
 
 let local: any
-let context = github.context
+let context = Context
 
 try {
 	local = require("../config.json")
@@ -505,43 +504,26 @@ export default class Action {
 	}
 
 	applyContext(runners: Runners, config: Config, curContext: CurContext) {
-		let ctx: PullRequests | Issues | Project | Schedule
-		if (curContext.type == "pr") {
-			ctx = new PullRequests(
-				this.util,
-				runners,
-				config,
-				curContext,
-				this.dryRun
+		let ctx: PullRequests | Issues | Project | Schedule | undefined =
+			curContext.type == "pr"
+				? new PullRequests(this.util, runners, config, curContext, this.dryRun)
+				: curContext.type == "issue"
+				? new Issues(this.util, runners, config, curContext, this.dryRun)
+				: curContext.type == "project"
+				? new Project(this.util, runners, config, curContext, this.dryRun)
+				: curContext.type == "schedule"
+				? new Schedule(this.util, runners, config, curContext, this.dryRun)
+				: undefined
+
+		if (!ctx)
+			throw new LoggingDataClass(LoggingLevels.error, "Context not found")
+
+		ctx.run().catch((err) => {
+			throw log(
+				LoggingLevels.error,
+				`Error thrown while running context: `,
+				err
 			)
-			ctx.run()
-		} else if (curContext.type == "issue") {
-			ctx = new Issues(this.util, runners, config, curContext, this.dryRun)
-			ctx.run().catch((err) => {
-				throw log(
-					LoggingLevels.error,
-					`Error thrown while running context: `,
-					err
-				)
-			})
-		} else if (curContext.type == "project") {
-			ctx = new Project(this.util, runners, config, curContext, this.dryRun)
-			ctx.run().catch((err) => {
-				throw log(
-					LoggingLevels.error,
-					`Error thrown while running context: `,
-					err
-				)
-			})
-		} else if (curContext.type == "schedule") {
-			ctx = new Schedule(this.util, runners, config, curContext, this.dryRun)
-			ctx.run().catch((err) => {
-				throw log(
-					LoggingLevels.error,
-					`Error thrown while running context: `,
-					err
-				)
-			})
-		}
+		})
 	}
 }

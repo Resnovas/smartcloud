@@ -7,7 +7,7 @@
   "source": "@site/docs/release-mastermind/interfaces/Runners.md",
   "sourceDirName": "release-mastermind/interfaces",
   "slug": "/release-mastermind/interfaces/Runners",
-  "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/Runners",
+  "permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners",
   "editUrl": null,
   "version": "current",
   "sidebarPosition": 0,
@@ -21,10 +21,10 @@
   "sidebar": "release",
   "previous": {
     "title": "Repo",
-    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/Repo"
+    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/Repo"
   },
   "next": {
     "title": "ScheduleConditionConfig",
-    "permalink": "/action-masterminds/es/docs/release-mastermind/interfaces/ScheduleConditionConfig"
+    "permalink": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig"
   }
 }

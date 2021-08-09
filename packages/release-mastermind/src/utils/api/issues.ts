@@ -4,7 +4,7 @@ import { Utils } from ".."
 
 export async function get(this: Utils, IDNumber: number) {
 	return (
-		await this.client.issues.get({
+		await this.client.rest.issues.get({
 			...this.repo,
 			issue_number: IDNumber
 		})
@@ -25,7 +25,7 @@ export async function list(
 	}
 ) {
 	return (
-		await this.client.issues.listForRepo({
+		await this.client.rest.issues.listForRepo({
 			...this.repo,
 			state,
 			sort,
@@ -39,7 +39,7 @@ export async function list(
 export const comments = {
 	async list(this: Utils, IDNumber: number) {
 		return (
-			await this.client.issues.listComments({
+			await this.client.rest.issues.listComments({
 				...this.repo,
 				issue_number: IDNumber
 			})
@@ -47,7 +47,7 @@ export const comments = {
 	},
 	async get(this: Utils, comment_id: number) {
 		return (
-			await this.client.issues.getComment({
+			await this.client.rest.issues.getComment({
 				...this.repo,
 				comment_id
 			})
@@ -55,7 +55,7 @@ export const comments = {
 	},
 	async create(this: Utils, IDNumber: number, body: string) {
 		return (
-			await this.client.issues.createComment({
+			await this.client.rest.issues.createComment({
 				...this.repo,
 				issue_number: IDNumber,
 				body
@@ -64,7 +64,7 @@ export const comments = {
 	},
 	async update(this: Utils, comment_id: number, body: string) {
 		return (
-			await this.client.issues.updateComment({
+			await this.client.rest.issues.updateComment({
 				...this.repo,
 				comment_id,
 				body
@@ -73,7 +73,7 @@ export const comments = {
 	},
 	async delete(this: Utils, comment_id: number) {
 		return (
-			await this.client.issues.deleteComment({
+			await this.client.rest.issues.deleteComment({
 				...this.repo,
 				comment_id
 			})
