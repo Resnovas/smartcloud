@@ -35,7 +35,7 @@
     "@videndum/utilities": "^1.0.0-alpha.17"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.15",
+    "@types/jest": "^27.0.0",
     "@types/node": "^16.4.2",
     "@types/nodegit": "^0.27.3",
     "@vercel/ncc": "^0.29.0",

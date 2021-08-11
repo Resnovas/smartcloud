@@ -36,7 +36,7 @@
     "tweetsodium": "^0.0.5"
   },
   "devDependencies": {
-    "@types/jest": "^26.0.15",
+    "@types/jest": "^27.0.0",
     "@types/node": "^16.4.2",
     "@vercel/ncc": "^0.29.0",
     "eslint-plugin-github": "^4.1.1",
