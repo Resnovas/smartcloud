@@ -2,6 +2,8 @@
 sidebar_position: 3
 ---
 
+<!-- @format -->
+
 # Your First Contribution
 
 Unsure where to begin contributing? You can start by looking through these beginner and help-wanted issues:

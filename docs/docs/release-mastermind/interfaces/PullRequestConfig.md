@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 The Pull Request configuration
 
 ## Hierarchy
@@ -20,13 +22,13 @@ The Pull Request configuration
 
 • `Optional` **assignProject**: `AssignProject`[]
 
- The project assignment configuration.
+The project assignment configuration.
 
 #### Defined in
 
 [contexts/pullRequests.ts:24](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/contexts/pullRequests.ts#L24)
 
-___
+---
 
 ### automaticApprove
 
@@ -38,13 +40,13 @@ The automatic approval configuration
 
 [contexts/pullRequests.ts:28](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/contexts/pullRequests.ts#L28)
 
-___
+---
 
 ### enforceConventions
 
 • `Optional` **enforceConventions**: `EnforceConventions`
 
-	The enforceConventions configuration
+    The enforceConventions configuration
 
 #### Inherited from
 
@@ -54,7 +56,7 @@ ___
 
 [action.ts:119](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L119)
 
-___
+---
 
 ### labels
 
@@ -74,7 +76,7 @@ The labels to be applied
 
 [action.ts:127](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L127)
 
-___
+---
 
 ### manageRelease
 
@@ -86,7 +88,7 @@ The release management configuration.
 
 [contexts/pullRequests.ts:32](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/contexts/pullRequests.ts#L32)
 
-___
+---
 
 ### ref
 
@@ -102,13 +104,13 @@ The reference used internally
 
 [action.ts:115](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L115)
 
-___
+---
 
 ### stale
 
 • `Optional` **stale**: `Stale`
 
-	The stale configuration
+    The stale configuration
 
 #### Inherited from
 
@@ -118,7 +120,7 @@ ___
 
 [action.ts:123](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L123)
 
-___
+---
 
 ### syncRemote
 

@@ -8,6 +8,8 @@ authorTwitter: fannyvieiira
 tags: [blog, docusaurus]
 ---
 
+<!-- @format -->
+
 You can use our blog plugin to do your posts
 
 <!--truncate-->

@@ -1,6 +1,9 @@
 ---
 sidebar_position: 2
 ---
+
+<!-- @format -->
+
 # Branch Names
 
 A branch will normally be created by the automatic system for each issue, if not please follow the branch name configuration defined as follows:
@@ -15,4 +18,3 @@ A branch will normally be created by the automatic system for each issue, if not
 - Refactor: ref/
 - Style: style/
 - Style: style/
-

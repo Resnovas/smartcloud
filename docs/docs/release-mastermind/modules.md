@@ -6,6 +6,8 @@ sidebar_position: 0.5
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Interfaces
 
 - [ApiProps](interfaces/ApiProps.md)
@@ -30,13 +32,13 @@ custom_edit_url: null
 
 ### Event
 
-Ƭ **Event**: ``"REQUEST_CHANGES"`` \| ``"APPROVE"`` \| ``"COMMENT"``
+Ƭ **Event**: `"REQUEST_CHANGES"` \| `"APPROVE"` \| `"COMMENT"`
 
 #### Defined in
 
 [utils/index.ts:215](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/utils/index.ts#L215)
 
-___
+---
 
 ### IssueCondition
 
@@ -46,7 +48,7 @@ ___
 
 [conditions/issue/index.ts:6](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/conditions/issue/index.ts#L6)
 
-___
+---
 
 ### PRCondition
 
@@ -56,7 +58,7 @@ ___
 
 [conditions/pr/index.ts:13](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/conditions/pr/index.ts#L13)
 
-___
+---
 
 ### ProjectCondition
 
@@ -66,7 +68,7 @@ ___
 
 [conditions/project/index.ts:7](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/conditions/project/index.ts#L7)
 
-___
+---
 
 ### ScheduleCondition
 
@@ -76,7 +78,7 @@ ___
 
 conditions/schedule/index.ts:6
 
-___
+---
 
 ### ScheduleConfig
 
@@ -88,7 +90,7 @@ The schedule configuration
 
 contexts/schedule.ts:15
 
-___
+---
 
 ### Tags
 
@@ -98,11 +100,11 @@ ___
 
 [utils/index.ts:216](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/utils/index.ts#L216)
 
-___
+---
 
 ### VersionSource
 
-Ƭ **VersionSource**: ``"node"`` \| ``"milestones"`` \| `string`
+Ƭ **VersionSource**: `"node"` \| `"milestones"` \| `string`
 
 The version source.
 Node: A node project, our package will use the package.json to determine the version.
@@ -113,11 +115,11 @@ String: A string to use as the version.
 
 [action.ts:174](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L174)
 
-___
+---
 
 ### VersionType
 
-Ƭ **VersionType**: ``"SemVer"``
+Ƭ **VersionType**: `"SemVer"`
 
 The version number type. This is used to determine how versioning is handled. SemVer is the default.
 
@@ -125,21 +127,21 @@ The version number type. This is used to determine how versioning is handled. Se
 
 [action.ts:179](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L179)
 
-___
+---
 
 ### functionality
 
-Ƭ **functionality**: ``"release"`` \| ``"convention"`` \| ``"label"``
+Ƭ **functionality**: `"release"` \| `"convention"` \| `"label"`
 
 #### Defined in
 
 [utils/index.ts:208](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/utils/index.ts#L208)
 
-___
+---
 
 ### packages
 
-Ƭ **packages**: ``"@videndum/release-mastermind"`` \| ``"@videndum/label-mastermind"`` \| ``"@videndum/convention-mastermind"`` \| `undefined`
+Ƭ **packages**: `"@videndum/release-mastermind"` \| `"@videndum/label-mastermind"` \| `"@videndum/convention-mastermind"` \| `undefined`
 
 #### Defined in
 

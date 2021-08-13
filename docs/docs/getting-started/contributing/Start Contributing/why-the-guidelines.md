@@ -4,6 +4,8 @@ sidebar_label: "Start Contributing"
 sidebar_position: 0
 ---
 
+<!-- @format -->
+
 # Why the guidelines
 
 First off, thank you for considering contributing to this project.
@@ -25,4 +27,3 @@ We have a Contributor License Agreement which can be found at [`{root}/docs/gett
 - Create issues for any major changes and enhancements that you wish to make. Discuss things transparently and get community feedback.
 - Ensure each contribution is created on its own branch to ensure we can follow [Semantic Versioning](http://semver.org/)
 - Be welcoming to newcomers and encourage diverse new contributors from all backgrounds
-

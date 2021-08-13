@@ -1,3 +1,5 @@
+<!-- @format -->
+
 <!-- Thank you for concidering to create a pull request for this project.
 
 We use Conventional Commits to title our pull requests. Please follow the [specification](https://www.conventionalcommits.org/en/v1.0.0/#specification)
@@ -7,17 +9,17 @@ To help you out heres some quick notes:
 - fix: a commit of the type fix patches a bug (this correlates with PATCH versioning).
 - feat: a commit of the type feat introduces a new feature (this correlates with MINOR versioning)
 - <type>: other than fix: and feat: are allowed (this correlates with PRERELEASE versioning)
-- [scope]: defines which package is being affected. 
+- [scope]: defines which package is being affected.
 - valid scopes are; smartcloudjs, cli, discord, workflows, components, webfront, console, webdocs
 - Breaking changes MUST be indicated in the type/scope prefix, or as an entry in the footer (correlating with MAJOR versioning).
 - If included as a footer, a breaking change MUST consist of the uppercase text BREAKING CHANGE, followed by a colon, space, and description
 - If included in the type/scope prefix, breaking changes MUST be indicated by a ! immediately before the :
 
-It is important to ensure that the title is formatted correctly as it's used by multiple automation systems. This includes Changelog Creation, Version Bumping, and Release Packaging. 
+It is important to ensure that the title is formatted correctly as it's used by multiple automation systems. This includes Changelog Creation, Version Bumping, and Release Packaging.
 
 Examples:
 Breaking Change -> feat(smartcloudjs)!: Adds MySQL support
-Minor -> feat(workflows): 
+Minor -> feat(workflows):
 Patch -> fix(discord): fixes loop bug #13
 
 -->
@@ -37,7 +39,7 @@ Related issue(s):
 
 ## Author's checklist
 
-- [ ] Code has passed all 
+- [ ] Code has passed all
 
 <!--
 ## Reviewing checklist
@@ -56,8 +58,7 @@ Related issue(s):
 2. [ ] Ensure a release milestone is set.
 -->
 
-
-<!-- Uncomment if your pull request introduces a breaking change. 
+<!-- Uncomment if your pull request introduces a breaking change.
 
 BREAKING CHANGE: <your breaking change>
 

@@ -1,31 +1,33 @@
+# @format
+
 mode: auto
 silent: false
-branchName: '${issue.number}-${issue.title}'
+branchName: "${issue.number}-${issue.title}"
 autoCloseIssue: true
 branches:
-  - label: 'Type - Chore'
+  - label: "Type - Chore"
     prefix: chore/
-  - label: 'Type - Enhancement'
+  - label: "Type - Enhancement"
     prefix: enhance/
-  - label: 'Type - Feature'
+  - label: "Type - Feature"
     prefix: feat/
-  - label: 'Type - Documentation'
+  - label: "Type - Documentation"
     prefix: docs/
-  - label: 'Type - Bug'
+  - label: "Type - Bug"
     prefix: fix/
-  - label: 'Type - Optimisation'
+  - label: "Type - Optimisation"
     prefix: opt/
-  - label: 'Type - Decrecated'
+  - label: "Type - Decrecated"
     prefix: dep/
-  - label: 'Type - Refactor'
+  - label: "Type - Refactor"
     prefix: ref/
-  - label: 'Type - Style'
+  - label: "Type - Style"
     prefix: style/
-  - label: 'Type - Discussion'
+  - label: "Type - Discussion"
     skip: true
-  - label: 'Type - Question'
+  - label: "Type - Question"
     skip: true
-  - label: 'Type - Revert'
+  - label: "Type - Revert"
     skip: true
-  - label: '*'
+  - label: "*"
     skip: true

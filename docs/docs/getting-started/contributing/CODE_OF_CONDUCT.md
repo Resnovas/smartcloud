@@ -4,6 +4,8 @@ sidebar_label: "Code of Conduct"
 sidebar_position: 1
 ---
 
+<!-- @format -->
+
 ## Our Pledge {#our-pledge}
 
 In the interest of fostering an open and welcoming environment, we as

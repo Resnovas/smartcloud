@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 The Project condition configuration
 
 ## Properties
@@ -20,7 +22,7 @@ The conditions required for this to succeed
 
 [conditions/index.ts:264](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/conditions/index.ts#L264)
 
-___
+---
 
 ### requires
 

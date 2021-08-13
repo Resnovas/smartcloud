@@ -2,6 +2,8 @@
 sidebar_position: 1
 ---
 
+<!-- @format -->
+
 # External Contributions Workflow
 
 For all contributions you are required to do the following

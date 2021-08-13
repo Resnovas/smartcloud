@@ -1,3 +1,5 @@
+# @format
+
 name: Project Management
 on:
   issues:
@@ -18,4 +20,4 @@ jobs:
         uses: Videndum/release-mastermind@0.0.0-alpha.7
         with:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
-          config: .github/allconfigs.json
+          config: .github/config.json

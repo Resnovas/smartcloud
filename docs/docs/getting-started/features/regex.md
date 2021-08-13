@@ -4,6 +4,8 @@ title: Using Regex patterns
 sidebar_label: Using Regex
 ---
 
+<!-- @format -->
+
 Many conditions use regular expressions (usually with a `pattern` parameter).
 Since these regular expressions are passed in through JSON strings, there are
 some things to pay attention to.

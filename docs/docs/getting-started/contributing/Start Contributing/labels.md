@@ -2,6 +2,8 @@
 sidebar_position: 3
 ---
 
+<!-- @format -->
+
 # Understanding Labels
 
 - **Statuses**

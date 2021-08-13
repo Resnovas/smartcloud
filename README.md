@@ -2,28 +2,26 @@
 
 # Mastermind Collection
 
-
-
 ## Index
 
 <!-- toc -->
 
 - [Features](#features)
 - [How to get support 👨‍👩‍👧‍👦](#how-to-get-support-%F0%9F%91%A8%E2%80%8D%F0%9F%91%A9%E2%80%8D%F0%9F%91%A7%E2%80%8D%F0%9F%91%A6)
-  * [Why not GitHub Issues?](#why-not-github-issues)
+  - [Why not GitHub Issues?](#why-not-github-issues)
 - [Backlog & Contributing](#backlog--contributing)
 - [Running Locally & Developing](#running-locally--developing)
-  * [Prerequisities](#prerequisities)
-  * [Developing](#developing)
-  * [Running locally](#running-locally)
+  - [Prerequisities](#prerequisities)
+  - [Developing](#developing)
+  - [Running locally](#running-locally)
 - [Getting Started](#getting-started)
-  * [Automatic setup via CLI](#automatic-setup-via-cli)
-  * [Manual setup](#manual-setup)
-    + [Workflow Options](#workflow-options)
-  * [All configuration options](#all-configuration-options)
-    + [Runners](#runners)
+  - [Automatic setup via CLI](#automatic-setup-via-cli)
+  - [Manual setup](#manual-setup)
+    - [Workflow Options](#workflow-options)
+  - [All configuration options](#all-configuration-options)
+    - [Runners](#runners)
       - [Versioning](#versioning)
-    + [PullRequestConfig](#pullrequestconfig)
+    - [PullRequestConfig](#pullrequestconfig)
       - [EnforceConventions](#enforceconventions)
       - [AssignProject](#assignproject)
       - [SharedConventionsConfig](#sharedconventionsconfig)
@@ -32,41 +30,41 @@
       - [ReleaseLabels](#releaselabels)
       - [CreateRelease](#createrelease)
       - [Changelog](#changelog)
-        * [Sections](#sections)
+        - [Sections](#sections)
       - [CreateMilestone](#createmilestone)
       - [DuplicateHotfix](#duplicatehotfix)
       - [SyncRemote](#syncremote)
-    + [IssueConfig](#issueconfig)
+    - [IssueConfig](#issueconfig)
       - [CreateBranch](#createbranch)
-    + [ProjectConfig](#projectconfig)
+    - [ProjectConfig](#projectconfig)
       - [ExProjects](#exprojects)
       - [ProjectCreateBranch](#projectcreatebranch)
       - [Milestones](#milestones)
-    + [Typings](#typings)
-  * [Using Regex Patterns](#using-regex-patterns)
+    - [Typings](#typings)
+  - [Using Regex Patterns](#using-regex-patterns)
 - [Available Conditions](#available-conditions)
-  * [Common Conditions](#common-conditions)
-    + [\$and](#and)
-    + [creatorMatches](#creatormatches)
-    + [descriptionMatches](#descriptionmatches)
-    + [hasLabel](#haslabel)
-    + [isAbandoned](#isabandoned)
-    + [isLocked](#islocked)
-    + [isOpen](#isopen)
-    + [isStale](#isstale)
-    + [\$only](#only)
-    + [\$or](#or)
-  * [Pull Request Conditions](#pull-request-conditions)
-    + [branchMatches](#branchmatches)
-    + [changesSize](#changessize)
-    + [filesMatch](#filesmatch)
-    + [isApproved](#isapproved)
-    + [isDraft](#isdraft)
-    + [pendingReview](#pendingreview)
-    + [requestedChanges](#requestedchanges)
-  * [Issue Conditions](#issue-conditions)
-  * [Project Conditions](#project-conditions)
-    + [onColumn](#oncolumn)
+  - [Common Conditions](#common-conditions)
+    - [\$and](#and)
+    - [creatorMatches](#creatormatches)
+    - [descriptionMatches](#descriptionmatches)
+    - [hasLabel](#haslabel)
+    - [isAbandoned](#isabandoned)
+    - [isLocked](#islocked)
+    - [isOpen](#isopen)
+    - [isStale](#isstale)
+    - [\$only](#only)
+    - [\$or](#or)
+  - [Pull Request Conditions](#pull-request-conditions)
+    - [branchMatches](#branchmatches)
+    - [changesSize](#changessize)
+    - [filesMatch](#filesmatch)
+    - [isApproved](#isapproved)
+    - [isDraft](#isdraft)
+    - [pendingReview](#pendingreview)
+    - [requestedChanges](#requestedchanges)
+  - [Issue Conditions](#issue-conditions)
+  - [Project Conditions](#project-conditions)
+    - [onColumn](#oncolumn)
 - [Final Note](#final-note)
 
 <!-- tocstop -->
@@ -144,7 +142,6 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 6. Modify the `./config.sample.json` to contain your `GITHUB_TOKEN` and rename to `./config.json`
 7. Run the script using `yarn dev:run` or `npm run dev:run`
 
-
 ## Getting Started
 
 > [!IMPORTANT]
@@ -155,7 +152,6 @@ Setting up local running is simple, however we **MUST** warn that building / pac
 ### Automatic setup via CLI
 
 [coming soon]
-
 
 ### Manual setup
 
@@ -1448,8 +1444,6 @@ Choosing `"semanticTitle"` as the condition will automatically configure your co
 | onColumn     | true     | Which column should be used    | `string`   |
 | ignoreLabels | false    | Labels which should be ignored | `string[]` |
 
-
-
 #### Typings
 
 <details>
@@ -1923,7 +1917,6 @@ Allows conditions to be combined to create more advanced conditions. Would requi
 
 <!-- @format -->
 
-
 ### Pull Request Conditions
 
 <!-- @format -->
@@ -2035,10 +2028,7 @@ Example:
 }
 ```
 
-
 ### Issue Conditions
-
-
 
 ### Project Conditions
 
@@ -2058,11 +2048,8 @@ Example:
 }
 ```
 
-
-
 ## Final Note
 
 Thank you for taking the time to look through this repository. If you have liked what you have found, please would you favourite & share. Ideally I would like to get a community behind this project which can ensure that it is maintained, updated and improved as GitActions get more suffisticated.
 
 This project took heavy infulence from [IvanFon/super-labeler-action](https://github.com/IvanFon/super-labeler-action) which we are actively maintaining on our fork here: [Videndum/label-mastermind](https://github.com/Videndum/label-mastermind). We invite any of the team who worked on his project to come onboard with our version and intend to continue maintaining for a significant while.
-

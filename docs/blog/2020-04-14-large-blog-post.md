@@ -8,6 +8,8 @@ authorTwitter: fannyvieiira
 tags: [blog, docusaurus]
 ---
 
+<!-- @format -->
+
 Hello, this is an example
 
 <!-- truncate -->

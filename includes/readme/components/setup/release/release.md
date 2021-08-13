@@ -1,3 +1,5 @@
+<!-- @format -->
+
 ##### Release
 
 | Option           | Required  | Description                                       | Params                                |

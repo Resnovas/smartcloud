@@ -1,3 +1,5 @@
+# @format
+
 name: Contributor License Agreement Management
 on:
   issue_comment:
@@ -8,7 +10,7 @@ on:
 # Ensures the CLA is signed
 jobs:
   CLAssistant:
-    name: 'CLA Assistant'
+    name: "CLA Assistant"
     runs-on: ubuntu-latest
     if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA' || github.event_name == 'pull_request' )
     steps:
@@ -17,8 +19,8 @@ jobs:
         uses: ./packages/variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
-          settingsjson: '.github/allconfigs.json'
-          mode: 'environment'
+          settingsjson: ".github/allconfigs.json"
+          mode: "environment"
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: CLA Assistant
@@ -27,8 +29,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: '${{env.cla_path}}'
-          path-To-cladocument: 'https://github.com/${{github.repository}}/${{env.claDocs}}'
+          path-to-signatures: "${{env.cla_path}}"
+          path-To-cladocument: "https://github.com/${{github.repository}}/${{env.claDocs}}"
           label: ${{env.cla_label}}
           whitelist: join(${{env.auto_whitelist}})
         continue-on-error: true

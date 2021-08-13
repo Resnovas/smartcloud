@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 Conventions to use
 
 ## Properties
@@ -20,7 +22,7 @@ The conditions required for this to succeed. You can use the "semanticTitle" to 
 
 [conditions/index.ts:222](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/conditions/index.ts#L222)
 
-___
+---
 
 ### requires
 

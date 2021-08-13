@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 The application options used within Github Actions workflows
 
 ## Properties
@@ -20,7 +22,7 @@ The json configuration object
 
 [index.ts:139](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/index.ts#L139)
 
-___
+---
 
 ### configPath
 
@@ -32,7 +34,7 @@ The path to find the config
 
 [index.ts:135](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/index.ts#L135)
 
-___
+---
 
 ### dryRun
 
@@ -44,7 +46,7 @@ should dry run?
 
 [index.ts:147](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/index.ts#L147)
 
-___
+---
 
 ### fillEmpty
 
@@ -56,7 +58,7 @@ Should fill empty values?
 
 [index.ts:151](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/index.ts#L151)
 
-___
+---
 
 ### repo
 
@@ -68,7 +70,7 @@ The repo to use
 
 [index.ts:159](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/index.ts#L159)
 
-___
+---
 
 ### showLogs
 
@@ -80,7 +82,7 @@ Should show logs?
 
 [index.ts:143](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/index.ts#L143)
 
-___
+---
 
 ### skipDelete
 

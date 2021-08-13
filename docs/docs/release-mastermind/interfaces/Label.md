@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 The labels configuration.
 
 **`param`** The name as appears on github
@@ -26,7 +28,7 @@ The color of the label
 
 [action.ts:155](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L155)
 
-___
+---
 
 ### description
 
@@ -38,7 +40,7 @@ A description of the label
 
 [action.ts:151](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L151)
 
-___
+---
 
 ### name
 

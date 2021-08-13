@@ -1,3 +1,5 @@
+# @format
+
 name: rebase-command
 on:
   repository_dispatch:

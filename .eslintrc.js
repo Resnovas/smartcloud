@@ -14,6 +14,6 @@ module.exports = {
 		"eslint-plugin-tsdoc"
 	],
 	rules: {
-    	"tsdoc/syntax": "warn"
-  	}
+		"tsdoc/syntax": "warn"
+	}
 }

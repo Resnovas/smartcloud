@@ -1,6 +1,9 @@
 ---
 sidebar_position: 1
 ---
+
+<!-- @format -->
+
 # Internal Contributions Workflow
 
 For all contributions you are required to do the following

@@ -1,1 +1,3 @@
-# Contributors 
+<!-- @format -->
+
+# Contributors

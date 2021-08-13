@@ -2,6 +2,8 @@
 sidebar_position: 2
 ---
 
+<!-- @format -->
+
 # Contribution Types
 
 ## Minor Contributions {#minor-contributions}

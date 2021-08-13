@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Properties
 
 ### labels
@@ -18,7 +20,7 @@ The labels configuration.
 
 [action.ts:35](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L35)
 
-___
+---
 
 ### runners
 

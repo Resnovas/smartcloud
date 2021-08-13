@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Properties
 
 ### client
@@ -16,7 +18,7 @@ custom_edit_url: null
 
 [utils/index.ts:204](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/utils/index.ts#L204)
 
-___
+---
 
 ### repo
 

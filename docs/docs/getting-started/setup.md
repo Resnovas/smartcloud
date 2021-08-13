@@ -1,3 +1,5 @@
+<!-- @format -->
+
 # Manual setup
 
 Create a new Github Actions workflow at `.github/workflows/action.yml` which uses our action:
@@ -32,40 +34,40 @@ Now create the config file at `.github/config.json`:
 
 ```json
 {
-  "labels": {
-    "example": {
-      "name": "example",
-      "colour": "#00ff00",
-      "description": "Example label"
-    }
-  },
-  "issue": {
-    "example": {
-      "requires": 2,
-      "conditions": [
-        {
-          "type": "titleMatches",
-          "pattern": "example"
-        },
-        {
-          "type": "isOpen"
-        }
-      ]
-    }
-  },
-  "pr": {
-    "example": {
-      "requires": 1,
-      "conditions": [
-        {
-          "type": "isDraft",
-          "value": false
-        }
-      ]
-    }
-  },
-  "skip_labeling": true,
-  "delete_labels": true
+	"labels": {
+		"example": {
+			"name": "example",
+			"colour": "#00ff00",
+			"description": "Example label"
+		}
+	},
+	"issue": {
+		"example": {
+			"requires": 2,
+			"conditions": [
+				{
+					"type": "titleMatches",
+					"pattern": "example"
+				},
+				{
+					"type": "isOpen"
+				}
+			]
+		}
+	},
+	"pr": {
+		"example": {
+			"requires": 1,
+			"conditions": [
+				{
+					"type": "isDraft",
+					"value": false
+				}
+			]
+		}
+	},
+	"skip_labeling": true,
+	"delete_labels": true
 }
 ```
 

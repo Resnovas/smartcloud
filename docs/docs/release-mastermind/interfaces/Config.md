@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Properties
 
 ### issue
@@ -18,7 +20,7 @@ The issue configurations.
 
 [action.ts:87](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L87)
 
-___
+---
 
 ### pr
 
@@ -30,7 +32,7 @@ The pull request configurations.
 
 [action.ts:83](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L83)
 
-___
+---
 
 ### project
 
@@ -42,7 +44,7 @@ The project configurations.
 
 [action.ts:91](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L91)
 
-___
+---
 
 ### retryLimit
 
@@ -56,7 +58,7 @@ Maximum number of attempts before stopping.
 
 [action.ts:68](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L68)
 
-___
+---
 
 ### root
 
@@ -68,7 +70,7 @@ The root branch used to check configuration settings against.
 
 [action.ts:46](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L46)
 
-___
+---
 
 ### schedule
 
@@ -80,7 +82,7 @@ The schedule configurations.
 
 [action.ts:95](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L95)
 
-___
+---
 
 ### sharedConfig
 
@@ -92,7 +94,7 @@ Shared configurations, merged with the PR, Issue, Project and Schedule configura
 
 [action.ts:79](https://github.com/Videndum/Convential-PR-Releases/blob/377fcdd/src/action.ts#L79)
 
-___
+---
 
 ### versioning
 
@@ -102,11 +104,11 @@ Versioning configuration used for release management.
 
 #### Type declaration
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `prereleaseName?` | `string` | If version is a pre-release, this is the version name to use. |
-| `source` | `string` | Version source used to determine the version. |
-| `type?` | ``"SemVer"`` | Version Type to change how versioning is handled. |
+| Name              | Type       | Description                                                   |
+| :---------------- | :--------- | :------------------------------------------------------------ |
+| `prereleaseName?` | `string`   | If version is a pre-release, this is the version name to use. |
+| `source`          | `string`   | Version source used to determine the version.                 |
+| `type?`           | `"SemVer"` | Version Type to change how versioning is handled.             |
 
 #### Defined in
 
