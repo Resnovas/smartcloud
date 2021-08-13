@@ -1,6 +1,6 @@
 /** @format */
 
-import * as github from "@actions/github"
+import { Github } from ".."
 import { Config, Label, Runners } from "../action"
 import { Reviews, UtilThis } from "../conditions"
 import * as APIFiles from "./api/files"
@@ -18,7 +18,7 @@ import * as UtilVersioning from "./versioning"
  * @private
  */
 export class Utils {
-	client: github.GitHub
+	client: Github
 	repo: Repo
 	dryRun: boolean
 	skipDelete: boolean
@@ -201,7 +201,7 @@ export interface Repo {
 	repo: string
 }
 export interface ApiProps {
-	client: github.GitHub
+	client: Github
 	repo: Repo
 }
 

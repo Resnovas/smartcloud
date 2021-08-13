@@ -114,7 +114,7 @@ export class Project extends Contexts {
 			props: {
 				type: "project",
 				ID: issue.number,
-				creator: issue.user.login,
+				creator: issue.user?.login ? issue.user.login : "",
 				description: issue.body || "",
 				locked: issue.locked,
 				state: issue.state as ProjectContext["props"]["state"],

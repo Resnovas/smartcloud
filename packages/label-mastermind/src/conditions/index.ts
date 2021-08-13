@@ -103,7 +103,7 @@ export type IssueProps = Props
 export interface ProjectProps extends Props {
 	project: any
 	column_id: number
-	localCard: localCard
+	localCard: Partial<localCard>
 	localColumn: localColumn
 	changes: {
 		column_id: {
@@ -164,7 +164,7 @@ interface localCard {
 	creator: any
 	id: number
 	node_id: string
-	note: string
+	note: string | null
 	project_url: string
 	updated_at: string
 	url: string

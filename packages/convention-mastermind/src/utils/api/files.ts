@@ -11,7 +11,7 @@ export async function get(
 	/**
 	 * Checks to see if the settings file is valid
 	 */
-	const gotdata: any = await this.client.repos.getContents({
+	const gotdata: any = await this.client.rest.repos.getContent({
 		owner: this.repo.owner || github.context.repo.owner,
 		repo: this.repo.repo || github.context.repo.repo,
 		ref: ref || "master",
@@ -21,7 +21,7 @@ export async function get(
 }
 
 export async function list(this: Utils, IDNumber: number) {
-	const files = await this.client.pulls.listFiles({
+	const files = await this.client.rest.pulls.listFiles({
 		...this.repo,
 		pull_number: IDNumber,
 		per_page: 100

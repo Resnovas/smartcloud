@@ -15,7 +15,7 @@ class Testing {
                 path.dirname = "";
                 path.extname = "";
             }))
-            .pipe(exec(file => `cd ${file.path} && npm run run`))
+            .pipe(exec(file => `cd ${file.path} && npm run dev:run`))
             .pipe(exec.reporter({ stdout: false }));
     }
 
@@ -26,8 +26,8 @@ class Testing {
                 path.dirname = "";
                 path.extname = "";
             }))
-            .pipe(exec(file => `cd ${file.path} && del config.json context.json`))
-            .pipe(exec.reporter());
+            .pipe(exec(file => `cd ${file.path} && del config.json context.json`), { maxBuffer: Infinity })
+            .pipe(exec.reporter({ maxBuffer: Infinity }));
     }
 
     static copy = {

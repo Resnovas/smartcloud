@@ -1,6 +1,6 @@
 /** @format */
 
-import { Github } from '..'
+import { Github } from ".."
 import { Config, Label, Runners } from "../action"
 import { Reviews, UtilThis } from "../conditions"
 import * as APIFiles from "./api/files"

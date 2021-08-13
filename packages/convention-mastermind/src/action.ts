@@ -1,7 +1,8 @@
 /** @format */
 
 import * as core from "@actions/core"
-import { context as Context, GitHub } from "@actions/github"
+import { context as Context } from "@actions/github"
+import { GitHub } from "@actions/github/lib/utils"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
 import fs from "fs"
 import { log, Options } from "."
@@ -147,7 +148,7 @@ export interface Label {
 	/**
 	 * A description of the label
 	 */
-	description: string
+	description?: string
 	/**
 	 * The color of the label
 	 */
@@ -177,6 +178,11 @@ export type VersionSource = "node" | "milestones" | string
  */
 export type VersionType = "SemVer"
 
+/**
+ * @private
+ */
+export type Github = InstanceType<typeof GitHub>
+
 let local: any
 let context = Context
 
@@ -192,7 +198,7 @@ try {
  * @private
  */
 export default class Action {
-	client: GitHub
+	client: Github
 	opts: Options
 	configJSON: Options["configJSON"]
 	configPath: Options["configPath"]
@@ -201,7 +207,7 @@ export default class Action {
 	repo = context.repo || {}
 	util: Utils
 
-	constructor(client: GitHub, options: Options) {
+	constructor(client: Github, options: Options) {
 		log(
 			LoggingLevels.debug,
 			`Release Mastermind Constructed: ${options.toString()}`

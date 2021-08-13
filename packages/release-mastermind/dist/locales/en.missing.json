@@ -1,7 +1,7 @@
 {
-  "error": {
-    "unspecific": {
-      "localize": "error.unspecific.localize"
-    }
-  }
+	"error": {
+		"unspecific": {
+			"localize": "error.unspecific.localize"
+		}
+	}
 }

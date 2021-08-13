@@ -3,9 +3,10 @@
 import { Tags, Utils } from ".."
 
 export async function get(this: Utils): Promise<Tags> {
-	const options = await this.client.repos.listTags({
-		...this.repo
-	})
-	const tags = await this.client.paginate(options)
+	const tags = (
+		await this.client.rest.repos.listTags({
+			...this.repo
+		})
+	).data
 	return tags.map((tag) => tag.name)
 }

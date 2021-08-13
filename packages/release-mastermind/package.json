@@ -13,7 +13,8 @@
 	"directories": {
 		"lib": "./lib",
 		"doc": "./docs",
-		"test": "./__tests__"
+		"test": "./__tests__",
+		"typing": "./lib"
 	},
 	"keywords": [
 		"actions",

@@ -27,15 +27,17 @@ export async function del(this: Utils, name: string) {
 }
 
 export async function get(this: Utils): Promise<Labels> {
-  const labels = (await this.client.rest.issues.listLabelsForRepo({
-    ...this.repo
-  })).data
-	
-  const labelsMap = labels.map(label => ({
-    name: label.name,
-    description: label.description != null ? label.description : undefined,
-    color: label.color
-  }))
+	const labels = (
+		await this.client.rest.issues.listLabelsForRepo({
+			...this.repo
+		})
+	).data
+
+	const labelsMap = labels.map((label) => ({
+		name: label.name,
+		description: label.description != null ? label.description : undefined,
+		color: label.color
+	}))
 
 	return labelsMap.reduce((acc: { [key: string]: Label }, cur) => {
 		acc[cur.name.toLowerCase()] = cur

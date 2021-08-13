@@ -86,7 +86,7 @@ export class Schedule extends Contexts {
 					props: {
 						type: "issue",
 						ID: issue.number,
-						creator: issue.user.login,
+						creator: issue.user?.login ? issue.user.login : "",
 						description: issue.body || "",
 						locked: issue.locked,
 						labels,
