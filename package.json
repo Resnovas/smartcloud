@@ -1,6 +1,6 @@
 {
 	"name": "@videndum/smartcloud",
-	"version": "1.0.0-alpha.1",
+	"version": "1.0.0-alpha.3",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/Videndum/action-masterminds.git"
@@ -42,21 +42,16 @@
 		"dev:schema": "typescript-json-schema ./tsconfig.json Runners -o schema.json  --propOrder --defaultProps --titles --topRef --refs --required",
 		"dev:test": "jest --json --outputFile=result.json --testLocationInResults",
 		"dev:tsc": "tsc -p tsconfig.json",
-		"git": "git add . && git commit -m \"chore: Bump Version & Changelog\" -s && git push",
+		"git:bump": "git add . && git commit -m \"chore: Bump Version & Changelog\" -s && git push",
 		"gulp": "gulp",
 		"package": "gulp package",
 		"postdev:schema": "typescript-json-schema ./tsconfig.json Labels -o schema/labels.json  --propOrder --defaultProps --titles --topRef --refs --required",
-		"pre": "yarn version --prerelease --no-git-tag-version && git",
+		"pre": "yarn version --prerelease --no-git-tag-version && npm run git:bump",
 		"predev:schema": "typescript-json-schema ./tsconfig.json Config -o schema/configs.json  --propOrder --defaultProps --titles --topRef --refs --required",
-		"release": "yarn version --no-git-tag-version && git",
+		"release": "yarn version --no-git-tag-version && npm run git:bump",
 		"run": "gulp && git add . && cz",
 		"start": "npm run run",
 		"test": "gulp testall"
-	},
-	"config": {
-		"commitizen": {
-			"path": "./node_modules/@instructure/cz-lerna-changelog"
-		}
 	},
 	"dependencies": {
 		"@actions/core": "^1.4.0",
@@ -108,5 +103,11 @@
 		"typedoc-plugin-markdown": "^3.10.4",
 		"typescript": "^4.3.5",
 		"typescript-json-schema": "^0.50.1"
+	},
+	"config": {
+		"commitizen": {
+			"path": "cz-conventional-changelog",
+			"maxHeaderWidth": 100
+		}
 	}
 }
