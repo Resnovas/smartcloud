@@ -1,15 +1,15 @@
-[submodule "packages/convention-mastermind"]
-	path = packages/convention-mastermind
-	url = git@github.com:Videndum/convention-mastermind.git
-[submodule "packages/label-mastermind"]
-	path = packages/label-mastermind
-	url = git@github.com:Videndum/label-mastermind.git
-[submodule "packages/release-mastermind"]
-	path = packages/release-mastermind
-	url = git@github.com:Videndum/release-mastermind.git
-[submodule "packages/variable-mastermind"]
-	path = packages/variable-mastermind
-	url = git@github.com:Videndum/variable-mastermind.git
-[submodule "packages/workflow-mastermind"]
-	path = packages/workflow-mastermind
-	url = git@github.com:Videndum/workflow-mastermind.git
+[submodule "convention-mastermind"]
+path = packages/convention-mastermind
+url = git@github.com:Videndum/convention-mastermind.git
+[submodule "label-mastermind"]
+path = packages/label-mastermind
+url = git@github.com:Videndum/label-mastermind.git
+[submodule "release-mastermind"]
+path = packages/release-mastermind
+url = git@github.com:Videndum/release-mastermind.git
+[submodule "variable-mastermind"]
+path = packages/variable-mastermind
+url = git@github.com:Videndum/variable-mastermind.git
+[submodule "workflow-mastermind"]
+path = packages/workflow-mastermind
+url = git@github.com:Videndum/workflow-mastermind.git

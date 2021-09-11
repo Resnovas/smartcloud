@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/labels",
+	"id": "getting-started/contributing/Start Contributing/labels",
+	"isDocsHomePage": false,
+	"title": "Understanding Labels",
+	"description": "- Statuses",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/labels.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/labels",
+	"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/labels.md",
+	"version": "current",
+	"sidebarPosition": 3,
+	"frontMatter": {
+		"sidebar_position": 3
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Your First Contribution",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/first"
+	},
+	"next": {
+		"title": "Support 👨‍👩‍👧‍👦",
+		"permalink": "/action-masterminds/docs/getting-started/support"
+	}
+}

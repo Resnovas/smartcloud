@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/ScheduleConditionConfig",
+	"id": "api/interfaces/ScheduleConditionConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: ScheduleConditionConfig",
+	"description": "The Schedule condition configuration",
+	"source": "@site/docs/api/interfaces/ScheduleConditionConfig.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/ScheduleConditionConfig",
+	"permalink": "/docs/next/api/interfaces/ScheduleConditionConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ScheduleConditionConfig",
+		"title": "Interface: ScheduleConditionConfig",
+		"sidebar_label": "ScheduleConditionConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Runners",
+		"permalink": "/docs/next/api/interfaces/Runners"
+	},
+	"next": {
+		"title": "ScheduleContext",
+		"permalink": "/docs/next/api/interfaces/ScheduleContext"
+	}
+}

@@ -1,0 +1,26 @@
+{
+	"unversionedId": "release-mastermind/interfaces/SharedConventionConditions",
+	"id": "release-mastermind/interfaces/SharedConventionConditions",
+	"isDocsHomePage": false,
+	"title": "Interface: SharedConventionConditions",
+	"description": "Conventions to use",
+	"source": "@site/docs/release-mastermind/interfaces/SharedConventionConditions.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/SharedConventionConditions",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "SharedConventionConditions",
+		"title": "Interface: SharedConventionConditions",
+		"sidebar_label": "SharedConventionConditions",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "SharedConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig"
+	}
+}

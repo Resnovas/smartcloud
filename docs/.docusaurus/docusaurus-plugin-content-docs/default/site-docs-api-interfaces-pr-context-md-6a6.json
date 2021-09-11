@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/PRContext",
+	"id": "api/interfaces/PRContext",
+	"isDocsHomePage": false,
+	"title": "Interface: PRContext",
+	"description": "Hierarchy",
+	"source": "@site/docs/api/interfaces/PRContext.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/PRContext",
+	"permalink": "/docs/next/api/interfaces/PRContext",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "PRContext",
+		"title": "Interface: PRContext",
+		"sidebar_label": "PRContext",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "PRConditionConfig",
+		"permalink": "/docs/next/api/interfaces/PRConditionConfig"
+	},
+	"next": {
+		"title": "PRProps",
+		"permalink": "/docs/next/api/interfaces/PRProps"
+	}
+}

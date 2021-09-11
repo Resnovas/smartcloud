@@ -1,3 +1,5 @@
+# @format
+
 name: Command Management
 
 on:
@@ -26,7 +28,7 @@ jobs:
         uses: ./packages/variable-mastermind/
         with:
           settings: ${{ secrets.SETTINGS }}
-          mode: 'environment'
+          mode: "environment"
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # Advanced JSON configuration

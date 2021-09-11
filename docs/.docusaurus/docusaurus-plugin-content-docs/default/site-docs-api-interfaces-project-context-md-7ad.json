@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/ProjectContext",
+	"id": "api/interfaces/ProjectContext",
+	"isDocsHomePage": false,
+	"title": "Interface: ProjectContext",
+	"description": "Hierarchy",
+	"source": "@site/docs/api/interfaces/ProjectContext.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/ProjectContext",
+	"permalink": "/docs/next/api/interfaces/ProjectContext",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ProjectContext",
+		"title": "Interface: ProjectContext",
+		"sidebar_label": "ProjectContext",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "ProjectConfig",
+		"permalink": "/docs/next/api/interfaces/ProjectConfig"
+	},
+	"next": {
+		"title": "ProjectProps",
+		"permalink": "/docs/next/api/interfaces/ProjectProps"
+	}
+}

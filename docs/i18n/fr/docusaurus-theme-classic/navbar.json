@@ -1,0 +1,26 @@
+{
+	"title": {
+		"message": "Action Masterminds",
+		"description": "The title in the navbar"
+	},
+	"item.label.Get Started": {
+		"message": "Get Started",
+		"description": "Navbar item with label Get Started"
+	},
+	"item.label.Config Docs": {
+		"message": "Config Docs",
+		"description": "Navbar item with label Config Docs"
+	},
+	"item.label.Blog": {
+		"message": "Blog",
+		"description": "Navbar item with label Blog"
+	},
+	"item.label.Changelog": {
+		"message": "Changelog",
+		"description": "Navbar item with label Changelog"
+	},
+	"item.label.GitHub": {
+		"message": "GitHub",
+		"description": "Navbar item with label GitHub"
+	}
+}

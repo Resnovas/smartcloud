@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/branch copy",
+	"id": "getting-started/contributing/Start Contributing/branch copy",
+	"isDocsHomePage": false,
+	"title": "Branch Names",
+	"description": "A branch will normally be created by the automatic system for each issue, if not please follow the branch name configuration defined as follows:",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/branch copy.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/branch copy",
+	"permalink": "/docs/getting-started/contributing/Start Contributing/branch copy",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/branch copy.md",
+	"version": "current",
+	"sidebarPosition": 2,
+	"frontMatter": {
+		"sidebar_position": 2
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Internal Contributions Workflow",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/internal"
+	},
+	"next": {
+		"title": "Branch Names",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/branch"
+	}
+}

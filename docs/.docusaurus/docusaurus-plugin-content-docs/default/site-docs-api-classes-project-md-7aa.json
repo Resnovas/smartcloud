@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/classes/Project",
+	"id": "api/classes/Project",
+	"isDocsHomePage": false,
+	"title": "Class: Project",
+	"description": "Hierarchy",
+	"source": "@site/docs/api/classes/Project.md",
+	"sourceDirName": "api/classes",
+	"slug": "/api/classes/Project",
+	"permalink": "/docs/next/api/classes/Project",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Project",
+		"title": "Class: Project",
+		"sidebar_label": "Project",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Issues",
+		"permalink": "/docs/next/api/classes/Issues"
+	},
+	"next": {
+		"title": "PullRequests",
+		"permalink": "/docs/next/api/classes/PullRequests"
+	}
+}

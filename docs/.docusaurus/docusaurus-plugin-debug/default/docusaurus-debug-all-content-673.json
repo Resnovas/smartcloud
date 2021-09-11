@@ -1,0 +1,1550 @@
+{
+	"docusaurus-plugin-content-docs": {
+		"default": {
+			"loadedVersions": [
+				{
+					"versionName": "current",
+					"versionLabel": "Next",
+					"versionPath": "/action-masterminds/docs",
+					"versionEditUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs",
+					"versionEditUrlLocalized": "https://github.com/videndum/action-masterminds/edit/develop/docs/i18n/en/docusaurus-plugin-content-docs/current",
+					"versionBanner": "none",
+					"isLast": true,
+					"routePriority": -1,
+					"sidebarFilePath": "D:\\Jonathan\\Documents\\Repositories\\devspace\\Videndum\\projects\\action-masterminds\\docs\\sidebars.js",
+					"contentPath": "D:\\Jonathan\\Documents\\Repositories\\devspace\\Videndum\\projects\\action-masterminds\\docs\\docs",
+					"contentPathLocalized": "D:\\Jonathan\\Documents\\Repositories\\devspace\\Videndum\\projects\\action-masterminds\\docs\\i18n\\en\\docusaurus-plugin-content-docs\\current",
+					"mainDocId": "getting-started/intro",
+					"sidebars": {
+						"getting": [
+							{
+								"type": "doc",
+								"id": "getting-started/intro"
+							},
+							{
+								"type": "doc",
+								"id": "getting-started/setup"
+							},
+							{
+								"type": "doc",
+								"id": "getting-started/backlog"
+							},
+							{
+								"type": "category",
+								"label": "Features",
+								"items": [
+									{
+										"type": "doc",
+										"id": "getting-started/features/regex",
+										"label": "Using Regex"
+									}
+								],
+								"collapsible": true,
+								"collapsed": true
+							},
+							{
+								"type": "category",
+								"label": "Contributing",
+								"items": [
+									{
+										"type": "doc",
+										"id": "getting-started/contributing/CODE_OF_CONDUCT",
+										"label": "Code of Conduct"
+									},
+									{
+										"type": "doc",
+										"id": "getting-started/contributing/gpgkey"
+									},
+									{
+										"type": "doc",
+										"id": "getting-started/contributing/runningLocally"
+									},
+									{
+										"type": "doc",
+										"id": "getting-started/contributing/code-review-process"
+									},
+									{
+										"type": "doc",
+										"id": "getting-started/contributing/security"
+									},
+									{
+										"type": "category",
+										"label": "Start Contributing",
+										"items": [
+											{
+												"type": "doc",
+												"id": "getting-started/contributing/Start Contributing/why-the-guidelines",
+												"label": "Start Contributing"
+											},
+											{
+												"type": "doc",
+												"id": "getting-started/contributing/Start Contributing/external"
+											},
+											{
+												"type": "doc",
+												"id": "getting-started/contributing/Start Contributing/internal"
+											},
+											{
+												"type": "doc",
+												"id": "getting-started/contributing/Start Contributing/branch"
+											},
+											{
+												"type": "doc",
+												"id": "getting-started/contributing/Start Contributing/types"
+											},
+											{
+												"type": "doc",
+												"id": "getting-started/contributing/Start Contributing/first"
+											},
+											{
+												"type": "doc",
+												"id": "getting-started/contributing/Start Contributing/labels"
+											}
+										],
+										"collapsed": true,
+										"collapsible": true
+									}
+								],
+								"collapsible": true,
+								"collapsed": true
+							},
+							{
+								"type": "doc",
+								"id": "getting-started/support"
+							},
+							{
+								"type": "doc",
+								"id": "getting-started/contributors"
+							}
+						],
+						"release": [
+							{
+								"type": "doc",
+								"id": "release-mastermind/index",
+								"label": "Readme"
+							},
+							{
+								"type": "doc",
+								"id": "release-mastermind/modules",
+								"label": "Exports"
+							},
+							{
+								"type": "category",
+								"label": "Interfaces",
+								"items": [
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/ApiProps",
+										"label": "ApiProps"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/Config",
+										"label": "Config"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/IssueConditionConfig",
+										"label": "IssueConditionConfig"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/IssueConfig",
+										"label": "IssueConfig"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/Label",
+										"label": "Label"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/Labels",
+										"label": "Labels"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/Options",
+										"label": "Options"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/PRConditionConfig",
+										"label": "PRConditionConfig"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/ProjectConditionConfig",
+										"label": "ProjectConditionConfig"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/ProjectConfig",
+										"label": "ProjectConfig"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/PullRequestConfig",
+										"label": "PullRequestConfig"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/Repo",
+										"label": "Repo"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/Runners",
+										"label": "Runners"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/ScheduleConditionConfig",
+										"label": "ScheduleConditionConfig"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/SharedConditions",
+										"label": "SharedConditions"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/SharedConfig",
+										"label": "SharedConfig"
+									},
+									{
+										"type": "doc",
+										"id": "release-mastermind/interfaces/SharedConventionConditions",
+										"label": "SharedConventionConditions"
+									}
+								],
+								"collapsed": true,
+								"collapsible": true
+							}
+						]
+					},
+					"docs": [
+						{
+							"unversionedId": "getting-started/backlog",
+							"id": "getting-started/backlog",
+							"isDocsHomePage": false,
+							"title": "Backlog",
+							"description": "Thank you for taking an interst in contributing. We have created development containers (.devcontainer) to allow you to jump straight in with coding. We even went through the hassle of setting up step by step guides using CodeTour. Everything is configured and ready to go, all you need to do is use one of the supported platforms: VSCode | Github Codespaces",
+							"source": "@site/docs/getting-started/backlog.md",
+							"sourceDirName": "getting-started",
+							"slug": "/getting-started/backlog",
+							"permalink": "/action-masterminds/docs/getting-started/backlog",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/backlog.md",
+							"version": "current",
+							"frontMatter": {},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Manual setup",
+								"permalink": "/action-masterminds/docs/getting-started/setup"
+							},
+							"next": {
+								"title": "Using Regex",
+								"permalink": "/action-masterminds/docs/getting-started/features/regex"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/CODE_OF_CONDUCT",
+							"id": "getting-started/contributing/CODE_OF_CONDUCT",
+							"isDocsHomePage": false,
+							"title": "Code of Conduct",
+							"description": "Our Pledge",
+							"source": "@site/docs/getting-started/contributing/CODE_OF_CONDUCT.md",
+							"sourceDirName": "getting-started/contributing",
+							"slug": "/getting-started/contributing/CODE_OF_CONDUCT",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/CODE_OF_CONDUCT.md",
+							"version": "current",
+							"sidebarPosition": 1,
+							"frontMatter": {
+								"title": "Code of Conduct",
+								"sidebar_label": "Code of Conduct",
+								"sidebar_position": 1
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Using Regex",
+								"permalink": "/action-masterminds/docs/getting-started/features/regex"
+							},
+							"next": {
+								"title": "Signing Git with GPG using Keybase",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/gpgkey"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/code-review-process",
+							"id": "getting-started/contributing/code-review-process",
+							"isDocsHomePage": false,
+							"title": "Code review process",
+							"description": "[Coming soon - Please stand by]",
+							"source": "@site/docs/getting-started/contributing/code-review-process.md",
+							"sourceDirName": "getting-started/contributing",
+							"slug": "/getting-started/contributing/code-review-process",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/code-review-process",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/code-review-process.md",
+							"version": "current",
+							"sidebarPosition": 4,
+							"frontMatter": {
+								"sidebar_position": 4
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Running Locally & Developing",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/runningLocally"
+							},
+							"next": {
+								"title": "Security Disclosures",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/security"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/gpgkey",
+							"id": "getting-started/contributing/gpgkey",
+							"isDocsHomePage": false,
+							"title": "Signing Git with GPG using Keybase",
+							"description": "This tutorial was originally writen by Stephen Rees-Carter",
+							"source": "@site/docs/getting-started/contributing/gpgkey.md",
+							"sourceDirName": "getting-started/contributing",
+							"slug": "/getting-started/contributing/gpgkey",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/gpgkey",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/gpgkey.md",
+							"version": "current",
+							"sidebarPosition": 3,
+							"frontMatter": {
+								"sidebar_position": 3
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Code of Conduct",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT"
+							},
+							"next": {
+								"title": "Running Locally & Developing",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/runningLocally"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/runningLocally",
+							"id": "getting-started/contributing/runningLocally",
+							"isDocsHomePage": false,
+							"title": "Running Locally & Developing",
+							"description": "Setting up local running is simple, however we MUST warn that building / packaging while using local scripts can cause your GITHUB_TOKEN to be included within the package. To avoid this happening. you MUST follow the steps correctly. We will not be held responsible for any leeked personal tokens.",
+							"source": "@site/docs/getting-started/contributing/runningLocally.md",
+							"sourceDirName": "getting-started/contributing",
+							"slug": "/getting-started/contributing/runningLocally",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/runningLocally",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/runningLocally.md",
+							"version": "current",
+							"sidebarPosition": 3,
+							"frontMatter": {
+								"sidebar_position": 3
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Signing Git with GPG using Keybase",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/gpgkey"
+							},
+							"next": {
+								"title": "Code review process",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/code-review-process"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/security",
+							"id": "getting-started/contributing/security",
+							"isDocsHomePage": false,
+							"title": "Security Disclosures",
+							"description": "In order to determine whether you are dealing with a security issue, ask yourself these two questions:",
+							"source": "@site/docs/getting-started/contributing/security.md",
+							"sourceDirName": "getting-started/contributing",
+							"slug": "/getting-started/contributing/security",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/security",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/security.md",
+							"version": "current",
+							"sidebarPosition": 4,
+							"frontMatter": {
+								"sidebar_position": 4
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Code review process",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/code-review-process"
+							},
+							"next": {
+								"title": "Start Contributing",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/Start Contributing/branch",
+							"id": "getting-started/contributing/Start Contributing/branch",
+							"isDocsHomePage": false,
+							"title": "Branch Names",
+							"description": "A branch will normally be created by the automatic system for each issue, if not please follow the branch name configuration defined as follows:",
+							"source": "@site/docs/getting-started/contributing/Start Contributing/branch.md",
+							"sourceDirName": "getting-started/contributing/Start Contributing",
+							"slug": "/getting-started/contributing/Start Contributing/branch",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/branch",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/branch.md",
+							"version": "current",
+							"sidebarPosition": 2,
+							"frontMatter": {
+								"sidebar_position": 2
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Internal Contributions Workflow",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/internal"
+							},
+							"next": {
+								"title": "Contribution Types",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/types"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/Start Contributing/external",
+							"id": "getting-started/contributing/Start Contributing/external",
+							"isDocsHomePage": false,
+							"title": "External Contributions Workflow",
+							"description": "For all contributions you are required to do the following",
+							"source": "@site/docs/getting-started/contributing/Start Contributing/external.md",
+							"sourceDirName": "getting-started/contributing/Start Contributing",
+							"slug": "/getting-started/contributing/Start Contributing/external",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/external",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/external.md",
+							"version": "current",
+							"sidebarPosition": 1,
+							"frontMatter": {
+								"sidebar_position": 1
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Start Contributing",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
+							},
+							"next": {
+								"title": "Internal Contributions Workflow",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/internal"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/Start Contributing/first",
+							"id": "getting-started/contributing/Start Contributing/first",
+							"isDocsHomePage": false,
+							"title": "Your First Contribution",
+							"description": "Unsure where to begin contributing? You can start by looking through these beginner and help-wanted issues:",
+							"source": "@site/docs/getting-started/contributing/Start Contributing/first.md",
+							"sourceDirName": "getting-started/contributing/Start Contributing",
+							"slug": "/getting-started/contributing/Start Contributing/first",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/first",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/first.md",
+							"version": "current",
+							"sidebarPosition": 3,
+							"frontMatter": {
+								"sidebar_position": 3
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Contribution Types",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/types"
+							},
+							"next": {
+								"title": "Understanding Labels",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/Start Contributing/internal",
+							"id": "getting-started/contributing/Start Contributing/internal",
+							"isDocsHomePage": false,
+							"title": "Internal Contributions Workflow",
+							"description": "For all contributions you are required to do the following",
+							"source": "@site/docs/getting-started/contributing/Start Contributing/internal.md",
+							"sourceDirName": "getting-started/contributing/Start Contributing",
+							"slug": "/getting-started/contributing/Start Contributing/internal",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/internal",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/internal.md",
+							"version": "current",
+							"sidebarPosition": 1,
+							"frontMatter": {
+								"sidebar_position": 1
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "External Contributions Workflow",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/external"
+							},
+							"next": {
+								"title": "Branch Names",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/branch"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/Start Contributing/labels",
+							"id": "getting-started/contributing/Start Contributing/labels",
+							"isDocsHomePage": false,
+							"title": "Understanding Labels",
+							"description": "- Statuses",
+							"source": "@site/docs/getting-started/contributing/Start Contributing/labels.md",
+							"sourceDirName": "getting-started/contributing/Start Contributing",
+							"slug": "/getting-started/contributing/Start Contributing/labels",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/labels.md",
+							"version": "current",
+							"sidebarPosition": 3,
+							"frontMatter": {
+								"sidebar_position": 3
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Your First Contribution",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/first"
+							},
+							"next": {
+								"title": "Support 👨‍👩‍👧‍👦",
+								"permalink": "/action-masterminds/docs/getting-started/support"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/Start Contributing/types",
+							"id": "getting-started/contributing/Start Contributing/types",
+							"isDocsHomePage": false,
+							"title": "Contribution Types",
+							"description": "Minor Contributions",
+							"source": "@site/docs/getting-started/contributing/Start Contributing/types.md",
+							"sourceDirName": "getting-started/contributing/Start Contributing",
+							"slug": "/getting-started/contributing/Start Contributing/types",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/types",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/types.md",
+							"version": "current",
+							"sidebarPosition": 2,
+							"frontMatter": {
+								"sidebar_position": 2
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Branch Names",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/branch"
+							},
+							"next": {
+								"title": "Your First Contribution",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/first"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributing/Start Contributing/why-the-guidelines",
+							"id": "getting-started/contributing/Start Contributing/why-the-guidelines",
+							"isDocsHomePage": false,
+							"title": "Contributing",
+							"description": "First off, thank you for considering contributing to this project.",
+							"source": "@site/docs/getting-started/contributing/Start Contributing/why-the-guidelines.md",
+							"sourceDirName": "getting-started/contributing/Start Contributing",
+							"slug": "/getting-started/contributing/Start Contributing/why-the-guidelines",
+							"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/why-the-guidelines.md",
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"title": "Contributing",
+								"sidebar_label": "Start Contributing",
+								"sidebar_position": 0
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Security Disclosures",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/security"
+							},
+							"next": {
+								"title": "External Contributions Workflow",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/external"
+							}
+						},
+						{
+							"unversionedId": "getting-started/contributors",
+							"id": "getting-started/contributors",
+							"isDocsHomePage": false,
+							"title": "Contributors",
+							"description": "",
+							"source": "@site/docs/getting-started/contributors.md",
+							"sourceDirName": "getting-started",
+							"slug": "/getting-started/contributors",
+							"permalink": "/action-masterminds/docs/getting-started/contributors",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributors.md",
+							"version": "current",
+							"frontMatter": {},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Support 👨‍👩‍👧‍👦",
+								"permalink": "/action-masterminds/docs/getting-started/support"
+							}
+						},
+						{
+							"unversionedId": "getting-started/features/regex",
+							"id": "getting-started/features/regex",
+							"isDocsHomePage": false,
+							"title": "Using Regex patterns",
+							"description": "Many conditions use regular expressions (usually with a pattern parameter).",
+							"source": "@site/docs/getting-started/features/regex.md",
+							"sourceDirName": "getting-started/features",
+							"slug": "/getting-started/features/regex",
+							"permalink": "/action-masterminds/docs/getting-started/features/regex",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/features/regex.md",
+							"version": "current",
+							"frontMatter": {
+								"id": "regex",
+								"title": "Using Regex patterns",
+								"sidebar_label": "Using Regex"
+							},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Backlog",
+								"permalink": "/action-masterminds/docs/getting-started/backlog"
+							},
+							"next": {
+								"title": "Code of Conduct",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT"
+							}
+						},
+						{
+							"unversionedId": "getting-started/intro",
+							"id": "getting-started/intro",
+							"isDocsHomePage": false,
+							"title": "Getting Started",
+							"description": "Welcome to the Github Action Mastermind collection. This is the mono-repository for Videndum's collection of superpowered actions. This collection is built to work together as an universal tool for Github Project management. For simplicity, our main tool - Release Mastermind - incorporates all our other tools within one simple action, which can be used in all your workflows to manage all your common tasks.",
+							"source": "@site/docs/getting-started/index.md",
+							"sourceDirName": "getting-started",
+							"slug": "/getting-started",
+							"permalink": "/action-masterminds/docs/getting-started",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/index.md",
+							"version": "current",
+							"frontMatter": {
+								"id": "intro",
+								"title": "Getting Started",
+								"sidebar_label": "Intro",
+								"slug": "/getting-started"
+							},
+							"sidebar": "getting",
+							"next": {
+								"title": "Manual setup",
+								"permalink": "/action-masterminds/docs/getting-started/setup"
+							}
+						},
+						{
+							"unversionedId": "getting-started/setup",
+							"id": "getting-started/setup",
+							"isDocsHomePage": false,
+							"title": "Manual setup",
+							"description": "Create a new Github Actions workflow at .github/workflows/action.yml which uses our action:",
+							"source": "@site/docs/getting-started/setup.md",
+							"sourceDirName": "getting-started",
+							"slug": "/getting-started/setup",
+							"permalink": "/action-masterminds/docs/getting-started/setup",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/setup.md",
+							"version": "current",
+							"frontMatter": {},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Intro",
+								"permalink": "/action-masterminds/docs/getting-started"
+							},
+							"next": {
+								"title": "Backlog",
+								"permalink": "/action-masterminds/docs/getting-started/backlog"
+							}
+						},
+						{
+							"unversionedId": "getting-started/support",
+							"id": "getting-started/support",
+							"isDocsHomePage": false,
+							"title": "Support 👨‍👩‍👧‍👦",
+							"description": "For Features Requests, Q&A, Show & Tell and Discussions please use our discussions page 🚑.",
+							"source": "@site/docs/getting-started/support.md",
+							"sourceDirName": "getting-started",
+							"slug": "/getting-started/support",
+							"permalink": "/action-masterminds/docs/getting-started/support",
+							"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/support.md",
+							"version": "current",
+							"frontMatter": {},
+							"sidebar": "getting",
+							"previous": {
+								"title": "Understanding Labels",
+								"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels"
+							},
+							"next": {
+								"title": "Contributors",
+								"permalink": "/action-masterminds/docs/getting-started/contributors"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/index",
+							"id": "release-mastermind/index",
+							"isDocsHomePage": false,
+							"title": "@videndum/release-mastermind",
+							"description": "",
+							"source": "@site/docs/release-mastermind/index.md",
+							"sourceDirName": "release-mastermind",
+							"slug": "/release-mastermind",
+							"permalink": "/action-masterminds/docs/release-mastermind",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "index",
+								"title": "@videndum/release-mastermind",
+								"slug": "/release-mastermind",
+								"sidebar_label": "Readme",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"next": {
+								"title": "Exports",
+								"permalink": "/action-masterminds/docs/release-mastermind/modules"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/ApiProps",
+							"id": "release-mastermind/interfaces/ApiProps",
+							"isDocsHomePage": false,
+							"title": "Interface: ApiProps",
+							"description": "Properties",
+							"source": "@site/docs/release-mastermind/interfaces/ApiProps.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/ApiProps",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ApiProps",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "ApiProps",
+								"title": "Interface: ApiProps",
+								"sidebar_label": "ApiProps",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "Exports",
+								"permalink": "/action-masterminds/docs/release-mastermind/modules"
+							},
+							"next": {
+								"title": "Config",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Config"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/Config",
+							"id": "release-mastermind/interfaces/Config",
+							"isDocsHomePage": false,
+							"title": "Interface: Config",
+							"description": "Properties",
+							"source": "@site/docs/release-mastermind/interfaces/Config.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/Config",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Config",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "Config",
+								"title": "Interface: Config",
+								"sidebar_label": "Config",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "ApiProps",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ApiProps"
+							},
+							"next": {
+								"title": "IssueConditionConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/IssueConditionConfig",
+							"id": "release-mastermind/interfaces/IssueConditionConfig",
+							"isDocsHomePage": false,
+							"title": "Interface: IssueConditionConfig",
+							"description": "The Issue condition configuration",
+							"source": "@site/docs/release-mastermind/interfaces/IssueConditionConfig.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/IssueConditionConfig",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "IssueConditionConfig",
+								"title": "Interface: IssueConditionConfig",
+								"sidebar_label": "IssueConditionConfig",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "Config",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Config"
+							},
+							"next": {
+								"title": "IssueConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/IssueConfig",
+							"id": "release-mastermind/interfaces/IssueConfig",
+							"isDocsHomePage": false,
+							"title": "Interface: IssueConfig",
+							"description": "The issue configuration",
+							"source": "@site/docs/release-mastermind/interfaces/IssueConfig.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/IssueConfig",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "IssueConfig",
+								"title": "Interface: IssueConfig",
+								"sidebar_label": "IssueConfig",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "IssueConditionConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig"
+							},
+							"next": {
+								"title": "Label",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Label"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/Label",
+							"id": "release-mastermind/interfaces/Label",
+							"isDocsHomePage": false,
+							"title": "Interface: Label",
+							"description": "The labels configuration.",
+							"source": "@site/docs/release-mastermind/interfaces/Label.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/Label",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Label",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "Label",
+								"title": "Interface: Label",
+								"sidebar_label": "Label",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "IssueConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig"
+							},
+							"next": {
+								"title": "Labels",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Labels"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/Labels",
+							"id": "release-mastermind/interfaces/Labels",
+							"isDocsHomePage": false,
+							"title": "Interface: Labels",
+							"description": "An array of labels.",
+							"source": "@site/docs/release-mastermind/interfaces/Labels.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/Labels",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Labels",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "Labels",
+								"title": "Interface: Labels",
+								"sidebar_label": "Labels",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "Label",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Label"
+							},
+							"next": {
+								"title": "Options",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Options"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/Options",
+							"id": "release-mastermind/interfaces/Options",
+							"isDocsHomePage": false,
+							"title": "Interface: Options",
+							"description": "The application options used within Github Actions workflows",
+							"source": "@site/docs/release-mastermind/interfaces/Options.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/Options",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Options",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "Options",
+								"title": "Interface: Options",
+								"sidebar_label": "Options",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "Labels",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Labels"
+							},
+							"next": {
+								"title": "PRConditionConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/PRConditionConfig",
+							"id": "release-mastermind/interfaces/PRConditionConfig",
+							"isDocsHomePage": false,
+							"title": "Interface: PRConditionConfig",
+							"description": "The PR condition configuration",
+							"source": "@site/docs/release-mastermind/interfaces/PRConditionConfig.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/PRConditionConfig",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "PRConditionConfig",
+								"title": "Interface: PRConditionConfig",
+								"sidebar_label": "PRConditionConfig",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "Options",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Options"
+							},
+							"next": {
+								"title": "ProjectConditionConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/ProjectConditionConfig",
+							"id": "release-mastermind/interfaces/ProjectConditionConfig",
+							"isDocsHomePage": false,
+							"title": "Interface: ProjectConditionConfig",
+							"description": "The Project condition configuration",
+							"source": "@site/docs/release-mastermind/interfaces/ProjectConditionConfig.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/ProjectConditionConfig",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "ProjectConditionConfig",
+								"title": "Interface: ProjectConditionConfig",
+								"sidebar_label": "ProjectConditionConfig",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "PRConditionConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig"
+							},
+							"next": {
+								"title": "ProjectConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/ProjectConfig",
+							"id": "release-mastermind/interfaces/ProjectConfig",
+							"isDocsHomePage": false,
+							"title": "Interface: ProjectConfig",
+							"description": "The project configuration",
+							"source": "@site/docs/release-mastermind/interfaces/ProjectConfig.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/ProjectConfig",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "ProjectConfig",
+								"title": "Interface: ProjectConfig",
+								"sidebar_label": "ProjectConfig",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "ProjectConditionConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig"
+							},
+							"next": {
+								"title": "PullRequestConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/PullRequestConfig",
+							"id": "release-mastermind/interfaces/PullRequestConfig",
+							"isDocsHomePage": false,
+							"title": "Interface: PullRequestConfig",
+							"description": "The Pull Request configuration",
+							"source": "@site/docs/release-mastermind/interfaces/PullRequestConfig.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/PullRequestConfig",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "PullRequestConfig",
+								"title": "Interface: PullRequestConfig",
+								"sidebar_label": "PullRequestConfig",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "ProjectConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig"
+							},
+							"next": {
+								"title": "Repo",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Repo"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/Repo",
+							"id": "release-mastermind/interfaces/Repo",
+							"isDocsHomePage": false,
+							"title": "Interface: Repo",
+							"description": "Properties",
+							"source": "@site/docs/release-mastermind/interfaces/Repo.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/Repo",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Repo",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "Repo",
+								"title": "Interface: Repo",
+								"sidebar_label": "Repo",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "PullRequestConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig"
+							},
+							"next": {
+								"title": "Runners",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/Runners",
+							"id": "release-mastermind/interfaces/Runners",
+							"isDocsHomePage": false,
+							"title": "Interface: Runners",
+							"description": "Properties",
+							"source": "@site/docs/release-mastermind/interfaces/Runners.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/Runners",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "Runners",
+								"title": "Interface: Runners",
+								"sidebar_label": "Runners",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "Repo",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Repo"
+							},
+							"next": {
+								"title": "ScheduleConditionConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/ScheduleConditionConfig",
+							"id": "release-mastermind/interfaces/ScheduleConditionConfig",
+							"isDocsHomePage": false,
+							"title": "Interface: ScheduleConditionConfig",
+							"description": "The Schedule condition configuration",
+							"source": "@site/docs/release-mastermind/interfaces/ScheduleConditionConfig.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/ScheduleConditionConfig",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "ScheduleConditionConfig",
+								"title": "Interface: ScheduleConditionConfig",
+								"sidebar_label": "ScheduleConditionConfig",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "Runners",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners"
+							},
+							"next": {
+								"title": "SharedConditions",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConditions"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/SharedConditions",
+							"id": "release-mastermind/interfaces/SharedConditions",
+							"isDocsHomePage": false,
+							"title": "Interface: SharedConditions",
+							"description": "Shared conditions used by all types of events.",
+							"source": "@site/docs/release-mastermind/interfaces/SharedConditions.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/SharedConditions",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConditions",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "SharedConditions",
+								"title": "Interface: SharedConditions",
+								"sidebar_label": "SharedConditions",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "ScheduleConditionConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig"
+							},
+							"next": {
+								"title": "SharedConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/SharedConfig",
+							"id": "release-mastermind/interfaces/SharedConfig",
+							"isDocsHomePage": false,
+							"title": "Interface: SharedConfig",
+							"description": "The shared configuration",
+							"source": "@site/docs/release-mastermind/interfaces/SharedConfig.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/SharedConfig",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "SharedConfig",
+								"title": "Interface: SharedConfig",
+								"sidebar_label": "SharedConfig",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "SharedConditions",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConditions"
+							},
+							"next": {
+								"title": "SharedConventionConditions",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/interfaces/SharedConventionConditions",
+							"id": "release-mastermind/interfaces/SharedConventionConditions",
+							"isDocsHomePage": false,
+							"title": "Interface: SharedConventionConditions",
+							"description": "Conventions to use",
+							"source": "@site/docs/release-mastermind/interfaces/SharedConventionConditions.md",
+							"sourceDirName": "release-mastermind/interfaces",
+							"slug": "/release-mastermind/interfaces/SharedConventionConditions",
+							"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0,
+							"frontMatter": {
+								"id": "SharedConventionConditions",
+								"title": "Interface: SharedConventionConditions",
+								"sidebar_label": "SharedConventionConditions",
+								"sidebar_position": 0,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "SharedConfig",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig"
+							}
+						},
+						{
+							"unversionedId": "release-mastermind/modules",
+							"id": "release-mastermind/modules",
+							"isDocsHomePage": false,
+							"title": "@videndum/release-mastermind",
+							"description": "Interfaces",
+							"source": "@site/docs/release-mastermind/modules.md",
+							"sourceDirName": "release-mastermind",
+							"slug": "/release-mastermind/modules",
+							"permalink": "/action-masterminds/docs/release-mastermind/modules",
+							"editUrl": null,
+							"version": "current",
+							"sidebarPosition": 0.5,
+							"frontMatter": {
+								"id": "modules",
+								"title": "@videndum/release-mastermind",
+								"sidebar_label": "Exports",
+								"sidebar_position": 0.5,
+								"custom_edit_url": null
+							},
+							"sidebar": "release",
+							"previous": {
+								"title": "Readme",
+								"permalink": "/action-masterminds/docs/release-mastermind"
+							},
+							"next": {
+								"title": "ApiProps",
+								"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ApiProps"
+							}
+						}
+					]
+				}
+			]
+		}
+	},
+	"docusaurus-plugin-content-blog": {
+		"default": {
+			"blogPosts": [
+				{
+					"id": "Blog Plugin",
+					"metadata": {
+						"permalink": "/action-masterminds/blog/2020/04/14/blog-plugin",
+						"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/blog/blog/2020-04-14-blog-plugin.md",
+						"source": "@site/blog/2020-04-14-blog-plugin.md",
+						"title": "Blog Plugin",
+						"description": "You can use our blog plugin to do your posts",
+						"date": "2020-04-14T00:00:00.000Z",
+						"formattedDate": "April 14, 2020",
+						"tags": [
+							{
+								"label": "blog",
+								"permalink": "/action-masterminds/blog/tags/blog"
+							},
+							{
+								"label": "docusaurus",
+								"permalink": "/action-masterminds/blog/tags/docusaurus"
+							}
+						],
+						"readingTime": 0.145,
+						"truncated": true,
+						"nextItem": {
+							"title": "A large blog post",
+							"permalink": "/action-masterminds/blog/2020/04/14/large-blog-post"
+						}
+					}
+				},
+				{
+					"id": "A large blog post",
+					"metadata": {
+						"permalink": "/action-masterminds/blog/2020/04/14/large-blog-post",
+						"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/blog/blog/2020-04-14-large-blog-post.md",
+						"source": "@site/blog/2020-04-14-large-blog-post.md",
+						"title": "A large blog post",
+						"description": "Hello, this is an example",
+						"date": "2020-04-14T00:00:00.000Z",
+						"formattedDate": "April 14, 2020",
+						"tags": [
+							{
+								"label": "blog",
+								"permalink": "/action-masterminds/blog/tags/blog"
+							},
+							{
+								"label": "docusaurus",
+								"permalink": "/action-masterminds/blog/tags/docusaurus"
+							}
+						],
+						"readingTime": 4.1,
+						"truncated": true,
+						"prevItem": {
+							"title": "Blog Plugin",
+							"permalink": "/action-masterminds/blog/2020/04/14/blog-plugin"
+						},
+						"nextItem": {
+							"title": "Welcome",
+							"permalink": "/action-masterminds/blog/welcome"
+						}
+					}
+				},
+				{
+					"id": "welcome",
+					"metadata": {
+						"permalink": "/action-masterminds/blog/welcome",
+						"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/blog/blog/2019-05-30-welcome.md",
+						"source": "@site/blog/2019-05-30-welcome.md",
+						"title": "Welcome",
+						"description": "Blog features are powered by the blog plugin. Simply add files to the blog directory. It supports tags as well!",
+						"date": "2019-05-30T00:00:00.000Z",
+						"formattedDate": "May 30, 2019",
+						"tags": [
+							{
+								"label": "facebook",
+								"permalink": "/action-masterminds/blog/tags/facebook"
+							},
+							{
+								"label": "hello",
+								"permalink": "/action-masterminds/blog/tags/hello"
+							},
+							{
+								"label": "docusaurus",
+								"permalink": "/action-masterminds/blog/tags/docusaurus"
+							}
+						],
+						"readingTime": 0.175,
+						"truncated": false,
+						"prevItem": {
+							"title": "A large blog post",
+							"permalink": "/action-masterminds/blog/2020/04/14/large-blog-post"
+						},
+						"nextItem": {
+							"title": "Hello",
+							"permalink": "/action-masterminds/blog/hello-world"
+						}
+					}
+				},
+				{
+					"id": "hello-world",
+					"metadata": {
+						"permalink": "/action-masterminds/blog/hello-world",
+						"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/blog/blog/2019-05-29-hello-world.md",
+						"source": "@site/blog/2019-05-29-hello-world.md",
+						"title": "Hello",
+						"description": "Welcome to this blog. This blog is created with Docusaurus 2.",
+						"date": "2019-05-29T00:00:00.000Z",
+						"formattedDate": "May 29, 2019",
+						"tags": [
+							{
+								"label": "hello",
+								"permalink": "/action-masterminds/blog/tags/hello"
+							},
+							{
+								"label": "docusaurus",
+								"permalink": "/action-masterminds/blog/tags/docusaurus"
+							}
+						],
+						"readingTime": 0.115,
+						"truncated": true,
+						"prevItem": {
+							"title": "Welcome",
+							"permalink": "/action-masterminds/blog/welcome"
+						},
+						"nextItem": {
+							"title": "Hola",
+							"permalink": "/action-masterminds/blog/hola"
+						}
+					}
+				},
+				{
+					"id": "hola",
+					"metadata": {
+						"permalink": "/action-masterminds/blog/hola",
+						"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/blog/blog/2019-05-28-hola.md",
+						"source": "@site/blog/2019-05-28-hola.md",
+						"title": "Hola",
+						"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque elementum dignissim ultricies. Fusce rhoncus ipsum tempor eros aliquam consequat. Lorem ipsum dolor sit amet",
+						"date": "2019-05-28T00:00:00.000Z",
+						"formattedDate": "May 28, 2019",
+						"tags": [
+							{
+								"label": "hola",
+								"permalink": "/action-masterminds/blog/tags/hola"
+							},
+							{
+								"label": "docusaurus",
+								"permalink": "/action-masterminds/blog/tags/docusaurus"
+							}
+						],
+						"readingTime": 0.12,
+						"truncated": false,
+						"prevItem": {
+							"title": "Hello",
+							"permalink": "/action-masterminds/blog/hello-world"
+						}
+					}
+				}
+			],
+			"blogListPaginated": [
+				{
+					"metadata": {
+						"permalink": "/action-masterminds/blog",
+						"page": 1,
+						"postsPerPage": 10,
+						"totalPages": 1,
+						"totalCount": 5,
+						"previousPage": null,
+						"nextPage": null,
+						"blogDescription": "Blog",
+						"blogTitle": "Blog"
+					},
+					"items": [
+						"Blog Plugin",
+						"A large blog post",
+						"welcome",
+						"hello-world",
+						"hola"
+					]
+				}
+			],
+			"blogTags": {
+				"blog": {
+					"name": "blog",
+					"items": ["Blog Plugin", "A large blog post"],
+					"permalink": "/action-masterminds/blog/tags/blog"
+				},
+				"docusaurus": {
+					"name": "docusaurus",
+					"items": [
+						"Blog Plugin",
+						"A large blog post",
+						"welcome",
+						"hello-world",
+						"hola"
+					],
+					"permalink": "/action-masterminds/blog/tags/docusaurus"
+				},
+				"facebook": {
+					"name": "facebook",
+					"items": ["welcome"],
+					"permalink": "/action-masterminds/blog/tags/facebook"
+				},
+				"hello": {
+					"name": "hello",
+					"items": ["welcome", "hello-world"],
+					"permalink": "/action-masterminds/blog/tags/hello"
+				},
+				"hola": {
+					"name": "hola",
+					"items": ["hola"],
+					"permalink": "/action-masterminds/blog/tags/hola"
+				}
+			},
+			"blogTagsListPath": "/action-masterminds/blog/tags"
+		},
+		"changelog": {
+			"blogPosts": [
+				{
+					"id": "hola",
+					"metadata": {
+						"permalink": "/action-masterminds/changelog/hola",
+						"source": "@site/changelog/2019-05-28-hola.md",
+						"title": "Hola",
+						"description": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Pellentesque elementum dignissim ultricies. Fusce rhoncus ipsum tempor eros aliquam consequat. Lorem ipsum dolor sit amet",
+						"date": "2019-05-28T00:00:00.000Z",
+						"formattedDate": "May 28, 2019",
+						"tags": [
+							{
+								"label": "hola",
+								"permalink": "/action-masterminds/changelog/tags/hola"
+							},
+							{
+								"label": "docusaurus",
+								"permalink": "/action-masterminds/changelog/tags/docusaurus"
+							}
+						],
+						"readingTime": 0.12,
+						"truncated": false
+					}
+				}
+			],
+			"blogListPaginated": [
+				{
+					"metadata": {
+						"permalink": "/action-masterminds/changelog",
+						"page": 1,
+						"postsPerPage": 10,
+						"totalPages": 1,
+						"totalCount": 1,
+						"previousPage": null,
+						"nextPage": null,
+						"blogDescription": "Blog",
+						"blogTitle": "Blog"
+					},
+					"items": ["hola"]
+				}
+			],
+			"blogTags": {
+				"hola": {
+					"name": "hola",
+					"items": ["hola"],
+					"permalink": "/action-masterminds/changelog/tags/hola"
+				},
+				"docusaurus": {
+					"name": "docusaurus",
+					"items": ["hola"],
+					"permalink": "/action-masterminds/changelog/tags/docusaurus"
+				}
+			},
+			"blogTagsListPath": "/action-masterminds/changelog/tags"
+		}
+	},
+	"docusaurus-plugin-content-pages": {
+		"default": [
+			{
+				"type": "jsx",
+				"permalink": "/action-masterminds/",
+				"source": "@site/src/pages/index.js"
+			},
+			{
+				"type": "mdx",
+				"permalink": "/action-masterminds/markdown-page",
+				"source": "@site/src/pages/markdown-page.md"
+			}
+		]
+	},
+	"docusaurus-plugin-debug": {
+		"default": null
+	},
+	"docusaurus-theme-classic": {
+		"default": null
+	},
+	"docusaurus-theme-live-codeblock": {
+		"default": null
+	},
+	"undefined": {
+		"release-mastermind": null
+	}
+}

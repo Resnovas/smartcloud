@@ -1,0 +1,14 @@
+{
+	"unversionedId": "getting-started/runningLocally",
+	"id": "getting-started/runningLocally",
+	"isDocsHomePage": false,
+	"title": "runningLocally",
+	"description": "Running Locally & Developing",
+	"source": "@site/docs/getting-started/runningLocally.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/runningLocally",
+	"permalink": "/docs/getting-started/runningLocally",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/runningLocally.md",
+	"version": "current",
+	"frontMatter": {}
+}

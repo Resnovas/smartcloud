@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/ProjectConditionConfig",
+	"id": "release-mastermind/interfaces/ProjectConditionConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: ProjectConditionConfig",
+	"description": "The Project condition configuration",
+	"source": "@site/docs/release-mastermind/interfaces/ProjectConditionConfig.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/ProjectConditionConfig",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ProjectConditionConfig",
+		"title": "Interface: ProjectConditionConfig",
+		"sidebar_label": "ProjectConditionConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "PRConditionConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig"
+	},
+	"next": {
+		"title": "ProjectConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig"
+	}
+}

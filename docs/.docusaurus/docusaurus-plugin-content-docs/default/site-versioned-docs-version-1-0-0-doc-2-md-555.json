@@ -1,0 +1,26 @@
+{
+	"unversionedId": "doc2",
+	"id": "version-1.0.0/doc2",
+	"isDocsHomePage": false,
+	"title": "Document Number 2",
+	"description": "This is a link to another document. This is a link to an external page.",
+	"source": "@site/versioned_docs/version-1.0.0/doc2.md",
+	"sourceDirName": ".",
+	"slug": "/doc2",
+	"permalink": "/docs/1.0.0/doc2",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/versioned_docs/version-1.0.0/doc2.md",
+	"version": "1.0.0",
+	"frontMatter": {
+		"id": "doc2",
+		"title": "Document Number 2"
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Style Guide",
+		"permalink": "/docs/1.0.0/"
+	},
+	"next": {
+		"title": "This is Document Number 3",
+		"permalink": "/docs/1.0.0/doc3"
+	}
+}

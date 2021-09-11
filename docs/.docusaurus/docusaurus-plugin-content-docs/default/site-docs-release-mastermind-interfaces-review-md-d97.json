@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/Review",
+	"id": "release-mastermind/interfaces/Review",
+	"isDocsHomePage": false,
+	"title": "Interface: Review",
+	"description": "Properties",
+	"source": "@site/docs/release-mastermind/interfaces/Review.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/Review",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Review",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Review",
+		"title": "Interface: Review",
+		"sidebar_label": "Review",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Repo",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Repo"
+	},
+	"next": {
+		"title": "Runners",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners"
+	}
+}

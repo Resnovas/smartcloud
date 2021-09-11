@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/classes/PullRequests",
+	"id": "api/classes/PullRequests",
+	"isDocsHomePage": false,
+	"title": "Class: PullRequests",
+	"description": "Hierarchy",
+	"source": "@site/docs/api/classes/PullRequests.md",
+	"sourceDirName": "api/classes",
+	"slug": "/api/classes/PullRequests",
+	"permalink": "/docs/next/api/classes/PullRequests",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "PullRequests",
+		"title": "Class: PullRequests",
+		"sidebar_label": "PullRequests",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Project",
+		"permalink": "/docs/next/api/classes/Project"
+	},
+	"next": {
+		"title": "Schedule",
+		"permalink": "/docs/next/api/classes/Schedule"
+	}
+}

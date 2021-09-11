@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/classes/Project",
+	"id": "release-mastermind/classes/Project",
+	"isDocsHomePage": false,
+	"title": "Class: Project",
+	"description": "Hierarchy",
+	"source": "@site/docs/release-mastermind/classes/Project.md",
+	"sourceDirName": "release-mastermind/classes",
+	"slug": "/release-mastermind/classes/Project",
+	"permalink": "/docs/release-mastermind/classes/Project",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Project",
+		"title": "Class: Project",
+		"sidebar_label": "Project",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Issues",
+		"permalink": "/docs/release-mastermind/classes/Issues"
+	},
+	"next": {
+		"title": "PullRequests",
+		"permalink": "/docs/release-mastermind/classes/PullRequests"
+	}
+}

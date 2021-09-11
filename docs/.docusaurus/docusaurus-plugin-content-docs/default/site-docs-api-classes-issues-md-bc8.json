@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/classes/Issues",
+	"id": "api/classes/Issues",
+	"isDocsHomePage": false,
+	"title": "Class: Issues",
+	"description": "Hierarchy",
+	"source": "@site/docs/api/classes/Issues.md",
+	"sourceDirName": "api/classes",
+	"slug": "/api/classes/Issues",
+	"permalink": "/docs/next/api/classes/Issues",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Issues",
+		"title": "Class: Issues",
+		"sidebar_label": "Issues",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Exports",
+		"permalink": "/docs/next/api/modules"
+	},
+	"next": {
+		"title": "Project",
+		"permalink": "/docs/next/api/classes/Project"
+	}
+}

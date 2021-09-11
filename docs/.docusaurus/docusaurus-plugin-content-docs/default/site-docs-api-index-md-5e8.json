@@ -1,0 +1,31 @@
+{
+	"unversionedId": "api/index",
+	"id": "api/index",
+	"isDocsHomePage": false,
+	"title": "@videndum/release-mastermind",
+	"description": "Welcome to the Github Action Mastermind collection. This is the mono-repository for Videndum's collection of superpowered actions. This collection is built to work together as an universal tool for Github Project management. For simplicity, our main tool - Release Mastermind - incorporates all our other tools within one simple action, which can be used in all your workflows to manage all your common tasks.",
+	"source": "@site/docs/api/index.md",
+	"sourceDirName": "api",
+	"slug": "/api",
+	"permalink": "/docs/next/api",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "index",
+		"title": "@videndum/release-mastermind",
+		"slug": "/api",
+		"sidebar_label": "Readme",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Style Guide",
+		"permalink": "/docs/next/"
+	},
+	"next": {
+		"title": "Exports",
+		"permalink": "/docs/next/api/modules"
+	}
+}

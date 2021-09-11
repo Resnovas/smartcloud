@@ -1,0 +1,203 @@
+{
+	"docusaurus-plugin-content-docs": {
+		"default": {
+			"path": "/action-masterminds/docs",
+			"versions": [
+				{
+					"name": "current",
+					"label": "Next",
+					"isLast": true,
+					"path": "/action-masterminds/docs",
+					"mainDocId": "getting-started/intro",
+					"docs": [
+						{
+							"id": "getting-started/backlog",
+							"path": "/action-masterminds/docs/getting-started/backlog",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/CODE_OF_CONDUCT",
+							"path": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/code-review-process",
+							"path": "/action-masterminds/docs/getting-started/contributing/code-review-process",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/gpgkey",
+							"path": "/action-masterminds/docs/getting-started/contributing/gpgkey",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/runningLocally",
+							"path": "/action-masterminds/docs/getting-started/contributing/runningLocally",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/security",
+							"path": "/action-masterminds/docs/getting-started/contributing/security",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/Start Contributing/branch",
+							"path": "/action-masterminds/docs/getting-started/contributing/Start Contributing/branch",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/Start Contributing/external",
+							"path": "/action-masterminds/docs/getting-started/contributing/Start Contributing/external",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/Start Contributing/first",
+							"path": "/action-masterminds/docs/getting-started/contributing/Start Contributing/first",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/Start Contributing/internal",
+							"path": "/action-masterminds/docs/getting-started/contributing/Start Contributing/internal",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/Start Contributing/labels",
+							"path": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/Start Contributing/types",
+							"path": "/action-masterminds/docs/getting-started/contributing/Start Contributing/types",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributing/Start Contributing/why-the-guidelines",
+							"path": "/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/contributors",
+							"path": "/action-masterminds/docs/getting-started/contributors",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/features/regex",
+							"path": "/action-masterminds/docs/getting-started/features/regex",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/intro",
+							"path": "/action-masterminds/docs/getting-started",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/setup",
+							"path": "/action-masterminds/docs/getting-started/setup",
+							"sidebar": "getting"
+						},
+						{
+							"id": "getting-started/support",
+							"path": "/action-masterminds/docs/getting-started/support",
+							"sidebar": "getting"
+						},
+						{
+							"id": "release-mastermind/index",
+							"path": "/action-masterminds/docs/release-mastermind",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/ApiProps",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/ApiProps",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/Config",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/Config",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/IssueConditionConfig",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/IssueConfig",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/Label",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/Label",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/Labels",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/Labels",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/Options",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/Options",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/PRConditionConfig",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/ProjectConditionConfig",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/ProjectConfig",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/PullRequestConfig",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/Repo",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/Repo",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/Runners",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/Runners",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/ScheduleConditionConfig",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/SharedConditions",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/SharedConditions",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/SharedConfig",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/interfaces/SharedConventionConditions",
+							"path": "/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions",
+							"sidebar": "release"
+						},
+						{
+							"id": "release-mastermind/modules",
+							"path": "/action-masterminds/docs/release-mastermind/modules",
+							"sidebar": "release"
+						}
+					]
+				}
+			]
+		}
+	}
+}

@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/gpgkey",
+	"id": "getting-started/contributing/gpgkey",
+	"isDocsHomePage": false,
+	"title": "Signing Git with GPG using Keybase",
+	"description": "This tutorial was originally writen by Stephen Rees-Carter",
+	"source": "@site/docs/getting-started/contributing/gpgkey.md",
+	"sourceDirName": "getting-started/contributing",
+	"slug": "/getting-started/contributing/gpgkey",
+	"permalink": "/action-masterminds/docs/getting-started/contributing/gpgkey",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/gpgkey.md",
+	"version": "current",
+	"sidebarPosition": 3,
+	"frontMatter": {
+		"sidebar_position": 3
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Code of Conduct",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT"
+	},
+	"next": {
+		"title": "Running Locally & Developing",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/runningLocally"
+	}
+}

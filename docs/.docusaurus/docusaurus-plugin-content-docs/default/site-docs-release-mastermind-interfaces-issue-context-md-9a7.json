@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/IssueContext",
+	"id": "release-mastermind/interfaces/IssueContext",
+	"isDocsHomePage": false,
+	"title": "Interface: IssueContext",
+	"description": "Hierarchy",
+	"source": "@site/docs/release-mastermind/interfaces/IssueContext.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/IssueContext",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueContext",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "IssueContext",
+		"title": "Interface: IssueContext",
+		"sidebar_label": "IssueContext",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "IssueConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig"
+	},
+	"next": {
+		"title": "Label",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Label"
+	}
+}

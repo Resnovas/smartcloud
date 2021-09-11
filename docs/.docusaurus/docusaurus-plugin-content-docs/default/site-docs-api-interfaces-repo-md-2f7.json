@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/Repo",
+	"id": "api/interfaces/Repo",
+	"isDocsHomePage": false,
+	"title": "Interface: Repo",
+	"description": "Properties",
+	"source": "@site/docs/api/interfaces/Repo.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/Repo",
+	"permalink": "/docs/next/api/interfaces/Repo",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Repo",
+		"title": "Interface: Repo",
+		"sidebar_label": "Repo",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "PullRequestConfig",
+		"permalink": "/docs/next/api/interfaces/PullRequestConfig"
+	},
+	"next": {
+		"title": "Review",
+		"permalink": "/docs/next/api/interfaces/Review"
+	}
+}

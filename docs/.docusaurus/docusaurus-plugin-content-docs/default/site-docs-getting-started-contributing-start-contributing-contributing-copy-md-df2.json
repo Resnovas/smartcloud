@@ -1,0 +1,22 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/contributing copy",
+	"id": "getting-started/contributing/Start Contributing/contributing copy",
+	"isDocsHomePage": false,
+	"title": "External Contributions Workflow",
+	"description": "For all contributions you are required to do the following",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/contributing copy.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/contributing copy",
+	"permalink": "/docs/getting-started/contributing/Start Contributing/contributing copy",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/contributing copy.md",
+	"version": "current",
+	"sidebarPosition": 1,
+	"frontMatter": {
+		"sidebar_position": 1
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Why the guidelines",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/why-the-guidelines"
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/ProjectConfig",
+	"id": "api/interfaces/ProjectConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: ProjectConfig",
+	"description": "The project configuration",
+	"source": "@site/docs/api/interfaces/ProjectConfig.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/ProjectConfig",
+	"permalink": "/docs/next/api/interfaces/ProjectConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ProjectConfig",
+		"title": "Interface: ProjectConfig",
+		"sidebar_label": "ProjectConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "ProjectConditionConfig",
+		"permalink": "/docs/next/api/interfaces/ProjectConditionConfig"
+	},
+	"next": {
+		"title": "ProjectContext",
+		"permalink": "/docs/next/api/interfaces/ProjectContext"
+	}
+}

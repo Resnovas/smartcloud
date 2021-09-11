@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/ScheduleConditionConfig",
+	"id": "release-mastermind/interfaces/ScheduleConditionConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: ScheduleConditionConfig",
+	"description": "The Schedule condition configuration",
+	"source": "@site/docs/release-mastermind/interfaces/ScheduleConditionConfig.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/ScheduleConditionConfig",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ScheduleConditionConfig",
+		"title": "Interface: ScheduleConditionConfig",
+		"sidebar_label": "ScheduleConditionConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Runners",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners"
+	},
+	"next": {
+		"title": "SharedConditions",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConditions"
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/PRConditionConfig",
+	"id": "release-mastermind/interfaces/PRConditionConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: PRConditionConfig",
+	"description": "The PR condition configuration",
+	"source": "@site/docs/release-mastermind/interfaces/PRConditionConfig.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/PRConditionConfig",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PRConditionConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "PRConditionConfig",
+		"title": "Interface: PRConditionConfig",
+		"sidebar_label": "PRConditionConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Options",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Options"
+	},
+	"next": {
+		"title": "ProjectConditionConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig"
+	}
+}

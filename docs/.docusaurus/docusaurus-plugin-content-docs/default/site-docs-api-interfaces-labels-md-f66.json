@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/Labels",
+	"id": "api/interfaces/Labels",
+	"isDocsHomePage": false,
+	"title": "Interface: Labels",
+	"description": "An array of labels.",
+	"source": "@site/docs/api/interfaces/Labels.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/Labels",
+	"permalink": "/docs/next/api/interfaces/Labels",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Labels",
+		"title": "Interface: Labels",
+		"sidebar_label": "Labels",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Label",
+		"permalink": "/docs/next/api/interfaces/Label"
+	},
+	"next": {
+		"title": "Options",
+		"permalink": "/docs/next/api/interfaces/Options"
+	}
+}

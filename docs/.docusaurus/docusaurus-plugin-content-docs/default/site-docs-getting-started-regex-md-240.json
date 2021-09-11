@@ -1,0 +1,23 @@
+{
+	"unversionedId": "getting-started/regex",
+	"id": "getting-started/regex",
+	"isDocsHomePage": false,
+	"title": "Using Regex patterns",
+	"description": "Many conditions use regular expressions (usually with a pattern parameter).",
+	"source": "@site/docs/getting-started/regex.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/regex",
+	"permalink": "/docs/getting-started/regex",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/regex.md",
+	"version": "current",
+	"frontMatter": {
+		"id": "regex",
+		"title": "Using Regex patterns",
+		"sidebar_label": "Using Regex"
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Intro",
+		"permalink": "/docs/getting-started"
+	}
+}

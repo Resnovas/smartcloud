@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/modules",
+	"id": "api/modules",
+	"isDocsHomePage": false,
+	"title": "@videndum/release-mastermind",
+	"description": "Classes",
+	"source": "@site/docs/api/modules.md",
+	"sourceDirName": "api",
+	"slug": "/api/modules",
+	"permalink": "/docs/next/api/modules",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0.5,
+	"frontMatter": {
+		"id": "modules",
+		"title": "@videndum/release-mastermind",
+		"sidebar_label": "Exports",
+		"sidebar_position": 0.5,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Readme",
+		"permalink": "/docs/next/api"
+	},
+	"next": {
+		"title": "Issues",
+		"permalink": "/docs/next/api/classes/Issues"
+	}
+}

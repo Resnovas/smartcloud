@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/internal",
+	"id": "getting-started/contributing/Start Contributing/internal",
+	"isDocsHomePage": false,
+	"title": "Internal Contributions Workflow",
+	"description": "For all contributions you are required to do the following",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/internal.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/internal",
+	"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/internal",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/internal.md",
+	"version": "current",
+	"sidebarPosition": 1,
+	"frontMatter": {
+		"sidebar_position": 1
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "External Contributions Workflow",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/external"
+	},
+	"next": {
+		"title": "Branch Names",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/branch"
+	}
+}

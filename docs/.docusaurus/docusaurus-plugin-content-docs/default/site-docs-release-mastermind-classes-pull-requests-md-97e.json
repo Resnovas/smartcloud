@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/classes/PullRequests",
+	"id": "release-mastermind/classes/PullRequests",
+	"isDocsHomePage": false,
+	"title": "Class: PullRequests",
+	"description": "Hierarchy",
+	"source": "@site/docs/release-mastermind/classes/PullRequests.md",
+	"sourceDirName": "release-mastermind/classes",
+	"slug": "/release-mastermind/classes/PullRequests",
+	"permalink": "/docs/release-mastermind/classes/PullRequests",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "PullRequests",
+		"title": "Class: PullRequests",
+		"sidebar_label": "PullRequests",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Project",
+		"permalink": "/docs/release-mastermind/classes/Project"
+	},
+	"next": {
+		"title": "Schedule",
+		"permalink": "/docs/release-mastermind/classes/Schedule"
+	}
+}

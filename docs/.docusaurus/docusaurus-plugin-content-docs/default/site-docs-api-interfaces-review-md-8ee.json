@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/Review",
+	"id": "api/interfaces/Review",
+	"isDocsHomePage": false,
+	"title": "Interface: Review",
+	"description": "Properties",
+	"source": "@site/docs/api/interfaces/Review.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/Review",
+	"permalink": "/docs/next/api/interfaces/Review",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Review",
+		"title": "Interface: Review",
+		"sidebar_label": "Review",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Repo",
+		"permalink": "/docs/next/api/interfaces/Repo"
+	},
+	"next": {
+		"title": "Runners",
+		"permalink": "/docs/next/api/interfaces/Runners"
+	}
+}

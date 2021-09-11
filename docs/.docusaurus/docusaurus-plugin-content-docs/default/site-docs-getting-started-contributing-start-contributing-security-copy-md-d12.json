@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/security copy",
+	"id": "getting-started/contributing/Start Contributing/security copy",
+	"isDocsHomePage": false,
+	"title": "Security Disclosures",
+	"description": "In order to determine whether you are dealing with a security issue, ask yourself these two questions:",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/security copy.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/security copy",
+	"permalink": "/docs/getting-started/contributing/Start Contributing/security copy",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/security copy.md",
+	"version": "current",
+	"sidebarPosition": 4,
+	"frontMatter": {
+		"sidebar_position": 4
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Your First Contribution",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/first"
+	},
+	"next": {
+		"title": "Security Disclosures",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/security"
+	}
+}

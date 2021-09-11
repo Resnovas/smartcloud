@@ -1,0 +1,19 @@
+{
+	"defaultLocale": "en",
+	"locales": ["en", "fr", "es"],
+	"currentLocale": "en",
+	"localeConfigs": {
+		"en": {
+			"label": "English",
+			"direction": "ltr"
+		},
+		"fr": {
+			"label": "français",
+			"direction": "ltr"
+		},
+		"es": {
+			"label": "español",
+			"direction": "ltr"
+		}
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/Labels",
+	"id": "release-mastermind/interfaces/Labels",
+	"isDocsHomePage": false,
+	"title": "Interface: Labels",
+	"description": "An array of labels.",
+	"source": "@site/docs/release-mastermind/interfaces/Labels.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/Labels",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Labels",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Labels",
+		"title": "Interface: Labels",
+		"sidebar_label": "Labels",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Label",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Label"
+	},
+	"next": {
+		"title": "Options",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Options"
+	}
+}

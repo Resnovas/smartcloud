@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/first copy",
+	"id": "getting-started/contributing/Start Contributing/first copy",
+	"isDocsHomePage": false,
+	"title": "Your First Contribution",
+	"description": "Unsure where to begin contributing? You can start by looking through these beginner and help-wanted issues:",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/first copy.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/first copy",
+	"permalink": "/docs/getting-started/contributing/Start Contributing/first copy",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/first copy.md",
+	"version": "current",
+	"sidebarPosition": 3,
+	"frontMatter": {
+		"sidebar_position": 3
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Contribution Types",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/types"
+	},
+	"next": {
+		"title": "Your First Contribution",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/first"
+	}
+}

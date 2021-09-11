@@ -1,0 +1,14 @@
+{
+	"unversionedId": "getting-started/releaseManualSetup",
+	"id": "getting-started/releaseManualSetup",
+	"isDocsHomePage": false,
+	"title": "releaseManualSetup",
+	"description": "Manual setup",
+	"source": "@site/docs/getting-started/releaseManualSetup.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/releaseManualSetup",
+	"permalink": "/docs/getting-started/releaseManualSetup",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/releaseManualSetup.md",
+	"version": "current",
+	"frontMatter": {}
+}

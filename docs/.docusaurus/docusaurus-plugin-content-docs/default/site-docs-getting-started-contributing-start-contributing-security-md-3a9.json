@@ -1,0 +1,22 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/security",
+	"id": "getting-started/contributing/Start Contributing/security",
+	"isDocsHomePage": false,
+	"title": "Security Disclosures",
+	"description": "In order to determine whether you are dealing with a security issue, ask yourself these two questions:",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/security.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/security",
+	"permalink": "/docs/getting-started/contributing/Start Contributing/security",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/security.md",
+	"version": "current",
+	"sidebarPosition": 4,
+	"frontMatter": {
+		"sidebar_position": 4
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Understanding Labels",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/labels"
+	}
+}

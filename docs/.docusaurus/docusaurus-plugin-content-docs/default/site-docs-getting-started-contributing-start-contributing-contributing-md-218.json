@@ -1,0 +1,24 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/contributing",
+	"id": "getting-started/contributing/Start Contributing/contributing",
+	"isDocsHomePage": false,
+	"title": "Contributing",
+	"description": "First off, thank you for considering contributing to this project.",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/contributing.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/contributing",
+	"permalink": "/docs/getting-started/contributing/Start Contributing/contributing",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/contributing.md",
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"title": "Contributing",
+		"sidebar_label": "Start Contributing",
+		"sidebar_position": 0
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Start Contributing",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/contributing copy"
+	}
+}

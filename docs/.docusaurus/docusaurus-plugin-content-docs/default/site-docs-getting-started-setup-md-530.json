@@ -1,0 +1,23 @@
+{
+	"unversionedId": "getting-started/setup",
+	"id": "getting-started/setup",
+	"isDocsHomePage": false,
+	"title": "Manual setup",
+	"description": "Create a new Github Actions workflow at .github/workflows/action.yml which uses our action:",
+	"source": "@site/docs/getting-started/setup.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/setup",
+	"permalink": "/action-masterminds/docs/getting-started/setup",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/setup.md",
+	"version": "current",
+	"frontMatter": {},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Intro",
+		"permalink": "/action-masterminds/docs/getting-started"
+	},
+	"next": {
+		"title": "Backlog",
+		"permalink": "/action-masterminds/docs/getting-started/backlog"
+	}
+}

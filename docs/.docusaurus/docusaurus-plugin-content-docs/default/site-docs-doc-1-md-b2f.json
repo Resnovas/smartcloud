@@ -1,0 +1,24 @@
+{
+	"unversionedId": "test",
+	"id": "test",
+	"isDocsHomePage": false,
+	"title": "TEST",
+	"description": "You can write content using GitHub-flavored Markdown syntax.",
+	"source": "@site/docs/doc1.md",
+	"sourceDirName": ".",
+	"slug": "/",
+	"permalink": "/docs/",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/doc1.md",
+	"version": "current",
+	"frontMatter": {
+		"id": "test",
+		"title": "TEST",
+		"sidebar_label": "Style Guide",
+		"slug": "/"
+	},
+	"sidebar": "someSidebar",
+	"next": {
+		"title": "Document Number 2",
+		"permalink": "/docs/doc2"
+	}
+}

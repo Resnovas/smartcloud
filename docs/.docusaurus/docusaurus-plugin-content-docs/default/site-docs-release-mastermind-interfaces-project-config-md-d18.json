@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/ProjectConfig",
+	"id": "release-mastermind/interfaces/ProjectConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: ProjectConfig",
+	"description": "The project configuration",
+	"source": "@site/docs/release-mastermind/interfaces/ProjectConfig.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/ProjectConfig",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ProjectConfig",
+		"title": "Interface: ProjectConfig",
+		"sidebar_label": "ProjectConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "ProjectConditionConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig"
+	},
+	"next": {
+		"title": "PullRequestConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig"
+	}
+}

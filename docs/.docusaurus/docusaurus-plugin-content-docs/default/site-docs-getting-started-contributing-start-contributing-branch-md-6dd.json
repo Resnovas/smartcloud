@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/branch",
+	"id": "getting-started/contributing/Start Contributing/branch",
+	"isDocsHomePage": false,
+	"title": "Branch Names",
+	"description": "A branch will normally be created by the automatic system for each issue, if not please follow the branch name configuration defined as follows:",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/branch.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/branch",
+	"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/branch",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/branch.md",
+	"version": "current",
+	"sidebarPosition": 2,
+	"frontMatter": {
+		"sidebar_position": 2
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Internal Contributions Workflow",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/internal"
+	},
+	"next": {
+		"title": "Contribution Types",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/types"
+	}
+}

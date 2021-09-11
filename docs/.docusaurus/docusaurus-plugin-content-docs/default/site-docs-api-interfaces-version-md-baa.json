@@ -1,0 +1,26 @@
+{
+	"unversionedId": "api/interfaces/Version",
+	"id": "api/interfaces/Version",
+	"isDocsHomePage": false,
+	"title": "Interface: Version",
+	"description": "Properties",
+	"source": "@site/docs/api/interfaces/Version.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/Version",
+	"permalink": "/docs/next/api/interfaces/Version",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Version",
+		"title": "Interface: Version",
+		"sidebar_label": "Version",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "SharedConventionConditions",
+		"permalink": "/docs/next/api/interfaces/SharedConventionConditions"
+	}
+}

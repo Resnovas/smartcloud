@@ -1,0 +1,14 @@
+{
+	"unversionedId": "getting-started/contributing",
+	"id": "getting-started/contributing",
+	"isDocsHomePage": false,
+	"title": "Contributing",
+	"description": "First off, thank you for considering contributing to this project.",
+	"source": "@site/docs/getting-started/contributing.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/contributing",
+	"permalink": "/docs/getting-started/contributing",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing.md",
+	"version": "current",
+	"frontMatter": {}
+}

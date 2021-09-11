@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/Label",
+	"id": "release-mastermind/interfaces/Label",
+	"isDocsHomePage": false,
+	"title": "Interface: Label",
+	"description": "The labels configuration.",
+	"source": "@site/docs/release-mastermind/interfaces/Label.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/Label",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Label",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Label",
+		"title": "Interface: Label",
+		"sidebar_label": "Label",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "IssueConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig"
+	},
+	"next": {
+		"title": "Labels",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Labels"
+	}
+}

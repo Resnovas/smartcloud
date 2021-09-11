@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/IssueConfig",
+	"id": "api/interfaces/IssueConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: IssueConfig",
+	"description": "The issue configuration",
+	"source": "@site/docs/api/interfaces/IssueConfig.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/IssueConfig",
+	"permalink": "/docs/next/api/interfaces/IssueConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "IssueConfig",
+		"title": "Interface: IssueConfig",
+		"sidebar_label": "IssueConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "IssueConditionConfig",
+		"permalink": "/docs/next/api/interfaces/IssueConditionConfig"
+	},
+	"next": {
+		"title": "IssueContext",
+		"permalink": "/docs/next/api/interfaces/IssueContext"
+	}
+}

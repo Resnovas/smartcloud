@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/IssueConditionConfig",
+	"id": "release-mastermind/interfaces/IssueConditionConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: IssueConditionConfig",
+	"description": "The Issue condition configuration",
+	"source": "@site/docs/release-mastermind/interfaces/IssueConditionConfig.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/IssueConditionConfig",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "IssueConditionConfig",
+		"title": "Interface: IssueConditionConfig",
+		"sidebar_label": "IssueConditionConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Config",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Config"
+	},
+	"next": {
+		"title": "IssueConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConfig"
+	}
+}

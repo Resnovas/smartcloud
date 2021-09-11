@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/ProjectProps",
+	"id": "api/interfaces/ProjectProps",
+	"isDocsHomePage": false,
+	"title": "Interface: ProjectProps",
+	"description": "Hierarchy",
+	"source": "@site/docs/api/interfaces/ProjectProps.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/ProjectProps",
+	"permalink": "/docs/next/api/interfaces/ProjectProps",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ProjectProps",
+		"title": "Interface: ProjectProps",
+		"sidebar_label": "ProjectProps",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "ProjectContext",
+		"permalink": "/docs/next/api/interfaces/ProjectContext"
+	},
+	"next": {
+		"title": "PullRequestConfig",
+		"permalink": "/docs/next/api/interfaces/PullRequestConfig"
+	}
+}

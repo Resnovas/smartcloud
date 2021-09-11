@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/Label",
+	"id": "api/interfaces/Label",
+	"isDocsHomePage": false,
+	"title": "Interface: Label",
+	"description": "The labels configuration.",
+	"source": "@site/docs/api/interfaces/Label.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/Label",
+	"permalink": "/docs/next/api/interfaces/Label",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Label",
+		"title": "Interface: Label",
+		"sidebar_label": "Label",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "IssueContext",
+		"permalink": "/docs/next/api/interfaces/IssueContext"
+	},
+	"next": {
+		"title": "Labels",
+		"permalink": "/docs/next/api/interfaces/Labels"
+	}
+}

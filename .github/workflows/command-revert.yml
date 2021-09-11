@@ -1,3 +1,5 @@
+# @format
+
 name: revert-command
 on:
   repository_dispatch:

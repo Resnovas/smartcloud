@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/Repo",
+	"id": "release-mastermind/interfaces/Repo",
+	"isDocsHomePage": false,
+	"title": "Interface: Repo",
+	"description": "Properties",
+	"source": "@site/docs/release-mastermind/interfaces/Repo.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/Repo",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Repo",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Repo",
+		"title": "Interface: Repo",
+		"sidebar_label": "Repo",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "PullRequestConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PullRequestConfig"
+	},
+	"next": {
+		"title": "Runners",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners"
+	}
+}

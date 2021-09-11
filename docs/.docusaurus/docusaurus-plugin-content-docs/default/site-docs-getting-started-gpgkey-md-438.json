@@ -1,0 +1,14 @@
+{
+	"unversionedId": "getting-started/gpgkey",
+	"id": "getting-started/gpgkey",
+	"isDocsHomePage": false,
+	"title": "Signing Git with GPG using Keybase",
+	"description": "This tutorial was originally writen by Stephen Rees-Carter",
+	"source": "@site/docs/getting-started/gpgkey.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/gpgkey",
+	"permalink": "/docs/getting-started/gpgkey",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/gpgkey.md",
+	"version": "current",
+	"frontMatter": {}
+}

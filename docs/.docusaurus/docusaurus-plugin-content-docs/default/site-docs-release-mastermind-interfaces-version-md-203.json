@@ -1,0 +1,26 @@
+{
+	"unversionedId": "release-mastermind/interfaces/Version",
+	"id": "release-mastermind/interfaces/Version",
+	"isDocsHomePage": false,
+	"title": "Interface: Version",
+	"description": "Properties",
+	"source": "@site/docs/release-mastermind/interfaces/Version.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/Version",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Version",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Version",
+		"title": "Interface: Version",
+		"sidebar_label": "Version",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "SharedConventionConditions",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions"
+	}
+}

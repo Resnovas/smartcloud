@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/Runners",
+	"id": "api/interfaces/Runners",
+	"isDocsHomePage": false,
+	"title": "Interface: Runners",
+	"description": "Properties",
+	"source": "@site/docs/api/interfaces/Runners.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/Runners",
+	"permalink": "/docs/next/api/interfaces/Runners",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Runners",
+		"title": "Interface: Runners",
+		"sidebar_label": "Runners",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Review",
+		"permalink": "/docs/next/api/interfaces/Review"
+	},
+	"next": {
+		"title": "ScheduleConditionConfig",
+		"permalink": "/docs/next/api/interfaces/ScheduleConditionConfig"
+	}
+}

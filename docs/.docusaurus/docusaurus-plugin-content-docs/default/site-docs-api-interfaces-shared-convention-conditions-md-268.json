@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/SharedConventionConditions",
+	"id": "api/interfaces/SharedConventionConditions",
+	"isDocsHomePage": false,
+	"title": "Interface: SharedConventionConditions",
+	"description": "Conventions to use",
+	"source": "@site/docs/api/interfaces/SharedConventionConditions.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/SharedConventionConditions",
+	"permalink": "/docs/next/api/interfaces/SharedConventionConditions",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "SharedConventionConditions",
+		"title": "Interface: SharedConventionConditions",
+		"sidebar_label": "SharedConventionConditions",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "SharedConfig",
+		"permalink": "/docs/next/api/interfaces/SharedConfig"
+	},
+	"next": {
+		"title": "Version",
+		"permalink": "/docs/next/api/interfaces/Version"
+	}
+}

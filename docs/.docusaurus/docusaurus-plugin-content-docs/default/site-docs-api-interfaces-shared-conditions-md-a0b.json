@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/SharedConditions",
+	"id": "api/interfaces/SharedConditions",
+	"isDocsHomePage": false,
+	"title": "Interface: SharedConditions",
+	"description": "Shared conditions used by all types of events.",
+	"source": "@site/docs/api/interfaces/SharedConditions.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/SharedConditions",
+	"permalink": "/docs/next/api/interfaces/SharedConditions",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "SharedConditions",
+		"title": "Interface: SharedConditions",
+		"sidebar_label": "SharedConditions",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "ScheduleContext",
+		"permalink": "/docs/next/api/interfaces/ScheduleContext"
+	},
+	"next": {
+		"title": "SharedConfig",
+		"permalink": "/docs/next/api/interfaces/SharedConfig"
+	}
+}

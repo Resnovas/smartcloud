@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/classes/Utils",
+	"id": "release-mastermind/classes/Utils",
+	"isDocsHomePage": false,
+	"title": "Class: Utils",
+	"description": "Constructors",
+	"source": "@site/docs/release-mastermind/classes/Utils.md",
+	"sourceDirName": "release-mastermind/classes",
+	"slug": "/release-mastermind/classes/Utils",
+	"permalink": "/docs/release-mastermind/classes/Utils",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Utils",
+		"title": "Class: Utils",
+		"sidebar_label": "Utils",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Exports",
+		"permalink": "/docs/release-mastermind"
+	},
+	"next": {
+		"title": "ApiProps",
+		"permalink": "/docs/release-mastermind/interfaces/ApiProps"
+	}
+}

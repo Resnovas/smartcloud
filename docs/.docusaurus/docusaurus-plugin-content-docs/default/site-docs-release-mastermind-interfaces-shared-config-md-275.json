@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/SharedConfig",
+	"id": "release-mastermind/interfaces/SharedConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: SharedConfig",
+	"description": "The shared configuration",
+	"source": "@site/docs/release-mastermind/interfaces/SharedConfig.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/SharedConfig",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "SharedConfig",
+		"title": "Interface: SharedConfig",
+		"sidebar_label": "SharedConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "SharedConditions",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConditions"
+	},
+	"next": {
+		"title": "SharedConventionConditions",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConventionConditions"
+	}
+}

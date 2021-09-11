@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/runningLocally",
+	"id": "getting-started/contributing/runningLocally",
+	"isDocsHomePage": false,
+	"title": "Running Locally & Developing",
+	"description": "Setting up local running is simple, however we MUST warn that building / packaging while using local scripts can cause your GITHUB_TOKEN to be included within the package. To avoid this happening. you MUST follow the steps correctly. We will not be held responsible for any leeked personal tokens.",
+	"source": "@site/docs/getting-started/contributing/runningLocally.md",
+	"sourceDirName": "getting-started/contributing",
+	"slug": "/getting-started/contributing/runningLocally",
+	"permalink": "/action-masterminds/docs/getting-started/contributing/runningLocally",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/runningLocally.md",
+	"version": "current",
+	"sidebarPosition": 3,
+	"frontMatter": {
+		"sidebar_position": 3
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Signing Git with GPG using Keybase",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/gpgkey"
+	},
+	"next": {
+		"title": "Code review process",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/code-review-process"
+	}
+}

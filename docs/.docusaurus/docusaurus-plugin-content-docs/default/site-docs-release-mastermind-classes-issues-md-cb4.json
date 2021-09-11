@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/classes/Issues",
+	"id": "release-mastermind/classes/Issues",
+	"isDocsHomePage": false,
+	"title": "Class: Issues",
+	"description": "Hierarchy",
+	"source": "@site/docs/release-mastermind/classes/Issues.md",
+	"sourceDirName": "release-mastermind/classes",
+	"slug": "/release-mastermind/classes/Issues",
+	"permalink": "/docs/release-mastermind/classes/Issues",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Issues",
+		"title": "Class: Issues",
+		"sidebar_label": "Issues",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Exports",
+		"permalink": "/docs/release-mastermind"
+	},
+	"next": {
+		"title": "Project",
+		"permalink": "/docs/release-mastermind/classes/Project"
+	}
+}

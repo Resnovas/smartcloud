@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/SharedConditions",
+	"id": "release-mastermind/interfaces/SharedConditions",
+	"isDocsHomePage": false,
+	"title": "Interface: SharedConditions",
+	"description": "Shared conditions used by all types of events.",
+	"source": "@site/docs/release-mastermind/interfaces/SharedConditions.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/SharedConditions",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConditions",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "SharedConditions",
+		"title": "Interface: SharedConditions",
+		"sidebar_label": "SharedConditions",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "ScheduleConditionConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig"
+	},
+	"next": {
+		"title": "SharedConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/SharedConfig"
+	}
+}

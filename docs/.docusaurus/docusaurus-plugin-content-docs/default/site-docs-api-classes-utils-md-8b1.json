@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/classes/Utils",
+	"id": "api/classes/Utils",
+	"isDocsHomePage": false,
+	"title": "Class: Utils",
+	"description": "Constructors",
+	"source": "@site/docs/api/classes/Utils.md",
+	"sourceDirName": "api/classes",
+	"slug": "/api/classes/Utils",
+	"permalink": "/docs/next/api/classes/Utils",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Utils",
+		"title": "Class: Utils",
+		"sidebar_label": "Utils",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Schedule",
+		"permalink": "/docs/next/api/classes/Schedule"
+	},
+	"next": {
+		"title": "ApiProps",
+		"permalink": "/docs/next/api/interfaces/ApiProps"
+	}
+}

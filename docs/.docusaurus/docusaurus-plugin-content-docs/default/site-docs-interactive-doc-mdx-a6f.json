@@ -1,0 +1,17 @@
+{
+	"unversionedId": "mdx",
+	"id": "mdx",
+	"isDocsHomePage": false,
+	"title": "Powered by MDX",
+	"description": "You can write JSX and use React components within your Markdown thanks to MDX.",
+	"source": "@site/docs/interactiveDoc.mdx",
+	"sourceDirName": ".",
+	"slug": "/mdx",
+	"permalink": "/docs/mdx",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/interactiveDoc.mdx",
+	"version": "current",
+	"frontMatter": {
+		"id": "mdx",
+		"title": "Powered by MDX"
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/SharedConfig",
+	"id": "api/interfaces/SharedConfig",
+	"isDocsHomePage": false,
+	"title": "Interface: SharedConfig",
+	"description": "The shared configuration",
+	"source": "@site/docs/api/interfaces/SharedConfig.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/SharedConfig",
+	"permalink": "/docs/next/api/interfaces/SharedConfig",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "SharedConfig",
+		"title": "Interface: SharedConfig",
+		"sidebar_label": "SharedConfig",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "SharedConditions",
+		"permalink": "/docs/next/api/interfaces/SharedConditions"
+	},
+	"next": {
+		"title": "SharedConventionConditions",
+		"permalink": "/docs/next/api/interfaces/SharedConventionConditions"
+	}
+}

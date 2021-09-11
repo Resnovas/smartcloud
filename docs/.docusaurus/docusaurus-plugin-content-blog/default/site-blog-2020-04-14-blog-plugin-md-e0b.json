@@ -1,0 +1,25 @@
+{
+	"permalink": "/action-masterminds/blog/2020/04/14/blog-plugin",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/blog/blog/2020-04-14-blog-plugin.md",
+	"source": "@site/blog/2020-04-14-blog-plugin.md",
+	"title": "Blog Plugin",
+	"description": "You can use our blog plugin to do your posts",
+	"date": "2020-04-14T00:00:00.000Z",
+	"formattedDate": "April 14, 2020",
+	"tags": [
+		{
+			"label": "blog",
+			"permalink": "/action-masterminds/blog/tags/blog"
+		},
+		{
+			"label": "docusaurus",
+			"permalink": "/action-masterminds/blog/tags/docusaurus"
+		}
+	],
+	"readingTime": 0.145,
+	"truncated": true,
+	"nextItem": {
+		"title": "A large blog post",
+		"permalink": "/action-masterminds/blog/2020/04/14/large-blog-post"
+	}
+}

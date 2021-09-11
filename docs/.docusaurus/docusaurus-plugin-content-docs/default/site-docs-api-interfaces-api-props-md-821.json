@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/ApiProps",
+	"id": "api/interfaces/ApiProps",
+	"isDocsHomePage": false,
+	"title": "Interface: ApiProps",
+	"description": "Properties",
+	"source": "@site/docs/api/interfaces/ApiProps.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/ApiProps",
+	"permalink": "/docs/next/api/interfaces/ApiProps",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ApiProps",
+		"title": "Interface: ApiProps",
+		"sidebar_label": "ApiProps",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "Utils",
+		"permalink": "/docs/next/api/classes/Utils"
+	},
+	"next": {
+		"title": "Config",
+		"permalink": "/docs/next/api/interfaces/Config"
+	}
+}

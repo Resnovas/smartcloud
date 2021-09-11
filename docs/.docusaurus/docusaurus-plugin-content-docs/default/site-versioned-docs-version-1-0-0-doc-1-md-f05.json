@@ -1,0 +1,24 @@
+{
+	"unversionedId": "doc1",
+	"id": "version-1.0.0/doc1",
+	"isDocsHomePage": false,
+	"title": "Style Guide",
+	"description": "You can write content using GitHub-flavored Markdown syntax.",
+	"source": "@site/versioned_docs/version-1.0.0/doc1.md",
+	"sourceDirName": ".",
+	"slug": "/",
+	"permalink": "/docs/1.0.0/",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/versioned_docs/version-1.0.0/doc1.md",
+	"version": "1.0.0",
+	"frontMatter": {
+		"id": "doc1",
+		"title": "Style Guide",
+		"sidebar_label": "Style Guide",
+		"slug": "/"
+	},
+	"sidebar": "someSidebar",
+	"next": {
+		"title": "Document Number 2",
+		"permalink": "/docs/1.0.0/doc2"
+	}
+}

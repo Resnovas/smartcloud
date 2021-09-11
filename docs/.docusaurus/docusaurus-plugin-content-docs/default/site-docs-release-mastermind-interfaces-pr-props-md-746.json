@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/PRProps",
+	"id": "release-mastermind/interfaces/PRProps",
+	"isDocsHomePage": false,
+	"title": "Interface: PRProps",
+	"description": "Hierarchy",
+	"source": "@site/docs/release-mastermind/interfaces/PRProps.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/PRProps",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PRProps",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "PRProps",
+		"title": "Interface: PRProps",
+		"sidebar_label": "PRProps",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "PRContext",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/PRContext"
+	},
+	"next": {
+		"title": "ProjectConditionConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConditionConfig"
+	}
+}

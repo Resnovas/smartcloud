@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/ProjectContext",
+	"id": "release-mastermind/interfaces/ProjectContext",
+	"isDocsHomePage": false,
+	"title": "Interface: ProjectContext",
+	"description": "Hierarchy",
+	"source": "@site/docs/release-mastermind/interfaces/ProjectContext.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/ProjectContext",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectContext",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "ProjectContext",
+		"title": "Interface: ProjectContext",
+		"sidebar_label": "ProjectContext",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "ProjectConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectConfig"
+	},
+	"next": {
+		"title": "ProjectProps",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ProjectProps"
+	}
+}

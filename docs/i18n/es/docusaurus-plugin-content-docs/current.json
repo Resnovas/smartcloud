@@ -1,0 +1,22 @@
+{
+	"version.label": {
+		"message": "Next",
+		"description": "The label for version current"
+	},
+	"sidebar.getting.category.Features": {
+		"message": "Features",
+		"description": "The label for category Features in sidebar getting"
+	},
+	"sidebar.getting.category.Contributing": {
+		"message": "Contributing",
+		"description": "The label for category Contributing in sidebar getting"
+	},
+	"sidebar.getting.category.Start Contributing": {
+		"message": "Start Contributing",
+		"description": "The label for category Start Contributing in sidebar getting"
+	},
+	"sidebar.release.category.Interfaces": {
+		"message": "Interfaces",
+		"description": "The label for category Interfaces in sidebar release"
+	}
+}

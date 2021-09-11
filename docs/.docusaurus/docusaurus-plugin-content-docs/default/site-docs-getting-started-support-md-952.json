@@ -1,0 +1,23 @@
+{
+	"unversionedId": "getting-started/support",
+	"id": "getting-started/support",
+	"isDocsHomePage": false,
+	"title": "Support 👨‍👩‍👧‍👦",
+	"description": "For Features Requests, Q&A, Show & Tell and Discussions please use our discussions page 🚑.",
+	"source": "@site/docs/getting-started/support.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/support",
+	"permalink": "/action-masterminds/docs/getting-started/support",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/support.md",
+	"version": "current",
+	"frontMatter": {},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Understanding Labels",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/labels"
+	},
+	"next": {
+		"title": "Contributors",
+		"permalink": "/action-masterminds/docs/getting-started/contributors"
+	}
+}

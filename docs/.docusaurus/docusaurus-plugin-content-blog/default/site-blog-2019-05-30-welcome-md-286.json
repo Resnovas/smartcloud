@@ -1,0 +1,33 @@
+{
+	"permalink": "/action-masterminds/blog/welcome",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/blog/blog/2019-05-30-welcome.md",
+	"source": "@site/blog/2019-05-30-welcome.md",
+	"title": "Welcome",
+	"description": "Blog features are powered by the blog plugin. Simply add files to the blog directory. It supports tags as well!",
+	"date": "2019-05-30T00:00:00.000Z",
+	"formattedDate": "May 30, 2019",
+	"tags": [
+		{
+			"label": "facebook",
+			"permalink": "/action-masterminds/blog/tags/facebook"
+		},
+		{
+			"label": "hello",
+			"permalink": "/action-masterminds/blog/tags/hello"
+		},
+		{
+			"label": "docusaurus",
+			"permalink": "/action-masterminds/blog/tags/docusaurus"
+		}
+	],
+	"readingTime": 0.175,
+	"truncated": false,
+	"prevItem": {
+		"title": "A large blog post",
+		"permalink": "/action-masterminds/blog/2020/04/14/large-blog-post"
+	},
+	"nextItem": {
+		"title": "Hello",
+		"permalink": "/action-masterminds/blog/hello-world"
+	}
+}

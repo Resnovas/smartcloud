@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/interfaces/IssueContext",
+	"id": "api/interfaces/IssueContext",
+	"isDocsHomePage": false,
+	"title": "Interface: IssueContext",
+	"description": "Hierarchy",
+	"source": "@site/docs/api/interfaces/IssueContext.md",
+	"sourceDirName": "api/interfaces",
+	"slug": "/api/interfaces/IssueContext",
+	"permalink": "/docs/next/api/interfaces/IssueContext",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "IssueContext",
+		"title": "Interface: IssueContext",
+		"sidebar_label": "IssueContext",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "IssueConfig",
+		"permalink": "/docs/next/api/interfaces/IssueConfig"
+	},
+	"next": {
+		"title": "Label",
+		"permalink": "/docs/next/api/interfaces/Label"
+	}
+}

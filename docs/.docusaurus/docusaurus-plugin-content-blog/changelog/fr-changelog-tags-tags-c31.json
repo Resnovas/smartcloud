@@ -1,0 +1,16 @@
+{
+	"hola": {
+		"allTagsPath": "/fr/changelog/tags",
+		"slug": "hola",
+		"name": "hola",
+		"count": 1,
+		"permalink": "/fr/changelog/tags/hola"
+	},
+	"docusaurus": {
+		"allTagsPath": "/fr/changelog/tags",
+		"slug": "docusaurus",
+		"name": "docusaurus",
+		"count": 1,
+		"permalink": "/fr/changelog/tags/docusaurus"
+	}
+}

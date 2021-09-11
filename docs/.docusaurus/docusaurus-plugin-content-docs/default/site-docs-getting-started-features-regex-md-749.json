@@ -1,0 +1,27 @@
+{
+	"unversionedId": "getting-started/features/regex",
+	"id": "getting-started/features/regex",
+	"isDocsHomePage": false,
+	"title": "Using Regex patterns",
+	"description": "Many conditions use regular expressions (usually with a pattern parameter).",
+	"source": "@site/docs/getting-started/features/regex.md",
+	"sourceDirName": "getting-started/features",
+	"slug": "/getting-started/features/regex",
+	"permalink": "/action-masterminds/docs/getting-started/features/regex",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/features/regex.md",
+	"version": "current",
+	"frontMatter": {
+		"id": "regex",
+		"title": "Using Regex patterns",
+		"sidebar_label": "Using Regex"
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Backlog",
+		"permalink": "/action-masterminds/docs/getting-started/backlog"
+	},
+	"next": {
+		"title": "Code of Conduct",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/CODE_OF_CONDUCT"
+	}
+}

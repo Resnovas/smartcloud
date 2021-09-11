@@ -1,0 +1,14 @@
+{
+	"unversionedId": "getting-started/workflowConfig",
+	"id": "getting-started/workflowConfig",
+	"isDocsHomePage": false,
+	"title": "workflowConfig",
+	"description": "Workflow Options",
+	"source": "@site/docs/getting-started/workflowConfig.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/workflowConfig",
+	"permalink": "/docs/getting-started/workflowConfig",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/workflowConfig.md",
+	"version": "current",
+	"frontMatter": {}
+}

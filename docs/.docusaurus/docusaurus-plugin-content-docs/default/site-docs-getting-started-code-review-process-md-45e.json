@@ -1,0 +1,14 @@
+{
+	"unversionedId": "getting-started/code-review-process",
+	"id": "getting-started/code-review-process",
+	"isDocsHomePage": false,
+	"title": "Code review process",
+	"description": "",
+	"source": "@site/docs/getting-started/code-review-process.md",
+	"sourceDirName": "getting-started",
+	"slug": "/getting-started/code-review-process",
+	"permalink": "/docs/getting-started/code-review-process",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/code-review-process.md",
+	"version": "current",
+	"frontMatter": {}
+}

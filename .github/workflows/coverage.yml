@@ -1,3 +1,5 @@
+# @format
+
 name: codacy-coverage-reporter
 
 on: ["push"]
@@ -11,6 +13,6 @@ jobs:
       - name: Run codacy-coverage-reporter
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
-#           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          #           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
           api-token: ${{ secrets.CODACY_API_TOKEN }}
           coverage-reports: cobertura.xml

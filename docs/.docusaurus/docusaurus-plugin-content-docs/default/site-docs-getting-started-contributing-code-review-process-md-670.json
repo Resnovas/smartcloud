@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/code-review-process",
+	"id": "getting-started/contributing/code-review-process",
+	"isDocsHomePage": false,
+	"title": "Code review process",
+	"description": "[Coming soon - Please stand by]",
+	"source": "@site/docs/getting-started/contributing/code-review-process.md",
+	"sourceDirName": "getting-started/contributing",
+	"slug": "/getting-started/contributing/code-review-process",
+	"permalink": "/action-masterminds/docs/getting-started/contributing/code-review-process",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/code-review-process.md",
+	"version": "current",
+	"sidebarPosition": 4,
+	"frontMatter": {
+		"sidebar_position": 4
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Running Locally & Developing",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/runningLocally"
+	},
+	"next": {
+		"title": "Security Disclosures",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/security"
+	}
+}

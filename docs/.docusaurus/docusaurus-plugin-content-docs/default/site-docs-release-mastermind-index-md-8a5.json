@@ -1,0 +1,27 @@
+{
+	"unversionedId": "release-mastermind/index",
+	"id": "release-mastermind/index",
+	"isDocsHomePage": false,
+	"title": "@videndum/release-mastermind",
+	"description": "",
+	"source": "@site/docs/release-mastermind/index.md",
+	"sourceDirName": "release-mastermind",
+	"slug": "/release-mastermind",
+	"permalink": "/action-masterminds/docs/release-mastermind",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "index",
+		"title": "@videndum/release-mastermind",
+		"slug": "/release-mastermind",
+		"sidebar_label": "Readme",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"next": {
+		"title": "Exports",
+		"permalink": "/action-masterminds/docs/release-mastermind/modules"
+	}
+}

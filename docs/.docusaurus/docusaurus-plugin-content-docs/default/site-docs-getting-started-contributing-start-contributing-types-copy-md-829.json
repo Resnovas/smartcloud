@@ -1,0 +1,26 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/types copy",
+	"id": "getting-started/contributing/Start Contributing/types copy",
+	"isDocsHomePage": false,
+	"title": "Contribution Types",
+	"description": "Minor Contributions",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/types copy.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/types copy",
+	"permalink": "/docs/getting-started/contributing/Start Contributing/types copy",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/types copy.md",
+	"version": "current",
+	"sidebarPosition": 2,
+	"frontMatter": {
+		"sidebar_position": 2
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Branch Names",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/branch"
+	},
+	"next": {
+		"title": "Contribution Types",
+		"permalink": "/docs/getting-started/contributing/Start Contributing/types"
+	}
+}

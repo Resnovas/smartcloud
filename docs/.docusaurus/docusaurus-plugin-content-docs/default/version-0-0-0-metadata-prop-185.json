@@ -1,0 +1,47 @@
+{
+	"pluginId": "default",
+	"version": "0.0.0",
+	"label": "0.0.0",
+	"banner": "none",
+	"isLast": true,
+	"docsSidebars": {
+		"someSidebar": [
+			{
+				"type": "category",
+				"collapsed": true,
+				"collapsible": true,
+				"label": "Docusaurus",
+				"items": [
+					{
+						"type": "link",
+						"label": "Style Guide",
+						"href": "/docs/"
+					},
+					{
+						"type": "link",
+						"label": "Document Number 2",
+						"href": "/docs/doc2"
+					},
+					{
+						"type": "link",
+						"label": "This is Document Number 3",
+						"href": "/docs/doc3"
+					}
+				]
+			},
+			{
+				"type": "category",
+				"collapsed": true,
+				"collapsible": true,
+				"label": "Features",
+				"items": [
+					{
+						"type": "link",
+						"label": "Powered by MDX",
+						"href": "/docs/mdx"
+					}
+				]
+			}
+		]
+	}
+}

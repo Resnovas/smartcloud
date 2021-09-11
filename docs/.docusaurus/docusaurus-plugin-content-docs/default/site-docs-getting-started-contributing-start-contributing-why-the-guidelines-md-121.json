@@ -1,0 +1,28 @@
+{
+	"unversionedId": "getting-started/contributing/Start Contributing/why-the-guidelines",
+	"id": "getting-started/contributing/Start Contributing/why-the-guidelines",
+	"isDocsHomePage": false,
+	"title": "Contributing",
+	"description": "First off, thank you for considering contributing to this project.",
+	"source": "@site/docs/getting-started/contributing/Start Contributing/why-the-guidelines.md",
+	"sourceDirName": "getting-started/contributing/Start Contributing",
+	"slug": "/getting-started/contributing/Start Contributing/why-the-guidelines",
+	"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/why-the-guidelines",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/Start Contributing/why-the-guidelines.md",
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"title": "Contributing",
+		"sidebar_label": "Start Contributing",
+		"sidebar_position": 0
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Security Disclosures",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/security"
+	},
+	"next": {
+		"title": "External Contributions Workflow",
+		"permalink": "/action-masterminds/docs/getting-started/contributing/Start Contributing/external"
+	}
+}

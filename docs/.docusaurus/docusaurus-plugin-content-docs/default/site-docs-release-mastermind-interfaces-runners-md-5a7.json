@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/Runners",
+	"id": "release-mastermind/interfaces/Runners",
+	"isDocsHomePage": false,
+	"title": "Interface: Runners",
+	"description": "Properties",
+	"source": "@site/docs/release-mastermind/interfaces/Runners.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/Runners",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Runners",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Runners",
+		"title": "Interface: Runners",
+		"sidebar_label": "Runners",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "Repo",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Repo"
+	},
+	"next": {
+		"title": "ScheduleConditionConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ScheduleConditionConfig"
+	}
+}

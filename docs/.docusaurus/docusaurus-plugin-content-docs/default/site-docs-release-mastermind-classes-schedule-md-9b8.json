@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/classes/Schedule",
+	"id": "release-mastermind/classes/Schedule",
+	"isDocsHomePage": false,
+	"title": "Class: Schedule",
+	"description": "Hierarchy",
+	"source": "@site/docs/release-mastermind/classes/Schedule.md",
+	"sourceDirName": "release-mastermind/classes",
+	"slug": "/release-mastermind/classes/Schedule",
+	"permalink": "/docs/release-mastermind/classes/Schedule",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Schedule",
+		"title": "Class: Schedule",
+		"sidebar_label": "Schedule",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "PullRequests",
+		"permalink": "/docs/release-mastermind/classes/PullRequests"
+	},
+	"next": {
+		"title": "Utils",
+		"permalink": "/docs/release-mastermind/classes/Utils"
+	}
+}

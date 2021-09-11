@@ -1,0 +1,28 @@
+{
+	"unversionedId": "getting-started/contributing/contributing",
+	"id": "getting-started/contributing/contributing",
+	"isDocsHomePage": false,
+	"title": "Contributing",
+	"description": "First off, thank you for considering contributing to this project.",
+	"source": "@site/docs/getting-started/contributing/contributing.md",
+	"sourceDirName": "getting-started/contributing",
+	"slug": "/getting-started/contributing/contributing",
+	"permalink": "/docs/getting-started/contributing/contributing",
+	"editUrl": "https://github.com/videndum/action-masterminds/edit/develop/docs/docs/getting-started/contributing/contributing.md",
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"title": "Contributing",
+		"sidebar_label": "Start Contributing",
+		"sidebar_position": 0
+	},
+	"sidebar": "getting",
+	"previous": {
+		"title": "Using Regex",
+		"permalink": "/docs/getting-started/features/regex"
+	},
+	"next": {
+		"title": "Code of Conduct",
+		"permalink": "/docs/getting-started/contributing/CODE_OF_CONDUCT"
+	}
+}

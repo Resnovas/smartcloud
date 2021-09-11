@@ -1,0 +1,30 @@
+{
+	"unversionedId": "api/classes/Schedule",
+	"id": "api/classes/Schedule",
+	"isDocsHomePage": false,
+	"title": "Class: Schedule",
+	"description": "Hierarchy",
+	"source": "@site/docs/api/classes/Schedule.md",
+	"sourceDirName": "api/classes",
+	"slug": "/api/classes/Schedule",
+	"permalink": "/docs/next/api/classes/Schedule",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Schedule",
+		"title": "Class: Schedule",
+		"sidebar_label": "Schedule",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "someSidebar",
+	"previous": {
+		"title": "PullRequests",
+		"permalink": "/docs/next/api/classes/PullRequests"
+	},
+	"next": {
+		"title": "Utils",
+		"permalink": "/docs/next/api/classes/Utils"
+	}
+}

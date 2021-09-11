@@ -1,0 +1,30 @@
+{
+	"unversionedId": "release-mastermind/interfaces/Config",
+	"id": "release-mastermind/interfaces/Config",
+	"isDocsHomePage": false,
+	"title": "Interface: Config",
+	"description": "Properties",
+	"source": "@site/docs/release-mastermind/interfaces/Config.md",
+	"sourceDirName": "release-mastermind/interfaces",
+	"slug": "/release-mastermind/interfaces/Config",
+	"permalink": "/action-masterminds/docs/release-mastermind/interfaces/Config",
+	"editUrl": null,
+	"version": "current",
+	"sidebarPosition": 0,
+	"frontMatter": {
+		"id": "Config",
+		"title": "Interface: Config",
+		"sidebar_label": "Config",
+		"sidebar_position": 0,
+		"custom_edit_url": null
+	},
+	"sidebar": "release",
+	"previous": {
+		"title": "ApiProps",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/ApiProps"
+	},
+	"next": {
+		"title": "IssueConditionConfig",
+		"permalink": "/action-masterminds/docs/release-mastermind/interfaces/IssueConditionConfig"
+	}
+}
