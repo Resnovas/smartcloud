@@ -17,7 +17,6 @@ export async function add(
 			labels: [label]
 		})
 }
-
 export async function create(this: Utils, label: Label, ref?: string) {
 	const color = this.parsingData.formatColor(label.color)
 	if (!this.dryRun)
@@ -72,6 +71,7 @@ export async function remove(
 			name: label
 		})
 }
+
 
 export async function update(
 	this: Utils,

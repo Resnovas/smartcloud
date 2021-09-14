@@ -133,6 +133,7 @@ export class PullRequests extends Contexts {
 				throw err
 			})
 
+
 		let currentVersion: Version | undefined = undefined
 		if (config.versioning)
 			currentVersion = await utils.versioning
@@ -259,6 +260,7 @@ export class PullRequests extends Contexts {
 		if (
 			(!this.configs.versioning || this.configs.versioning.type == "SemVer") &&
 			this.newVersion?.semantic
+
 		) {
 			if (
 				this.context.props.labels[labels.major] || labels.breaking

@@ -255,7 +255,6 @@ export default class Action {
 		 * @author TGTGamer
 		 * @since 1.1.0
 		 */
-
 		const configs = await this.processConfig().catch((err) => {
 			throw log(
 				LoggingLevels.error,
@@ -267,6 +266,7 @@ export default class Action {
 			throw log(LoggingLevels.error, `No config data.`)
 		}
 		log(LoggingLevels.debug, `Config: ${JSON.stringify(configs)}`)
+
 
 		if (configs.labels && this.util.shouldRun("label")) {
 			/**
