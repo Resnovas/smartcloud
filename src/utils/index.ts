@@ -1,5 +1,5 @@
 /** @format */
-
+import simpleGit, { SimpleGit, SimpleGitOptions } from "simple-git"
 import { Github } from ".."
 import { Config, Label, Runners } from "../action"
 import { Reviews, UtilThis } from "../conditions"
@@ -22,14 +22,27 @@ export class Utils {
 	repo: Repo
 	dryRun: boolean
 	skipDelete: boolean
+	ref?: string
+	git: SimpleGit
 	constructor(
 		props: ApiProps,
-		options: { dryRun: boolean; skipDelete: boolean }
+		options: { dryRun: boolean; skipDelete: boolean; ref?: string },
+		{ git }: { git?: SimpleGitOptions }
 	) {
 		this.client = props.client
 		this.repo = props.repo
 		this.dryRun = options.dryRun
 		this.skipDelete = options.skipDelete
+		this.ref = options.ref
+		this.git = git
+			? simpleGit({
+					...git,
+					baseDir: !git.baseDir ? process.cwd() : git.baseDir,
+					binary: "git",
+					maxConcurrentProcesses: 6,
+					config: !git.config ? [] : git.config
+			  })
+			: simpleGit()
 	}
 	api = {
 		files: {
@@ -38,6 +51,14 @@ export class Utils {
 		},
 		issues: {
 			get: (IDNumber: number) => APIIssues.get.call(this, IDNumber),
+			create: (
+				title: string,
+				body: string,
+				labels: string[],
+				assignees: string[],
+				milestone: string
+			) =>
+				APIIssues.create.call(this, title, body, labels, assignees, milestone),
 			list: ({
 				state,
 				sort,

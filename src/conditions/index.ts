@@ -28,7 +28,7 @@ export type CurContext =
  * @private
  */
 export interface PRContext extends GeneralContext {
-	currentVersion: Version
+	currentVersion?: Version
 	IDNumber: number
 	props: PRProps
 }
@@ -37,7 +37,7 @@ export interface PRContext extends GeneralContext {
  * @private
  */
 export interface IssueContext extends GeneralContext {
-	currentVersion: Version
+	currentVersion?: Version
 	IDNumber: number
 	props: IssueProps
 }
@@ -46,7 +46,7 @@ export interface IssueContext extends GeneralContext {
  * @private
  */
 export interface ProjectContext extends GeneralContext {
-	currentVersion: Version
+	currentVersion?: Version
 	IDNumber: number
 	props: ProjectProps
 }

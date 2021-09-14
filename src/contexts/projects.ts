@@ -90,12 +90,18 @@ export class Project extends Contexts {
 			throw err
 		})
 
-		const currentVersion: Version = await utils.versioning
-			.parse(config, config.project?.ref)
-			.catch((err) => {
-				log(LoggingLevels.error, `Error thrown while parsing versioning: `, err)
-				throw err
-			})
+		let currentVersion: Version | undefined = undefined
+		if (config.versioning)
+			currentVersion = await utils.versioning
+				.parse(config, config.issue?.ref)
+				.catch((err) => {
+					log(
+						LoggingLevels.error,
+						`Error thrown while parsing versioning: `,
+						err
+					)
+					throw err
+				})
 
 		let localProject
 		localProject = await utils.api.project.projects.get(

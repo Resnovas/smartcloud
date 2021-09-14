@@ -14,18 +14,19 @@ export async function get(
 	const gotdata: any = await this.client.rest.repos.getContent({
 		owner: this.repo.owner || github.context.repo.owner,
 		repo: this.repo.repo || github.context.repo.repo,
-		ref: ref || "master",
+		ref: ref || this.ref || "master",
 		path: file
 	})
 	return Buffer.from(gotdata.data.content, gotdata.data.encoding).toString()
 }
 
-export async function list(this: Utils, IDNumber: number) {
+export async function list(this: Utils, IDNumber: number, ref?: string) {
 	const files = await this.client.rest.pulls
 		.listFiles({
 			...this.repo,
 			pull_number: IDNumber,
-			per_page: 100
+			per_page: 100,
+			ref: ref || this.ref || "master"
 		})
 		.catch((err) => {
 			console.log(err)

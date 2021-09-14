@@ -10,6 +10,7 @@ import {
 	LogReturn
 } from "@videndum/utilities"
 import path from "path"
+import { SimpleGitOptions } from "simple-git"
 import Action, { Runners } from "./action"
 import { Repo } from "./utils"
 export * from "./action"
@@ -96,12 +97,13 @@ async function run() {
 	const fillEmpty = Boolean(core.getInput("fillEmpty") || local.FILL)
 	const skipDelete = Boolean(core.getInput("skipDelete") || local.SKIPDELETE)
 	const options: Options = {
-		configPath: path.join(GITHUB_WORKSPACE, core.getInput("config")),
+		configPath:
+			local.configPath || path.join(GITHUB_WORKSPACE, core.getInput("config")),
 		configJSON:
 			configInput.releaseMastermind ||
 			(configInput.pr || configInput.issue || configInput.project
 				? configInput
-				: local == undefined
+				: local == undefined || local.configJSON == undefined
 				? undefined
 				: /* eslint-disable @typescript-eslint/no-var-requires */
 				require(local.configJSON).releaseMastermind
@@ -112,7 +114,8 @@ async function run() {
 		dryRun,
 		fillEmpty,
 		skipDelete,
-		repo
+		repo,
+		ref: local.ref || undefined
 	}
 	const action = new Action(getOctokit(GITHUB_TOKEN), options)
 	action.run().catch((err) => {
@@ -157,4 +160,12 @@ export interface Options {
 	 * The repo to use
 	 */
 	repo?: Repo
+	/**
+	 * The Git settings to use
+	 */
+	git?: SimpleGitOptions
+	/**
+	 * The ref to use
+	 */
+	ref?: string
 }

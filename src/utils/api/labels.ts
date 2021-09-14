@@ -3,33 +3,46 @@
 import { Utils } from ".."
 import { Label, Labels } from "../../action"
 
-export async function add(this: Utils, IDNumber: number, label: string) {
+export async function add(
+	this: Utils,
+	IDNumber: number,
+	label: string,
+	ref?: string
+) {
 	if (!this.dryRun)
 		await this.client.rest.issues.addLabels({
 			...this.repo,
+			ref: ref || this.ref || "master",
 			issue_number: IDNumber,
 			labels: [label]
 		})
 }
 
-export async function create(this: Utils, label: Label) {
+export async function create(this: Utils, label: Label, ref?: string) {
 	const color = this.parsingData.formatColor(label.color)
 	if (!this.dryRun)
-		await this.client.rest.issues.createLabel({ ...this.repo, ...label, color })
+		await this.client.rest.issues.createLabel({
+			...this.repo,
+			ref: ref || this.ref || "master",
+			...label,
+			color
+		})
 }
 
-export async function del(this: Utils, name: string) {
+export async function del(this: Utils, name: string, ref?: string) {
 	if (!this.dryRun)
 		await this.client.rest.issues.deleteLabel({
 			...this.repo,
+			ref: ref || this.ref || "master",
 			name
 		})
 }
 
-export async function get(this: Utils): Promise<Labels> {
+export async function get(this: Utils, ref?: string): Promise<Labels> {
 	const labels = (
 		await this.client.rest.issues.listLabelsForRepo({
-			...this.repo
+			...this.repo,
+			ref: ref || this.ref || "master"
 		})
 	).data
 
@@ -45,20 +58,32 @@ export async function get(this: Utils): Promise<Labels> {
 	}, {})
 }
 
-export async function remove(this: Utils, IDNumber: number, label: string) {
+export async function remove(
+	this: Utils,
+	IDNumber: number,
+	label: string,
+	ref?: string
+) {
 	if (!this.dryRun)
 		await this.client.rest.issues.removeLabel({
 			...this.repo,
+			ref: ref || this.ref || "master",
 			issue_number: IDNumber,
 			name: label
 		})
 }
 
-export async function update(this: Utils, current_name: string, label: Label) {
+export async function update(
+	this: Utils,
+	current_name: string,
+	label: Label,
+	ref?: string
+) {
 	const color = this.parsingData.formatColor(label.color)
 	if (!this.dryRun)
 		await this.client.rest.issues.updateLabel({
 			...this.repo,
+			ref: ref || this.ref || "master",
 			current_name,
 			name: label.name,
 			description: label.description,

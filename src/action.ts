@@ -4,7 +4,6 @@ import * as core from "@actions/core"
 import { context as Context } from "@actions/github"
 import { GitHub } from "@actions/github/lib/utils"
 import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
-import fs from "fs"
 import { log, Options } from "."
 import {
 	CurContext,
@@ -206,6 +205,7 @@ export default class Action {
 	fillEmpty: Options["fillEmpty"]
 	repo = context.repo || {}
 	util: Utils
+	ref?: string
 
 	constructor(client: Github, options: Options) {
 		log(
@@ -226,9 +226,13 @@ export default class Action {
 		this.configJSON = options.configJSON
 		this.configPath = options.configPath
 		this.fillEmpty = options.fillEmpty
+		this.ref = options.ref || context.ref
 		this.util = new Utils(
 			{ client, repo: this.repo },
-			{ dryRun: options.dryRun, skipDelete: options.skipDelete }
+			{ dryRun: options.dryRun, skipDelete: options.skipDelete, ref: this.ref },
+			{
+				git: options.git
+			}
 		)
 	}
 
@@ -251,7 +255,6 @@ export default class Action {
 		 * @author TGTGamer
 		 * @since 1.1.0
 		 */
-		log(LoggingLevels.debug, `Config: ${JSON.stringify(this.configJSON)}`)
 
 		const configs = await this.processConfig().catch((err) => {
 			throw log(
@@ -263,6 +266,7 @@ export default class Action {
 		if (!configs.runners[0]) {
 			throw log(LoggingLevels.error, `No config data.`)
 		}
+		log(LoggingLevels.debug, `Config: ${JSON.stringify(configs)}`)
 
 		if (configs.labels && this.util.shouldRun("label")) {
 			/**
@@ -353,12 +357,11 @@ export default class Action {
 	 */
 	async processConfig(): Promise<Runners> {
 		if (!this.configJSON?.runners[0]) {
-			if (!fs.existsSync(this.configPath)) {
-				throw new Error(`config not found at "${this.configPath}"`)
-			}
 			const pathConfig = await JSON.parse(
-				fs.readFileSync(this.configPath).toString()
+				await this.util.api.files.get(this.configPath)
 			)
+			if (!pathConfig)
+				throw new Error(`config not found at "${this.configPath}"`)
 			if (!pathConfig.releaseMastermind) return pathConfig
 			else return pathConfig.releaseMastermind
 		} else {

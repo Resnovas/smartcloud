@@ -133,13 +133,18 @@ export class PullRequests extends Contexts {
 				throw err
 			})
 
-		const currentVersion: Version = await utils.versioning
-			.parse(config, config.pr?.ref)
-			.catch((err) => {
-				log(LoggingLevels.error, `Error thrown while parsing versioning: `, err)
-				throw err
-			})
-
+		let currentVersion: Version | undefined = undefined
+		if (config.versioning)
+			currentVersion = await utils.versioning
+				.parse(config, config.issue?.ref)
+				.catch((err) => {
+					log(
+						LoggingLevels.error,
+						`Error thrown while parsing versioning: `,
+						err
+					)
+					throw err
+				})
 		return {
 			ref: pr.base.ref,
 			sha: context.sha,
@@ -253,7 +258,7 @@ export class PullRequests extends Contexts {
 		if (!labels || !this.context.props.labels) return
 		if (
 			(!this.configs.versioning || this.configs.versioning.type == "SemVer") &&
-			this.newVersion.semantic
+			this.newVersion?.semantic
 		) {
 			if (
 				this.context.props.labels[labels.major] || labels.breaking
