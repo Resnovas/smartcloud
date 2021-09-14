@@ -14,23 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     if: (github.event.comment.body == 'recheckcla' || github.event.comment.body == 'I have read the CLA Document and I hereby sign the CLA' || github.event_name == 'pull_request' )
     steps:
-      - uses: actions/checkout@v2.3.4
-      - name: Manage Github Secrets
-        uses: ./packages/variable-mastermind/
-        with:
-          settings: ${{ secrets.SETTINGS }}
-          settingsjson: ".github/allconfigs.json"
-          mode: "environment"
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: CLA Assistant
         if: ${{env.cla_enabled}} == true
         uses: cla-assistant/github-action@v2.1.3-beta
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          path-to-signatures: "${{env.cla_path}}"
-          path-To-cladocument: "https://github.com/${{github.repository}}/${{env.claDocs}}"
-          label: ${{env.cla_label}}
-          whitelist: join(${{env.auto_whitelist}})
+          path-to-signatures: ".github/cla.json"
+          path-To-cladocument: "https://github.com/${{github.repository}}/docs/getting-started/contributing/CODE_OF_CONDUCT.md"
+          label: true
+          whitelist: "dependabot[bot], dependabot-preview[bot], github-actions[bot], github-actions, github-user, actions-user, web-flow, VidendumStudios"
         continue-on-error: true

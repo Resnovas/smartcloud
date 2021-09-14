@@ -45,7 +45,7 @@ export class Contexts {
 	config: PullRequestConfig | IssueConfig | ProjectConfig
 	curContext: CurContext
 	context: ProjectContext | IssueContext | PRContext | Partial<ScheduleContext>
-	newVersion: Version = {}
+	newVersion?: Version = {}
 	util: Utils
 	retryLimit: number
 	dryRun: boolean

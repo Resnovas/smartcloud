@@ -2,10 +2,33 @@
 
 import { Utils } from ".."
 
-export async function get(this: Utils, IDNumber: number) {
+export async function create(
+	this: Utils,
+	title: string,
+	body: string,
+	labels: string[],
+	assignees: string[],
+	milestone: string,
+	ref?: string
+) {
+	return (
+		await this.client.rest.issues.create({
+			...this.repo,
+			ref: ref || this.ref || "master",
+			title,
+			body,
+			milestone,
+			labels,
+			assignees
+		})
+	).data
+}
+
+export async function get(this: Utils, IDNumber: number, ref?: string) {
 	return (
 		await this.client.rest.issues.get({
 			...this.repo,
+			ref: ref || this.ref || "master",
 			issue_number: IDNumber
 		})
 	).data
@@ -16,17 +39,20 @@ export async function list(
 		state,
 		sort,
 		direction,
-		page
+		page,
+		ref
 	}: {
 		state?: "open" | "closed" | "all"
 		sort?: "created" | "updated" | "comments"
 		direction?: "asc" | "desc"
 		page?: number
+		ref?: string
 	}
 ) {
 	return (
 		await this.client.rest.issues.listForRepo({
 			...this.repo,
+			ref: ref || this.ref || "master",
 			state,
 			sort,
 			direction,
@@ -37,44 +63,49 @@ export async function list(
 }
 
 export const comments = {
-	async list(this: Utils, IDNumber: number) {
+	async list(this: Utils, IDNumber: number, ref?: string) {
 		return (
 			await this.client.rest.issues.listComments({
 				...this.repo,
+				ref: ref || this.ref || "master",
 				issue_number: IDNumber
 			})
 		).data
 	},
-	async get(this: Utils, comment_id: number) {
+	async get(this: Utils, comment_id: number, ref?: string) {
 		return (
 			await this.client.rest.issues.getComment({
 				...this.repo,
+				ref: ref || this.ref || "master",
 				comment_id
 			})
 		).data
 	},
-	async create(this: Utils, IDNumber: number, body: string) {
+	async create(this: Utils, IDNumber: number, body: string, ref?: string) {
 		return (
 			await this.client.rest.issues.createComment({
 				...this.repo,
+				ref: ref || this.ref || "master",
 				issue_number: IDNumber,
 				body
 			})
 		).data
 	},
-	async update(this: Utils, comment_id: number, body: string) {
+	async update(this: Utils, comment_id: number, body: string, ref?: string) {
 		return (
 			await this.client.rest.issues.updateComment({
 				...this.repo,
+				ref: ref || this.ref || "master",
 				comment_id,
 				body
 			})
 		).data
 	},
-	async delete(this: Utils, comment_id: number) {
+	async delete(this: Utils, comment_id: number, ref?: string) {
 		return (
 			await this.client.rest.issues.deleteComment({
 				...this.repo,
+				ref: ref || this.ref || "master",
 				comment_id
 			})
 		).data

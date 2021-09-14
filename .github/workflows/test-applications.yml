@@ -6,37 +6,14 @@ on:
     types: [submitted]
 
 jobs:
-  convention-mastermind:
-    name: Convention Mastermind
-    runs-on: ubuntu-latest
-    if: ${{ github.event.review.state == 'approved'}}
-    steps:
-      - uses: actions/checkout@v2.3.4
-
-      - uses: ./packages/convention-mastermind/
-        with:
-          GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
-          config: .github/config/conventionMastermind.json
-          dryRun: true
   release-mastermind:
     name: Release Mastermind
     runs-on: ubuntu-latest
     if: ${{ github.event.review.state == 'approved'}}
     steps:
       - uses: actions/checkout@v2.3.4
-      - uses: ./packages/label-mastermind/
-        with:
-          GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
-          config: .github/config/labelMastermind.json
-          dryRun: true
+      - uses: ./
 
-  label-mastermind:
-    name: Label Mastermind
-    runs-on: ubuntu-latest
-    if: ${{ github.event.review.state == 'approved'}}
-    steps:
-      - uses: actions/checkout@v2.3.4
-      - uses: ./packages/release-mastermind/
         with:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
           config: .github/config/labelMastermind.json
