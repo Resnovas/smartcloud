@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.4
       - name: Release Mastermind
-        uses: Videndum/release-mastermind@0.0.0-alpha.7
+        uses: ./
         with:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
           config: .github/config.json
