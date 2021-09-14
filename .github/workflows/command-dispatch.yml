@@ -34,7 +34,7 @@ jobs:
       # Advanced JSON configuration
       - name: Slash Command Dispatch (JSON)
         id: scd
-        uses: peter-evans/slash-command-dispatch@v2.2.1
+        uses: peter-evans/slash-command-dispatch@v2.3.0
         with:
           token: ${{ secrets.BOT_TOKEN }}
           config: ${{env.command_settings}}
