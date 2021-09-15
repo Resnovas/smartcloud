@@ -98,7 +98,7 @@ async function run() {
 		fillEmpty,
 		skipDelete,
 		repo,
-		ref: local.ref || undefined
+		ref: local ? local.ref : undefined
 	}
 	const action = new Action(getOctokit(GITHUB_TOKEN), options)
 	action.run().catch((err) => {
