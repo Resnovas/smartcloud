@@ -7,7 +7,7 @@
 		"sourceMap": true,
 		"declarationMap": true,
 		// Compile
-		"target": "esnext",
+		"target": "es6",
 		"module": "commonjs",
 		"moduleResolution": "node",
 		"resolveJsonModule": true,
