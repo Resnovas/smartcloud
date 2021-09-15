@@ -9,6 +9,8 @@ import {
 	LoggingOptions,
 	LogReturn
 } from "@videndum/utilities"
+import fs from "fs"
+import { cwd } from "process"
 import { SimpleGitOptions } from "simple-git"
 import Action, { Runners } from "./action"
 import { Repo } from "./utils"
@@ -53,12 +55,14 @@ export async function log(
 	return L.log(data)
 }
 
-let local: any = undefined
+let localEx: boolean = fs.existsSync(cwd() + "/config.json")
+let local: any
 let dryRun: boolean
 let showLogs = false
 let repo: Repo | undefined = undefined
+console.log(cwd(), localEx)
 
-try {
+if (localEx) {
 	local = require("../config.json")
 	dryRun = local.GH_ACTION_LOCAL_TEST || core.getInput("dryRun") || false
 	showLogs = local.SHOW_LOGS || false
@@ -67,8 +71,6 @@ try {
 			repo: local.GITHUB_REPOSITORY,
 			owner: local.GITHUB_REPOSITORY_OWNER
 		} || undefined
-} catch (err) {
-	log(LoggingLevels.emergency, err.message, { errors: err })
 }
 
 /**
@@ -83,22 +85,21 @@ async function run() {
 			`${process.env.NPM_PACKAGE_NAME} is running in local dryrun mode. No Actions will be applyed`
 		)
 	const GITHUB_TOKEN =
-		core.getInput("GITHUB_TOKEN") ||
-		(local == undefined ? undefined : local.GITHUB_TOKEN)
+		core.getInput("GITHUB_TOKEN") || (!localEx ? undefined : local.GITHUB_TOKEN)
 	if (!GITHUB_TOKEN) {
 		return core.setFailed("No Token provided")
 	}
 	const fillEmpty = Boolean(core.getInput("fillEmpty") || local.FILL)
 	const skipDelete = Boolean(core.getInput("skipDelete") || local.SKIPDELETE)
 	const options: Options = {
-		configPath: local ? local.configPath : core.getInput("config"),
-		configRef: local ? local.configRef : core.getInput("configRef"),
+		configPath: localEx ? local.configPath : core.getInput("config"),
+		configRef: localEx ? local.configRef : core.getInput("configRef"),
 		showLogs,
 		dryRun,
 		fillEmpty,
 		skipDelete,
 		repo,
-		ref: local ? local.ref : undefined
+		ref: localEx ? local.ref : undefined
 	}
 	const action = new Action(getOctokit(GITHUB_TOKEN), options)
 	action.run().catch((err) => {

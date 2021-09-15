@@ -18,3 +18,4 @@ jobs:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
           config: .github/config/labelMastermind.json
           dryRun: true
+          configRef: develop
