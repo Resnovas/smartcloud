@@ -1,7 +1,7 @@
 {
-	"$schema": "../schema.json",
+	"$schema": "https://raw.githubusercontent.com/Videndum/smartcloud/develop/schema.json",
 	"labels": {
-		"$schema": "../../schema/labels.json",
+		"$schema": "https://raw.githubusercontent.com/Videndum/smartcloud/develop/schema/labels.json",
 		"abandoned": {
 			"name": "Status - Abandoned",
 			"color": "CFD3D7",
