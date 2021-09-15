@@ -3,16 +3,10 @@
 import { Utils } from ".."
 import { Label, Labels } from "../../action"
 
-export async function add(
-	this: Utils,
-	IDNumber: number,
-	label: string,
-	ref?: string
-) {
+export async function add(this: Utils, IDNumber: number, label: string) {
 	if (!this.dryRun)
 		await this.client.rest.issues.addLabels({
 			...this.repo,
-			ref: ref || this.ref || "master",
 			issue_number: IDNumber,
 			labels: [label]
 		})
