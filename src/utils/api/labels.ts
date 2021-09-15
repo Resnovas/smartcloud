@@ -72,7 +72,6 @@ export async function remove(
 		})
 }
 
-
 export async function update(
 	this: Utils,
 	current_name: string,

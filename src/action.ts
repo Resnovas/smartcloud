@@ -267,7 +267,6 @@ export default class Action {
 		}
 		log(LoggingLevels.debug, `Config: ${JSON.stringify(configs)}`)
 
-
 		if (configs.labels && this.util.shouldRun("label")) {
 			/**
 			 * Syncronise the labels
