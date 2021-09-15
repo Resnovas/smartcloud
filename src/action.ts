@@ -201,6 +201,7 @@ export default class Action {
 	opts: Options
 	configJSON: Options["configJSON"]
 	configPath: Options["configPath"]
+	configRef: Options["configRef"]
 	dryRun: Options["dryRun"]
 	fillEmpty: Options["fillEmpty"]
 	repo = context.repo || {}
@@ -225,6 +226,7 @@ export default class Action {
 		}
 		this.configJSON = options.configJSON
 		this.configPath = options.configPath
+		this.configRef = options.configRef
 		this.fillEmpty = options.fillEmpty
 		this.ref = options.ref || context.ref
 		this.util = new Utils(
@@ -258,8 +260,7 @@ export default class Action {
 		const configs = await this.processConfig().catch((err) => {
 			throw log(
 				LoggingLevels.error,
-				`Error thrown while processing config: `,
-				err
+				`Error thrown while processing config: ` + err
 			)
 		})
 		if (!configs.runners[0]) {
@@ -356,9 +357,14 @@ export default class Action {
 	 */
 	async processConfig(): Promise<Runners> {
 		if (!this.configJSON?.runners[0]) {
+			if (!this.configPath)
+				throw new Error(
+					`Configpath  (${this.configPath}) & configjson are undefined`
+				)
 			const pathConfig = await JSON.parse(
-				await this.util.api.files.get(this.configPath)
+				await this.util.api.files.get(this.configPath, this.configRef)
 			)
+			log(LoggingLevels.debug, `pathConfig: ${JSON.stringify(pathConfig)}`)
 			if (!pathConfig)
 				throw new Error(`config not found at "${this.configPath}"`)
 			if (!pathConfig.releaseMastermind) return pathConfig

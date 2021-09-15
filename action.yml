@@ -18,6 +18,10 @@ inputs:
     description: "JSON string with configuration data"
     default: ""
     required: false
+  configRef:
+    description: "The ref to use when getting the config"
+    default: ""
+    required: false
   fillEmpty:
     description: "Fill Empty context configuration with shared configs"
     default: "true"

@@ -9,7 +9,6 @@ import {
 	LoggingOptions,
 	LogReturn
 } from "@videndum/utilities"
-import path from "path"
 import { SimpleGitOptions } from "simple-git"
 import Action, { Runners } from "./action"
 import { Repo } from "./utils"
@@ -72,8 +71,6 @@ try {
 	log(LoggingLevels.emergency, err.message, { errors: err })
 }
 
-const { GITHUB_WORKSPACE = "" } = process.env
-
 /**
  * Runs the action
  * @author TGTGamer
@@ -85,9 +82,6 @@ async function run() {
 			LoggingLevels.notice,
 			`${process.env.NPM_PACKAGE_NAME} is running in local dryrun mode. No Actions will be applyed`
 		)
-	const configInput = JSON.parse(
-		core.getInput("configJSON") === "" ? "{}" : core.getInput("configJSON")
-	)
 	const GITHUB_TOKEN =
 		core.getInput("GITHUB_TOKEN") ||
 		(local == undefined ? undefined : local.GITHUB_TOKEN)
@@ -97,19 +91,8 @@ async function run() {
 	const fillEmpty = Boolean(core.getInput("fillEmpty") || local.FILL)
 	const skipDelete = Boolean(core.getInput("skipDelete") || local.SKIPDELETE)
 	const options: Options = {
-		configPath:
-			local.configPath || path.join(GITHUB_WORKSPACE, core.getInput("config")),
-		configJSON:
-			configInput.releaseMastermind ||
-			(configInput.pr || configInput.issue || configInput.project
-				? configInput
-				: local == undefined || local.configJSON == undefined
-				? undefined
-				: /* eslint-disable @typescript-eslint/no-var-requires */
-				require(local.configJSON).releaseMastermind
-				? require(local.configJSON).releaseMastermind
-				: require(local.configJSON)),
-		/* eslint-enable @typescript-eslint/no-var-requires */
+		configPath: local ? local.configPath : core.getInput("config"),
+		configRef: local ? local.configRef : core.getInput("configRef"),
 		showLogs,
 		dryRun,
 		fillEmpty,
@@ -135,11 +118,15 @@ export interface Options {
 	/**
 	 * The path to find the config
 	 */
-	configPath: string
+	configPath?: string
 	/**
 	 * The json configuration object
 	 */
-	configJSON: Runners
+	configJSON?: Runners
+	/**
+	 * The ref to use when retrieving config
+	 */
+	configRef?: string
 	/**
 	 * Should show logs?
 	 */

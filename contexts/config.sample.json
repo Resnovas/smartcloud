@@ -7,5 +7,7 @@
 	"SHOW_LOGS": true,
 	"GH_ACTION_LOCAL_TEST": true,
 	"github_context": "../context.json",
-	"configJSON": "../.github/config.json"
+	"configJSON": "../.github/config.json",
+	"configPath": ".github/config.json",
+	"configRef": "develop"
 }
