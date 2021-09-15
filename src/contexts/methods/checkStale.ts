@@ -113,7 +113,7 @@ export async function checkStale(
 		)
 
 		// If stale run the rest of the actions
-		if (stale)
+		if (await stale)
 			if (this.config.labels && !this.config.labels[StaleLabel])
 				// Apply the stale label
 				this.config.labels[StaleLabel] = {
@@ -122,7 +122,7 @@ export async function checkStale(
 				}
 
 		// Create the stale comment
-		!this.dryRun && createComment.call(this, config.stale, stale)
+		!this.dryRun && createComment.call(this, config.stale, await stale)
 	}
 	if (config.abandoned) {
 		log(
@@ -166,7 +166,7 @@ export async function checkStale(
 		const AbandonedLabel = this.configs.labels?.[config.abandoned.label]
 		if (!AbandonedLabel) throw new Error("Stale Label must exist")
 
-		if (abandoned && AbandonedLabel)
+		if ((await abandoned) && AbandonedLabel)
 			if (this.config.labels && !this.config.labels[AbandonedLabel])
 				// Apply the stale label
 				this.config.labels[AbandonedLabel] = {
@@ -174,7 +174,7 @@ export async function checkStale(
 					requires: 1
 				}
 		// Create the abandoned comment
-		!this.dryRun && createComment.call(this, config.abandoned, abandoned)
+		!this.dryRun && createComment.call(this, config.abandoned, await abandoned)
 	}
 }
 

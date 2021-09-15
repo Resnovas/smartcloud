@@ -19,7 +19,7 @@ import { Issues, Project, PullRequests } from "./contexts"
 import { SharedConventionsConfig } from "./contexts/methods/conventions"
 import { Release } from "./contexts/methods/release"
 
-const forConditions = <
+const forConditions = async <
 	T extends IssueCondition | PRCondition | ProjectCondition
 >(
 	conditions: T[],
@@ -27,11 +27,12 @@ const forConditions = <
 ) => {
 	let matches = 0
 	for (const condition of conditions) {
+		const callbackRes = await callback(condition)
 		log(
 			LoggingLevels.debug,
-			`Condition: ${JSON.stringify(condition)} == ${callback(condition)}`
+			`Condition: ${JSON.stringify(condition)} == ${callbackRes}`
 		)
-		if (callback(condition)) {
+		if (callbackRes) {
 			matches++
 		}
 	}
@@ -41,7 +42,7 @@ const forConditions = <
  * Used to evaluate the conditions.
  * @private
  */
-export function evaluator(
+export async function evaluator(
 	this: UtilThis,
 	config:
 		| PRConditionConfig
@@ -62,19 +63,19 @@ export function evaluator(
 	 * TODO: fix this error
 	 */
 	// @ts-expect-error - an issue with conditions but dont know how to fix
-	const matches = forConditions(conditions, (condition) => {
+	const matches = await forConditions(conditions, async (condition) => {
 		const handler =
 			props.type == "issue"
-				? getIssueConditionHandler.call(
+				? await getIssueConditionHandler.call(
 						this as Issues,
 						condition as IssueCondition
 				  )
 				: props.type == "pr"
-				? getPRConditionHandler.call(
+				? await getPRConditionHandler.call(
 						this as PullRequests,
 						condition as PRCondition
 				  )
-				: getProjectConditionHandler.call(
+				: await getProjectConditionHandler.call(
 						this as Project,
 						condition as ProjectCondition
 				  )

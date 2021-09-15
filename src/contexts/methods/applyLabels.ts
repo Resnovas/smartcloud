@@ -35,7 +35,7 @@ export async function applyLabels(this: UtilThis) {
 		if (!shouldHaveLabel && hasLabel && this.context.props.labels)
 			delete this.context.props.labels[labelName.toLowerCase()]
 		if (
-			shouldHaveLabel &&
+			(await shouldHaveLabel) &&
 			!hasLabel &&
 			this.context.props.labels &&
 			this.runners.labels
@@ -45,7 +45,12 @@ export async function applyLabels(this: UtilThis) {
 		}
 
 		await this.util.labels
-			.addRemove(labelName, this.context.props.ID, hasLabel, shouldHaveLabel)
+			.addRemove(
+				labelName,
+				this.context.props.ID,
+				hasLabel,
+				await shouldHaveLabel
+			)
 			.catch((err) => {
 				log(
 					LoggingLevels.error,

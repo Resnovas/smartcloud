@@ -38,14 +38,14 @@ export async function del(this: Utils, name: string, ref?: string) {
 }
 
 export async function get(this: Utils, ref?: string): Promise<Labels> {
-	const labels = (
-		await this.client.rest.issues.listLabelsForRepo({
+	const labels = await this.client.paginate(
+		this.client.rest.issues.listLabelsForRepo.endpoint({
 			...this.repo,
 			ref: ref || this.ref || "master"
 		})
-	).data
+	)
 
-	const labelsMap = labels.map((label) => ({
+	const labelsMap = labels.map((label: any) => ({
 		name: label.name,
 		description: label.description != null ? label.description : undefined,
 		color: label.color

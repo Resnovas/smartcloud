@@ -60,7 +60,6 @@ let local: any
 let dryRun: boolean
 let showLogs = false
 let repo: Repo | undefined = undefined
-console.log(cwd(), localEx)
 
 if (localEx) {
 	local = require("../config.json")
