@@ -9,12 +9,14 @@ export interface ConditionCreatorMatches {
 	pattern: string
 }
 
-function creatorMatches(
+async function creatorMatches(
 	this: UtilThis,
 	condition: ConditionCreatorMatches,
 	issue: UtilProps
 ) {
-	const pattern = this.util.parsingData.processRegExpPattern(condition.pattern)
+	const pattern = await this.util.parsingData.processRegExpPattern(
+		condition.pattern
+	)
 	return pattern.test(issue.creator)
 }
 

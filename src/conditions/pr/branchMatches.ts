@@ -10,12 +10,14 @@ export interface ConditionBranchMatches {
 	pattern: string
 }
 
-function branchMatches(
+async function branchMatches(
 	this: Issues | PullRequests | Project,
 	condition: ConditionBranchMatches,
 	pr: PRProps
 ) {
-	const pattern = this.util.parsingData.processRegExpPattern(condition.pattern)
+	const pattern = await this.util.parsingData.processRegExpPattern(
+		condition.pattern
+	)
 	return pattern.test(pr.branch)
 }
 

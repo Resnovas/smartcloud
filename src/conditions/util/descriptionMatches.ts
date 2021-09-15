@@ -9,12 +9,14 @@ export interface ConditionDescriptionMatches {
 	pattern: string
 }
 
-function descriptionMatches(
+async function descriptionMatches(
 	this: UtilThis,
 	condition: ConditionDescriptionMatches,
 	issue: UtilProps
 ) {
-	const pattern = this.util.parsingData.processRegExpPattern(condition.pattern)
+	const pattern = await this.util.parsingData.processRegExpPattern(
+		condition.pattern
+	)
 	return pattern.test(issue.description)
 }
 

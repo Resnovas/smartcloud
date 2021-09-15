@@ -83,10 +83,10 @@ export class Project extends Contexts {
 
 		if (!project.content_url) throw new Error("No content information to get")
 		const issueNumber: number = project.content_url.split("/").pop()
-		const issue = await await utils.api.issues.get(issueNumber)
+		const issue = await utils.api.issues.get(issueNumber)
 
 		const labels = await utils.parsingData.labels(issue.labels).catch((err) => {
-			log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
+			log(LoggingLevels.error, `Error thrown while parsing labels: ` + err)
 			throw err
 		})
 
@@ -97,8 +97,7 @@ export class Project extends Contexts {
 				.catch((err) => {
 					log(
 						LoggingLevels.error,
-						`Error thrown while parsing versioning: `,
-						err
+						`Error thrown while parsing versioning: ` + err
 					)
 					throw err
 				})
@@ -170,12 +169,12 @@ export class Project extends Contexts {
 				// some code
 				if (this.config.labels && this.util.shouldRun("label"))
 					await this.applyLabels(this).catch((err) => {
-						log(LoggingLevels.error, "Error applying labels", err)
+						log(LoggingLevels.error, "Error applying labels" + err)
 					})
-				if (this.config.syncRemote && this.util.shouldRun("release"))
-					await this.syncRemoteProject(this).catch((err) => {
-						log(LoggingLevels.error, "Error syncing remote project", err)
-					})
+				// if (this.config.syncRemote && this.util.shouldRun("release"))
+				// 	await this.syncRemoteProject(this).catch((err) => {
+				// 		log(LoggingLevels.error, "Error syncing remote project"+ err)
+				// 	})
 				core.endGroup()
 			}
 		} catch (err) {

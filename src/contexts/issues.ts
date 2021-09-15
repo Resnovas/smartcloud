@@ -75,7 +75,7 @@ export class Issues extends Contexts {
 		)
 
 		const labels = await utils.parsingData.labels(issue.labels).catch((err) => {
-			log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
+			log(LoggingLevels.error, `Error thrown while parsing labels: ` + err)
 			throw err
 		})
 
@@ -86,8 +86,7 @@ export class Issues extends Contexts {
 				.catch((err) => {
 					log(
 						LoggingLevels.error,
-						`Error thrown while parsing versioning: `,
-						err
+						`Error thrown while parsing versioning: ` + err
 					)
 					throw err
 				})
@@ -129,12 +128,12 @@ export class Issues extends Contexts {
 			if (enforceConventionsSuccess) {
 				if (this.config.labels && this.util.shouldRun("label"))
 					await this.applyLabels(this).catch((err) => {
-						log(LoggingLevels.error, "Error applying label", err)
+						log(LoggingLevels.error, "Error applying label" + err)
 					})
 
 				if (this.config.assignProject && this.util.shouldRun("release"))
 					await this.assignProject(this).catch((err) => {
-						log(LoggingLevels.error, "Error assigning projects", err)
+						log(LoggingLevels.error, "Error assigning projects" + err)
 					})
 
 				core.endGroup()

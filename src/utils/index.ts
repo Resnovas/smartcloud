@@ -46,12 +46,13 @@ export class Utils {
 	}
 	api = {
 		files: {
-			get: (file: string, ref?: string) => APIFiles.get.call(this, file, ref),
-			list: (IDNumber: number) => APIFiles.list.call(this, IDNumber)
+			get: async (file: string, ref?: string) =>
+				APIFiles.get.call(this, file, ref),
+			list: async (IDNumber: number) => APIFiles.list.call(this, IDNumber)
 		},
 		issues: {
-			get: (IDNumber: number) => APIIssues.get.call(this, IDNumber),
-			create: (
+			get: async (IDNumber: number) => APIIssues.get.call(this, IDNumber),
+			create: async (
 				title: string,
 				body: string,
 				labels: string[],
@@ -59,7 +60,7 @@ export class Utils {
 				milestone: string
 			) =>
 				APIIssues.create.call(this, title, body, labels, assignees, milestone),
-			list: ({
+			list: async ({
 				state,
 				sort,
 				direction
@@ -69,39 +70,41 @@ export class Utils {
 				direction?: "asc" | "desc"
 			}) => APIIssues.list.call(this, { state, sort, direction }),
 			comments: {
-				list: (IDNumber: number) =>
+				list: async (IDNumber: number) =>
 					APIIssues.comments.list.call(this, IDNumber),
-				get: (IDNumber: number) => APIIssues.comments.get.call(this, IDNumber),
-				create: (IDNumber: number, body: string) =>
+				get: async (IDNumber: number) =>
+					APIIssues.comments.get.call(this, IDNumber),
+				create: async (IDNumber: number, body: string) =>
 					APIIssues.comments.create.call(this, IDNumber, body),
-				update: (comment_id: number, body: string) =>
+				update: async (comment_id: number, body: string) =>
 					APIIssues.comments.update.call(this, comment_id, body),
-				delete: (comment_id: number) =>
+				delete: async (comment_id: number) =>
 					APIIssues.comments.delete.call(this, comment_id)
 			}
 		},
 		labels: {
-			add: (IDNumber: number, label: string) =>
+			add: async (IDNumber: number, label: string) =>
 				APILabels.add.call(this, IDNumber, label),
-			create: (label: Label) => APILabels.create.call(this, label),
-			del: (name: string) => APILabels.del.call(this, name),
-			get: () => APILabels.get.call(this),
-			remove: (IDNumber: number, label: string) =>
+			create: async (label: Label) => APILabels.create.call(this, label),
+			del: async (name: string) => APILabels.del.call(this, name),
+			get: async () => APILabels.get.call(this),
+			remove: async (IDNumber: number, label: string) =>
 				APILabels.remove.call(this, IDNumber, label),
-			update: (current_name: string, label: Label) =>
+			update: async (current_name: string, label: Label) =>
 				APILabels.update.call(this, current_name, label)
 		},
 		project: {
 			column: {
-				list: (project_id: number) =>
+				list: async (project_id: number) =>
 					APIProject.column.list.call(this, project_id),
-				get: (column_id: number) => APIProject.column.get.call(this, column_id),
-				listCards: (column_id: number) =>
+				get: async (column_id: number) =>
+					APIProject.column.get.call(this, column_id),
+				listCards: async (column_id: number) =>
 					APIProject.column.listCards.call(this, column_id)
 			},
 			card: {
-				get: (card_id: number) => APIProject.card.get.call(this, card_id),
-				create: (
+				get: async (card_id: number) => APIProject.card.get.call(this, card_id),
+				create: async (
 					content_id: number,
 					column_id: number,
 					content_type?: "Issue" | "PullRequest"
@@ -112,24 +115,25 @@ export class Utils {
 						column_id,
 						content_type
 					),
-				move: (card_id: number, column_id: number) =>
+				move: async (card_id: number, column_id: number) =>
 					APIProject.card.move.call(this, card_id, column_id)
 			},
 			projects: {
-				get: (project_id: number) =>
+				get: async (project_id: number) =>
 					APIProject.projects.get.call(this, project_id),
-				org: (org: string) => APIProject.projects.org.call(this, org),
-				user: (user: string) => APIProject.projects.user.call(this, user),
-				repo: (owner: string, repo: string) =>
+				org: async (org: string) => APIProject.projects.org.call(this, org),
+				user: async (user: string) => APIProject.projects.user.call(this, user),
+				repo: async (owner: string, repo: string) =>
 					APIProject.projects.repo.call(this, owner, repo)
 			}
 		},
 		pullRequests: {
-			list: (IDNumber: number) => APIPullRequests.list.call(this, IDNumber),
-			changes: (additions: number, deletions: number) =>
+			list: async (IDNumber: number) =>
+				APIPullRequests.list.call(this, IDNumber),
+			changes: async (additions: number, deletions: number) =>
 				APIPullRequests.changes(additions, deletions),
 			reviews: {
-				create: (
+				create: async (
 					IDNumber: number,
 					body?: string,
 					event?: Event,
@@ -142,32 +146,33 @@ export class Utils {
 						event,
 						comments
 					),
-				update: (IDNumber: number, review_id: number, body: string) =>
+				update: async (IDNumber: number, review_id: number, body: string) =>
 					APIPullRequests.reviews.update.call(this, IDNumber, review_id, body),
-				dismiss: (IDNumber: number, review_id: number, message: string) =>
+				dismiss: async (IDNumber: number, review_id: number, message: string) =>
 					APIPullRequests.reviews.dismiss.call(
 						this,
 						IDNumber,
 						review_id,
 						message
 					),
-				list: (IDNumber: number) =>
+				list: async (IDNumber: number) =>
 					APIPullRequests.reviews.list.call(this, IDNumber),
-				requestedChanges: (reviews: Reviews) =>
+				requestedChanges: async (reviews: Reviews) =>
 					APIPullRequests.reviews.requestedChanges.call(this, reviews),
-				isApproved: (reviews: Reviews) =>
+				isApproved: async (reviews: Reviews) =>
 					APIPullRequests.reviews.isApproved(reviews),
-				pending: (reviews: number, requested_reviews: number) =>
+				pending: async (reviews: number, requested_reviews: number) =>
 					APIPullRequests.reviews.pending(reviews, requested_reviews)
 			}
 		},
 		tags: {
-			get: () => APITag.get.call(this)
+			get: async () => APITag.get.call(this)
 		}
 	}
 	labels = {
-		sync: (config: Runners["labels"]) => UtilLabels.sync.call(this, config),
-		addRemove: (
+		sync: async (config: Runners["labels"]) =>
+			UtilLabels.sync.call(this, config),
+		addRemove: async (
 			labelName: string,
 			IDNumber: number,
 			hasLabel: boolean,
@@ -182,21 +187,21 @@ export class Utils {
 			)
 	}
 	parsingData = {
-		formatColor: (color: string) => UtilParsingData.formatColor(color),
-		processRegExpPattern: (pattern: string) =>
+		formatColor: async (color: string) => UtilParsingData.formatColor(color),
+		processRegExpPattern: async (pattern: string) =>
 			UtilParsingData.processRegExpPattern(pattern),
-		normalize: (text: string) => UtilParsingData.normalize(text),
+		normalize: async (text: string) => UtilParsingData.normalize(text),
 		labels: async (labels: any) => UtilParsingData.parseLabels(labels)
 	}
 
-	respond = (
+	respond = async (
 		that: UtilThis,
 		success: boolean,
 		previousComment?: number,
 		body?: string
 	) => UtilRespond.respond.call(that, success, previousComment, body)
 	versioning = {
-		parse: (config: Config, ref?: string) =>
+		parse: async (config: Config, ref?: string) =>
 			UtilVersioning.parse.call(this, config, ref)
 	}
 
@@ -209,7 +214,7 @@ export class Utils {
 
 		// Test the fucntion against package
 
-		if (pack == "@videndum/release-mastermind") return true
+		if (pack == "@videndum/smartcloud") return true
 		else if (pack == "@videndum/convention-mastermind" && type == "convention")
 			return true
 		else if (pack == "@videndum/label-mastermind" && type == "label")
@@ -228,7 +233,7 @@ export interface ApiProps {
 
 export type functionality = "release" | "convention" | "label"
 export type packages =
-	| "@videndum/release-mastermind"
+	| "@videndum/smartcloud"
 	| "@videndum/label-mastermind"
 	| "@videndum/convention-mastermind"
 	| undefined

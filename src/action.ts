@@ -279,8 +279,7 @@ export default class Action {
 			await this.syncLabels(configs).catch((err) => {
 				throw log(
 					LoggingLevels.debug,
-					`Error thrown while syncronising labels: `,
-					err
+					`Error thrown while syncronising labels: ` + err
 				)
 			})
 			log(LoggingLevels.notice, `Successfully applied all labels`)
@@ -301,8 +300,6 @@ export default class Action {
 				return acc
 			}, {})
 
-			log(LoggingLevels.debug, `Config: ${JSON.stringify(config)}`)
-
 			/**
 			 * Get the context
 			 * @author TGTGamer
@@ -311,8 +308,7 @@ export default class Action {
 			const curContext = await this.processContext(config).catch((err) => {
 				throw log(
 					LoggingLevels.error,
-					`Error thrown while processing context: `,
-					err
+					`Error thrown while processing context: ` + err
 				)
 			})
 			log(LoggingLevels.debug, `Current Context: ${JSON.stringify(curContext)}`)
@@ -364,7 +360,6 @@ export default class Action {
 			const pathConfig = await JSON.parse(
 				await this.util.api.files.get(this.configPath, this.configRef)
 			)
-			log(LoggingLevels.debug, `pathConfig: ${JSON.stringify(pathConfig)}`)
 			if (!pathConfig)
 				throw new Error(`config not found at "${this.configPath}"`)
 			if (!pathConfig.releaseMastermind) return pathConfig
@@ -392,8 +387,7 @@ export default class Action {
 				(err) => {
 					throw log(
 						LoggingLevels.error,
-						`Error thrown while parsing PR context: `,
-						err
+						`Error thrown while parsing PR context: ` + err
 					)
 				}
 			)
@@ -441,8 +435,7 @@ export default class Action {
 				(err) => {
 					log(
 						LoggingLevels.error,
-						`Error thrown while parsing Project context: `,
-						err
+						`Error thrown while parsing Project context: ` + err
 					)
 					return err
 				}
@@ -465,8 +458,7 @@ export default class Action {
 			const ctx = await Schedule.parse(context).catch((err) => {
 				log(
 					LoggingLevels.error,
-					`Error thrown while parsing Schedule context: `,
-					err
+					`Error thrown while parsing Schedule context: ` + err
 				)
 				return err
 			})
@@ -535,8 +527,7 @@ export default class Action {
 		ctx.run().catch((err) => {
 			throw log(
 				LoggingLevels.error,
-				`Error thrown while running context: `,
-				err
+				`Error thrown while running context: ` + err
 			)
 		})
 	}

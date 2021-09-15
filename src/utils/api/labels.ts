@@ -18,7 +18,7 @@ export async function add(
 		})
 }
 export async function create(this: Utils, label: Label, ref?: string) {
-	const color = this.parsingData.formatColor(label.color)
+	const color = await this.parsingData.formatColor(label.color)
 	if (!this.dryRun)
 		await this.client.rest.issues.createLabel({
 			...this.repo,
@@ -78,7 +78,7 @@ export async function update(
 	label: Label,
 	ref?: string
 ) {
-	const color = this.parsingData.formatColor(label.color)
+	const color = await this.parsingData.formatColor(label.color)
 	if (!this.dryRun)
 		await this.client.rest.issues.updateLabel({
 			...this.repo,

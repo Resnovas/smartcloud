@@ -105,8 +105,7 @@ async function run() {
 	action.run().catch((err) => {
 		log(
 			LoggingLevels.emergency,
-			`${process.env.NPM_PACKAGE_NAME} did not complete due to error:`,
-			err
+			`${process.env.NPM_PACKAGE_NAME} did not complete due to error:` + err
 		)
 	})
 }

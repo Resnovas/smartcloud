@@ -77,7 +77,10 @@ export class Schedule extends Contexts {
 				const labels = await this.util.parsingData
 					.labels(issue.labels)
 					.catch((err) => {
-						log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
+						log(
+							LoggingLevels.error,
+							`Error thrown while parsing labels: ` + err
+						)
 						throw err
 					})
 
@@ -102,7 +105,7 @@ export class Schedule extends Contexts {
 				)
 				if (this.config.stale && this.util.shouldRun("label"))
 					await this.checkStale(this).catch((err) => {
-						log(LoggingLevels.error, "Error checking stale", err)
+						log(LoggingLevels.error, "Error checking stale:" + err)
 					})
 				log(
 					LoggingLevels.debug,
@@ -112,7 +115,7 @@ export class Schedule extends Contexts {
 				)
 				if (this.config.labels && this.util.shouldRun("label"))
 					await this.applyLabels(this).catch((err) => {
-						log(LoggingLevels.error, "Error applying label", err)
+						log(LoggingLevels.error, "Error applying label:" + err)
 					})
 			})
 			core.endGroup()

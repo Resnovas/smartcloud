@@ -88,48 +88,48 @@ export class PullRequests extends Contexts {
 
 		const IDNumber = pr.number
 		const labels = await utils.parsingData.labels(pr.labels).catch((err) => {
-			log(LoggingLevels.error, `Error thrown while parsing labels: `, err)
+			log(LoggingLevels.error, `Error thrown while parsing labels: ` + err)
 			throw err
 		})
 		const files: string[] = await utils.api.files
 			.list(IDNumber)
 			.catch((err) => {
-				log(LoggingLevels.error, `Error thrown while listing files: `, err)
+				log(LoggingLevels.error, `Error thrown while listing files: ` + err)
 				throw err
 			})
 
 		const changes: number = await utils.api.pullRequests
 			.changes(pr.additions, pr.deletions)
 			.catch((err) => {
-				log(LoggingLevels.error, `Error thrown while handling changes: `, err)
+				log(LoggingLevels.error, `Error thrown while handling changes: ` + err)
 				throw err
 			})
 
 		const reviews: Reviews = await utils.api.pullRequests.reviews
 			.list(IDNumber)
 			.catch((err) => {
-				log(LoggingLevels.error, `Error thrown while handling reviews: `, err)
+				log(LoggingLevels.error, `Error thrown while handling reviews: ` + err)
 				throw err
 			})
 
 		const pendingReview: boolean = await utils.api.pullRequests.reviews
 			.pending(reviews.length, pr.requested_reviewers.length)
 			.catch((err) => {
-				log(LoggingLevels.error, `Error thrown while handling reviews: `, err)
+				log(LoggingLevels.error, `Error thrown while handling reviews: ` + err)
 				throw err
 			})
 
 		const requestedChanges: number = await utils.api.pullRequests.reviews
 			.requestedChanges(reviews)
 			.catch((err) => {
-				log(LoggingLevels.error, `Error thrown while handling reviews: `, err)
+				log(LoggingLevels.error, `Error thrown while handling reviews: ` + err)
 				throw err
 			})
 
 		const approved: number = await utils.api.pullRequests.reviews
 			.isApproved(reviews)
 			.catch((err) => {
-				log(LoggingLevels.error, `Error thrown while handling reviews: `, err)
+				log(LoggingLevels.error, `Error thrown while handling reviews: ` + err)
 				throw err
 			})
 
@@ -140,8 +140,7 @@ export class PullRequests extends Contexts {
 				.catch((err) => {
 					log(
 						LoggingLevels.error,
-						`Error thrown while parsing versioning: `,
-						err
+						`Error thrown while parsing versioning: ` + err
 					)
 					throw err
 				})
@@ -187,11 +186,11 @@ export class PullRequests extends Contexts {
 			if (enforceConventionsSuccess) {
 				if (this.config.labels && this.util.shouldRun("label"))
 					await this.applyLabels(this).catch((err) => {
-						log(LoggingLevels.error, "Error applying labels", err)
+						log(LoggingLevels.error, "Error applying labels" + err)
 					})
 				if (this.config.assignProject && this.util.shouldRun("release"))
 					await this.assignProject(this).catch((err) => {
-						log(LoggingLevels.error, "Error assigning projects", err)
+						log(LoggingLevels.error, "Error assigning projects" + err)
 					})
 				// if (this.config.automaticApprove)
 				//   await this.automaticApprove(this.config.automaticApprove)
@@ -254,7 +253,7 @@ export class PullRequests extends Contexts {
 		})
 	}
 
-	bumpVersion(labels: Release["labels"]) {
+	async bumpVersion(labels: Release["labels"]) {
 		if (!labels || !this.context.props.labels) return
 		if (
 			(!this.configs.versioning || this.configs.versioning.type == "SemVer") &&

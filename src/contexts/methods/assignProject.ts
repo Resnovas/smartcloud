@@ -81,8 +81,8 @@ export async function assignProject(this: Issues | PullRequests) {
 					.catch((err) => {
 						log(
 							LoggingLevels.error,
-							`New error thrown when attempting to add to project "${project.name}"`,
-							err
+							`New error thrown when attempting to add to project "${project.name}"` +
+								err
 						)
 					}))
 		}
