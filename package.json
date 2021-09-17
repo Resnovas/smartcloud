@@ -65,7 +65,7 @@
 		"simple-git": "^2.44.0"
 	},
 	"devDependencies": {
-		"@instructure/cz-lerna-changelog": "^8.6.0",
+		"@instructure/cz-lerna-changelog": "^8.9.1",
 		"@types/jest": "^27.0.1",
 		"@types/node": "^16.4.2",
 		"@types/nodegit": "^0.27.3",
