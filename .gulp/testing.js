@@ -22,7 +22,7 @@ class Testing {
 	}
 	static cleanup = () => {
 		return src("package.json")
-			.pipe(exec(`del config.json context.json`))
+			.pipe(exec(`rm config.json context.json`))
 			.pipe(exec.reporter())
 	}
 	static copy = {

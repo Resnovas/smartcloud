@@ -61,7 +61,7 @@
 	"dependencies": {
 		"@actions/core": "^1.4.0",
 		"@actions/github": "^5.0.0",
-		"@videndum/utilities": "^1.0.0-alpha.17",
+		"@videndum/utilities": "^1.0.0-alpha.18",
 		"simple-git": "^2.44.0"
 	},
 	"devDependencies": {
