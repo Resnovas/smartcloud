@@ -550,10 +550,10 @@
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.3.tgz#f060bf6eaafae4d56a7dac618980838b0696e2ab"
   integrity sha512-FmuxfCuolpLl0AnQ2NHSzoUKWEJDFl63qXjzdoWBVyFCXzMGm1spBzk7LeHNoVCiWCF7mRVms9e6jEV9+MoPbg==
 
-"@instructure/command-utils@8.7.0":
-  version "8.7.0"
-  resolved "https://registry.yarnpkg.com/@instructure/command-utils/-/command-utils-8.7.0.tgz#8f7600029944b57aca3ed86322104052cd839e71"
-  integrity sha512-aLjn0rZbrIU7qwT48fsUuc00H5MzsPDapXnG+Aodi1xEkdmoOJX+e+A10wcDFBE/TVIo/Dl7HFA82GmTjBMn+Q==
+"@instructure/command-utils@8.10.2":
+  version "8.10.2"
+  resolved "https://registry.yarnpkg.com/@instructure/command-utils/-/command-utils-8.10.2.tgz#440af5b73ac8760f90b56877afa598ee722dd4b2"
+  integrity sha512-9IPKNJp9bz8hezia2QkkDUwP14xvSyj+v28bMLGHxg4h05Hb2JIKyyrpfLa+YXSLFATQsexkzqvZ/3sXaUTIrw==
   dependencies:
     chalk "^4"
     concurrently "^6"
@@ -561,24 +561,24 @@
     execa "^5"
     which "^2"
 
-"@instructure/cz-lerna-changelog@^8.6.0":
-  version "8.7.0"
-  resolved "https://registry.yarnpkg.com/@instructure/cz-lerna-changelog/-/cz-lerna-changelog-8.7.0.tgz#dfcf210483ce8a8f1d29cb8490867179a83fc2ff"
-  integrity sha512-jgxhMG5Gik7z/H7t6LY3F5oIaFQMU2UEPGNB7jztQpL6ZKtXE6WlWRlhWEKmGar+chaER327q+u0fDX+VVlEJg==
+"@instructure/cz-lerna-changelog@^8.10.2":
+  version "8.10.2"
+  resolved "https://registry.yarnpkg.com/@instructure/cz-lerna-changelog/-/cz-lerna-changelog-8.10.2.tgz#f20b381fa8d26a8381121086a143ae02aade2cde"
+  integrity sha512-Akyli2bUuoPHeiTz5ouX9HtOL3pkhEsjGaBAWbqtP+c6BLQDh5Mqrq57nOP6NER1KxgyFhI7JcIYSsfnnQzDfA==
   dependencies:
-    "@instructure/pkg-utils" "8.7.0"
+    "@instructure/pkg-utils" "8.10.2"
     "@semantic-release/commit-analyzer" "^8"
     chalk "^4"
     cz-customizable "^6.2.0"
     inquirer "^8"
     inquirer-autocomplete-prompt "^1.0.1"
 
-"@instructure/pkg-utils@8.7.0":
-  version "8.7.0"
-  resolved "https://registry.yarnpkg.com/@instructure/pkg-utils/-/pkg-utils-8.7.0.tgz#3fe737e754c1ffed5f60c25d160d8240ac0f9494"
-  integrity sha512-ZYWwMt3P3vbgbCF7VR4c+jrhv2CHGs0RMbPbJO4kDlXJ+5+M3XL2R1HWz2/XElS1TGnr1tmEQb44SFZgWjVNxQ==
+"@instructure/pkg-utils@8.10.2":
+  version "8.10.2"
+  resolved "https://registry.yarnpkg.com/@instructure/pkg-utils/-/pkg-utils-8.10.2.tgz#a93e00800c742dbd4f00ba0c310673296c92804c"
+  integrity sha512-bZ2MX5mpvnzcyCNlY3Ep8kx09xjhHLG218CavezlGyn80dOZtbCtzaF3KKlEX483GBjTODk20E9UlVjAz4BIlg==
   dependencies:
-    "@instructure/command-utils" "8.7.0"
+    "@instructure/command-utils" "8.10.2"
     "@lerna/package" "^4"
     read-pkg-up "^7"
 
