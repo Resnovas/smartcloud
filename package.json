@@ -66,7 +66,7 @@
 	},
 	"devDependencies": {
 		"@instructure/cz-lerna-changelog": "^8.10.2",
-		"@types/jest": "^27.0.1",
+		"@types/jest": "^27.0.2",
 		"@types/node": "^16.10.4",
 		"@types/nodegit": "^0.27.3",
 		"@typescript-eslint/eslint-plugin": "^4.31.1",
