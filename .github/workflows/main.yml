@@ -21,4 +21,4 @@ jobs:
         with:
           GITHUB_TOKEN: "${{ secrets.BOT_TOKEN }}"
           config: .github/config.json
-          configRef: develop
+          configRef: main
