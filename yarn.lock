@@ -9684,10 +9684,10 @@ prettier-linter-helpers@^1.0.0:
   dependencies:
     fast-diff "^1.1.2"
 
-prettier-plugin-organize-imports@^2.3.3:
-  version "2.3.3"
-  resolved "https://registry.yarnpkg.com/prettier-plugin-organize-imports/-/prettier-plugin-organize-imports-2.3.3.tgz#6877bcf8ca02569198d8f419c954a0d90a95de15"
-  integrity sha512-PBOwQ8vEIB2b7B3gCuBG7D+dqsr1fsTR4TSAjNacRVdHJrD0yzgz9grOLPSyfwJm+NUTZLyWeHoZ+1mHaUrk+g==
+prettier-plugin-organize-imports@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-organize-imports/-/prettier-plugin-organize-imports-3.0.2.tgz#104f9c9f238569e2a9fbdf2ec5eb6b8e95fdbe68"
+  integrity sha512-cA+Hh8EPNQSLG4hrAzcCwM2PmTjxbWNP3ZRT/Cub7cMHNH1lVaUyNLIHqtiqit6l0T1a0ugjYoRdXa9qpJFYuw==
 
 prettier-plugin-pkg@^0.10.0:
   version "0.10.0"
