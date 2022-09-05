@@ -11,7 +11,7 @@ jobs:
   profanityCheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
       - name: Profanity check step
         if: ${{env.checkProfanity}} == true
         uses: tailaiw/mind-your-language-action@v1.0.3
@@ -23,7 +23,7 @@ jobs:
     if: github.event.action == 'created'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.4
+      - uses: actions/checkout@v3
       - name: Get Configurations
         uses: ./packages/variable-mastermind/
         with:
