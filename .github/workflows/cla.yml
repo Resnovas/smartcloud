@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: CLA Assistant
         if: ${{env.cla_enabled}} == true
-        uses: cla-assistant/github-action@v2.1.3-beta
+        uses: cla-assistant/github-action@v2.2.1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
