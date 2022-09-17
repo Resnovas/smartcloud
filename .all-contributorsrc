@@ -43,6 +43,16 @@
         "test",
         "tool"
       ]
+    },
+    {
+      "login": "jbinda",
+      "name": "jbinda",
+      "avatar_url": "https://avatars.githubusercontent.com/u/21242757?v=4",
+      "profile": "https://github.com/jbinda",
+      "contributions": [
+        "code",
+        "maintenance"
+      ]
     }
   ],
   "contributorsPerLine": 7
