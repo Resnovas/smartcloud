@@ -1,0 +1,28 @@
+{
+  "projectName": "smartcloud",
+  "projectOwner": "Resnovas",
+  "repoType": "github",
+  "repoHost": "",
+  "files": [
+    "docs\\docs\\getting-started\\contributors.md",
+    "./readme.md"
+  ],
+  "imageSize": 100,
+  "commit": true,
+  "commitConvention": "angular",
+  "contributors": [
+    {
+      "login": "IvanFon",
+      "name": "Ivan",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1174413?v=4",
+      "profile": "https://github.com/IvanFon",
+      "contributions": [
+        "ideas",
+        "doc",
+        "code",
+        "infra"
+      ]
+    }
+  ],
+  "contributorsPerLine": 7
+}
