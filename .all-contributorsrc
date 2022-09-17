@@ -53,6 +53,16 @@
         "code",
         "maintenance"
       ]
+    },
+    {
+      "login": "VidendumStudios",
+      "name": "Videndum Studios Github Actions",
+      "avatar_url": "https://avatars.githubusercontent.com/u/68557851?v=4",
+      "profile": "https://github.com/VidendumStudios",
+      "contributions": [
+        "projectManagement",
+        "tool"
+      ]
     }
   ],
   "contributorsPerLine": 7
