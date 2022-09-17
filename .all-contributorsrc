@@ -72,6 +72,15 @@
       "contributions": [
         "plugin"
       ]
+    },
+    {
+      "login": "fossabot",
+      "name": "fossabot",
+      "avatar_url": "https://avatars.githubusercontent.com/u/29791463?v=4",
+      "profile": "https://fossa.com/",
+      "contributions": [
+        "security"
+      ]
     }
   ],
   "contributorsPerLine": 7
