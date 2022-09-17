@@ -22,6 +22,27 @@
         "code",
         "infra"
       ]
+    },
+    {
+      "login": "TGTGamer",
+      "name": "Jonathan S",
+      "avatar_url": "https://avatars.githubusercontent.com/u/11413796?v=4",
+      "profile": "https://keybase.io/TGTGamer",
+      "contributions": [
+        "question",
+        "bug",
+        "code",
+        "design",
+        "doc",
+        "example",
+        "ideas",
+        "infra",
+        "maintenance",
+        "projectManagement",
+        "security",
+        "test",
+        "tool"
+      ]
     }
   ],
   "contributorsPerLine": 7
