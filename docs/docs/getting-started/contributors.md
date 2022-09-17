@@ -26,6 +26,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
       <td align="center"><a href="https://fossa.com/"><img src="https://avatars.githubusercontent.com/u/29791463?v=4?s=100" width="100px;" alt=""/><br /><sub><b>fossabot</b></sub></a><br /><a href="#security-fossabot" title="Security">🛡️</a></td>
       <td align="center"><a href="https://github.com/web-flow"><img src="https://avatars.githubusercontent.com/u/19864447?v=4?s=100" width="100px;" alt=""/><br /><sub><b>GitHub Web Flow</b></sub></a><br /><a href="#projectManagement-web-flow" title="Project Management">📆</a></td>
     </tr>
+    <tr>
+      <td align="center"><a href="https://github.com/apps/github-actions"><img src="https://avatars.githubusercontent.com/in/15368?v=4?s=100" width="100px;" alt=""/><br /><sub><b>github-actions[bot]</b></sub></a><br /><a href="#projectManagement-github-actions[bot]" title="Project Management">📆</a></td>
+    </tr>
   </tbody>
 </table>
 
