@@ -10150,10 +10150,10 @@ prettier-plugin-organize-imports@^3.1.1:
   resolved "https://registry.yarnpkg.com/prettier-plugin-organize-imports/-/prettier-plugin-organize-imports-3.1.1.tgz#e581cb6fa528cf72f7d95b807ce38c3e51c3c27c"
   integrity sha512-6bHIQzybqA644h0WGUW3gpWEVbMBvzui5wCMRBi7qA++d5ov2xjjfDk8pxJJ/ardfZrGAwizKMq/fQMFdJ+0Zw==
 
-prettier-plugin-pkg@^0.10.0:
-  version "0.10.0"
-  resolved "https://registry.yarnpkg.com/prettier-plugin-pkg/-/prettier-plugin-pkg-0.10.0.tgz#07d5acfcc3818dbec957e21e9860d7c3f80e02d4"
-  integrity sha512-NvqkGTfAdB9Bu7txMaePQTieVAo4mvBGkWsdtOego5WwJT3cu6mLlYDBe/FEQ9gcW6+vjYiBwkP0qs3lBIZbfw==
+prettier-plugin-pkg@^0.17.1:
+  version "0.17.1"
+  resolved "https://registry.yarnpkg.com/prettier-plugin-pkg/-/prettier-plugin-pkg-0.17.1.tgz#f160c97fa971e8af28e78e34414b16db1360d18d"
+  integrity sha512-XPRRMQR5oseJXdfK8kQDj2LCV1UjmTuDlPbbJ8C2WLaATNhdvZLhQO0+NtWnRrQTP+erLR5cVxfcwyqF+3R8SA==
 
 prettier-plugin-sh@^0.12.8:
   version "0.12.8"
