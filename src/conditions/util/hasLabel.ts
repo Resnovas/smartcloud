@@ -7,8 +7,21 @@ const TYPE = "hasLabel"
 export interface ConditionHasLabel {
 	type: typeof TYPE
 	label: string
-	value: boolean
+	condition: boolean
 }
+
+/** Checks if an issue or pull request has a specific label applied.
+
+Example:
+
+```json
+{
+	"type": "hasLabel",
+	"label": "Type - Bug",
+	"condition": "false"
+}
+```
+ */
 
 function hasLabel(
 	this: UtilThis,
@@ -16,7 +29,7 @@ function hasLabel(
 	issue: UtilProps
 ) {
 	return (
-		Boolean(issue.labels?.[condition.label.toLowerCase()]) == condition.value
+		Boolean(issue.labels?.[condition.label.toLowerCase()]) == condition.condition
 	)
 }
 

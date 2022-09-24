@@ -1,6 +1,6 @@
 /** @format */
 
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import { log } from "../.."
 import { Project } from "../projects"
 

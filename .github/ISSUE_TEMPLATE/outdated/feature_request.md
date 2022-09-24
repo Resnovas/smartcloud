@@ -50,7 +50,7 @@ Include:
 - Node Version: [e.g. v16.8.0]
 - Yarn Version: [e.g. v1.22.4]
 - Docker Version: [e.g. Docker version 19.03.12, build 48a66213fe]
-- Package(s): [e.g. @videndum/release-mastermind]
+- Package(s): [e.g. @resnovas/release-mastermind]
 - URL: [e.g. https://console.smartcloud.gg/admin]
 
 ### What does success look like, and how can we measure

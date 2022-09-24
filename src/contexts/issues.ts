@@ -2,7 +2,7 @@
 
 import * as core from "@actions/core"
 import { Context } from "@actions/github/lib/context"
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import { log } from ".."
 import { Config, Runners, SharedConfig } from "../action"
 import { CurContext, IssueContext, Version } from "../conditions"
@@ -25,10 +25,6 @@ export interface IssueConfig extends SharedConfig {
 	createBranch?: { [label: string]: CreateBranch }
 }
 
-/**
- * The issue class.
- * @private
- */
 export class Issues extends Contexts {
 	context: IssueContext
 	config: IssueConfig
@@ -119,25 +115,20 @@ export class Issues extends Contexts {
 			attempt = 1
 			core.startGroup("Issue Actions")
 		}
-		let seconds = attempt * 10,
-			enforceConventionsSuccess = true
+		let seconds = attempt * 10
 		try {
-			if (this.config.enforceConventions && this.util.shouldRun("convention"))
-				enforceConventionsSuccess = await this.conventions.enforce(this)
+			if (this.config.enforceConventions) await this.conventions.enforce(this)
+			if (this.config.labels)
+				await this.applyLabels(this).catch((err) => {
+					log(LoggingLevels.error, "Error applying label" + err)
+				})
 
-			if (enforceConventionsSuccess) {
-				if (this.config.labels && this.util.shouldRun("label"))
-					await this.applyLabels(this).catch((err) => {
-						log(LoggingLevels.error, "Error applying label" + err)
-					})
+			if (this.config.assignProject)
+				await this.assignProject(this).catch((err) => {
+					log(LoggingLevels.error, "Error assigning projects" + err)
+				})
 
-				if (this.config.assignProject && this.util.shouldRun("release"))
-					await this.assignProject(this).catch((err) => {
-						log(LoggingLevels.error, "Error assigning projects" + err)
-					})
-
-				core.endGroup()
-			}
+			core.endGroup()
 		} catch (err) {
 			if (attempt > this.retryLimit) {
 				core.endGroup()

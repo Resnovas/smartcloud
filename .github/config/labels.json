@@ -1,5 +1,5 @@
 {
-	"$schema": "https://raw.githubusercontent.com/Videndum/smartcloud/develop/schema/labels.json",
+	"$schema": "https://raw.githubusercontent.com/resnovas/smartcloud/main/schema/labels.json",
 	"abandoned": {
 		"name": "Status - Abandoned",
 		"color": "CFD3D7",
@@ -138,17 +138,17 @@
 	"releaseMastermind": {
 		"name": "Context - Release Mastermind",
 		"color": "f9cea2",
-		"description": "Related to @videndum/release-mastermind"
+		"description": "Related to @resnovas/release-mastermind"
 	},
 	"labelMastermind": {
 		"name": "Context - Label Mastermind",
 		"color": "f9cea2",
-		"description": "Related to @videndum/label-mastermind"
+		"description": "Related to @resnovas/label-mastermind"
 	},
 	"variableMastermind": {
 		"name": "Context - Variable Mastermind",
 		"color": "f9cea2",
-		"description": "Related to @videndum/variable-mastermind"
+		"description": "Related to @resnovas/variable-mastermind"
 	},
 	"condition": {
 		"name": "Context - Conditions",

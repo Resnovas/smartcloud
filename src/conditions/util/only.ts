@@ -14,14 +14,33 @@ const TYPE = "$only"
 export interface ConditionOnlyOne {
 	required: number
 	type: typeof TYPE
-	pattern: [PRConditionConfig | IssueConditionConfig | ProjectConditionConfig]
+	condition: [PRConditionConfig | IssueConditionConfig | ProjectConditionConfig]
 }
+
+/** Requires only the number specified in `requires` to pass otherwise it fails.
+
+```json
+{
+	"type": "$only",
+	"requires": 1,
+	"condition": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
+}
+``` */
 
 function only(this: UtilThis, condition: ConditionOnlyOne, props: UtilProps) {
 	let success = 0
 
-	condition.pattern.forEach((condition) => {
-		if (evaluator.call(this, condition, props)) success++
+	condition.condition.forEach(async (condition) => {
+		if (await evaluator.call(this, condition, props)) success++
 	})
 
 	return success == condition.required

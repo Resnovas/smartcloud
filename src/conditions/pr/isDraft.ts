@@ -7,15 +7,25 @@ const TYPE = "isDraft"
 
 export interface ConditionIsDraft {
 	type: typeof TYPE
-	value: boolean
+	condition: boolean
 }
 
+/** Checks if a pull request is a draft.
+
+Example:
+
+```json
+{
+	"type": "isDraft",
+	"condition": true
+}
+``` */
 function isDraft(
 	this: Issues | PullRequests | Project,
 	condition: ConditionIsDraft,
 	pr: PRProps
 ) {
-	return pr.isDraft === condition.value
+	return pr.isDraft === condition.condition
 }
 
 export default [TYPE, isDraft] as const

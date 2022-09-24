@@ -12,16 +12,35 @@ const TYPE = "$and"
 
 export interface ConditionAnd {
 	type: typeof TYPE
-	pattern: [PRConditionConfig | IssueConditionConfig | ProjectConditionConfig]
+	condition: [PRConditionConfig | IssueConditionConfig | ProjectConditionConfig]
 }
+
+/** 
+Allows conditions to be combined to create more advanced conditions. Requires all conditions to return true otherwise it would fail.
+
+```json
+{
+	"type": "$and",
+	"condition": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
+}
+``` */
 
 function and(this: UtilThis, condition: ConditionAnd, props: UtilProps) {
 	let success = 0
-	condition.pattern.forEach((condition) => {
-		if (evaluator.call(this, condition, props)) success++
+	condition.condition.forEach(async (condition) => {
+		if (await evaluator.call(this, condition, props)) success++
 	})
 
-	return success == condition.pattern.length
+	return success == condition.condition.length
 }
 
 export default [TYPE, and] as const

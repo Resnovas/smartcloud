@@ -39,7 +39,7 @@ export const card = {
 		column_id: number,
 		content_type?: "Issue" | "PullRequest"
 	) {
-		return (
+		return !this.dryRun && (
 			await this.client.rest.projects.createCard({
 				content_id,
 				column_id,
@@ -48,7 +48,7 @@ export const card = {
 		).data
 	},
 	async move(this: Utils, card_id: number, column_id: number) {
-		return this.client.rest.projects.moveCard({
+		return !this.dryRun && this.client.rest.projects.moveCard({
 			card_id,
 			column_id,
 			position: "top"

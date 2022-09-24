@@ -9,7 +9,6 @@ const handlers = [...sharedHandlers]
 
 /**
  * The schedule condition handler.
- * @private
  */
 export function getScheduleConditionHandler(
 	this: Schedule,

@@ -10,7 +10,17 @@ export interface ConditiononColumn {
 	project: string
 	column: string
 }
+/** Checks if the card is in the specified column.
 
+Example:
+
+```json
+{
+	"type": "onColumn",
+	"project": "Isuues",
+	"column": "New"
+}
+``` */
 function onColumn(
 	this: Issues | PullRequests | Project,
 	condition: ConditiononColumn,

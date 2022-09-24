@@ -13,10 +13,7 @@ import * as UtilLabels from "./labels"
 import * as UtilParsingData from "./parsingData"
 import * as UtilRespond from "./respond"
 import * as UtilVersioning from "./versioning"
-/**
- * The util class.
- * @private
- */
+
 export class Utils {
 	client: Github
 	repo: Repo
@@ -36,12 +33,12 @@ export class Utils {
 		this.ref = options.ref
 		this.git = git
 			? simpleGit({
-					...git,
-					baseDir: !git.baseDir ? process.cwd() : git.baseDir,
-					binary: "git",
-					maxConcurrentProcesses: 6,
-					config: !git.config ? [] : git.config
-			  })
+				...git,
+				baseDir: !git.baseDir ? process.cwd() : git.baseDir,
+				binary: "git",
+				maxConcurrentProcesses: 6,
+				config: !git.config ? [] : git.config
+			})
 			: simpleGit()
 	}
 	api = {
@@ -146,6 +143,7 @@ export class Utils {
 						event,
 						comments
 					),
+				requestReviewers: async (IDNumber: number, reviewers: string[]) => APIPullRequests.reviews.requestReviewers.call(this, IDNumber, reviewers),
 				update: async (IDNumber: number, review_id: number, body: string) =>
 					APIPullRequests.reviews.update.call(this, IDNumber, review_id, body),
 				dismiss: async (IDNumber: number, review_id: number, message: string) =>
@@ -188,8 +186,8 @@ export class Utils {
 	}
 	parsingData = {
 		formatColor: async (color: string) => UtilParsingData.formatColor(color),
-		processRegExpPattern: async (pattern: string) =>
-			UtilParsingData.processRegExpPattern(pattern),
+		processRegExpcondition: async (condition: string) =>
+			UtilParsingData.processRegExpcondition(condition),
 		normalize: async (text: string) => UtilParsingData.normalize(text),
 		labels: async (labels: any) => UtilParsingData.parseLabels(labels)
 	}
@@ -197,29 +195,37 @@ export class Utils {
 	respond = async (
 		that: UtilThis,
 		success: boolean,
-		previousComment?: number,
-		body?: string
-	) => UtilRespond.respond.call(that, success, previousComment, body)
+		{
+			event,
+			previousComment,
+			body
+		}: {
+			event?: Event,
+			previousComment?: number,
+			body?: string
+		}
+	) => UtilRespond.respond.call(that, success, event, previousComment, body)
 	versioning = {
 		parse: async (config: Config, ref?: string) =>
 			UtilVersioning.parse.call(this, config, ref)
 	}
 
-	shouldRun = (type: functionality) => {
-		// get the package name
-		let pack = process.env.NPM_PACKAGE_NAME as packages
+	shouldRun = (_type: functionality) => {
+		// // get the package name
+		// let pack = process.env.NPM_PACKAGE_NAME as packages
 
-		/*eslint-disable-next-line @typescript-eslint/no-var-requires */
-		if (!pack) pack = require("../../package.json").name as packages
+		// /*eslint-disable-next-line @typescript-eslint/no-var-requires */
+		// if (!pack) pack = require("../../package.json").name as packages
 
-		// Test the fucntion against package
+		// // Test the fucntion against package
 
-		if (pack == "@videndum/smartcloud") return true
-		else if (pack == "@videndum/convention-mastermind" && type == "convention")
-			return true
-		else if (pack == "@videndum/label-mastermind" && type == "label")
-			return true
-		else return false
+		// if (pack == "@resnovas/smartcloud") return true
+		// else if (pack == "@resnovas/convention-mastermind" && type == "convention")
+		// 	return true
+		// else if (pack == "@resnovas/label-mastermind" && type == "label")
+		// 	return true
+		// else return false
+		return true
 	}
 }
 export interface Repo {
@@ -233,9 +239,9 @@ export interface ApiProps {
 
 export type functionality = "release" | "convention" | "label"
 export type packages =
-	| "@videndum/smartcloud"
-	| "@videndum/label-mastermind"
-	| "@videndum/convention-mastermind"
+	| "@resnovas/smartcloud"
+	| "@resnovas/label-mastermind"
+	| "@resnovas/convention-mastermind"
 	| undefined
 
 export type Event = "REQUEST_CHANGES" | "APPROVE" | "COMMENT"

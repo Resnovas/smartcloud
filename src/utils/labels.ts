@@ -1,6 +1,6 @@
 /** @format */
 
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import { Utils } from "."
 import { log } from ".."
 import { Labels, Runners } from "../action"
@@ -117,8 +117,7 @@ export async function addRemove(
 	} else {
 		log(
 			LoggingLevels.info,
-			`No action required for label "${labelName}"${
-				hasLabel ? " as label is already applied." : "."
+			`No action required for label "${labelName}"${hasLabel ? " as label is already applied." : "."
 			}`
 		)
 	}
