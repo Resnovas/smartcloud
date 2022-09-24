@@ -7,7 +7,6 @@ const rename = require("gulp-rename")
 const jsonFmt = require("gulp-json-fmt")
 const { src, dest, series, parallel } = require("gulp")
 const exec = require("gulp-exec")
-const log = require("fancy-log")
 
 class Testing {
 	static run = () => {

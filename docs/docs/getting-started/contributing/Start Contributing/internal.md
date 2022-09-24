@@ -1,10 +1,10 @@
 ---
-sidebar_position: 1
+title: "Internal Contributions"
+sidebar_label: "Internal Contributions"
+sidebar_position: 3
 ---
 
 <!-- @format -->
-
-# Internal Contributions Workflow
 
 For all contributions you are required to do the following
 

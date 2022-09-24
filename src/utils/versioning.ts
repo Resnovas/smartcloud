@@ -1,6 +1,6 @@
 /** @format */
 
-import { LoggingLevels } from "@videndum/utilities"
+import { LoggingLevels } from "@resnovas/utilities"
 import path from "path"
 import { Utils } from "."
 import { log } from ".."
@@ -18,10 +18,10 @@ export async function parse(
 	ref?: string
 ): Promise<Version> {
 	let rawVersion
-	if (!config.root) config.root = "master"
+	if (!config.branch) config.branch = "master"
 	if (config.versioning?.source == "node") {
 		rawVersion = await getNodeVersion
-			.call(this, config.root, ref)
+			.call(this, config.branch, ref)
 			.catch((err) => {
 				log(
 					LoggingLevels.error,

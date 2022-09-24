@@ -1,6 +1,6 @@
 /** @format */
 
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import {
 	getIssueConditionHandler,
 	getPRConditionHandler,
@@ -38,10 +38,7 @@ const forConditions = async <
 	}
 	return matches
 }
-/**
- * Used to evaluate the conditions.
- * @private
- */
+
 export async function evaluator(
 	this: UtilThis,
 	config:
@@ -52,9 +49,9 @@ export async function evaluator(
 		| Release,
 	props: UtilProps
 ) {
-	const { conditions, requires } = config
+	const { condition, requires } = config
 	log(LoggingLevels.debug, JSON.stringify(config))
-	if (typeof conditions == "string")
+	if (typeof condition == "string")
 		throw new LoggingDataClass(
 			LoggingLevels.error,
 			"String can not be used to evaluate conditions"
@@ -63,22 +60,22 @@ export async function evaluator(
 	 * TODO: fix this error
 	 */
 	// @ts-expect-error - an issue with conditions but dont know how to fix
-	const matches = await forConditions(conditions, async (condition) => {
+	const matches = await forConditions(condition, async (condition) => {
 		const handler =
 			props.type == "issue"
-				? await getIssueConditionHandler.call(
-						this as Issues,
-						condition as IssueCondition
-				  )
+				? getIssueConditionHandler.call(
+					this as Issues,
+					condition as IssueCondition
+				)
 				: props.type == "pr"
-				? await getPRConditionHandler.call(
+					? getPRConditionHandler.call(
 						this as PullRequests,
 						condition as PRCondition
-				  )
-				: await getProjectConditionHandler.call(
+					)
+					: getProjectConditionHandler.call(
 						this as Project,
 						condition as ProjectCondition
-				  )
+					)
 		log(LoggingLevels.debug, `The handler is ${handler?.name}`)
 		// @ts-expect-error
 		return handler?.call(this, condition as any, props as any) as boolean

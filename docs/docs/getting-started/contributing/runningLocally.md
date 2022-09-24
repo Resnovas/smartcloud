@@ -1,5 +1,7 @@
 ---
-sidebar_position: 3
+title: "Running Locally"
+sidebar_label: "Running Locally"
+sidebar_position: 1
 ---
 
 <!-- @format -->

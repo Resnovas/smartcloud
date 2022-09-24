@@ -6,18 +6,30 @@ const TYPE = "creatorMatches"
 
 export interface ConditionCreatorMatches {
 	type: typeof TYPE
-	pattern: string
+	condition: string
 }
+
+/** Checks if an issue or pull request's creator's username matches a Regex condition.
+
+Example:
+
+```json
+{
+	"type": "creatorMatches",
+	"condition": "^foo"
+}
+```
+ */
 
 async function creatorMatches(
 	this: UtilThis,
-	condition: ConditionCreatorMatches,
+	pattern: ConditionCreatorMatches,
 	issue: UtilProps
 ) {
-	const pattern = await this.util.parsingData.processRegExpPattern(
-		condition.pattern
+	const condition = await this.util.parsingData.processRegExpcondition(
+		pattern.condition
 	)
-	return pattern.test(issue.creator)
+	return condition.test(issue.creator)
 }
 
 export default [TYPE, creatorMatches] as const

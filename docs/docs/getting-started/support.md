@@ -1,12 +1,14 @@
-<!-- @format -->
+---
+title: "Get Support"
+sidebar_label: "Get Support"
+sidebar_position: 2
+---
 
-# Support 👨‍👩‍👧‍👦
+For **Features Requests**, **Q&A**, **Show & Tell** and **Discussions** please use **[our discussions page](https://github.com/Resnovas/Smartcloud/discussions)** 🚑.
 
-For **Features Requests**, **Q&A**, **Show & Tell** and **Discussions** please use **[our discussions page](https://github.com/Videndum/action-masterminds/discussions)** 🚑.
+We have a **FAQ** category in our **[discussions page](https://github.com/Resnovas/Smartcloud/discussions)** where you can get quick answers, help with debugging weird issues, and general help.
 
-We have a **FAQ** category in our **[discussions page](https://github.com/Videndum/action-masterminds/discussions)** where you can get quick answers, help with debugging weird issues, and general help.
-
-Our extensive **documentation** can be found at **[here](https://github.com/Videndum/action-masterminds/blob/develop/README.md)**.
+Our extensive **documentation** can be found at **[here](https://github.com/Resnovas/Smartcloud/blob/develop/README.md)**.
 
 ## Why not GitHub Issues? {#why-not-github-issues}
 

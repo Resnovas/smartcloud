@@ -1,9 +1,9 @@
 /** @format */
 
-import { LoggingLevels } from "@videndum/utilities"
+import { LoggingLevels } from "@resnovas/utilities"
 import { Issues, Project, PullRequests, Schedule } from ".."
 import { log } from "../.."
-import { SharedConditions, UtilThis } from "../../conditions"
+import { SharedConditions } from "../../conditions"
 import { evaluator } from "../../evaluator"
 
 /**
@@ -25,7 +25,7 @@ export interface Stale {
 	/**
 	 * The conditions to use when checking stale
 	 */
-	conditions?: SharedConditions[]
+	condition?: SharedConditions[]
 }
 
 /**
@@ -80,6 +80,7 @@ export async function checkStale(
 	if (!this.context.props) throw new Error("Context Props must exist")
 	const StaleLabel = this.configs.labels?.[config.staleLabel]
 	if (!StaleLabel) throw new Error("Stale Label must exist")
+	let suffix = `\r\n\r\n----------\r\n\r\nSimply comment, assign or modify this issue to remove the stale status \r\n\r\n`
 
 	if (config.stale) {
 		log(
@@ -87,18 +88,18 @@ export async function checkStale(
 			`Checking stale status for ${this.context.props.type} ${this.context.props.ID} - ${this.context.props.title}`
 		)
 		if (
-			!config.stale.conditions?.find(
+			!config.stale.condition?.find(
 				(condition) => condition.type === "isStale"
 			)
 		) {
-			if (!config.stale.conditions)
-				config.stale.conditions = [
-					{ type: "isStale", value: config.stale.days }
+			if (!config.stale.condition)
+				config.stale.condition = [
+					{ type: "isStale", condition: config.stale.days }
 				]
 			else
-				config.stale.conditions.push({
+				config.stale.condition.push({
 					type: "isStale",
-					value: config.stale.days
+					condition: config.stale.days
 				})
 
 			if (!config.stale.requires) config.stale.requires = 1
@@ -117,12 +118,17 @@ export async function checkStale(
 			if (this.config.labels && !this.config.labels[StaleLabel])
 				// Apply the stale label
 				this.config.labels[StaleLabel] = {
-					conditions: config.stale.conditions,
+					condition: config.stale.condition,
 					requires: 1
 				}
 
 		// Create the stale comment
-		!this.dryRun && createComment.call(this, config.stale, await stale)
+		let isstale = await stale
+		!this.dryRun && this.createComment.call(this, "stale", isstale, {
+			body: (isstale ? config.stale.comment : config.stale.resolve) +
+				"\r\n\r\n" +
+				suffix + config.stale.commentFooter || "",
+		})
 	}
 	if (config.abandoned) {
 		log(
@@ -130,22 +136,22 @@ export async function checkStale(
 			`Checking abandoned status for ${this.context.props.type} ${this.context.props.ID} - ${this.context.props.title}`
 		)
 		if (
-			!config.abandoned.conditions?.find(
+			!config.abandoned.condition?.find(
 				(condition) => condition.type === "isAbandoned"
 			)
 		) {
-			if (!config.abandoned.conditions)
-				config.abandoned.conditions = [
+			if (!config.abandoned.condition)
+				config.abandoned.condition = [
 					{
 						type: "isAbandoned",
-						value: config.abandoned.days,
+						condition: config.abandoned.days,
 						label: config.abandoned.label
 					}
 				]
 			else
-				config.abandoned.conditions.push({
+				config.abandoned.condition.push({
 					type: "isAbandoned",
-					value: config.abandoned.days,
+					condition: config.abandoned.days,
 					label: config.abandoned.label
 				})
 
@@ -170,46 +176,15 @@ export async function checkStale(
 			if (this.config.labels && !this.config.labels[AbandonedLabel])
 				// Apply the stale label
 				this.config.labels[AbandonedLabel] = {
-					conditions: config.abandoned.conditions,
+					condition: config.abandoned.condition,
 					requires: 1
 				}
 		// Create the abandoned comment
-		!this.dryRun && createComment.call(this, config.abandoned, await abandoned)
-	}
-}
-
-async function createComment(
-	this: UtilThis,
-	config: AbanondedConfig | StaleConfig,
-	isStale: boolean
-) {
-	let prefix = `<!--releaseMastermind: Stale-->${
-			config.commentHeader || ""
-		}\r\n\r\n`,
-		suffix = `\r\n\r\n----------\r\n\r\nSimply comment, assign or modify this issue to remove the stale status \r\n\r\n${
-			config.commentFooter || ""
-		}`,
-		body: string =
-			prefix +
-			(isStale ? config.comment : config.resolve) +
-			"\r\n\r\n" +
-			suffix,
-		commentList =
-			this.context.props?.type === "pr"
-				? await this.util.api.pullRequests.reviews.list(this.context.props.ID)
-				: this.context.props?.ID
-				? await this.util.api.issues.comments.list(this.context.props.ID)
-				: undefined,
-		previousComment: number | undefined
-
-	if (commentList) {
-		commentList.forEach((comment: any) => {
-			if (
-				comment.body.includes(prefix) &&
-				(!("state" in comment) || comment.state !== "DISMISSED")
-			)
-				previousComment = comment.id
+		let isAbandoned = await abandoned
+		!this.dryRun && this.createComment.call(this, "stale", isAbandoned, {
+			body: (isAbandoned ? config.abandoned.comment : config.abandoned.resolve) +
+				"\r\n\r\n" +
+				suffix + config.abandoned.commentFooter || "",
 		})
 	}
-	this.util.respond(this, isStale, previousComment, body)
 }

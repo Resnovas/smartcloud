@@ -4,7 +4,7 @@ import { Utils } from ".."
 import { Label, Labels } from "../../action"
 
 export async function add(this: Utils, IDNumber: number, label: string) {
-	if (!this.dryRun)
+	!this.dryRun &&
 		await this.client.rest.issues.addLabels({
 			...this.repo,
 			issue_number: IDNumber,
@@ -13,7 +13,7 @@ export async function add(this: Utils, IDNumber: number, label: string) {
 }
 export async function create(this: Utils, label: Label, ref?: string) {
 	const color = await this.parsingData.formatColor(label.color)
-	if (!this.dryRun)
+	!this.dryRun &&
 		await this.client.rest.issues.createLabel({
 			...this.repo,
 			ref: ref || this.ref || "master",
@@ -23,7 +23,7 @@ export async function create(this: Utils, label: Label, ref?: string) {
 }
 
 export async function del(this: Utils, name: string, ref?: string) {
-	if (!this.dryRun)
+	!this.dryRun &&
 		await this.client.rest.issues.deleteLabel({
 			...this.repo,
 			ref: ref || this.ref || "master",
@@ -57,7 +57,7 @@ export async function remove(
 	label: string,
 	ref?: string
 ) {
-	if (!this.dryRun)
+	!this.dryRun &&
 		await this.client.rest.issues.removeLabel({
 			...this.repo,
 			ref: ref || this.ref || "master",
@@ -73,7 +73,7 @@ export async function update(
 	ref?: string
 ) {
 	const color = await this.parsingData.formatColor(label.color)
-	if (!this.dryRun)
+	!this.dryRun &&
 		await this.client.rest.issues.updateLabel({
 			...this.repo,
 			ref: ref || this.ref || "master",

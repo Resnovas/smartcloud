@@ -3,7 +3,7 @@
 import * as core from "@actions/core"
 import { context as Context } from "@actions/github"
 import { GitHub } from "@actions/github/lib/utils"
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import { log, Options } from "."
 import {
 	CurContext,
@@ -29,20 +29,28 @@ import { Utils } from "./utils"
 
 export interface Runners {
 	/**
-	 * The labels configuration.
+	 * Declaritively specify which schema you want to use. This defaults to our latest schema specified at: https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json
+	 * @default https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json
+	 */
+	$schema: string
+	/**
+	 * Declaritively specify all the labels that shuold exist in this repository, and initialise them.
+	 * You will use the names specified here later to apply these same labels to issues and pull requests.
 	 */
 	labels?: Labels
 	/**
-	 * The runners configuration.
+	 * This defines all the diffent configurations for your repository. 
+	 * You can have as many as you like. You can use this within Mono-repositories to have different configurations for different projects.
+	 * You can also have diffeent configurations for different branches.
 	 */
 	runners: Config[]
 }
 
 export interface Config {
 	/**
-	 * The root branch used to check configuration settings against.
+	 * The branch used to get the config file from. Defaults to master.
 	 */
-	root?: string
+	branch?: string
 	/**
 	 * Versioning configuration used for release management.
 	 */
@@ -125,11 +133,11 @@ export interface SharedConfig {
 	 */
 	labels?: {
 		[key: string]:
-			| IssueConditionConfig
-			| ProjectConditionConfig
-			| PRConditionConfig
-			| ScheduleConditionConfig
-			| SharedConditions
+		| IssueConditionConfig
+		| ProjectConditionConfig
+		| PRConditionConfig
+		| ScheduleConditionConfig
+		| SharedConditions
 	}
 }
 
@@ -177,9 +185,6 @@ export type VersionSource = "node" | "milestones" | string
  */
 export type VersionType = "SemVer"
 
-/**
- * @private
- */
 export type Github = InstanceType<typeof GitHub>
 
 let local: any
@@ -191,11 +196,9 @@ try {
 	process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER
 	if (!context.payload.issue && !context.payload.pull_request)
 		context = require(local.github_context)
-} catch {}
-/**
- * The action to run.
- * @private
- */
+} catch { }
+
+
 export default class Action {
 	client: Github
 	opts: Options
@@ -258,13 +261,15 @@ export default class Action {
 		 * @since 1.1.0
 		 */
 		const configs = await this.processConfig().catch((err) => {
-			throw log(
+			log(
 				LoggingLevels.error,
 				`Error thrown while processing config: ` + err
 			)
+			throw `Error thrown while processing config: ` + err
 		})
 		if (!configs.runners[0]) {
-			throw log(LoggingLevels.error, `No config data.`)
+			await log(LoggingLevels.error, `No config data.`)
+			throw `No config data.`
 		}
 		log(LoggingLevels.debug, `Config: ${JSON.stringify(configs)}`)
 
@@ -276,11 +281,12 @@ export default class Action {
 			 */
 			core.startGroup("label Actions")
 			log(LoggingLevels.debug, `Attempting to apply labels`)
-			await this.syncLabels(configs).catch((err) => {
-				throw log(
+			await this.syncLabels(configs).catch(async (err) => {
+				await log(
 					LoggingLevels.debug,
 					`Error thrown while syncronising labels: ` + err
 				)
+				throw `Error thrown while syncronising labels: ` + err
 			})
 			log(LoggingLevels.notice, `Successfully applied all labels`)
 			core.endGroup()
@@ -305,11 +311,12 @@ export default class Action {
 			 * @author TGTGamer
 			 * @since 1.1.0
 			 */
-			const curContext = await this.processContext(config).catch((err) => {
-				throw log(
+			const curContext = await this.processContext(config).catch(async (err) => {
+				await log(
 					LoggingLevels.error,
 					`Error thrown while processing context: ` + err
 				)
+				throw `Error thrown while processing context: ` + err
 			})
 			log(LoggingLevels.debug, `Current Context: ${JSON.stringify(curContext)}`)
 
@@ -333,9 +340,7 @@ export default class Action {
 						}
 					}
 				} else if (
-					(action === "enforceConventions" &&
-						this.util.shouldRun("convention")) ||
-					(action === "stale" && this.util.shouldRun("release"))
+					action === "enforceConventions" || action === "stale"
 				) {
 					// @ts-expect-error - Property 'conventions' is missing in type 'Stale' but required in type 'EnforceConventions'
 					config[curContext.type]![action] = config.sharedConfig[action]
@@ -355,7 +360,7 @@ export default class Action {
 		if (!this.configJSON?.runners[0]) {
 			if (!this.configPath)
 				throw new Error(
-					`Configpath  (${this.configPath}) & configjson are undefined`
+					`Configpath  (${this.configPath}) & configJSON are undefined`
 				)
 			const pathConfig = await JSON.parse(
 				await this.util.api.files.get(this.configPath, this.configRef)
@@ -384,18 +389,20 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await PullRequests.parse(this.util, config, context).catch(
-				(err) => {
-					throw log(
+				async (err) => {
+					await log(
 						LoggingLevels.error,
 						`Error thrown while parsing PR context: ` + err
 					)
+					throw `Error thrown while parsing PR context: ` + err
 				}
 			)
 			if (!ctx) {
-				throw new LoggingDataClass(
+				await log(
 					LoggingLevels.error,
 					"Pull Request not found on context"
 				)
+				throw "Pull Request not found on context"
 			}
 			log(LoggingLevels.debug, `PR context: ${JSON.stringify(ctx)}`)
 			curContext = {
@@ -409,11 +416,12 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await Issues.parse(this.util, config, context).catch(
-				(err) => {
-					throw log(
+				async (err) => {
+					await log(
 						LoggingLevels.error,
 						`Error thrown while parsing issue context: ` + err
 					)
+					throw `Error thrown while parsing issue context: ` + err
 				}
 			)
 			if (!ctx) {
@@ -437,7 +445,7 @@ export default class Action {
 						LoggingLevels.error,
 						`Error thrown while parsing Project context: ` + err
 					)
-					return err
+					throw `Error thrown while parsing Project context: ` + err
 				}
 			)
 			if (!ctx) {
@@ -460,7 +468,7 @@ export default class Action {
 					LoggingLevels.error,
 					`Error thrown while parsing Schedule context: ` + err
 				)
-				return err
+				throw `Error thrown while parsing Schedule context: ` + err
 			})
 			if (!ctx) {
 				throw new Error("Schedule not found on context")
@@ -477,10 +485,11 @@ export default class Action {
 			 * @author TGTGamer
 			 * @since 1.1.0
 			 */
-			throw log(
+			log(
 				LoggingLevels.notice,
 				`There is no context to parse: ${JSON.stringify(context.payload)}`
 			)
+			throw `There is no context to parse: ${JSON.stringify(context.payload)}`
 		}
 		return curContext
 	}
@@ -514,12 +523,12 @@ export default class Action {
 			curContext.type == "pr"
 				? new PullRequests(this.util, runners, config, curContext, this.dryRun)
 				: curContext.type == "issue"
-				? new Issues(this.util, runners, config, curContext, this.dryRun)
-				: curContext.type == "project"
-				? new Project(this.util, runners, config, curContext, this.dryRun)
-				: curContext.type == "schedule"
-				? new Schedule(this.util, runners, config, curContext, this.dryRun)
-				: undefined
+					? new Issues(this.util, runners, config, curContext, this.dryRun)
+					: curContext.type == "project"
+						? new Project(this.util, runners, config, curContext, this.dryRun)
+						: curContext.type == "schedule"
+							? new Schedule(this.util, runners, config, curContext, this.dryRun)
+							: undefined
 
 		if (!ctx)
 			throw new LoggingDataClass(LoggingLevels.error, "Context not found")

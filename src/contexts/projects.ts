@@ -2,7 +2,7 @@
 
 import * as core from "@actions/core"
 import { Context } from "@actions/github/lib/context"
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import { Config, Runners, SharedConfig } from "../action"
 import { CurContext, ProjectContext, Version } from "../conditions"
 import { Utils } from "../utils"
@@ -31,10 +31,7 @@ export interface ProjectConfig extends SharedConfig {
 		[milestone: string]: Milestones
 	}
 }
-/**
- * The project class.
- * @private
- */
+
 export class Project extends Contexts {
 	context: ProjectContext
 	config: ProjectConfig
@@ -149,10 +146,9 @@ export class Project extends Contexts {
 			core.startGroup("project Actions")
 		}
 		const seconds = attempt * 10
-		let enforceConventionsSuccess = true
 
 		try {
-			if (this.config.enforceConventions && this.util.shouldRun("convention")) {
+			if (this.config.enforceConventions) {
 				if (!this.config.enforceConventions.onColumn) return
 				this.config.enforceConventions.onColumn = await this.convertColumnStringsToIDArray(
 					this.config.enforceConventions.onColumn
@@ -162,21 +158,17 @@ export class Project extends Contexts {
 						this.context.props.column_id
 					)
 				)
-					enforceConventionsSuccess = await this.conventions.enforce(this)
+					await this.conventions.enforce(this)
 			}
-
-			if (enforceConventionsSuccess) {
-				// some code
-				if (this.config.labels && this.util.shouldRun("label"))
-					await this.applyLabels(this).catch((err) => {
-						log(LoggingLevels.error, "Error applying labels" + err)
-					})
-				// if (this.config.syncRemote && this.util.shouldRun("release"))
-				// 	await this.syncRemoteProject(this).catch((err) => {
-				// 		log(LoggingLevels.error, "Error syncing remote project"+ err)
-				// 	})
-				core.endGroup()
-			}
+			if (this.config.labels)
+				await this.applyLabels(this).catch((err) => {
+					log(LoggingLevels.error, "Error applying labels" + err)
+				})
+			// if (this.config.syncRemote && this.util.shouldRun("release"))
+			// 	await this.syncRemoteProject(this).catch((err) => {
+			// 		log(LoggingLevels.error, "Error syncing remote project"+ err)
+			// 	})
+			core.endGroup()
 		} catch (err) {
 			if (attempt > this.retryLimit) {
 				core.endGroup()

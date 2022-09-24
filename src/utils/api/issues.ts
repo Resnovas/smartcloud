@@ -11,7 +11,7 @@ export async function create(
 	milestone: string,
 	ref?: string
 ) {
-	return (
+	return !this.dryRun && (
 		await this.client.rest.issues.create({
 			...this.repo,
 			ref: ref || this.ref || "master",
@@ -82,7 +82,7 @@ export const comments = {
 		).data
 	},
 	async create(this: Utils, IDNumber: number, body: string, ref?: string) {
-		return (
+		return !this.dryRun && (
 			await this.client.rest.issues.createComment({
 				...this.repo,
 				ref: ref || this.ref || "master",
@@ -92,7 +92,7 @@ export const comments = {
 		).data
 	},
 	async update(this: Utils, comment_id: number, body: string, ref?: string) {
-		return (
+		return !this.dryRun && (
 			await this.client.rest.issues.updateComment({
 				...this.repo,
 				ref: ref || this.ref || "master",
@@ -102,7 +102,7 @@ export const comments = {
 		).data
 	},
 	async delete(this: Utils, comment_id: number, ref?: string) {
-		return (
+		return !this.dryRun && (
 			await this.client.rest.issues.deleteComment({
 				...this.repo,
 				ref: ref || this.ref || "master",

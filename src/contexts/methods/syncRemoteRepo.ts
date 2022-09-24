@@ -25,7 +25,7 @@ export interface SyncRemote {
 	/**
 	 * The conditions to use when syncing
 	 */
-	conditions: SharedConditions[]
+	condition: SharedConditions[]
 }
 
 // export async function syncRemote(dryRun: boolean) {}

@@ -11,14 +11,25 @@ enum States {
 
 export interface ConditionIsOpen {
 	type: typeof TYPE
-	value: boolean
+	condition: boolean
 }
+
+/** Checks if an issue or pull request is open or closed.
+
+Example:
+
+```json
+{
+	"type": "isOpen",
+	"condition": true
+}
+``` */
 
 function isOpen(this: UtilThis, condition: ConditionIsOpen, issue: UtilProps) {
 	return (
 		this.util.parsingData.normalize(issue.state) ===
 		this.util.parsingData.normalize(
-			condition.value ? States.Open : States.Closed
+			condition.condition ? States.Open : States.Closed
 		)
 	)
 }

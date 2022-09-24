@@ -7,15 +7,26 @@ const TYPE = "requestedChanges"
 
 export interface ConditionRequestedChanges {
 	type: typeof TYPE
-	value: boolean
+	condition: boolean
 }
+
+/** Checks if a pull request has requested a review.
+
+Example:
+
+```json
+{
+	"type": "requestedChanges",
+	"condition": true
+}
+``` */
 
 function requestedChanges(
 	this: Issues | PullRequests | Project,
 	condition: ConditionRequestedChanges,
 	pr: PRProps
 ) {
-	return condition.value === pr.requestedChanges > pr.approved
+	return condition.condition === pr.requestedChanges > pr.approved
 }
 
 export default [TYPE, requestedChanges] as const

@@ -1,10 +1,10 @@
 ---
-sidebar_position: 1
+title: "External Contributions"
+sidebar_label: "External Contributions"
+sidebar_position: 3
 ---
 
 <!-- @format -->
-
-# External Contributions Workflow
 
 For all contributions you are required to do the following
 

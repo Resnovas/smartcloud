@@ -7,15 +7,26 @@ const TYPE = "pendingReview"
 
 export interface ConditionPendingReview {
 	type: typeof TYPE
-	value: boolean
+	condition: boolean
 }
+
+/** Checks if a pull request has requested a review.
+
+Example:
+
+```json
+{
+	"type": "pendingReview",
+	"condition": true
+}
+``` */
 
 function pendingReview(
 	this: Issues | PullRequests | Project,
 	condition: ConditionPendingReview,
 	pr: PRProps
 ) {
-	return pr.pendingReview === condition.value
+	return pr.pendingReview === condition.condition
 }
 
 export default [TYPE, pendingReview] as const

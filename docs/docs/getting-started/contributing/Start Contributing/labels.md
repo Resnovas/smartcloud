@@ -1,10 +1,10 @@
 ---
-sidebar_position: 3
+title: "Understanding Labels Names"
+sidebar_label: "Understanding Labels Names"
+sidebar_position: 2
 ---
 
 <!-- @format -->
-
-# Understanding Labels
 
 - **Statuses**
 
