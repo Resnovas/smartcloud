@@ -24,7 +24,11 @@ The project assignment configuration.
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/pullRequests.ts:24](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/pullRequests.ts#L24)
+=======
+[src/contexts/pullRequests.ts:24](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/pullRequests.ts#L24)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -36,7 +40,11 @@ The automatic approval configuration
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/pullRequests.ts:28](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/pullRequests.ts#L28)
+=======
+[src/contexts/pullRequests.ts:28](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/pullRequests.ts#L28)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -52,7 +60,11 @@ The enforceConventions configuration
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/action.ts:126](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L126)
+=======
+[src/action.ts:121](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L121)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -72,7 +84,11 @@ The labels to be applied
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/action.ts:134](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L134)
+=======
+[src/action.ts:129](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L129)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -84,7 +100,11 @@ The release management configuration.
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/pullRequests.ts:32](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/pullRequests.ts#L32)
+=======
+[src/contexts/pullRequests.ts:32](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/pullRequests.ts#L32)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -100,7 +120,11 @@ The reference used internally
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/action.ts:122](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L122)
+=======
+[src/action.ts:117](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L117)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -112,7 +136,11 @@ Request approvals configuration.
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/pullRequests.ts:40](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/pullRequests.ts#L40)
+=======
+[src/contexts/pullRequests.ts:40](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/pullRequests.ts#L40)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -128,7 +156,11 @@ The stale configuration
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/action.ts:130](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L130)
+=======
+[src/action.ts:125](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L125)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -140,4 +172,8 @@ Syncronise remote repository configuration.
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/pullRequests.ts:36](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/pullRequests.ts#L36)
+=======
+[src/contexts/pullRequests.ts:36](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/pullRequests.ts#L36)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960

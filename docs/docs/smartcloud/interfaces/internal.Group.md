@@ -25,7 +25,11 @@ The comment to create
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/requestApprovals.ts:22](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/requestApprovals.ts#L22)
+=======
+src/contexts/methods/requestApprovals.ts:22
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -35,7 +39,11 @@ ___
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/requestApprovals.ts:36](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/requestApprovals.ts#L36)
+=======
+src/contexts/methods/requestApprovals.ts:36
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -47,4 +55,8 @@ The reviewers to reques
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/requestApprovals.ts:18](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/requestApprovals.ts#L18)
+=======
+src/contexts/methods/requestApprovals.ts:18
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960

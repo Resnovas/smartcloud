@@ -19,7 +19,11 @@ The conditions to use when syncing
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/syncRemoteRepo.ts:28](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteRepo.ts#L28)
+=======
+[src/contexts/methods/syncRemoteRepo.ts:28](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteRepo.ts#L28)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -31,7 +35,11 @@ local branch to sync
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/syncRemoteRepo.ts:12](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteRepo.ts#L12)
+=======
+[src/contexts/methods/syncRemoteRepo.ts:12](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteRepo.ts#L12)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -43,7 +51,11 @@ The path to the local files to sync
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/syncRemoteRepo.ts:20](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteRepo.ts#L20)
+=======
+[src/contexts/methods/syncRemoteRepo.ts:20](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteRepo.ts#L20)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -55,7 +67,11 @@ remote branch to sync
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/syncRemoteRepo.ts:16](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteRepo.ts#L16)
+=======
+[src/contexts/methods/syncRemoteRepo.ts:16](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteRepo.ts#L16)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -67,4 +83,8 @@ The path to the remote file destination
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/syncRemoteRepo.ts:24](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteRepo.ts#L24)
+=======
+[src/contexts/methods/syncRemoteRepo.ts:24](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteRepo.ts#L24)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960

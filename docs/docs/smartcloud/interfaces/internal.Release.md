@@ -29,7 +29,11 @@ The conditions required for this to succeed
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/conditions/index.ts:196](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L196)
+=======
+[src/conditions/index.ts:196](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L196)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -41,7 +45,11 @@ Should the release create a changelog?
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/release.ts:59](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L59)
+=======
+[src/contexts/methods/release.ts:59](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L59)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -53,7 +61,11 @@ Should the release create the next milestone?
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/release.ts:51](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L51)
+=======
+[src/contexts/methods/release.ts:51](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L51)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -65,7 +77,11 @@ Should the release create a Github Package?
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/release.ts:55](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L55)
+=======
+[src/contexts/methods/release.ts:55](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L55)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -77,7 +93,11 @@ Should the release create a Github Release?
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/release.ts:47](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L47)
+=======
+[src/contexts/methods/release.ts:47](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L47)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -89,7 +109,11 @@ Should the release create a tag?
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/release.ts:43](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L43)
+=======
+[src/contexts/methods/release.ts:43](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L43)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -112,7 +136,11 @@ The labels to use to detect release type (semantic release)
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/contexts/methods/release.ts:13](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L13)
+=======
+[src/contexts/methods/release.ts:13](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L13)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
 ___
 
@@ -128,4 +156,8 @@ The number of requires needed for this to succeed
 
 #### Defined in
 
+<<<<<<< HEAD
 [src/conditions/index.ts:192](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L192)
+=======
+[src/conditions/index.ts:192](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L192)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960

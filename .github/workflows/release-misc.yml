@@ -1,0 +1,29 @@
+# @format
+
+name: Release Management
+
+on:
+  pull_request:
+    types:
+      - closed
+
+jobs:
+  misc:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true
+    strategy:
+      matrix:
+        node-version: [16.x]
+    steps:
+      # Inclusive Org
+      - run: if [ ${{env.inclusive_org}} === 'owner' ]; then echo "inclusiveorg=${{github.repository_owner}}" >> $GITHUB_ENV ; else echo "inclusiveorg=${{env.inclusive_org}}" >> $GITHUB_ENV ; fi
+      - name: Invite contributor to the organization
+        uses: lekterable/inclusive-organization-action@v1.1.0
+        if: ${{env.inclusive_enabled}} == true
+        with:
+          organization: ${{env.inclusiveorg}}
+          team: ${{env.inclusive_team}}
+          comment: ${{env.inclusive_comment}}
+        env:
+          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
+        continue-on-error: true

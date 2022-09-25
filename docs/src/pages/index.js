@@ -73,7 +73,6 @@ function Configurator() {
 export default function Home() {
 	const [isConfigOpen, setisConfigOpen] = React.useState(false)
 
-
 	if (!isConfigOpen) return (
 		<Layout
 			title={`The supercharged Github Action`}

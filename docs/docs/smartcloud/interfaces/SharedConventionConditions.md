@@ -24,7 +24,11 @@ The conditions required for this to succeed. You can use the "semanticTitle" to 
 
 #### Defined in
 
+<<<<<<< HEAD:docs/docs/smartcloud/interfaces/SharedConventionConditions.md
 [src/conditions/index.ts:182](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L182)
+=======
+[src/conditions/index.ts:182](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L182)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/SharedConventionConditions.md
 
 ___
 
@@ -36,4 +40,8 @@ The number of requires needed for this to succeed
 
 #### Defined in
 
+<<<<<<< HEAD:docs/docs/smartcloud/interfaces/SharedConventionConditions.md
 [src/conditions/index.ts:178](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L178)
+=======
+[src/conditions/index.ts:178](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L178)
+>>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/SharedConventionConditions.md
