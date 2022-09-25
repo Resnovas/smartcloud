@@ -88,9 +88,7 @@ export async function checkStale(
 			`Checking stale status for ${this.context.props.type} ${this.context.props.ID} - ${this.context.props.title}`
 		)
 		if (
-			!config.stale.condition?.find(
-				(condition) => condition.type === "isStale"
-			)
+			!config.stale.condition?.find((condition) => condition.type === "isStale")
 		) {
 			if (!config.stale.condition)
 				config.stale.condition = [
@@ -124,11 +122,14 @@ export async function checkStale(
 
 		// Create the stale comment
 		let isstale = await stale
-		!this.dryRun && this.createComment.call(this, "stale", isstale, {
-			body: (isstale ? config.stale.comment : config.stale.resolve) +
-				"\r\n\r\n" +
-				suffix + config.stale.commentFooter || "",
-		})
+		!this.dryRun &&
+			this.createComment.call(this, "stale", isstale, {
+				body:
+					(isstale ? config.stale.comment : config.stale.resolve) +
+						"\r\n\r\n" +
+						suffix +
+						config.stale.commentFooter || ""
+			})
 	}
 	if (config.abandoned) {
 		log(
@@ -181,10 +182,13 @@ export async function checkStale(
 				}
 		// Create the abandoned comment
 		let isAbandoned = await abandoned
-		!this.dryRun && this.createComment.call(this, "stale", isAbandoned, {
-			body: (isAbandoned ? config.abandoned.comment : config.abandoned.resolve) +
-				"\r\n\r\n" +
-				suffix + config.abandoned.commentFooter || "",
-		})
+		!this.dryRun &&
+			this.createComment.call(this, "stale", isAbandoned, {
+				body:
+					(isAbandoned ? config.abandoned.comment : config.abandoned.resolve) +
+						"\r\n\r\n" +
+						suffix +
+						config.abandoned.commentFooter || ""
+			})
 	}
 }

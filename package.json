@@ -49,7 +49,7 @@
 		"postdev:schema": "typescript-json-schema ./tsconfig.json Labels -o schema/labels.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
 		"predev:schema": "typescript-json-schema ./tsconfig.json Config -o schema/configs.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
 		"release": "yarn version --no-git-tag-version && npm run git:bump",
-		"run": "gulp && git add . && yarn version --prerelease --no-git-tag-version && cz",
+		"run": "gulp && git add . && yarn version --prerelease --no-git-tag-version",
 		"start": "npm run run",
 		"test": "gulp testall"
 	},

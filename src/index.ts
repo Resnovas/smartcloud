@@ -91,7 +91,9 @@ async function run() {
 	const fillEmpty = Boolean(core.getInput("fillEmpty") || local.FILL)
 	const skipDelete = Boolean(core.getInput("skipDelete") || local.SKIPDELETE)
 	const options: Options = {
-		configJSON: localEx ? require(local.configJSON) : core.getInput("configJSON"),
+		configJSON: localEx
+			? require(local.configJSON)
+			: core.getInput("configJSON"),
 		configPath: localEx ? local.configPath : core.getInput("config"),
 		configRef: localEx ? local.configRef : core.getInput("configRef"),
 		showLogs,
@@ -105,7 +107,8 @@ async function run() {
 	action.run().catch(async (err) => {
 		log(
 			LoggingLevels.emergency,
-			`${process.env.NPM_PACKAGE_NAME} did not complete due to error:` + await err
+			`${process.env.NPM_PACKAGE_NAME} did not complete due to error:` +
+				(await err)
 		)
 	})
 }

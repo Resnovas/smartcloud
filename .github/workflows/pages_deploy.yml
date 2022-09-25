@@ -21,10 +21,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: "18"
-          registry-url: 'https://npm.pkg.github.com/'
-          scope: '@resnovas'
+          registry-url: "https://npm.pkg.github.com/"
+          scope: "@resnovas"
           always-auth: true
-          cache: 'yarn'
+          cache: "yarn"
 
       - name: login to github packages
         run: npm set "npm.pkg.github.com/:_authToken" {{ secrets.GITHUB_TOKEN }}

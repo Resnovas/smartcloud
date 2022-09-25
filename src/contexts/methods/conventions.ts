@@ -80,7 +80,8 @@ export async function enforce(this: Issues | PullRequests | Project) {
 				})
 			}
 			convention.failedComment =
-				`Semantic Conditions failed - Please title your ${this.curContext.type == "pr" ? "pull request" : "issue"
+				`Semantic Conditions failed - Please title your ${
+					this.curContext.type == "pr" ? "pull request" : "issue"
 				} using one of the valid options:\r\n\r\n Types: ` +
 				semantic.join(", ") +
 				(convention.contexts
@@ -93,19 +94,19 @@ export async function enforce(this: Issues | PullRequests | Project) {
 			successful++
 		} else {
 			failedMessages.push(convention.failedComment)
-			log(
-				LoggingLevels.info,
-				convention.failedComment
-			)
+			log(LoggingLevels.info, convention.failedComment)
 		}
 	}
 
 	if (required > successful) {
 		failedMessages.forEach((fail) => core.setFailed(fail))
-		let suffix = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${this.config.enforceConventions.commentFooter || ""
+		let suffix = `\r\n\r\n----------\r\n\r\nThis message will be automatically updated when you make this change\r\n\r\n${
+				this.config.enforceConventions.commentFooter || ""
 			}`,
 			body: string =
-				`${this.config.enforceConventions.commentHeader || ""}\r\n\r\n` + failedMessages?.join("\r\n\r\n") + suffix
+				`${this.config.enforceConventions.commentHeader || ""}\r\n\r\n` +
+				failedMessages?.join("\r\n\r\n") +
+				suffix
 		this.createComment.call(this, "Conventions", false, { body })
 		return false
 	}
@@ -113,6 +114,8 @@ export async function enforce(this: Issues | PullRequests | Project) {
 		LoggingLevels.info,
 		`All conventions successfully enforced. Moving to next step`
 	)
-	this.createComment.call(this, "Conventions", true, { body: "All conventions successfully enforced." })
+	this.createComment.call(this, "Conventions", true, {
+		body: "All conventions successfully enforced."
+	})
 	return true
 }

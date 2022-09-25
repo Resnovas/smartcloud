@@ -35,6 +35,4 @@ export interface CreateBranch {
 	branchName: "title" | "short" | "number"
 }
 
-export function CreateBranch(this: Issues) {
-
-}
+export function CreateBranch(this: Issues) {}

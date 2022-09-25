@@ -25,34 +25,39 @@ export const reviews = {
 		comments?: any
 	) {
 		if (this.dryRun) return undefined
-		else return (await this.client.rest.pulls.createReview({
-			...this.repo,
-			pull_number: IDNumber,
-			body,
-			event,
-			comments
-		})).data
+		else
+			return (
+				await this.client.rest.pulls.createReview({
+					...this.repo,
+					pull_number: IDNumber,
+					body,
+					event,
+					comments
+				})
+			).data
 	},
-	async requestReviewers(
-		this: Utils,
-		IDNumber: number,
-		reviewers: string[]
-	) {
+	async requestReviewers(this: Utils, IDNumber: number, reviewers: string[]) {
 		if (this.dryRun) return undefined
-		else return (await this.client.rest.pulls.requestReviewers({
-			...this.repo,
-			pull_number: IDNumber,
-			reviewers,
-		})).data
+		else
+			return (
+				await this.client.rest.pulls.requestReviewers({
+					...this.repo,
+					pull_number: IDNumber,
+					reviewers
+				})
+			).data
 	},
 	async update(this: Utils, IDNumber: number, review_id: number, body: string) {
 		if (this.dryRun) return undefined
-		else return (await this.client.rest.pulls.updateReview({
-			...this.repo,
-			pull_number: IDNumber,
-			review_id,
-			body
-		})).data
+		else
+			return (
+				await this.client.rest.pulls.updateReview({
+					...this.repo,
+					pull_number: IDNumber,
+					review_id,
+					body
+				})
+			).data
 	},
 	async dismiss(
 		this: Utils,
@@ -61,12 +66,15 @@ export const reviews = {
 		message: string
 	) {
 		if (this.dryRun) return undefined
-		else return (await this.client.rest.pulls.dismissReview({
-			...this.repo,
-			pull_number: IDNumber,
-			review_id,
-			message
-		})).data
+		else
+			return (
+				await this.client.rest.pulls.dismissReview({
+					...this.repo,
+					pull_number: IDNumber,
+					review_id,
+					message
+				})
+			).data
 	},
 
 	async list(this: Utils, IDNumber: number) {

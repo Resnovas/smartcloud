@@ -117,7 +117,8 @@ export async function addRemove(
 	} else {
 		log(
 			LoggingLevels.info,
-			`No action required for label "${labelName}"${hasLabel ? " as label is already applied." : "."
+			`No action required for label "${labelName}"${
+				hasLabel ? " as label is already applied." : "."
 			}`
 		)
 	}

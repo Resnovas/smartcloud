@@ -11,17 +11,20 @@ export async function create(
 	milestone: string,
 	ref?: string
 ) {
-	return !this.dryRun && (
-		await this.client.rest.issues.create({
-			...this.repo,
-			ref: ref || this.ref || "master",
-			title,
-			body,
-			milestone,
-			labels,
-			assignees
-		})
-	).data
+	return (
+		!this.dryRun &&
+		(
+			await this.client.rest.issues.create({
+				...this.repo,
+				ref: ref || this.ref || "master",
+				title,
+				body,
+				milestone,
+				labels,
+				assignees
+			})
+		).data
+	)
 }
 
 export async function get(this: Utils, IDNumber: number, ref?: string) {
@@ -82,32 +85,41 @@ export const comments = {
 		).data
 	},
 	async create(this: Utils, IDNumber: number, body: string, ref?: string) {
-		return !this.dryRun && (
-			await this.client.rest.issues.createComment({
-				...this.repo,
-				ref: ref || this.ref || "master",
-				issue_number: IDNumber,
-				body
-			})
-		).data
+		return (
+			!this.dryRun &&
+			(
+				await this.client.rest.issues.createComment({
+					...this.repo,
+					ref: ref || this.ref || "master",
+					issue_number: IDNumber,
+					body
+				})
+			).data
+		)
 	},
 	async update(this: Utils, comment_id: number, body: string, ref?: string) {
-		return !this.dryRun && (
-			await this.client.rest.issues.updateComment({
-				...this.repo,
-				ref: ref || this.ref || "master",
-				comment_id,
-				body
-			})
-		).data
+		return (
+			!this.dryRun &&
+			(
+				await this.client.rest.issues.updateComment({
+					...this.repo,
+					ref: ref || this.ref || "master",
+					comment_id,
+					body
+				})
+			).data
+		)
 	},
 	async delete(this: Utils, comment_id: number, ref?: string) {
-		return !this.dryRun && (
-			await this.client.rest.issues.deleteComment({
-				...this.repo,
-				ref: ref || this.ref || "master",
-				comment_id
-			})
-		).data
+		return (
+			!this.dryRun &&
+			(
+				await this.client.rest.issues.deleteComment({
+					...this.repo,
+					ref: ref || this.ref || "master",
+					comment_id
+				})
+			).data
+		)
 	}
 }

@@ -39,7 +39,7 @@ export interface Runners {
 	 */
 	labels?: Labels
 	/**
-	 * This defines all the diffent configurations for your repository. 
+	 * This defines all the diffent configurations for your repository.
 	 * You can have as many as you like. You can use this within Mono-repositories to have different configurations for different projects.
 	 * You can also have diffeent configurations for different branches.
 	 */
@@ -133,11 +133,11 @@ export interface SharedConfig {
 	 */
 	labels?: {
 		[key: string]:
-		| IssueConditionConfig
-		| ProjectConditionConfig
-		| PRConditionConfig
-		| ScheduleConditionConfig
-		| SharedConditions
+			| IssueConditionConfig
+			| ProjectConditionConfig
+			| PRConditionConfig
+			| ScheduleConditionConfig
+			| SharedConditions
 	}
 }
 
@@ -196,8 +196,7 @@ try {
 	process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER
 	if (!context.payload.issue && !context.payload.pull_request)
 		context = require(local.github_context)
-} catch { }
-
+} catch {}
 
 export default class Action {
 	client: Github
@@ -261,10 +260,7 @@ export default class Action {
 		 * @since 1.1.0
 		 */
 		const configs = await this.processConfig().catch((err) => {
-			log(
-				LoggingLevels.error,
-				`Error thrown while processing config: ` + err
-			)
+			log(LoggingLevels.error, `Error thrown while processing config: ` + err)
 			throw `Error thrown while processing config: ` + err
 		})
 		if (!configs.runners[0]) {
@@ -299,56 +295,67 @@ export default class Action {
 			 * @author TGTGamer
 			 * @since 1.1.0
 			 */
-			config.labels = Object.entries(
-				configs.labels ? configs.labels : []
-			).reduce((acc: { [key: string]: string }, cur) => {
-				acc[cur[0]] = cur[1].name
-				return acc
-			}, {})
+			config.labels = this.configureLabels(configs)
 
 			/**
 			 * Get the context
 			 * @author TGTGamer
 			 * @since 1.1.0
 			 */
-			const curContext = await this.processContext(config).catch(async (err) => {
-				await log(
-					LoggingLevels.error,
-					`Error thrown while processing context: ` + err
-				)
-				throw `Error thrown while processing context: ` + err
-			})
+			const curContext = await this.processContext(config).catch(
+				async (err) => {
+					await log(
+						LoggingLevels.error,
+						`Error thrown while processing context: ` + err
+					)
+					throw `Error thrown while processing context: ` + err
+				}
+			)
 			log(LoggingLevels.debug, `Current Context: ${JSON.stringify(curContext)}`)
 
-			/**
-			 * Combine the Shared & Context.type Configs
-			 * @author TGTGamer
-			 * @since 1.1.0
-			 */
+			config = this.handleSharedConfig(config, curContext)
 
-			for (const a in config.sharedConfig) {
-				const action = a as SharedConfigIndex
-				if (!action || (!config[curContext.type] && !this.fillEmpty)) return
-				else if (!config[curContext.type]) config[curContext.type] = {}
-				if (action == "labels" && this.util.shouldRun("label")) {
-					for (const label in config.sharedConfig.labels) {
-						if (!config[curContext.type]!.labels)
-							config[curContext.type]!.labels = {}
-						if (!(label in config[curContext.type]!)) {
-							const l = config.sharedConfig.labels[label]
-							if (l) config[curContext.type]!.labels![label] = l
-						}
-					}
-				} else if (
-					action === "enforceConventions" || action === "stale"
-				) {
-					// @ts-expect-error - Property 'conventions' is missing in type 'Stale' but required in type 'EnforceConventions'
-					config[curContext.type]![action] = config.sharedConfig[action]
-				}
-			}
 			core.endGroup()
 			this.applyContext(configs, config, curContext)
 		})
+	}
+
+	/**
+	 * Combine the Shared & Context.type Configs
+	 * @author TGTGamer
+	 * @since 1.1.0
+	 */
+	handleSharedConfig(config: Config, curContext: CurContext) {
+		for (const a in config.sharedConfig) {
+			const action = a as SharedConfigIndex
+			if (!action || (!config[curContext.type] && !this.fillEmpty))
+				return config
+			else if (!config[curContext.type]) config[curContext.type] = {}
+			if (action == "labels") {
+				for (const label in config.sharedConfig.labels) {
+					if (!config[curContext.type]!.labels)
+						config[curContext.type]!.labels = {}
+					if (!(label in config[curContext.type]!)) {
+						const l = config.sharedConfig.labels[label]
+						if (l) config[curContext.type]!.labels![label] = l
+					}
+				}
+			} else if (action === "enforceConventions" || action === "stale") {
+				// @ts-expect-error - Property 'conventions' is missing in type 'Stale' but required in type 'EnforceConventions'
+				config[curContext.type]![action] = config.sharedConfig[action]
+			}
+		}
+		return config
+	}
+
+	configureLabels(configs: Runners) {
+		return Object.entries(configs.labels ? configs.labels : []).reduce(
+			(acc: { [key: string]: string }, cur) => {
+				acc[cur[0]] = cur[1].name
+				return acc
+			},
+			{}
+		)
 	}
 
 	/**
@@ -398,10 +405,7 @@ export default class Action {
 				}
 			)
 			if (!ctx) {
-				await log(
-					LoggingLevels.error,
-					"Pull Request not found on context"
-				)
+				await log(LoggingLevels.error, "Pull Request not found on context")
 				throw "Pull Request not found on context"
 			}
 			log(LoggingLevels.debug, `PR context: ${JSON.stringify(ctx)}`)
@@ -523,12 +527,12 @@ export default class Action {
 			curContext.type == "pr"
 				? new PullRequests(this.util, runners, config, curContext, this.dryRun)
 				: curContext.type == "issue"
-					? new Issues(this.util, runners, config, curContext, this.dryRun)
-					: curContext.type == "project"
-						? new Project(this.util, runners, config, curContext, this.dryRun)
-						: curContext.type == "schedule"
-							? new Schedule(this.util, runners, config, curContext, this.dryRun)
-							: undefined
+				? new Issues(this.util, runners, config, curContext, this.dryRun)
+				: curContext.type == "project"
+				? new Project(this.util, runners, config, curContext, this.dryRun)
+				: curContext.type == "schedule"
+				? new Schedule(this.util, runners, config, curContext, this.dryRun)
+				: undefined
 
 		if (!ctx)
 			throw new LoggingDataClass(LoggingLevels.error, "Context not found")
