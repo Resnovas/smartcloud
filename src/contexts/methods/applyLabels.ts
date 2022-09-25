@@ -44,12 +44,7 @@ export async function applyLabels(this: UtilThis) {
 		}
 
 		await this.util.labels
-			.addRemove(
-				labelName,
-				this.context.props.ID,
-				hasLabel,
-				shouldHaveLabel
-			)
+			.addRemove(labelName, this.context.props.ID, hasLabel, shouldHaveLabel)
 			.catch(async (err) => {
 				await log(
 					LoggingLevels.error,

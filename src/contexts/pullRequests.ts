@@ -86,7 +86,7 @@ export class PullRequests extends Contexts {
 		log(
 			LoggingLevels.debug,
 			`context.payload.pull_request: ` +
-			JSON.stringify(context.payload.pull_request)
+				JSON.stringify(context.payload.pull_request)
 		)
 
 		const IDNumber = pr.number

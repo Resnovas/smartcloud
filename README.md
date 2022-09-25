@@ -1,6 +1,9 @@
+<!-- @format -->
 
 <!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+
 [![All Contributors](https://img.shields.io/badge/all_contributors-4-orange.svg?style=flat-square)](#contributors-)
+
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 
 # Smartcloud
@@ -11,7 +14,7 @@ The most advanced github action, with functionality overflowing and declaritive 
 
 Projects Classic is still supported
 
-I have began to work on the new ProjectsV2 api, which has required us to deploy an app which uses OAuth to interact with the new Projects API. This has not effected the functionality of the rest of the tools and is not required for most of the tools to function. 
+I have began to work on the new ProjectsV2 api, which has required us to deploy an app which uses OAuth to interact with the new Projects API. This has not effected the functionality of the rest of the tools and is not required for most of the tools to function.
 
 ## Index
 

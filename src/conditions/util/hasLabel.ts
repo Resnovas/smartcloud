@@ -29,7 +29,8 @@ function hasLabel(
 	issue: UtilProps
 ) {
 	return (
-		Boolean(issue.labels?.[condition.label.toLowerCase()]) == condition.condition
+		Boolean(issue.labels?.[condition.label.toLowerCase()]) ==
+		condition.condition
 	)
 }
 

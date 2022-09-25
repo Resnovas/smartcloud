@@ -33,12 +33,12 @@ export class Utils {
 		this.ref = options.ref
 		this.git = git
 			? simpleGit({
-				...git,
-				baseDir: !git.baseDir ? process.cwd() : git.baseDir,
-				binary: "git",
-				maxConcurrentProcesses: 6,
-				config: !git.config ? [] : git.config
-			})
+					...git,
+					baseDir: !git.baseDir ? process.cwd() : git.baseDir,
+					binary: "git",
+					maxConcurrentProcesses: 6,
+					config: !git.config ? [] : git.config
+			  })
 			: simpleGit()
 	}
 	api = {
@@ -143,7 +143,12 @@ export class Utils {
 						event,
 						comments
 					),
-				requestReviewers: async (IDNumber: number, reviewers: string[]) => APIPullRequests.reviews.requestReviewers.call(this, IDNumber, reviewers),
+				requestReviewers: async (IDNumber: number, reviewers: string[]) =>
+					APIPullRequests.reviews.requestReviewers.call(
+						this,
+						IDNumber,
+						reviewers
+					),
 				update: async (IDNumber: number, review_id: number, body: string) =>
 					APIPullRequests.reviews.update.call(this, IDNumber, review_id, body),
 				dismiss: async (IDNumber: number, review_id: number, message: string) =>
@@ -200,8 +205,8 @@ export class Utils {
 			previousComment,
 			body
 		}: {
-			event?: Event,
-			previousComment?: number,
+			event?: Event
+			previousComment?: number
 			body?: string
 		}
 	) => UtilRespond.respond.call(that, success, event, previousComment, body)

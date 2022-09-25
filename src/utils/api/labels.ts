@@ -5,30 +5,30 @@ import { Label, Labels } from "../../action"
 
 export async function add(this: Utils, IDNumber: number, label: string) {
 	!this.dryRun &&
-		await this.client.rest.issues.addLabels({
+		(await this.client.rest.issues.addLabels({
 			...this.repo,
 			issue_number: IDNumber,
 			labels: [label]
-		})
+		}))
 }
 export async function create(this: Utils, label: Label, ref?: string) {
 	const color = await this.parsingData.formatColor(label.color)
 	!this.dryRun &&
-		await this.client.rest.issues.createLabel({
+		(await this.client.rest.issues.createLabel({
 			...this.repo,
 			ref: ref || this.ref || "master",
 			...label,
 			color
-		})
+		}))
 }
 
 export async function del(this: Utils, name: string, ref?: string) {
 	!this.dryRun &&
-		await this.client.rest.issues.deleteLabel({
+		(await this.client.rest.issues.deleteLabel({
 			...this.repo,
 			ref: ref || this.ref || "master",
 			name
-		})
+		}))
 }
 
 export async function get(this: Utils, ref?: string): Promise<Labels> {
@@ -58,12 +58,12 @@ export async function remove(
 	ref?: string
 ) {
 	!this.dryRun &&
-		await this.client.rest.issues.removeLabel({
+		(await this.client.rest.issues.removeLabel({
 			...this.repo,
 			ref: ref || this.ref || "master",
 			issue_number: IDNumber,
 			name: label
-		})
+		}))
 }
 
 export async function update(
@@ -74,12 +74,12 @@ export async function update(
 ) {
 	const color = await this.parsingData.formatColor(label.color)
 	!this.dryRun &&
-		await this.client.rest.issues.updateLabel({
+		(await this.client.rest.issues.updateLabel({
 			...this.repo,
 			ref: ref || this.ref || "master",
 			current_name,
 			name: label.name,
 			description: label.description,
 			color
-		})
+		}))
 }

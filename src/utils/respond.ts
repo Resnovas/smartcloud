@@ -1,7 +1,7 @@
 /** @format */
 
-import { UtilThis } from "../conditions"
 import { Event } from "."
+import { UtilThis } from "../conditions"
 
 export function respond(
 	this: UtilThis,
@@ -12,7 +12,8 @@ export function respond(
 ) {
 	if (!this.curContext.context.props?.ID)
 		throw new Error("ID value is required")
-	if (!previousComment && success && event !== "APPROVE") return // No need to comment if there is no previous comment and the job is successful
+	if (!previousComment && success && event !== "APPROVE") return
+	// No need to comment if there is no previous comment and the job is successful
 	else if ((!previousComment && !success) || event == "APPROVE") {
 		// does not have a previous comment || is not successful
 

@@ -14,7 +14,6 @@ import only, { ConditionOnlyOne } from "./only"
 import or, { ConditionOr } from "./or"
 import titleMatches, { ConditionTitleMatches } from "./titleMatches"
 
-
 export type Condition =
 	| ConditionCreatorMatches
 	| ConditionDescriptionMatches

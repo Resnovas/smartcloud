@@ -71,9 +71,7 @@ export interface PRProps extends Props {
 	changes: number
 }
 
-
 export type IssueProps = Props
-
 
 export interface ProjectProps extends Props {
 	project: any
@@ -87,9 +85,7 @@ export interface ProjectProps extends Props {
 	}
 }
 
-
 export type ScheduleProps = Props
-
 
 export interface Version {
 	name?: string
@@ -102,9 +98,7 @@ export interface Version {
 	}
 }
 
-
 export type Reviews = Review[]
-
 
 export interface Review {
 	id?: number
@@ -133,7 +127,6 @@ interface localCard {
 	updated_at: string
 	url: string
 }
-
 
 interface localColumn {
 	name: any

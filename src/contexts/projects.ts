@@ -150,9 +150,10 @@ export class Project extends Contexts {
 		try {
 			if (this.config.enforceConventions) {
 				if (!this.config.enforceConventions.onColumn) return
-				this.config.enforceConventions.onColumn = await this.convertColumnStringsToIDArray(
-					this.config.enforceConventions.onColumn
-				)
+				this.config.enforceConventions.onColumn =
+					await this.convertColumnStringsToIDArray(
+						this.config.enforceConventions.onColumn
+					)
 				if (
 					this.config.enforceConventions?.onColumn?.includes(
 						this.context.props.column_id

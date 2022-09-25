@@ -64,18 +64,18 @@ export async function evaluator(
 		const handler =
 			props.type == "issue"
 				? getIssueConditionHandler.call(
-					this as Issues,
-					condition as IssueCondition
-				)
+						this as Issues,
+						condition as IssueCondition
+				  )
 				: props.type == "pr"
-					? getPRConditionHandler.call(
+				? getPRConditionHandler.call(
 						this as PullRequests,
 						condition as PRCondition
-					)
-					: getProjectConditionHandler.call(
+				  )
+				: getProjectConditionHandler.call(
 						this as Project,
 						condition as ProjectCondition
-					)
+				  )
 		log(LoggingLevels.debug, `The handler is ${handler?.name}`)
 		// @ts-expect-error
 		return handler?.call(this, condition as any, props as any) as boolean

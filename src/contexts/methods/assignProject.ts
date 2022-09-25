@@ -82,7 +82,7 @@ export async function assignProject(this: Issues | PullRequests) {
 						log(
 							LoggingLevels.error,
 							`New error thrown when attempting to add to project "${project.name}"` +
-							err
+								err
 						)
 					}))
 		}
