@@ -6,9 +6,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - ".github/workflows/deploy.yml"
-      - "docs/**"
 
 jobs:
   deploy:
@@ -42,7 +39,7 @@ jobs:
 
       - run: yarn install --frozen-lockfile
         working-directory: docs
-        
+
       - run: yarn build
         working-directory: docs
 
