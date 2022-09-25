@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/conditions/pr/changesSize.ts:11](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/changesSize.ts#L11)
+[src/conditions/pr/changesSize.ts:11](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/changesSize.ts#L11)
 
 ___
 
@@ -25,7 +25,7 @@ ___
 
 #### Defined in
 
-[src/conditions/pr/changesSize.ts:10](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/changesSize.ts#L10)
+[src/conditions/pr/changesSize.ts:10](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/changesSize.ts#L10)
 
 ___
 
@@ -35,4 +35,4 @@ ___
 
 #### Defined in
 
-[src/conditions/pr/changesSize.ts:9](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/changesSize.ts#L9)
+[src/conditions/pr/changesSize.ts:9](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/changesSize.ts#L9)

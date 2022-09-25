@@ -29,7 +29,7 @@ The conditions required for this to succeed
 
 #### Defined in
 
-[src/conditions/index.ts:196](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L196)
+[src/conditions/index.ts:196](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L196)
 
 ___
 
@@ -41,7 +41,7 @@ Should the release create a changelog?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:59](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L59)
+[src/contexts/methods/release.ts:59](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L59)
 
 ___
 
@@ -53,7 +53,7 @@ Should the release create the next milestone?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:51](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L51)
+[src/contexts/methods/release.ts:51](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L51)
 
 ___
 
@@ -65,7 +65,7 @@ Should the release create a Github Package?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:55](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L55)
+[src/contexts/methods/release.ts:55](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L55)
 
 ___
 
@@ -77,7 +77,7 @@ Should the release create a Github Release?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:47](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L47)
+[src/contexts/methods/release.ts:47](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L47)
 
 ___
 
@@ -89,7 +89,7 @@ Should the release create a tag?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:43](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L43)
+[src/contexts/methods/release.ts:43](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L43)
 
 ___
 
@@ -112,7 +112,7 @@ The labels to use to detect release type (semantic release)
 
 #### Defined in
 
-[src/contexts/methods/release.ts:13](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L13)
+[src/contexts/methods/release.ts:13](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L13)
 
 ___
 
@@ -128,4 +128,4 @@ The number of requires needed for this to succeed
 
 #### Defined in
 
-[src/conditions/index.ts:192](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L192)
+[src/conditions/index.ts:192](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L192)

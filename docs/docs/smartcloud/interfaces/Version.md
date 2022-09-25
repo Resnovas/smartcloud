@@ -14,7 +14,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/conditions/index.ts:95](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L95)
+[src/conditions/index.ts:95](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L95)
 
 ___
 
@@ -34,4 +34,4 @@ ___
 
 #### Defined in
 
-[src/conditions/index.ts:96](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L96)
+[src/conditions/index.ts:96](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L96)

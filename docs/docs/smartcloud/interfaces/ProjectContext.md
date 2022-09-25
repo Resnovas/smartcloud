@@ -20,7 +20,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/conditions/index.ts:38](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L38)
+[src/conditions/index.ts:38](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L38)
 
 ___
 
@@ -34,7 +34,7 @@ ___
 
 #### Defined in
 
-[src/conditions/index.ts:48](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L48)
+[src/conditions/index.ts:48](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L48)
 
 ___
 
@@ -44,7 +44,7 @@ ___
 
 #### Defined in
 
-[src/conditions/index.ts:37](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L37)
+[src/conditions/index.ts:37](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L37)
 
 ___
 
@@ -54,7 +54,7 @@ ___
 
 #### Defined in
 
-[src/conditions/index.ts:39](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L39)
+[src/conditions/index.ts:39](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L39)
 
 ___
 
@@ -68,7 +68,7 @@ ___
 
 #### Defined in
 
-[src/conditions/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L46)
+[src/conditions/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L46)
 
 ___
 
@@ -82,4 +82,4 @@ ___
 
 #### Defined in
 
-[src/conditions/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L47)
+[src/conditions/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L47)

@@ -19,7 +19,7 @@ The local project to sync
 
 #### Defined in
 
-[src/contexts/methods/syncRemoteProject.ts:14](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteProject.ts#L14)
+[src/contexts/methods/syncRemoteProject.ts:14](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteProject.ts#L14)
 
 ___
 
@@ -31,7 +31,7 @@ The owner of the project
 
 #### Defined in
 
-[src/contexts/methods/syncRemoteProject.ts:18](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteProject.ts#L18)
+[src/contexts/methods/syncRemoteProject.ts:18](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteProject.ts#L18)
 
 ___
 
@@ -47,7 +47,7 @@ owner|user|repo
 
 #### Defined in
 
-[src/contexts/methods/syncRemoteProject.ts:32](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteProject.ts#L32)
+[src/contexts/methods/syncRemoteProject.ts:32](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteProject.ts#L32)
 
 ___
 
@@ -63,7 +63,7 @@ owner
 
 #### Defined in
 
-[src/contexts/methods/syncRemoteProject.ts:27](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteProject.ts#L27)
+[src/contexts/methods/syncRemoteProject.ts:27](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteProject.ts#L27)
 
 ___
 
@@ -75,4 +75,4 @@ The user of the project
 
 #### Defined in
 
-[src/contexts/methods/syncRemoteProject.ts:22](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/syncRemoteProject.ts#L22)
+[src/contexts/methods/syncRemoteProject.ts:22](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/syncRemoteProject.ts#L22)

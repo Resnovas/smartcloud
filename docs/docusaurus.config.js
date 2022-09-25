@@ -40,8 +40,7 @@ module.exports = {
 			{
 				id: "changelog",
 				routeBasePath: "changelog",
-				path: "./changelog",
-				editLocalizedFiles: true
+				path: "./changelog"
 			}
 		]
 	],
@@ -68,16 +67,11 @@ module.exports = {
 					label: "Config Docs",
 					position: "left"
 				},
-				// { to: "blog", label: "Blog", position: "left" },
 				{ to: "changelog", label: "Changelog", position: "left" },
 				{
 					href: "https://github.com/resnovas/smartcloud",
 					label: "GitHub",
 					position: "right"
-				},
-				{
-					type: "localeDropdown",
-					position: "left"
 				}
 			]
 		},
@@ -126,14 +120,12 @@ module.exports = {
 				docs: {
 					sidebarPath: require.resolve("./sidebars.js"),
 					editUrl:
-						"https://github.com/resnovas/smartcloud/edit/develop/docs/",
-					editLocalizedFiles: true,
+						"https://github.com/resnovas/smartcloud/edit/develop/docs/"
 				},
 				blog: {
 					showReadingTime: true,
 					editUrl:
-						"https://github.com/resnovas/smartcloud/edit/develop/docs/blog/",
-					editLocalizedFiles: true
+						"https://github.com/resnovas/smartcloud/edit/develop/docs/blog/"
 				}
 			}
 		]

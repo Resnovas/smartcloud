@@ -30,7 +30,7 @@ The color of the label
 
 #### Defined in
 
-[src/action.ts:157](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L157)
+[src/action.ts:162](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L162)
 
 ___
 
@@ -42,7 +42,7 @@ A description of the label
 
 #### Defined in
 
-[src/action.ts:153](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L153)
+[src/action.ts:158](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L158)
 
 ___
 
@@ -54,4 +54,4 @@ The name as appears on github
 
 #### Defined in
 
-[src/action.ts:149](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L149)
+[src/action.ts:154](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L154)

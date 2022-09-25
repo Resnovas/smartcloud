@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/conditions/util/only.ts:17](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/util/only.ts#L17)
+[src/conditions/util/only.ts:17](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/only.ts#L17)
 
 ___
 
@@ -25,7 +25,7 @@ ___
 
 #### Defined in
 
-[src/conditions/util/only.ts:15](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/util/only.ts#L15)
+[src/conditions/util/only.ts:15](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/only.ts#L15)
 
 ___
 
@@ -35,4 +35,4 @@ ___
 
 #### Defined in
 
-[src/conditions/util/only.ts:16](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/util/only.ts#L16)
+[src/conditions/util/only.ts:16](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/only.ts#L16)

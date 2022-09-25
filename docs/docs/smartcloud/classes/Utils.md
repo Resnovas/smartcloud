@@ -26,7 +26,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/utils/index.ts:24](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L24)
+[src/utils/index.ts:24](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L24)
 
 ## Properties
 
@@ -89,7 +89,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/utils/index.ts:44](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L44)
+[src/utils/index.ts:44](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L44)
 
 ___
 
@@ -99,7 +99,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:18](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L18)
+[src/utils/index.ts:18](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L18)
 
 ___
 
@@ -109,7 +109,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:20](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L20)
+[src/utils/index.ts:20](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L20)
 
 ___
 
@@ -119,7 +119,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:23](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L23)
+[src/utils/index.ts:23](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L23)
 
 ___
 
@@ -136,7 +136,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:170](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L170)
+[src/utils/index.ts:170](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L170)
 
 ___
 
@@ -155,7 +155,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:187](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L187)
+[src/utils/index.ts:187](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L187)
 
 ___
 
@@ -165,7 +165,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:22](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L22)
+[src/utils/index.ts:22](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L22)
 
 ___
 
@@ -175,7 +175,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:19](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L19)
+[src/utils/index.ts:19](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L19)
 
 ___
 
@@ -185,7 +185,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:21](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L21)
+[src/utils/index.ts:21](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L21)
 
 ___
 
@@ -201,7 +201,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:208](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L208)
+[src/utils/index.ts:208](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L208)
 
 ## Methods
 
@@ -226,7 +226,7 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:195](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L195)
+[src/utils/index.ts:195](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L195)
 
 ___
 
@@ -246,4 +246,4 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:213](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L213)
+[src/utils/index.ts:213](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L213)

@@ -29,7 +29,7 @@ CreateBranch.branchName
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:35](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L35)
+[src/contexts/methods/createBranch.ts:35](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L35)
 
 ___
 
@@ -45,7 +45,7 @@ CreateBranch.branchPrefix
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:27](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L27)
+[src/contexts/methods/createBranch.ts:27](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L27)
 
 ___
 
@@ -61,7 +61,7 @@ CreateBranch.branchSuffix
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:31](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L31)
+[src/contexts/methods/createBranch.ts:31](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L31)
 
 ___
 
@@ -73,7 +73,7 @@ Column to use
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:17](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L17)
+[src/contexts/methods/createBranch.ts:17](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L17)
 
 ___
 
@@ -85,4 +85,4 @@ Project to use
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:13](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L13)
+[src/contexts/methods/createBranch.ts:13](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L13)

@@ -19,7 +19,7 @@ The date in which you want to set as the completion date
 
 #### Defined in
 
-[src/contexts/methods/handleMilestone.ts:29](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/handleMilestone.ts#L29)
+[src/contexts/methods/handleMilestone.ts:29](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/handleMilestone.ts#L29)
 
 ___
 
@@ -31,4 +31,4 @@ The milestone you want to use
 
 #### Defined in
 
-[src/contexts/methods/handleMilestone.ts:25](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/handleMilestone.ts#L25)
+[src/contexts/methods/handleMilestone.ts:25](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/handleMilestone.ts#L25)

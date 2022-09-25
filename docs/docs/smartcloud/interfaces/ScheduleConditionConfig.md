@@ -18,7 +18,7 @@ The conditions required for this to succeed
 
 #### Defined in
 
-[src/conditions/index.ts:238](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L238)
+[src/conditions/index.ts:238](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L238)
 
 ___
 
@@ -30,4 +30,4 @@ The number of requires needed for this to succeed
 
 #### Defined in
 
-[src/conditions/index.ts:234](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L234)
+[src/conditions/index.ts:234](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L234)

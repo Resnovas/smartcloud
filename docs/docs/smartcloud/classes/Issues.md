@@ -34,7 +34,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/contexts/issues.ts:31](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/issues.ts#L31)
+[src/contexts/issues.ts:31](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/issues.ts#L31)
 
 ## Properties
 
@@ -48,7 +48,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/contexts/issues.ts:30](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/issues.ts#L30)
+[src/contexts/issues.ts:30](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/issues.ts#L30)
 
 ___
 
@@ -62,7 +62,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L47)
+[src/contexts/methods/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L47)
 
 ___
 
@@ -76,7 +76,7 @@ ___
 
 #### Defined in
 
-[src/contexts/issues.ts:29](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/issues.ts#L29)
+[src/contexts/issues.ts:29](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/issues.ts#L29)
 
 ___
 
@@ -96,7 +96,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:101](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L101)
+[src/contexts/methods/index.ts:101](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L101)
 
 ___
 
@@ -110,7 +110,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:49](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L49)
+[src/contexts/methods/index.ts:49](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L49)
 
 ___
 
@@ -124,7 +124,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:54](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L54)
+[src/contexts/methods/index.ts:54](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L54)
 
 ___
 
@@ -138,7 +138,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:51](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L51)
+[src/contexts/methods/index.ts:51](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L51)
 
 ___
 
@@ -152,7 +152,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:53](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L53)
+[src/contexts/methods/index.ts:53](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L53)
 
 ___
 
@@ -166,7 +166,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L46)
+[src/contexts/methods/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L46)
 
 ___
 
@@ -180,7 +180,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:52](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L52)
+[src/contexts/methods/index.ts:52](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L52)
 
 ## Methods
 
@@ -204,7 +204,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:94](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L94)
+[src/contexts/methods/index.ts:94](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L94)
 
 ___
 
@@ -228,7 +228,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:93](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L93)
+[src/contexts/methods/index.ts:93](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L93)
 
 ___
 
@@ -252,7 +252,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:97](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L97)
+[src/contexts/methods/index.ts:97](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L97)
 
 ___
 
@@ -276,7 +276,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:99](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L99)
+[src/contexts/methods/index.ts:99](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L99)
 
 ___
 
@@ -300,7 +300,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:95](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L95)
+[src/contexts/methods/index.ts:95](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L95)
 
 ___
 
@@ -329,7 +329,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:107](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L107)
+[src/contexts/methods/index.ts:107](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L107)
 
 ___
 
@@ -353,7 +353,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:98](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L98)
+[src/contexts/methods/index.ts:98](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L98)
 
 ___
 
@@ -373,7 +373,7 @@ ___
 
 #### Defined in
 
-[src/contexts/issues.ts:108](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/issues.ts#L108)
+[src/contexts/issues.ts:108](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/issues.ts#L108)
 
 ___
 
@@ -397,7 +397,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:92](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L92)
+[src/contexts/methods/index.ts:92](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L92)
 
 ___
 
@@ -429,4 +429,4 @@ IvanFon, TGTGamer, jbinda
 
 #### Defined in
 
-[src/contexts/issues.ts:58](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/issues.ts#L58)
+[src/contexts/issues.ts:58](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/issues.ts#L58)

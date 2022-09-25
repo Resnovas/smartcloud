@@ -25,7 +25,7 @@ The branch name type
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:35](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L35)
+[src/contexts/methods/createBranch.ts:35](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L35)
 
 ___
 
@@ -37,7 +37,7 @@ The branch prefix
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:27](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L27)
+[src/contexts/methods/createBranch.ts:27](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L27)
 
 ___
 
@@ -49,4 +49,4 @@ The branch suffix
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:31](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L31)
+[src/contexts/methods/createBranch.ts:31](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L31)

@@ -28,7 +28,7 @@ Assign to milestone configuration
 
 #### Defined in
 
-[src/contexts/projects.ts:30](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/projects.ts#L30)
+[src/contexts/projects.ts:30](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/projects.ts#L30)
 
 ___
 
@@ -44,7 +44,7 @@ The enforceConventions configuration
 
 #### Defined in
 
-[src/action.ts:121](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L121)
+[src/action.ts:126](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L126)
 
 ___
 
@@ -64,7 +64,7 @@ The labels to be applied
 
 #### Defined in
 
-[src/action.ts:129](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L129)
+[src/action.ts:134](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L134)
 
 ___
 
@@ -76,7 +76,7 @@ Open branch configuration
 
 #### Defined in
 
-[src/contexts/projects.ts:26](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/projects.ts#L26)
+[src/contexts/projects.ts:26](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/projects.ts#L26)
 
 ___
 
@@ -92,7 +92,7 @@ The reference used internally
 
 #### Defined in
 
-[src/action.ts:117](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L117)
+[src/action.ts:122](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L122)
 
 ___
 
@@ -108,7 +108,7 @@ The stale configuration
 
 #### Defined in
 
-[src/action.ts:125](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L125)
+[src/action.ts:130](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L130)
 
 ___
 
@@ -120,4 +120,4 @@ Syncronise remote repository configuration.
 
 #### Defined in
 
-[src/contexts/projects.ts:22](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/projects.ts#L22)
+[src/contexts/projects.ts:22](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/projects.ts#L22)

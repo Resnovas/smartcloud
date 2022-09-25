@@ -19,7 +19,7 @@ Which labels should e ignored?
 
 #### Defined in
 
-[src/contexts/methods/handleMilestone.ts:15](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/handleMilestone.ts#L15)
+[src/contexts/methods/handleMilestone.ts:15](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/handleMilestone.ts#L15)
 
 ___
 
@@ -31,4 +31,4 @@ Which column o use
 
 #### Defined in
 
-[src/contexts/methods/handleMilestone.ts:11](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/handleMilestone.ts#L11)
+[src/contexts/methods/handleMilestone.ts:11](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/handleMilestone.ts#L11)

@@ -25,7 +25,7 @@ Should be a draft?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:133](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L133)
+[src/contexts/methods/release.ts:133](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L133)
 
 ___
 
@@ -41,7 +41,7 @@ Should include issues?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:69](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L69)
+[src/contexts/methods/release.ts:69](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L69)
 
 ___
 
@@ -53,7 +53,7 @@ Should release be a prerelease?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:137](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L137)
+[src/contexts/methods/release.ts:137](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L137)
 
 ___
 
@@ -65,7 +65,7 @@ The name of the release to create
 
 #### Defined in
 
-[src/contexts/methods/release.ts:121](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L121)
+[src/contexts/methods/release.ts:121](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L121)
 
 ___
 
@@ -77,7 +77,7 @@ The prefix before the releaseName
 
 #### Defined in
 
-[src/contexts/methods/release.ts:125](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L125)
+[src/contexts/methods/release.ts:125](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L125)
 
 ___
 
@@ -89,7 +89,7 @@ The sufix to add to the release name
 
 #### Defined in
 
-[src/contexts/methods/release.ts:129](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L129)
+[src/contexts/methods/release.ts:129](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L129)
 
 ___
 
@@ -105,7 +105,7 @@ The section configuration
 
 #### Defined in
 
-[src/contexts/methods/release.ts:73](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L73)
+[src/contexts/methods/release.ts:73](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L73)
 
 ___
 
@@ -117,7 +117,7 @@ The name of the tag to create
 
 #### Defined in
 
-[src/contexts/methods/release.ts:113](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L113)
+[src/contexts/methods/release.ts:113](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L113)
 
 ___
 
@@ -129,7 +129,7 @@ The prefix before the tagName
 
 #### Defined in
 
-[src/contexts/methods/release.ts:117](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L117)
+[src/contexts/methods/release.ts:117](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L117)
 
 ___
 
@@ -141,4 +141,4 @@ Should the release use the generated changelog?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:141](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L141)
+[src/contexts/methods/release.ts:141](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L141)

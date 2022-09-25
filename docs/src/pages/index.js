@@ -1,16 +1,15 @@
 /** @format */
 
 import useBaseUrl from "@docusaurus/useBaseUrl"
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
 import Layout from "@theme/Layout"
 import clsx from "clsx"
 import React from "react"
 import styles from "./styles.module.css"
-import { Button, TextField } from "@mui/material"
-import {JSONEditor} from '@json-editor/json-editor'
+import { Button } from "@mui/material"
 import { useEffect } from 'react'
 import schema from './schema.json'
 import config from './template_config.json'
+import BrowserOnly from '@docusaurus/BrowserOnly'
 
 const features = [
 	{
@@ -58,7 +57,8 @@ function Feature({ imageUrl, title, description }) {
 }
 
 function Configurator() {
-		useEffect(() => {
+	useEffect(() => {
+			const JSONEditor = require('@json-editor/json-editor').JSONEditor
 			const element = document.getElementById('editor_holder');
 			const editor = new JSONEditor(element, {
 				schema: schema,
@@ -71,7 +71,6 @@ function Configurator() {
 }
 
 export default function Home() {
-	const context = useDocusaurusContext()
 	const [isConfigOpen, setisConfigOpen] = React.useState(false)
 
 

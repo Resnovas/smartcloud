@@ -14,7 +14,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/utils/index.ts:236](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L236)
+[src/utils/index.ts:236](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L236)
 
 ___
 
@@ -24,4 +24,4 @@ ___
 
 #### Defined in
 
-[src/utils/index.ts:237](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/utils/index.ts#L237)
+[src/utils/index.ts:237](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L237)

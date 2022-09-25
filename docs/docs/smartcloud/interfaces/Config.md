@@ -16,7 +16,7 @@ The branch used to get the config file from. Defaults to master.
 
 #### Defined in
 
-[src/action.ts:48](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L48)
+[src/action.ts:53](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L53)
 
 ___
 
@@ -28,7 +28,7 @@ The issue configurations.
 
 #### Defined in
 
-[src/action.ts:89](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L89)
+[src/action.ts:94](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L94)
 
 ___
 
@@ -44,7 +44,7 @@ The labels used by our internal tools.
 
 #### Defined in
 
-[src/action.ts:75](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L75)
+[src/action.ts:80](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L80)
 
 ___
 
@@ -56,7 +56,7 @@ The pull request configurations.
 
 #### Defined in
 
-[src/action.ts:85](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L85)
+[src/action.ts:90](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L90)
 
 ___
 
@@ -68,7 +68,7 @@ The project configurations.
 
 #### Defined in
 
-[src/action.ts:93](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L93)
+[src/action.ts:98](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L98)
 
 ___
 
@@ -84,7 +84,7 @@ Maximum number of attempts before stopping.
 
 #### Defined in
 
-[src/action.ts:70](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L70)
+[src/action.ts:75](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L75)
 
 ___
 
@@ -96,7 +96,7 @@ The schedule configurations.
 
 #### Defined in
 
-[src/action.ts:97](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L97)
+[src/action.ts:102](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L102)
 
 ___
 
@@ -108,7 +108,7 @@ Shared configurations, merged with the PR, Issue, Project and Schedule configura
 
 #### Defined in
 
-[src/action.ts:81](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L81)
+[src/action.ts:86](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L86)
 
 ___
 
@@ -128,4 +128,4 @@ Versioning configuration used for release management.
 
 #### Defined in
 
-[src/action.ts:52](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L52)
+[src/action.ts:57](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L57)

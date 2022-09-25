@@ -17,7 +17,7 @@ The comment to append to the footer
 
 #### Defined in
 
-[src/contexts/methods/conventions.ts:28](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L28)
+[src/contexts/methods/conventions.ts:28](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L28)
 
 ___
 
@@ -29,7 +29,7 @@ The comment to append to the header
 
 #### Defined in
 
-[src/contexts/methods/conventions.ts:24](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L24)
+[src/contexts/methods/conventions.ts:24](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L24)
 
 ___
 
@@ -41,7 +41,7 @@ The conventions to enforce
 
 #### Defined in
 
-[src/contexts/methods/conventions.ts:36](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L36)
+[src/contexts/methods/conventions.ts:36](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L36)
 
 ___
 
@@ -53,7 +53,7 @@ The column to move if fails
 
 #### Defined in
 
-[src/contexts/methods/conventions.ts:32](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L32)
+[src/contexts/methods/conventions.ts:32](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L32)
 
 ___
 
@@ -65,4 +65,4 @@ The columns to enforce conventions
 
 #### Defined in
 
-[src/contexts/methods/conventions.ts:20](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L20)
+[src/contexts/methods/conventions.ts:20](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L20)

@@ -4,6 +4,9 @@ docs/output
 context.json
 contexts/config.json
 lib/
+docs/build
+docs/.docusaurus
+
 # dist/
 
 # Rest pulled from https://github.com/github/gitignore/blob/master/Node.gitignore

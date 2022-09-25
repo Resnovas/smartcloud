@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/conditions/pr/branchMatches.ts:10](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/branchMatches.ts#L10)
+[src/conditions/pr/branchMatches.ts:10](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/branchMatches.ts#L10)
 
 ___
 
@@ -25,4 +25,4 @@ ___
 
 #### Defined in
 
-[src/conditions/pr/branchMatches.ts:9](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/branchMatches.ts#L9)
+[src/conditions/pr/branchMatches.ts:9](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/branchMatches.ts#L9)

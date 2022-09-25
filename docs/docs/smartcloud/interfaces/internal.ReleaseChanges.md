@@ -25,7 +25,7 @@ Should include issues?
 
 #### Defined in
 
-[src/contexts/methods/release.ts:69](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L69)
+[src/contexts/methods/release.ts:69](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L69)
 
 ___
 
@@ -37,4 +37,4 @@ The section configuration
 
 #### Defined in
 
-[src/contexts/methods/release.ts:73](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L73)
+[src/contexts/methods/release.ts:73](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L73)

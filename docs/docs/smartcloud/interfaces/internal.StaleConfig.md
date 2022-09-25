@@ -27,7 +27,7 @@ The comment to append to the stale issue
 
 #### Defined in
 
-[src/contexts/methods/checkStale.ts:42](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L42)
+[src/contexts/methods/checkStale.ts:42](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L42)
 
 ___
 
@@ -39,7 +39,7 @@ The comment to append to the footer
 
 #### Defined in
 
-[src/contexts/methods/checkStale.ts:54](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L54)
+[src/contexts/methods/checkStale.ts:54](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L54)
 
 ___
 
@@ -51,7 +51,7 @@ The comment to append to the header
 
 #### Defined in
 
-[src/contexts/methods/checkStale.ts:50](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L50)
+[src/contexts/methods/checkStale.ts:50](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L50)
 
 ___
 
@@ -67,7 +67,7 @@ The conditions required for this to succeed
 
 #### Defined in
 
-[src/conditions/index.ts:168](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L168)
+[src/conditions/index.ts:168](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L168)
 
 ___
 
@@ -79,7 +79,7 @@ The days to consider stale
 
 #### Defined in
 
-[src/contexts/methods/checkStale.ts:38](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L38)
+[src/contexts/methods/checkStale.ts:38](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L38)
 
 ___
 
@@ -95,7 +95,7 @@ The number of requires needed for this to succeed
 
 #### Defined in
 
-[src/conditions/index.ts:164](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L164)
+[src/conditions/index.ts:164](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L164)
 
 ___
 
@@ -107,4 +107,4 @@ The comment to switch when resolved
 
 #### Defined in
 
-[src/contexts/methods/checkStale.ts:46](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L46)
+[src/contexts/methods/checkStale.ts:46](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L46)

@@ -29,7 +29,7 @@ The conditions required for this to succeed. You can use the "semanticTitle" to 
 
 #### Defined in
 
-[src/conditions/index.ts:182](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L182)
+[src/conditions/index.ts:182](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L182)
 
 ___
 
@@ -45,7 +45,7 @@ conditions: "semanticTitle"
 
 #### Defined in
 
-[src/contexts/methods/conventions.ts:48](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L48)
+[src/contexts/methods/conventions.ts:48](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L48)
 
 ___
 
@@ -57,7 +57,7 @@ The failed comment to use
 
 #### Defined in
 
-[src/contexts/methods/conventions.ts:43](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L43)
+[src/contexts/methods/conventions.ts:43](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L43)
 
 ___
 
@@ -73,4 +73,4 @@ The number of requires needed for this to succeed
 
 #### Defined in
 
-[src/conditions/index.ts:178](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L178)
+[src/conditions/index.ts:178](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L178)

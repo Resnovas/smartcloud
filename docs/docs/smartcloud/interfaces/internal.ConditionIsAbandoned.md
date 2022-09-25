@@ -15,7 +15,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/conditions/util/isAbandoned.ts:9](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/util/isAbandoned.ts#L9)
+[src/conditions/util/isAbandoned.ts:9](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/isAbandoned.ts#L9)
 
 ___
 
@@ -25,7 +25,7 @@ ___
 
 #### Defined in
 
-[src/conditions/util/isAbandoned.ts:10](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/util/isAbandoned.ts#L10)
+[src/conditions/util/isAbandoned.ts:10](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/isAbandoned.ts#L10)
 
 ___
 
@@ -35,4 +35,4 @@ ___
 
 #### Defined in
 
-[src/conditions/util/isAbandoned.ts:8](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/util/isAbandoned.ts#L8)
+[src/conditions/util/isAbandoned.ts:8](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/isAbandoned.ts#L8)
