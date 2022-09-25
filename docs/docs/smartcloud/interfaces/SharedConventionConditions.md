@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 Conventions to use
 
 ## Hierarchy
@@ -28,9 +30,10 @@ The conditions required for this to succeed. You can use the "semanticTitle" to 
 [src/conditions/index.ts:182](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L182)
 =======
 [src/conditions/index.ts:182](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L182)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/SharedConventionConditions.md
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/SharedConventionConditions.md
+
+---
 
 ### requires
 
@@ -44,4 +47,5 @@ The number of requires needed for this to succeed
 [src/conditions/index.ts:178](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L178)
 =======
 [src/conditions/index.ts:178](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L178)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/SharedConventionConditions.md
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/SharedConventionConditions.md

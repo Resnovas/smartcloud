@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 The issue configuration
 
 ## Hierarchy
@@ -28,9 +30,10 @@ Assign project configuration.
 [src/contexts/issues.ts:21](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/issues.ts#L21)
 =======
 [src/contexts/issues.ts:21](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/issues.ts#L21)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
+
+---
 
 ### createBranch
 
@@ -48,9 +51,10 @@ Open branch configuration
 [src/contexts/issues.ts:25](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/issues.ts#L25)
 =======
 [src/contexts/issues.ts:25](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/issues.ts#L25)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
+
+---
 
 ### enforceConventions
 
@@ -68,9 +72,10 @@ The enforceConventions configuration
 [src/action.ts:126](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L126)
 =======
 [src/action.ts:121](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L121)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
+
+---
 
 ### labels
 
@@ -92,9 +97,10 @@ The labels to be applied
 [src/action.ts:134](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L134)
 =======
 [src/action.ts:129](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L129)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
+
+---
 
 ### ref
 
@@ -112,9 +118,10 @@ The reference used internally
 [src/action.ts:122](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L122)
 =======
 [src/action.ts:117](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L117)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
+
+---
 
 ### stale
 
@@ -132,4 +139,5 @@ The stale configuration
 [src/action.ts:130](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L130)
 =======
 [src/action.ts:125](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/action.ts#L125)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/IssueConfig.md

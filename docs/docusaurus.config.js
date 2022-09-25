@@ -5,7 +5,8 @@
 
 module.exports = {
 	title: "Smartcloud",
-	tagline: "The most advanced github action, with functionality overflowing and declaritive configuration to streamline your entire github workflow!",
+	tagline:
+		"The most advanced github action, with functionality overflowing and declaritive configuration to streamline your entire github workflow!",
 	url: "https://resnovas.github.io",
 	baseUrl: "/smartcloud/",
 	onBrokenLinks: "throw",
@@ -30,9 +31,7 @@ module.exports = {
 				searchInComments: true,
 				excludeExternals: true,
 				internalModule: "internal",
-				plugin: [
-					"typedoc-plugin-missing-exports"
-				]
+				plugin: ["typedoc-plugin-missing-exports"]
 			}
 		],
 		[
@@ -119,8 +118,7 @@ module.exports = {
 			{
 				docs: {
 					sidebarPath: require.resolve("./sidebars.js"),
-					editUrl:
-						"https://github.com/resnovas/smartcloud/edit/develop/docs/"
+					editUrl: "https://github.com/resnovas/smartcloud/edit/develop/docs/"
 				},
 				blog: {
 					showReadingTime: true,

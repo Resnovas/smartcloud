@@ -1,3 +1,5 @@
+# @format
+
 name: Push to GitHub Pages
 
 on:
@@ -5,8 +7,8 @@ on:
     branches:
       - main
     paths:
-      - '.github/workflows/deploy.yml'
-      - 'docs/**'
+      - ".github/workflows/deploy.yml"
+      - "docs/**"
   pull_request:
 
 jobs:
@@ -25,7 +27,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '14'
+          node-version: "18"
 
       - name: Get yarn cache
         id: yarn-cache

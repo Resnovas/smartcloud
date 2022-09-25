@@ -6,6 +6,8 @@ sidebar_position: 0.5
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Modules
 
 - [internal](modules/internal.md)
@@ -56,27 +58,27 @@ custom_edit_url: null
 
 [src/conditions/util/index.ts:18](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/index.ts#L18)
 
-___
+---
 
 ### CurContext
 
-Ƭ **CurContext**: { `context`: [`PRContext`](interfaces/PRContext.md) ; `type`: ``"pr"``  } \| { `context`: [`IssueContext`](interfaces/IssueContext.md) ; `type`: ``"issue"``  } \| { `context`: [`ProjectContext`](interfaces/ProjectContext.md) ; `type`: ``"project"``  } \| { `context`: [`ScheduleContext`](interfaces/ScheduleContext.md) ; `type`: ``"schedule"``  }
+Ƭ **CurContext**: { `context`: [`PRContext`](interfaces/PRContext.md) ; `type`: `"pr"` } \| { `context`: [`IssueContext`](interfaces/IssueContext.md) ; `type`: `"issue"` } \| { `context`: [`ProjectContext`](interfaces/ProjectContext.md) ; `type`: `"project"` } \| { `context`: [`ScheduleContext`](interfaces/ScheduleContext.md) ; `type`: `"schedule"` }
 
 #### Defined in
 
 [src/conditions/index.ts:18](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L18)
 
-___
+---
 
 ### Event
 
-Ƭ **Event**: ``"REQUEST_CHANGES"`` \| ``"APPROVE"`` \| ``"COMMENT"``
+Ƭ **Event**: `"REQUEST_CHANGES"` \| `"APPROVE"` \| `"COMMENT"`
 
 #### Defined in
 
 [src/utils/index.ts:247](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L247)
 
-___
+---
 
 ### Github
 
@@ -86,7 +88,7 @@ ___
 
 [src/action.ts:188](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L188)
 
-___
+---
 
 ### IssueCondition
 
@@ -96,7 +98,7 @@ ___
 
 [src/conditions/issue/index.ts:6](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/issue/index.ts#L6)
 
-___
+---
 
 ### IssueProps
 
@@ -106,7 +108,7 @@ ___
 
 [src/conditions/index.ts:75](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L75)
 
-___
+---
 
 ### PRCondition
 
@@ -116,7 +118,7 @@ ___
 
 [src/conditions/pr/index.ts:13](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/index.ts#L13)
 
-___
+---
 
 ### ProjectCondition
 
@@ -126,7 +128,7 @@ ___
 
 [src/conditions/project/index.ts:7](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/project/index.ts#L7)
 
-___
+---
 
 ### Reviews
 
@@ -136,7 +138,7 @@ ___
 
 [src/conditions/index.ts:106](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L106)
 
-___
+---
 
 ### ScheduleCondition
 
@@ -146,7 +148,7 @@ ___
 
 [src/conditions/schedule/index.ts:6](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/schedule/index.ts#L6)
 
-___
+---
 
 ### ScheduleConfig
 
@@ -158,7 +160,7 @@ The schedule configuration
 
 [src/contexts/schedule.ts:15](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/schedule.ts#L15)
 
-___
+---
 
 ### ScheduleProps
 
@@ -168,11 +170,11 @@ ___
 
 [src/conditions/index.ts:91](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L91)
 
-___
+---
 
 ### SharedConfigIndex
 
-Ƭ `Private` **SharedConfigIndex**: ``"ref"`` \| ``"enforceConventions"`` \| ``"labels"`` \| ``"stale"``
+Ƭ `Private` **SharedConfigIndex**: `"ref"` \| `"enforceConventions"` \| `"labels"` \| `"stale"`
 
 The shared configuration Index
 
@@ -180,7 +182,7 @@ The shared configuration Index
 
 [src/action.ts:109](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L109)
 
-___
+---
 
 ### Tags
 
@@ -190,7 +192,7 @@ ___
 
 [src/utils/index.ts:248](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L248)
 
-___
+---
 
 ### UtilProps
 
@@ -202,7 +204,7 @@ Props used instead of manually requiring props
 
 [src/conditions/index.ts:155](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L155)
 
-___
+---
 
 ### UtilThis
 
@@ -214,11 +216,11 @@ This instead of manually requiring this
 
 [src/conditions/index.ts:151](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L151)
 
-___
+---
 
 ### VersionSource
 
-Ƭ **VersionSource**: ``"node"`` \| ``"milestones"`` \| `string`
+Ƭ **VersionSource**: `"node"` \| `"milestones"` \| `string`
 
 The version source.
 Node: A node project, our package will use the package.json to determine the version.
@@ -229,11 +231,11 @@ String: A string to use as the version.
 
 [src/action.ts:181](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L181)
 
-___
+---
 
 ### VersionType
 
-Ƭ **VersionType**: ``"SemVer"``
+Ƭ **VersionType**: `"SemVer"`
 
 The version number type. This is used to determine how versioning is handled. SemVer is the default.
 
@@ -241,21 +243,21 @@ The version number type. This is used to determine how versioning is handled. Se
 
 [src/action.ts:186](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/action.ts#L186)
 
-___
+---
 
 ### functionality
 
-Ƭ **functionality**: ``"release"`` \| ``"convention"`` \| ``"label"``
+Ƭ **functionality**: `"release"` \| `"convention"` \| `"label"`
 
 #### Defined in
 
 [src/utils/index.ts:240](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/utils/index.ts#L240)
 
-___
+---
 
 ### packages
 
-Ƭ **packages**: ``"@resnovas/smartcloud"`` \| ``"@resnovas/label-mastermind"`` \| ``"@resnovas/convention-mastermind"`` \| `undefined`
+Ƭ **packages**: `"@resnovas/smartcloud"` \| `"@resnovas/label-mastermind"` \| `"@resnovas/convention-mastermind"` \| `undefined`
 
 #### Defined in
 
@@ -265,7 +267,7 @@ ___
 
 ### handlers
 
-• `Const` **handlers**: (readonly [``"creatorMatches"``, (`this`: [`UtilThis`](#utilthis), `pattern`: [`ConditionCreatorMatches`](interfaces/internal.ConditionCreatorMatches.md), `issue`: [`UtilProps`](#utilprops)) => `Promise`<`boolean`\>] \| readonly [``"descriptionMatches"``, (`this`: [`UtilThis`](#utilthis), `pattern`: [`ConditionDescriptionMatches`](interfaces/internal.ConditionDescriptionMatches.md), `issue`: [`UtilProps`](#utilprops)) => `Promise`<`boolean`\>] \| readonly [``"isOpen"``, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionIsOpen`](interfaces/internal.ConditionIsOpen.md), `issue`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [``"isStale"``, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionIsStale`](interfaces/internal.ConditionIsStale.md), `issue`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [``"isAbandoned"``, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionIsAbandoned`](interfaces/internal.ConditionIsAbandoned.md), `issue`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [``"hasLabel"``, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionHasLabel`](interfaces/internal.ConditionHasLabel.md), `issue`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [``"titleMatches"``, (`this`: [`UtilThis`](#utilthis), `pattern`: [`ConditionTitleMatches`](interfaces/internal.ConditionTitleMatches.md), `issue`: [`UtilProps`](#utilprops)) => `Promise`<`boolean`\>] \| readonly [``"$and"``, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionAnd`](interfaces/internal.ConditionAnd.md), `props`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [``"$or"``, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionOr`](interfaces/internal.ConditionOr.md), `props`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [``"$not"``, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionNot`](interfaces/internal.ConditionNot.md), `props`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [``"$only"``, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionOnlyOne`](interfaces/internal.ConditionOnlyOne.md), `props`: [`UtilProps`](#utilprops)) => `boolean`])[]
+• `Const` **handlers**: (readonly [`"creatorMatches"`, (`this`: [`UtilThis`](#utilthis), `pattern`: [`ConditionCreatorMatches`](interfaces/internal.ConditionCreatorMatches.md), `issue`: [`UtilProps`](#utilprops)) => `Promise`<`boolean`\>] \| readonly [`"descriptionMatches"`, (`this`: [`UtilThis`](#utilthis), `pattern`: [`ConditionDescriptionMatches`](interfaces/internal.ConditionDescriptionMatches.md), `issue`: [`UtilProps`](#utilprops)) => `Promise`<`boolean`\>] \| readonly [`"isOpen"`, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionIsOpen`](interfaces/internal.ConditionIsOpen.md), `issue`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [`"isStale"`, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionIsStale`](interfaces/internal.ConditionIsStale.md), `issue`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [`"isAbandoned"`, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionIsAbandoned`](interfaces/internal.ConditionIsAbandoned.md), `issue`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [`"hasLabel"`, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionHasLabel`](interfaces/internal.ConditionHasLabel.md), `issue`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [`"titleMatches"`, (`this`: [`UtilThis`](#utilthis), `pattern`: [`ConditionTitleMatches`](interfaces/internal.ConditionTitleMatches.md), `issue`: [`UtilProps`](#utilprops)) => `Promise`<`boolean`\>] \| readonly [`"$and"`, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionAnd`](interfaces/internal.ConditionAnd.md), `props`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [`"$or"`, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionOr`](interfaces/internal.ConditionOr.md), `props`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [`"$not"`, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionNot`](interfaces/internal.ConditionNot.md), `props`: [`UtilProps`](#utilprops)) => `boolean`] \| readonly [`"$only"`, (`this`: [`UtilThis`](#utilthis), `condition`: [`ConditionOnlyOne`](interfaces/internal.ConditionOnlyOne.md), `props`: [`UtilProps`](#utilprops)) => `boolean`])[]
 
 The utility condition handler.
 
@@ -281,11 +283,11 @@ The utility condition handler.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `this` | [`UtilThis`](#utilthis) |
+| Name     | Type                                                                                                                                                                                                                                                                                                                     |
+| :------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `this`   | [`UtilThis`](#utilthis)                                                                                                                                                                                                                                                                                                  |
 | `config` | [`SharedConventionsConfig`](interfaces/internal.SharedConventionsConfig.md) \| [`PRConditionConfig`](interfaces/PRConditionConfig.md) \| [`IssueConditionConfig`](interfaces/IssueConditionConfig.md) \| [`ProjectConditionConfig`](interfaces/ProjectConditionConfig.md) \| [`Release`](interfaces/internal.Release.md) |
-| `props` | [`UtilProps`](#utilprops) |
+| `props`  | [`UtilProps`](#utilprops)                                                                                                                                                                                                                                                                                                |
 
 #### Returns
 
@@ -295,7 +297,7 @@ The utility condition handler.
 
 [src/evaluator.ts:42](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/evaluator.ts#L42)
 
-___
+---
 
 ### getIssueConditionHandler
 
@@ -303,10 +305,10 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `this` | [`Issues`](classes/Issues.md) |
-| `condition` | [`Condition`](#condition) |
+| Name        | Type                          |
+| :---------- | :---------------------------- |
+| `this`      | [`Issues`](classes/Issues.md) |
+| `condition` | [`Condition`](#condition)     |
 
 #### Returns
 
@@ -316,7 +318,7 @@ ___
 
 [src/conditions/issue/index.ts:10](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/issue/index.ts#L10)
 
-___
+---
 
 ### getPRConditionHandler
 
@@ -324,10 +326,10 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `this` | [`Issues`](classes/Issues.md) \| [`PullRequests`](classes/PullRequests.md) \| [`Project`](classes/Project.md) |
-| `condition` | [`PRCondition`](#prcondition) |
+| Name        | Type                                                                                                          |
+| :---------- | :------------------------------------------------------------------------------------------------------------ |
+| `this`      | [`Issues`](classes/Issues.md) \| [`PullRequests`](classes/PullRequests.md) \| [`Project`](classes/Project.md) |
+| `condition` | [`PRCondition`](#prcondition)                                                                                 |
 
 #### Returns
 
@@ -337,7 +339,7 @@ ___
 
 [src/conditions/pr/index.ts:34](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/index.ts#L34)
 
-___
+---
 
 ### getProjectConditionHandler
 
@@ -347,10 +349,10 @@ The project condition handler.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `this` | [`Issues`](classes/Issues.md) \| [`PullRequests`](classes/PullRequests.md) \| [`Project`](classes/Project.md) |
-| `condition` | [`ProjectCondition`](#projectcondition) |
+| Name        | Type                                                                                                          |
+| :---------- | :------------------------------------------------------------------------------------------------------------ |
+| `this`      | [`Issues`](classes/Issues.md) \| [`PullRequests`](classes/PullRequests.md) \| [`Project`](classes/Project.md) |
+| `condition` | [`ProjectCondition`](#projectcondition)                                                                       |
 
 #### Returns
 
@@ -360,7 +362,7 @@ The project condition handler.
 
 [src/conditions/project/index.ts:14](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/project/index.ts#L14)
 
-___
+---
 
 ### getScheduleConditionHandler
 
@@ -370,10 +372,10 @@ The schedule condition handler.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `this` | [`Schedule`](classes/Schedule.md) |
-| `condition` | [`Condition`](#condition) |
+| Name        | Type                              |
+| :---------- | :-------------------------------- |
+| `this`      | [`Schedule`](classes/Schedule.md) |
+| `condition` | [`Condition`](#condition)         |
 
 #### Returns
 
@@ -383,7 +385,7 @@ The schedule condition handler.
 
 [src/conditions/schedule/index.ts:13](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/schedule/index.ts#L13)
 
-___
+---
 
 ### log
 
@@ -393,10 +395,10 @@ Logging function used throught the package.
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `name` | `LoggingLevels` |
-| `message` | `string` |
+| Name       | Type             |
+| :--------- | :--------------- |
+| `name`     | `LoggingLevels`  |
+| `message`  | `string`         |
 | `options?` | `LoggingOptions` |
 
 #### Returns

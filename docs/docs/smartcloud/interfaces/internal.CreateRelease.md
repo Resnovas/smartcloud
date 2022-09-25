@@ -5,6 +5,8 @@ sidebar_label: "CreateRelease"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).CreateRelease
 
 The create release configuration
@@ -29,9 +31,10 @@ Should be a draft?
 [src/contexts/methods/release.ts:133](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L133)
 =======
 [src/contexts/methods/release.ts:133](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L133)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### includeIssues
 
@@ -49,9 +52,10 @@ Should include issues?
 [src/contexts/methods/release.ts:69](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L69)
 =======
 [src/contexts/methods/release.ts:69](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L69)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### prerelease
 
@@ -65,9 +69,10 @@ Should release be a prerelease?
 [src/contexts/methods/release.ts:137](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L137)
 =======
 [src/contexts/methods/release.ts:137](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L137)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### releaseName
 
@@ -81,9 +86,10 @@ The name of the release to create
 [src/contexts/methods/release.ts:121](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L121)
 =======
 [src/contexts/methods/release.ts:121](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L121)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### releaseNamePrefix
 
@@ -97,9 +103,10 @@ The prefix before the releaseName
 [src/contexts/methods/release.ts:125](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L125)
 =======
 [src/contexts/methods/release.ts:125](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L125)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### releaseNameSuffix
 
@@ -113,9 +120,10 @@ The sufix to add to the release name
 [src/contexts/methods/release.ts:129](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L129)
 =======
 [src/contexts/methods/release.ts:129](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L129)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### sections
 
@@ -133,9 +141,10 @@ The section configuration
 [src/contexts/methods/release.ts:73](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L73)
 =======
 [src/contexts/methods/release.ts:73](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L73)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### tagName
 
@@ -149,9 +158,10 @@ The name of the tag to create
 [src/contexts/methods/release.ts:113](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L113)
 =======
 [src/contexts/methods/release.ts:113](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L113)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### tagPrefix
 
@@ -165,9 +175,10 @@ The prefix before the tagName
 [src/contexts/methods/release.ts:117](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L117)
 =======
 [src/contexts/methods/release.ts:117](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L117)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### useChangelog
 
@@ -181,4 +192,5 @@ Should the release use the generated changelog?
 [src/contexts/methods/release.ts:141](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L141)
 =======
 [src/contexts/methods/release.ts:141](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L141)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

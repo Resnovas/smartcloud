@@ -5,6 +5,8 @@ sidebar_label: "Changelog"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).Changelog
 
 Changelog
@@ -29,9 +31,10 @@ The changelog body (before the sections)
 [src/contexts/methods/changelog.ts:15](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/changelog.ts#L15)
 =======
 [src/contexts/methods/changelog.ts:15](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/changelog.ts#L15)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### includeIssues
 
@@ -49,9 +52,10 @@ Should include issues?
 [src/contexts/methods/release.ts:69](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L69)
 =======
 [src/contexts/methods/release.ts:69](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L69)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### sections
 
@@ -69,9 +73,10 @@ The section configuration
 [src/contexts/methods/release.ts:73](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L73)
 =======
 [src/contexts/methods/release.ts:73](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L73)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### title
 
@@ -85,4 +90,5 @@ The changelog title
 [src/contexts/methods/changelog.ts:10](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/changelog.ts#L10)
 =======
 [src/contexts/methods/changelog.ts:10](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/changelog.ts#L10)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

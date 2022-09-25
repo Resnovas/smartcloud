@@ -5,6 +5,8 @@ sidebar_label: "SharedConventionsConfig"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).SharedConventionsConfig
 
 Conventions to use
@@ -33,9 +35,10 @@ The conditions required for this to succeed. You can use the "semanticTitle" to 
 [src/conditions/index.ts:182](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L182)
 =======
 [src/conditions/index.ts:182](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L182)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### contexts
 
@@ -53,9 +56,10 @@ conditions: "semanticTitle"
 [src/contexts/methods/conventions.ts:48](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L48)
 =======
 [src/contexts/methods/conventions.ts:48](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L48)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### failedComment
 
@@ -69,9 +73,10 @@ The failed comment to use
 [src/contexts/methods/conventions.ts:43](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L43)
 =======
 [src/contexts/methods/conventions.ts:43](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L43)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### requires
 
@@ -89,4 +94,5 @@ The number of requires needed for this to succeed
 [src/conditions/index.ts:178](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L178)
 =======
 [src/conditions/index.ts:178](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L178)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

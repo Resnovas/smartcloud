@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 The Project condition configuration
 
 ## Properties
@@ -22,9 +24,10 @@ The conditions required for this to succeed
 [src/conditions/index.ts:224](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L224)
 =======
 [src/conditions/index.ts:224](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L224)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/ProjectConditionConfig.md
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/ProjectConditionConfig.md
+
+---
 
 ### requires
 
@@ -38,4 +41,5 @@ The number of requires needed for this to succeed
 [src/conditions/index.ts:220](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L220)
 =======
 [src/conditions/index.ts:220](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L220)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/ProjectConditionConfig.md
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960:docs/docs/release-mastermind/interfaces/ProjectConditionConfig.md

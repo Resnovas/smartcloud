@@ -5,6 +5,8 @@ sidebar_label: "Release"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).Release
 
 The release configuration
@@ -33,9 +35,10 @@ The conditions required for this to succeed
 [src/conditions/index.ts:196](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L196)
 =======
 [src/conditions/index.ts:196](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L196)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### createChangelog
 
@@ -49,9 +52,10 @@ Should the release create a changelog?
 [src/contexts/methods/release.ts:59](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L59)
 =======
 [src/contexts/methods/release.ts:59](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L59)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### createMilestone
 
@@ -65,9 +69,10 @@ Should the release create the next milestone?
 [src/contexts/methods/release.ts:51](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L51)
 =======
 [src/contexts/methods/release.ts:51](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L51)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### createPackages
 
@@ -81,9 +86,10 @@ Should the release create a Github Package?
 [src/contexts/methods/release.ts:55](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L55)
 =======
 [src/contexts/methods/release.ts:55](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L55)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### createRelease
 
@@ -97,9 +103,10 @@ Should the release create a Github Release?
 [src/contexts/methods/release.ts:47](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L47)
 =======
 [src/contexts/methods/release.ts:47](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L47)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### createTag
 
@@ -113,9 +120,10 @@ Should the release create a tag?
 [src/contexts/methods/release.ts:43](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L43)
 =======
 [src/contexts/methods/release.ts:43](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L43)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### labels
 
@@ -125,14 +133,14 @@ The labels to use to detect release type (semantic release)
 
 #### Type declaration
 
-| Name | Type | Description |
-| :------ | :------ | :------ |
-| `breaking?` | `string` | The label to use to mark a breaking change |
-| `build` | `string` | The label to use to mark a build |
-| `major` | `string` | The label to use to mark a major |
-| `minor` | `string` | The label to use to mark a minor |
-| `patch` | `string` | The label to use to mark a patch |
-| `prerelease` | `string` | The label to use to mark a prerelease |
+| Name         | Type     | Description                                |
+| :----------- | :------- | :----------------------------------------- |
+| `breaking?`  | `string` | The label to use to mark a breaking change |
+| `build`      | `string` | The label to use to mark a build           |
+| `major`      | `string` | The label to use to mark a major           |
+| `minor`      | `string` | The label to use to mark a minor           |
+| `patch`      | `string` | The label to use to mark a patch           |
+| `prerelease` | `string` | The label to use to mark a prerelease      |
 
 #### Defined in
 
@@ -140,9 +148,10 @@ The labels to use to detect release type (semantic release)
 [src/contexts/methods/release.ts:13](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/release.ts#L13)
 =======
 [src/contexts/methods/release.ts:13](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/release.ts#L13)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### requires
 
@@ -160,4 +169,5 @@ The number of requires needed for this to succeed
 [src/conditions/index.ts:192](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L192)
 =======
 [src/conditions/index.ts:192](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L192)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

@@ -5,6 +5,8 @@ sidebar_label: "EnforceConventions"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).EnforceConventions
 
 ## Properties
@@ -21,9 +23,10 @@ The comment to append to the footer
 [src/contexts/methods/conventions.ts:28](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L28)
 =======
 [src/contexts/methods/conventions.ts:28](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L28)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### commentHeader
 
@@ -37,9 +40,10 @@ The comment to append to the header
 [src/contexts/methods/conventions.ts:24](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L24)
 =======
 [src/contexts/methods/conventions.ts:24](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L24)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### condition
 
@@ -53,9 +57,10 @@ The conventions to enforce
 [src/contexts/methods/conventions.ts:36](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L36)
 =======
 [src/contexts/methods/conventions.ts:36](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L36)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### moveToColumn
 
@@ -69,9 +74,10 @@ The column to move if fails
 [src/contexts/methods/conventions.ts:32](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L32)
 =======
 [src/contexts/methods/conventions.ts:32](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L32)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### onColumn
 
@@ -85,4 +91,5 @@ The columns to enforce conventions
 [src/contexts/methods/conventions.ts:20](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L20)
 =======
 [src/contexts/methods/conventions.ts:20](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L20)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

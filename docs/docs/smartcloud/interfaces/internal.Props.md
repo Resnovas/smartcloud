@@ -5,6 +5,8 @@ sidebar_label: "Props"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).Props
 
 ## Hierarchy
@@ -27,9 +29,10 @@ custom_edit_url: null
 [src/conditions/index.ts:58](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L58)
 =======
 [src/conditions/index.ts:58](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L58)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### creator
 
@@ -41,9 +44,10 @@ ___
 [src/conditions/index.ts:52](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L52)
 =======
 [src/conditions/index.ts:52](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L52)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### description
 
@@ -55,9 +59,10 @@ ___
 [src/conditions/index.ts:53](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L53)
 =======
 [src/conditions/index.ts:53](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L53)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### labels
 
@@ -69,9 +74,10 @@ ___
 [src/conditions/index.ts:57](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L57)
 =======
 [src/conditions/index.ts:57](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L57)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### lastUpdated
 
@@ -83,9 +89,10 @@ ___
 [src/conditions/index.ts:60](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L60)
 =======
 [src/conditions/index.ts:60](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L60)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### locked
 
@@ -97,13 +104,14 @@ ___
 [src/conditions/index.ts:54](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L54)
 =======
 [src/conditions/index.ts:54](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L54)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### state
 
-• **state**: ``"open"`` \| ``"closed"``
+• **state**: `"open"` \| `"closed"`
 
 #### Defined in
 
@@ -111,9 +119,10 @@ ___
 [src/conditions/index.ts:55](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L55)
 =======
 [src/conditions/index.ts:55](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L55)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### title
 
@@ -125,13 +134,14 @@ ___
 [src/conditions/index.ts:56](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L56)
 =======
 [src/conditions/index.ts:56](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L56)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### type
 
-• **type**: ``"pr"`` \| ``"issue"`` \| ``"project"``
+• **type**: `"pr"` \| `"issue"` \| `"project"`
 
 #### Defined in
 
@@ -139,4 +149,5 @@ ___
 [src/conditions/index.ts:59](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L59)
 =======
 [src/conditions/index.ts:59](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L59)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

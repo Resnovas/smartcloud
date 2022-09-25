@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Classes
 
 - [Contexts](../classes/internal.Contexts.md)
@@ -76,8 +78,8 @@ The enforce conventions configuration
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                             |
+| :----- | :------------------------------- |
 | `this` | [`Issues`](../classes/Issues.md) |
 
 #### Returns

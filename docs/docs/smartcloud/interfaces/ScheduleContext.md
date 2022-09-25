@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Hierarchy
 
 - [`GeneralContext`](internal.GeneralContext.md)
@@ -28,9 +30,10 @@ custom_edit_url: null
 [src/conditions/index.ts:48](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L48)
 =======
 [src/conditions/index.ts:48](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L48)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### props
 
@@ -42,9 +45,10 @@ ___
 [src/conditions/index.ts:43](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L43)
 =======
 [src/conditions/index.ts:43](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L43)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### ref
 
@@ -60,9 +64,10 @@ ___
 [src/conditions/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L46)
 =======
 [src/conditions/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L46)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### sha
 
@@ -78,4 +83,5 @@ ___
 [src/conditions/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L47)
 =======
 [src/conditions/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L47)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

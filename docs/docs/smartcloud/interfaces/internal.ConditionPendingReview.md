@@ -5,6 +5,8 @@ sidebar_label: "ConditionPendingReview"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).ConditionPendingReview
 
 ## Properties
@@ -19,13 +21,14 @@ custom_edit_url: null
 [src/conditions/pr/pendingReview.ts:10](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/pendingReview.ts#L10)
 =======
 [src/conditions/pr/pendingReview.ts:10](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/pendingReview.ts#L10)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### type
 
-• **type**: ``"pendingReview"``
+• **type**: `"pendingReview"`
 
 #### Defined in
 
@@ -33,4 +36,5 @@ ___
 [src/conditions/pr/pendingReview.ts:9](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/pendingReview.ts#L9)
 =======
 [src/conditions/pr/pendingReview.ts:9](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/pendingReview.ts#L9)
->>>>>>> f1c3d7350ef9f5604f99e801f5604678ab957960
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
