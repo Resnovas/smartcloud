@@ -1,7 +1,7 @@
 {
 	"GITHUB_TOKEN": "",
-	"GITHUB_REPOSITORY": "",
 	"GITHUB_REPOSITORY_OWNER": "",
+	"GITHUB_REPOSITORY": "",
 	"FILL": true,
 	"SKIPDELETE": true,
 	"SHOW_LOGS": true,

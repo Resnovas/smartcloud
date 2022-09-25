@@ -21,7 +21,7 @@ Risk: <!-- The risk associated with this change based on reliance of other featu
 
 <!-- Please include the code section which needs maintenance if under 50 lines -->
 
-https://github.com/Videndum/Smartcloud/blob/5fbd201d7edfc6f32b34105a15729384bfcae134/package.json#L12-L16
+https://github.com/resnovas/Smartcloud/blob/5fbd201d7edfc6f32b34105a15729384bfcae134/package.json#L12-L16
 
 ## Improvements
 

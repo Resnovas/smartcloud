@@ -31,10 +31,6 @@ const handlers = [
 	isApproved
 ]
 
-/**
- * The pull request condition handler.
- * @private
- */
 export function getPRConditionHandler(
 	this: Issues | PullRequests | Project,
 	condition: PRCondition

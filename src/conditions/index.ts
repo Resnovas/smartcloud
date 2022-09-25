@@ -15,45 +15,30 @@ import { ProjectCondition } from "./project"
 import { ScheduleCondition } from "./schedule"
 import { Condition } from "./util"
 
-/**
- * @private
- */
 export type CurContext =
 	| { type: "pr"; context: PRContext }
 	| { type: "issue"; context: IssueContext }
 	| { type: "project"; context: ProjectContext }
 	| { type: "schedule"; context: ScheduleContext }
 
-/**
- * @private
- */
 export interface PRContext extends GeneralContext {
 	currentVersion?: Version
 	IDNumber: number
 	props: PRProps
 }
 
-/**
- * @private
- */
 export interface IssueContext extends GeneralContext {
 	currentVersion?: Version
 	IDNumber: number
 	props: IssueProps
 }
 
-/**
- * @private
- */
 export interface ProjectContext extends GeneralContext {
 	currentVersion?: Version
 	IDNumber: number
 	props: ProjectProps
 }
 
-/**
- * @private
- */
 export interface ScheduleContext extends GeneralContext {
 	props?: ScheduleProps
 }
@@ -63,9 +48,6 @@ interface GeneralContext {
 	action: string
 }
 
-/**
- * @private
- */
 interface Props {
 	creator: string
 	description: string
@@ -78,9 +60,6 @@ interface Props {
 	lastUpdated?: string
 }
 
-/**
- * @private
- */
 export interface PRProps extends Props {
 	branch: string
 	isDraft: boolean
@@ -92,14 +71,8 @@ export interface PRProps extends Props {
 	changes: number
 }
 
-/**
- * @private
- */
 export type IssueProps = Props
 
-/**
- * @private
- */
 export interface ProjectProps extends Props {
 	project: any
 	column_id: number
@@ -112,14 +85,8 @@ export interface ProjectProps extends Props {
 	}
 }
 
-/**
- * @private
- */
 export type ScheduleProps = Props
 
-/**
- * @private
- */
 export interface Version {
 	name?: string
 	semantic?: {
@@ -131,14 +98,8 @@ export interface Version {
 	}
 }
 
-/**
- * @private
- */
 export type Reviews = Review[]
 
-/**
- * @private
- */
 export interface Review {
 	id?: number
 	node_id?: string
@@ -153,9 +114,6 @@ export interface Review {
 	commit_id?: string
 }
 
-/**
- * @private
- */
 interface localCard {
 	archived: boolean
 	column_url: string
@@ -170,9 +128,6 @@ interface localCard {
 	url: string
 }
 
-/**
- * @private
- */
 interface localColumn {
 	name: any
 	cards_url: string
@@ -185,12 +140,10 @@ interface localColumn {
 }
 /**
  * This instead of manually requiring this
- * @private
  */
 export type UtilThis = Issues | PullRequests | Project | Schedule
 /**
  * Props used instead of manually requiring props
- * @private
  */
 export type UtilProps = IssueProps | PRProps | ProjectProps | ScheduleProps
 
@@ -205,7 +158,7 @@ export interface SharedConditions {
 	/**
 	 * The conditions required for this to succeed
 	 */
-	conditions: Condition[]
+	condition: Condition[]
 }
 
 /**
@@ -219,7 +172,7 @@ export interface SharedConventionConditions {
 	/**
 	 * The conditions required for this to succeed. You can use the "semanticTitle" to automatically apply thses conditions
 	 */
-	conditions: Condition[] | string
+	condition: Condition[] | string
 }
 
 /**
@@ -233,7 +186,7 @@ export interface PRConditionConfig {
 	/**
 	 * The conditions required for this to succeed
 	 */
-	conditions: PRCondition[]
+	condition: PRCondition[]
 }
 
 /**
@@ -247,7 +200,7 @@ export interface IssueConditionConfig {
 	/**
 	 * The conditions required for this to succeed
 	 */
-	conditions: IssueCondition[]
+	condition: IssueCondition[]
 }
 
 /**
@@ -261,7 +214,7 @@ export interface ProjectConditionConfig {
 	/**
 	 * The conditions required for this to succeed
 	 */
-	conditions: ProjectCondition[]
+	condition: ProjectCondition[]
 }
 
 /**
@@ -275,5 +228,5 @@ export interface ScheduleConditionConfig {
 	/**
 	 * The conditions required for this to succeed
 	 */
-	conditions: ScheduleCondition[]
+	condition: ScheduleCondition[]
 }

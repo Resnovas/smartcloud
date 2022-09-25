@@ -1,5 +1,7 @@
 /** @format */
 
+import { Issues } from "../issues"
+
 /**
  * Create branch on project configuration
  */
@@ -32,3 +34,5 @@ export interface CreateBranch {
 	 */
 	branchName: "title" | "short" | "number"
 }
+
+export function CreateBranch(this: Issues) {}

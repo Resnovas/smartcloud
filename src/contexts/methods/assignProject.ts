@@ -1,6 +1,6 @@
 /** @format */
 
-import { LoggingLevels } from "@videndum/utilities"
+import { LoggingLevels } from "@resnovas/utilities"
 import { Issues, PullRequests } from ".."
 import { log } from "../.."
 import { IssueConditionConfig } from "../../conditions"
@@ -65,7 +65,7 @@ export async function assignProject(this: Issues | PullRequests) {
 		if (!remoteColumn) throw log(LoggingLevels.error, "No column to use")
 
 		const should =
-			remote.conditions.length > 0
+			remote.condition.length > 0
 				? evaluator.call(this, remote, this.context.props)
 				: true
 

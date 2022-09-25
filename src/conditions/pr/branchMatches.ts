@@ -7,18 +7,28 @@ const TYPE = "branchMatches"
 
 export interface ConditionBranchMatches {
 	type: typeof TYPE
-	pattern: string
+	condition: string
 }
 
+/** Checks if branch name matches a Regex condition.
+
+	Example:
+
+```json
+{
+	"type": "branchMatches",
+	"condition": "^bugfix\\/"
+}
+``` */
 async function branchMatches(
 	this: Issues | PullRequests | Project,
-	condition: ConditionBranchMatches,
+	pattern: ConditionBranchMatches,
 	pr: PRProps
 ) {
-	const pattern = await this.util.parsingData.processRegExpPattern(
-		condition.pattern
+	const condition = await this.util.parsingData.processRegExpcondition(
+		pattern.condition
 	)
-	return pattern.test(pr.branch)
+	return condition.test(pr.branch)
 }
 
 export default [TYPE, branchMatches] as const

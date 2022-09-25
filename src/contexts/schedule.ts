@@ -2,7 +2,7 @@
 
 import * as core from "@actions/core"
 import { Context } from "@actions/github/lib/context"
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import { log } from ".."
 import { Config, Runners, SharedConfig } from "../action"
 import { CurContext, ScheduleContext } from "../conditions"
@@ -14,10 +14,6 @@ import { Contexts } from "./methods"
  */
 export type ScheduleConfig = SharedConfig
 
-/**
- * The schedule class.
- * @private
- */
 export class Schedule extends Contexts {
 	context: ScheduleContext
 	ctx: ScheduleContext
@@ -103,7 +99,7 @@ export class Schedule extends Contexts {
 					LoggingLevels.debug,
 					`Testing issue: ${issue.id} - ${issue.title} - ${issue.html_url} - Last updated: ${issue.updated_at}`
 				)
-				if (this.config.stale && this.util.shouldRun("label"))
+				if (this.config.stale)
 					await this.checkStale(this).catch((err) => {
 						log(LoggingLevels.error, "Error checking stale:" + err)
 					})
@@ -113,7 +109,7 @@ export class Schedule extends Contexts {
 						this.config.labels
 					)}`
 				)
-				if (this.config.labels && this.util.shouldRun("label"))
+				if (this.config.labels)
 					await this.applyLabels(this).catch((err) => {
 						log(LoggingLevels.error, "Error applying label:" + err)
 					})
@@ -125,7 +121,7 @@ export class Schedule extends Contexts {
 				throw new LoggingDataClass(
 					LoggingLevels.emergency,
 					`Scheduled actions failed. Terminating job.`,
-					{ errors: err }
+					{ errors: err as Error }
 				)
 			}
 			log(

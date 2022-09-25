@@ -1,7 +1,7 @@
 {
-	"$schema": "https://raw.githubusercontent.com/Videndum/smartcloud/develop/schema.json",
+	"$schema": "https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json",
 	"labels": {
-		"$schema": "https://raw.githubusercontent.com/Videndum/smartcloud/develop/schema/labels.json",
+		"$schema": "https://raw.githubusercontent.com/resnovas/smartcloud/main/schema/labels.json",
 		"abandoned": {
 			"name": "Status - Abandoned",
 			"color": "CFD3D7",
@@ -140,17 +140,17 @@
 		"releaseMastermind": {
 			"name": "Context - Release Mastermind",
 			"color": "f9cea2",
-			"description": "Related to @videndum/release-mastermind"
+			"description": "Related to @resnovas/release-mastermind"
 		},
 		"labelMastermind": {
 			"name": "Context - Label Mastermind",
 			"color": "f9cea2",
-			"description": "Related to @videndum/label-mastermind"
+			"description": "Related to @resnovas/label-mastermind"
 		},
 		"variableMastermind": {
 			"name": "Context - Variable Mastermind",
 			"color": "f9cea2",
-			"description": "Related to @videndum/variable-mastermind"
+			"description": "Related to @resnovas/variable-mastermind"
 		},
 		"condition": {
 			"name": "Context - Conditions",
@@ -460,7 +460,7 @@
 	},
 	"runners": [
 		{
-			"$schema": "https://raw.githubusercontent.com/Videndum/smartcloud/develop/schema/configs.json",
+			"$schema": "../../../schema/configs.json",
 			"root": ".",
 			"versioning": {
 				"source": "milestones",
@@ -482,15 +482,15 @@
 				},
 				"enforceConventions": {
 					"onColumn": ["Accepted", "Reviewing"],
-					"conventions": [
+					"condition": [
 						{
 							"requires": 1,
 							"contexts": [
-								"@videndum/workflow-mastermind",
-								"@videndum/release-mastermind",
-								"@videndum/label-mastermind",
-								"@videndum/variable-mastermind",
-								"@videndum/convention-mastermind",
+								"@resnovas/workflow-mastermind",
+								"@resnovas/release-mastermind",
+								"@resnovas/label-mastermind",
+								"@resnovas/variable-mastermind",
+								"@resnovas/convention-mastermind",
 								"condition",
 								"api",
 								"util",
@@ -498,340 +498,340 @@
 								"deps",
 								"deps-dev"
 							],
-							"conditions": "semanticTitle"
+							"condition": "semanticTitle"
 						}
 					]
 				},
 				"labels": {
 					"bug": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^bug(\\(.*\\))?(!)?:/i"
+								"condition": "/^bug(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/(created|new|opened|made)( an| a)? bug/i"
+								"condition": "/(created|new|opened|made)( an| a)? bug/i"
 							}
 						]
 					},
 					"chore": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^chore(\\(.*\\))?(!)?:/i"
+								"condition": "/^chore(\\(.*\\))?(!)?:/i"
 							}
 						]
 					},
 					"optimisation": {
 						"requires": 2,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^opt(\\(.*\\))?(!)?:/i"
+								"condition": "/^opt(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^optimisation(\\(.*\\))?(!)?:/i"
+								"condition": "/^optimisation(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+								"condition": "/^maint(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+								"condition": "/^maintenance(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
+								"condition": "/^type:(,| |Style|Refactoring|Revert|Deprecated|Removal)*optimisation/im"
 							}
 						]
 					},
 					"style": {
 						"requires": 2,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^style(\\(.*\\))?(!)?:/i"
+								"condition": "/^style(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+								"condition": "/^maint(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+								"condition": "/^maintenance(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
+								"condition": "/^type:(,| |Refactoring|Optimisation|Revert|Deprecated|Removal)*style/im"
 							}
 						]
 					},
 					"refactor": {
 						"requires": 2,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^ref(\\(.*\\))?(!)?:/i"
+								"condition": "/^ref(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^refactor(\\(.*\\))?(!)?:/i"
+								"condition": "/^refactor(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+								"condition": "/^maint(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+								"condition": "/^maintenance(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
+								"condition": "/^type:(,| |Style|Optimisation|Revert|Deprecated|Removal)*refactoring/im"
 							}
 						]
 					},
 					"revert": {
 						"requires": 2,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^revert(\\(.*\\))?(!)?:/i"
+								"condition": "/^revert(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+								"condition": "/^maint(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+								"condition": "/^maintenance(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
+								"condition": "/^type:(,| |Style|Refactoring|Optimisation|Deprecated|Removal)*revert/im"
 							}
 						]
 					},
 					"deprecated": {
 						"requires": 2,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^dep(\\(.*\\))?(!)?:/i"
+								"condition": "/^dep(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^deprecated(\\(.*\\))?(!)?:/i"
+								"condition": "/^deprecated(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+								"condition": "/^maint(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+								"condition": "/^maintenance(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
+								"condition": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Removal)*deprecated/im"
 							}
 						]
 					},
 					"removal": {
 						"requires": 2,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^removal(\\(.*\\))?(!)?:/i"
+								"condition": "/^removal(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maint(\\(.*\\))?(!)?:/i"
+								"condition": "/^maint(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^maintenance(\\(.*\\))?(!)?:/i"
+								"condition": "/^maintenance(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
+								"condition": "/^type:(,| |Style|Refactoring|Optimisation|Revert|Deprecated)*removal/im"
 							}
 						]
 					},
 					"discussion": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^discussion(\\(.*\\))?(!)?:/i"
+								"condition": "/^discussion(\\(.*\\))?(!)?:/i"
 							}
 						]
 					},
 					"documentation": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^docs(\\(.*\\))?(!)?:/i"
+								"condition": "/^docs(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^documentation(\\(.*\\))?(!)?:/i"
+								"condition": "/^documentation(\\(.*\\))?(!)?:/i"
 							}
 						]
 					},
 					"feature": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^feat(\\(.*\\))?(!)?:/i"
+								"condition": "/^feat(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^enhance(\\(.*\\))?(!)?:/i"
+								"condition": "/^enhance(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^feature(\\(.*\\))?(!)?:/i"
+								"condition": "/^feature(\\(.*\\))?(!)?:/i"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^enhancement(\\(.*\\))?(!)?:/i"
+								"condition": "/^enhancement(\\(.*\\))?(!)?:/i"
 							}
 						]
 					},
 					"fix": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^fix(\\(.*\\))?(!)?:/i"
+								"condition": "/^fix(\\(.*\\))?(!)?:/i"
 							}
 						]
 					},
 					"workflow": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\((@videndum\\/)?workflow-mastermind\\)(!)?:/i"
+								"condition": "/^.*\\((@videndum\\/)?workflow-mastermind\\)(!)?:/i"
 							}
 						]
 					},
 					"releaseMastermind": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
+								"condition": "/^- package\\(s\\):.*(@videndum\\/)?release-mastermind.*/im"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\((@videndum\\/)?release-mastermind\\)(!)?:/i"
+								"condition": "/^.*\\((@videndum\\/)?release-mastermind\\)(!)?:/i"
 							}
 						]
 					},
 					"labelMastermind": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
+								"condition": "/^- package\\(s\\):.*(@videndum\\/)?label-mastermind.*/im"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\((@videndum\\/)?label-mastermind\\)(!)?:/i"
+								"condition": "/^.*\\((@videndum\\/)?label-mastermind\\)(!)?:/i"
 							}
 						]
 					},
 					"variableMastermind": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
+								"condition": "/^- package\\(s\\):.*(@videndum\\/)?variable-mastermind.*/im"
 							},
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\((@videndum\\/)?variable-mastermind\\)(!)?:/i"
+								"condition": "/^.*\\((@videndum\\/)?variable-mastermind\\)(!)?:/i"
 							}
 						]
 					},
 					"condition": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\(condition\\)(!)?:/i"
+								"condition": "/^.*\\(condition\\)(!)?:/i"
 							}
 						]
 					},
 					"api": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\(api\\)(!)?:/i"
+								"condition": "/^.*\\(api\\)(!)?:/i"
 							}
 						]
 					},
 					"contexts": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\(contexts\\)(!)?:/i"
+								"condition": "/^.*\\(contexts\\)(!)?:/i"
 							}
 						]
 					},
 					"util": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\(util\\)(!)?:/i"
+								"condition": "/^.*\\(util\\)(!)?:/i"
 							}
 						]
 					},
 					"installer": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\(installer\\)(!)?:/i"
+								"condition": "/^.*\\(installer\\)(!)?:/i"
 							}
 						]
 					},
 					"deps": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\(deps\\)(!)?:/i"
+								"condition": "/^.*\\(deps\\)(!)?:/i"
 							}
 						]
 					},
 					"depsDev": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "/^.*\\(deps-dev\\)(!)?:/i"
+								"condition": "/^.*\\(deps-dev\\)(!)?:/i"
 							}
 						]
 					},
 					"priorityCritical": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "titleMatches",
-								"pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+								"condition": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
 							}
 						]
 					}
@@ -903,31 +903,45 @@
 							}
 						]
 					},
-					"conditions": {}
+					"condition": {}
 				},
 				"automaticApprove": {
-					"conventions": [
+					"condition": [
 						{
 							"requires": 1,
-							"conditions": [{}]
+							"condition": [
+								{
+									"type": "creatorMatches",
+									"condition": "/^dependabot/i"
+								}
+							]
 						}
 					]
 				},
+				"requestApprovals": {
+					"all": {
+						"reviewers": ["tgtgamer"],
+						"requires": 1,
+						"condition": [
+							{
+								"type": "$not",
+								"requires": 1,
+								"condition": [
+									{
+										"type": "creatorMatches",
+										"condition": "/^dependabot/i"
+									}
+								]
+							}
+						]
+					}
+				},
 				"duplicateHotfix": {},
 				"createMilestone": {},
-				"syncRemote": {},
-				"assignProject": [
-					{
-						"project": "Developer Operations",
-						"column": "Reviewing",
-						"requires": 0,
-						"conditions": []
-					}
-				],
 				"labels": {
 					"xs": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "changesSize",
 								"min": 0,
@@ -937,7 +951,7 @@
 					},
 					"s": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "changesSize",
 								"min": 10,
@@ -947,7 +961,7 @@
 					},
 					"m": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "changesSize",
 								"min": 40,
@@ -957,7 +971,7 @@
 					},
 					"l": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "changesSize",
 								"min": 100,
@@ -967,7 +981,7 @@
 					},
 					"xl": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "changesSize",
 								"min": 500,
@@ -977,7 +991,7 @@
 					},
 					"xxl": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "changesSize",
 								"min": 1000
@@ -986,430 +1000,204 @@
 					},
 					"fixConfirmed": {
 						"requires": 6,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+								"condition": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have fixed on a clean installation/im"
+								"condition": "/^- \\[x\\] have fixed on a clean installation/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have fixed on a stable build/im"
+								"condition": "/^- \\[x\\] have fixed on a stable build/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have fixed on a development build/im"
+								"condition": "/^- \\[x\\] have fixed on a development build/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have included logs or screenshots/im"
+								"condition": "/^- \\[x\\] have included logs or screenshots/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have linked any related/im"
+								"condition": "/^- \\[x\\] have linked any related/im"
 							}
 						]
 					},
 					"devOpsReviewing": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "pendingReview",
-								"value": true
+								"condition": true
 							}
 						]
 					},
 					"devOpsRejected": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "requestedChanges",
-								"value": true
+								"condition": true
 							}
 						]
 					}
 				}
 			},
 			"issue": {
-				"assignProject": [
-					{
-						"project": "Developer Operations",
-						"column": "Requested",
-						"requires": 1,
-						"conditions": []
-					},
-					{
-						"project": "Issues",
-						"column": "New",
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "hasLabel",
-								"label": "Type - Bug",
-								"value": true
-							},
-							{
-								"type": "titleMatches",
-								"pattern": "/^bug(\\(.*\\))?(!)?:/i"
-							},
-							{
-								"type": "descriptionMatches",
-								"pattern": "/(created|new|opened|made)( an| a)? bug/i"
-							}
-						]
-					}
-				],
-				"assignColumn": {},
 				"createBranch": {},
 				"labels": {
 					"android": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*android/im"
+								"condition": "/^- platform:.*android/im"
 							}
 						]
 					},
 					"aws": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*aws/im"
+								"condition": "/^- platform:.*aws/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*amazon web service/im"
+								"condition": "/^- platform:.*amazon web service/im"
 							}
 						]
 					},
 					"google": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*google/im"
+								"condition": "/^- platform:.*google/im"
 							}
 						]
 					},
 					"ios": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*ios/im"
+								"condition": "/^- platform:.*ios/im"
 							}
 						]
 					},
 					"ubuntu": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*ubuntu/im"
+								"condition": "/^- platform:.*ubuntu/im"
 							}
 						]
 					},
 					"fedora": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*fedora/im"
+								"condition": "/^- platform:.*fedora/im"
 							}
 						]
 					},
 					"debian": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*debian/im"
+								"condition": "/^- platform:.*debian/im"
 							}
 						]
 					},
 					"macos": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*macos/im"
+								"condition": "/^- platform:.*macos/im"
 							}
 						]
 					},
 					"windows": {
 						"requires": 1,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- platform:.*windows/im"
+								"condition": "/^- platform:.*windows/im"
 							}
 						]
 					},
 					"bugConfirmed": {
 						"requires": 8,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] bug Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+								"condition": "/^- \\[x\\] bug Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have reproduced on my application version/im"
+								"condition": "/^- \\[x\\] have reproduced on my application version/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have reproduced on a clean installation/im"
+								"condition": "/^- \\[x\\] have reproduced on a clean installation/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have reproduced on a development build/im"
+								"condition": "/^- \\[x\\] have reproduced on a development build/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have included logs or screenshots/im"
+								"condition": "/^- \\[x\\] have included logs or screenshots/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have contacted support/im"
+								"condition": "/^- \\[x\\] have contacted support/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have asked the community/im"
+								"condition": "/^- \\[x\\] have asked the community/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have linked any related/im"
+								"condition": "/^- \\[x\\] have linked any related/im"
 							}
 						]
 					},
 					"fixConfirmed": {
 						"requires": 6,
-						"conditions": [
+						"condition": [
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
-							},
-							{
-								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have fixed on a clean installation/im"
+								"condition": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have fixed on a stable build/im"
+								"condition": "/^- \\[x\\] have fixed on a clean installation/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have fixed on a development build/im"
+								"condition": "/^- \\[x\\] have fixed on a stable build/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have included logs or screenshots/im"
+								"condition": "/^- \\[x\\] have fixed on a development build/im"
 							},
 							{
 								"type": "descriptionMatches",
-								"pattern": "/^- \\[x\\] have linked any related/im"
-							}
-						]
-					}
-				}
-			},
-			"project": {
-				"syncRemote": [
-					{
-						"localProject": "Developer Operations",
-						"owner": "Videndum",
-						"project": "Developer Operations"
-					},
-					{
-						"localProject": "Issues",
-						"owner": "Videndum",
-						"project": "Issues"
-					}
-				],
-				"openBranch": {},
-				"assignMilestone": {},
-				"labels": {
-					"available": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Requested"
-							}
-						]
-					},
-					"pending": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Accepted"
-							}
-						]
-					},
-					"progress": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "In Progress"
+								"condition": "/^- \\[x\\] have included logs or screenshots/im"
 							},
 							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Testing"
-							}
-						]
-					},
-					"review": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Reviewing"
-							}
-						]
-					},
-					"completed": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Completed"
-							}
-						]
-					},
-					"doNotDevelop": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Rejected"
-							}
-						]
-					},
-					"devOpsAccepted": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Accepted"
-							}
-						]
-					},
-					"devOpsDeveloping": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "In Progress"
-							}
-						]
-					},
-					"devOpsTesting": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Testing"
-							}
-						]
-					},
-					"devOpsReviewing": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Reviewing"
-							}
-						]
-					},
-					"devOpsStaging": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Staging"
-							}
-						]
-					},
-					"devOpsCompleted": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Completed"
-							}
-						]
-					},
-					"devOpsRejected": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Developer Operations",
-								"column": "Rejected"
-							}
-						]
-					},
-					"priorityLow": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Issues",
-								"column": "Low Priority"
-							}
-						]
-					},
-					"priorityMedium": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Issues",
-								"column": "Medium Priority"
-							}
-						]
-					},
-					"priorityHigh": {
-						"requires": 1,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Issues",
-								"column": "High Priority"
-							}
-						]
-					},
-					"priorityCritical": {
-						"requires": 2,
-						"conditions": [
-							{
-								"type": "onColumn",
-								"project": "Issues",
-								"column": "High Priority"
-							},
-							{
-								"type": "titleMatches",
-								"pattern": "!:.*(critical|urgent)?|!?:.*(critical|urgent)"
+								"type": "descriptionMatches",
+								"condition": "/^- \\[x\\] have linked any related/im"
 							}
 						]
 					}

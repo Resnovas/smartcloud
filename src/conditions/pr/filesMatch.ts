@@ -8,15 +8,28 @@ const TYPE = "filesMatch"
 
 export interface ConditionFilesMatch {
 	type: typeof TYPE
-	glob: string
+	condition: string
 }
+
+/** Checks if the files modified in the pull request match a glob.
+
+Globs are matched using the [minimatch](https://github.com/isaacs/minimatch) library.
+
+Example:
+
+```json
+{
+	"type": "filesMatch",
+	"condition": "src/foo/**"
+}
+``` */
 
 function filesMatch(
 	this: Issues | PullRequests | Project,
 	condition: ConditionFilesMatch,
 	pr: PRProps
 ) {
-	return match(pr.files, condition.glob).length > 0
+	return match(pr.files, condition.condition).length > 0
 }
 
 export default [TYPE, filesMatch] as const

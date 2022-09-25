@@ -15,24 +15,6 @@ jobs:
       matrix:
         node-version: [16.x]
     steps:
-      - uses: actions/checkout@v3
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v3.4.1
-        with:
-          node-version: ${{ matrix.node-version }}
-
-      - name: Push all configs
-        run: |
-          npm install
-          npm run lerna:git
-
-      - name: Get Configurations
-        uses: ./packages/variable-mastermind/
-        with:
-          settings: ${{ secrets.SETTINGS }}
-          mode: "environment"
-          token: ${{ secrets.GITHUB_TOKEN }}
-
       # Inclusive Org
       - run: if [ ${{env.inclusive_org}} === 'owner' ]; then echo "inclusiveorg=${{github.repository_owner}}" >> $GITHUB_ENV ; else echo "inclusiveorg=${{env.inclusive_org}}" >> $GITHUB_ENV ; fi
       - name: Invite contributor to the organization

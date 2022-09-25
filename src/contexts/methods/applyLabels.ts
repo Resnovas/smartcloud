@@ -1,6 +1,6 @@
 /** @format */
 
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import { log } from "../.."
 import { UtilThis } from "../../conditions"
 import { evaluator } from "../../evaluator"
@@ -15,9 +15,8 @@ export async function applyLabels(this: UtilThis) {
 		this.config.labels
 	)) {
 		if (!this.context.props) throw new Error("Props are required")
-		log(LoggingLevels.debug, `Label: ${labelID}`)
-
-		const shouldHaveLabel = evaluator.call(
+		await log(LoggingLevels.debug, `Label: ${labelID}`)
+		const shouldHaveLabel = await evaluator.call(
 			this,
 			conditionsConfig,
 			this.context.props
@@ -35,7 +34,7 @@ export async function applyLabels(this: UtilThis) {
 		if (!shouldHaveLabel && hasLabel && this.context.props.labels)
 			delete this.context.props.labels[labelName.toLowerCase()]
 		if (
-			(await shouldHaveLabel) &&
+			shouldHaveLabel &&
 			!hasLabel &&
 			this.context.props.labels &&
 			this.runners.labels
@@ -45,14 +44,9 @@ export async function applyLabels(this: UtilThis) {
 		}
 
 		await this.util.labels
-			.addRemove(
-				labelName,
-				this.context.props.ID,
-				hasLabel,
-				await shouldHaveLabel
-			)
-			.catch((err) => {
-				log(
+			.addRemove(labelName, this.context.props.ID, hasLabel, shouldHaveLabel)
+			.catch(async (err) => {
+				await log(
 					LoggingLevels.error,
 					`Error thrown while running addRemoveLabel: ` + err
 				)

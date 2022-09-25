@@ -6,8 +6,19 @@ const TYPE = "isStale"
 
 export interface ConditionIsStale {
 	type: typeof TYPE
-	value: number
+	condition: number
 }
+
+/** Checks if an issue or pull request is stale.
+
+Example:
+
+```json
+{
+	"type": "isStale",
+	"condition": 30
+}
+``` */
 
 function isStale(
 	this: UtilThis,
@@ -16,7 +27,7 @@ function isStale(
 ) {
 	if (!issue.lastUpdated) return false
 	const last = new Date(issue.lastUpdated)
-	last.setDate(last.getDate() + condition.value)
+	last.setDate(last.getDate() + condition.condition)
 	const now = new Date()
 	return last >= now
 }

@@ -8,7 +8,7 @@ import {
 	LoggingLevels,
 	LoggingOptions,
 	LogReturn
-} from "@videndum/utilities"
+} from "@resnovas/utilities"
 import fs from "fs"
 import { cwd } from "process"
 import { SimpleGitOptions } from "simple-git"
@@ -91,6 +91,9 @@ async function run() {
 	const fillEmpty = Boolean(core.getInput("fillEmpty") || local.FILL)
 	const skipDelete = Boolean(core.getInput("skipDelete") || local.SKIPDELETE)
 	const options: Options = {
+		configJSON: localEx
+			? require(local.configJSON)
+			: core.getInput("configJSON"),
 		configPath: localEx ? local.configPath : core.getInput("config"),
 		configRef: localEx ? local.configRef : core.getInput("configRef"),
 		showLogs,
@@ -101,10 +104,11 @@ async function run() {
 		ref: localEx ? local.ref : undefined
 	}
 	const action = new Action(getOctokit(GITHUB_TOKEN), options)
-	action.run().catch((err) => {
+	action.run().catch(async (err) => {
 		log(
 			LoggingLevels.emergency,
-			`${process.env.NPM_PACKAGE_NAME} did not complete due to error:` + err
+			`${process.env.NPM_PACKAGE_NAME} did not complete due to error:` +
+				(await err)
 		)
 	})
 }

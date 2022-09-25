@@ -1,5 +1,7 @@
 ---
-sidebar_position: 3
+title: "GPG Key Configuration"
+sidebar_label: "GPG Key Configuration"
+sidebar_position: 4
 ---
 
 <!-- @format -->

@@ -26,12 +26,12 @@
 					"title": "commentHeader",
 					"type": "string"
 				},
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"days": {
@@ -70,9 +70,9 @@
 				"commentHeader",
 				"commentFooter",
 				"requires",
-				"conditions"
+				"condition"
 			],
-			"required": ["conditions", "days", "label", "requires"],
+			"required": ["condition", "days", "label", "requires"],
 			"title": "AbanondedConfig",
 			"type": "object"
 		},
@@ -85,12 +85,12 @@
 					"title": "column",
 					"type": "string"
 				},
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"owner": {
@@ -126,9 +126,9 @@
 				"project",
 				"column",
 				"requires",
-				"conditions"
+				"condition"
 			],
-			"required": ["column", "conditions", "project", "requires"],
+			"required": ["column", "condition", "project", "requires"],
 			"title": "AssignProject",
 			"type": "object"
 		},
@@ -136,6 +136,11 @@
 			"defaultProperties": [],
 			"description": "Automatic Approval configuration",
 			"properties": {
+				"commentBody": {
+					"description": "The comment to append to the footer",
+					"title": "commentBody",
+					"type": "string"
+				},
 				"commentFooter": {
 					"description": "The comment to append to the footer",
 					"title": "commentFooter",
@@ -146,17 +151,22 @@
 					"title": "commentHeader",
 					"type": "string"
 				},
-				"conventions": {
+				"condition": {
 					"description": "The conventions to use when approving",
 					"items": {
 						"$ref": "#/definitions/SharedConventionsConfig"
 					},
-					"title": "conventions",
+					"title": "condition",
 					"type": "array"
 				}
 			},
-			"propertyOrder": ["commentHeader", "commentFooter", "conventions"],
-			"required": ["conventions"],
+			"propertyOrder": [
+				"commentHeader",
+				"commentBody",
+				"commentFooter",
+				"condition"
+			],
+			"required": ["condition"],
 			"title": "AutomaticApprove",
 			"type": "object"
 		},
@@ -216,6 +226,9 @@
 					"$ref": "#/definitions/ConditionIsStale"
 				},
 				{
+					"$ref": "#/definitions/ConditionNot"
+				},
+				{
 					"$ref": "#/definitions/ConditionOnlyOne"
 				},
 				{
@@ -230,7 +243,7 @@
 		"ConditionAnd": {
 			"defaultProperties": [],
 			"properties": {
-				"pattern": {
+				"condition": {
 					"items": [
 						{
 							"anyOf": [
@@ -248,7 +261,7 @@
 					],
 					"maxItems": 1,
 					"minItems": 1,
-					"title": "pattern",
+					"title": "condition",
 					"type": "array"
 				},
 				"type": {
@@ -257,16 +270,16 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["type", "pattern"],
-			"required": ["pattern", "type"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionAnd",
 			"type": "object"
 		},
 		"ConditionBranchMatches": {
 			"defaultProperties": [],
 			"properties": {
-				"pattern": {
-					"title": "pattern",
+				"condition": {
+					"title": "condition",
 					"type": "string"
 				},
 				"type": {
@@ -275,8 +288,8 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["type", "pattern"],
-			"required": ["pattern", "type"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionBranchMatches",
 			"type": "object"
 		},
@@ -305,8 +318,8 @@
 		"ConditionCreatorMatches": {
 			"defaultProperties": [],
 			"properties": {
-				"pattern": {
-					"title": "pattern",
+				"condition": {
+					"title": "condition",
 					"type": "string"
 				},
 				"type": {
@@ -315,16 +328,16 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["type", "pattern"],
-			"required": ["pattern", "type"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionCreatorMatches",
 			"type": "object"
 		},
 		"ConditionDescriptionMatches": {
 			"defaultProperties": [],
 			"properties": {
-				"pattern": {
-					"title": "pattern",
+				"condition": {
+					"title": "condition",
 					"type": "string"
 				},
 				"type": {
@@ -333,16 +346,16 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["type", "pattern"],
-			"required": ["pattern", "type"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionDescriptionMatches",
 			"type": "object"
 		},
 		"ConditionFilesMatch": {
 			"defaultProperties": [],
 			"properties": {
-				"glob": {
-					"title": "glob",
+				"condition": {
+					"title": "condition",
 					"type": "string"
 				},
 				"type": {
@@ -351,14 +364,18 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["type", "glob"],
-			"required": ["glob", "type"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionFilesMatch",
 			"type": "object"
 		},
 		"ConditionHasLabel": {
 			"defaultProperties": [],
 			"properties": {
+				"condition": {
+					"title": "condition",
+					"type": "boolean"
+				},
 				"label": {
 					"title": "label",
 					"type": "string"
@@ -367,20 +384,20 @@
 					"enum": ["hasLabel"],
 					"title": "type",
 					"type": "string"
-				},
-				"value": {
-					"title": "value",
-					"type": "boolean"
 				}
 			},
-			"propertyOrder": ["type", "label", "value"],
-			"required": ["label", "type", "value"],
+			"propertyOrder": ["type", "label", "condition"],
+			"required": ["condition", "label", "type"],
 			"title": "ConditionHasLabel",
 			"type": "object"
 		},
 		"ConditionIsAbandoned": {
 			"defaultProperties": [],
 			"properties": {
+				"condition": {
+					"title": "condition",
+					"type": "number"
+				},
 				"label": {
 					"title": "label",
 					"type": "string"
@@ -389,75 +406,71 @@
 					"enum": ["isAbandoned"],
 					"title": "type",
 					"type": "string"
-				},
-				"value": {
-					"title": "value",
-					"type": "number"
 				}
 			},
-			"propertyOrder": ["type", "value", "label"],
-			"required": ["label", "type", "value"],
+			"propertyOrder": ["type", "condition", "label"],
+			"required": ["condition", "label", "type"],
 			"title": "ConditionIsAbandoned",
 			"type": "object"
 		},
 		"ConditionIsDraft": {
 			"defaultProperties": [],
 			"properties": {
+				"condition": {
+					"title": "condition",
+					"type": "boolean"
+				},
 				"type": {
 					"enum": ["isDraft"],
 					"title": "type",
 					"type": "string"
-				},
-				"value": {
-					"title": "value",
-					"type": "boolean"
 				}
 			},
-			"propertyOrder": ["type", "value"],
-			"required": ["type", "value"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionIsDraft",
 			"type": "object"
 		},
 		"ConditionIsOpen": {
 			"defaultProperties": [],
 			"properties": {
+				"condition": {
+					"title": "condition",
+					"type": "boolean"
+				},
 				"type": {
 					"enum": ["isOpen"],
 					"title": "type",
 					"type": "string"
-				},
-				"value": {
-					"title": "value",
-					"type": "boolean"
 				}
 			},
-			"propertyOrder": ["type", "value"],
-			"required": ["type", "value"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionIsOpen",
 			"type": "object"
 		},
 		"ConditionIsStale": {
 			"defaultProperties": [],
 			"properties": {
+				"condition": {
+					"title": "condition",
+					"type": "number"
+				},
 				"type": {
 					"enum": ["isStale"],
 					"title": "type",
 					"type": "string"
-				},
-				"value": {
-					"title": "value",
-					"type": "number"
 				}
 			},
-			"propertyOrder": ["type", "value"],
-			"required": ["type", "value"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionIsStale",
 			"type": "object"
 		},
-		"ConditionOnlyOne": {
+		"ConditionNot": {
 			"defaultProperties": [],
 			"properties": {
-				"pattern": {
+				"condition": {
 					"items": [
 						{
 							"anyOf": [
@@ -475,7 +488,48 @@
 					],
 					"maxItems": 1,
 					"minItems": 1,
-					"title": "pattern",
+					"title": "condition",
+					"type": "array"
+				},
+				"requires": {
+					"description": "The number of requires needed for this to succeed",
+					"title": "requires",
+					"type": "number"
+				},
+				"type": {
+					"description": "The condition required for this to succeed. You can use the \"semanticTitle\" to automatically apply thses ccondition",
+					"enum": ["$not"],
+					"title": "type",
+					"type": "string"
+				}
+			},
+			"propertyOrder": ["requires", "type", "condition"],
+			"required": ["condition", "requires", "type"],
+			"title": "ConditionNot",
+			"type": "object"
+		},
+		"ConditionOnlyOne": {
+			"defaultProperties": [],
+			"properties": {
+				"condition": {
+					"items": [
+						{
+							"anyOf": [
+								{
+									"$ref": "#/definitions/PRConditionConfig"
+								},
+								{
+									"$ref": "#/definitions/IssueConditionConfig"
+								},
+								{
+									"$ref": "#/definitions/ProjectConditionConfig"
+								}
+							]
+						}
+					],
+					"maxItems": 1,
+					"minItems": 1,
+					"title": "condition",
 					"type": "array"
 				},
 				"required": {
@@ -488,15 +542,15 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["required", "type", "pattern"],
-			"required": ["pattern", "required", "type"],
+			"propertyOrder": ["required", "type", "condition"],
+			"required": ["condition", "required", "type"],
 			"title": "ConditionOnlyOne",
 			"type": "object"
 		},
 		"ConditionOr": {
 			"defaultProperties": [],
 			"properties": {
-				"pattern": {
+				"condition": {
 					"items": [
 						{
 							"anyOf": [
@@ -514,7 +568,7 @@
 					],
 					"maxItems": 1,
 					"minItems": 1,
-					"title": "pattern",
+					"title": "condition",
 					"type": "array"
 				},
 				"type": {
@@ -523,52 +577,52 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["type", "pattern"],
-			"required": ["pattern", "type"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionOr",
 			"type": "object"
 		},
 		"ConditionPendingReview": {
 			"defaultProperties": [],
 			"properties": {
+				"condition": {
+					"title": "condition",
+					"type": "boolean"
+				},
 				"type": {
 					"enum": ["pendingReview"],
 					"title": "type",
 					"type": "string"
-				},
-				"value": {
-					"title": "value",
-					"type": "boolean"
 				}
 			},
-			"propertyOrder": ["type", "value"],
-			"required": ["type", "value"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionPendingReview",
 			"type": "object"
 		},
 		"ConditionRequestedChanges": {
 			"defaultProperties": [],
 			"properties": {
+				"condition": {
+					"title": "condition",
+					"type": "boolean"
+				},
 				"type": {
 					"enum": ["requestedChanges"],
 					"title": "type",
 					"type": "string"
-				},
-				"value": {
-					"title": "value",
-					"type": "boolean"
 				}
 			},
-			"propertyOrder": ["type", "value"],
-			"required": ["type", "value"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionRequestedChanges",
 			"type": "object"
 		},
 		"ConditionTitleMatches": {
 			"defaultProperties": [],
 			"properties": {
-				"pattern": {
-					"title": "pattern",
+				"condition": {
+					"title": "condition",
 					"type": "string"
 				},
 				"type": {
@@ -577,8 +631,8 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["type", "pattern"],
-			"required": ["pattern", "type"],
+			"propertyOrder": ["type", "condition"],
+			"required": ["condition", "type"],
 			"title": "ConditionTitleMatches",
 			"type": "object"
 		},
@@ -629,6 +683,11 @@
 		"Config": {
 			"defaultProperties": [],
 			"properties": {
+				"branch": {
+					"description": "The branch used to get the config file from. Defaults to master.",
+					"title": "branch",
+					"type": "string"
+				},
 				"issue": {
 					"$ref": "#/definitions/IssueConfig",
 					"description": "The issue configurations.",
@@ -659,11 +718,6 @@
 					"description": "Maximum number of attempts before stopping.",
 					"title": "retryLimit",
 					"type": "number"
-				},
-				"root": {
-					"description": "The root branch used to check configuration settings against.",
-					"title": "root",
-					"type": "string"
 				},
 				"schedule": {
 					"$ref": "#/definitions/SharedConfig",
@@ -703,7 +757,7 @@
 				}
 			},
 			"propertyOrder": [
-				"root",
+				"branch",
 				"versioning",
 				"retryLimit",
 				"labels",
@@ -848,12 +902,12 @@
 					"title": "commentHeader",
 					"type": "string"
 				},
-				"conventions": {
+				"condition": {
 					"description": "The conventions to enforce",
 					"items": {
 						"$ref": "#/definitions/SharedConventionsConfig"
 					},
-					"title": "conventions",
+					"title": "condition",
 					"type": "array"
 				},
 				"moveToColumn": {
@@ -876,9 +930,9 @@
 				"commentHeader",
 				"commentFooter",
 				"moveToColumn",
-				"conventions"
+				"condition"
 			],
-			"required": ["conventions"],
+			"required": ["condition"],
 			"title": "EnforceConventions",
 			"type": "object"
 		},
@@ -917,16 +971,64 @@
 			"title": "ExProjects",
 			"type": "object"
 		},
+		"Group": {
+			"defaultProperties": [],
+			"properties": {
+				"comment": {
+					"defaultProperties": [],
+					"description": "The comment to create",
+					"properties": {
+						"commentBody": {
+							"description": "The comment to append to the footer",
+							"title": "commentBody",
+							"type": "string"
+						},
+						"commentFooter": {
+							"description": "The comment to append to the footer",
+							"title": "commentFooter",
+							"type": "string"
+						},
+						"commentHeader": {
+							"description": "The comment to append to the header",
+							"title": "commentHeader",
+							"type": "string"
+						}
+					},
+					"propertyOrder": ["commentHeader", "commentBody", "commentFooter"],
+					"title": "comment",
+					"type": "object"
+				},
+				"condition": {
+					"items": {
+						"$ref": "#/definitions/SharedConventionsConfig"
+					},
+					"title": "condition",
+					"type": "array"
+				},
+				"reviewers": {
+					"description": "The reviewers to reques",
+					"items": {
+						"type": "string"
+					},
+					"title": "reviewers",
+					"type": "array"
+				}
+			},
+			"propertyOrder": ["reviewers", "comment", "condition"],
+			"required": ["condition", "reviewers"],
+			"title": "Group",
+			"type": "object"
+		},
 		"IssueConditionConfig": {
 			"defaultProperties": [],
 			"description": "The Issue condition configuration",
 			"properties": {
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"requires": {
@@ -935,8 +1037,8 @@
 					"type": "number"
 				}
 			},
-			"propertyOrder": ["requires", "conditions"],
-			"required": ["conditions", "requires"],
+			"propertyOrder": ["requires", "condition"],
+			"required": ["condition", "requires"],
 			"title": "IssueConditionConfig",
 			"type": "object"
 		},
@@ -1077,7 +1179,7 @@
 			"defaultProperties": [],
 			"description": "The PR condition configuration",
 			"properties": {
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"anyOf": [
@@ -1101,6 +1203,9 @@
 							},
 							{
 								"$ref": "#/definitions/ConditionIsStale"
+							},
+							{
+								"$ref": "#/definitions/ConditionNot"
 							},
 							{
 								"$ref": "#/definitions/ConditionOnlyOne"
@@ -1134,7 +1239,7 @@
 							}
 						]
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"requires": {
@@ -1143,8 +1248,8 @@
 					"type": "number"
 				}
 			},
-			"propertyOrder": ["requires", "conditions"],
-			"required": ["conditions", "requires"],
+			"propertyOrder": ["requires", "condition"],
+			"required": ["condition", "requires"],
 			"title": "PRConditionConfig",
 			"type": "object"
 		},
@@ -1152,7 +1257,7 @@
 			"defaultProperties": [],
 			"description": "The Project condition configuration",
 			"properties": {
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"anyOf": [
@@ -1178,6 +1283,9 @@
 								"$ref": "#/definitions/ConditionIsStale"
 							},
 							{
+								"$ref": "#/definitions/ConditionNot"
+							},
+							{
 								"$ref": "#/definitions/ConditionOnlyOne"
 							},
 							{
@@ -1191,7 +1299,7 @@
 							}
 						]
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"requires": {
@@ -1200,8 +1308,8 @@
 					"type": "number"
 				}
 			},
-			"propertyOrder": ["requires", "conditions"],
-			"required": ["conditions", "requires"],
+			"propertyOrder": ["requires", "condition"],
+			"required": ["condition", "requires"],
 			"title": "ProjectConditionConfig",
 			"type": "object"
 		},
@@ -1386,6 +1494,11 @@
 					"title": "ref",
 					"type": "string"
 				},
+				"requestApprovals": {
+					"$ref": "#/definitions/RequestApprovals",
+					"description": "Request approvals configuration.",
+					"title": "requestApprovals"
+				},
 				"stale": {
 					"$ref": "#/definitions/Stale",
 					"description": "The stale configuration",
@@ -1405,6 +1518,7 @@
 				"automaticApprove",
 				"manageRelease",
 				"syncRemote",
+				"requestApprovals",
 				"ref",
 				"enforceConventions",
 				"stale",
@@ -1417,7 +1531,7 @@
 			"defaultProperties": [],
 			"description": "The release configuration",
 			"properties": {
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"anyOf": [
@@ -1441,6 +1555,9 @@
 							},
 							{
 								"$ref": "#/definitions/ConditionIsStale"
+							},
+							{
+								"$ref": "#/definitions/ConditionNot"
 							},
 							{
 								"$ref": "#/definitions/ConditionOnlyOne"
@@ -1474,7 +1591,7 @@
 							}
 						]
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"createChangelog": {
@@ -1573,22 +1690,37 @@
 				"createPackages",
 				"createChangelog",
 				"requires",
-				"conditions"
+				"condition"
 			],
-			"required": ["conditions", "requires"],
+			"required": ["condition", "requires"],
 			"title": "Release",
+			"type": "object"
+		},
+		"RequestApprovals": {
+			"additionalProperties": {
+				"$ref": "#/definitions/Group"
+			},
+			"defaultProperties": [],
+			"propertyOrder": [],
+			"title": "RequestApprovals",
 			"type": "object"
 		},
 		"Runners": {
 			"defaultProperties": [],
 			"properties": {
+				"$schema": {
+					"default": "https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json",
+					"description": "Declaritively specify which schema you want to use. This defaults to our latest schema specified at: https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json",
+					"title": "$schema",
+					"type": "string"
+				},
 				"labels": {
 					"$ref": "#/definitions/Labels",
-					"description": "The labels configuration.",
+					"description": "Declaritively specify all the labels that shuold exist in this repository, and initialise them.\nYou will use the names specified here later to apply these same labels to issues and pull requests.",
 					"title": "labels"
 				},
 				"runners": {
-					"description": "The runners configuration.",
+					"description": "This defines all the diffent configurations for your repository.\nYou can have as many as you like. You can use this within Mono-repositories to have different configurations for different projects.\nYou can also have diffeent configurations for different branches.",
 					"items": {
 						"$ref": "#/definitions/Config"
 					},
@@ -1596,8 +1728,8 @@
 					"type": "array"
 				}
 			},
-			"propertyOrder": ["labels", "runners"],
-			"required": ["runners"],
+			"propertyOrder": ["$schema", "labels", "runners"],
+			"required": ["$schema", "runners"],
 			"title": "Runners",
 			"type": "object"
 		},
@@ -1605,12 +1737,12 @@
 			"defaultProperties": [],
 			"description": "The Schedule condition configuration",
 			"properties": {
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"requires": {
@@ -1619,8 +1751,8 @@
 					"type": "number"
 				}
 			},
-			"propertyOrder": ["requires", "conditions"],
-			"required": ["conditions", "requires"],
+			"propertyOrder": ["requires", "condition"],
+			"required": ["condition", "requires"],
 			"title": "ScheduleConditionConfig",
 			"type": "object"
 		},
@@ -1681,12 +1813,12 @@
 			"defaultProperties": [],
 			"description": "Shared conditions used by all types of events.",
 			"properties": {
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"requires": {
@@ -1695,8 +1827,8 @@
 					"type": "number"
 				}
 			},
-			"propertyOrder": ["requires", "conditions"],
-			"required": ["conditions", "requires"],
+			"propertyOrder": ["requires", "condition"],
+			"required": ["condition", "requires"],
 			"title": "SharedConditions",
 			"type": "object"
 		},
@@ -1753,7 +1885,7 @@
 		"SharedConventionsConfig": {
 			"defaultProperties": [],
 			"properties": {
-				"conditions": {
+				"condition": {
 					"anyOf": [
 						{
 							"items": {
@@ -1766,7 +1898,7 @@
 						}
 					],
 					"description": "The conditions required for this to succeed. You can use the \"semanticTitle\" to automatically apply thses conditions",
-					"title": "conditions"
+					"title": "condition"
 				},
 				"contexts": {
 					"description": "The contexts to use. Use this in combernation with \"semanticTitle\"",
@@ -1787,8 +1919,8 @@
 					"type": "number"
 				}
 			},
-			"propertyOrder": ["failedComment", "contexts", "requires", "conditions"],
-			"required": ["conditions", "failedComment", "requires"],
+			"propertyOrder": ["failedComment", "contexts", "requires", "condition"],
+			"required": ["condition", "failedComment", "requires"],
 			"title": "SharedConventionsConfig",
 			"type": "object"
 		},
@@ -1801,12 +1933,12 @@
 					"description": "The abanonded configuration to use",
 					"title": "abandoned"
 				},
-				"conditions": {
+				"condition": {
 					"description": "The conditions to use when checking stale",
 					"items": {
 						"$ref": "#/definitions/SharedConditions"
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"stale": {
@@ -1820,7 +1952,7 @@
 					"type": "string"
 				}
 			},
-			"propertyOrder": ["staleLabel", "stale", "abandoned", "conditions"],
+			"propertyOrder": ["staleLabel", "stale", "abandoned", "condition"],
 			"required": ["staleLabel"],
 			"title": "Stale",
 			"type": "object"
@@ -1844,12 +1976,12 @@
 					"title": "commentHeader",
 					"type": "string"
 				},
-				"conditions": {
+				"condition": {
 					"description": "The conditions required for this to succeed",
 					"items": {
 						"$ref": "#/definitions/Condition"
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"days": {
@@ -1875,9 +2007,9 @@
 				"commentHeader",
 				"commentFooter",
 				"requires",
-				"conditions"
+				"condition"
 			],
-			"required": ["conditions", "days", "requires"],
+			"required": ["condition", "days", "requires"],
 			"title": "StaleConfig",
 			"type": "object"
 		},
@@ -1885,12 +2017,12 @@
 			"defaultProperties": [],
 			"description": "Sync Remote configuration",
 			"properties": {
-				"conditions": {
+				"condition": {
 					"description": "The conditions to use when syncing",
 					"items": {
 						"$ref": "#/definitions/SharedConditions"
 					},
-					"title": "conditions",
+					"title": "condition",
 					"type": "array"
 				},
 				"localBranch": {
@@ -1919,10 +2051,10 @@
 				"remoteBranch",
 				"localPath",
 				"remotePath",
-				"conditions"
+				"condition"
 			],
 			"required": [
-				"conditions",
+				"condition",
 				"localBranch",
 				"localPath",
 				"remoteBranch",

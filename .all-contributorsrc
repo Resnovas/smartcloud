@@ -2,7 +2,6 @@
   "projectName": "smartcloud",
   "projectOwner": "Resnovas",
   "repoType": "github",
-  "repoHost": "",
   "files": [
     "docs\\docs\\getting-started\\contributors.md",
     "./readme.md"
@@ -17,10 +16,15 @@
       "avatar_url": "https://avatars.githubusercontent.com/u/1174413?v=4",
       "profile": "https://github.com/IvanFon",
       "contributions": [
+        "bug",
+        "code",
         "ideas",
         "doc",
-        "code",
-        "infra"
+        "infra",
+        "maintenance",
+        "projectManagement",
+        "test",
+        "tool"
       ]
     },
     {
@@ -62,42 +66,6 @@
       "contributions": [
         "projectManagement",
         "tool"
-      ]
-    },
-    {
-      "login": "dependabot[bot]",
-      "name": "dependabot[bot]",
-      "avatar_url": "https://avatars.githubusercontent.com/in/29110?v=4",
-      "profile": "https://github.com/apps/dependabot",
-      "contributions": [
-        "plugin"
-      ]
-    },
-    {
-      "login": "fossabot",
-      "name": "fossabot",
-      "avatar_url": "https://avatars.githubusercontent.com/u/29791463?v=4",
-      "profile": "https://fossa.com/",
-      "contributions": [
-        "security"
-      ]
-    },
-    {
-      "login": "web-flow",
-      "name": "GitHub Web Flow",
-      "avatar_url": "https://avatars.githubusercontent.com/u/19864447?v=4",
-      "profile": "https://github.com/web-flow",
-      "contributions": [
-        "projectManagement"
-      ]
-    },
-    {
-      "login": "github-actions[bot]",
-      "name": "github-actions[bot]",
-      "avatar_url": "https://avatars.githubusercontent.com/in/15368?v=4",
-      "profile": "https://github.com/apps/github-actions",
-      "contributions": [
-        "projectManagement"
       ]
     }
   ],

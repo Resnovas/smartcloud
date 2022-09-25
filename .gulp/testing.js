@@ -7,7 +7,6 @@ const rename = require("gulp-rename")
 const jsonFmt = require("gulp-json-fmt")
 const { src, dest, series, parallel } = require("gulp")
 const exec = require("gulp-exec")
-const log = require("fancy-log")
 
 class Testing {
 	static run = () => {
@@ -22,7 +21,7 @@ class Testing {
 	}
 	static cleanup = () => {
 		return src("package.json")
-			.pipe(exec(`rm config.json context.json`))
+			.pipe(exec(`del config.json,context.json`))
 			.pipe(exec.reporter())
 	}
 	static copy = {

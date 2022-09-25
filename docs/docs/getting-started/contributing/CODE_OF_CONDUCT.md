@@ -1,7 +1,7 @@
 ---
 title: "Code of Conduct"
 sidebar_label: "Code of Conduct"
-sidebar_position: 1
+sidebar_position: 2
 ---
 
 <!-- @format -->

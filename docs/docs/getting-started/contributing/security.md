@@ -1,10 +1,10 @@
 ---
+title: "Security Disclosures"
+sidebar_label: "Security Disclosures"
 sidebar_position: 4
 ---
 
 <!-- @format -->
-
-# Security Disclosures
 
 In order to determine whether you are dealing with a security issue, ask yourself these two questions:
 

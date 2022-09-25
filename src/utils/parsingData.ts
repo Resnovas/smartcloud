@@ -19,15 +19,15 @@ export const formatColor = (color: string) => {
 /**
  * Formats the hex color code to ensure no hash (#) is included
  * @author IvanFon, jbinda
- * @param {String} pattern Regex partern to use
+ * @param {String} condition Regex partern to use
  * @since 1.0.0
  */
-export const processRegExpPattern = (pattern: string) => {
-	const matchDelimiters = pattern.match(/^\/(.*)\/(.*)$/)
+export const processRegExpcondition = (condition: string) => {
+	const matchDelimiters = condition.match(/^\/(.*)\/(.*)$/)
 
 	const [, source, flags] = matchDelimiters || []
 
-	return new RegExp(source || pattern, flags)
+	return new RegExp(source || condition, flags)
 }
 
 /**

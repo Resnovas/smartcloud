@@ -6,9 +6,20 @@ const TYPE = "isAbandoned"
 
 export interface ConditionIsAbandoned {
 	type: typeof TYPE
-	value: number
+	condition: number
 	label: string
 }
+
+/** Checks if an issue or pull request is abandoned.
+
+Example:
+
+```json
+{
+	"type": "isAbandoned",
+	"condition": 30
+}
+``` */
 
 function isAbandoned(
 	this: UtilThis,
@@ -18,7 +29,7 @@ function isAbandoned(
 	if (!issue.lastUpdated || !issue.labels?.[condition.label.toLowerCase()])
 		return false
 	const last = new Date(issue.lastUpdated)
-	last.setDate(last.getDate() + condition.value)
+	last.setDate(last.getDate() + condition.condition)
 	const now = new Date()
 	return last >= now
 }

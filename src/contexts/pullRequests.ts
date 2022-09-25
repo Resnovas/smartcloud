@@ -1,17 +1,17 @@
 /** @format */
 
 import * as core from "@actions/core"
-import { LoggingDataClass, LoggingLevels } from "@videndum/utilities"
+import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
 import { Context } from "vm"
 import { log } from ".."
 import { Config, Runners, SharedConfig } from "../action"
 import { CurContext, PRContext, Reviews, Version } from "../conditions"
-import { evaluator } from "../evaluator"
 import { Utils } from "../utils"
 import { Contexts } from "./methods"
 import { AssignProject } from "./methods/assignProject"
 import { AutomaticApprove } from "./methods/autoApprove"
 import { Release } from "./methods/release"
+import { RequestApprovals } from "./methods/requestApprovals"
 import { SyncRemote } from "./methods/syncRemoteRepo"
 
 /**
@@ -34,11 +34,14 @@ export interface PullRequestConfig extends SharedConfig {
 	 * Syncronise remote repository configuration.
 	 */
 	syncRemote?: SyncRemote[]
+	/**
+	 * Request approvals configuration.
+	 */
+	requestApprovals?: RequestApprovals
 }
 
 /**
  * The pull request class.
- * @private
  */
 export class PullRequests extends Contexts {
 	context: PRContext
@@ -178,31 +181,34 @@ export class PullRequests extends Contexts {
 			core.startGroup("Pull Request Actions")
 		}
 		const seconds = attempt * 10
-		let enforceConventionsSuccess = true
 
 		try {
-			if (this.config.enforceConventions && this.util.shouldRun("convention"))
-				enforceConventionsSuccess = await this.conventions.enforce(this)
-			if (enforceConventionsSuccess) {
-				if (this.config.labels && this.util.shouldRun("label"))
-					await this.applyLabels(this).catch((err) => {
-						log(LoggingLevels.error, "Error applying labels" + err)
-					})
-				if (this.config.assignProject && this.util.shouldRun("release"))
-					await this.assignProject(this).catch((err) => {
-						log(LoggingLevels.error, "Error assigning projects" + err)
-					})
-				// if (this.config.automaticApprove)
-				//   await this.automaticApprove(this.config.automaticApprove)
-				// duplicate hotfix
-				if (this.config.manageRelease && this.util.shouldRun("release"))
-					await this.bumpVersion(this.config.manageRelease.labels)
-				// create changelog
-				// create release
-				// sync remote repositories
-				// if (this.config.syncRemote) await this.syncRemoteRepo(this)
-				core.endGroup()
-			}
+			if (this.config.enforceConventions) await this.conventions.enforce(this)
+			if (this.config.labels)
+				await this.applyLabels(this).catch((err) => {
+					log(LoggingLevels.error, "Error applying labels " + err)
+				})
+			if (this.config.assignProject)
+				await this.assignProject(this).catch((err) => {
+					log(LoggingLevels.error, "Error assigning projects " + err)
+				})
+			if (this.config.automaticApprove)
+				await this.automaticApprove(this).catch((err) => {
+					log(LoggingLevels.error, "Error approving " + err)
+				})
+			if (this.config.requestApprovals)
+				await this.requestApprovals(this).catch((err) => {
+					log(LoggingLevels.error, "Error requesting approval " + err)
+				})
+			if (this.config.manageRelease)
+				await this.bumpVersion(this).catch((err) => {
+					log(LoggingLevels.error, "Error managing release " + err)
+				})
+			// create changelog
+			// create release
+			// sync remote repositories
+			// if (this.config.syncRemote) await this.syncRemoteRepo(this)
+			core.endGroup()
 		} catch (err) {
 			if (attempt > this.retryLimit) {
 				core.endGroup()
@@ -223,74 +229,6 @@ export class PullRequests extends Contexts {
 				)
 				this.run(attempt)
 			}, seconds * 1000)
-		}
-	}
-
-	automaticApprove(automaticApprove: PullRequestConfig["automaticApprove"]) {
-		if (!automaticApprove || !automaticApprove.conventions)
-			throw new LoggingDataClass(
-				LoggingLevels.error,
-				"Not Able to automatically approve"
-			)
-		automaticApprove.conventions.forEach((convention) => {
-			if (!convention.conditions) return
-			if (evaluator.call(this, convention, this.context.props)) {
-				log(LoggingLevels.info, `Automatically Approved Successfully`)
-				const body =
-					automaticApprove.commentHeader +
-					"\n\n Automatically Approved - Will automatically merge shortly! \n\n" +
-					automaticApprove.commentFooter
-				this.util.api.pullRequests.reviews.create(
-					this.context.IDNumber,
-					body,
-					"APPROVE"
-				)
-				return true
-			} else {
-				core.setFailed(convention.failedComment)
-				return false
-			}
-		})
-	}
-
-	async bumpVersion(labels: Release["labels"]) {
-		if (!labels || !this.context.props.labels) return
-		if (
-			(!this.configs.versioning || this.configs.versioning.type == "SemVer") &&
-			this.newVersion?.semantic
-		) {
-			if (
-				this.context.props.labels[labels.major] || labels.breaking
-					? this.context.props.labels[labels.major]
-					: true
-			) {
-				this.newVersion.semantic.major++
-			} else if (this.context.props.labels[labels.minor]) {
-				this.newVersion.semantic.minor++
-			} else if (this.context.props.labels[labels.patch]) {
-				this.newVersion.semantic.patch++
-			}
-			if (this.context.props.labels[labels.prerelease]) {
-				this.newVersion.semantic.prerelease =
-					this.newVersion.semantic.prerelease ||
-					this.configs.versioning?.prereleaseName ||
-					"prerelease"
-			}
-			if (this.context.props.labels[labels.build]) {
-				this.newVersion.semantic.build = +1
-			}
-			this.newVersion.name = `${this.newVersion.semantic.major}.${
-				this.newVersion.semantic.minor
-			}.${this.newVersion.semantic.patch}${
-				this.newVersion.semantic.prerelease
-					? `-${this.newVersion.semantic.prerelease}`
-					: ""
-			}${
-				this.newVersion.semantic.build
-					? `+${this.newVersion.semantic.build}`
-					: ""
-			}`
-			log(LoggingLevels.debug, `New Version is: ${this.newVersion.name}`)
 		}
 	}
 }

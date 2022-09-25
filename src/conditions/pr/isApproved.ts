@@ -11,6 +11,18 @@ export interface ConditionisApproved {
 	required?: number
 }
 
+/** Checks if a pull request has requested a review.
+
+Example:
+
+```json
+{
+	"type": "isApproved",
+	"value": true,
+	"required": 1
+}
+``` */
+
 function isApproved(
 	this: Issues | PullRequests | Project,
 	condition: ConditionisApproved,

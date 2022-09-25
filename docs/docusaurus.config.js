@@ -3,58 +3,43 @@
  * @type {import('@docusaurus/types').DocusaurusConfig}
  */
 
-const remarkContributors = import("remark-git-contributors")
-
 module.exports = {
-	title: "Action Masterminds",
-	tagline: "Superpowered Github Actions",
-	url: "https://videndum.github.io",
-	baseUrl: "/action-masterminds/",
+	title: "Smartcloud",
+	tagline:
+		"The most advanced github action, with functionality overflowing and declaritive configuration to streamline your entire github workflow!",
+	url: "https://resnovas.github.io",
+	baseUrl: "/smartcloud/",
 	onBrokenLinks: "throw",
 	onBrokenMarkdownLinks: "warn",
 	favicon: "img/favicon.ico",
-	organizationName: "videndum",
-	projectName: "action-masterminds",
+	organizationName: "resnovas",
+	projectName: "smartcloud",
 	trailingSlash: false,
-	i18n: {
-		defaultLocale: "en",
-		locales: ["en", "fr", "es"]
-	},
 	plugins: [
 		"@docusaurus/theme-live-codeblock",
 		[
 			"docusaurus-plugin-typedoc",
 			{
-				id: "release-mastermind",
-				out: "release-mastermind",
-				entryPoints: ["../packages/release-mastermind/src/index.ts"],
-				tsconfig: "../packages/release-mastermind/tsconfig.json",
+				id: "smartcloud",
+				out: "smartcloud",
+				entryPoints: ["../src/index.ts"],
+				tsconfig: "../tsconfig.json",
 				sidebar: {
 					categoryLabel: "rm"
 				},
-				excludePrivate: true,
-				readme: "none"
+				readme: "none",
+				searchInComments: true,
+				excludeExternals: true,
+				internalModule: "internal",
+				plugin: ["typedoc-plugin-missing-exports"]
 			}
 		],
-		// [
-		//   'docusaurus-plugin-typedoc',
-		//   {
-		//     id: 'label-mastermind',
-		//     out: "label-mastermind",
-		//     entryPoints: ['../packages/label-mastermind/src/index.ts'],
-		//     tsconfig: '../packages/label-mastermind/tsconfig.json',
-		//     sidebar: {
-		//       "categoryLabel": "lm"
-		//     }
-		//   },
-		// ],
 		[
 			"@docusaurus/plugin-content-blog",
 			{
 				id: "changelog",
 				routeBasePath: "changelog",
-				path: "./changelog",
-				editLocalizedFiles: true
+				path: "./changelog"
 			}
 		]
 	],
@@ -63,9 +48,9 @@ module.exports = {
 			playgroundPosition: "bottom"
 		},
 		navbar: {
-			title: "Action Masterminds",
+			title: "Smartcloud",
 			logo: {
-				alt: "Action Masterminds",
+				alt: "Smartcloud",
 				src: "img/logo.svg"
 			},
 			items: [
@@ -76,59 +61,54 @@ module.exports = {
 					position: "left"
 				},
 				{
-					to: "docs/release-mastermind",
-					activeBasePath: "docs/release-mastermind",
+					to: "docs/smartcloud",
+					activeBasePath: "docs/smartcloud",
 					label: "Config Docs",
 					position: "left"
 				},
-				{ to: "blog", label: "Blog", position: "left" },
 				{ to: "changelog", label: "Changelog", position: "left" },
 				{
-					href: "https://github.com/videndum/action-masterminds",
+					href: "https://github.com/resnovas/smartcloud",
 					label: "GitHub",
 					position: "right"
-				},
-				{
-					type: "localeDropdown",
-					position: "left"
 				}
 			]
 		},
 		footer: {
 			style: "dark",
-			links: [
-				{
-					title: "Community",
-					items: [
-						{
-							label: "Stack Overflow",
-							href: "https://stackoverflow.com/questions/tagged/docusaurus"
-						},
-						{
-							label: "Discord",
-							href: "https://discordapp.com/invite/docusaurus"
-						},
-						{
-							label: "Twitter",
-							href: "https://twitter.com/docusaurus"
-						}
-					]
-				},
-				{
-					title: "More",
-					items: [
-						{
-							label: "Blog",
-							to: "blog/"
-						},
-						{
-							label: "GitHub",
-							href: "https://github.com/facebook/docusaurus"
-						}
-					]
-				}
-			],
-			copyright: `Copyright © ${new Date().getFullYear()} Videndum Studios Ltd.`
+			// links: [
+			// 	{
+			// 		title: "Community",
+			// 		items: [
+			// 			{
+			// 				label: "Stack Overflow",
+			// 				href: "https://stackoverflow.com/questions/tagged/docusaurus"
+			// 			},
+			// 			{
+			// 				label: "Discord",
+			// 				href: "https://discordapp.com/invite/docusaurus"
+			// 			},
+			// 			{
+			// 				label: "Twitter",
+			// 				href: "https://twitter.com/docusaurus"
+			// 			}
+			// 		]
+			// 	},
+			// 	{
+			// 		title: "More",
+			// 		items: [
+			// 			{
+			// 				label: "Changelog",
+			// 				to: "changelog/"
+			// 			},
+			// 			{
+			// 				label: "GitHub",
+			// 				href: "https://github.com/facebook/docusaurus"
+			// 			}
+			// 		]
+			// 	}
+			// ],
+			copyright: `Copyright © ${new Date().getFullYear()} Resnovas.`
 		}
 	},
 
@@ -138,29 +118,12 @@ module.exports = {
 			{
 				docs: {
 					sidebarPath: require.resolve("./sidebars.js"),
-					editUrl:
-						"https://github.com/videndum/action-masterminds/edit/develop/docs/",
-					editLocalizedFiles: true,
-					remarkPlugins: [
-						// [
-						//   remarkContributors,
-						//   {
-						//     "contributors": [
-						//       {
-						//       "name": "Sara",
-						//       "email": "sara@example.com",
-						//       "github": "sara"
-						//       }
-						//     ]
-						//   }
-						// ],
-					]
+					editUrl: "https://github.com/resnovas/smartcloud/edit/develop/docs/"
 				},
 				blog: {
 					showReadingTime: true,
 					editUrl:
-						"https://github.com/videndum/action-masterminds/edit/develop/docs/blog/",
-					editLocalizedFiles: true
+						"https://github.com/resnovas/smartcloud/edit/develop/docs/blog/"
 				}
 			}
 		]

@@ -6,18 +6,29 @@ const TYPE = "descriptionMatches"
 
 export interface ConditionDescriptionMatches {
 	type: typeof TYPE
-	pattern: string
+	condition: string
 }
+
+/** Checks if an issue or pull request's description matches a Regex condition.
+
+Example:
+
+```json
+{
+	"type": "descriptionMatches",
+	"condition": "foo.*bar"
+}
+``` */
 
 async function descriptionMatches(
 	this: UtilThis,
-	condition: ConditionDescriptionMatches,
+	pattern: ConditionDescriptionMatches,
 	issue: UtilProps
 ) {
-	const pattern = await this.util.parsingData.processRegExpPattern(
-		condition.pattern
+	const condition = await this.util.parsingData.processRegExpcondition(
+		pattern.condition
 	)
-	return pattern.test(issue.description)
+	return condition.test(issue.description)
 }
 
 export default [TYPE, descriptionMatches] as const

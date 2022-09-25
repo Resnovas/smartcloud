@@ -7,10 +7,6 @@ export type IssueCondition = Condition
 
 const handlers = [...sharedHandlers]
 
-/**
- * The issue condition handler.
- * @private
- */
 export function getIssueConditionHandler(
 	this: Issues,
 	condition: IssueCondition

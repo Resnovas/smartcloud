@@ -12,14 +12,32 @@ const TYPE = "$or"
 
 export interface ConditionOr {
 	type: typeof TYPE
-	pattern: [PRConditionConfig | IssueConditionConfig | ProjectConditionConfig]
+	condition: [PRConditionConfig | IssueConditionConfig | ProjectConditionConfig]
 }
+
+/** Allows conditions to be combined to create more advanced conditions. Would require one conditions to return true otherwise it would fail. If both return true, this would return false.
+
+```json
+{
+	"type": "$or",
+	"condition": [
+		{
+			"requires": 1,
+			"conditions": []
+		},
+		{
+			"requires": 1,
+			"conditions": []
+		}
+	]
+}
+``` */
 
 function or(this: UtilThis, condition: ConditionOr, props: UtilProps) {
 	let success = false
 
-	condition.pattern.forEach((condition) => {
-		if (evaluator.call(this, condition, props)) success = true
+	condition.condition.forEach(async (condition) => {
+		if (await evaluator.call(this, condition, props)) success = true
 	})
 
 	return success
