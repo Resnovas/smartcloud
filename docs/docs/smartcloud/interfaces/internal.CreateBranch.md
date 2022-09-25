@@ -5,6 +5,8 @@ sidebar_label: "CreateBranch"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).CreateBranch
 
 Create branch configuration
@@ -19,15 +21,20 @@ Create branch configuration
 
 ### branchName
 
-• **branchName**: ``"number"`` \| ``"title"`` \| ``"short"``
+• **branchName**: `"number"` \| `"title"` \| `"short"`
 
 The branch name type
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/createBranch.ts:35](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L35)
+=======
 [src/contexts/methods/createBranch.ts:35](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L35)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### branchPrefix
 
@@ -37,9 +44,14 @@ The branch prefix
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/createBranch.ts:27](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L27)
+=======
 [src/contexts/methods/createBranch.ts:27](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L27)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### branchSuffix
 
@@ -49,4 +61,9 @@ The branch suffix
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/createBranch.ts:31](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L31)
+=======
 [src/contexts/methods/createBranch.ts:31](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L31)
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

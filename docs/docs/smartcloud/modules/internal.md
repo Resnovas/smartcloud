@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Classes
 
 - [Contexts](../classes/internal.Contexts.md)
@@ -66,7 +68,7 @@ The enforce conventions configuration
 
 #### Defined in
 
-[src/contexts/methods/conventions.ts:15](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/conventions.ts#L15)
+[src/contexts/methods/conventions.ts:15](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/conventions.ts#L15)
 
 ## Functions
 
@@ -76,8 +78,8 @@ The enforce conventions configuration
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                             |
+| :----- | :------------------------------- |
 | `this` | [`Issues`](../classes/Issues.md) |
 
 #### Returns
@@ -86,4 +88,4 @@ The enforce conventions configuration
 
 #### Defined in
 
-[src/contexts/methods/createBranch.ts:38](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/createBranch.ts#L38)
+[src/contexts/methods/createBranch.ts:38](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/createBranch.ts#L38)

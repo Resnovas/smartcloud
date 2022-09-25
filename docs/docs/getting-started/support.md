@@ -4,6 +4,8 @@ sidebar_label: "Get Support"
 sidebar_position: 2
 ---
 
+<!-- @format -->
+
 For **Features Requests**, **Q&A**, **Show & Tell** and **Discussions** please use **[our discussions page](https://github.com/Resnovas/Smartcloud/discussions)** 🚑.
 
 We have a **FAQ** category in our **[discussions page](https://github.com/Resnovas/Smartcloud/discussions)** where you can get quick answers, help with debugging weird issues, and general help.

@@ -5,6 +5,8 @@ sidebar_label: "ConditionisApproved"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).ConditionisApproved
 
 ## Properties
@@ -15,19 +17,29 @@ custom_edit_url: null
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/pr/isApproved.ts:11](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/isApproved.ts#L11)
+=======
 [src/conditions/pr/isApproved.ts:11](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/isApproved.ts#L11)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### type
 
-• **type**: ``"isApproved"``
+• **type**: `"isApproved"`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/pr/isApproved.ts:9](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/isApproved.ts#L9)
+=======
 [src/conditions/pr/isApproved.ts:9](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/isApproved.ts#L9)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### value
 
@@ -35,4 +47,9 @@ ___
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/pr/isApproved.ts:10](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/pr/isApproved.ts#L10)
+=======
 [src/conditions/pr/isApproved.ts:10](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/pr/isApproved.ts#L10)
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

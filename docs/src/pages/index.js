@@ -1,16 +1,13 @@
 /** @format */
 
 import useBaseUrl from "@docusaurus/useBaseUrl"
-import useDocusaurusContext from "@docusaurus/useDocusaurusContext"
+import { Button } from "@mui/material"
 import Layout from "@theme/Layout"
 import clsx from "clsx"
-import React from "react"
+import React, { useEffect } from "react"
+import schema from "./schema.json"
 import styles from "./styles.module.css"
-import { Button, TextField } from "@mui/material"
-import {JSONEditor} from '@json-editor/json-editor'
-import { useEffect } from 'react'
-import schema from './schema.json'
-import config from './template_config.json'
+import config from "./template_config.json"
 
 const features = [
 	{
@@ -18,7 +15,9 @@ const features = [
 		imageUrl: "img/undraw_docusaurus_mountain.svg",
 		description: (
 			<>
-				Configure you smartcloud actions using JSON or YAML declaritively. Either use the documentation or our config generator tool to get started.
+				Configure you smartcloud actions using JSON or YAML declaritively.
+				Either use the documentation or our config generator tool to get
+				started.
 			</>
 		)
 	},
@@ -27,7 +26,8 @@ const features = [
 		imageUrl: "img/undraw_docusaurus_tree.svg",
 		description: (
 			<>
-				Configure you tools to do as little or as much as you need. Smartcloud is designed to be flexible and work with your existing tools.
+				Configure you tools to do as little or as much as you need. Smartcloud
+				is designed to be flexible and work with your existing tools.
 			</>
 		)
 	},
@@ -36,7 +36,9 @@ const features = [
 		imageUrl: "img/undraw_docusaurus_react.svg",
 		description: (
 			<>
-				Smartcloud has been designed to work within you github actions. No need to implement complex third party integrations, just use what you already have.
+				Smartcloud has been designed to work within you github actions. No need
+				to implement complex third party integrations, just use what you already
+				have.
 			</>
 		)
 	}
@@ -58,53 +60,56 @@ function Feature({ imageUrl, title, description }) {
 }
 
 function Configurator() {
-		useEffect(() => {
-			const element = document.getElementById('editor_holder');
-			const editor = new JSONEditor(element, {
-				schema: schema,
-				startval: config,
-				theme: 'spectre'
-			})
-			
-		}, [])
-	return <div id='editor_holder'/>
+	useEffect(() => {
+		const JSONEditor = require("@json-editor/json-editor").JSONEditor
+		const element = document.getElementById("editor_holder")
+		const editor = new JSONEditor(element, {
+			schema: schema,
+			startval: config,
+			theme: "spectre"
+		})
+	}, [])
+	return <div id="editor_holder" />
 }
 
 export default function Home() {
-	const context = useDocusaurusContext()
 	const [isConfigOpen, setisConfigOpen] = React.useState(false)
 
-
-	if (!isConfigOpen) return (
-		<Layout
-			title={`The supercharged Github Action`}
-			description="The most advanced github action, with functionality overflowing and declaritive configuration to streamline your entire github workflow!"
-		>
-			<div className={styles.hero}>
-				<main>
-					{features && features.length > 0 && (
-						<section className={styles.section}>
-							<div className={styles.features}>
-								{features.map((props, idx) => (
-									<Feature key={idx} {...props} />
-								))}
-							</div>
-						</section>
-					)}
-				</main>
-				<Button variant="outlined" onClick={() => setisConfigOpen(true)}>Open Configurator</Button>
-			</div>
-		</Layout>
-	)
-	else {		
+	if (!isConfigOpen)
 		return (
 			<Layout
 				title={`The supercharged Github Action`}
 				description="The most advanced github action, with functionality overflowing and declaritive configuration to streamline your entire github workflow!"
 			>
-				<Button variant="outlined" onClick={() => setisConfigOpen(false)}>Close Configurator</Button>
-				<Configurator/>
-		</Layout>
+				<div className={styles.hero}>
+					<main>
+						{features && features.length > 0 && (
+							<section className={styles.section}>
+								<div className={styles.features}>
+									{features.map((props, idx) => (
+										<Feature key={idx} {...props} />
+									))}
+								</div>
+							</section>
+						)}
+					</main>
+					<Button variant="outlined" onClick={() => setisConfigOpen(true)}>
+						Open Configurator
+					</Button>
+				</div>
+			</Layout>
+		)
+	else {
+		return (
+			<Layout
+				title={`The supercharged Github Action`}
+				description="The most advanced github action, with functionality overflowing and declaritive configuration to streamline your entire github workflow!"
+			>
+				<Button variant="outlined" onClick={() => setisConfigOpen(false)}>
+					Close Configurator
+				</Button>
+				<Configurator />
+			</Layout>
 		)
 	}
 }

@@ -5,6 +5,8 @@ sidebar_label: "AbanondedConfig"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).AbanondedConfig
 
 The abanonded configuration
@@ -25,9 +27,14 @@ Should the abanonded issue be closed
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/checkStale.ts:64](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L64)
+=======
 [src/contexts/methods/checkStale.ts:64](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L64)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### comment
 
@@ -41,9 +48,14 @@ The comment to append to the stale issue
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/checkStale.ts:42](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L42)
+=======
 [src/contexts/methods/checkStale.ts:42](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L42)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### commentFooter
 
@@ -57,9 +69,14 @@ The comment to append to the footer
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/checkStale.ts:54](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L54)
+=======
 [src/contexts/methods/checkStale.ts:54](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L54)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### commentHeader
 
@@ -73,9 +90,14 @@ The comment to append to the header
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/checkStale.ts:50](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L50)
+=======
 [src/contexts/methods/checkStale.ts:50](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L50)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### condition
 
@@ -89,9 +111,14 @@ The conditions required for this to succeed
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:168](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L168)
+=======
 [src/conditions/index.ts:168](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L168)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### days
 
@@ -105,9 +132,14 @@ The days to consider stale
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/checkStale.ts:38](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L38)
+=======
 [src/contexts/methods/checkStale.ts:38](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L38)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### label
 
@@ -117,9 +149,14 @@ The label to use for abanonded issues
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/checkStale.ts:72](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L72)
+=======
 [src/contexts/methods/checkStale.ts:72](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L72)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### lock
 
@@ -129,9 +166,14 @@ Should the abanonded issue be locked
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/checkStale.ts:68](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L68)
+=======
 [src/contexts/methods/checkStale.ts:68](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L68)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### requires
 
@@ -145,9 +187,14 @@ The number of requires needed for this to succeed
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:164](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L164)
+=======
 [src/conditions/index.ts:164](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L164)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### resolve
 
@@ -161,4 +208,9 @@ The comment to switch when resolved
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/contexts/methods/checkStale.ts:46](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/checkStale.ts#L46)
+=======
 [src/contexts/methods/checkStale.ts:46](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/checkStale.ts#L46)
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

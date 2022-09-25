@@ -5,6 +5,8 @@ sidebar_label: "localCard"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).localCard
 
 ## Properties
@@ -15,39 +17,59 @@ custom_edit_url: null
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:124](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L124)
+=======
 [src/conditions/index.ts:124](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L124)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
 
-### column\_url
+---
 
-• **column\_url**: `string`
+### column_url
+
+• **column_url**: `string`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:125](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L125)
+=======
 [src/conditions/index.ts:125](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L125)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
 
-### content\_url
+---
 
-• **content\_url**: `string`
+### content_url
+
+• **content_url**: `string`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:126](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L126)
+=======
 [src/conditions/index.ts:126](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L126)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
 
-### created\_at
+---
 
-• **created\_at**: `string`
+### created_at
+
+• **created_at**: `string`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:127](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L127)
+=======
 [src/conditions/index.ts:127](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L127)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### creator
 
@@ -55,9 +77,14 @@ ___
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:128](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L128)
+=======
 [src/conditions/index.ts:128](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L128)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### id
 
@@ -65,49 +92,74 @@ ___
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:129](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L129)
+=======
 [src/conditions/index.ts:129](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L129)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
 
-### node\_id
+---
 
-• **node\_id**: `string`
+### node_id
+
+• **node_id**: `string`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:130](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L130)
+=======
 [src/conditions/index.ts:130](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L130)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### note
 
-• **note**: ``null`` \| `string`
+• **note**: `null` \| `string`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:131](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L131)
+=======
 [src/conditions/index.ts:131](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L131)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
 
-### project\_url
+---
 
-• **project\_url**: `string`
+### project_url
+
+• **project_url**: `string`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:132](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L132)
+=======
 [src/conditions/index.ts:132](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L132)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
 
-### updated\_at
+---
 
-• **updated\_at**: `string`
+### updated_at
+
+• **updated_at**: `string`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:133](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L133)
+=======
 [src/conditions/index.ts:133](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L133)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### url
 
@@ -115,4 +167,9 @@ ___
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:134](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L134)
+=======
 [src/conditions/index.ts:134](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L134)
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

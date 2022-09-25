@@ -35,11 +35,11 @@
 	],
 	"scripts": {
 		"dev:all": "npm run dev:package && npm run dev:format",
+		"dev:debug": "node lib/index.js",
 		"dev:format": "prettier --config .prettier.json --write .",
 		"dev:format-check": "prettier --config .prettier.json --check .",
 		"dev:package": "npm run dev:tsc && ncc build --source-map --target es6",
 		"dev:run": "npm run dev:tsc && node lib/index.js",
-		"dev:debug": "node lib/index.js",
 		"dev:schema": "typescript-json-schema ./tsconfig.json Runners -o schema.json  --propOrder --esModuleInterop --defaultProps --titles --topRef --refs --required --tsNodeRegister",
 		"dev:test": "jest --json --outputFile=result.json --testLocationInResults",
 		"dev:tsc": "tsc -p tsconfig.json",

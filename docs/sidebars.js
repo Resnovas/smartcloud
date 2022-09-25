@@ -35,15 +35,3 @@ module.exports = {
 		}
 	]
 }
-
-// getting-started/CODE_OF_CONDUCT
-// - getting-started/backlog
-// - getting-started/code-review-process
-// - getting-started/contributing
-// - getting-started/gpgkey
-// - getting-started/intro
-// - getting-started/regex
-// - getting-started/releaseManualSetup
-// - getting-started/runningLocally
-// - getting-started/support
-// - getting-started/workflowConfig

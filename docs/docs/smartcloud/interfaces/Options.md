@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 The application options used within Github Actions workflows
 
 ## Properties
@@ -18,9 +20,14 @@ The json configuration object
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:125](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L125)
+=======
 [src/index.ts:125](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L125)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### configPath
 
@@ -30,9 +37,14 @@ The path to find the config
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:121](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L121)
+=======
 [src/index.ts:121](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L121)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### configRef
 
@@ -42,9 +54,14 @@ The ref to use when retrieving config
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:129](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L129)
+=======
 [src/index.ts:129](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L129)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### dryRun
 
@@ -54,9 +71,14 @@ should dry run?
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:137](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L137)
+=======
 [src/index.ts:137](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L137)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### fillEmpty
 
@@ -66,9 +88,14 @@ Should fill empty values?
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:141](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L141)
+=======
 [src/index.ts:141](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L141)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### git
 
@@ -78,9 +105,14 @@ The Git settings to use
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:153](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L153)
+=======
 [src/index.ts:153](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L153)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### ref
 
@@ -90,9 +122,14 @@ The ref to use
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:157](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L157)
+=======
 [src/index.ts:157](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L157)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### repo
 
@@ -102,9 +139,14 @@ The repo to use
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:149](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L149)
+=======
 [src/index.ts:149](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L149)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### showLogs
 
@@ -114,9 +156,14 @@ Should show logs?
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:133](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L133)
+=======
 [src/index.ts:133](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L133)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### skipDelete
 
@@ -126,4 +173,9 @@ Should skip delete of labels
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/index.ts:145](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/index.ts#L145)
+=======
 [src/index.ts:145](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/index.ts#L145)
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

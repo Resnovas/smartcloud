@@ -6,6 +6,8 @@ sidebar_position: 0
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 ## Hierarchy
 
 - [`Contexts`](internal.Contexts.md)
@@ -20,13 +22,13 @@ custom_edit_url: null
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `util` | [`Utils`](Utils.md) |
-| `runners` | [`Runners`](../interfaces/Runners.md) |
-| `configs` | [`Config`](../interfaces/Config.md) |
-| `curContext` | [`CurContext`](../#curcontext) |
-| `dryRun` | `boolean` |
+| Name         | Type                                  |
+| :----------- | :------------------------------------ |
+| `util`       | [`Utils`](Utils.md)                   |
+| `runners`    | [`Runners`](../interfaces/Runners.md) |
+| `configs`    | [`Config`](../interfaces/Config.md)   |
+| `curContext` | [`CurContext`](../#curcontext)        |
+| `dryRun`     | `boolean`                             |
 
 #### Overrides
 
@@ -34,7 +36,7 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/contexts/schedule.ts:22](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/schedule.ts#L22)
+[src/contexts/schedule.ts:22](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/schedule.ts#L22)
 
 ## Properties
 
@@ -48,9 +50,9 @@ custom_edit_url: null
 
 #### Defined in
 
-[src/contexts/schedule.ts:20](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/schedule.ts#L20)
+[src/contexts/schedule.ts:20](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/schedule.ts#L20)
 
-___
+---
 
 ### configs
 
@@ -62,9 +64,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L47)
+[src/contexts/methods/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L47)
 
-___
+---
 
 ### context
 
@@ -76,9 +78,9 @@ ___
 
 #### Defined in
 
-[src/contexts/schedule.ts:18](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/schedule.ts#L18)
+[src/contexts/schedule.ts:18](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/schedule.ts#L18)
 
-___
+---
 
 ### conventions
 
@@ -86,8 +88,8 @@ ___
 
 #### Type declaration
 
-| Name | Type |
-| :------ | :------ |
+| Name      | Type                                                                                                                                    |
+| :-------- | :-------------------------------------------------------------------------------------------------------------------------------------- |
 | `enforce` | (`that`: [`Issues`](Issues.md) \| [`PullRequests`](PullRequests.md) \| [`Project`](Project.md)) => `Promise`<`undefined` \| `boolean`\> |
 
 #### Inherited from
@@ -96,9 +98,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:101](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L101)
+[src/contexts/methods/index.ts:101](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L101)
 
-___
+---
 
 ### ctx
 
@@ -106,9 +108,9 @@ ___
 
 #### Defined in
 
-[src/contexts/schedule.ts:19](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/schedule.ts#L19)
+[src/contexts/schedule.ts:19](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/schedule.ts#L19)
 
-___
+---
 
 ### curContext
 
@@ -120,9 +122,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:49](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L49)
+[src/contexts/methods/index.ts:49](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L49)
 
-___
+---
 
 ### dryRun
 
@@ -134,9 +136,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:54](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L54)
+[src/contexts/methods/index.ts:54](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L54)
 
-___
+---
 
 ### newVersion
 
@@ -148,9 +150,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:51](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L51)
+[src/contexts/methods/index.ts:51](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L51)
 
-___
+---
 
 ### retryLimit
 
@@ -162,9 +164,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:53](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L53)
+[src/contexts/methods/index.ts:53](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L53)
 
-___
+---
 
 ### runners
 
@@ -176,9 +178,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L46)
+[src/contexts/methods/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L46)
 
-___
+---
 
 ### util
 
@@ -190,7 +192,7 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:52](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L52)
+[src/contexts/methods/index.ts:52](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L52)
 
 ## Methods
 
@@ -200,8 +202,8 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                       |
+| :----- | :------------------------- |
 | `that` | [`UtilThis`](../#utilthis) |
 
 #### Returns
@@ -214,9 +216,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:94](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L94)
+[src/contexts/methods/index.ts:94](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L94)
 
-___
+---
 
 ### assignProject
 
@@ -224,8 +226,8 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                                                       |
+| :----- | :--------------------------------------------------------- |
 | `that` | [`Issues`](Issues.md) \| [`PullRequests`](PullRequests.md) |
 
 #### Returns
@@ -238,9 +240,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:93](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L93)
+[src/contexts/methods/index.ts:93](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L93)
 
-___
+---
 
 ### automaticApprove
 
@@ -248,8 +250,8 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                              |
+| :----- | :-------------------------------- |
 | `that` | [`PullRequests`](PullRequests.md) |
 
 #### Returns
@@ -262,9 +264,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:97](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L97)
+[src/contexts/methods/index.ts:97](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L97)
 
-___
+---
 
 ### bumpVersion
 
@@ -272,8 +274,8 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                              |
+| :----- | :-------------------------------- |
 | `that` | [`PullRequests`](PullRequests.md) |
 
 #### Returns
@@ -286,9 +288,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:99](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L99)
+[src/contexts/methods/index.ts:99](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L99)
 
-___
+---
 
 ### checkStale
 
@@ -296,8 +298,8 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                                                                                                               |
+| :----- | :----------------------------------------------------------------------------------------------------------------- |
 | `that` | [`Issues`](Issues.md) \| [`PullRequests`](PullRequests.md) \| [`Project`](Project.md) \| [`Schedule`](Schedule.md) |
 
 #### Returns
@@ -310,9 +312,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:95](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L95)
+[src/contexts/methods/index.ts:95](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L95)
 
-___
+---
 
 ### createComment
 
@@ -320,14 +322,14 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
-| `this` | [`Issues`](Issues.md) \| [`PullRequests`](PullRequests.md) \| [`Project`](Project.md) \| [`Schedule`](Schedule.md) |
-| `jobName` | `string` |
-| `success` | `boolean` |
-| `options?` | `Object` |
-| `options.body?` | `string` |
-| `options.event?` | [`Event`](../#event) |
+| Name             | Type                                                                                                               |
+| :--------------- | :----------------------------------------------------------------------------------------------------------------- |
+| `this`           | [`Issues`](Issues.md) \| [`PullRequests`](PullRequests.md) \| [`Project`](Project.md) \| [`Schedule`](Schedule.md) |
+| `jobName`        | `string`                                                                                                           |
+| `success`        | `boolean`                                                                                                          |
+| `options?`       | `Object`                                                                                                           |
+| `options.body?`  | `string`                                                                                                           |
+| `options.event?` | [`Event`](../#event)                                                                                               |
 
 #### Returns
 
@@ -339,9 +341,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:107](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L107)
+[src/contexts/methods/index.ts:107](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L107)
 
-___
+---
 
 ### requestApprovals
 
@@ -349,8 +351,8 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                              |
+| :----- | :-------------------------------- |
 | `that` | [`PullRequests`](PullRequests.md) |
 
 #### Returns
@@ -363,9 +365,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:98](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L98)
+[src/contexts/methods/index.ts:98](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L98)
 
-___
+---
 
 ### run
 
@@ -373,8 +375,8 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name       | Type     |
+| :--------- | :------- |
 | `attempt?` | `number` |
 
 #### Returns
@@ -383,9 +385,9 @@ ___
 
 #### Defined in
 
-[src/contexts/schedule.ts:59](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/schedule.ts#L59)
+[src/contexts/schedule.ts:59](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/schedule.ts#L59)
 
-___
+---
 
 ### syncRemoteProject
 
@@ -393,8 +395,8 @@ ___
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name   | Type                    |
+| :----- | :---------------------- |
 | `that` | [`Project`](Project.md) |
 
 #### Returns
@@ -407,9 +409,9 @@ ___
 
 #### Defined in
 
-[src/contexts/methods/index.ts:92](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/methods/index.ts#L92)
+[src/contexts/methods/index.ts:92](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/methods/index.ts#L92)
 
-___
+---
 
 ### parse
 
@@ -427,8 +429,8 @@ TGTGamer
 
 #### Parameters
 
-| Name | Type |
-| :------ | :------ |
+| Name      | Type      |
+| :-------- | :-------- |
 | `context` | `Context` |
 
 #### Returns
@@ -437,4 +439,4 @@ TGTGamer
 
 #### Defined in
 
-[src/contexts/schedule.ts:51](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/contexts/schedule.ts#L51)
+[src/contexts/schedule.ts:51](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/contexts/schedule.ts#L51)

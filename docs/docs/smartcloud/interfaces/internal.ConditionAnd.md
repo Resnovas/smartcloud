@@ -5,6 +5,8 @@ sidebar_label: "ConditionAnd"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).ConditionAnd
 
 ## Properties
@@ -15,14 +17,24 @@ custom_edit_url: null
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/util/and.ts:15](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/and.ts#L15)
+=======
 [src/conditions/util/and.ts:15](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/util/and.ts#L15)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### type
 
-• **type**: ``"$and"``
+• **type**: `"$and"`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/util/and.ts:14](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/util/and.ts#L14)
+=======
 [src/conditions/util/and.ts:14](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/util/and.ts#L14)
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

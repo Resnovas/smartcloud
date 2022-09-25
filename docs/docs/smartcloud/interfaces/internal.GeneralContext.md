@@ -5,6 +5,8 @@ sidebar_label: "GeneralContext"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).GeneralContext
 
 ## Hierarchy
@@ -27,9 +29,14 @@ custom_edit_url: null
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:48](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L48)
+=======
 [src/conditions/index.ts:48](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L48)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### ref
 
@@ -37,9 +44,14 @@ ___
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L46)
+=======
 [src/conditions/index.ts:46](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L46)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### sha
 
@@ -47,4 +59,9 @@ ___
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/index.ts#L47)
+=======
 [src/conditions/index.ts:47](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/index.ts#L47)
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

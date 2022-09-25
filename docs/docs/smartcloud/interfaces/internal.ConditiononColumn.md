@@ -5,6 +5,8 @@ sidebar_label: "ConditiononColumn"
 custom_edit_url: null
 ---
 
+<!-- @format -->
+
 [internal](../modules/internal.md).ConditiononColumn
 
 ## Properties
@@ -15,9 +17,14 @@ custom_edit_url: null
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/project/onColumn.ts:11](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/project/onColumn.ts#L11)
+=======
 [src/conditions/project/onColumn.ts:11](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/project/onColumn.ts#L11)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### project
 
@@ -25,14 +32,24 @@ ___
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/project/onColumn.ts:10](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/project/onColumn.ts#L10)
+=======
 [src/conditions/project/onColumn.ts:10](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/project/onColumn.ts#L10)
 
-___
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960
+
+---
 
 ### type
 
-• **type**: ``"onColumn"``
+• **type**: `"onColumn"`
 
 #### Defined in
 
+<<<<<<< HEAD
+[src/conditions/project/onColumn.ts:9](https://github.com/Resnovas/smartcloud/blob/b9e22a9/src/conditions/project/onColumn.ts#L9)
+=======
 [src/conditions/project/onColumn.ts:9](https://github.com/Resnovas/smartcloud/blob/b91f5b4/src/conditions/project/onColumn.ts#L9)
+
+> > > > > > > f1c3d7350ef9f5604f99e801f5604678ab957960

@@ -1,0 +1,39 @@
+# @format
+
+name: Test documentation update
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.ref }}
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          registry-url: 'https://npm.pkg.github.com/'
+          scope: '@resnovas'
+          always-auth: true
+          cache: 'yarn'
+
+      - name: login to github packages
+        run: npm set "npm.pkg.github.com/:_authToken" {{ secrets.GITHUB_TOKEN }}
+
+      - name: install smartcloud dependencies
+        run: yarn install --frozen-lockfile
+
+      - run: yarn install --frozen-lockfile
+        working-directory: docs
+        
+      - run: yarn build
+        working-directory: docs
