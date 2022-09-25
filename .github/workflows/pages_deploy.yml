@@ -26,14 +26,6 @@ jobs:
           always-auth: true
           cache: 'yarn'
 
-      - name: Setup .yarnrc.yml
-        run: |
-          yarn config set npmScopes.resnovas.npmRegistryServer "https://npm.pkg.github.com"
-          yarn config set npmScopes.resnovas.npmAlwaysAuth true
-          yarn config set npmScopes.resnovas.npmAuthToken $NPM_AUTH_TOKEN
-        env:
-          NPM_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
-
       - name: install smartcloud dependencies
         run: yarn install --frozen-lockfile
         env:
