@@ -26,10 +26,11 @@ jobs:
           always-auth: true
           cache: 'yarn'
 
+      - name: login to github packages
+        run: npm set "npm.pkg.github.com/:_authToken" {{ secrets.GITHUB_TOKEN }}
+
       - name: install smartcloud dependencies
         run: yarn install --frozen-lockfile
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: yarn install --frozen-lockfile
         working-directory: docs
