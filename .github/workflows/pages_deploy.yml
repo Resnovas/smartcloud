@@ -9,7 +9,6 @@ on:
     paths:
       - ".github/workflows/deploy.yml"
       - "docs/**"
-  pull_request:
 
 jobs:
   deploy:
@@ -18,9 +17,6 @@ jobs:
       contents: write
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
-    defaults:
-      run:
-        working-directory: docs
     steps:
       - uses: actions/checkout@v3
 
@@ -41,8 +37,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docs-
 
+      - name: install smartcloud dependencies
+        run: yarn install --frozen-lockfile
+
       - run: yarn install --frozen-lockfile
+        working-directory: docs
+        
       - run: yarn build
+        working-directory: docs
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3

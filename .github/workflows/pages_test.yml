@@ -41,5 +41,11 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-docs-
 
+      - name: install smartcloud dependencies
+        run: yarn install --frozen-lockfile
+
       - run: yarn install --frozen-lockfile
+        working-directory: docs
+        
       - run: yarn build
+        working-directory: docs
