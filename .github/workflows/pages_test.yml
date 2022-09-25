@@ -23,21 +23,21 @@ jobs:
           node-version: "18"
           registry-url: 'https://npm.pkg.github.com/'
           scope: '@resnovas'
+          always-auth: true
+          cache: 'yarn'
 
-      - name: Get yarn cache
-        id: yarn-cache
-        run: echo "::set-output name=dir::$(yarn cache dir)"
-
-      - name: Cache dependencies
-        uses: actions/cache@v2
-        with:
-          path: ${{ steps.yarn-cache.outputs.dir }}
-          key: ${{ runner.os }}-docs-${{ hashFiles('**/yarn.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-docs-
+      - name: Setup .yarnrc.yml
+        run: |
+          yarn config set npmScopes.resnovas.npmRegistryServer "https://npm.pkg.github.com"
+          yarn config set npmScopes.resnovas.npmAlwaysAuth true
+          yarn config set npmScopes.resnovas.npmAuthToken $NPM_AUTH_TOKEN
+        env:
+          NPM_AUTH_TOKEN: ${{ secrets.YARN_TOKEN }}
 
       - name: install smartcloud dependencies
         run: yarn install --frozen-lockfile
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - run: yarn install --frozen-lockfile
         working-directory: docs
