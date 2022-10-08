@@ -1,4 +1,11 @@
-# @format
+###
+ # Filename: d:\Jonathan\Documents\Repositories\devspace\smartcloud\action.yml
+ # Path: d:\Jonathan\Documents\Repositories\devspace\smartcloud
+ # Created Date: Monday, September 5th 2022, 7:20:39 pm
+ # Author: Jonathan Stevens
+ # 
+ # Copyright (c) 2022 Jonathan Stevens
+ ###
 
 name: "SmartcloudAction"
 description: "Smartcloud - Github project management automation without limits"
@@ -14,7 +21,7 @@ inputs:
     description: "Config file path"
     default: ".github/config.json"
     required: false
-  configJSON:
+  configJson:
     description: "JSON string with configuration data"
     default: ""
     required: false

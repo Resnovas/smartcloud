@@ -22,6 +22,25 @@
 	"private": false,
 	"main": "lib/index.js",
 	"typings": "./lib/index.d.ts",
+	"type": "module",
+	"eslintConfig": {
+		"extends": [
+			"xo",
+			"xo-typescript"
+		]
+	},
+	"xo": {
+		"rules": {
+			"semicolon": 0,
+			"import/extensions": 0,
+			"import/no-cycle": [
+				2,
+				{
+					"maxDepth": 1
+				}
+			]
+		}
+	},
 	"directories": {
 		"lib": "./lib",
 		"doc": "./docs",
@@ -34,30 +53,14 @@
 		"setup"
 	],
 	"scripts": {
-		"dev:all": "npm run dev:package && npm run dev:format",
-		"dev:debug": "node lib/index.js",
-		"dev:format": "prettier --config .prettier.json --write .",
-		"dev:format-check": "prettier --config .prettier.json --check .",
-		"dev:package": "npm run dev:tsc && ncc build --source-map --target es6",
-		"dev:run": "npm run dev:tsc && node lib/index.js",
-		"dev:schema": "typescript-json-schema ./tsconfig.json Runners -o schema.json  --propOrder --esModuleInterop --defaultProps --titles --topRef --refs --required --tsNodeRegister",
-		"dev:test": "jest --json --outputFile=result.json --testLocationInResults",
-		"dev:tsc": "tsc -p tsconfig.json",
-		"git:bump": "git add . && git commit -m \"chore: Bump Version & Changelog\" -s && git push",
-		"gulp": "gulp",
-		"package": "gulp package",
-		"postdev:schema": "typescript-json-schema ./tsconfig.json Labels -o schema/labels.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
-		"predev:schema": "typescript-json-schema ./tsconfig.json Config -o schema/configs.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
-		"release": "yarn version --no-git-tag-version && npm run git:bump",
-		"run": "gulp && git add . && yarn version --prerelease --no-git-tag-version",
-		"start": "npm run run",
-		"test": "gulp testall"
-	},
-	"config": {
-		"commitizen": {
-			"path": "cz-conventional-changelog",
-			"maxHeaderWidth": 100
-		}
+		"package": "npm run tsc && ncc build --source-map --target es6",
+		"run": "npm run tsc && node lib/index.js",
+		"schema": "typescript-json-schema ./tsconfig.json Runners -o schema.json  --propOrder --esModuleInterop --defaultProps --titles --topRef --refs --required --tsNodeRegister",
+		"tsc": "tsc -p tsconfig.json",
+		"postschema": "typescript-json-schema ./tsconfig.json Labels -o schema/labels.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
+		"preschema": "typescript-json-schema ./tsconfig.json Config -o schema/configs.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
+		"start": "xo --fix && gulp && all-contributors generate && git add . && yarn version --prerelease --no-git-tag-version",
+		"test": "xo --fix && gulp testall"
 	},
 	"dependencies": {
 		"@actions/core": "^1.9.1",
@@ -66,6 +69,9 @@
 		"@emotion/styled": "^11.10.4",
 		"@mui/material": "^5.10.6",
 		"@resnovas/utilities": "1.0.0-alpha.18",
+		"@typescript-eslint/parser": "^5.38.0",
+		"eslint-config-xo": "^0.42.0",
+		"eslint-config-xo-typescript": "^0.53.0",
 		"minimatch": "^5.1.0",
 		"simple-git": "^3.14.0"
 	},
@@ -74,6 +80,7 @@
 		"@types/minimatch": "^5.1.2",
 		"@types/node": "^18.7.15",
 		"@types/nodegit": "^0.27.3",
+		"@typescript-eslint/eslint-plugin": "^5.38.0",
 		"@vercel/ncc": "^0.34.0",
 		"all-contributors-cli": "^6.20.4",
 		"docusaurus-plugin-typedoc": "^0.17.5",
@@ -96,7 +103,8 @@
 		"tslib": "^2.4.0",
 		"typedoc": "^0.23.14",
 		"typedoc-plugin-markdown": "^3.10.4",
-		"typescript": "^4.8.2",
-		"typescript-json-schema": "^0.54.0"
+		"typescript": "*",
+		"typescript-json-schema": "^0.54.0",
+		"xo": "^0.52.3"
 	}
 }

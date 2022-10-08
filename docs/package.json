@@ -1,47 +1,47 @@
 {
-	"name": "smartcloud",
-	"private": true,
-	"scripts": {
-		"build": "docusaurus build",
-		"clear": "docusaurus clear",
-		"deploy": "docusaurus deploy",
-		"docusaurus": "docusaurus",
-		"serve": "docusaurus serve",
-		"start": "docusaurus start",
-		"swizzle": "docusaurus swizzle",
-		"write-heading-ids": "docusaurus write-heading-ids",
-		"write-translations": "docusaurus write-translations"
-	},
-	"dependencies": {
-		"@docusaurus/core": "^2.1.0",
-		"@docusaurus/preset-classic": "^2.1.0",
-		"@docusaurus/theme-live-codeblock": "^2.1.0",
-		"@docusaurus/theme-search-algolia": "^2.1.0",
-		"@json-editor/json-editor": "^2.9.0-beta.0",
-		"@knodes/typedoc-plugin-code-blocks": "^0.23.1",
-		"@mdx-js/react": "^1.6.22",
-		"@svgr/webpack": "^6.3.1",
-		"clsx": "^1.2.1",
-		"docusaurus-plugin-typedoc": "^0.17.5",
-		"file-loader": "^6.2.0",
-		"react": "^17.0.0",
-		"react-dom": "^17.0.0",
-		"remark-git-contributors": "^4.0.1",
-		"typedoc": "^0.23.14",
-		"typedoc-plugin-markdown": "^3.13.6",
-		"typedoc-plugin-missing-exports": "^1.0.0",
-		"url-loader": "^4.1.1"
-	},
-	"browserslist": {
-		"production": [
-			">0.2%",
-			"not dead",
-			"not op_mini all"
-		],
-		"development": [
-			"last 1 chrome version",
-			"last 1 firefox version",
-			"last 1 safari version"
-		]
-	}
+  "name": "smartcloud",
+  "private": true,
+  "scripts": {
+    "build": "docusaurus build",
+    "clear": "docusaurus clear",
+    "deploy": "docusaurus deploy",
+    "docusaurus": "docusaurus",
+    "serve": "docusaurus serve",
+    "start": "docusaurus start",
+    "swizzle": "docusaurus swizzle",
+    "write-heading-ids": "docusaurus write-heading-ids",
+    "write-translations": "docusaurus write-translations"
+  },
+  "dependencies": {
+    "@docusaurus/core": "^2.1.0",
+    "@docusaurus/preset-classic": "^2.1.0",
+    "@docusaurus/theme-live-codeblock": "^2.1.0",
+    "@docusaurus/theme-search-algolia": "^2.1.0",
+    "@json-editor/json-editor": "^2.9.0-beta.0",
+    "@knodes/typedoc-plugin-code-blocks": "^0.23.1",
+    "@mdx-js/react": "^1.6.22",
+    "@svgr/webpack": "^6.3.1",
+    "clsx": "^1.2.1",
+    "docusaurus-plugin-typedoc": "^0.17.5",
+    "file-loader": "^6.2.0",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
+    "remark-git-contributors": "^4.0.1",
+    "typedoc": "^0.23.14",
+    "typedoc-plugin-markdown": "^3.13.6",
+    "typedoc-plugin-missing-exports": "^1.0.0",
+    "url-loader": "^4.1.1"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }

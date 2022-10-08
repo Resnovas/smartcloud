@@ -1,6 +1,6 @@
 {
-	"copyright": {
-		"message": "Copyright © 2022 Resnovas.",
-		"description": "The footer copyright"
-	}
+  "copyright": {
+    "message": "Copyright © 2022 Resnovas.",
+    "description": "The footer copyright"
+  }
 }

@@ -1,71 +1,87 @@
-/** @format */
-import simpleGit, { SimpleGit, SimpleGitOptions } from "simple-git"
-import { Github } from ".."
-import { Config, Label, Runners } from "../action"
-import { Reviews, UtilThis } from "../conditions"
-import * as APIFiles from "./api/files"
-import * as APIIssues from "./api/issues"
-import * as APILabels from "./api/labels"
-import * as APIProject from "./api/project"
-import * as APIPullRequests from "./api/pullRequests"
-import * as APITag from "./api/tags"
-import * as UtilLabels from "./labels"
-import * as UtilParsingData from "./parsingData"
-import * as UtilRespond from "./respond"
-import * as UtilVersioning from "./versioning"
+/**
+ * Project: @resnovas/smartcloud
+ * File: index.ts
+ * Path: \src\utils\index.ts
+ * Created Date: Tuesday, September 6th 2022
+ * Author: Jonathan Stevens
+ * -----
+ * Last Modified: Sun Sep 25 2022
+ * Modified By: Jonathan Stevens
+ * Current Version: 1.0.0-beta.0
+ * -----
+ * Copyright (c) 2022 Resnovas - All Rights Reserved
+ * -----
+ * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
+ *
+ * This program has been provided under confidence of the copyright holder and is
+ * licensed for copying, distribution and modification under the terms of
+ * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
+ * or (at your option) any later version of this license.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License v3.0 or later for more details.
+ *
+ * You should have received a copy of the GNU General Public License v3.0 or later
+ * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
+ *
+ * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
+ * -----
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	---------------------------------------------------------
+ */
+
+import type {SimpleGit, SimpleGitOptions} from 'simple-git';
+import {simpleGit} from 'simple-git';
+import type {Github, Config, Label, Runners} from '../types';
+import type {Reviews, UtilThis} from '../conditions';
+import * as APIFiles from './api/files';
+import * as APIIssues from './api/issues';
+import * as APILabels from './api/labels';
+import * as APIProject from './api/project';
+import * as APIPullRequests from './api/pull-requests';
+import * as APITag from './api/tags';
+import * as UtilLabels from './labels';
+import * as UtilParsingData from './parsing-data';
+import * as UtilRespond from './respond';
+import * as UtilVersioning from './versioning';
 
 export class Utils {
-	client: Github
-	repo: Repo
-	dryRun: boolean
-	skipDelete: boolean
-	ref?: string
-	git: SimpleGit
-	constructor(
-		props: ApiProps,
-		options: { dryRun: boolean; skipDelete: boolean; ref?: string },
-		{ git }: { git?: SimpleGitOptions }
-	) {
-		this.client = props.client
-		this.repo = props.repo
-		this.dryRun = options.dryRun
-		this.skipDelete = options.skipDelete
-		this.ref = options.ref
-		this.git = git
-			? simpleGit({
-					...git,
-					baseDir: !git.baseDir ? process.cwd() : git.baseDir,
-					binary: "git",
-					maxConcurrentProcesses: 6,
-					config: !git.config ? [] : git.config
-			  })
-			: simpleGit()
-	}
+	client: Github;
+	repo: Repo;
+	dryRun: boolean;
+	skipDelete: boolean;
+	ref?: string;
+	git: SimpleGit;
 	api = {
 		files: {
 			get: async (file: string, ref?: string) =>
 				APIFiles.get.call(this, file, ref),
-			list: async (IDNumber: number) => APIFiles.list.call(this, IDNumber)
+			list: async (IDNumber: number) => APIFiles.list.call(this, IDNumber),
 		},
 		issues: {
 			get: async (IDNumber: number) => APIIssues.get.call(this, IDNumber),
+			// eslint-disable-next-line max-params
 			create: async (
 				title: string,
 				body: string,
 				labels: string[],
 				assignees: string[],
-				milestone: string
+				milestone: string,
 			) =>
 				APIIssues.create.call(this, title, body, labels, assignees, milestone),
 			list: async ({
 				state,
 				sort,
-				direction
+				direction,
 			}: {
-				state?: "open" | "closed" | "all"
-				sort?: "created" | "updated" | "comments"
-				direction?: "asc" | "desc"
-			}) => APIIssues.list.call(this, { state, sort, direction }),
+				state?: 'open' | 'closed' | 'all';
+				sort?: 'created' | 'updated' | 'comments';
+				direction?: 'asc' | 'desc';
+			}) => APIIssues.list.call(this, {state, sort, direction}),
 			comments: {
 				list: async (IDNumber: number) =>
 					APIIssues.comments.list.call(this, IDNumber),
@@ -76,8 +92,8 @@ export class Utils {
 				update: async (comment_id: number, body: string) =>
 					APIIssues.comments.update.call(this, comment_id, body),
 				delete: async (comment_id: number) =>
-					APIIssues.comments.delete.call(this, comment_id)
-			}
+					APIIssues.comments.delete.call(this, comment_id),
+			},
 		},
 		labels: {
 			add: async (IDNumber: number, label: string) =>
@@ -88,7 +104,7 @@ export class Utils {
 			remove: async (IDNumber: number, label: string) =>
 				APILabels.remove.call(this, IDNumber, label),
 			update: async (current_name: string, label: Label) =>
-				APILabels.update.call(this, current_name, label)
+				APILabels.update.call(this, current_name, label),
 		},
 		project: {
 			column: {
@@ -97,23 +113,23 @@ export class Utils {
 				get: async (column_id: number) =>
 					APIProject.column.get.call(this, column_id),
 				listCards: async (column_id: number) =>
-					APIProject.column.listCards.call(this, column_id)
+					APIProject.column.listCards.call(this, column_id),
 			},
 			card: {
 				get: async (card_id: number) => APIProject.card.get.call(this, card_id),
 				create: async (
 					content_id: number,
 					column_id: number,
-					content_type?: "Issue" | "PullRequest"
+					content_type?: 'Issue' | 'PullRequest',
 				) =>
 					APIProject.card.create.call(
 						this,
 						content_id,
 						column_id,
-						content_type
+						content_type,
 					),
 				move: async (card_id: number, column_id: number) =>
-					APIProject.card.move.call(this, card_id, column_id)
+					APIProject.card.move.call(this, card_id, column_id),
 			},
 			projects: {
 				get: async (project_id: number) =>
@@ -121,8 +137,8 @@ export class Utils {
 				org: async (org: string) => APIProject.projects.org.call(this, org),
 				user: async (user: string) => APIProject.projects.user.call(this, user),
 				repo: async (owner: string, repo: string) =>
-					APIProject.projects.repo.call(this, owner, repo)
-			}
+					APIProject.projects.repo.call(this, owner, repo),
+			},
 		},
 		pullRequests: {
 			list: async (IDNumber: number) =>
@@ -134,20 +150,30 @@ export class Utils {
 					IDNumber: number,
 					body?: string,
 					event?: Event,
-					comments?: any
+					comments?: Array<{
+						path: string;
+						position?: number | undefined;
+						body: string;
+						line?: number | undefined;
+						side?: string | undefined;
+						start_line?: number | undefined;
+						start_side?: string | undefined;
+					}>,
 				) =>
 					APIPullRequests.reviews.create.call(
 						this,
 						IDNumber,
-						body,
-						event,
-						comments
+						{
+							body,
+							event,
+							comments,
+						},
 					),
 				requestReviewers: async (IDNumber: number, reviewers: string[]) =>
 					APIPullRequests.reviews.requestReviewers.call(
 						this,
 						IDNumber,
-						reviewers
+						reviewers,
 					),
 				update: async (IDNumber: number, review_id: number, body: string) =>
 					APIPullRequests.reviews.update.call(this, IDNumber, review_id, body),
@@ -156,7 +182,7 @@ export class Utils {
 						this,
 						IDNumber,
 						review_id,
-						message
+						message,
 					),
 				list: async (IDNumber: number) =>
 					APIPullRequests.reviews.list.call(this, IDNumber),
@@ -165,36 +191,65 @@ export class Utils {
 				isApproved: async (reviews: Reviews) =>
 					APIPullRequests.reviews.isApproved(reviews),
 				pending: async (reviews: number, requested_reviews: number) =>
-					APIPullRequests.reviews.pending(reviews, requested_reviews)
-			}
+					APIPullRequests.reviews.pending(reviews, requested_reviews),
+			},
 		},
 		tags: {
-			get: async () => APITag.get.call(this)
-		}
-	}
+			get: async () => APITag.get.call(this),
+		},
+	};
+
 	labels = {
-		sync: async (config: Runners["labels"]) =>
+		sync: async (config: Runners['labels']) =>
 			UtilLabels.sync.call(this, config),
 		addRemove: async (
 			labelName: string,
 			IDNumber: number,
 			hasLabel: boolean,
-			shouldHaveLabel: boolean
+			shouldHaveLabel: boolean,
 		) =>
 			UtilLabels.addRemove.call(
 				this,
 				labelName,
 				IDNumber,
 				hasLabel,
-				shouldHaveLabel
-			)
-	}
+				shouldHaveLabel,
+			),
+	};
+
 	parsingData = {
 		formatColor: async (color: string) => UtilParsingData.formatColor(color),
 		processRegExpcondition: async (condition: string) =>
 			UtilParsingData.processRegExpcondition(condition),
 		normalize: async (text: string) => UtilParsingData.normalize(text),
-		labels: async (labels: any) => UtilParsingData.parseLabels(labels)
+		labels: async (labels: any) => UtilParsingData.parseLabels(labels),
+	};
+
+	versioning = {
+		parse: async (config: Config, ref?: string) =>
+			UtilVersioning.parse.call(this, config, ref),
+	};
+
+	constructor(
+		props: ApiProps,
+		options: {dryRun: boolean; skipDelete: boolean; ref?: string},
+		{git}: {git?: SimpleGitOptions},
+	) {
+		this.client = props.client;
+		this.repo = props.repo;
+		this.dryRun = options.dryRun;
+		this.skipDelete = options.skipDelete;
+		this.ref = options.ref;
+		this.git = git
+			? simpleGit({
+				...git,
+				// eslint-disable-next-line n/prefer-global/process
+				baseDir: git.baseDir ? git.baseDir : process.cwd(),
+				binary: 'git',
+				maxConcurrentProcesses: 6,
+				config: git.config ? git.config : [],
+			})
+			: simpleGit();
 	}
 
 	respond = async (
@@ -203,51 +258,25 @@ export class Utils {
 		{
 			event,
 			previousComment,
-			body
+			body,
 		}: {
-			event?: Event
-			previousComment?: number
-			body?: string
-		}
-	) => UtilRespond.respond.call(that, success, event, previousComment, body)
-	versioning = {
-		parse: async (config: Config, ref?: string) =>
-			UtilVersioning.parse.call(this, config, ref)
-	}
-
-	shouldRun = (_type: functionality) => {
-		// // get the package name
-		// let pack = process.env.NPM_PACKAGE_NAME as packages
-
-		// /*eslint-disable-next-line @typescript-eslint/no-var-requires */
-		// if (!pack) pack = require("../../package.json").name as packages
-
-		// // Test the fucntion against package
-
-		// if (pack == "@resnovas/smartcloud") return true
-		// else if (pack == "@resnovas/convention-mastermind" && type == "convention")
-		// 	return true
-		// else if (pack == "@resnovas/label-mastermind" && type == "label")
-		// 	return true
-		// else return false
-		return true
-	}
+			event?: Event;
+			previousComment?: number;
+			body?: string;
+		},
+	) => {
+		await UtilRespond.respond.call(that, success, event, {previousComment, body});
+	};
 }
-export interface Repo {
-	owner: string
-	repo: string
-}
-export interface ApiProps {
-	client: Github
-	repo: Repo
-}
+export type Repo = {
+	owner: string;
+	repo: string;
+};
+export type ApiProps = {
+	client: Github;
+	repo: Repo;
+};
 
-export type functionality = "release" | "convention" | "label"
-export type packages =
-	| "@resnovas/smartcloud"
-	| "@resnovas/label-mastermind"
-	| "@resnovas/convention-mastermind"
-	| undefined
-
-export type Event = "REQUEST_CHANGES" | "APPROVE" | "COMMENT"
-export type Tags = string[]
+export type Functionality = 'release' | 'convention' | 'label';
+export type Event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT';
+export type Tags = string[];
