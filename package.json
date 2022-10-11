@@ -72,7 +72,7 @@
 	"devDependencies": {
 		"@types/jest": "29.0.0",
 		"@types/minimatch": "^5.1.2",
-		"@types/node": "^18.7.15",
+		"@types/node": "^18.8.4",
 		"@types/nodegit": "^0.27.3",
 		"@vercel/ncc": "^0.34.0",
 		"all-contributors-cli": "^6.20.4",
