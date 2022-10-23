@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: only.ts
  * Path: \src\conditions\util\only.ts
- * Created Date: Monday, September 5th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,11 +25,14 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
@@ -46,7 +50,7 @@ import {evaluator} from '../../evaluator';
 const type = '$only';
 
 export type ConditionOnlyOne = {
-	required: number;
+	requires: number;
 	type: typeof type;
 	condition: Array<PrConditionConfig | IssueConditionConfig | ProjectConditionConfig>;
 };
@@ -70,19 +74,19 @@ export type ConditionOnlyOne = {
 }
 ``` */
 
-async function only(this: UtilThis, condition: ConditionOnlyOne, props: UtilProps) {
-	const results = await run.call(this, condition, props);
+async function only(this: UtilThis, condition: ConditionOnlyOne, context: UtilProps) {
+	const results = await run.call(this, condition, context);
 	const success = results.filter(Boolean).length;
-	return success === condition.required;
+	return success === condition.requires;
 }
 
 export default [type, only] as const;
 
-async function run(this: UtilThis, condition: ConditionOnlyOne, props: UtilProps) {
+async function run(this: UtilThis, condition: ConditionOnlyOne, context: UtilProps) {
 	const results: Array<Promise<boolean>> = [];
 
 	for (const conditions of condition.condition) {
-		results.push(evaluator.call(this, conditions, props));
+		results.push(evaluator.call(this, conditions, context));
 	}
 
 	return Promise.all(results);
@@ -90,13 +94,13 @@ async function run(this: UtilThis, condition: ConditionOnlyOne, props: UtilProps
 
 export const example: ConditionOnlyOne = {
 	type,
-	required: 1,
+	requires: 1,
 	condition: [
 		{
 			requires: 1,
 			condition: [
 				{
-					type: 'isLocked',
+					type: 'isDraft',
 					condition: true,
 				},
 			],

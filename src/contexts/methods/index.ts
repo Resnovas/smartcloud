@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: index.ts
  * Path: \src\contexts\methods\index.ts
- * Created Date: Monday, September 5th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,18 +25,21 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
  */
 
-import {LoggingDataClass, LoggingLevels} from '@resnovas/utilities';
-import type {Config, Runners} from '../../types';
+import process from 'node:process';
+import type {Config, Runners, SharedConfig} from '../../types';
 import type {
 	CurContext,
 	IssueContext,
@@ -46,20 +50,20 @@ import type {
 	Version,
 } from '../../conditions';
 import type {Schedule} from '../schedule';
-import type {Utils} from '../../utils';
+import type {Utils, Event} from '../../utils';
 import type {IssueConfig, Issues} from '../issues';
 import type {ProjectConfig, Project} from '../projects';
 import type {PullRequestConfig, PullRequests} from '../pull-requests';
+import {log, LoggingLevels} from '../../logging';
 import {applyLabels} from './apply-labels';
 import {assignProject} from './assign-project';
 import {automaticApprove} from './auto-approve';
 import {bumpVersion} from './bump-version';
 import {checkStale} from './check-stale';
 import * as conventions from './conventions';
-import {requestApprovals} from './requestApprovals';
-import {syncRemoteProject} from './syncRemoteProject';
+import {requestApprovals} from './request-approvals';
+import {syncRemoteProject} from './sync-remote-project';
 
-export {log} from '../../logging';
 export * from './apply-labels';
 export * from './assign-project';
 export * from './auto-approve';
@@ -69,12 +73,12 @@ export * from './conventions';
 export * from './create-branch';
 export * from './handle-milestone';
 export * from './release';
-export * from './syncRemoteProject';
+export * from './sync-remote-project';
 export * from './sync-remote-repo';
 
 export class Contexts {
 	runners: Runners;
-	configs: Config;
+	runnerConfigs: Config;
 	config: PullRequestConfig | IssueConfig | ProjectConfig;
 	curContext: CurContext;
 	context: ProjectContext | IssueContext | PrContext | Partial<ScheduleContext>;
@@ -82,6 +86,11 @@ export class Contexts {
 	util: Utils;
 	retryLimit: number;
 	dryRun: boolean;
+	conventions = {
+		enforce: async (that: UtilThis) => conventions.enforce.bind(that),
+	};
+
+	// eslint-disable-next-line max-params
 	constructor(
 		util: Utils,
 		runners: Runners,
@@ -95,31 +104,30 @@ export class Contexts {
 
 		this.runners = runners;
 		if (!configs) {
-			throw new LoggingDataClass(
+			throw new Error(log(
 				LoggingLevels.error,
 				'Cannot construct without configs',
-			);
+			));
 		}
 
-		this.configs = configs;
+		this.runnerConfigs = configs;
 		if (!curContext) {
-			throw new LoggingDataClass(
+			throw new Error(log(
 				LoggingLevels.error,
 				'Cannot construct without context',
-			);
+			));
 		}
 
 		this.curContext = curContext;
 		const config = configs[curContext.type];
 		if (!config) {
-			throw new LoggingDataClass(
+			throw new Error(log(
 				LoggingLevels.error,
 				'Cannot construct without config',
-			);
+			));
 		}
 
 		this.config = config;
-		// TODO: This needs removing from the label-mastermind config
 		if (curContext.type !== 'schedule') {
 			this.newVersion = curContext.context.currentVersion;
 		}
@@ -130,22 +138,19 @@ export class Contexts {
 		this.retryLimit = configs.retryLimit ?? 3;
 	}
 
-	syncRemoteProject = async (that: Project) => syncRemoteProject.call(that);
-	assignProject = async (that: Issues | PullRequests) =>
-		assignProject.call(that);
+	syncRemoteProject = async (that: Project) => syncRemoteProject.bind(that);
+	assignProject = async (that: Issues | PullRequests) => assignProject.bind(that);
 
-	applyLabels = async (that: UtilThis) => applyLabels.call(that);
-	checkStale = async (that: Issues | PullRequests | Project | Schedule) =>
-		checkStale.call(that);
+	applyLabels = async (that: UtilThis) => applyLabels.bind(that);
+	checkStale = async (
+		that: UtilThis,
+		context?: IssueContext | ScheduleContext | PrContext | ProjectContext,
+		config?: SharedConfig | IssueConfig | PullRequestConfig | ProjectConfig,
+	) => checkStale.call(that, context, config);
 
-	automaticApprove = async (that: PullRequests) => automaticApprove.call(that);
-	requestApprovals = async (that: PullRequests) => requestApprovals.call(that);
-	bumpVersion = async (that: PullRequests) => bumpVersion.call(that);
-
-	conventions = {
-		enforce: async (that: Issues | PullRequests | Project) =>
-			conventions.enforce.call(that),
-	};
+	automaticApprove = async (that: PullRequests) => automaticApprove.bind(that);
+	requestApprovals = async (that: PullRequests) => requestApprovals.bind(that);
+	bumpVersion = async (that: PullRequests) => bumpVersion.bind(that);
 
 	async createComment(
 		this: PullRequests | Issues | Project | Schedule,
@@ -153,22 +158,24 @@ export class Contexts {
 		success: boolean,
 		options?: {body?: string; event?: Event},
 	) {
-		const prefix = `<!--${process.env.NPM_PACKAGE_NAME}: ${jobName}-->`;
+		const prefix = `<!--${String(process.env.NPM_PACKAGE_NAME)}: ${jobName}-->`;
 		const body
-			= prefix + options?.body !== undefined ? '\n\r\n\r' + options?.body : '';
+			= prefix + String(options?.body === undefined ? '' : '\n\r\n\r' + String(options?.body));
 
 		const commentList
 			= this.context.props?.type === 'pr'
-				? await this.util.api.pullRequests.reviews.list(this.context.props.ID)
-				: (this.context.props?.ID
-					? await this.util.api.issues.comments.list(this.context.props.ID)
+				? await this.util.api.pullRequests.reviews.list(this.context.props.number)
+				: ('number' in this.context.props
+					// @ts-expect-error if it gets here something has changed :)
+					? await this.util.api.issues.comments.list(this.context.props.number)
 					: undefined);
 		let previousComment: number | undefined;
 
 		if (commentList) {
-			commentList.forEach((comment: any) => {
+			// eslint-disable-next-line unicorn/no-array-for-each
+			commentList.forEach(comment => {
 				if (
-					comment.body.includes(prefix)
+					comment.body?.includes(prefix)
 					&& (!('state' in comment) || comment.state !== 'DISMISSED')
 				) {
 					previousComment = comment.id;
@@ -176,7 +183,7 @@ export class Contexts {
 			});
 		}
 
-		this.util.respond(this, success, {
+		await this.util.respond(this, success, {
 			event: options?.event,
 			previousComment,
 			body,

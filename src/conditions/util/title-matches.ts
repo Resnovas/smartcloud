@@ -58,12 +58,29 @@ Example:
 async function titleMatches(
 	this: UtilThis,
 	pattern: ConditionTitleMatches,
-	issue: UtilProps,
+	context: UtilProps,
 ) {
+	let test;
+	switch (context.type) {
+		case 'issue':
+			test = context.issue.title;
+			break;
+		case 'pr':
+			test = context.pull_request.title;
+			break;
+		default:
+			break;
+	}
+
+	if (!test) {
+		return false;
+	}
+
 	const condition = await this.util.parsingData.processRegExpcondition(
 		pattern.condition,
 	);
-	return condition.test(issue.title);
+
+	return condition.test(test);
 }
 
 export default [type, titleMatches] as const;

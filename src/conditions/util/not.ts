@@ -72,8 +72,8 @@ export type ConditionNot = {
 }
 ``` */
 
-async function not(this: UtilThis, condition: ConditionNot, props: UtilProps) {
-	const success = await evaluator.call(this, condition.condition, props);
+async function not(this: UtilThis, condition: ConditionNot, context: UtilProps) {
+	const success = await evaluator.call(this, condition.condition, context);
 
 	return !(success);
 }

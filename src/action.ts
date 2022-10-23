@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: action.ts
  * Path: \src\action.ts
- * Created Date: Monday, September 5th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,11 +25,14 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
@@ -36,22 +40,21 @@
 
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable n/prefer-global/process */
 /* eslint-disable @typescript-eslint/no-require-imports */
 
+import process from 'node:process';
 import * as core from '@actions/core';
-import {context as Context} from '@actions/github';
-import {LoggingDataClass, LoggingLevels} from '@resnovas/utilities';
+import {context as GHContext} from '@actions/github';
 import type {
 	CurContext,
 } from './conditions';
 import {Issues, Project, PullRequests, Schedule} from './contexts';
 import {Utils} from './utils';
-import {log} from './logging';
+import {log, LoggingLevels} from './logging';
 import type {Options, Github, Config, SharedConfigIndex, Runners, Label} from './types';
 
 let local: any;
-let context = Context;
+let context = GHContext;
 
 try {
 	// eslint-disable-next-line unicorn/prefer-module
@@ -110,14 +113,14 @@ export default class Action {
 	}
 
 	async run() {
-		await log(LoggingLevels.debug, `Repo data: ${this.repo.owner}/${this.repo.repo}`);
+		log(LoggingLevels.debug, `Repo data: ${this.repo.owner}/${this.repo.repo}`);
 
 		/**
 		 * Capture and log context to debug for Local Running
 		 * @author TGTGamer
 		 * @since 1.0.0
 		 */
-		await log(
+		log(
 			LoggingLevels.debug,
 			`Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
 				context,
@@ -129,18 +132,16 @@ export default class Action {
 		 * @since 1.1.0
 		 */
 		const configs = await this.processConfig().catch(async error => {
-			await log(
+			throw new Error(log(
 				LoggingLevels.error,
 				'Error thrown while processing config: ' + String(error),
-			);
-			throw new Error('Error thrown while processing config: ' + String(error));
+			));
 		});
 		if (!configs.runners[0]) {
-			await log(LoggingLevels.error, 'No config data.');
-			throw new Error('No config data.');
+			throw new Error(log(LoggingLevels.error, 'No config data.'));
 		}
 
-		await log(LoggingLevels.debug, `Config: ${JSON.stringify(configs)}`);
+		log(LoggingLevels.debug, `Config: ${JSON.stringify(configs)}`);
 
 		if (configs.labels) {
 			/**
@@ -149,15 +150,14 @@ export default class Action {
 			 * @since 1.1.0
 			 */
 			core.startGroup('label Actions');
-			await log(LoggingLevels.debug, 'Attempting to apply labels');
+			log(LoggingLevels.debug, 'Attempting to apply labels');
 			await this.syncLabels(configs).catch(async error => {
-				await log(
-					LoggingLevels.debug,
+				throw new Error(log(
+					LoggingLevels.error,
 					'Error thrown while syncronising labels: ' + String(error),
-				);
-				throw new Error('Error thrown while syncronising labels: ' + String(error));
+				));
 			});
-			await log(LoggingLevels.notice, 'Successfully applied all labels');
+			log(LoggingLevels.notice, 'Successfully applied all labels');
 			core.endGroup();
 		}
 
@@ -177,14 +177,13 @@ export default class Action {
 			 */
 			const curContext = await this.processContext(config).catch(
 				async error => {
-					await log(
+					throw new Error(log(
 						LoggingLevels.error,
 						'Error thrown while processing context: ' + String(error),
-					);
-					throw new Error('Error thrown while processing context: ' + String(error));
+					));
 				},
 			);
-			await log(
+			log(
 				LoggingLevels.debug,
 				`Current Context: ${JSON.stringify(curContext)}`,
 			);
@@ -213,7 +212,9 @@ export default class Action {
 					config[curContext.type] = {};
 				}
 
-				if (action === 'enforceConventions' || action === 'stale') {
+				if (action === 'stale') {
+					config[curContext.type]![action] = config.sharedConfig[action];
+				} else if (action === 'enforceConventions') {
 					config[curContext.type]![action] = config.sharedConfig[action];
 				} else if (action !== 'labels') {
 					return config;
@@ -227,7 +228,9 @@ export default class Action {
 
 						if (!(label in config[curContext.type]!)) {
 							const l = config.sharedConfig.labels[label];
-							config[curContext.type]!.labels![label] = l;
+							if (l) {
+								config[curContext.type]!.labels![label] = l;
+							}
 						}
 					}
 				}
@@ -290,19 +293,17 @@ export default class Action {
 			 */
 			const ctx = await PullRequests.parse(this.util, config, context).catch(
 				async error => {
-					await log(
+					throw new Error(log(
 						LoggingLevels.error,
 						'Error thrown while parsing PR context: ' + String(error),
-					);
-					throw new Error('Error thrown while parsing PR context: ' + String(error));
+					));
 				},
 			);
 			if (!ctx) {
-				await log(LoggingLevels.error, 'Pull Request not found on context');
-				throw new Error('Pull Request not found on context');
+				throw new Error(log(LoggingLevels.error, 'Pull Request not found on context'));
 			}
 
-			await log(LoggingLevels.debug, `PR context: ${JSON.stringify(ctx)}`);
+			log(LoggingLevels.debug, `PR context: ${JSON.stringify(ctx)}`);
 			curContext = {
 				type: 'pr',
 				context: ctx,
@@ -315,18 +316,17 @@ export default class Action {
 			 */
 			const ctx = await Issues.parse(this.util, config, context).catch(
 				async error => {
-					await log(
+					throw new Error(log(
 						LoggingLevels.error,
 						'Error thrown while parsing issue context: ' + String(error),
-					);
-					throw new Error('Error thrown while parsing issue context: ' + String(error));
+					));
 				},
 			);
 			if (!ctx) {
 				throw new Error('Issue not found on context');
 			}
 
-			await log(LoggingLevels.debug, `issue context: ${JSON.stringify(ctx)}`);
+			log(LoggingLevels.debug, `issue context: ${JSON.stringify(ctx)}`);
 
 			curContext = {
 				type: 'issue',
@@ -340,18 +340,17 @@ export default class Action {
 			 */
 			const ctx = await Project.parse(this.util, config, context).catch(
 				async error => {
-					await log(
+					throw new Error(log(
 						LoggingLevels.error,
 						'Error thrown while parsing Project context: ' + String(error),
-					);
-					throw new Error('Error thrown while parsing Project context: ' + String(error));
+					));
 				},
 			);
 			if (!ctx) {
 				throw new Error('Project Card not found on context');
 			}
 
-			await log(LoggingLevels.debug, `Project Card context: ${JSON.stringify(ctx)}`);
+			log(LoggingLevels.debug, `Project Card context: ${JSON.stringify(ctx)}`);
 
 			curContext = {
 				type: 'project',
@@ -364,17 +363,16 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await Schedule.parse(context).catch(async error => {
-				await log(
+				throw new Error(log(
 					LoggingLevels.error,
 					'Error thrown while parsing Schedule context: ' + String(error),
-				);
-				throw new Error('Error thrown while parsing Schedule context: ' + String(error));
+				));
 			});
 			if (!ctx) {
 				throw new Error('Schedule not found on context');
 			}
 
-			await log(LoggingLevels.debug, `Schedule context: ${JSON.stringify(ctx)}`);
+			log(LoggingLevels.debug, `Schedule context: ${JSON.stringify(ctx)}`);
 
 			curContext = {
 				type: 'schedule',
@@ -386,7 +384,7 @@ export default class Action {
 			 * @author TGTGamer
 			 * @since 1.1.0
 			 */
-			await log(
+			log(
 				LoggingLevels.notice,
 				`There is no context to parse: ${JSON.stringify(context.payload)}`,
 			);
@@ -416,11 +414,11 @@ export default class Action {
 		);
 
 		await this.util.labels.sync(labels).catch(async error => {
-			await log(
+			throw new Error(log(
 				LoggingLevels.error,
-				'Error thrown while handling syncLabels tasks:',
-				error,
-			);
+				'Error thrown while handling syncLabels tasks:'
+				+ String(error),
+			));
 		});
 	}
 
@@ -445,14 +443,14 @@ export default class Action {
 		}
 
 		if (!ctx) {
-			throw new LoggingDataClass(LoggingLevels.error, 'Context not found');
+			throw new Error(log(LoggingLevels.error, 'Context not found'));
 		}
 
 		ctx.run().catch(async error => {
-			await log(
+			throw new Error(log(
 				LoggingLevels.error,
 				'Error thrown while running context: ' + String(error),
-			);
+			));
 		});
 	}
 }

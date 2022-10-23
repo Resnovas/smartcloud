@@ -59,9 +59,25 @@ Example:
 }
 ``` */
 
-function isOpen(this: UtilThis, condition: ConditionIsOpen, issue: UtilProps) {
+function isOpen(this: UtilThis, condition: ConditionIsOpen, context: UtilProps) {
+	let test;
+	switch (context.type) {
+		case 'issue':
+			test = context.issue.state;
+			break;
+		case 'pr':
+			test = context.pull_request.state;
+			break;
+		default:
+			break;
+	}
+
+	if (!test) {
+		return false;
+	}
+
 	return (
-		this.util.parsingData.normalize(issue.state)
+		this.util.parsingData.normalize(test)
 		=== this.util.parsingData.normalize(
 			condition.condition ? States.Open : States.Closed,
 		)

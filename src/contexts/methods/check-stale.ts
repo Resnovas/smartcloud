@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: check-stale.ts
  * Path: \src\contexts\methods\check-stale.ts
- * Created Date: Monday, September 5th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,21 +25,26 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
  */
 
-import {LoggingLevels} from '@resnovas/utilities';
-import type {Issues, Project, PullRequests, Schedule} from '..';
-import {log} from '../../logging';
-import type {SharedConditions} from '../../conditions';
+/* eslint-disable complexity */
+
+import type {IssueConfig, Issues, Project, ProjectConfig, PullRequestConfig, PullRequests, Schedule} from '..';
+import {log, LoggingLevels} from '../../logging';
+import type {IssueContext, PrContext, ProjectContext, ScheduleContext, SharedConditions} from '../../conditions';
 import {evaluator} from '../../evaluator';
+import type {SharedConfig} from '../../types';
 
 /**
  * The stale configuration
@@ -108,93 +114,105 @@ export type AbanondedConfig = {
 
 export async function checkStale(
 	this: Issues | PullRequests | Project | Schedule,
+	context: IssueContext | ScheduleContext | PrContext | ProjectContext = this.context,
+	configlocal: SharedConfig | IssueConfig | PullRequestConfig | ProjectConfig = this.config,
 ) {
-	const config = this.config.stale;
+	const config = configlocal.stale;
 	if (!config) {
 		throw new Error('Stale is not enabled');
 	}
 
-	if (!this.context.props) {
+	if (!context.props) {
 		throw new Error('Context Props must exist');
 	}
 
-	const StaleLabel = this.configs.labels?.[config.staleLabel];
-	if (!StaleLabel) {
+	const staleLabel = this.runnerConfigs.labels?.[config.staleLabel];
+	if (!staleLabel) {
 		throw new Error('Stale Label must exist');
 	}
 
 	const suffix
 		= '\r\n\r\n----------\r\n\r\nSimply comment, assign or modify this issue to remove the stale status \r\n\r\n';
 
-	if (config.stale) {
+	if (config.stale && 'number' in context.props) {
 		log(
 			LoggingLevels.debug,
-			`Checking stale status for ${this.context.props.type} ${this.context.props.ID} - ${this.context.props.title}`,
+			// @ts-expect-error known issue
+			`Checking stale status for ${context.props.type} ${context.props.number} - ${String(context.props.title)}`,
 		);
 		if (
 			!config.stale.condition?.find(condition => condition.type === 'isStale')
 		) {
-			if (!config.stale.condition) {
-				config.stale.condition = [
-					{type: 'isStale', condition: config.stale.days},
-				];
-			} else {
+			if (config.stale.condition) {
 				config.stale.condition.push({
 					type: 'isStale',
 					condition: config.stale.days,
 				});
+			} else {
+				config.stale.condition = [
+					{type: 'isStale', condition: config.stale.days},
+				];
 			}
 
-			if (!config.stale.requires) {
-				config.stale.requires = 1;
-			} else {
+			if (config.stale.requires) {
 				config.stale.requires++;
+			} else {
+				config.stale.requires = 1;
 			}
 		}
 
 		// Check to see if the issue is stale using the evaluation function
-		const stale = evaluator.call(this, config.stale, this.context.props);
+		const stale = await evaluator.call(this, config.stale, context.props);
 		log(
 			LoggingLevels.notice,
-			`Stale status for ${this.context.props.title}: ${stale}`,
+			// @ts-expect-error known issue
+			`Stale status for ${String(context.props.title)}: ${String(stale)}`,
 		);
 
 		// If stale run the rest of the actions
 		if (
-			(await stale)
+			(stale)
 			&& this.config.labels
-			&& !this.config.labels[StaleLabel]
+			&& !this.config.labels[staleLabel]
 		) {
 			// Apply the stale label
-			this.config.labels[StaleLabel] = {
+			this.config.labels[staleLabel] = {
 				condition: config.stale.condition,
 				requires: 1,
 			};
 		}
 
 		// Create the stale comment
-		const isstale = await stale;
-		!this.dryRun
-			&& this.createComment.call(this, 'stale', isstale, {
+		const isstale = stale;
+		if (!this.dryRun) {
+			await this.createComment.bind(this)('stale', isstale, {
 				body:
-					(isstale ? config.stale.comment : config.stale.resolve)
+					(isstale ? String(config.stale.comment) : String(config.stale.resolve))
 					+ '\r\n\r\n'
-					+ suffix
-					+ config.stale.commentFooter || '',
+					+ suffix.toString()
+					+ String(config.stale.commentFooter ?? ''),
 			});
+		}
 	}
 
-	if (config.abandoned) {
+	if (config.abandoned && 'number' in context.props) {
 		log(
 			LoggingLevels.debug,
-			`Checking abandoned status for ${this.context.props.type} ${this.context.props.ID} - ${this.context.props.title}`,
+			// @ts-expect-error known issue
+			`Checking abandoned status for ${context.props.type} ${String(context.props.number)} - ${String(context.props.title)}`,
 		);
 		if (
 			!config.abandoned.condition?.find(
 				condition => condition.type === 'isAbandoned',
 			)
 		) {
-			if (!config.abandoned.condition) {
+			if (config.abandoned.condition) {
+				config.abandoned.condition.push({
+					type: 'isAbandoned',
+					condition: config.abandoned.days,
+					label: config.abandoned.label,
+				});
+			} else {
 				config.abandoned.condition = [
 					{
 						type: 'isAbandoned',
@@ -202,59 +220,55 @@ export async function checkStale(
 						label: config.abandoned.label,
 					},
 				];
-			} else {
-				config.abandoned.condition.push({
-					type: 'isAbandoned',
-					condition: config.abandoned.days,
-					label: config.abandoned.label,
-				});
 			}
 
-			if (!config.abandoned.requires) {
-				config.abandoned.requires = 1;
-			} else {
+			if (config.abandoned.requires) {
 				config.abandoned.requires++;
+			} else {
+				config.abandoned.requires = 1;
 			}
 		}
 
 		// Check to see if the issue is abandoned using the evaluation function
-		const abandoned = evaluator.call(
+		const abandoned = await evaluator.call(
 			this,
 			config.abandoned,
-			this.context.props,
+			context.props,
 		);
 		log(
 			LoggingLevels.notice,
-			`Abandoned status for ${this.context.props.title}: ${abandoned}`,
+			// @ts-expect-error known issue
+			`Abandoned status for ${String(context.props.title)}: ${String(abandoned)}`,
 		);
 
-		const AbandonedLabel = this.configs.labels?.[config.abandoned.label];
-		if (!AbandonedLabel) {
+		const abandonedLabel = this.runnerConfigs.labels?.[config.abandoned.label];
+		if (!abandonedLabel) {
 			throw new Error('Stale Label must exist');
 		}
 
 		if (
-			(await abandoned)
-			&& AbandonedLabel
+			(abandoned)
+			&& abandonedLabel
 			&& this.config.labels
-			&& !this.config.labels[AbandonedLabel]
+			&& !this.config.labels[abandonedLabel]
 		) {
 			// Apply the stale label
-			this.config.labels[AbandonedLabel] = {
+			this.config.labels[abandonedLabel] = {
 				condition: config.abandoned.condition,
 				requires: 1,
 			};
 		}
 
 		// Create the abandoned comment
-		const isAbandoned = await abandoned;
-		!this.dryRun
-			&& this.createComment.call(this, 'stale', isAbandoned, {
+		const isAbandoned = abandoned;
+		if (!this.dryRun) {
+			await this.createComment.bind(this)('stale', isAbandoned, {
 				body:
-					(isAbandoned ? config.abandoned.comment : config.abandoned.resolve)
+					String((isAbandoned ? config.abandoned.comment : config.abandoned.resolve))
 					+ '\r\n\r\n'
-					+ suffix
-					+ config.abandoned.commentFooter || '',
+					+ String(suffix)
+					+ String(config.abandoned.commentFooter ?? ''),
 			});
+		}
 	}
 }

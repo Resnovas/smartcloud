@@ -60,10 +60,10 @@ Example:
 function hasLabel(
 	this: UtilThis,
 	condition: ConditionHasLabel,
-	issue: UtilProps,
+	context: UtilProps,
 ) {
 	return (
-		Boolean(issue.labels?.[condition.label.toLowerCase()]) === condition.condition
+		Boolean(context.labels?.[condition.label.toLowerCase()]) === condition.condition
 	);
 }
 

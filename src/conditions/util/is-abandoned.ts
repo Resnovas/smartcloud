@@ -58,13 +58,25 @@ Example:
 function isAbandoned(
 	this: UtilThis,
 	condition: ConditionIsAbandoned,
-	issue: UtilProps,
+	context: UtilProps,
 ) {
-	if (!issue.lastUpdated || !issue.labels?.[condition.label.toLowerCase()]) {
+	let test;
+	switch (context.type) {
+		case 'issue':
+			test = context.issue.updated_at;
+			break;
+		case 'pr':
+			test = context.pull_request.updated_at;
+			break;
+		default:
+			break;
+	}
+
+	if (!test) {
 		return false;
 	}
 
-	const last = new Date(issue.lastUpdated);
+	const last = new Date(test);
 	last.setDate(last.getDate() + condition.condition);
 	const now = new Date();
 	return last >= now;

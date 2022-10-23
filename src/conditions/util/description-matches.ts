@@ -34,7 +34,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {UtilProps, UtilThis} from '..';
+import type {IssueProps, PrProps, ProjectProps, UtilThis} from '..';
 
 const type = 'descriptionMatches';
 
@@ -57,12 +57,29 @@ Example:
 async function descriptionMatches(
 	this: UtilThis,
 	pattern: ConditionDescriptionMatches,
-	issue: UtilProps,
+	context: IssueProps | PrProps | ProjectProps,
 ) {
 	const condition = await this.util.parsingData.processRegExpcondition(
 		pattern.condition,
 	);
-	return condition.test(issue.description);
+
+	let test;
+	switch (context.type) {
+		case 'issue':
+			test = context.issue.body;
+			break;
+		case 'pr':
+			test = context.pull_request.body;
+			break;
+		default:
+			break;
+	}
+
+	if (!test) {
+		return false;
+	}
+
+	return condition.test(test);
 }
 
 export default [type, descriptionMatches] as const;

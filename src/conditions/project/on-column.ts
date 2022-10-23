@@ -58,11 +58,15 @@ Example:
 function onColumn(
 	this: Issues | PullRequests | Project,
 	condition: ConditiononColumn,
-	pr: ProjectProps,
+	context: ProjectProps,
 ) {
+	if (!context.localCard) {
+		return false;
+	}
+
 	return (
-		pr.localColumn.name === condition.column
-		&& pr.project.name === condition.project
+		context.localColumn?.name === condition.column
+		&& context.project.name === condition.project
 	);
 }
 

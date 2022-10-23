@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: index.ts
  * Path: \src\conditions\index.ts
- * Created Date: Monday, September 5th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,16 +25,22 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
  */
 
+import type {Context} from '@actions/github/lib/context';
+import type {PullRequestEvent, IssuesEvent, IssueCommentEvent, ProjectCardEvent} from '@octokit/webhooks-types';
+import type {RestEndpointMethodTypes} from '@octokit/plugin-rest-endpoint-methods';
 import type {Labels} from '../types';
 import type {Issues, Project, PullRequests, Schedule} from '../contexts';
 import type {IssueCondition} from './issue';
@@ -41,73 +48,56 @@ import type {PrCondition} from './pr';
 import type {ProjectCondition} from './project';
 import type {ScheduleCondition} from './schedule';
 import type {Condition} from './util';
+import {handlers as sharedHandlers} from './util';
+import {handlers as prHandlers} from './pr';
 
-type GeneralContext = {
-	ref?: string;
-	sha: string;
-	action: string;
-};
+export type {Condition} from './util';
+
+export type GeneralContext = {
+	currentVersion?: Version;
+} & Context;
 
 export type PrContext = {
-	currentVersion?: Version;
-	idNumber: number;
 	props: PrProps;
 } & GeneralContext;
 
 export type IssueContext = {
-	currentVersion?: Version;
-	IDNumber: number;
 	props: IssueProps;
 } & GeneralContext;
 
 export type ProjectContext = {
-	currentVersion?: Version;
-	IDNumber: number;
 	props: ProjectProps;
 } & GeneralContext;
 
 export type ScheduleContext = {
-	props?: ScheduleProps;
+	props: ScheduleProps;
 } & GeneralContext;
 
-type Props = {
-	creator: string;
-	description: string;
-	locked: boolean;
-	state: 'open' | 'closed';
-	title: string;
+export type Props = {
 	labels?: Labels;
-	id: number;
-	type: 'issue' | 'pr' | 'project';
-	lastUpdated?: string;
 };
 
 export type PrProps = {
-	branch: string;
-	isDraft: boolean;
+	type: 'pr';
 	files: string[];
 	reviews: Reviews;
 	pendingReview: boolean;
 	requestedChanges: number;
 	approved: number;
 	changes: number;
-} & Props;
+} & Props & PullRequestEvent;
 
-export type IssueProps = Props;
+export type IssueProps = {type: 'issue'} & (IssuesEvent | IssueCommentEvent) & Props;
 
 export type ProjectProps = {
+	type: 'project';
 	project: any;
 	column_id: number;
-	localCard: Partial<LocalCard>;
-	localColumn: LocalColumn;
-	changes: {
-		column_id: {
-			from: number;
-		};
-	};
-} & Props;
+	localCard?: RestEndpointMethodTypes['projects']['getCard']['response']['data'];
+	localColumn?: RestEndpointMethodTypes['projects']['getColumn']['response']['data'];
+} & Props & ProjectCardEvent;
 
-export type ScheduleProps = Props;
+export type ScheduleProps = {type: 'schedule'} & Props;
 
 export type Version = {
 	name?: string;
@@ -136,30 +126,6 @@ export type Review = {
 	commit_id?: string;
 };
 
-type LocalCard = {
-	archived: boolean;
-	column_url: string;
-	content_url: string;
-	created_at: string;
-	creator: any;
-	id: number;
-	node_id: string;
-	note: string | undefined;
-	project_url: string;
-	updated_at: string;
-	url: string;
-};
-
-type LocalColumn = {
-	name: any;
-	cards_url: string;
-	created_at: string;
-	id: number;
-	node_id: string;
-	project_url: string;
-	updated_at: string;
-	url: string;
-};
 /**
  * This instead of manually requiring this
  */
@@ -253,8 +219,33 @@ export type ScheduleConditionConfig = {
 	condition: ScheduleCondition[];
 };
 
+type Conditions = IssueCondition | PrCondition | ProjectCondition | ScheduleCondition | Condition;
+
 export type CurContext =
 	| {type: 'pr'; context: PrContext}
 	| {type: 'issue'; context: IssueContext}
 	| {type: 'project'; context: ProjectContext}
 	| {type: 'schedule'; context: ScheduleContext};
+
+const handlers = [
+	...sharedHandlers,
+	...prHandlers,
+	// ...issueHandlers,
+	// ...scheduleHandlers,
+];
+
+type HandlerTypes = [
+	type: string,
+	function: (this: UtilThis, condition: Conditions, context: ProjectProps | PrProps | IssueProps) => Promise<boolean>,
+];
+
+/**
+ * The schedule condition handler.
+ */
+export function getConditionHandler(
+	this: UtilThis,
+	condition: IssueCondition | PrCondition | ProjectCondition | ScheduleCondition,
+) {
+	const handler = handlers.find(handler => handler[0] === condition.type) as HandlerTypes;
+	return handler?.[1];
+}

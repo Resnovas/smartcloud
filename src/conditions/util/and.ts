@@ -68,19 +68,19 @@ Allows conditions to be combined to create more advanced conditions. Requires al
 }
 ``` */
 
-async function and(this: UtilThis, condition: ConditionAnd, props: UtilProps) {
-	const results = await run.call(this, condition, props);
+async function and(this: UtilThis, condition: ConditionAnd, context: UtilProps) {
+	const results = await run.call(this, condition, context);
 	const success = results.filter(Boolean).length;
 	return success === condition.condition.length;
 }
 
 export default [type, and] as const;
 
-async function run(this: UtilThis, condition: ConditionAnd, props: UtilProps) {
+async function run(this: UtilThis, condition: ConditionAnd, context: UtilProps) {
 	const results: Array<Promise<boolean>> = [];
 
 	for (const conditions of condition.condition) {
-		results.push(evaluator.call(this, conditions, props));
+		results.push(evaluator.call(this, conditions, context));
 	}
 
 	return Promise.all(results);
@@ -93,7 +93,7 @@ export const example: ConditionAnd = {
 			requires: 1,
 			condition: [
 				{
-					type: 'isLocked',
+					type: 'isDraft',
 					condition: true,
 				},
 			],

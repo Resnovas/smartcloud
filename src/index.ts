@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: index.ts
  * Path: \src\index.ts
- * Created Date: Monday, September 5th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,44 +25,46 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
  */
 
-/* eslint-disable n/prefer-global/process */
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-
 import fs from 'node:fs';
-import {cwd} from 'node:process';
+import process, {cwd} from 'node:process';
 import * as core from '@actions/core';
 import {getOctokit} from '@actions/github';
-import {LoggingLevels} from '@resnovas/utilities';
-import {log} from './logging';
+import {log, LoggingLevels} from './logging';
 import Action from './action';
 import type {Repo} from './utils';
 import type {Options} from './types';
 
-const localEx: boolean = fs.existsSync(cwd() + '/config.json');
+const localEx: boolean = fs.existsSync(cwd() + '../config.json');
 let local: any;
 let dryRun: boolean;
 let showLogs = false;
 let repo: Repo | undefined;
 
 if (localEx) {
-	// @ts-expect-error - This is a local run and config only exists when gulp is running
-	local = await import('../config.json');
-	dryRun = local.GH_ACTION_LOCAL_TEST ?? core.getInput('dryRun') ?? false;
-	showLogs = local.SHOW_LOGS ?? false;
-	repo = {
-		repo: local.GITHUB_REPOSITORY,
-		owner: local.GITHUB_REPOSITORY_OWNER,
-	};
+	try {
+		// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
+		// @ts-ignore
+		local = await import('../config.json');
+		dryRun = local.GH_ACTION_LOCAL_TEST as boolean ?? false;
+		showLogs = local.SHOW_LOGS as boolean ?? false;
+		repo = {
+			repo: local.GITHUB_REPOSITORY as string,
+			owner: local.GITHUB_REPOSITORY_OWNER as string,
+		};
+	} catch {}
 }
 
 /**
@@ -71,7 +74,7 @@ if (localEx) {
  */
 async function run() {
 	if (dryRun) {
-		await log(
+		log(
 			LoggingLevels.notice,
 			`${String(process.env.NPM_PACKAGE_NAME)} is running in local dryrun mode. No Actions will be applyed`,
 		);
@@ -102,18 +105,18 @@ async function run() {
 	};
 	const action = new Action(getOctokit(GITHUB_TOKEN), options);
 	action.run().catch(async error => {
-		await log(
+		throw new Error(log(
 			LoggingLevels.emergency,
 			`${String(process.env.NPM_PACKAGE_NAME)} did not complete due to error:`
 			+ String(error),
-		);
+		));
 	});
 }
 
 run().catch(async error => {
-	await log(
+	throw new Error(log(
 		LoggingLevels.emergency,
 		`${String(process.env.NPM_PACKAGE_NAME)} did not complete due to error:`
 		+ String(error),
-	);
+	));
 });

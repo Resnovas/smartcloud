@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: evaluator.ts
  * Path: \src\evaluator.ts
- * Created Date: Monday, September 5th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,41 +25,40 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
  */
 
-import {LoggingDataClass, LoggingLevels} from '@resnovas/utilities';
-import {log} from './logging';
+import {log, LoggingLevels} from './logging';
 
 import type {
 	IssueConditionConfig,
 	PrConditionConfig,
 	ProjectConditionConfig,
 	UtilProps,
-	UtilThis,
+	UtilThis} from './conditions';
+import {
+	getConditionHandler,
 } from './conditions';
 
-import type {Issues, Project, PullRequests} from './contexts';
 import type {SharedConventionsConfig} from './contexts/methods/conventions';
 import type {IssueCondition} from './conditions/issue';
-import {getIssueConditionHandler} from './conditions/issue';
 import type {PrCondition} from './conditions/pr';
-import {getPrConditionHandler} from './conditions/pr';
 import type {ProjectCondition} from './conditions/project';
-import {getProjectConditionHandler} from './conditions/project';
+import type {ScheduleCondition} from './conditions/schedule';
 
-const forConditions = async <
-	T extends IssueCondition | PrCondition | ProjectCondition,
->(
-	conditions: T[],
-	callback: (condition: T) => boolean,
+const forConditions = async (
+	conditions: Array<IssueCondition | PrCondition | ProjectCondition | ScheduleCondition>,
+	callback: (condition: IssueCondition | PrCondition | ProjectCondition | ScheduleCondition) => boolean,
 ) => {
 	let matches = 0;
 	for (const condition of conditions) {
@@ -81,41 +81,33 @@ export async function evaluator(
 	props: UtilProps,
 ) {
 	const {condition, requires} = config;
-	await log(LoggingLevels.debug, JSON.stringify(config));
+	log(LoggingLevels.debug, JSON.stringify(config));
 	if (typeof condition === 'string') {
-		throw new LoggingDataClass(
+		throw new TypeError(log(
 			LoggingLevels.error,
 			'String can not be used to evaluate conditions',
-		);
+		));
 	}
 
 	// @ts-expect-error - still not sure how to resolve this
 	const matches = await forConditions(condition, async condition => {
-		let handler;
-		switch (props.type) {
-			case 'issue':
-				handler = getIssueConditionHandler.call(
-					this as Issues,
-					condition as IssueCondition,
-				);
-				break;
-			case 'pr':
-				getPrConditionHandler.call(this as PullRequests, condition);
-				break;
-			case 'project':
-				getProjectConditionHandler.call(this as Project, condition);
-				break;
-			default:
-				throw new LoggingDataClass(
-					LoggingLevels.error,
-					'Invalid type provided to evaluator',
-				);
+		const handler = getConditionHandler.call(
+			this,
+			condition,
+		);
+
+		if (!handler) {
+			throw new Error(log(
+				LoggingLevels.error,
+				'Handler must be defined',
+			));
 		}
 
-		await log(LoggingLevels.debug, `The handler is ${handler.name}`);
+		log(LoggingLevels.debug, `The handler is ${handler.name}`);
 
-		return handler?.call(this, condition as any, props as any) as boolean;
+		// @ts-expect-error - Todo: need to be fixed, typing issue which never gets triggered in runtime
+		return handler?.call(this, condition, props);
 	});
-	await log(LoggingLevels.debug, `Matches: ${matches}/${requires}`);
+	log(LoggingLevels.debug, `Matches: ${matches}/${requires}`);
 	return matches >= requires;
 }

@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: schedule.ts
  * Path: \src\contexts\schedule.ts
- * Created Date: Monday, September 5th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,11 +25,14 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
@@ -36,10 +40,9 @@
 
 import * as core from '@actions/core';
 import type {Context} from '@actions/github/lib/context';
-import {LoggingDataClass, LoggingLevels} from '@resnovas/utilities';
-import {log} from '../logging';
-import type {Config, Runners, SharedConfig} from '../action';
-import type {CurContext, ScheduleContext} from '../conditions';
+import {log, LoggingLevels} from '../logging';
+import type {Config, Runners, SharedConfig} from '../types';
+import type {CurContext, IssueContext, ScheduleContext} from '../conditions';
 import type {Utils} from '../utils';
 import {Contexts} from './methods';
 
@@ -49,37 +52,6 @@ import {Contexts} from './methods';
 export type ScheduleConfig = SharedConfig;
 
 export class Schedule extends Contexts {
-	context: ScheduleContext;
-	ctx: ScheduleContext;
-	config: ScheduleConfig;
-
-	constructor(
-		util: Utils,
-		runners: Runners,
-		configs: Config,
-		curContext: CurContext,
-		dryRun: boolean,
-	) {
-		if (curContext.type !== 'schedule') {
-			throw new LoggingDataClass(
-				LoggingLevels.error,
-				'Cannot construct without schedule context',
-			);
-		}
-
-		super(util, runners, configs, curContext, dryRun);
-		this.context = curContext.context;
-		this.ctx = curContext.context;
-		if (!configs.schedule) {
-			throw new LoggingDataClass(
-				LoggingLevels.error,
-				'Cannot start without config',
-			);
-		}
-
-		this.config = configs.schedule;
-	}
-
 	/**
 	 * Parse the Schedule Context
 	 * @author TGTGamer
@@ -88,18 +60,53 @@ export class Schedule extends Contexts {
 
 	static async parse(context: Context): Promise<ScheduleContext | undefined> {
 		return {
-			ref: context.ref,
-			sha: context.sha,
-			action: context.payload.action!,
+			...context,
+			repo: context.repo,
+			issue: context.issue,
+			props: {
+				type: 'schedule',
+			},
 		};
+	}
+
+	context: ScheduleContext;
+	ctx: ScheduleContext;
+	config: ScheduleConfig;
+
+	// eslint-disable-next-line max-params
+	constructor(
+		util: Utils,
+		runners: Runners,
+		configs: Config,
+		curContext: CurContext,
+		dryRun: boolean,
+	) {
+		if (curContext.type !== 'schedule') {
+			throw new Error(log(
+				LoggingLevels.error,
+				'Cannot construct without schedule context',
+			));
+		}
+
+		super(util, runners, configs, curContext, dryRun);
+		this.context = curContext.context;
+		this.ctx = curContext.context;
+		if (!configs.schedule) {
+			throw new Error(log(
+				LoggingLevels.error,
+				'Cannot start without config',
+			));
+		}
+
+		this.config = configs.schedule;
 	}
 
 	async run(attempt?: number) {
 		if (!this.config) {
-			throw new LoggingDataClass(
+			throw new Error(log(
 				LoggingLevels.warn,
 				'Cannot start without config',
-			);
+			));
 		}
 
 		if (!attempt) {
@@ -110,29 +117,28 @@ export class Schedule extends Contexts {
 		const seconds = attempt * 10;
 		try {
 			const issues = await this.util.api.issues.list({});
+
+			// Todo: fix this for each loop
+			// eslint-disable-next-line unicorn/no-array-for-each
 			issues.forEach(async issue => {
 				const labels = await this.util.parsingData
 					.labels(issue.labels)
-					.catch(error => {
-						log(
+					.catch(async error => {
+						throw new Error(log(
 							LoggingLevels.error,
-							'Error thrown while parsing labels: ' + error,
-						);
-						throw error;
+							'Error thrown while parsing labels: ' + String(error),
+						));
 					});
 
-				this.context = {
+				const context: IssueContext = {
 					...this.ctx,
+
+					// Todo: ask for advice on how to resolve
+					// @ts-expect-error due to the range of possible types, it throws an error even though its fully populated
 					props: {
 						type: 'issue',
-						ID: issue.number,
-						creator: issue.user?.login ? issue.user.login : '',
-						description: issue.body || '',
-						locked: issue.locked,
+						...issue,
 						labels,
-						title: issue.title,
-						state: issue.state === 'open' ? 'open' : 'closed',
-						lastUpdated: issue.updated_at,
 					},
 				};
 
@@ -141,8 +147,8 @@ export class Schedule extends Contexts {
 					`Testing issue: ${issue.id} - ${issue.title} - ${issue.html_url} - Last updated: ${issue.updated_at}`,
 				);
 				if (this.config.stale) {
-					await this.checkStale(this).catch(error => {
-						log(LoggingLevels.error, 'Error checking stale:' + error);
+					await this.checkStale(this, context, this.config).catch(async error => {
+						throw new Error(log(LoggingLevels.error, 'Error checking stale:' + String(error)));
 					});
 				}
 
@@ -153,29 +159,28 @@ export class Schedule extends Contexts {
 					)}`,
 				);
 				if (this.config.labels) {
-					await this.applyLabels(this).catch(error => {
-						log(LoggingLevels.error, 'Error applying label:' + error);
+					await this.applyLabels(this).catch(async error => {
+						throw new Error(log(LoggingLevels.error, 'Error applying label:' + String(error)));
 					});
 				}
 			});
 			core.endGroup();
-		} catch (error) {
+		} catch (error: unknown) {
 			if (attempt > this.retryLimit) {
 				core.endGroup();
-				throw new LoggingDataClass(
+				throw new Error(log(
 					LoggingLevels.emergency,
 					'Scheduled actions failed. Terminating job.',
-					{errors: error as Error},
-				);
+				));
 			}
 
 			log(
 				LoggingLevels.warn,
-				`Scheduled Actions failed with "${error}", retrying in ${seconds} seconds....`,
+				`Scheduled Actions failed with "${String(error)}", retrying in ${seconds} seconds....`,
 			);
 			attempt++;
 			setTimeout(async () => {
-				this.run(attempt);
+				await this.run(attempt);
 			}, seconds * 1000);
 		}
 	}

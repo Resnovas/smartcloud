@@ -68,19 +68,19 @@ export type ConditionOr = {
 }
 ``` */
 
-async function or(this: UtilThis, condition: ConditionOr, props: UtilProps) {
-	const results = await run.call(this, condition, props);
+async function or(this: UtilThis, condition: ConditionOr, context: UtilProps) {
+	const results = await run.call(this, condition, context);
 	const success = results.filter(Boolean).length;
 	return success > 0;
 }
 
 export default [type, or] as const;
 
-async function run(this: UtilThis, condition: ConditionOr, props: UtilProps) {
+async function run(this: UtilThis, condition: ConditionOr, context: UtilProps) {
 	const results: Array<Promise<boolean>> = [];
 
 	for (const conditions of condition.condition) {
-		results.push(evaluator.call(this, conditions, props));
+		results.push(evaluator.call(this, conditions, context));
 	}
 
 	return Promise.all(results);
@@ -93,7 +93,7 @@ export const example: ConditionOr = {
 			requires: 1,
 			condition: [
 				{
-					type: 'isLocked',
+					type: 'isDraft',
 					condition: true,
 				},
 			],

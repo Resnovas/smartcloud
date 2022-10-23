@@ -57,9 +57,21 @@ Example:
 function isLocked(
 	this: UtilThis,
 	condition: ConditionIsLocked,
-	issue: UtilProps,
+	context: UtilProps,
 ) {
-	return condition.condition === issue.locked;
+	let test;
+	switch (context.type) {
+		case 'issue':
+			test = context.issue.locked;
+			break;
+		case 'pr':
+			test = context.pull_request.locked;
+			break;
+		default:
+			break;
+	}
+
+	return condition.condition === test;
 }
 
 export default [type, isLocked] as const;
