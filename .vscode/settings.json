@@ -1,0 +1,14 @@
+{
+	"psi-header.config": {
+		"license": "GPL-3.0+",
+		"authorEmail": "jonathan@resnovas.com",
+		"company": "Resnovas",
+		"copyrightHolder": "Jonathan Stevens",
+	},
+	"psi-header.variables": [
+		[
+			"projectslug",
+			"resnovas/smartcloud"
+		]
+	],
+}

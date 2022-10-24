@@ -1,12 +1,51 @@
-/** @format */
-import { PRConditionConfig } from "../../conditions"
-import { Changelog } from "./changelog"
-import { CreateMilestone } from "./handleMilestone"
+/*
+ * Project: @resnovas/smartcloud
+ * File: release.ts
+ * Path: \src\contexts\methods\release.ts
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * -----
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
+ * -----
+ * Copyright (c) 2022 Resnovas - All Rights Reserved
+ * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
+ * -----
+ * This program has been provided under confidence of the copyright holder and is
+ * licensed for copying, distribution and modification under the terms of
+ * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
+ * or (at your option) any later version of this license.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License v3.0 or later for more details.
+ *
+ * You should have received a copy of the GNU General Public License v3.0 or later
+ * along with this program. If not, please write to: jonathan@resnovas.com,
+ * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
+ *
+ * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
+ * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	---------------------------------------------------------
+ */
+
+import type {PrConditionConfig} from '../../conditions/index.js';
+import type {Changelog} from './changelog.js';
+import type {CreateMilestone} from './handle-milestone.js';
 
 /**
  * The release configuration
  */
-export interface Release extends PRConditionConfig {
+export type Release = {
 	/**
 	 * The labels to use to detect release type (semantic release)
 	 */
@@ -14,129 +53,129 @@ export interface Release extends PRConditionConfig {
 		/**
 		 * The label to use to mark a build
 		 */
-		build: string
+		build: string;
 		/**
 		 * The label to use to mark a prerelease
 		 */
-		prerelease: string
+		prerelease: string;
 		/**
 		 * The label to use to mark a patch
 		 */
-		patch: string
+		patch: string;
 		/**
 		 * The label to use to mark a minor
 		 */
-		minor: string
+		minor: string;
 		/**
 		 * The label to use to mark a major
 		 */
-		major: string
+		major: string;
 
 		/**
 		 * The label to use to mark a breaking change
 		 */
-		breaking?: string
-	}
+		breaking?: string;
+	};
 	/**
 	 * Should the release create a tag?
 	 */
-	createTag?: boolean
+	createTag?: boolean;
 	/**
 	 * Should the release create a Github Release?
 	 */
-	createRelease?: CreateRelease
+	createRelease?: CreateRelease;
 	/**
 	 * Should the release create the next milestone?
 	 */
-	createMilestone?: CreateMilestone
+	createMilestone?: CreateMilestone;
 	/**
 	 * Should the release create a Github Package?
 	 */
-	createPackages?: string[] | string
+	createPackages?: string[] | string;
 	/**
 	 * Should the release create a changelog?
 	 */
-	createChangelog?: Changelog
-}
+	createChangelog?: Changelog;
+} & PrConditionConfig;
 
 /**
  *
  */
-export interface ReleaseChanges {
+export type ReleaseChanges = {
 	/**
 	 * Should include issues?
 	 */
-	includeIssues?: boolean
+	includeIssues?: boolean;
 	/**
 	 * The section configuration
 	 */
-	sections?: Sections[]
-}
+	sections?: Sections[];
+};
 
 /**
  * The section configuration
  */
-export interface Sections {
+export type Sections = {
 	/**
 	 * The title of this section
 	 */
-	title: string
+	title: string;
 	/**
 	 * The body of this section
 	 */
-	body?: string
+	body?: string;
 	/**
 	 * The pull request labels to include
 	 */
-	PRlabels: string[]
+	PRlabels: string[];
 	/**
 	 * The issue labels to include
 	 */
-	issueLabels?: string[]
+	issueLabels?: string[];
 	/**
 	 *  Should include the committer username?
 	 */
-	includeCommitter?: boolean
+	includeCommitter?: boolean;
 	/**
 	 * Should link the Pull Request?
 	 */
-	linkPR?: boolean
-}
+	linkPR?: boolean;
+};
 
 /**
  * The create release configuration
  */
-export interface CreateRelease extends ReleaseChanges {
+export type CreateRelease = {
 	/**
 	 * The name of the tag to create
 	 */
-	tagName?: string
+	tagName?: string;
 	/**
 	 * The prefix before the tagName
 	 */
-	tagPrefix?: string
+	tagPrefix?: string;
 	/**
 	 * The name of the release to create
 	 */
-	releaseName?: string
+	releaseName?: string;
 	/**
 	 * The prefix before the releaseName
 	 */
-	releaseNamePrefix?: string
+	releaseNamePrefix?: string;
 	/**
 	 * The sufix to add to the release name
 	 */
-	releaseNameSuffix?: string
+	releaseNameSuffix?: string;
 	/**
 	 * Should be a draft?
 	 */
-	draft?: boolean
+	draft?: boolean;
 	/**
 	 * Should release be a prerelease?
 	 */
-	prerelease?: boolean
+	prerelease?: boolean;
 	/**
 	 * Should the release use the generated changelog?
 	 */
-	useChangelog?: boolean
-}
+	useChangelog?: boolean;
+} & ReleaseChanges;

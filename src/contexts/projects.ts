@@ -1,62 +1,75 @@
-/** @format */
+/*
+ * Project: @resnovas/smartcloud
+ * File: projects.ts
+ * Path: \src\contexts\projects.ts
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * -----
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
+ * -----
+ * Copyright (c) 2022 Resnovas - All Rights Reserved
+ * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
+ * -----
+ * This program has been provided under confidence of the copyright holder and is
+ * licensed for copying, distribution and modification under the terms of
+ * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
+ * or (at your option) any later version of this license.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License v3.0 or later for more details.
+ *
+ * You should have received a copy of the GNU General Public License v3.0 or later
+ * along with this program. If not, please write to: jonathan@resnovas.com,
+ * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
+ *
+ * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
+ * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	---------------------------------------------------------
+ */
 
-import * as core from "@actions/core"
-import { Context } from "@actions/github/lib/context"
-import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
-import { Config, Runners, SharedConfig } from "../action"
-import { CurContext, ProjectContext, Version } from "../conditions"
-import { Utils } from "../utils"
-import { Contexts, log } from "./methods"
-import { Column } from "./methods/conventions"
-import { ProjectCreateBranch } from "./methods/createBranch"
-import { Milestones } from "./methods/handleMilestone"
-import { ExProjects } from "./methods/syncRemoteProject"
+import * as core from '@actions/core';
+import type {Context} from '@actions/github/lib/context.js';
+import type {ProjectCardEvent} from '@octokit/webhooks-types';
+import type {Config, Runners, SharedConfig} from '../types.js';
+import type {CurContext, ProjectContext, Version} from '../conditions/index.js';
+import type {Utils} from '../utils/index.js';
+import {log, LoggingLevels} from '../logging.js';
+import {Contexts} from './methods/index.js';
+import type {Column} from './methods/conventions.js';
+import type {ProjectCreateBranch} from './methods/create-branch.js';
+import type {Milestones} from './methods/handle-milestone.js';
+import type {ExProjects} from './methods/sync-remote-project.js';
 
 /**
  * The project configuration
  */
-export interface ProjectConfig extends SharedConfig {
+export type ProjectConfig = {
 	/**
 	 * Syncronise remote repository configuration.
 	 */
-	syncRemote?: ExProjects[]
+	syncRemote?: ExProjects[];
 	/**
 	 * Open branch configuration
 	 */
-	openBranch?: ProjectCreateBranch
+	openBranch?: ProjectCreateBranch;
 	/**
 	 * Assign to milestone configuration
 	 */
-	assignMilestone?: {
-		[milestone: string]: Milestones
-	}
-}
+	assignMilestone?: Record<string, Milestones>;
+} & SharedConfig;
 
 export class Project extends Contexts {
-	context: ProjectContext
-	config: ProjectConfig
-	constructor(
-		util: Utils,
-		runners: Runners,
-		configs: Config,
-		curContext: CurContext,
-		dryRun: boolean
-	) {
-		if (curContext.type !== "project")
-			throw new LoggingDataClass(
-				LoggingLevels.error,
-				"Cannot construct without project context"
-			)
-		super(util, runners, configs, curContext, dryRun)
-		this.context = curContext.context
-		if (!configs.project)
-			throw new LoggingDataClass(
-				LoggingLevels.error,
-				"Cannot start without config"
-			)
-		this.config = configs.project
-	}
-
 	/**
 	 * Parse the Project Context
 	 * @author IvanFon, TGTGamer, jbinda
@@ -65,148 +78,193 @@ export class Project extends Contexts {
 	static async parse(
 		utils: Utils,
 		config: Config,
-		context: Context
+		context: Context,
 	): Promise<ProjectContext | undefined> {
-		const project = context.payload.project_card
+		const payload = context.payload as ProjectCardEvent;
+		const project = payload.project_card;
 		if (!project) {
-			return
+			return;
 		}
+
 		log(
 			LoggingLevels.debug,
 			`context.payload.project_card: ${JSON.stringify(
-				context.payload.project_card
-			)}`
-		)
+				context.payload.project_card,
+			)}`,
+		);
 
-		if (!project.content_url) throw new Error("No content information to get")
-		const issueNumber: number = project.content_url.split("/").pop()
-		const issue = await utils.api.issues.get(issueNumber)
+		if (!project.content_url) {
+			throw new Error('No content information to get');
+		}
 
-		const labels = await utils.parsingData.labels(issue.labels).catch((err) => {
-			log(LoggingLevels.error, `Error thrown while parsing labels: ` + err)
-			throw err
-		})
+		const issueNumber = project.id;
+		const issue = await utils.api.issues.get(issueNumber);
 
-		let currentVersion: Version | undefined = undefined
-		if (config.versioning)
+		const labels = await utils.parsingData
+			.labels(issue.labels)
+			.catch(async error => {
+				throw new Error(log(LoggingLevels.error, 'Error thrown while parsing labels: ' + String(error)));
+			});
+
+		let currentVersion: Version | undefined;
+		if (config.versioning) {
 			currentVersion = await utils.versioning
 				.parse(config, config.issue?.ref)
-				.catch((err) => {
-					log(
+				.catch(async error => {
+					throw new Error(log(
 						LoggingLevels.error,
-						`Error thrown while parsing versioning: ` + err
-					)
-					throw err
-				})
+						'Error thrown while parsing versioning: ' + String(error),
+					));
+				});
+		}
 
-		let localProject
-		localProject = await utils.api.project.projects.get(
-			project.project_url.split("/").pop()
-		)
-		const changes = context.payload.changes
-		const localColumn = await utils.api.project.column.get(project.column_id)
+		const localProject = await utils.api.project.projects.get(project.id);
 
-		const localCard = await utils.api.project.card.get(project.id)
+		const localColumn = await utils.api.project.column.get(project.column_id);
+
+		const localCard = await utils.api.project.card.get(project.id);
 
 		return {
-			sha: context.sha,
-			action: context.payload.action as string,
+			...context,
 			currentVersion,
-			IDNumber: issue.id,
+
+			// Todo: ask for advice on how to resolve
+			// @ts-expect-error due to the range of possible types, it throws an error even though its fully populated
 			props: {
-				type: "project",
-				ID: issue.number,
-				creator: issue.user?.login ? issue.user.login : "",
-				description: issue.body || "",
-				locked: issue.locked,
-				state: issue.state as ProjectContext["props"]["state"],
-				title: issue.title,
+				type: 'project',
+				...project,
 				project: localProject,
-				column_id: project.column_id,
 				localColumn,
 				localCard,
-				changes,
-				labels
-			}
+				labels,
+			},
+		};
+	}
+
+	context: ProjectContext;
+	config: ProjectConfig;
+	// eslint-disable-next-line max-params
+	constructor(
+		util: Utils,
+		runners: Runners,
+		configs: Config,
+		curContext: CurContext,
+		dryRun: boolean,
+	) {
+		if (curContext.type !== 'project') {
+			throw new Error(log(
+				LoggingLevels.error,
+				'Cannot construct without project context',
+			));
 		}
+
+		super(util, runners, configs, curContext, dryRun);
+		this.context = curContext.context;
+		if (!configs.project) {
+			throw new Error(log(
+				LoggingLevels.error,
+				'Cannot start without config',
+			));
+		}
+
+		this.config = configs.project;
 	}
 
 	async run(attempt?: number) {
-		if (!this.config)
-			throw new LoggingDataClass(
+		if (!this.config) {
+			throw new Error(log(
 				LoggingLevels.error,
-				"Cannot start without config"
-			)
-		if (!attempt) {
-			attempt = 1
-			core.startGroup("project Actions")
+				'Cannot start without config',
+			));
 		}
+
 		if (!attempt) {
-			attempt = 1
-			core.startGroup("project Actions")
+			attempt = 1;
+			core.startGroup('project Actions');
 		}
-		const seconds = attempt * 10
+
+		if (!attempt) {
+			attempt = 1;
+			core.startGroup('project Actions');
+		}
+
+		const seconds = attempt * 10;
 
 		try {
 			if (this.config.enforceConventions) {
-				if (!this.config.enforceConventions.onColumn) return
-				this.config.enforceConventions.onColumn =
-					await this.convertColumnStringsToIDArray(
-						this.config.enforceConventions.onColumn
-					)
+				if (!this.config.enforceConventions.onColumn) {
+					return;
+				}
+
+				this.config.enforceConventions.onColumn
+					= await this.convertColumnStringsToIdArray(
+						this.config.enforceConventions.onColumn,
+					);
 				if (
 					this.config.enforceConventions?.onColumn?.includes(
-						this.context.props.column_id
+						this.context.props.column_id,
 					)
-				)
-					await this.conventions.enforce(this)
+				) {
+					await this.conventions.enforce(this);
+				}
 			}
-			if (this.config.labels)
-				await this.applyLabels(this).catch((err) => {
-					log(LoggingLevels.error, "Error applying labels" + err)
-				})
-			// if (this.config.syncRemote && this.util.shouldRun("release"))
+
+			if (this.config.labels) {
+				await this.applyLabels(this).catch(async error => {
+					throw new Error(log(LoggingLevels.error, 'Error applying labels' + String(error)));
+				});
+			}
+
+			// If (this.config.syncRemote && this.util.shouldRun("release"))
 			// 	await this.syncRemoteProject(this).catch((err) => {
-			// 		log(LoggingLevels.error, "Error syncing remote project"+ err)
+			// 		await log(LoggingLevels.error, "Error syncing remote project"+ err)
 			// 	})
-			core.endGroup()
-		} catch (err) {
+			core.endGroup();
+		} catch (error: unknown) {
 			if (attempt > this.retryLimit) {
-				core.endGroup()
-				throw log(
+				core.endGroup();
+				throw new Error(log(
 					LoggingLevels.emergency,
-					`project actions failed. Terminating job.`
-				)
+					'project actions failed. Terminating job.',
+				));
 			}
+
 			log(
 				LoggingLevels.warn,
-				`project Actions failed with "${err}", retrying in ${seconds} seconds....`
-			)
+				`project Actions failed with "${String(error)}", retrying in ${seconds} seconds....`,
+			);
 
-			attempt++
+			attempt++;
 			setTimeout(async () => {
-				this.run(attempt)
-			}, seconds * 1000)
+				await this.run(attempt);
+			}, seconds * 1000);
 		}
 	}
-	async convertColumnStringsToIDArray(columns: Column[]): Promise<number[]> {
+
+	async convertColumnStringsToIdArray(columns: Column[]): Promise<number[]> {
 		const columnList = await this.util.api.project.column.list(
-			this.context.props.project.id
-		)
-		return await columns.map((column) => {
-			if (typeof column === "string") {
-				let columnID: number | undefined
-				columnList.forEach((value) => {
-					if (value.name.toLowerCase() == column.toLowerCase())
-						columnID = value.id
-				})
-				if (!columnID)
-					throw new LoggingDataClass(
+			this.context.props.project.id,
+		);
+		return columns.map(column => {
+			if (typeof column === 'string') {
+				let columnId: number | undefined;
+				for (const value of columnList) {
+					if (value.name.toLowerCase() === column.toLowerCase()) {
+						columnId = value.id;
+					}
+				}
+
+				if (!columnId) {
+					throw new Error(log(
 						LoggingLevels.error,
-						`${column} doesn't exist on this project`
-					)
-				return columnID
-			} else return column
-		})
+						`${column} doesn't exist on this project`,
+					));
+				}
+
+				return columnId;
+			}
+
+			return column;
+		});
 	}
 }

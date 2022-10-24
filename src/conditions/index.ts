@@ -1,232 +1,256 @@
-/** @format */
+/*
+ * Project: @resnovas/smartcloud
+ * File: index.ts
+ * Path: \src\conditions\index.ts
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * -----
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
+ * -----
+ * Copyright (c) 2022 Resnovas - All Rights Reserved
+ * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
+ * -----
+ * This program has been provided under confidence of the copyright holder and is
+ * licensed for copying, distribution and modification under the terms of
+ * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
+ * or (at your option) any later version of this license.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License v3.0 or later for more details.
+ *
+ * You should have received a copy of the GNU General Public License v3.0 or later
+ * along with this program. If not, please write to: jonathan@resnovas.com,
+ * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
+ *
+ * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
+ * -----
+ * Last Modified: 25-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	---------------------------------------------------------
+ */
+import type {components} from '@octokit/openapi-types/types.js';
+import type {Context} from '@actions/github/lib/context.js';
+import type {PullRequestEvent, IssuesEvent, IssueCommentEvent, ProjectCardEvent} from '@octokit/webhooks-types';
+import type {RestEndpointMethodTypes} from '@octokit/plugin-rest-endpoint-methods';
+import type {Labels} from '../types.js';
+import type {Issues, Project, PullRequests, Schedule} from '../contexts/index.js';
+import type {IssueCondition} from './issue/index.js';
+import type {PrCondition} from './pr/index.js';
+import type {ProjectCondition} from './project/index.js';
+import type {ScheduleCondition} from './schedule/index.js';
+import type {Condition} from './util/index.js';
+import {handlers as sharedHandlers} from './util/index.js';
+import {handlers as prHandlers} from './pr/index.js';
 
-export { log } from "../"
-export * from "./issue"
-export * from "./pr"
-export * from "./project"
-export * from "./schedule"
-export * from "./util"
+export type {Condition} from './util/index.js';
 
-import { Labels } from "../action"
-import { Issues, Project, PullRequests, Schedule } from "../contexts"
-import { IssueCondition } from "./issue"
-import { PRCondition } from "./pr"
-import { ProjectCondition } from "./project"
-import { ScheduleCondition } from "./schedule"
-import { Condition } from "./util"
+export type GeneralContext = {
+	currentVersion?: Version;
+} & Context;
 
-export type CurContext =
-	| { type: "pr"; context: PRContext }
-	| { type: "issue"; context: IssueContext }
-	| { type: "project"; context: ProjectContext }
-	| { type: "schedule"; context: ScheduleContext }
+export type PrContext = {
+	props: PrProps;
+} & GeneralContext;
 
-export interface PRContext extends GeneralContext {
-	currentVersion?: Version
-	IDNumber: number
-	props: PRProps
-}
+export type IssueContext = {
+	props: IssueProps;
+} & GeneralContext;
 
-export interface IssueContext extends GeneralContext {
-	currentVersion?: Version
-	IDNumber: number
-	props: IssueProps
-}
+export type ScheduleIssueContext = {
+	props: ScheduleIssueProps;
+};
 
-export interface ProjectContext extends GeneralContext {
-	currentVersion?: Version
-	IDNumber: number
-	props: ProjectProps
-}
+export type ProjectContext = {
+	props: ProjectProps;
+} & GeneralContext;
 
-export interface ScheduleContext extends GeneralContext {
-	props?: ScheduleProps
-}
-interface GeneralContext {
-	ref?: string
-	sha: string
-	action: string
-}
+export type ScheduleContext = {
+	props: ScheduleProps;
+} & GeneralContext;
 
-interface Props {
-	creator: string
-	description: string
-	locked: boolean
-	state: "open" | "closed"
-	title: string
-	labels?: Labels
-	ID: number
-	type: "issue" | "pr" | "project"
-	lastUpdated?: string
-}
+export type Props = {
+	labels?: Labels;
+};
 
-export interface PRProps extends Props {
-	branch: string
-	isDraft: boolean
-	files: string[]
-	reviews: Reviews
-	pendingReview: boolean
-	requestedChanges: number
-	approved: number
-	changes: number
-}
+export type PrProps = {
+	type: 'pr';
+	files: string[];
+	reviews: Reviews;
+	pendingReview: boolean;
+	requestedChanges: number;
+	approved: number;
+	changes: number;
+} & Props & PullRequestEvent;
 
-export type IssueProps = Props
+export type IssueProps = {type: 'issue'} & (IssuesEvent | IssueCommentEvent) & Props;
 
-export interface ProjectProps extends Props {
-	project: any
-	column_id: number
-	localCard: Partial<localCard>
-	localColumn: localColumn
-	changes: {
-		column_id: {
-			from: number
-		}
-	}
-}
+export type ProjectProps = {
+	type: 'project';
+	project: any;
+	column_id: number;
+	localCard?: RestEndpointMethodTypes['projects']['getCard']['response']['data'];
+	localColumn?: RestEndpointMethodTypes['projects']['getColumn']['response']['data'];
+} & Props & ProjectCardEvent;
 
-export type ScheduleProps = Props
+export type ScheduleProps = {type: 'schedule'} & Props;
+export type ScheduleIssueProps = {type: 'issue'} & Props & Omit<components['schemas']['issue'], 'labels'>;
 
-export interface Version {
-	name?: string
+export type Version = {
+	name?: string;
 	semantic?: {
-		major: number
-		minor: number
-		patch: number
-		prerelease?: string
-		build?: number
-	}
-}
+		major: number;
+		minor: number;
+		patch: number;
+		prerelease?: string;
+		build?: number;
+	};
+};
 
-export type Reviews = Review[]
+export type Reviews = Review[];
 
-export interface Review {
-	id?: number
-	node_id?: string
-	user?: any
-	body?: string
-	state?: "APPROVED" | "" | string
-	html_url?: string
-	pull_request_url?: string
-	author_association?: string
-	_links?: {}
-	submitted_at?: string
-	commit_id?: string
-}
+export type Review = {
+	id?: number;
+	node_id?: string;
+	user?: any;
+	body?: string;
+	state?: string;
+	html_url?: string;
+	pull_request_url?: string;
+	author_association?: string;
+	_links?: Record<string, unknown>;
+	submitted_at?: string;
+	commit_id?: string;
+};
 
-interface localCard {
-	archived: boolean
-	column_url: string
-	content_url: string
-	created_at: string
-	creator: any
-	id: number
-	node_id: string
-	note: string | null
-	project_url: string
-	updated_at: string
-	url: string
-}
-
-interface localColumn {
-	name: any
-	cards_url: string
-	created_at: string
-	id: number
-	node_id: string
-	project_url: string
-	updated_at: string
-	url: string
-}
 /**
  * This instead of manually requiring this
  */
-export type UtilThis = Issues | PullRequests | Project | Schedule
+export type UtilThis = Issues | PullRequests | Project | Schedule;
 /**
  * Props used instead of manually requiring props
  */
-export type UtilProps = IssueProps | PRProps | ProjectProps | ScheduleProps
+export type UtilProps = IssueProps | PrProps | ProjectProps | ScheduleProps | ScheduleIssueProps;
 
 /**
  * Shared conditions used by all types of events.
  */
-export interface SharedConditions {
+export type SharedConditions = {
 	/**
 	 * The number of requires needed for this to succeed
 	 */
-	requires: number
+	requires: number;
 	/**
 	 * The conditions required for this to succeed
 	 */
-	condition: Condition[]
-}
+	condition: Condition[];
+};
 
 /**
  * Conventions to use
  */
-export interface SharedConventionConditions {
+export type SharedConventionConditions = {
 	/**
 	 * The number of requires needed for this to succeed
 	 */
-	requires: number
+	requires: number;
 	/**
 	 * The conditions required for this to succeed. You can use the "semanticTitle" to automatically apply thses conditions
 	 */
-	condition: Condition[] | string
-}
+	condition: Condition[] | string;
+};
 
 /**
  * The PR condition configuration
  */
-export interface PRConditionConfig {
+export type PrConditionConfig = {
 	/**
 	 * The number of requires needed for this to succeed
 	 */
-	requires: number
+	requires: number;
 	/**
 	 * The conditions required for this to succeed
 	 */
-	condition: PRCondition[]
-}
+	condition: PrCondition[];
+};
 
 /**
  * The Issue condition configuration
  */
-export interface IssueConditionConfig {
+export type IssueConditionConfig = {
 	/**
 	 * The number of requires needed for this to succeed
 	 */
-	requires: number
+	requires: number;
 	/**
 	 * The conditions required for this to succeed
 	 */
-	condition: IssueCondition[]
-}
+	condition: IssueCondition[];
+};
 
 /**
  * The Project condition configuration
  */
-export interface ProjectConditionConfig {
+export type ProjectConditionConfig = {
 	/**
 	 * The number of requires needed for this to succeed
 	 */
-	requires: number
+	requires: number;
 	/**
 	 * The conditions required for this to succeed
 	 */
-	condition: ProjectCondition[]
-}
+	condition: ProjectCondition[];
+};
 
 /**
  * The Schedule condition configuration
  */
-export interface ScheduleConditionConfig {
+export type ScheduleConditionConfig = {
 	/**
 	 * The number of requires needed for this to succeed
 	 */
-	requires: number
+	requires: number;
 	/**
 	 * The conditions required for this to succeed
 	 */
-	condition: ScheduleCondition[]
+	condition: ScheduleCondition[];
+};
+
+type Conditions = IssueCondition | PrCondition | ProjectCondition | ScheduleCondition | Condition;
+
+export type CurContext =
+	| {type: 'pr'; context: PrContext}
+	| {type: 'issue'; context: IssueContext}
+	| {type: 'project'; context: ProjectContext}
+	| {type: 'schedule'; context: ScheduleContext};
+
+const handlers = [
+	...sharedHandlers,
+	...prHandlers,
+	// ...issueHandlers,
+	// ...scheduleHandlers,
+];
+
+type HandlerTypes = [
+	type: string,
+	function: (this: UtilThis, condition: Conditions, context: ProjectProps | PrProps | IssueProps) => Promise<boolean>,
+];
+
+/**
+ * The schedule condition handler.
+ */
+export function getConditionHandler(
+	this: UtilThis,
+	condition: IssueCondition | PrCondition | ProjectCondition | ScheduleCondition,
+) {
+	const handler = handlers.find(handler => handler[0] === condition.type) as HandlerTypes;
+	return handler?.[1];
 }

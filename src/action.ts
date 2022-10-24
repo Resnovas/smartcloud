@@ -1,247 +1,122 @@
-/** @format */
+/*
+ * Project: @resnovas/smartcloud
+ * File: action.ts
+ * Path: \src\action.ts
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * -----
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
+ * -----
+ * Copyright (c) 2022 Resnovas - All Rights Reserved
+ * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
+ * -----
+ * This program has been provided under confidence of the copyright holder and is
+ * licensed for copying, distribution and modification under the terms of
+ * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
+ * or (at your option) any later version of this license.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License v3.0 or later for more details.
+ *
+ * You should have received a copy of the GNU General Public License v3.0 or later
+ * along with this program. If not, please write to: jonathan@resnovas.com,
+ * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
+ *
+ * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
+ * -----
+ * Last Modified: 24-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
+ * HISTORY:
+ * Date      	By	Comments
+ * ----------	---	---------------------------------------------------------
+ */
 
-import * as core from "@actions/core"
-import { context as Context } from "@actions/github"
-import { GitHub } from "@actions/github/lib/utils"
-import { LoggingDataClass, LoggingLevels } from "@resnovas/utilities"
-import { log, Options } from "."
-import {
+/* eslint-disable no-await-in-loop */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+
+import fs from 'node:fs';
+import process, {cwd} from 'node:process';
+import * as core from '@actions/core';
+import {context as GHContext} from '@actions/github';
+import type {
 	CurContext,
-	IssueConditionConfig,
-	PRConditionConfig,
-	ProjectConditionConfig,
-	ScheduleConditionConfig,
-	SharedConditions
-} from "./conditions"
-import {
-	IssueConfig,
-	Issues,
-	Project,
-	ProjectConfig,
-	PullRequestConfig,
-	PullRequests,
-	Schedule,
-	ScheduleConfig
-} from "./contexts"
-import { Stale } from "./contexts/methods/checkStale"
-import { EnforceConventions } from "./contexts/methods/conventions"
-import { Utils } from "./utils"
+} from './conditions/index.js';
+import {Issues, Project, PullRequests, Schedule} from './contexts/index.js';
+import {Utils} from './utils/index.js';
+import {log, LoggingLevels} from './logging.js';
+import type {Options, Github, Config, SharedConfigIndex, Runners, Label} from './types.js';
 
-export interface Runners {
-	/**
-	 * Declaritively specify which schema you want to use. This defaults to our latest schema specified at: https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json
-	 * @default https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json
-	 */
-	$schema: string
-	/**
-	 * Declaritively specify all the labels that shuold exist in this repository, and initialise them.
-	 * You will use the names specified here later to apply these same labels to issues and pull requests.
-	 */
-	labels?: Labels
-	/**
-	 * This defines all the diffent configurations for your repository.
-	 * You can have as many as you like. You can use this within Mono-repositories to have different configurations for different projects.
-	 * You can also have diffeent configurations for different branches.
-	 */
-	runners: Config[]
-}
+const localEx: boolean = fs.existsSync(cwd() + '/config.json');
+let local: any;
+let context = GHContext;
 
-export interface Config {
-	/**
-	 * The branch used to get the config file from. Defaults to master.
-	 */
-	branch?: string
-	/**
-	 * Versioning configuration used for release management.
-	 */
-	versioning?: {
-		/**
-		 * Version source used to determine the version.
-		 */
-		source: VersionSource
-		/**
-		 * Version Type to change how versioning is handled.
-		 */
-		type?: VersionType
-		/**
-		 * If version is a pre-release, this is the version name to use.
-		 */
-		prereleaseName?: string
-	}
-	/**
-	 * Maximum number of attempts before stopping.
-	 * @default 3
-	 */
-	retryLimit?: number
-	/**
-	 * The labels used by our internal tools.
-	 * @private
-	 */
-	labels?: {
-		[key: string]: string
-	}
-	/**
-	 * Shared configurations, merged with the PR, Issue, Project and Schedule configurations.
-	 */
-	sharedConfig?: SharedConfig
-	/**
-	 * The pull request configurations.
-	 */
-	pr?: PullRequestConfig
-	/**
-	 * The issue configurations.
-	 */
-	issue?: IssueConfig
-	/**
-	 * The project configurations.
-	 */
-	project?: ProjectConfig
-	/**
-	 * The schedule configurations.
-	 */
-	schedule?: ScheduleConfig
-}
+if (localEx) {
+	// eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error, @typescript-eslint/ban-ts-comment
+	// @ts-ignore
 
-/**
- * The shared configuration Index
- * @private
- */
-export type SharedConfigIndex =
-	| "ref"
-	| "enforceConventions"
-	| "labels"
-	| "stale"
-
-/**
- * The shared configuration
- */
-export interface SharedConfig {
-	/**
-	 * The reference used internally
-	 */
-	ref?: string
-	/**
-	 * 	The enforceConventions configuration
-	 */
-	enforceConventions?: EnforceConventions
-	/**
-	 *	The stale configuration
-	 */
-	stale?: Stale
-	/**
-	 * The labels to be applied
-	 */
-	labels?: {
-		[key: string]:
-			| IssueConditionConfig
-			| ProjectConditionConfig
-			| PRConditionConfig
-			| ScheduleConditionConfig
-			| SharedConditions
+	local = (await import('../config.json', {assert: {type: 'json'}}));
+	process.env.GITHUB_REPOSITORY = local.default.GITHUB_REPOSITORY;
+	process.env.GITHUB_REPOSITORY_OWNER = local.default.GITHUB_REPOSITORY_OWNER;
+	if (!context.payload.issue && !context.payload.pull_request) {
+		// eslint-disable-next-line unicorn/no-await-expression-member
+		context = (await import(local.default.github_context, {assert: {type: 'json'}})).default;
 	}
 }
-
-/**
- * The labels configuration.
- * @param name The name as appears on github
- * @param description A description of the label
- * @param color The color of the label
- */
-export interface Label {
-	/**
-	 * The name as appears on github
-	 */
-	name: string
-	/**
-	 * A description of the label
-	 */
-	description?: string
-	/**
-	 * The color of the label
-	 */
-	color: string
-}
-
-/**
- *	An array of labels.
- */
-export interface Labels {
-	/**
-	 * And identifiable label name as the key, followed by the label configuration.
-	 * @example "bug": {name: "bug", description: "A bug has been found", color: "red"
-	 */
-	[key: string]: Label
-}
-/**
- * The version source.
- * Node: A node project, our package will use the package.json to determine the version.
- * Milestones: Utilises the Github Milestone API to determine the version.
- * String: A string to use as the version.
- */
-export type VersionSource = "node" | "milestones" | string
-
-/**
- * The version number type. This is used to determine how versioning is handled. SemVer is the default.
- */
-export type VersionType = "SemVer"
-
-export type Github = InstanceType<typeof GitHub>
-
-let local: any
-let context = Context
-
-try {
-	local = require("../config.json")
-	process.env.GITHUB_REPOSITORY = local.GITHUB_REPOSITORY
-	process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER
-	if (!context.payload.issue && !context.payload.pull_request)
-		context = require(local.github_context)
-} catch {}
 
 export default class Action {
-	client: Github
-	opts: Options
-	configJSON: Options["configJSON"]
-	configPath: Options["configPath"]
-	configRef: Options["configRef"]
-	dryRun: Options["dryRun"]
-	fillEmpty: Options["fillEmpty"]
-	repo = context.repo || {}
-	util: Utils
-	ref?: string
+	client: Github;
+	opts: Options;
+	configJson: Options['configJson'];
+	configPath: Options['configPath'];
+	configRef: Options['configRef'];
+	dryRun: Options['dryRun'];
+	fillEmpty: Options['fillEmpty'];
+	repo = context.repo || {};
+	util: Utils;
+	ref?: string;
 
 	constructor(client: Github, options: Options) {
-		log(
-			LoggingLevels.debug,
-			`Release Mastermind Constructed: ${options.toString()}`
-		)
-		core.startGroup("Setup Phase")
-		this.client = client
-		this.opts = options
-		this.dryRun = options.dryRun
+		core.startGroup('Setup Phase');
+		this.client = client;
+		this.opts = options;
+		this.dryRun = options.dryRun;
 		if (this.dryRun) {
-			if (options.repo) this.repo = options.repo
-			if (!options.repo?.repo)
-				this.repo.repo = process.env.GITHUB_REPOSITORY || "Unknown"
-			if (!options.repo?.owner)
-				this.repo.owner = process.env.GITHUB_REPOSITORY_OWNER || "Unknown"
-		}
-		this.configJSON = options.configJSON
-		this.configPath = options.configPath
-		this.configRef = options.configRef
-		this.fillEmpty = options.fillEmpty
-		this.ref = options.ref || context.ref
-		this.util = new Utils(
-			{ client, repo: this.repo },
-			{ dryRun: options.dryRun, skipDelete: options.skipDelete, ref: this.ref },
-			{
-				git: options.git
+			if (options.repo) {
+				this.repo = options.repo;
 			}
-		)
+
+			if (!options.repo?.repo) {
+				this.repo.repo = process.env.GITHUB_REPOSITORY ?? 'Unknown';
+			}
+
+			if (!options.repo?.owner) {
+				this.repo.owner = process.env.GITHUB_REPOSITORY_OWNER ?? 'Unknown';
+			}
+		}
+
+		this.configJson = options.configJson;
+		this.configPath = options.configPath;
+		this.configRef = options.configRef;
+		this.fillEmpty = options.fillEmpty;
+		this.ref = options.ref ?? context.ref;
+		this.util = new Utils(
+			{client, repo: this.repo},
+			{dryRun: options.dryRun, skipDelete: options.skipDelete, ref: this.ref},
+			{
+				git: options.git,
+			},
+		);
 	}
 
 	async run() {
-		log(LoggingLevels.debug, `Repo data: ${this.repo.owner}/${this.repo.repo}`)
+		log(LoggingLevels.debug, `Repo data: ${this.repo.owner}/${this.repo.repo}`);
 
 		/**
 		 * Capture and log context to debug for Local Running
@@ -251,51 +126,52 @@ export default class Action {
 		log(
 			LoggingLevels.debug,
 			`Context for local running. See readme.md for information on how to setup local running: ${JSON.stringify(
-				context
-			)}`
-		)
+				context,
+			)}`,
+		);
 		/**
 		 * Process the config
 		 * @author TGTGamer
 		 * @since 1.1.0
 		 */
-		const configs = await this.processConfig().catch((err) => {
-			log(LoggingLevels.error, `Error thrown while processing config: ` + err)
-			throw `Error thrown while processing config: ` + err
-		})
+		const configs = await this.processConfig().catch(async error => {
+			throw new Error(log(
+				LoggingLevels.error,
+				'Error thrown while processing config: ' + String(error),
+			));
+		});
 		if (!configs.runners[0]) {
-			await log(LoggingLevels.error, `No config data.`)
-			throw `No config data.`
+			throw new Error(log(LoggingLevels.error, 'No config data.'));
 		}
-		log(LoggingLevels.debug, `Config: ${JSON.stringify(configs)}`)
 
-		if (configs.labels && this.util.shouldRun("label")) {
+		log(LoggingLevels.debug, `Config: ${JSON.stringify(configs)}`);
+
+		if (configs.labels) {
 			/**
 			 * Syncronise the labels
 			 * @author TGTGamer
 			 * @since 1.1.0
 			 */
-			core.startGroup("label Actions")
-			log(LoggingLevels.debug, `Attempting to apply labels`)
-			await this.syncLabels(configs).catch(async (err) => {
-				await log(
-					LoggingLevels.debug,
-					`Error thrown while syncronising labels: ` + err
-				)
-				throw `Error thrown while syncronising labels: ` + err
-			})
-			log(LoggingLevels.notice, `Successfully applied all labels`)
-			core.endGroup()
+			core.startGroup('label Actions');
+			log(LoggingLevels.debug, 'Attempting to apply labels');
+			await this.syncLabels(configs).catch(async error => {
+				throw new Error(log(
+					LoggingLevels.error,
+					'Error thrown while syncronising labels: ' + String(error),
+				));
+			});
+			log(LoggingLevels.notice, 'Successfully applied all labels');
+			core.endGroup();
 		}
 
 		// Run each release manager
-		configs.runners.forEach(async (config) => {
+		for (let config of configs.runners) {
 			/**
 			 * Convert label ID's to Names
 			 * @author TGTGamer
 			 * @since 1.1.0
 			 */
-			config.labels = this.configureLabels(configs)
+			config.labels = this.configureLabels(configs);
 
 			/**
 			 * Get the context
@@ -303,21 +179,23 @@ export default class Action {
 			 * @since 1.1.0
 			 */
 			const curContext = await this.processContext(config).catch(
-				async (err) => {
-					await log(
+				async error => {
+					throw new Error(log(
 						LoggingLevels.error,
-						`Error thrown while processing context: ` + err
-					)
-					throw `Error thrown while processing context: ` + err
-				}
-			)
-			log(LoggingLevels.debug, `Current Context: ${JSON.stringify(curContext)}`)
+						'Error thrown while processing context: ' + String(error),
+					));
+				},
+			);
+			log(
+				LoggingLevels.debug,
+				`Current Context: ${JSON.stringify(curContext)}`,
+			);
 
-			config = this.handleSharedConfig(config, curContext)
+			config = this.handleSharedConfig(config, curContext);
 
-			core.endGroup()
-			this.applyContext(configs, config, curContext)
-		})
+			core.endGroup();
+			this.applyContext(configs, config, curContext);
+		}
 	}
 
 	/**
@@ -327,35 +205,53 @@ export default class Action {
 	 */
 	handleSharedConfig(config: Config, curContext: CurContext) {
 		for (const a in config.sharedConfig) {
-			const action = a as SharedConfigIndex
-			if (!action || (!config[curContext.type] && !this.fillEmpty))
-				return config
-			else if (!config[curContext.type]) config[curContext.type] = {}
-			if (action == "labels") {
+			if (a) {
+				const action = a as SharedConfigIndex;
+				if (!action || (!config[curContext.type] && !this.fillEmpty)) {
+					return config;
+				}
+
+				if (!config[curContext.type]) {
+					config[curContext.type] = {};
+				}
+
+				if (action === 'stale') {
+					config[curContext.type]![action] = config.sharedConfig[action];
+				} else if (action === 'enforceConventions') {
+					config[curContext.type]![action] = config.sharedConfig[action];
+				} else if (action !== 'labels') {
+					return config;
+				}
+
 				for (const label in config.sharedConfig.labels) {
-					if (!config[curContext.type]!.labels)
-						config[curContext.type]!.labels = {}
-					if (!(label in config[curContext.type]!)) {
-						const l = config.sharedConfig.labels[label]
-						if (l) config[curContext.type]!.labels![label] = l
+					if (label) {
+						if (!config[curContext.type]!.labels) {
+							config[curContext.type]!.labels = {};
+						}
+
+						if (!(label in config[curContext.type]!)) {
+							const l = config.sharedConfig.labels[label];
+							if (l) {
+								config[curContext.type]!.labels![label] = l;
+							}
+						}
 					}
 				}
-			} else if (action === "enforceConventions" || action === "stale") {
-				// @ts-expect-error - Property 'conventions' is missing in type 'Stale' but required in type 'EnforceConventions'
-				config[curContext.type]![action] = config.sharedConfig[action]
 			}
 		}
-		return config
+
+		return config;
 	}
 
 	configureLabels(configs: Runners) {
+		// eslint-disable-next-line unicorn/no-array-reduce
 		return Object.entries(configs.labels ? configs.labels : []).reduce(
-			(acc: { [key: string]: string }, cur) => {
-				acc[cur[0]] = cur[1].name
-				return acc
+			(acc: Record<string, string>, cur) => {
+				acc[cur[0]] = cur[1].name;
+				return acc;
 			},
-			{}
-		)
+			{},
+		);
 	}
 
 	/**
@@ -364,21 +260,24 @@ export default class Action {
 	 * @since 1.0.0
 	 */
 	async processConfig(): Promise<Runners> {
-		if (!this.configJSON?.runners[0]) {
-			if (!this.configPath)
+		if (!this.configJson?.runners[0]) {
+			if (!this.configPath) {
 				throw new Error(
-					`Configpath  (${this.configPath}) & configJSON are undefined`
-				)
+					'Configpath & configJson are undefined',
+				);
+			}
+
 			const pathConfig = await JSON.parse(
-				await this.util.api.files.get(this.configPath, this.configRef)
-			)
-			if (!pathConfig)
-				throw new Error(`config not found at "${this.configPath}"`)
-			if (!pathConfig.releaseMastermind) return pathConfig
-			else return pathConfig.releaseMastermind
-		} else {
-			return this.configJSON
+				await this.util.api.files.get(this.configPath, this.configRef),
+			) as Runners;
+			if (!pathConfig) {
+				throw new Error(`config not found at "${this.configPath}"`);
+			}
+
+			return pathConfig;
 		}
+
+		return this.configJson;
 	}
 
 	/**
@@ -387,7 +286,7 @@ export default class Action {
 	 * @since 1.0.0
 	 */
 	async processContext(config: Config) {
-		let curContext: CurContext
+		let curContext: CurContext;
 
 		if (context.payload.pull_request) {
 			/**
@@ -396,23 +295,22 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await PullRequests.parse(this.util, config, context).catch(
-				async (err) => {
-					await log(
+				async error => {
+					throw new Error(log(
 						LoggingLevels.error,
-						`Error thrown while parsing PR context: ` + err
-					)
-					throw `Error thrown while parsing PR context: ` + err
-				}
-			)
+						'Error thrown while parsing PR context: ' + String(error),
+					));
+				},
+			);
 			if (!ctx) {
-				await log(LoggingLevels.error, "Pull Request not found on context")
-				throw "Pull Request not found on context"
+				throw new Error(log(LoggingLevels.error, 'Pull Request not found on context'));
 			}
-			log(LoggingLevels.debug, `PR context: ${JSON.stringify(ctx)}`)
+
+			log(LoggingLevels.debug, `PR context: ${JSON.stringify(ctx)}`);
 			curContext = {
-				type: "pr",
-				context: ctx
-			}
+				type: 'pr',
+				context: ctx,
+			};
 		} else if (context.payload.issue) {
 			/**
 			 * Issue Context
@@ -420,23 +318,23 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await Issues.parse(this.util, config, context).catch(
-				async (err) => {
-					await log(
+				async error => {
+					throw new Error(log(
 						LoggingLevels.error,
-						`Error thrown while parsing issue context: ` + err
-					)
-					throw `Error thrown while parsing issue context: ` + err
-				}
-			)
+						'Error thrown while parsing issue context: ' + String(error),
+					));
+				},
+			);
 			if (!ctx) {
-				throw new Error("Issue not found on context")
+				throw new Error('Issue not found on context');
 			}
-			log(LoggingLevels.debug, `issue context: ${JSON.stringify(ctx)}`)
+
+			log(LoggingLevels.debug, `issue context: ${JSON.stringify(ctx)}`);
 
 			curContext = {
-				type: "issue",
-				context: ctx
-			}
+				type: 'issue',
+				context: ctx,
+			};
 		} else if (context.payload.project_card) {
 			/**
 			 * Project Context
@@ -444,45 +342,45 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await Project.parse(this.util, config, context).catch(
-				(err) => {
-					log(
+				async error => {
+					throw new Error(log(
 						LoggingLevels.error,
-						`Error thrown while parsing Project context: ` + err
-					)
-					throw `Error thrown while parsing Project context: ` + err
-				}
-			)
+						'Error thrown while parsing Project context: ' + String(error),
+					));
+				},
+			);
 			if (!ctx) {
-				throw new Error("Project Card not found on context")
+				throw new Error('Project Card not found on context');
 			}
-			log(LoggingLevels.debug, `Project Card context: ${JSON.stringify(ctx)}`)
+
+			log(LoggingLevels.debug, `Project Card context: ${JSON.stringify(ctx)}`);
 
 			curContext = {
-				type: "project",
-				context: ctx
-			}
+				type: 'project',
+				context: ctx,
+			};
 		} else if (context.payload.schedule) {
 			/**
 			 * Project Schedule Context
 			 * @author TGTGamer
 			 * @since 1.0.0
 			 */
-			const ctx = await Schedule.parse(context).catch((err) => {
-				log(
+			const ctx = await Schedule.parse(context).catch(async error => {
+				throw new Error(log(
 					LoggingLevels.error,
-					`Error thrown while parsing Schedule context: ` + err
-				)
-				throw `Error thrown while parsing Schedule context: ` + err
-			})
+					'Error thrown while parsing Schedule context: ' + String(error),
+				));
+			});
 			if (!ctx) {
-				throw new Error("Schedule not found on context")
+				throw new Error('Schedule not found on context');
 			}
-			log(LoggingLevels.debug, `Schedule context: ${JSON.stringify(ctx)}`)
+
+			log(LoggingLevels.debug, `Schedule context: ${JSON.stringify(ctx)}`);
 
 			curContext = {
-				type: "schedule",
-				context: ctx
-			}
+				type: 'schedule',
+				context: ctx,
+			};
 		} else {
 			/**
 			 * No Context
@@ -491,11 +389,12 @@ export default class Action {
 			 */
 			log(
 				LoggingLevels.notice,
-				`There is no context to parse: ${JSON.stringify(context.payload)}`
-			)
-			throw `There is no context to parse: ${JSON.stringify(context.payload)}`
+				`There is no context to parse: ${JSON.stringify(context.payload)}`,
+			);
+			throw new Error(`There is no context to parse: ${JSON.stringify(context.payload)}`);
 		}
-		return curContext
+
+		return curContext;
 	}
 
 	/**
@@ -504,44 +403,57 @@ export default class Action {
 	 * @since 1.0.0
 	 */
 	async syncLabels(config: Runners) {
+		// eslint-disable-next-line unicorn/no-array-reduce
 		const labels = Object.entries(config.labels ? config.labels : []).reduce(
-			(acc: { [key: string]: Label }, cur) => {
-				if (cur[0] === "$schema") return acc
-				acc[cur[1].name.toLowerCase()] = cur[1]
-				return acc
-			},
-			{}
-		)
+			(acc: Record<string, Label>, cur) => {
+				if (cur[0] === '$schema') {
+					return acc;
+				}
 
-		await this.util.labels.sync(labels).catch((err) => {
-			log(
+				acc[cur[1].name.toLowerCase()] = cur[1];
+				return acc;
+			},
+			{},
+		);
+
+		await this.util.labels.sync(labels).catch(async error => {
+			throw new Error(log(
 				LoggingLevels.error,
-				`Error thrown while handling syncLabels tasks:`,
-				err
-			)
-		})
+				'Error thrown while handling syncLabels tasks:'
+				+ String(error),
+			));
+		});
 	}
 
 	applyContext(runners: Runners, config: Config, curContext: CurContext) {
-		let ctx: PullRequests | Issues | Project | Schedule | undefined =
-			curContext.type == "pr"
-				? new PullRequests(this.util, runners, config, curContext, this.dryRun)
-				: curContext.type == "issue"
-				? new Issues(this.util, runners, config, curContext, this.dryRun)
-				: curContext.type == "project"
-				? new Project(this.util, runners, config, curContext, this.dryRun)
-				: curContext.type == "schedule"
-				? new Schedule(this.util, runners, config, curContext, this.dryRun)
-				: undefined
+		let ctx: PullRequests | Issues | Project | Schedule | undefined;
 
-		if (!ctx)
-			throw new LoggingDataClass(LoggingLevels.error, "Context not found")
+		switch (curContext.type) {
+			case 'pr':
+				ctx = new PullRequests(this.util, runners, config, curContext, this.dryRun);
+				break;
+			case 'issue':
+				ctx = new Issues(this.util, runners, config, curContext, this.dryRun);
+				break;
+			case 'project':
+				ctx = new Project(this.util, runners, config, curContext, this.dryRun);
+				break;
+			case 'schedule':
+				ctx = new Schedule(this.util, runners, config, curContext, this.dryRun);
+				break;
+			default:
+				ctx = undefined;
+		}
 
-		ctx.run().catch((err) => {
-			throw log(
+		if (!ctx) {
+			throw new Error(log(LoggingLevels.error, 'Context not found'));
+		}
+
+		ctx.run().catch(async error => {
+			throw new Error(log(
 				LoggingLevels.error,
-				`Error thrown while running context: ` + err
-			)
-		})
+				'Error thrown while running context: ' + String(error),
+			));
+		});
 	}
 }
