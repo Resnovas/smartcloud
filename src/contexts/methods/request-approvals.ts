@@ -39,10 +39,10 @@
  */
 
 import * as core from '@actions/core';
-import type {PullRequests} from '..';
-import {log, LoggingLevels} from '../../logging';
-import {evaluator} from '../../evaluator';
-import type {SharedConventionsConfig} from '.';
+import type {PullRequests} from '../index.js';
+import {log, LoggingLevels} from '../../logging.js';
+import {evaluator} from '../../evaluator.js';
+import type {SharedConventionsConfig} from './index.js';
 
 export type RequestApprovals = Record<string, Group>;
 

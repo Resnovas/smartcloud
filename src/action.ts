@@ -30,7 +30,7 @@
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
- * Last Modified: 23-10-2022
+ * Last Modified: 24-10-2022
  * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * Current Version: 1.0.0-beta.0
  * HISTORY:
@@ -40,32 +40,35 @@
 
 /* eslint-disable no-await-in-loop */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-require-imports */
 
-import process from 'node:process';
+import fs from 'node:fs';
+import process, {cwd} from 'node:process';
 import * as core from '@actions/core';
 import {context as GHContext} from '@actions/github';
 import type {
 	CurContext,
-} from './conditions';
-import {Issues, Project, PullRequests, Schedule} from './contexts';
-import {Utils} from './utils';
-import {log, LoggingLevels} from './logging';
-import type {Options, Github, Config, SharedConfigIndex, Runners, Label} from './types';
+} from './conditions/index.js';
+import {Issues, Project, PullRequests, Schedule} from './contexts/index.js';
+import {Utils} from './utils/index.js';
+import {log, LoggingLevels} from './logging.js';
+import type {Options, Github, Config, SharedConfigIndex, Runners, Label} from './types.js';
 
+const localEx: boolean = fs.existsSync(cwd() + '/config.json');
 let local: any;
 let context = GHContext;
 
-try {
-	// eslint-disable-next-line unicorn/prefer-module
-	local = require('../config.json');
-	process.env.GITHUB_REPOSITORY = local.GITHUB_REPOSITORY;
-	process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER;
+if (localEx) {
+	// eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error, @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+
+	local = (await import('../config.json', {assert: {type: 'json'}}));
+	process.env.GITHUB_REPOSITORY = local.default.GITHUB_REPOSITORY;
+	process.env.GITHUB_REPOSITORY_OWNER = local.default.GITHUB_REPOSITORY_OWNER;
 	if (!context.payload.issue && !context.payload.pull_request) {
-		// eslint-disable-next-line unicorn/prefer-module
-		context = require(local.github_context);
+		// eslint-disable-next-line unicorn/no-await-expression-member
+		context = (await import(local.default.github_context, {assert: {type: 'json'}})).default;
 	}
-} catch {}
+}
 
 export default class Action {
 	client: Github;

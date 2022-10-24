@@ -39,7 +39,7 @@
  */
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import type {Utils} from '..';
+import type {Utils} from '../index.js';
 
 // eslint-disable-next-line max-params
 export async function create(

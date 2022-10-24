@@ -30,28 +30,28 @@
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
- * Last Modified: 23-10-2022
+ * Last Modified: 25-10-2022
  * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
  */
-
-import type {Context} from '@actions/github/lib/context';
+import type {components} from '@octokit/openapi-types/types.js';
+import type {Context} from '@actions/github/lib/context.js';
 import type {PullRequestEvent, IssuesEvent, IssueCommentEvent, ProjectCardEvent} from '@octokit/webhooks-types';
 import type {RestEndpointMethodTypes} from '@octokit/plugin-rest-endpoint-methods';
-import type {Labels} from '../types';
-import type {Issues, Project, PullRequests, Schedule} from '../contexts';
-import type {IssueCondition} from './issue';
-import type {PrCondition} from './pr';
-import type {ProjectCondition} from './project';
-import type {ScheduleCondition} from './schedule';
-import type {Condition} from './util';
-import {handlers as sharedHandlers} from './util';
-import {handlers as prHandlers} from './pr';
+import type {Labels} from '../types.js';
+import type {Issues, Project, PullRequests, Schedule} from '../contexts/index.js';
+import type {IssueCondition} from './issue/index.js';
+import type {PrCondition} from './pr/index.js';
+import type {ProjectCondition} from './project/index.js';
+import type {ScheduleCondition} from './schedule/index.js';
+import type {Condition} from './util/index.js';
+import {handlers as sharedHandlers} from './util/index.js';
+import {handlers as prHandlers} from './pr/index.js';
 
-export type {Condition} from './util';
+export type {Condition} from './util/index.js';
 
 export type GeneralContext = {
 	currentVersion?: Version;
@@ -64,6 +64,10 @@ export type PrContext = {
 export type IssueContext = {
 	props: IssueProps;
 } & GeneralContext;
+
+export type ScheduleIssueContext = {
+	props: ScheduleIssueProps;
+};
 
 export type ProjectContext = {
 	props: ProjectProps;
@@ -98,6 +102,7 @@ export type ProjectProps = {
 } & Props & ProjectCardEvent;
 
 export type ScheduleProps = {type: 'schedule'} & Props;
+export type ScheduleIssueProps = {type: 'issue'} & Props & Omit<components['schemas']['issue'], 'labels'>;
 
 export type Version = {
 	name?: string;
@@ -133,7 +138,7 @@ export type UtilThis = Issues | PullRequests | Project | Schedule;
 /**
  * Props used instead of manually requiring props
  */
-export type UtilProps = IssueProps | PrProps | ProjectProps | ScheduleProps;
+export type UtilProps = IssueProps | PrProps | ProjectProps | ScheduleProps | ScheduleIssueProps;
 
 /**
  * Shared conditions used by all types of events.

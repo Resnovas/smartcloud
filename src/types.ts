@@ -38,7 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {GitHub} from '@actions/github/lib/utils';
+import type {GitHub} from '@actions/github/lib/utils.js';
 import type {SimpleGitOptions} from 'simple-git';
 import type {
 	IssueConditionConfig,
@@ -46,17 +46,17 @@ import type {
 	ProjectConditionConfig,
 	ScheduleConditionConfig,
 	SharedConditions,
-} from './conditions';
+} from './conditions/index.js';
 import type {
 	IssueConfig,
 	ProjectConfig,
 	PullRequestConfig,
 	ScheduleConfig,
-} from './contexts';
+} from './contexts/index.js';
 
-import type {Stale} from './contexts/methods/check-stale';
-import type {EnforceConventions} from './contexts/methods/conventions';
-import type {Repo} from './utils';
+import type {Stale} from './contexts/methods/check-stale.js';
+import type {EnforceConventions} from './contexts/methods/conventions.js';
+import type {Repo} from './utils/index.js';
 
 /**
  * The application options used within Github Actions workflows

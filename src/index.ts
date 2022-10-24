@@ -30,7 +30,7 @@
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
- * Last Modified: 23-10-2022
+ * Last Modified: 24-10-2022
  * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * Current Version: 1.0.0-beta.0
  * HISTORY:
@@ -38,33 +38,33 @@
  * ----------	---	---------------------------------------------------------
  */
 
+/* eslint-disable unicorn/no-await-expression-member */
+
 import fs from 'node:fs';
 import process, {cwd} from 'node:process';
 import * as core from '@actions/core';
 import {getOctokit} from '@actions/github';
-import {log, LoggingLevels} from './logging';
-import Action from './action';
-import type {Repo} from './utils';
-import type {Options} from './types';
+import {log, LoggingLevels} from './logging.js';
+import Action from './action.js';
+import type {Repo} from './utils/index.js';
+import type {Options} from './types.js';
 
-const localEx: boolean = fs.existsSync(cwd() + '../config.json');
+const localEx: boolean = fs.existsSync(cwd() + '/config.json');
 let local: any;
 let dryRun: boolean;
 let showLogs = false;
 let repo: Repo | undefined;
 
 if (localEx) {
-	try {
-		// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
-		// @ts-ignore
-		local = await import('../config.json');
-		dryRun = local.GH_ACTION_LOCAL_TEST as boolean ?? false;
-		showLogs = local.SHOW_LOGS as boolean ?? false;
-		repo = {
-			repo: local.GITHUB_REPOSITORY as string,
-			owner: local.GITHUB_REPOSITORY_OWNER as string,
-		};
-	} catch {}
+	// eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error, @typescript-eslint/ban-ts-comment
+	// @ts-ignore
+	local = (await import('../config.json', {assert: {type: 'json'}})).default;
+	dryRun = local.GH_ACTION_LOCAL_TEST as boolean ?? false;
+	showLogs = local.SHOW_LOGS as boolean ?? false;
+	repo = {
+		repo: local.GITHUB_REPOSITORY as string,
+		owner: local.GITHUB_REPOSITORY_OWNER as string,
+	};
 }
 
 /**
@@ -92,7 +92,7 @@ async function run() {
 	const skipDelete = Boolean(core.getInput('skipDelete') || local.SKIPDELETE);
 	const options: Options = {
 		configJson: localEx
-			? await import(local.configJson) as Options['configJson']
+			? (await import(local.configJson, {assert: {type: 'json'}})).default as Options['configJson']
 			: JSON.parse(core.getInput('configJson')) as Options['configJson'],
 		configPath: localEx ? local.configPath as string : core.getInput('config'),
 		configRef: localEx ? local.configRef as string : core.getInput('configRef'),

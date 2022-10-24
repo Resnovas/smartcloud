@@ -40,8 +40,8 @@
 
 /* eslint-disable complexity */
 
-import {log, LoggingLevels} from '../../logging';
-import type {Project} from '../projects';
+import {log, LoggingLevels} from '../../logging.js';
+import type {Project} from '../projects.js';
 
 /**
  * External projects configuration

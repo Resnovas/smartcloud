@@ -1,18 +1,19 @@
-/**
+/*
  * Project: @resnovas/smartcloud
  * File: index.ts
  * Path: \src\utils\index.ts
- * Created Date: Tuesday, September 6th 2022
- * Author: Jonathan Stevens
+ * Created Date: Saturday, October 8th 2022
+ * Author: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * -----
- * Last Modified: Sun Sep 25 2022
- * Modified By: Jonathan Stevens
- * Current Version: 1.0.0-beta.0
+ * Contributing: Please read through our contributing guidelines. Included are directions for opening
+ * issues, coding standards, and notes on development. These can be found at https://github.com/resnovas/smartcloud/CONTRIBUTING.md
+ *
+ * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
+ * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
  * Copyright (c) 2022 Resnovas - All Rights Reserved
- * -----
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
- *
+ * -----
  * This program has been provided under confidence of the copyright holder and is
  * licensed for copying, distribution and modification under the terms of
  * the GNU General Public License v3.0 or later (GPL-3.0+) published as the License,
@@ -24,11 +25,14 @@
  * GNU General Public License v3.0 or later for more details.
  *
  * You should have received a copy of the GNU General Public License v3.0 or later
- * along with this program. If not, please write to: jonathan@resnovas.com ,
+ * along with this program. If not, please write to: jonathan@resnovas.com,
  * or see https://www.gnu.org/licenses/gpl-3.0-standalone.html
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
+ * Last Modified: 23-10-2022
+ * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
+ * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
@@ -36,18 +40,18 @@
 
 import type {SimpleGit, SimpleGitOptions} from 'simple-git';
 import {simpleGit} from 'simple-git';
-import type {Github, Config, Label, Runners} from '../types';
-import type {Reviews, UtilThis} from '../conditions';
-import * as APIFiles from './api/files';
-import * as APIIssues from './api/issues';
-import * as APILabels from './api/labels';
-import * as APIProject from './api/project';
-import * as APIPullRequests from './api/pull-requests';
-import * as APITag from './api/tags';
-import * as UtilLabels from './labels';
-import * as UtilParsingData from './parsing-data';
-import * as UtilRespond from './respond';
-import * as UtilVersioning from './versioning';
+import type {Github, Config, Label, Runners} from '../types.js';
+import type {Reviews, UtilThis} from '../conditions/index.js';
+import * as APIFiles from './api/files.js';
+import * as APIIssues from './api/issues.js';
+import * as APILabels from './api/labels.js';
+import * as APIProject from './api/project.js';
+import * as APIPullRequests from './api/pull-requests.js';
+import * as APITag from './api/tags.js';
+import * as UtilLabels from './labels.js';
+import * as UtilParsingData from './parsing-data.js';
+import * as UtilRespond from './respond.js';
+import * as UtilVersioning from './versioning.js';
 
 export class Utils {
 	client: Github;

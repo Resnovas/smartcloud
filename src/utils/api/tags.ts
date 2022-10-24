@@ -38,7 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {Tags, Utils} from '..';
+import type {Tags, Utils} from '../index.js';
 
 export async function get(this: Utils): Promise<Tags> {
 	const result = await this.client.rest.repos.listTags({

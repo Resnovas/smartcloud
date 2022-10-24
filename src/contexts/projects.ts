@@ -39,17 +39,17 @@
  */
 
 import * as core from '@actions/core';
-import type {Context} from '@actions/github/lib/context';
+import type {Context} from '@actions/github/lib/context.js';
 import type {ProjectCardEvent} from '@octokit/webhooks-types';
-import type {Config, Runners, SharedConfig} from '../types';
-import type {CurContext, ProjectContext, Version} from '../conditions';
-import type {Utils} from '../utils';
-import {log, LoggingLevels} from '../logging';
-import {Contexts} from './methods';
-import type {Column} from './methods/conventions';
-import type {ProjectCreateBranch} from './methods/create-branch';
-import type {Milestones} from './methods/handle-milestone';
-import type {ExProjects} from './methods/sync-remote-project';
+import type {Config, Runners, SharedConfig} from '../types.js';
+import type {CurContext, ProjectContext, Version} from '../conditions/index.js';
+import type {Utils} from '../utils/index.js';
+import {log, LoggingLevels} from '../logging.js';
+import {Contexts} from './methods/index.js';
+import type {Column} from './methods/conventions.js';
+import type {ProjectCreateBranch} from './methods/create-branch.js';
+import type {Milestones} from './methods/handle-milestone.js';
+import type {ExProjects} from './methods/sync-remote-project.js';
 
 /**
  * The project configuration

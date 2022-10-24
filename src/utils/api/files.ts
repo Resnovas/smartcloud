@@ -40,7 +40,7 @@
 /* eslint-disable @typescript-eslint/naming-convention */
 import {Buffer} from 'node:buffer';
 import * as github from '@actions/github';
-import type {Utils} from '..';
+import type {Utils} from '../index.js';
 
 export async function get(
 	this: Utils,

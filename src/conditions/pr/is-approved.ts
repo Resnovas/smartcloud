@@ -38,8 +38,8 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {Issues, Project, PullRequests} from '../../contexts';
-import type {PrProps} from '..';
+import type {Issues, Project, PullRequests} from '../../contexts/index.js';
+import type {PrProps} from '../index.js';
 
 const type = 'isApproved';
 

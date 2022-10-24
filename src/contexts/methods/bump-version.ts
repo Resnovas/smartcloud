@@ -38,8 +38,8 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import {LoggingLevels, log} from '../../logging';
-import type {PullRequests} from '..';
+import {LoggingLevels, log} from '../../logging.js';
+import type {PullRequests} from '../index.js';
 
 export async function bumpVersion(this: PullRequests) {
 	const labels = this.config.manageRelease?.labels;

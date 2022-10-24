@@ -38,9 +38,9 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {PrConditionConfig} from '../../conditions';
-import type {Changelog} from './changelog';
-import type {CreateMilestone} from './handle-milestone';
+import type {PrConditionConfig} from '../../conditions/index.js';
+import type {Changelog} from './changelog.js';
+import type {CreateMilestone} from './handle-milestone.js';
 
 /**
  * The release configuration

@@ -38,7 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {UtilProps, UtilThis} from '..';
+import type {UtilProps, UtilThis} from '../index.js';
 
 const type = 'creatorMatches';
 

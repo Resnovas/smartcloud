@@ -38,12 +38,12 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {Condition} from '../util';
-import type {ConditiononColumn} from './on-column';
-import onColumn from './on-column';
+import type {Condition} from '../util/index.js';
+import type {ConditiononColumn} from './on-column.js';
+import onColumn from './on-column.js';
 
 export type ProjectCondition = Condition | ConditiononColumn;
 
 export const handlers = [onColumn];
 
-export type {ProjectProps} from '..';
+export type {ProjectProps} from '../index.js';

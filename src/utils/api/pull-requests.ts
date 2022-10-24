@@ -40,8 +40,8 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import type {Event, Utils} from '..';
-import type {Reviews} from '../../conditions';
+import type {Event, Utils} from '../index.js';
+import type {Reviews} from '../../conditions/index.js';
 
 export async function list(this: Utils, IDNumber: number) {
 	const files = await this.client.rest.pulls.listFiles({

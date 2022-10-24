@@ -1,6 +1,6 @@
 {
 	"name": "@resnovas/smartcloud",
-	"version": "1.0.0-beta.0",
+	"version": "1.0.0-beta.1",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/resnovas/smartcloud.git"
@@ -53,28 +53,56 @@
 		"setup"
 	],
 	"scripts": {
-		"package": "npm run tsc && ncc build --source-map --target es6",
-		"run": "npm run tsc && node lib/index.js",
+		"build": "cd docs && docusaurus build",
+		"clear": "cd docs && docusaurus clear",
+		"deploy": "cd docs && docusaurus deploy",
+		"docusaurus": "cd docs && docusaurus",
+		"serve": "cd docs && docusaurus serve",
+		"docs": "cd docs && docusaurus start",
+		"swizzle": "cd docs && docusaurus swizzle",
+		"write-heading-ids": "cd docs && docusaurus write-heading-ids",
+		"write-translations": "cd docs && docusaurus write-translations",
+		"package": "yarn tsc && ncc build --source-map --target es2022",
+		"run": "yarn tsc && node lib/index.js",
 		"schema": "typescript-json-schema ./tsconfig.json Runners -o schema.json  --propOrder --esModuleInterop --defaultProps --titles --topRef --refs --required --tsNodeRegister",
 		"tsc": "tsc -p tsconfig.json",
 		"postschema": "typescript-json-schema ./tsconfig.json Labels -o schema/labels.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
 		"preschema": "typescript-json-schema ./tsconfig.json Config -o schema/configs.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
-		"start": "xo --fix && gulp && all-contributors generate && git add . && yarn version --prerelease --no-git-tag-version",
-		"test": "xo --fix && gulp testall"
+		"start": "gulp && all-contributors generate && git add . && yarn version --prerelease --no-git-tag-version",
+		"test": "gulp testall"
 	},
 	"dependencies": {
 		"@actions/core": "^1.9.1",
 		"@actions/github": "^5.0.3",
+		"@docusaurus/core": "^2.1.0",
+		"@docusaurus/preset-classic": "^2.1.0",
+		"@docusaurus/theme-live-codeblock": "^2.1.0",
+		"@docusaurus/theme-search-algolia": "^2.1.0",
 		"@emotion/react": "^11.10.4",
 		"@emotion/styled": "^11.10.4",
+		"@json-editor/json-editor": "^2.9.0-beta.0",
+		"@knodes/typedoc-plugin-code-blocks": "^0.23.1",
+		"@mdx-js/react": "^1.6.22",
 		"@mui/material": "^5.10.6",
 		"@octokit/plugin-rest-endpoint-methods": "^6.6.2",
-		"@octokit/webhooks-types": "^6.4.0",
+		"@octokit/webhooks-types": "^6.6.0",
+		"@svgr/webpack": "^6.3.1",
 		"@typescript-eslint/parser": "^5.38.0",
+		"clsx": "^1.2.1",
+		"docusaurus-plugin-typedoc": "^0.17.5",
 		"eslint-config-xo": "^0.42.0",
 		"eslint-config-xo-typescript": "^0.53.0",
+		"file-loader": "^6.2.0",
 		"minimatch": "^5.1.0",
-		"simple-git": "^3.14.0"
+		"react": "^17.0.0",
+		"react-dom": "^17.0.0",
+		"remark-git-contributors": "^4.0.1",
+		"simple-git": "^3.14.0",
+		"typedoc": "^0.23.14",
+		"typedoc-plugin-markdown": "^3.13.6",
+		"typedoc-plugin-missing-exports": "^1.0.0",
+		"typescript": "^4.8.4",
+		"url-loader": "^4.1.1"
 	},
 	"devDependencies": {
 		"@types/jest": "29.0.0",
@@ -103,9 +131,9 @@
 		"prettier-standard": "^16.4.1",
 		"tslib": "^2.4.0",
 		"typedoc": "^0.23.14",
-		"typedoc-plugin-markdown": "^3.10.4",
 		"typescript": "*",
 		"typescript-json-schema": "^0.54.0",
-		"xo": "^0.52.3"
+		"xo": "^0.52.3",
+		"yarn": "^1.22.19"
 	}
 }

@@ -38,10 +38,10 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {Issues, PullRequests} from '..';
-import {log, LoggingLevels} from '../../logging';
-import type {IssueConditionConfig} from '../../conditions';
-import {evaluator} from '../../evaluator';
+import type {Issues, PullRequests} from '../index.js';
+import {log, LoggingLevels} from '../../logging.js';
+import type {IssueConditionConfig} from '../../conditions/index.js';
+import {evaluator} from '../../evaluator.js';
 
 /**
  * Assign project configuration

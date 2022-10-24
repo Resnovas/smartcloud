@@ -38,7 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {Condition} from '../util';
+import type {Condition} from '../util/index.js';
 
 export type IssueCondition = Condition;
 

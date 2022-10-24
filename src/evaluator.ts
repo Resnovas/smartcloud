@@ -38,23 +38,23 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import {log, LoggingLevels} from './logging';
+import {log, LoggingLevels} from './logging.js';
 
 import type {
 	IssueConditionConfig,
 	PrConditionConfig,
 	ProjectConditionConfig,
 	UtilProps,
-	UtilThis} from './conditions';
+	UtilThis} from './conditions/index.js';
 import {
 	getConditionHandler,
-} from './conditions';
+} from './conditions/index.js';
 
-import type {SharedConventionsConfig} from './contexts/methods/conventions';
-import type {IssueCondition} from './conditions/issue';
-import type {PrCondition} from './conditions/pr';
-import type {ProjectCondition} from './conditions/project';
-import type {ScheduleCondition} from './conditions/schedule';
+import type {SharedConventionsConfig} from './contexts/methods/conventions.js';
+import type {IssueCondition} from './conditions/issue/index.js';
+import type {PrCondition} from './conditions/pr/index.js';
+import type {ProjectCondition} from './conditions/project/index.js';
+import type {ScheduleCondition} from './conditions/schedule/index.js';
 
 const forConditions = async (
 	conditions: Array<IssueCondition | PrCondition | ProjectCondition | ScheduleCondition>,

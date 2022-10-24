@@ -38,21 +38,21 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {Condition} from '../util';
-import type {ConditionBranchMatches} from './branch-matches';
-import branchMatches from './branch-matches';
-import type {ConditionChangesSize} from './changes-size';
-import changesSize from './changes-size';
-import type {ConditionFilesMatch} from './files-match';
-import filesMatch from './files-match';
-import type {ConditionisApproved} from './is-approved';
-import isApproved from './is-approved';
-import type {ConditionIsDraft} from './is-draft';
-import isDraft from './is-draft';
-import type {ConditionPendingReview} from './pending-review';
-import pendingReview from './pending-review';
-import type {ConditionRequestedChanges} from './requested-changes';
-import requestedChanges from './requested-changes';
+import type {Condition} from '../util/index.js';
+import type {ConditionBranchMatches} from './branch-matches.js';
+import branchMatches from './branch-matches.js';
+import type {ConditionChangesSize} from './changes-size.js';
+import changesSize from './changes-size.js';
+import type {ConditionFilesMatch} from './files-match.js';
+import filesMatch from './files-match.js';
+import type {ConditionisApproved} from './is-approved.js';
+import isApproved from './is-approved.js';
+import type {ConditionIsDraft} from './is-draft.js';
+import isDraft from './is-draft.js';
+import type {ConditionPendingReview} from './pending-review.js';
+import pendingReview from './pending-review.js';
+import type {ConditionRequestedChanges} from './requested-changes.js';
+import requestedChanges from './requested-changes.js';
 
 export type PrCondition =
 	| Condition

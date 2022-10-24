@@ -39,10 +39,10 @@
  */
 
 import path from 'node:path';
-import {log, LoggingLevels} from '../logging';
-import type {Config} from '../types';
-import type {Version} from '../conditions';
-import type {Utils} from '.';
+import {log, LoggingLevels} from '../logging.js';
+import type {Config} from '../types.js';
+import type {Version} from '../conditions/index.js';
+import type {Utils} from './index.js';
 
 /**
  * Gets the version information

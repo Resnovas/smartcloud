@@ -30,7 +30,7 @@
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
- * Last Modified: 23-10-2022
+ * Last Modified: 25-10-2022
  * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * Current Version: 1.0.0-beta.0
  * HISTORY:
@@ -48,8 +48,8 @@ import {Testing} from './.gulp/testing.js';
 
 const {src, dest, series} = pkg;
 
-const format = () =>
-	src('package.json').pipe(exec('npm run xo --fix')).pipe(exec.reporter());
+// const format = () =>
+// 	src('package.json').pipe(exec('npm run xo --fix')).pipe(exec.reporter());
 
 // Const schema = () =>
 // 	src('package.json').pipe(exec('npm run schema')).pipe(exec.reporter());
@@ -98,4 +98,4 @@ const release = series(
 			.pipe(dest('.github')),
 );
 
-export default series(release, testall, format);
+export default series(release, testall, /* format */);

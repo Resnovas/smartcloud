@@ -39,11 +39,11 @@
  */
 
 import * as core from '@actions/core';
-import {LoggingLevels, log} from '../../logging';
-import type {PullRequests} from '..';
+import {LoggingLevels, log} from '../../logging.js';
+import type {PullRequests} from '../index.js';
 
-import {evaluator} from '../../evaluator';
-import type {SharedConventionsConfig} from './conventions';
+import {evaluator} from '../../evaluator.js';
+import type {SharedConventionsConfig} from './conventions.js';
 
 /**
  * Automatic Approval configuration

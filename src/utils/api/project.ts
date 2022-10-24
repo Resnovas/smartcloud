@@ -40,7 +40,7 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import type {Utils} from '..';
+import type {Utils} from '../index.js';
 
 export const column = {
 	async list(this: Utils, project_id: number) {

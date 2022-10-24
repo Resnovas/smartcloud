@@ -39,15 +39,15 @@
  */
 
 import * as core from '@actions/core';
-import type {Context} from '@actions/github/lib/context';
+import type {Context} from '@actions/github/lib/context.js';
 import type {IssuesEvent, IssueCommentEvent} from '@octokit/webhooks-types';
-import {log, LoggingLevels} from '../logging';
-import type {Config, Runners, SharedConfig} from '../types';
-import type {CurContext, IssueContext, Version} from '../conditions';
-import type {Utils} from '../utils';
-import {Contexts} from './methods';
-import type {AssignProject} from './methods/assign-project';
-import type {CreateBranch} from './methods/create-branch';
+import {log, LoggingLevels} from '../logging.js';
+import type {Config, Runners, SharedConfig} from '../types.js';
+import type {CurContext, IssueContext, Version} from '../conditions/index.js';
+import type {Utils} from '../utils/index.js';
+import {Contexts} from './methods/index.js';
+import type {AssignProject} from './methods/assign-project.js';
+import type {CreateBranch} from './methods/create-branch.js';
 
 /**
  * The issue configuration

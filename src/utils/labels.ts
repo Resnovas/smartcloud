@@ -39,10 +39,10 @@
  */
 /* eslint-disable no-await-in-loop */
 
-import {log, LoggingLevels} from '../logging';
-import type {Labels, Runners} from '../types';
-import {formatColor} from './parsing-data';
-import type {Utils} from '.';
+import {log, LoggingLevels} from '../logging.js';
+import type {Labels, Runners} from '../types.js';
+import {formatColor} from './parsing-data.js';
+import type {Utils} from './index.js';
 
 /**
  * Syncronise labels to repository

@@ -44,8 +44,8 @@ import type {
 	ProjectConditionConfig,
 	UtilProps,
 	UtilThis,
-} from '..';
-import {evaluator} from '../../evaluator';
+} from '../index.js';
+import {evaluator} from '../../evaluator.js';
 
 const type = '$only';
 

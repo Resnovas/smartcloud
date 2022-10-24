@@ -30,51 +30,51 @@
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
- * Last Modified: 23-10-2022
+ * Last Modified: 24-10-2022
  * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * Current Version: 1.0.0-beta.0
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
  */
-
 import process from 'node:process';
-import type {Config, Runners, SharedConfig} from '../../types';
+import type {Config, Runners, SharedConfig} from '../../types.js';
 import type {
 	CurContext,
 	IssueContext,
 	PrContext,
 	ProjectContext,
 	ScheduleContext,
+	ScheduleIssueContext,
 	UtilThis,
 	Version,
-} from '../../conditions';
-import type {Schedule} from '../schedule';
-import type {Utils, Event} from '../../utils';
-import type {IssueConfig, Issues} from '../issues';
-import type {ProjectConfig, Project} from '../projects';
-import type {PullRequestConfig, PullRequests} from '../pull-requests';
-import {log, LoggingLevels} from '../../logging';
-import {applyLabels} from './apply-labels';
-import {assignProject} from './assign-project';
-import {automaticApprove} from './auto-approve';
-import {bumpVersion} from './bump-version';
-import {checkStale} from './check-stale';
-import * as conventions from './conventions';
-import {requestApprovals} from './request-approvals';
-import {syncRemoteProject} from './sync-remote-project';
+} from '../../conditions/index.js';
+import type {Schedule} from '../schedule.js';
+import type {Utils, Event} from '../../utils/index.js';
+import type {IssueConfig, Issues} from '../issues.js';
+import type {ProjectConfig, Project} from '../projects.js';
+import type {PullRequestConfig, PullRequests} from '../pull-requests.js';
+import {log, LoggingLevels} from '../../logging.js';
+import {applyLabels} from './apply-labels.js';
+import {assignProject} from './assign-project.js';
+import {automaticApprove} from './auto-approve.js';
+import {bumpVersion} from './bump-version.js';
+import {checkStale} from './check-stale.js';
+import * as conventions from './conventions.js';
+import {requestApprovals} from './request-approvals.js';
+import {syncRemoteProject} from './sync-remote-project.js';
 
-export * from './apply-labels';
-export * from './assign-project';
-export * from './auto-approve';
-export * from './changelog';
-export * from './check-stale';
-export * from './conventions';
-export * from './create-branch';
-export * from './handle-milestone';
-export * from './release';
-export * from './sync-remote-project';
-export * from './sync-remote-repo';
+export * from './apply-labels.js';
+export * from './assign-project.js';
+export * from './auto-approve.js';
+export * from './changelog.js';
+export * from './check-stale.js';
+export * from './conventions.js';
+export * from './create-branch.js';
+export * from './handle-milestone.js';
+export * from './release.js';
+export * from './sync-remote-project.js';
+export * from './sync-remote-repo.js';
 
 export class Contexts {
 	runners: Runners;
@@ -144,7 +144,7 @@ export class Contexts {
 	applyLabels = async (that: UtilThis) => applyLabels.bind(that);
 	checkStale = async (
 		that: UtilThis,
-		context?: IssueContext | ScheduleContext | PrContext | ProjectContext,
+		context?: IssueContext | ScheduleContext | PrContext | ProjectContext | ScheduleIssueContext,
 		config?: SharedConfig | IssueConfig | PullRequestConfig | ProjectConfig,
 	) => checkStale.call(that, context, config);
 

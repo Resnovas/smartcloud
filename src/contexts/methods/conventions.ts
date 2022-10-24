@@ -40,10 +40,10 @@
 
 /* eslint-disable no-await-in-loop */
 import * as core from '@actions/core';
-import {log, LoggingLevels} from '../../logging';
-import type {Condition, SharedConventionConditions, UtilThis} from '../../conditions';
-import {evaluator} from '../../evaluator';
-import {semantic} from '../../utils/helper/semantic';
+import {log, LoggingLevels} from '../../logging.js';
+import type {Condition, SharedConventionConditions, UtilThis} from '../../conditions/index.js';
+import {evaluator} from '../../evaluator.js';
+import {semantic} from '../../utils/helper/semantic.js';
 
 /**
  * The enforce conventions configuration

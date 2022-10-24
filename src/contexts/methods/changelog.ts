@@ -38,7 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {ReleaseChanges} from './release';
+import type {ReleaseChanges} from './release.js';
 /**
  * Changelog
  */

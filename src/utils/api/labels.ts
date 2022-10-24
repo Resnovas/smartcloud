@@ -40,8 +40,8 @@
 
 /* eslint-disable @typescript-eslint/naming-convention */
 
-import type {Utils} from '..';
-import type {Label, Labels} from '../../types';
+import type {Utils} from '../index.js';
+import type {Label, Labels} from '../../types.js';
 
 export async function add(this: Utils, IDNumber: number, label: string) {
 	await this.client.rest.issues.addLabels({

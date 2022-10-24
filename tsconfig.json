@@ -3,9 +3,8 @@
     "rootDir": "src",
     "outDir": "lib",
     "target": "esnext",
-    "module": "esnext",
-    "incremental": true,
-    "moduleResolution": "node",
+    "module": "ESNext",
+    "moduleResolution": "nodenext",
     "declaration": true,
     "inlineSourceMap": true,
     "esModuleInterop": true /* Enables emit interoperability between CommonJS and ES Modules via creation of namespace objects for all imports. Implies 'allowSyntheticDefaultImports'. */,
@@ -21,8 +20,6 @@
     "alwaysStrict": true /* Parse in strict mode and emit "use strict" for each source file. */,
     "strictBindCallApply": true /* Enable strict 'bind', 'call', and 'apply' methods on functions. */,
     "skipLibCheck": true /* Skip type checking of declaration files. */,
-    "forceConsistentCasingInFileNames": true /* Report consistent errors for inconsistent casing across the codebase. */,
-    "allowJs": true /* Allow javascript files to be compiled. */,
     "allowSyntheticDefaultImports": true /* Allow default imports from modules with no default export. This does not affect code emit, just typechecking. */,
     /* Additional Checks */
     "noUnusedLocals": true /* Report errors on unused locals. */,
@@ -32,23 +29,19 @@
     "noEmitHelpers": true /* Do not emit helpers for async functions. */,
     "noUncheckedIndexedAccess": true /* Add undefined to any un-declared field in the type. */,
     /* Debugging Options */
-    "traceResolution": false /* Report module resolution log messages. */,
-    "listEmittedFiles": false /* Print names of generated files part of the compilation. */,
-    "listFiles": false /* Print names of files part of the compilation. */,
     "pretty": true /* Stylize errors and messages using color and context. */,
     /* Experimental Options */
     "experimentalDecorators": true /* Enables experimental support for ES7 decorators. */,
-    "emitDecoratorMetadata": true /* Enables experimental support for emitting type metadata for decorators. */,
-    "typeRoots": [
-      "../node_modules/@types",
-      "src/**/types"
-    ]
-    // "types": ["node"]
+    "emitDecoratorMetadata": true /* Enables experimental support for emitting type metadata for decorators. */
   },
   "compileOnSave": false,
+  "include": [
+    "src/**/*.ts",
+  ],
   "exclude": [
     "node_modules",
     "**/*.test.ts",
+    "lib",
     "dist",
     "docs",
     "gulpfile.js",

@@ -38,9 +38,9 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import {log, LoggingLevels} from '../../logging';
-import {evaluator} from '../../evaluator';
-import type {UtilThis} from '../../conditions';
+import {log, LoggingLevels} from '../../logging.js';
+import {evaluator} from '../../evaluator.js';
+import type {UtilThis} from '../../conditions/index.js';
 
 export async function applyLabels(this: UtilThis) {
 	if (!this.config?.labels || !this.runnerConfigs.labels) {

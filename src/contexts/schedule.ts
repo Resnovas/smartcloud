@@ -30,7 +30,7 @@
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
- * Last Modified: 23-10-2022
+ * Last Modified: 25-10-2022
  * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * Current Version: 1.0.0-beta.0
  * HISTORY:
@@ -39,12 +39,12 @@
  */
 
 import * as core from '@actions/core';
-import type {Context} from '@actions/github/lib/context';
-import {log, LoggingLevels} from '../logging';
-import type {Config, Runners, SharedConfig} from '../types';
-import type {CurContext, IssueContext, ScheduleContext} from '../conditions';
-import type {Utils} from '../utils';
-import {Contexts} from './methods';
+import type {Context} from '@actions/github/lib/context.js';
+import {log, LoggingLevels} from '../logging.js';
+import type {Config, Runners, SharedConfig} from '../types.js';
+import type {CurContext, ScheduleContext, ScheduleIssueContext} from '../conditions/index.js';
+import type {Utils} from '../utils/index.js';
+import {Contexts} from './methods/index.js';
 
 /**
  * The schedule configuration
@@ -130,14 +130,11 @@ export class Schedule extends Contexts {
 						));
 					});
 
-				const context: IssueContext = {
+				const context: ScheduleIssueContext = {
 					...this.ctx,
-
-					// Todo: ask for advice on how to resolve
-					// @ts-expect-error due to the range of possible types, it throws an error even though its fully populated
 					props: {
-						type: 'issue',
 						...issue,
+						type: 'issue',
 						labels,
 					},
 				};

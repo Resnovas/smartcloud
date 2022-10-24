@@ -30,7 +30,7 @@
  * 
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
- * Last Modified: 23-10-2022
+ * Last Modified: 25-10-2022
  * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
  * Current Version: 1.0.0-beta.0
  * HISTORY:
@@ -56,7 +56,7 @@ export class Testing {
   };
   static cleanup = () => {
     return src("package.json")
-      .pipe(exec(`cd src; del config.json,context.json`))
+      .pipe(exec(`del config.json,context.json`))
       .pipe(exec.reporter());
   };
   static copy = {

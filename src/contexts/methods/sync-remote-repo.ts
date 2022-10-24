@@ -38,7 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import type {SharedConditions} from '../../conditions';
+import type {SharedConditions} from '../../conditions/index.js';
 
 /**
  * Sync Remote configuration

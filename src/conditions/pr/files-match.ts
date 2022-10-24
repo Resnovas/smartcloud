@@ -38,9 +38,9 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import {match} from 'minimatch';
-import type {Issues, Project, PullRequests} from '../../contexts';
-import type {PrProps} from '..';
+import match from 'minimatch';
+import type {Issues, Project, PullRequests} from '../../contexts/index.js';
+import type {PrProps} from '../index.js';
 
 const type = 'filesMatch';
 
@@ -70,7 +70,7 @@ function filesMatch(
 	condition: ConditionFilesMatch,
 	context: PrProps,
 ) {
-	return match(context.files, condition.condition).length > 0;
+	return match.match(context.files, condition.condition).length > 0;
 }
 
 export default [type, filesMatch] as const;
