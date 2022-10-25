@@ -34,11 +34,7 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - run: yarn install --frozen-lockfile
-        working-directory: docs
-
       - run: yarn build
-        working-directory: docs
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v3
