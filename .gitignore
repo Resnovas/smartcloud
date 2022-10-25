@@ -3,7 +3,6 @@ node_modules
 docs/output
 context.json
 contexts/config.json
-lib/
 docs/build
 docs/.docusaurus
 
@@ -104,7 +103,6 @@ Thumbs.db
 
 # Ignore built ts files
 __tests__/runner/*
-lib/**/*
 
 # Blackbox files
 .blackbox/
