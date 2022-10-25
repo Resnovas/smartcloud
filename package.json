@@ -68,7 +68,7 @@
 		"tsc": "tsc -p tsconfig.json",
 		"postschema": "typescript-json-schema ./tsconfig.json Labels -o schema/labels.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
 		"preschema": "typescript-json-schema ./tsconfig.json Config -o schema/configs.json  --propOrder --defaultProps --titles --topRef --esModuleInterop --refs --required --tsNodeRegister",
-		"start": "gulp && all-contributors generate && git add . && yarn version --prerelease --no-git-tag-version",
+		"start": "gulp && all-contributors generate && git add . && yarn version --prerelease --no-git-tag-version && yarn deploy",
 		"test": "gulp testall"
 	},
 	"dependencies": {
