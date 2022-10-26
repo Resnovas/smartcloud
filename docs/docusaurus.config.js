@@ -7,8 +7,8 @@ module.exports = {
   title: "Smartcloud",
   tagline:
     "The most advanced github action, with functionality overflowing and declaritive configuration to streamline your entire github workflow!",
-  url: "https://resnovas.github.io",
-  baseUrl: "/smartcloud/",
+  url: process.env.VERCEL_URL ?? "https://resnovas.github.io",
+  baseUrl: process.env.VERCEL_URL ? "/" : "/smartcloud/",
   onBrokenLinks: "throw",
   onBrokenMarkdownLinks: "warn",
   favicon: "img/favicon.ico",
