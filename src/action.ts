@@ -45,6 +45,7 @@ import fs from 'node:fs';
 import process, {cwd} from 'node:process';
 import * as core from '@actions/core';
 import {context as GHContext} from '@actions/github';
+import type {Context} from '@actions/github/lib/context.js';
 import type {
 	CurContext,
 } from './conditions/index.js';
@@ -57,19 +58,6 @@ const localEx: boolean = fs.existsSync(cwd() + '/config.json');
 let local: any;
 let context = GHContext;
 
-if (localEx) {
-	// eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error, @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-
-	local = (await import('../config.json', {assert: {type: 'json'}}));
-	process.env.GITHUB_REPOSITORY = local.default.GITHUB_REPOSITORY;
-	process.env.GITHUB_REPOSITORY_OWNER = local.default.GITHUB_REPOSITORY_OWNER;
-	if (!context.payload.issue && !context.payload.pull_request) {
-		// eslint-disable-next-line unicorn/no-await-expression-member
-		context = (await import(local.default.github_context, {assert: {type: 'json'}})).default;
-	}
-}
-
 export default class Action {
 	client: Github;
 	opts: Options;
@@ -78,8 +66,8 @@ export default class Action {
 	configRef: Options['configRef'];
 	dryRun: Options['dryRun'];
 	fillEmpty: Options['fillEmpty'];
-	repo = context.repo || {};
-	util: Utils;
+	repo!: Context['repo'];
+	util!: Utils;
 	ref?: string;
 
 	constructor(client: Github, options: Options) {
@@ -87,35 +75,49 @@ export default class Action {
 		this.client = client;
 		this.opts = options;
 		this.dryRun = options.dryRun;
-		if (this.dryRun) {
-			if (options.repo) {
-				this.repo = options.repo;
-			}
-
-			if (!options.repo?.repo) {
-				this.repo.repo = process.env.GITHUB_REPOSITORY ?? 'Unknown';
-			}
-
-			if (!options.repo?.owner) {
-				this.repo.owner = process.env.GITHUB_REPOSITORY_OWNER ?? 'Unknown';
-			}
-		}
-
 		this.configJson = options.configJson;
 		this.configPath = options.configPath;
 		this.configRef = options.configRef;
 		this.fillEmpty = options.fillEmpty;
 		this.ref = options.ref ?? context.ref;
-		this.util = new Utils(
-			{client, repo: this.repo},
-			{dryRun: options.dryRun, skipDelete: options.skipDelete, ref: this.ref},
-			{
-				git: options.git,
-			},
-		);
 	}
 
 	async run() {
+		if (localEx) {
+			// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
+			// @ts-ignore
+			local = await import('../config.json');
+			process.env.GITHUB_REPOSITORY = local.GITHUB_REPOSITORY;
+			process.env.GITHUB_REPOSITORY_OWNER = local.GITHUB_REPOSITORY_OWNER;
+			if (!context.payload.issue && !context.payload.pull_request) {
+				context = await import(local.github_context) as Context;
+			}
+		}
+
+		this.repo = context.repo;
+
+		if (this.dryRun) {
+			if (this.opts.repo) {
+				this.repo = this.opts.repo;
+			}
+
+			if (!this.opts.repo?.repo) {
+				this.repo.repo = process.env.GITHUB_REPOSITORY ?? 'Unknown';
+			}
+
+			if (!this.opts.repo?.owner) {
+				this.repo.owner = process.env.GITHUB_REPOSITORY_OWNER ?? 'Unknown';
+			}
+		}
+
+		this.util = new Utils(
+			{client: this.client, repo: this.repo},
+			{dryRun: this.opts.dryRun, skipDelete: this.opts.skipDelete, ref: this.ref},
+			{
+				git: this.opts.git,
+			},
+		);
+
 		log(LoggingLevels.debug, `Repo data: ${this.repo.owner}/${this.repo.repo}`);
 
 		/**
@@ -134,11 +136,12 @@ export default class Action {
 		 * @author TGTGamer
 		 * @since 1.1.0
 		 */
-		const configs = await this.processConfig().catch(async error => {
-			throw new Error(log(
+		const configs = await this.processConfig().catch(async (error: Error) => {
+			log(
 				LoggingLevels.error,
 				'Error thrown while processing config: ' + String(error),
-			));
+			);
+			throw error;
 		});
 		if (!configs.runners[0]) {
 			throw new Error(log(LoggingLevels.error, 'No config data.'));
@@ -154,11 +157,12 @@ export default class Action {
 			 */
 			core.startGroup('label Actions');
 			log(LoggingLevels.debug, 'Attempting to apply labels');
-			await this.syncLabels(configs).catch(async error => {
-				throw new Error(log(
+			await this.syncLabels(configs).catch(async (error: Error) => {
+				log(
 					LoggingLevels.error,
 					'Error thrown while syncronising labels: ' + String(error),
-				));
+				);
+				throw error;
 			});
 			log(LoggingLevels.notice, 'Successfully applied all labels');
 			core.endGroup();
@@ -179,11 +183,12 @@ export default class Action {
 			 * @since 1.1.0
 			 */
 			const curContext = await this.processContext(config).catch(
-				async error => {
-					throw new Error(log(
+				async (error: Error) => {
+					log(
 						LoggingLevels.error,
 						'Error thrown while processing context: ' + String(error),
-					));
+					);
+					throw error;
 				},
 			);
 			log(
@@ -295,11 +300,12 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await PullRequests.parse(this.util, config, context).catch(
-				async error => {
-					throw new Error(log(
+				async (error: Error) => {
+					log(
 						LoggingLevels.error,
 						'Error thrown while parsing PR context: ' + String(error),
-					));
+					);
+					throw error;
 				},
 			);
 			if (!ctx) {
@@ -318,11 +324,12 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await Issues.parse(this.util, config, context).catch(
-				async error => {
-					throw new Error(log(
+				async (error: Error) => {
+					log(
 						LoggingLevels.error,
 						'Error thrown while parsing issue context: ' + String(error),
-					));
+					);
+					throw error;
 				},
 			);
 			if (!ctx) {
@@ -342,11 +349,12 @@ export default class Action {
 			 * @since 1.0.0
 			 */
 			const ctx = await Project.parse(this.util, config, context).catch(
-				async error => {
-					throw new Error(log(
+				async (error: Error) => {
+					log(
 						LoggingLevels.error,
 						'Error thrown while parsing Project context: ' + String(error),
-					));
+					);
+					throw error;
 				},
 			);
 			if (!ctx) {
@@ -365,11 +373,12 @@ export default class Action {
 			 * @author TGTGamer
 			 * @since 1.0.0
 			 */
-			const ctx = await Schedule.parse(context).catch(async error => {
-				throw new Error(log(
+			const ctx = await Schedule.parse(context).catch(async (error: Error) => {
+				log(
 					LoggingLevels.error,
 					'Error thrown while parsing Schedule context: ' + String(error),
-				));
+				);
+				throw error;
 			});
 			if (!ctx) {
 				throw new Error('Schedule not found on context');
@@ -416,12 +425,13 @@ export default class Action {
 			{},
 		);
 
-		await this.util.labels.sync(labels).catch(async error => {
-			throw new Error(log(
+		await this.util.labels.sync(labels).catch(async (error: Error) => {
+			log(
 				LoggingLevels.error,
 				'Error thrown while handling syncLabels tasks:'
 				+ String(error),
-			));
+			);
+			throw error;
 		});
 	}
 
@@ -449,11 +459,12 @@ export default class Action {
 			throw new Error(log(LoggingLevels.error, 'Context not found'));
 		}
 
-		ctx.run().catch(async error => {
-			throw new Error(log(
+		ctx.run().catch(async (error: Error) => {
+			log(
 				LoggingLevels.error,
 				'Error thrown while running context: ' + String(error),
-			));
+			);
+			throw error;
 		});
 	}
 }

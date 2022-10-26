@@ -38,8 +38,6 @@
  * ----------	---	---------------------------------------------------------
  */
 
-/* eslint-disable unicorn/no-await-expression-member */
-
 import fs from 'node:fs';
 import process, {cwd} from 'node:process';
 import * as core from '@actions/core';
@@ -55,24 +53,23 @@ let dryRun: boolean;
 let showLogs = false;
 let repo: Repo | undefined;
 
-if (localEx) {
-	// eslint-disable-next-line @typescript-eslint/prefer-ts-expect-error, @typescript-eslint/ban-ts-comment
-	// @ts-ignore
-	local = (await import('../config.json', {assert: {type: 'json'}})).default;
-	dryRun = local.GH_ACTION_LOCAL_TEST as boolean ?? false;
-	showLogs = local.SHOW_LOGS as boolean ?? false;
-	repo = {
-		repo: local.GITHUB_REPOSITORY as string,
-		owner: local.GITHUB_REPOSITORY_OWNER as string,
-	};
-}
-
 /**
  * Runs the action
  * @author TGTGamer
  * @since 1.0.0
  */
 async function run() {
+	if (localEx) {
+		local = await import('../config.json');
+		console.log(local);
+		dryRun = local.GH_ACTION_LOCAL_TEST as boolean ?? false;
+		showLogs = local.SHOW_LOGS as boolean ?? false;
+		repo = {
+			repo: local.GITHUB_REPOSITORY as string,
+			owner: local.GITHUB_REPOSITORY_OWNER as string,
+		};
+	}
+
 	if (dryRun) {
 		log(
 			LoggingLevels.notice,
@@ -92,7 +89,7 @@ async function run() {
 	const skipDelete = Boolean(core.getInput('skipDelete') || local.SKIPDELETE);
 	const options: Options = {
 		configJson: localEx
-			? (await import(local.configJson, {assert: {type: 'json'}})).default as Options['configJson']
+			? (await import(local.configJson)) as Options['configJson']
 			: JSON.parse(core.getInput('configJson')) as Options['configJson'],
 		configPath: localEx ? local.configPath as string : core.getInput('config'),
 		configRef: localEx ? local.configRef as string : core.getInput('configRef'),
@@ -104,19 +101,21 @@ async function run() {
 		ref: localEx ? local.ref as string : undefined,
 	};
 	const action = new Action(getOctokit(GITHUB_TOKEN), options);
-	action.run().catch(async error => {
-		throw new Error(log(
+	action.run().catch(async (error: Error) => {
+		log(
 			LoggingLevels.emergency,
 			`${String(process.env.NPM_PACKAGE_NAME)} did not complete due to error:`
 			+ String(error),
-		));
+		);
+		throw error;
 	});
 }
 
-run().catch(async error => {
-	throw new Error(log(
+run().catch(async (error: Error) => {
+	log(
 		LoggingLevels.emergency,
 		`${String(process.env.NPM_PACKAGE_NAME)} did not complete due to error:`
 		+ String(error),
-	));
+	);
+	throw error;
 });

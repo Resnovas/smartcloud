@@ -1,6 +1,6 @@
 {
 	"name": "@resnovas/smartcloud",
-	"version": "1.0.0-beta.1",
+	"version": "1.0.0-beta.2",
 	"repository": {
 		"type": "git",
 		"url": "https://github.com/resnovas/smartcloud.git"
@@ -22,7 +22,6 @@
 	"private": false,
 	"main": "lib/index.js",
 	"typings": "./lib/index.d.ts",
-	"type": "module",
 	"eslintConfig": {
 		"extends": [
 			"xo",
@@ -62,7 +61,7 @@
 		"swizzle": "cd docs && docusaurus swizzle",
 		"write-heading-ids": "cd docs && docusaurus write-heading-ids",
 		"write-translations": "cd docs && docusaurus write-translations",
-		"package": "yarn tsc && ncc build --source-map --target es2022",
+		"package": "yarn tsc && ncc build --source-map --target es2021",
 		"run": "yarn tsc && node lib/index.js",
 		"schema": "typescript-json-schema ./tsconfig.json Runners -o schema.json  --propOrder --esModuleInterop --defaultProps --titles --topRef --refs --required --tsNodeRegister",
 		"tsc": "tsc -p tsconfig.json",

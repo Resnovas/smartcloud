@@ -38,12 +38,12 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import rename from "gulp-rename";
-import exec from "gulp-exec";
-import pkg from 'gulp';
+const rename = require("gulp-rename")
+const exec = require("gulp-exec")
+const pkg = require('gulp')
 const { src, dest } = pkg
 
-export class Testing {
+class Testing {
   static run = () => {
     return src("package.json")
       .pipe(exec(`npm run run`))
@@ -103,3 +103,4 @@ export class Testing {
     },
   };
 }
+exports.Testing = Testing

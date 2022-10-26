@@ -38,13 +38,13 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import rename from 'gulp-rename';
-import exec from 'gulp-exec';
-import jsonMerge from 'gulp-merge-json';
-import jsonFmt from 'gulp-json-fmt';
-import jsonConfig from 'gulp-json-config';
-import pkg from 'gulp';
-import {Testing} from './.gulp/testing.js';
+const rename = require('gulp-rename')
+const exec = require('gulp-exec')
+const jsonMerge = require('gulp-merge-json')
+const jsonFmt = require('gulp-json-fmt')
+const jsonConfig = require('gulp-json-config')
+const pkg = require('gulp')
+const {Testing} = require('./.gulp/testing.js')
 
 const {src, dest, series} = pkg;
 
@@ -54,7 +54,7 @@ const {src, dest, series} = pkg;
 // Const schema = () =>
 // 	src('package.json').pipe(exec('npm run schema')).pipe(exec.reporter());
 
-export const testall = series(
+const testall = series(
 	Testing.copy.config,
 	// Schema,
 	Testing.copy.context.issue,
@@ -65,9 +65,10 @@ export const testall = series(
 	// Testing.run,
 	Testing.copy.context.schedule,
 	Testing.run,
-	Testing.cleanup,
 	Testing.package,
+	Testing.cleanup,
 );
+exports.testall = testall
 
 const release = series(
 	() =>
@@ -98,4 +99,4 @@ const release = series(
 			.pipe(dest('.github')),
 );
 
-export default series(release, testall, /* format */);
+exports.default = series(release, testall, /* format */);

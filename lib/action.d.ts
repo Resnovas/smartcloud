@@ -1,3 +1,4 @@
+import type { Context } from '@actions/github/lib/context.js';
 import type { CurContext } from './conditions/index.js';
 import { Utils } from './utils/index.js';
 import type { Options, Github, Config, Runners } from './types.js';
@@ -9,10 +10,7 @@ export default class Action {
     configRef: Options['configRef'];
     dryRun: Options['dryRun'];
     fillEmpty: Options['fillEmpty'];
-    repo: {
-        owner: string;
-        repo: string;
-    };
+    repo: Context['repo'];
     util: Utils;
     ref?: string;
     constructor(client: Github, options: Options);
