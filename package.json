@@ -106,7 +106,7 @@
 	"devDependencies": {
 		"@types/jest": "29.0.0",
 		"@types/minimatch": "^5.1.2",
-		"@types/node": "^18.7.15",
+		"@types/node": "^18.11.17",
 		"@types/nodegit": "^0.27.3",
 		"@typescript-eslint/eslint-plugin": "^5.38.0",
 		"@vercel/ncc": "^0.34.0",
