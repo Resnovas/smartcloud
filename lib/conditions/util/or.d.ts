@@ -1,6 +1,6 @@
 import type { IssueConditionConfig, PrConditionConfig, ProjectConditionConfig, UtilProps, UtilThis } from '../index.js';
 declare const type = "$or";
-export declare type ConditionOr = {
+export type ConditionOr = {
     type: typeof type;
     condition: Array<PrConditionConfig | IssueConditionConfig | ProjectConditionConfig>;
 };

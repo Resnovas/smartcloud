@@ -10,28 +10,28 @@ import type { ProjectCondition } from './project/index.js';
 import type { ScheduleCondition } from './schedule/index.js';
 import type { Condition } from './util/index.js';
 export type { Condition } from './util/index.js';
-export declare type GeneralContext = {
+export type GeneralContext = {
     currentVersion?: Version;
 } & Context;
-export declare type PrContext = {
+export type PrContext = {
     props: PrProps;
 } & GeneralContext;
-export declare type IssueContext = {
+export type IssueContext = {
     props: IssueProps;
 } & GeneralContext;
-export declare type ScheduleIssueContext = {
+export type ScheduleIssueContext = {
     props: ScheduleIssueProps;
 };
-export declare type ProjectContext = {
+export type ProjectContext = {
     props: ProjectProps;
 } & GeneralContext;
-export declare type ScheduleContext = {
+export type ScheduleContext = {
     props: ScheduleProps;
 } & GeneralContext;
-export declare type Props = {
+export type Props = {
     labels?: Labels;
 };
-export declare type PrProps = {
+export type PrProps = {
     type: 'pr';
     files: string[];
     reviews: Reviews;
@@ -40,23 +40,23 @@ export declare type PrProps = {
     approved: number;
     changes: number;
 } & Props & PullRequestEvent;
-export declare type IssueProps = {
+export type IssueProps = {
     type: 'issue';
 } & (IssuesEvent | IssueCommentEvent) & Props;
-export declare type ProjectProps = {
+export type ProjectProps = {
     type: 'project';
     project: any;
     column_id: number;
     localCard?: RestEndpointMethodTypes['projects']['getCard']['response']['data'];
     localColumn?: RestEndpointMethodTypes['projects']['getColumn']['response']['data'];
 } & Props & ProjectCardEvent;
-export declare type ScheduleProps = {
+export type ScheduleProps = {
     type: 'schedule';
 } & Props;
-export declare type ScheduleIssueProps = {
+export type ScheduleIssueProps = {
     type: 'issue';
 } & Props & Omit<components['schemas']['issue'], 'labels'>;
-export declare type Version = {
+export type Version = {
     name?: string;
     semantic?: {
         major: number;
@@ -66,8 +66,8 @@ export declare type Version = {
         build?: number;
     };
 };
-export declare type Reviews = Review[];
-export declare type Review = {
+export type Reviews = Review[];
+export type Review = {
     id?: number;
     node_id?: string;
     user?: any;
@@ -83,15 +83,15 @@ export declare type Review = {
 /**
  * This instead of manually requiring this
  */
-export declare type UtilThis = Issues | PullRequests | Project | Schedule;
+export type UtilThis = Issues | PullRequests | Project | Schedule;
 /**
  * Props used instead of manually requiring props
  */
-export declare type UtilProps = IssueProps | PrProps | ProjectProps | ScheduleProps | ScheduleIssueProps;
+export type UtilProps = IssueProps | PrProps | ProjectProps | ScheduleProps | ScheduleIssueProps;
 /**
  * Shared conditions used by all types of events.
  */
-export declare type SharedConditions = {
+export type SharedConditions = {
     /**
      * The number of requires needed for this to succeed
      */
@@ -104,7 +104,7 @@ export declare type SharedConditions = {
 /**
  * Conventions to use
  */
-export declare type SharedConventionConditions = {
+export type SharedConventionConditions = {
     /**
      * The number of requires needed for this to succeed
      */
@@ -117,7 +117,7 @@ export declare type SharedConventionConditions = {
 /**
  * The PR condition configuration
  */
-export declare type PrConditionConfig = {
+export type PrConditionConfig = {
     /**
      * The number of requires needed for this to succeed
      */
@@ -130,7 +130,7 @@ export declare type PrConditionConfig = {
 /**
  * The Issue condition configuration
  */
-export declare type IssueConditionConfig = {
+export type IssueConditionConfig = {
     /**
      * The number of requires needed for this to succeed
      */
@@ -143,7 +143,7 @@ export declare type IssueConditionConfig = {
 /**
  * The Project condition configuration
  */
-export declare type ProjectConditionConfig = {
+export type ProjectConditionConfig = {
     /**
      * The number of requires needed for this to succeed
      */
@@ -156,7 +156,7 @@ export declare type ProjectConditionConfig = {
 /**
  * The Schedule condition configuration
  */
-export declare type ScheduleConditionConfig = {
+export type ScheduleConditionConfig = {
     /**
      * The number of requires needed for this to succeed
      */
@@ -166,8 +166,8 @@ export declare type ScheduleConditionConfig = {
      */
     condition: ScheduleCondition[];
 };
-declare type Conditions = IssueCondition | PrCondition | ProjectCondition | ScheduleCondition | Condition;
-export declare type CurContext = {
+type Conditions = IssueCondition | PrCondition | ProjectCondition | ScheduleCondition | Condition;
+export type CurContext = {
     type: 'pr';
     context: PrContext;
 } | {

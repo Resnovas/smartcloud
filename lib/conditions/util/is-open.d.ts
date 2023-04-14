@@ -1,6 +1,6 @@
 import type { UtilProps, UtilThis } from '../index.js';
 declare const type = "isOpen";
-export declare type ConditionIsOpen = {
+export type ConditionIsOpen = {
     type: typeof type;
     condition: boolean;
 };

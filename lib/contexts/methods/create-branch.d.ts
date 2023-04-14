@@ -1,7 +1,7 @@
 /**
  * Create branch on project configuration
  */
-export declare type ProjectCreateBranch = {
+export type ProjectCreateBranch = {
     /**
      * Project to use
      */
@@ -14,7 +14,7 @@ export declare type ProjectCreateBranch = {
 /**
  * Create branch configuration
  */
-export declare type CreateBranch = {
+export type CreateBranch = {
     /**
      * The branch prefix
      */

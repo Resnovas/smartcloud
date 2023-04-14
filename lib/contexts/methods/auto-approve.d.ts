@@ -3,7 +3,7 @@ import type { SharedConventionsConfig } from './conventions.js';
 /**
  * Automatic Approval configuration
  */
-export declare type AutomaticApprove = {
+export type AutomaticApprove = {
     /**
      * The comment to append to the header
      */

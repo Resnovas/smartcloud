@@ -4,7 +4,7 @@ import type { SharedConfig } from '../../types.js';
 /**
  * The stale configuration
  */
-export declare type Stale = {
+export type Stale = {
     /**
      * The label to use for stale issues
      */
@@ -25,7 +25,7 @@ export declare type Stale = {
 /**
  * The stale configuration
  */
-export declare type StaleConfig = {
+export type StaleConfig = {
     /**
      * The days to consider stale
      */
@@ -50,7 +50,7 @@ export declare type StaleConfig = {
 /**
  * The abanonded configuration
  */
-export declare type AbanondedConfig = {
+export type AbanondedConfig = {
     /**
      * Should the abanonded issue be closed
      */

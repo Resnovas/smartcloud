@@ -1,7 +1,7 @@
 import type { Issues, Project, PullRequests } from '../../contexts/index.js';
 import type { PrProps } from '../index.js';
 declare const type = "changesSize";
-export declare type ConditionChangesSize = {
+export type ConditionChangesSize = {
     type: typeof type;
     min: number;
     max?: number;

@@ -1,6 +1,6 @@
 import type { UtilProps, UtilThis } from '../index.js';
 declare const type = "isAbandoned";
-export declare type ConditionIsAbandoned = {
+export type ConditionIsAbandoned = {
     type: typeof type;
     condition: number;
     label: string;

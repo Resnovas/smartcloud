@@ -11,7 +11,7 @@
  * Code of Conduct: This project abides by the Contributor Covenant, version 2.0. Please interact in ways that contribute to an open,
  * welcoming, diverse, inclusive, and healthy community. Our Code of Conduct can be found at https://github.com/resnovas/smartcloud/CODE_OF_CONDUCT.md
  * -----
- * Copyright (c) 2022 Resnovas - All Rights Reserved
+ * Copyright (c) 2023 Resnovas - All Rights Reserved
  * LICENSE: GNU General Public License v3.0 or later (GPL-3.0+)
  * -----
  * This program has been provided under confidence of the copyright holder and is
@@ -30,9 +30,9 @@
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE - PLEASE SEE THE LICENSE FILE FOR DETAILS
  * -----
- * Last Modified: 25-10-2022
+ * Last Modified: 14-04-2023
  * By: Jonathan Stevens (Email: jonathan@resnovas.com, Github: https://github.com/TGTGamer)
- * Current Version: 1.0.0-beta.0
+ * Current Version: 1.0.0-beta.7
  * HISTORY:
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
@@ -66,6 +66,7 @@ const testall = series(
 	Testing.copy.context.schedule,
 	Testing.run,
 	Testing.package,
+	// Testing.doc,
 	Testing.cleanup,
 );
 exports.testall = testall

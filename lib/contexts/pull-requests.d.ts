@@ -11,7 +11,7 @@ import type { SyncRemote } from './methods/sync-remote-repo.js';
 /**
  * The Pull Request configuration
  */
-export declare type PullRequestConfig = {
+export type PullRequestConfig = {
     /**
      *  The project assignment configuration.
      */

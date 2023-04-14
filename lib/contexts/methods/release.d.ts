@@ -4,7 +4,7 @@ import type { CreateMilestone } from './handle-milestone.js';
 /**
  * The release configuration
  */
-export declare type Release = {
+export type Release = {
     /**
      * The labels to use to detect release type (semantic release)
      */
@@ -58,7 +58,7 @@ export declare type Release = {
 /**
  *
  */
-export declare type ReleaseChanges = {
+export type ReleaseChanges = {
     /**
      * Should include issues?
      */
@@ -71,7 +71,7 @@ export declare type ReleaseChanges = {
 /**
  * The section configuration
  */
-export declare type Sections = {
+export type Sections = {
     /**
      * The title of this section
      */
@@ -100,7 +100,7 @@ export declare type Sections = {
 /**
  * The create release configuration
  */
-export declare type CreateRelease = {
+export type CreateRelease = {
     /**
      * The name of the tag to create
      */

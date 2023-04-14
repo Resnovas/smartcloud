@@ -1,6 +1,6 @@
 import type { IssueConditionConfig, PrConditionConfig, ProjectConditionConfig, UtilProps, UtilThis } from '../index.js';
 declare const type = "$only";
-export declare type ConditionOnlyOne = {
+export type ConditionOnlyOne = {
     requires: number;
     type: typeof type;
     condition: Array<PrConditionConfig | IssueConditionConfig | ProjectConditionConfig>;

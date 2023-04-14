@@ -1,7 +1,7 @@
 import type { Issues, Project, PullRequests } from '../../contexts/index.js';
 import type { PrProps } from '../index.js';
 declare const type = "pendingReview";
-export declare type ConditionPendingReview = {
+export type ConditionPendingReview = {
     type: typeof type;
     condition: boolean;
 };

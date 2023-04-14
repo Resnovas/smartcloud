@@ -1,6 +1,6 @@
 import type { UtilProps, UtilThis } from '../index.js';
 declare const type = "isStale";
-export declare type ConditionIsStale = {
+export type ConditionIsStale = {
     type: typeof type;
     condition: number;
 };

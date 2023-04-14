@@ -1,7 +1,7 @@
 import type { PullRequests } from '../index.js';
 import type { SharedConventionsConfig } from './index.js';
-export declare type RequestApprovals = Record<string, Group>;
-declare type Group = {
+export type RequestApprovals = Record<string, Group>;
+type Group = {
     /**
      * The reviewers to reques
      */

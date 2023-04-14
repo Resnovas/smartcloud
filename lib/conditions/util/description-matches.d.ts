@@ -1,6 +1,6 @@
 import type { IssueProps, PrProps, ProjectProps, UtilThis } from '../index.js';
 declare const type = "descriptionMatches";
-export declare type ConditionDescriptionMatches = {
+export type ConditionDescriptionMatches = {
     type: typeof type;
     condition: string;
 };
