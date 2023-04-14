@@ -21,10 +21,6 @@
         }
       },
       "enforceConventions": {
-        "onColumn": [
-          "Accepted",
-          "Reviewing"
-        ],
         "condition": [
           {
             "requires": 1,
