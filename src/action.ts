@@ -83,6 +83,8 @@ export default class Action {
 	}
 
 	async run() {
+		log(LoggingLevels.debug, 'Running action');
+
 		if (localEx) {
 			// eslint-disable-next-line @typescript-eslint/ban-ts-comment, @typescript-eslint/prefer-ts-expect-error
 			// @ts-ignore
@@ -439,20 +441,29 @@ export default class Action {
 		let ctx: PullRequests | Issues | Project | Schedule | undefined;
 
 		switch (curContext.type) {
-			case 'pr':
+			case 'pr': {
 				ctx = new PullRequests(this.util, runners, config, curContext, this.dryRun);
 				break;
-			case 'issue':
+			}
+
+			case 'issue': {
 				ctx = new Issues(this.util, runners, config, curContext, this.dryRun);
 				break;
-			case 'project':
+			}
+
+			case 'project': {
 				ctx = new Project(this.util, runners, config, curContext, this.dryRun);
 				break;
-			case 'schedule':
+			}
+
+			case 'schedule': {
 				ctx = new Schedule(this.util, runners, config, curContext, this.dryRun);
 				break;
-			default:
+			}
+
+			default: {
 				ctx = undefined;
+			}
 		}
 
 		if (!ctx) {

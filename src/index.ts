@@ -95,7 +95,9 @@ async function run() {
 	const options: Options = {
 		configJson: localEx
 			? (await import(local.configJson)) as Options['configJson']
-			: JSON.parse(core.getInput('configJson')) as Options['configJson'],
+			: (core.getInput('configJson') === ''
+				? undefined
+				: JSON.parse(core.getInput('configJson')) as Options['configJson']),
 		configPath: localEx ? local.configPath as string : core.getInput('config'),
 		configRef: localEx ? local.configRef as string : core.getInput('configRef'),
 		showLogs,
@@ -116,6 +118,7 @@ async function run() {
 	});
 }
 
+// eslint-disable-next-line unicorn/prefer-top-level-await
 run().catch(async (error: Error) => {
 	log(
 		LoggingLevels.emergency,
