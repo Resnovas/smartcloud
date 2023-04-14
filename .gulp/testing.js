@@ -51,7 +51,7 @@ class Testing {
   };
   static doc = () => {
     return src("package.json")
-      .pipe(exec(`npm run deploy`))
+      .pipe(exec(`npm run build`))
       .pipe(exec.reporter());
   };
   static package = () => {
