@@ -38,10 +38,8 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import * as core from '@actions/core';
 import {LoggingLevels, log} from '../../logging.js';
 import type {PullRequests} from '../index.js';
-
 import {evaluator} from '../../evaluator.js';
 import type {SharedConventionsConfig} from './conventions.js';
 
@@ -100,10 +98,6 @@ export async function automaticApprove(this: PullRequests) {
 				.catch(() => {
 					throw new Error(log(LoggingLevels.error, 'Unable to automatically approve'));
 				});
-			return;
 		}
-
-		core.setFailed(convention.failedComment);
-		return false;
 	});
 }

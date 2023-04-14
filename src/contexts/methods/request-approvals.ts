@@ -38,7 +38,6 @@
  * ----------	---	---------------------------------------------------------
  */
 
-import * as core from '@actions/core';
 import type {PullRequests} from '../index.js';
 import {log, LoggingLevels} from '../../logging.js';
 import {evaluator} from '../../evaluator.js';
@@ -98,7 +97,9 @@ export async function requestApprovals(this: PullRequests) {
 					return;
 				}
 
-				if (await evaluator.call(this, convention, this.context.props)) {
+				const test = await evaluator.call(this, convention, this.context.props);
+
+				if (test) {
 					log(LoggingLevels.info, 'Automatically Requesting Approvers');
 					const body
 					= (groupConfig?.comment?.commentHeader === undefined
@@ -127,11 +128,7 @@ export async function requestApprovals(this: PullRequests) {
 							));
 						});
 				}
-
-				core.setFailed(convention.failedComment);
-				return false;
 			});
-			return;
 		}
 	}
 }

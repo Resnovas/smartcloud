@@ -163,16 +163,19 @@ export class Issues extends Contexts {
 		const seconds = attempt * 10;
 		try {
 			if (this.config.enforceConventions) {
+				log(LoggingLevels.debug, 'Starting enforce conventions');
 				await this.conventions.enforce(this);
 			}
 
 			if (this.config.labels) {
-				await this.applyLabels(this).catch(async error => {
+				log(LoggingLevels.debug, 'Starting to label issue');
+				await this.applyLabels(this).catch(error => {
 					throw new Error(log(LoggingLevels.error, 'Error applying label' + String(error)));
 				});
 			}
 
 			if (this.config.assignProject) {
+				log(LoggingLevels.debug, 'Starting assisgn project');
 				await this.assignProject(this).catch(async error => {
 					throw new Error(log(LoggingLevels.error, 'Error assigning projects' + String(error)));
 				});

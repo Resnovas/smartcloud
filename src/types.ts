@@ -53,7 +53,6 @@ import type {
 	PullRequestConfig,
 	ScheduleConfig,
 } from './contexts/index.js';
-
 import type {Stale} from './contexts/methods/check-stale.js';
 import type {EnforceConventions} from './contexts/methods/conventions.js';
 import type {Repo} from './utils/index.js';

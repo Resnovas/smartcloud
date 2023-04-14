@@ -38,6 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
+// import log, {LoggingLevels} from '../../logging.js';
 import type {IssueProps, PrProps, ProjectProps, UtilThis} from '../index.js';
 
 const type = 'descriptionMatches';
@@ -68,20 +69,19 @@ async function descriptionMatches(
 	);
 
 	let test;
-	switch (context.type) {
-		case 'issue':
-			test = context.issue.body;
-			break;
-		case 'pr':
-			test = context.pull_request.body;
-			break;
-		default:
-			break;
+	if ('body' in context) {
+		test = context.body as string;
+	} else if ('issue' in context && 'body' in context.issue) {
+		test = context.issue.body;
+	} else if ('pull_request' in context && 'body' in context.pull_request) {
+		test = context.pull_request.body;
 	}
 
 	if (!test) {
 		return false;
 	}
+
+	// Log(LoggingLevels.debug, 'Running Test: ' + pattern.condition + ' on body:' + test + '\nresult: ' + String(condition.test(test)));
 
 	return condition.test(test);
 }
