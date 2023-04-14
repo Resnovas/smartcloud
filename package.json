@@ -101,6 +101,7 @@
 		"typedoc-plugin-markdown": "^3.13.6",
 		"typedoc-plugin-missing-exports": "^1.0.0",
 		"typescript": "^5.0.4",
+		"tslib": "^2.4.0",
 		"url-loader": "^4.1.1"
 	},
 	"devDependencies": {
@@ -128,7 +129,6 @@
 		"prettier-plugin-pkg": "^0.17.1",
 		"prettier-plugin-sh": "^0.12.8",
 		"prettier-standard": "^16.4.1",
-		"tslib": "^2.4.0",
 		"typedoc": "^0.23.14",
 		"typescript": "*",
 		"typescript-json-schema": "^0.56.0",
