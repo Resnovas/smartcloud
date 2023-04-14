@@ -1,6 +1,6 @@
 import type { IssueConditionConfig, PrConditionConfig, ProjectConditionConfig, UtilProps, UtilThis } from '../index.js';
 declare const type = "$not";
-export declare type ConditionNot = {
+export type ConditionNot = {
     /**
      * The condition required for this to succeed. You can use the "semanticTitle" to automatically apply thses ccondition
      */

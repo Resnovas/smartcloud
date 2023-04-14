@@ -3256,14 +3256,14 @@ export declare class Utils {
         body?: string | undefined;
     }) => Promise<void>;
 }
-export declare type Repo = {
+export type Repo = {
     owner: string;
     repo: string;
 };
-export declare type ApiProps = {
+export type ApiProps = {
     client: Github;
     repo: Repo;
 };
-export declare type Functionality = 'release' | 'convention' | 'label';
-export declare type Event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT';
-export declare type Tags = string[];
+export type Functionality = 'release' | 'convention' | 'label';
+export type Event = 'REQUEST_CHANGES' | 'APPROVE' | 'COMMENT';
+export type Tags = string[];

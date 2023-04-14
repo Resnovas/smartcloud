@@ -1,7 +1,7 @@
 import type { Issues, Project, PullRequests } from '../../contexts/index.js';
 import type { ProjectProps } from './index.js';
 declare const type = "onColumn";
-export declare type ConditiononColumn = {
+export type ConditiononColumn = {
     type: typeof type;
     project: string;
     column: string;

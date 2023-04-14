@@ -6,7 +6,7 @@ import { Contexts } from './methods/index.js';
 /**
  * The schedule configuration
  */
-export declare type ScheduleConfig = SharedConfig;
+export type ScheduleConfig = SharedConfig;
 export declare class Schedule extends Contexts {
     /**
      * Parse the Schedule Context

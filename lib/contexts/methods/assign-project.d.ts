@@ -3,7 +3,7 @@ import type { IssueConditionConfig } from '../../conditions/index.js';
 /**
  * Assign project configuration
  */
-export declare type AssignProject = {
+export type AssignProject = {
     /**
      * The owner of the project
      */

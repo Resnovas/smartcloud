@@ -1,6 +1,6 @@
 import type { UtilProps, UtilThis } from '../index.js';
 declare const type = "hasLabel";
-export declare type ConditionHasLabel = {
+export type ConditionHasLabel = {
     type: typeof type;
     label: string;
     condition: boolean;

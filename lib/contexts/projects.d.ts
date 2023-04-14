@@ -10,7 +10,7 @@ import type { ExProjects } from './methods/sync-remote-project.js';
 /**
  * The project configuration
  */
-export declare type ProjectConfig = {
+export type ProjectConfig = {
     /**
      * Syncronise remote repository configuration.
      */

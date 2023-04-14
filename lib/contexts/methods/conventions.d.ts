@@ -2,8 +2,8 @@ import type { SharedConventionConditions, UtilThis } from '../../conditions/inde
 /**
  * The enforce conventions configuration
  */
-export declare type Column = string | number;
-export declare type EnforceConventions = {
+export type Column = string | number;
+export type EnforceConventions = {
     /**
      * The columns to enforce conventions
      */
@@ -25,7 +25,7 @@ export declare type EnforceConventions = {
      */
     condition: SharedConventionsConfig[];
 };
-export declare type SharedConventionsConfig = {
+export type SharedConventionsConfig = {
     /**
      * The failed comment to use
      */

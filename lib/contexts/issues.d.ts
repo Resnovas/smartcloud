@@ -8,7 +8,7 @@ import type { CreateBranch } from './methods/create-branch.js';
 /**
  * The issue configuration
  */
-export declare type IssueConfig = {
+export type IssueConfig = {
     /**
      * Assign project configuration.
      */

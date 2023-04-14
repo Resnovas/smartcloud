@@ -1,6 +1,6 @@
 import type { UtilProps, UtilThis } from '../index.js';
 declare const type = "creatorMatches";
-export declare type ConditionCreatorMatches = {
+export type ConditionCreatorMatches = {
     type: typeof type;
     condition: string;
 };

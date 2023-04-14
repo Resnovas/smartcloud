@@ -2,7 +2,7 @@ import type { Project } from '../projects.js';
 /**
  * External projects configuration
  */
-export declare type ExProjects = {
+export type ExProjects = {
     /**
      * The local project to sync
      */

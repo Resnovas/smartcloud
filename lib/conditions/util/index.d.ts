@@ -9,7 +9,7 @@ import type { ConditionNot } from './not.js';
 import type { ConditionOnlyOne } from './only.js';
 import type { ConditionOr } from './or.js';
 import type { ConditionTitleMatches } from './title-matches.js';
-export declare type Condition = ConditionCreatorMatches | ConditionDescriptionMatches | ConditionIsOpen | ConditionTitleMatches | ConditionHasLabel | ConditionIsStale | ConditionIsAbandoned | ConditionOr | ConditionAnd | ConditionNot | ConditionOnlyOne;
+export type Condition = ConditionCreatorMatches | ConditionDescriptionMatches | ConditionIsOpen | ConditionTitleMatches | ConditionHasLabel | ConditionIsStale | ConditionIsAbandoned | ConditionOr | ConditionAnd | ConditionNot | ConditionOnlyOne;
 /**
  * The utility condition handler.
  */

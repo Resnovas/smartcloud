@@ -8,7 +8,7 @@ import type { Repo } from './utils/index.js';
 /**
  * The application options used within Github Actions workflows
  */
-export declare type Options = {
+export type Options = {
     /**
      * The path to find the config
      */
@@ -50,7 +50,7 @@ export declare type Options = {
      */
     ref?: string;
 };
-export declare type Runners = {
+export type Runners = {
     /**
      * Declaritively specify which schema you want to use. This defaults to our latest schema specified at: https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json
      * @default https://raw.githubusercontent.com/resnovas/smartcloud/main/schema.json
@@ -68,7 +68,7 @@ export declare type Runners = {
      */
     runners: Config[];
 };
-export declare type Config = {
+export type Config = {
     /**
      * The branch used to get the config file from. Defaults to master.
      */
@@ -125,11 +125,11 @@ export declare type Config = {
  * The shared configuration Index
  * @private
  */
-export declare type SharedConfigIndex = 'ref' | 'enforceConventions' | 'labels' | 'stale';
+export type SharedConfigIndex = 'ref' | 'enforceConventions' | 'labels' | 'stale';
 /**
  * The shared configuration
  */
-export declare type SharedConfig = {
+export type SharedConfig = {
     /**
      * The reference used internally
      */
@@ -153,7 +153,7 @@ export declare type SharedConfig = {
  * @param description A description of the label
  * @param color The color of the label
  */
-export declare type Label = {
+export type Label = {
     /**
      * The name as appears on github
      */
@@ -170,16 +170,16 @@ export declare type Label = {
 /**
  *	An array of labels.
  */
-export declare type Labels = Record<string, Label>;
+export type Labels = Record<string, Label>;
 /**
  * The version source.
  * Node: A node project, our package will use the package.json to determine the version.
  * Milestones: Utilises the Github Milestone API to determine the version.
  * String: A string to use as the version.
  */
-export declare type VersionSource = 'node' | 'milestones';
+export type VersionSource = 'node' | 'milestones';
 /**
  * The version number type. This is used to determine how versioning is handled. SemVer is the default.
  */
-export declare type VersionType = 'semVer';
-export declare type Github = InstanceType<typeof GitHub>;
+export type VersionType = 'semVer';
+export type Github = InstanceType<typeof GitHub>;

@@ -1,7 +1,7 @@
 /**
  * Assign to milestone based on project
  */
-export declare type Milestones = {
+export type Milestones = {
     /**
      * Which column o use
      */
@@ -14,7 +14,7 @@ export declare type Milestones = {
 /**
  * Create Milestones
  */
-export declare type CreateMilestone = {
+export type CreateMilestone = {
     /**
      * The milestone you want to use
      * @example 'version'

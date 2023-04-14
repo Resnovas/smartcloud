@@ -1,7 +1,7 @@
 import type { Issues, Project, PullRequests } from '../../contexts/index.js';
 import type { PrProps } from '../index.js';
 declare const type = "branchMatches";
-export declare type ConditionBranchMatches = {
+export type ConditionBranchMatches = {
     type: typeof type;
     condition: string;
 };

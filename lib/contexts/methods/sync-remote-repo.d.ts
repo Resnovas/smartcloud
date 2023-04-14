@@ -2,7 +2,7 @@ import type { SharedConditions } from '../../conditions/index.js';
 /**
  * Sync Remote configuration
  */
-export declare type SyncRemote = {
+export type SyncRemote = {
     /**
      * Local branch to sync
      */
