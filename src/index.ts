@@ -38,6 +38,9 @@
  * ----------	---	---------------------------------------------------------
  */
 
+/* eslint-disable @typescript-eslint/ban-ts-comment  */
+/* eslint-disable @typescript-eslint/prefer-ts-expect-error */
+
 import fs from 'node:fs';
 import process, {cwd} from 'node:process';
 import * as core from '@actions/core';
@@ -60,6 +63,8 @@ let repo: Repo | undefined;
  */
 async function run() {
 	if (localEx) {
+		// @ts-ignore
+		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		local = await import('../config.json');
 		console.log(local);
 		dryRun = local.GH_ACTION_LOCAL_TEST as boolean ?? false;
