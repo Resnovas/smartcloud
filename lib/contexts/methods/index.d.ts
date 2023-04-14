@@ -27,16 +27,16 @@ export declare class Contexts {
     retryLimit: number;
     dryRun: boolean;
     conventions: {
-        enforce: (that: UtilThis) => Promise<() => Promise<boolean | undefined>>;
+        enforce: (that: UtilThis) => Promise<boolean | undefined>;
     };
     constructor(util: Utils, runners: Runners, configs: Config, curContext: CurContext, dryRun: boolean);
-    syncRemoteProject: (that: Project) => Promise<() => Promise<void>>;
-    assignProject: (that: Issues | PullRequests) => Promise<() => Promise<void>>;
-    applyLabels: (that: UtilThis) => Promise<() => Promise<void>>;
+    syncRemoteProject: (that: Project) => Promise<void>;
+    assignProject: (that: Issues | PullRequests) => Promise<void>;
+    applyLabels: (that: UtilThis) => Promise<void>;
     checkStale: (that: UtilThis, context?: IssueContext | ScheduleContext | PrContext | ProjectContext | ScheduleIssueContext, config?: SharedConfig | IssueConfig | PullRequestConfig | ProjectConfig) => Promise<void>;
-    automaticApprove: (that: PullRequests) => Promise<() => Promise<void>>;
-    requestApprovals: (that: PullRequests) => Promise<() => Promise<void>>;
-    bumpVersion: (that: PullRequests) => Promise<() => Promise<void>>;
+    automaticApprove: (that: PullRequests) => Promise<void>;
+    requestApprovals: (that: PullRequests) => Promise<void>;
+    bumpVersion: (that: PullRequests) => Promise<void>;
     createComment(this: PullRequests | Issues | Project | Schedule, jobName: string, success: boolean, options?: {
         body?: string;
         event?: Event;

@@ -38,6 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
+// import log, {LoggingLevels} from '../../logging.js';
 import type {UtilProps, UtilThis} from '../index.js';
 
 const type = 'titleMatches';
@@ -80,6 +81,8 @@ async function titleMatches(
 	const condition = await this.util.parsingData.processRegExpcondition(
 		pattern.condition,
 	);
+
+	// Log(LoggingLevels.debug, 'Running Test: ' + pattern.condition + ' on title:' + test + '\nresult: ' + String(condition.test(test)));
 
 	return condition.test(test);
 }

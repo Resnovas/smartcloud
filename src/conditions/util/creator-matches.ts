@@ -38,6 +38,7 @@
  * ----------	---	---------------------------------------------------------
  */
 
+import log, {LoggingLevels} from '../../logging.js';
 import type {UtilProps, UtilThis} from '../index.js';
 
 const type = 'creatorMatches';
@@ -68,11 +69,12 @@ async function creatorMatches(
 		pattern.condition,
 	);
 
-	if (!('sender' in context)) {
-		throw new Error('No creator information to use');
+	if ('user' in context && context.user !== null) {
+		log(LoggingLevels.debug, 'Running Test: ' + pattern.condition + ' on user: ' + context.user.login + ' \nresult: ' + String(condition.test(context.user.login)));
+		return condition.test(context.user.login);
 	}
 
-	return condition.test(context.sender.login);
+	throw new Error('No creator information to use');
 }
 
 export default [type, creatorMatches] as const;

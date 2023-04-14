@@ -39,7 +39,6 @@
  */
 
 import {log, LoggingLevels} from './logging.js';
-
 import type {
 	IssueConditionConfig,
 	PrConditionConfig,
@@ -49,20 +48,19 @@ import type {
 import {
 	getConditionHandler,
 } from './conditions/index.js';
-
 import type {SharedConventionsConfig} from './contexts/methods/conventions.js';
 import type {IssueCondition} from './conditions/issue/index.js';
 import type {PrCondition} from './conditions/pr/index.js';
 import type {ProjectCondition} from './conditions/project/index.js';
-import type {ScheduleCondition} from './conditions/schedule/index.js';
 
 const forConditions = async (
-	conditions: Array<IssueCondition | PrCondition | ProjectCondition | ScheduleCondition>,
-	callback: (condition: IssueCondition | PrCondition | ProjectCondition | ScheduleCondition) => boolean,
+	conditions: Array<IssueCondition | PrCondition | ProjectCondition >,
+	callback: (condition: IssueCondition | PrCondition | ProjectCondition) => Promise<boolean>,
 ) => {
 	let matches = 0;
 	for (const condition of conditions) {
-		const callbackResponse = callback(condition);
+		// eslint-disable-next-line no-await-in-loop
+		const callbackResponse = await callback(condition);
 		if (callbackResponse) {
 			matches++;
 		}
@@ -89,7 +87,6 @@ export async function evaluator(
 		));
 	}
 
-	// @ts-expect-error - still not sure how to resolve this
 	const matches = await forConditions(condition, async condition => {
 		const handler = getConditionHandler.call(
 			this,
@@ -103,10 +100,11 @@ export async function evaluator(
 			));
 		}
 
-		log(LoggingLevels.debug, `The handler is ${handler.name}`);
-
 		// @ts-expect-error - Todo: need to be fixed, typing issue which never gets triggered in runtime
-		return handler?.call(this, condition, props);
+		const result = await handler?.call(this, condition, props);
+
+		log(LoggingLevels.debug, `The handler is ${handler.name}, Result: ${String(result)}`);
+		return result;
 	});
 	log(LoggingLevels.debug, `Matches: ${matches}/${requires}`);
 	return matches >= requires;

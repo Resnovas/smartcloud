@@ -55,6 +55,8 @@ export async function applyLabels(this: UtilThis) {
 			throw new Error('Props are required');
 		}
 
+		log(LoggingLevels.debug, `Label: ${labelId}`);
+
 		const conditionsConfig = this.config.labels[labelId];
 
 		if (!conditionsConfig) {

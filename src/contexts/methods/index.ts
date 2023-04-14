@@ -87,7 +87,7 @@ export class Contexts {
 	retryLimit: number;
 	dryRun: boolean;
 	conventions = {
-		enforce: async (that: UtilThis) => conventions.enforce.bind(that),
+		enforce: async (that: UtilThis) => conventions.enforce.call(that),
 	};
 
 	// eslint-disable-next-line max-params
@@ -138,19 +138,19 @@ export class Contexts {
 		this.retryLimit = configs.retryLimit ?? 3;
 	}
 
-	syncRemoteProject = async (that: Project) => syncRemoteProject.bind(that);
-	assignProject = async (that: Issues | PullRequests) => assignProject.bind(that);
+	syncRemoteProject = async (that: Project) => syncRemoteProject.call(that);
+	assignProject = async (that: Issues | PullRequests) => assignProject.call(that);
 
-	applyLabels = async (that: UtilThis) => applyLabels.bind(that);
+	applyLabels = async (that: UtilThis) => applyLabels.call(that);
 	checkStale = async (
 		that: UtilThis,
 		context?: IssueContext | ScheduleContext | PrContext | ProjectContext | ScheduleIssueContext,
 		config?: SharedConfig | IssueConfig | PullRequestConfig | ProjectConfig,
 	) => checkStale.call(that, context, config);
 
-	automaticApprove = async (that: PullRequests) => automaticApprove.bind(that);
-	requestApprovals = async (that: PullRequests) => requestApprovals.bind(that);
-	bumpVersion = async (that: PullRequests) => bumpVersion.bind(that);
+	automaticApprove = async (that: PullRequests) => automaticApprove.call(that);
+	requestApprovals = async (that: PullRequests) => requestApprovals.call(that);
+	bumpVersion = async (that: PullRequests) => bumpVersion.call(that);
 
 	async createComment(
 		this: PullRequests | Issues | Project | Schedule,

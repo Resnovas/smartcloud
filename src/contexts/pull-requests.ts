@@ -263,11 +263,11 @@ export class PullRequests extends Contexts {
 				});
 			}
 
-			if (this.config.manageRelease) {
-				await this.bumpVersion(this).catch(async error => {
-					throw new Error(log(LoggingLevels.error, 'Error managing release ' + String(error)));
-				});
-			}
+			// If (this.config.manageRelease) {
+			// 	await this.bumpVersion(this).catch(async error => {
+			// 		throw new Error(log(LoggingLevels.error, 'Error managing release ' + String(error)));
+			// 	});
+			// }
 
 			// Create changelog
 			// create release

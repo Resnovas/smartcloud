@@ -64,9 +64,7 @@ let repo: Repo | undefined;
 async function run() {
 	if (localEx) {
 		// @ts-ignore
-		// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
 		local = await import('../config.json');
-		console.log(local);
 		dryRun = local.GH_ACTION_LOCAL_TEST as boolean ?? false;
 		showLogs = local.SHOW_LOGS as boolean ?? false;
 		repo = {
