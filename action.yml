@@ -1,11 +1,11 @@
 ###
- # Filename: d:\Jonathan\Documents\Repositories\devspace\smartcloud\action.yml
- # Path: d:\Jonathan\Documents\Repositories\devspace\smartcloud
- # Created Date: Monday, September 5th 2022, 7:20:39 pm
- # Author: Jonathan Stevens
- # 
- # Copyright (c) 2022 Jonathan Stevens
- ###
+# Filename: d:\Jonathan\Documents\Repositories\devspace\smartcloud\action.yml
+# Path: d:\Jonathan\Documents\Repositories\devspace\smartcloud
+# Created Date: Monday, September 5th 2022, 7:20:39 pm
+# Author: Jonathan Stevens
+#
+# Copyright (c) 2022 Jonathan Stevens
+###
 
 name: "SmartcloudAction"
 description: "Smartcloud - Github project management automation without limits"
@@ -44,4 +44,4 @@ inputs:
 
 runs:
   using: "node16"
-  main: "lib/index.js"
+  main: "dist/index.js"
