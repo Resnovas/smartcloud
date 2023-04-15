@@ -6,9 +6,9 @@ on:
     types: [opened, edited, closed, reopened]
   pull_request_target:
     types: [opened, edited, closed, reopened, synchronize]
-  project_card:
-    types: [created, moved, deleted]
-  schedule: [cron: "0 * * * *"]
+  # project_card:
+    # types: [created, moved, deleted]
+  # schedule: [cron: "0 * * * *"]
 
 jobs:
   release-mastermind:
