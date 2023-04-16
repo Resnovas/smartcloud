@@ -40,6 +40,7 @@
 
 /* eslint-disable no-await-in-loop */
 import * as core from '@actions/core';
+import {gitmojis} from 'gitmojis';
 import {log, LoggingLevels} from '../../logging.js';
 import type {Condition, SharedConventionConditions, UtilThis} from '../../conditions/index.js';
 import {evaluator} from '../../evaluator.js';
@@ -102,35 +103,24 @@ export async function enforce(this: UtilThis) {
 			return;
 		}
 
+		console.log(gitmojis);
 		required++;
 		if (convention.condition === 'semanticTitle') {
-			convention.requires = 1;
-			const conditions: Condition[] = [];
-			for (const condition of semantic) {
-				conditions.push({
-					type: 'titleMatches',
-					condition: `/^${condition}(\\(.*\\))?:/i`,
-				});
-			}
-
-			if (convention.contexts) {
-				convention.requires = 2;
-				for (const condition of convention.contexts) {
-					conditions.push({
-						type: 'titleMatches',
-						condition: `/\\(.*${condition}.*\\):/i`,
-					});
-				}
-			}
-
-			convention.failedComment
-				= `Semantic Conditions failed - Please title your ${this.curContext.type === 'pr' ? 'pull request' : 'issue'
-				} using one of the valid options:\r\n\r\n Types: `
-				+ semantic.join(', ')
-				+ (convention.contexts
-					? `\r\n\r\n Contexts: ${convention.contexts.join(', ')}`
-					: '');
+			const {conditions, requires} = semanticTitle.bind(this)(convention);
 			convention.condition = conditions;
+			convention.requires = requires;
+		}
+
+		if (convention.condition === 'gitmojis') {
+			const {conditions, requires} = gitmoji.bind(this)(convention);
+			convention.condition = conditions;
+			convention.requires = requires;
+		}
+
+		if (convention.condition === 'semanticEmoji') {
+			const {conditions, requires} = semanticEmoji.bind(this)(convention);
+			convention.condition = conditions;
+			convention.requires = requires;
 		}
 
 		const success = await evaluator.bind(this)(convention, this.context.props);
@@ -164,4 +154,122 @@ export async function enforce(this: UtilThis) {
 		body: 'All conventions successfully enforced.',
 	});
 	return true;
+}
+
+function semanticTitle(this: UtilThis, convention: SharedConventionsConfig) {
+	let requires = 1;
+	const conditions: Condition[] = [];
+	for (const condition of semantic) {
+		conditions.push({
+			type: 'titleMatches',
+			condition: `/^${condition}(\\(.*\\))?:/i`,
+		});
+	}
+
+	if (convention.contexts) {
+		requires = 2;
+		for (const condition of convention.contexts) {
+			conditions.push({
+				type: 'titleMatches',
+				condition: `/\\(.*${condition}.*\\):/i`,
+			});
+		}
+	}
+
+	convention.failedComment
+		= `Semantic Conditions failed - Please title your ${this.curContext.type === 'pr' ? 'pull request' : 'issue'
+		} using one of the valid options:\r\n\r\n Types: `
+		+ semantic.join(',\r\n')
+		+ (convention.contexts
+			? `\r\n\r\n Contexts: ${convention.contexts.join(',\r\n')}`
+			: '')
+			+ '\r\n\r\nFor more information on Semantic Commit Messages, please see https://www.conventionalcommits.org/en/v1.0.0/';
+	return {conditions, requires};
+}
+
+function gitmoji(this: UtilThis, convention: SharedConventionsConfig) {
+	let requires = 1;
+	const conditions: Condition[] = [];
+	const failConventionComment: string[] = [];
+	for (const condition of gitmojis) {
+		conditions.push({
+			type: 'titleMatches',
+			condition: `/^${condition.emoji as string}(\\(.*\\))?:/i`,
+		}, {
+			type: 'titleMatches',
+			condition: `/^${condition.code as string}(\\(.*\\))?:/i`,
+		}, {
+			type: 'titleMatches',
+			condition: `/^${condition.entity as string}(\\(.*\\))?:/i`,
+		});
+		if (condition.semver) {
+			failConventionComment.push(`${condition.emoji as string} || ${condition.code as string} === ${condition.description as string}`);
+		}
+	}
+
+	if (convention.contexts) {
+		requires = 2;
+		for (const condition of convention.contexts) {
+			conditions.push({
+				type: 'titleMatches',
+				condition: `/\\(.*${condition}.*\\):/i`,
+			});
+		}
+	}
+
+	convention.failedComment
+		= `Gitmoji Conditions failed - Please title your ${this.curContext.type === 'pr' ? 'pull request' : 'issue'
+		} using one of the valid options:\r\n\r\n Types: `
+		+ failConventionComment.join(',\r\n')
+		+ (convention.contexts
+			? `\r\n\r\n Contexts: ${convention.contexts.join(',\r\n')}`
+			: '')
+		+ '\r\n\r\nFor more information on gitmoji, please visit https://gitmoji.dev/';
+	return {conditions, requires};
+}
+
+function semanticEmoji(this: UtilThis, convention: SharedConventionsConfig) {
+	let requires = 2;
+	const conditions: Condition[] = [];
+	const failConventionComment: string[] = [];
+	for (const condition of gitmojis) {
+		conditions.push({
+			type: 'titleMatches',
+			condition: `/^${condition.emoji as string}.*(\\(.*\\))?:/i`,
+		}, {
+			type: 'titleMatches',
+			condition: `/^${condition.code as string}.*(\\(.*\\))?:/i`,
+		}, {
+			type: 'titleMatches',
+			condition: `/^${condition.entity as string}.*(\\(.*\\))?:/i`,
+		});
+		if (condition.semver) {
+			failConventionComment.push(`${condition.emoji as string} || ${condition.code as string} === ${condition.description as string}`);
+		}
+	}
+
+	if (convention.contexts) {
+		requires = 3;
+		for (const condition of convention.contexts) {
+			conditions.push({
+				type: 'titleMatches',
+				condition: `/\\(.*${condition}.*\\):/i`,
+			});
+		}
+	}
+
+	convention.failedComment
+		= `SemanticEmoji Conditions failed - Please title your ${this.curContext.type === 'pr' ? 'pull request' : 'issue'
+		} using a combination of the valid options:`
+		+ '\r\nExample: ":bug: fix(context): Fixing a bug in context"'
+		+ '\r\n\r\nGitmoji Options: '
+		+ failConventionComment.join(',\r\n')
+		+ '\r\n\r\nSemantic Options: '
+		+ semantic.join(',\r\n')
+		+ (convention.contexts
+			? `\r\n\r\n Contexts: ${convention.contexts.join(',\r\n')}`
+			: '')
+		+ '\r\n\r\nFor more information on Semantic Commit Messages, please see https://www.conventionalcommits.org/en/v1.0.0/'
+		+ '\r\nFor more information on gitmoji, please visit https://gitmoji.dev/';
+	return {conditions, requires};
 }

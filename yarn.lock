@@ -6868,6 +6868,11 @@ github-slugger@^1.4.0:
   resolved "https://registry.yarnpkg.com/github-slugger/-/github-slugger-1.5.0.tgz#17891bbc73232051474d68bd867a34625c955f7d"
   integrity sha512-wIh+gKBI9Nshz2o46B0B3f5k/W+WI9ZAv6y5Dn5WJ5SK1t0TnDimB4WE5rmTD05ZAIn8HALCZVmCsvj0w0v0lw==
 
+gitmojis@^3.13.4:
+  version "3.13.4"
+  resolved "https://registry.yarnpkg.com/gitmojis/-/gitmojis-3.13.4.tgz#1ada02d46bc2c8d802e5ad1644acd02b5f798617"
+  integrity sha512-TRYhqnD36Xs9GHuATVRmo7hzBb+6wXYC0zxBFvLs3nma7N1WQGWW2vPTQ0+3GsGcPwSp0XVGfe3Besn4a6ip5Q==
+
 glob-parent@^3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/glob-parent/-/glob-parent-3.1.0.tgz#9e6af6299d8d3bd2bd40430832bd113df906c5ae"

@@ -396,7 +396,7 @@ function getConditionHandler(condition) {
     return handler?.[1];
 }
 exports.getConditionHandler = getConditionHandler;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvY29uZGl0aW9ucy9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFrREEsOENBQTJEO0FBQzNELDRDQUFxRDtBQXVMckQsTUFBTSxRQUFRLEdBQUc7SUFDaEIsR0FBRyxtQkFBYztJQUNqQixHQUFHLG1CQUFVO0lBQ2Isb0JBQW9CO0lBQ3BCLHVCQUF1QjtDQUN2QixDQUFDO0FBT0Y7O0dBRUc7QUFDSCxTQUFnQixtQkFBbUIsQ0FFbEMsU0FBOEU7SUFFOUUsTUFBTSxPQUFPLEdBQUcsUUFBUSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsRUFBRSxDQUFDLE9BQU8sQ0FBQyxDQUFDLENBQUMsS0FBSyxTQUFTLENBQUMsSUFBSSxDQUFpQixDQUFDO0lBQ3hGLE9BQU8sT0FBTyxFQUFFLENBQUMsQ0FBQyxDQUFDLENBQUM7QUFDckIsQ0FBQztBQU5ELGtEQU1DIn0=
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiaW5kZXguanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi9zcmMvY29uZGl0aW9ucy9pbmRleC50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7QUFtREEsOENBQTJEO0FBQzNELDRDQUFxRDtBQTBMckQsTUFBTSxRQUFRLEdBQUc7SUFDaEIsR0FBRyxtQkFBYztJQUNqQixHQUFHLG1CQUFVO0lBQ2Isb0JBQW9CO0lBQ3BCLHVCQUF1QjtDQUN2QixDQUFDO0FBT0Y7O0dBRUc7QUFDSCxTQUFnQixtQkFBbUIsQ0FFbEMsU0FBMEQ7SUFFMUQsTUFBTSxPQUFPLEdBQUcsUUFBUSxDQUFDLElBQUksQ0FBQyxPQUFPLENBQUMsRUFBRSxDQUFDLE9BQU8sQ0FBQyxDQUFDLENBQUMsS0FBSyxTQUFTLENBQUMsSUFBSSxDQUFpQixDQUFDO0lBQ3hGLE9BQU8sT0FBTyxFQUFFLENBQUMsQ0FBQyxDQUFDLENBQUM7QUFDckIsQ0FBQztBQU5ELGtEQU1DIn0=
 
 /***/ }),
 
@@ -2856,6 +2856,7 @@ exports.enforce = void 0;
 const tslib_1 = __nccwpck_require__(4351);
 /* eslint-disable no-await-in-loop */
 const core = tslib_1.__importStar(__nccwpck_require__(2186));
+const gitmojis_1 = __nccwpck_require__(324);
 const logging_js_1 = __nccwpck_require__(41);
 const evaluator_js_1 = __nccwpck_require__(9132);
 const semantic_js_1 = __nccwpck_require__(2355);
@@ -2872,32 +2873,22 @@ async function enforce() {
         if (!convention.condition) {
             return;
         }
+        console.log(gitmojis_1.gitmojis);
         required++;
         if (convention.condition === 'semanticTitle') {
-            convention.requires = 1;
-            const conditions = [];
-            for (const condition of semantic_js_1.semantic) {
-                conditions.push({
-                    type: 'titleMatches',
-                    condition: `/^${condition}(\\(.*\\))?:/i`,
-                });
-            }
-            if (convention.contexts) {
-                convention.requires = 2;
-                for (const condition of convention.contexts) {
-                    conditions.push({
-                        type: 'titleMatches',
-                        condition: `/\\(.*${condition}.*\\):/i`,
-                    });
-                }
-            }
-            convention.failedComment
-                = `Semantic Conditions failed - Please title your ${this.curContext.type === 'pr' ? 'pull request' : 'issue'} using one of the valid options:\r\n\r\n Types: `
-                    + semantic_js_1.semantic.join(', ')
-                    + (convention.contexts
-                        ? `\r\n\r\n Contexts: ${convention.contexts.join(', ')}`
-                        : '');
+            const { conditions, requires } = semanticTitle.bind(this)(convention);
             convention.condition = conditions;
+            convention.requires = requires;
+        }
+        if (convention.condition === 'gitmojis') {
+            const { conditions, requires } = gitmoji.bind(this)(convention);
+            convention.condition = conditions;
+            convention.requires = requires;
+        }
+        if (convention.condition === 'semanticEmoji') {
+            const { conditions, requires } = semanticEmoji.bind(this)(convention);
+            convention.condition = conditions;
+            convention.requires = requires;
         }
         const success = await evaluator_js_1.evaluator.bind(this)(convention, this.context.props);
         if (success) {
@@ -2926,7 +2917,113 @@ async function enforce() {
     return true;
 }
 exports.enforce = enforce;
-//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29udmVudGlvbnMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi9zcmMvY29udGV4dHMvbWV0aG9kcy9jb252ZW50aW9ucy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiO0FBQUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0dBc0NHOzs7O0FBRUgscUNBQXFDO0FBQ3JDLDREQUFzQztBQUN0QyxpREFBb0Q7QUFFcEQscURBQTZDO0FBQzdDLGdFQUF3RDtBQTBDakQsS0FBSyxVQUFVLE9BQU87SUFDNUIsSUFDQyxDQUFDLElBQUksQ0FBQyxNQUFNLENBQUMsa0JBQWtCO1dBQzVCLENBQUMsSUFBSSxDQUFDLE1BQU0sQ0FBQyxrQkFBa0IsQ0FBQyxTQUFTLEVBQzNDO1FBQ0QsTUFBTSxJQUFJLEtBQUssQ0FBQyw0QkFBNEIsQ0FBQyxDQUFDO0tBQzlDO0lBRUQsSUFBSSxRQUFRLEdBQUcsQ0FBQyxDQUFDO0lBQ2pCLElBQUksVUFBVSxHQUFHLENBQUMsQ0FBQztJQUNuQixNQUFNLGNBQWMsR0FBYSxFQUFFLENBQUM7SUFDcEMsNkVBQTZFO0lBQzdFLEtBQUssTUFBTSxVQUFVLElBQUksSUFBSSxDQUFDLE1BQU0sQ0FBQyxrQkFBa0IsQ0FBQyxTQUFTLEVBQUU7UUFDbEUsSUFBSSxDQUFDLFVBQVUsQ0FBQyxTQUFTLEVBQUU7WUFDMUIsT0FBTztTQUNQO1FBRUQsUUFBUSxFQUFFLENBQUM7UUFDWCxJQUFJLFVBQVUsQ0FBQyxTQUFTLEtBQUssZUFBZSxFQUFFO1lBQzdDLFVBQVUsQ0FBQyxRQUFRLEdBQUcsQ0FBQyxDQUFDO1lBQ3hCLE1BQU0sVUFBVSxHQUFnQixFQUFFLENBQUM7WUFDbkMsS0FBSyxNQUFNLFNBQVMsSUFBSSxzQkFBUSxFQUFFO2dCQUNqQyxVQUFVLENBQUMsSUFBSSxDQUFDO29CQUNmLElBQUksRUFBRSxjQUFjO29CQUNwQixTQUFTLEVBQUUsS0FBSyxTQUFTLGdCQUFnQjtpQkFDekMsQ0FB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
+function semanticTitle(convention) {
+    let requires = 1;
+    const conditions = [];
+    for (const condition of semantic_js_1.semantic) {
+        conditions.push({
+            type: 'titleMatches',
+            condition: `/^${condition}(\\(.*\\))?:/i`,
+        });
+    }
+    if (convention.contexts) {
+        requires = 2;
+        for (const condition of convention.contexts) {
+            conditions.push({
+                type: 'titleMatches',
+                condition: `/\\(.*${condition}.*\\):/i`,
+            });
+        }
+    }
+    convention.failedComment
+        = `Semantic Conditions failed - Please title your ${this.curContext.type === 'pr' ? 'pull request' : 'issue'} using one of the valid options:\r\n\r\n Types: `
+            + semantic_js_1.semantic.join(',\r\n')
+            + (convention.contexts
+                ? `\r\n\r\n Contexts: ${convention.contexts.join(',\r\n')}`
+                : '')
+            + '\r\n\r\nFor more information on Semantic Commit Messages, please see https://www.conventionalcommits.org/en/v1.0.0/';
+    return { conditions, requires };
+}
+function gitmoji(convention) {
+    let requires = 1;
+    const conditions = [];
+    const failConventionComment = [];
+    for (const condition of gitmojis_1.gitmojis) {
+        conditions.push({
+            type: 'titleMatches',
+            condition: `/^${condition.emoji}(\\(.*\\))?:/i`,
+        }, {
+            type: 'titleMatches',
+            condition: `/^${condition.code}(\\(.*\\))?:/i`,
+        }, {
+            type: 'titleMatches',
+            condition: `/^${condition.entity}(\\(.*\\))?:/i`,
+        });
+        if (condition.semver) {
+            failConventionComment.push(`${condition.emoji} || ${condition.code} === ${condition.description}`);
+        }
+    }
+    if (convention.contexts) {
+        requires = 2;
+        for (const condition of convention.contexts) {
+            conditions.push({
+                type: 'titleMatches',
+                condition: `/\\(.*${condition}.*\\):/i`,
+            });
+        }
+    }
+    convention.failedComment
+        = `Gitmoji Conditions failed - Please title your ${this.curContext.type === 'pr' ? 'pull request' : 'issue'} using one of the valid options:\r\n\r\n Types: `
+            + failConventionComment.join(',\r\n')
+            + (convention.contexts
+                ? `\r\n\r\n Contexts: ${convention.contexts.join(',\r\n')}`
+                : '')
+            + '\r\n\r\nFor more information on gitmoji, please visit https://gitmoji.dev/';
+    return { conditions, requires };
+}
+function semanticEmoji(convention) {
+    let requires = 2;
+    const conditions = [];
+    const failConventionComment = [];
+    for (const condition of gitmojis_1.gitmojis) {
+        conditions.push({
+            type: 'titleMatches',
+            condition: `/^${condition.emoji}.*(\\(.*\\))?:/i`,
+        }, {
+            type: 'titleMatches',
+            condition: `/^${condition.code}.*(\\(.*\\))?:/i`,
+        }, {
+            type: 'titleMatches',
+            condition: `/^${condition.entity}.*(\\(.*\\))?:/i`,
+        });
+        if (condition.semver) {
+            failConventionComment.push(`${condition.emoji} || ${condition.code} === ${condition.description}`);
+        }
+    }
+    if (convention.contexts) {
+        requires = 3;
+        for (const condition of convention.contexts) {
+            conditions.push({
+                type: 'titleMatches',
+                condition: `/\\(.*${condition}.*\\):/i`,
+            });
+        }
+    }
+    convention.failedComment
+        = `SemanticEmoji Conditions failed - Please title your ${this.curContext.type === 'pr' ? 'pull request' : 'issue'} using a combination of the valid options:`
+            + '\r\nExample: ":bug: fix(context): Fixing a bug in context"'
+            + '\r\n\r\nGitmoji Options: '
+            + failConventionComment.join(',\r\n')
+            + '\r\n\r\nSemantic Options: '
+            + semantic_js_1.semantic.join(',\r\n')
+            + (convention.contexts
+                ? `\r\n\r\n Contexts: ${convention.contexts.join(',\r\n')}`
+                : '')
+            + '\r\n\r\nFor more information on Semantic Commit Messages, please see https://www.conventionalcommits.org/en/v1.0.0/'
+            + '\r\nFor more information on gitmoji, please visit https://gitmoji.dev/';
+    return { conditions, requires };
+}
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiY29udmVudGlvbnMuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyIuLi8uLi8uLi9zcmMvY29udGV4dHMvbWV0aG9kcy9jb252ZW50aW9ucy50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiO0FBQUE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0dBc0NHOzs7O0FBRUgscUNBQXFDO0FBQ3JDLDREQUFzQztBQUN0Qyx1Q0FBa0M7QUFDbEMsaURBQW9EO0FBRXBELHFEQUE2QztBQUM3QyxnRUFBd0Q7QUEwQ2pELEtBQUssVUFBVSxPQUFPO0lBQzVCLElBQ0MsQ0FBQyxJQUFJLENBQUMsTUFBTSxDQUFDLGtCQUFrQjtXQUM1QixDQUFDLElBQUksQ0FBQyxNQUFNLENBQUMsa0JBQWtCLENBQUMsU0FBUyxFQUMzQztRQUNELE1BQU0sSUFBSSxLQUFLLENBQUMsNEJBQTRCLENBQUMsQ0FBQztLQUM5QztJQUVELElBQUksUUFBUSxHQUFHLENBQUMsQ0FBQztJQUNqQixJQUFJLFVBQVUsR0FBRyxDQUFDLENBQUM7SUFDbkIsTUFBTSxjQUFjLEdBQWEsRUFBRSxDQUFDO0lBQ3BDLDZFQUE2RTtJQUM3RSxLQUFLLE1BQU0sVUFBVSxJQUFJLElBQUksQ0FBQyxNQUFNLENBQUMsa0JBQWtCLENBQUMsU0FBUyxFQUFFO1FBQ2xFLElBQUksQ0FBQyxVQUFVLENBQUMsU0FBUyxFQUFFO1lBQzFCLE9BQU87U0FDUDtRQUVELE9BQU8sQ0FBQyxHQUFHLENBQUMsbUJBQVEsQ0FBQyxDQUFDO1FBQ3RCLFFBQVEsRUFBRSxDQUFDO1FBQ1gsSUFBSSxVQUFVLENBQUMsU0FBUyxLQUFLLGVBQWUsRUFBRTtZQUM3QyxNQUFNLEVBQUMsVUFBVSxFQUFFLFFBQVEsRUFBQyxHQUFHLGFBQWEsQ0FBQyxJQUFJLENBQUMsSUFBSSxDQUFDLENBQUMsVUFBVSxDQUFDLENBQUM7WUFDcEUsVUFBVSxDQUFDLFNBQVMsR0FBRyxVQUFVLENBQUM7WUFDbEMsVUFBVSxDQUFD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
 
 /***/ }),
 
@@ -23370,6 +23467,667 @@ const unescape = (s, { windowsPathsNoEscape = false, } = {}) => {
 };
 exports.unescape = unescape;
 //# sourceMappingURL=unescape.js.map
+
+/***/ }),
+
+/***/ 324:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+
+const $schema$1 = "https://gitmoji.dev/api/gitmojis/schema";
+const gitmojis$1 = [
+	{
+		emoji: "🎨",
+		entity: "&#x1f3a8;",
+		code: ":art:",
+		description: "Improve structure / format of the code.",
+		name: "art",
+		semver: null
+	},
+	{
+		emoji: "⚡️",
+		entity: "&#x26a1;",
+		code: ":zap:",
+		description: "Improve performance.",
+		name: "zap",
+		semver: "patch"
+	},
+	{
+		emoji: "🔥",
+		entity: "&#x1f525;",
+		code: ":fire:",
+		description: "Remove code or files.",
+		name: "fire",
+		semver: null
+	},
+	{
+		emoji: "🐛",
+		entity: "&#x1f41b;",
+		code: ":bug:",
+		description: "Fix a bug.",
+		name: "bug",
+		semver: "patch"
+	},
+	{
+		emoji: "🚑️",
+		entity: "&#128657;",
+		code: ":ambulance:",
+		description: "Critical hotfix.",
+		name: "ambulance",
+		semver: "patch"
+	},
+	{
+		emoji: "✨",
+		entity: "&#x2728;",
+		code: ":sparkles:",
+		description: "Introduce new features.",
+		name: "sparkles",
+		semver: "minor"
+	},
+	{
+		emoji: "📝",
+		entity: "&#x1f4dd;",
+		code: ":memo:",
+		description: "Add or update documentation.",
+		name: "memo",
+		semver: null
+	},
+	{
+		emoji: "🚀",
+		entity: "&#x1f680;",
+		code: ":rocket:",
+		description: "Deploy stuff.",
+		name: "rocket",
+		semver: null
+	},
+	{
+		emoji: "💄",
+		entity: "&#ff99cc;",
+		code: ":lipstick:",
+		description: "Add or update the UI and style files.",
+		name: "lipstick",
+		semver: "patch"
+	},
+	{
+		emoji: "🎉",
+		entity: "&#127881;",
+		code: ":tada:",
+		description: "Begin a project.",
+		name: "tada",
+		semver: null
+	},
+	{
+		emoji: "✅",
+		entity: "&#x2705;",
+		code: ":white_check_mark:",
+		description: "Add, update, or pass tests.",
+		name: "white-check-mark",
+		semver: null
+	},
+	{
+		emoji: "🔒️",
+		entity: "&#x1f512;",
+		code: ":lock:",
+		description: "Fix security issues.",
+		name: "lock",
+		semver: "patch"
+	},
+	{
+		emoji: "🔐",
+		entity: "&#x1f510;",
+		code: ":closed_lock_with_key:",
+		description: "Add or update secrets.",
+		name: "closed-lock-with-key",
+		semver: null
+	},
+	{
+		emoji: "🔖",
+		entity: "&#x1f516;",
+		code: ":bookmark:",
+		description: "Release / Version tags.",
+		name: "bookmark",
+		semver: null
+	},
+	{
+		emoji: "🚨",
+		entity: "&#x1f6a8;",
+		code: ":rotating_light:",
+		description: "Fix compiler / linter warnings.",
+		name: "rotating-light",
+		semver: null
+	},
+	{
+		emoji: "🚧",
+		entity: "&#x1f6a7;",
+		code: ":construction:",
+		description: "Work in progress.",
+		name: "construction",
+		semver: null
+	},
+	{
+		emoji: "💚",
+		entity: "&#x1f49a;",
+		code: ":green_heart:",
+		description: "Fix CI Build.",
+		name: "green-heart",
+		semver: null
+	},
+	{
+		emoji: "⬇️",
+		entity: "⬇️",
+		code: ":arrow_down:",
+		description: "Downgrade dependencies.",
+		name: "arrow-down",
+		semver: "patch"
+	},
+	{
+		emoji: "⬆️",
+		entity: "⬆️",
+		code: ":arrow_up:",
+		description: "Upgrade dependencies.",
+		name: "arrow-up",
+		semver: "patch"
+	},
+	{
+		emoji: "📌",
+		entity: "&#x1F4CC;",
+		code: ":pushpin:",
+		description: "Pin dependencies to specific versions.",
+		name: "pushpin",
+		semver: "patch"
+	},
+	{
+		emoji: "👷",
+		entity: "&#x1f477;",
+		code: ":construction_worker:",
+		description: "Add or update CI build system.",
+		name: "construction-worker",
+		semver: null
+	},
+	{
+		emoji: "📈",
+		entity: "&#x1F4C8;",
+		code: ":chart_with_upwards_trend:",
+		description: "Add or update analytics or track code.",
+		name: "chart-with-upwards-trend",
+		semver: "patch"
+	},
+	{
+		emoji: "♻️",
+		entity: "&#x267b;",
+		code: ":recycle:",
+		description: "Refactor code.",
+		name: "recycle",
+		semver: null
+	},
+	{
+		emoji: "➕",
+		entity: "&#10133;",
+		code: ":heavy_plus_sign:",
+		description: "Add a dependency.",
+		name: "heavy-plus-sign",
+		semver: "patch"
+	},
+	{
+		emoji: "➖",
+		entity: "&#10134;",
+		code: ":heavy_minus_sign:",
+		description: "Remove a dependency.",
+		name: "heavy-minus-sign",
+		semver: "patch"
+	},
+	{
+		emoji: "🔧",
+		entity: "&#x1f527;",
+		code: ":wrench:",
+		description: "Add or update configuration files.",
+		name: "wrench",
+		semver: "patch"
+	},
+	{
+		emoji: "🔨",
+		entity: "&#128296;",
+		code: ":hammer:",
+		description: "Add or update development scripts.",
+		name: "hammer",
+		semver: null
+	},
+	{
+		emoji: "🌐",
+		entity: "&#127760;",
+		code: ":globe_with_meridians:",
+		description: "Internationalization and localization.",
+		name: "globe-with-meridians",
+		semver: "patch"
+	},
+	{
+		emoji: "✏️",
+		entity: "&#59161;",
+		code: ":pencil2:",
+		description: "Fix typos.",
+		name: "pencil2",
+		semver: "patch"
+	},
+	{
+		emoji: "💩",
+		entity: "&#58613;",
+		code: ":poop:",
+		description: "Write bad code that needs to be improved.",
+		name: "poop",
+		semver: null
+	},
+	{
+		emoji: "⏪️",
+		entity: "&#9194;",
+		code: ":rewind:",
+		description: "Revert changes.",
+		name: "rewind",
+		semver: "patch"
+	},
+	{
+		emoji: "🔀",
+		entity: "&#128256;",
+		code: ":twisted_rightwards_arrows:",
+		description: "Merge branches.",
+		name: "twisted-rightwards-arrows",
+		semver: null
+	},
+	{
+		emoji: "📦️",
+		entity: "&#1F4E6;",
+		code: ":package:",
+		description: "Add or update compiled files or packages.",
+		name: "package",
+		semver: "patch"
+	},
+	{
+		emoji: "👽️",
+		entity: "&#1F47D;",
+		code: ":alien:",
+		description: "Update code due to external API changes.",
+		name: "alien",
+		semver: "patch"
+	},
+	{
+		emoji: "🚚",
+		entity: "&#1F69A;",
+		code: ":truck:",
+		description: "Move or rename resources (e.g.: files, paths, routes).",
+		name: "truck",
+		semver: null
+	},
+	{
+		emoji: "📄",
+		entity: "&#1F4C4;",
+		code: ":page_facing_up:",
+		description: "Add or update license.",
+		name: "page-facing-up",
+		semver: null
+	},
+	{
+		emoji: "💥",
+		entity: "&#x1f4a5;",
+		code: ":boom:",
+		description: "Introduce breaking changes.",
+		name: "boom",
+		semver: "major"
+	},
+	{
+		emoji: "🍱",
+		entity: "&#1F371",
+		code: ":bento:",
+		description: "Add or update assets.",
+		name: "bento",
+		semver: "patch"
+	},
+	{
+		emoji: "♿️",
+		entity: "&#9855;",
+		code: ":wheelchair:",
+		description: "Improve accessibility.",
+		name: "wheelchair",
+		semver: "patch"
+	},
+	{
+		emoji: "💡",
+		entity: "&#128161;",
+		code: ":bulb:",
+		description: "Add or update comments in source code.",
+		name: "bulb",
+		semver: null
+	},
+	{
+		emoji: "🍻",
+		entity: "&#x1f37b;",
+		code: ":beers:",
+		description: "Write code drunkenly.",
+		name: "beers",
+		semver: null
+	},
+	{
+		emoji: "💬",
+		entity: "&#128172;",
+		code: ":speech_balloon:",
+		description: "Add or update text and literals.",
+		name: "speech-balloon",
+		semver: "patch"
+	},
+	{
+		emoji: "🗃️",
+		entity: "&#128451;",
+		code: ":card_file_box:",
+		description: "Perform database related changes.",
+		name: "card-file-box",
+		semver: "patch"
+	},
+	{
+		emoji: "🔊",
+		entity: "&#128266;",
+		code: ":loud_sound:",
+		description: "Add or update logs.",
+		name: "loud-sound",
+		semver: null
+	},
+	{
+		emoji: "🔇",
+		entity: "&#128263;",
+		code: ":mute:",
+		description: "Remove logs.",
+		name: "mute",
+		semver: null
+	},
+	{
+		emoji: "👥",
+		entity: "&#128101;",
+		code: ":busts_in_silhouette:",
+		description: "Add or update contributor(s).",
+		name: "busts-in-silhouette",
+		semver: null
+	},
+	{
+		emoji: "🚸",
+		entity: "&#128696;",
+		code: ":children_crossing:",
+		description: "Improve user experience / usability.",
+		name: "children-crossing",
+		semver: "patch"
+	},
+	{
+		emoji: "🏗️",
+		entity: "&#1f3d7;",
+		code: ":building_construction:",
+		description: "Make architectural changes.",
+		name: "building-construction",
+		semver: null
+	},
+	{
+		emoji: "📱",
+		entity: "&#128241;",
+		code: ":iphone:",
+		description: "Work on responsive design.",
+		name: "iphone",
+		semver: "patch"
+	},
+	{
+		emoji: "🤡",
+		entity: "&#129313;",
+		code: ":clown_face:",
+		description: "Mock things.",
+		name: "clown-face",
+		semver: null
+	},
+	{
+		emoji: "🥚",
+		entity: "&#129370;",
+		code: ":egg:",
+		description: "Add or update an easter egg.",
+		name: "egg",
+		semver: "patch"
+	},
+	{
+		emoji: "🙈",
+		entity: "&#8bdfe7;",
+		code: ":see_no_evil:",
+		description: "Add or update a .gitignore file.",
+		name: "see-no-evil",
+		semver: null
+	},
+	{
+		emoji: "📸",
+		entity: "&#128248;",
+		code: ":camera_flash:",
+		description: "Add or update snapshots.",
+		name: "camera-flash",
+		semver: null
+	},
+	{
+		emoji: "⚗️",
+		entity: "&#128248;",
+		code: ":alembic:",
+		description: "Perform experiments.",
+		name: "alembic",
+		semver: "patch"
+	},
+	{
+		emoji: "🔍️",
+		entity: "&#128269;",
+		code: ":mag:",
+		description: "Improve SEO.",
+		name: "mag",
+		semver: "patch"
+	},
+	{
+		emoji: "🏷️",
+		entity: "&#127991;",
+		code: ":label:",
+		description: "Add or update types.",
+		name: "label",
+		semver: "patch"
+	},
+	{
+		emoji: "🌱",
+		entity: "&#127793;",
+		code: ":seedling:",
+		description: "Add or update seed files.",
+		name: "seedling",
+		semver: null
+	},
+	{
+		emoji: "🚩",
+		entity: "&#x1F6A9;",
+		code: ":triangular_flag_on_post:",
+		description: "Add, update, or remove feature flags.",
+		name: "triangular-flag-on-post",
+		semver: "patch"
+	},
+	{
+		emoji: "🥅",
+		entity: "&#x1F945;",
+		code: ":goal_net:",
+		description: "Catch errors.",
+		name: "goal-net",
+		semver: "patch"
+	},
+	{
+		emoji: "💫",
+		entity: "&#x1f4ab;",
+		code: ":dizzy:",
+		description: "Add or update animations and transitions.",
+		name: "animation",
+		semver: "patch"
+	},
+	{
+		emoji: "🗑️",
+		entity: "&#x1F5D1;",
+		code: ":wastebasket:",
+		description: "Deprecate code that needs to be cleaned up.",
+		name: "wastebasket",
+		semver: "patch"
+	},
+	{
+		emoji: "🛂",
+		entity: "&#x1F6C2;",
+		code: ":passport_control:",
+		description: "Work on code related to authorization, roles and permissions.",
+		name: "passport-control",
+		semver: "patch"
+	},
+	{
+		emoji: "🩹",
+		entity: "&#x1FA79;",
+		code: ":adhesive_bandage:",
+		description: "Simple fix for a non-critical issue.",
+		name: "adhesive-bandage",
+		semver: "patch"
+	},
+	{
+		emoji: "🧐",
+		entity: "&#x1F9D0;",
+		code: ":monocle_face:",
+		description: "Data exploration/inspection.",
+		name: "monocle-face",
+		semver: null
+	},
+	{
+		emoji: "⚰️",
+		entity: "&#x26B0;",
+		code: ":coffin:",
+		description: "Remove dead code.",
+		name: "coffin",
+		semver: null
+	},
+	{
+		emoji: "🧪",
+		entity: "&#x1F9EA;",
+		code: ":test_tube:",
+		description: "Add a failing test.",
+		name: "test-tube",
+		semver: null
+	},
+	{
+		emoji: "👔",
+		entity: "&#128084;",
+		code: ":necktie:",
+		description: "Add or update business logic.",
+		name: "necktie",
+		semver: "patch"
+	},
+	{
+		emoji: "🩺",
+		entity: "&#x1FA7A;",
+		code: ":stethoscope:",
+		description: "Add or update healthcheck.",
+		name: "stethoscope",
+		semver: null
+	},
+	{
+		emoji: "🧱",
+		entity: "&#x1f9f1;",
+		code: ":bricks:",
+		description: "Infrastructure related changes.",
+		name: "bricks",
+		semver: null
+	},
+	{
+		emoji: "🧑‍💻",
+		entity: "&#129489;&#8205;&#128187;",
+		code: ":technologist:",
+		description: "Improve developer experience.",
+		name: "technologist",
+		semver: null
+	},
+	{
+		emoji: "💸",
+		entity: "&#x1F4B8;",
+		code: ":money_with_wings:",
+		description: "Add sponsorships or money related infrastructure.",
+		name: "money-with-wings",
+		semver: null
+	},
+	{
+		emoji: "🧵",
+		entity: "&#x1F9F5;",
+		code: ":thread:",
+		description: "Add or update code related to multithreading or concurrency.",
+		name: "thread",
+		semver: null
+	},
+	{
+		emoji: "🦺",
+		entity: "&#x1F9BA;",
+		code: ":safety_vest:",
+		description: "Add or update code related to validation.",
+		name: "safety-vest",
+		semver: null
+	}
+];
+const gitmojisJson = {
+	$schema: $schema$1,
+	gitmojis: gitmojis$1
+};
+
+const type = "object";
+const $schema = "https://json-schema.org/draft/2020-12/schema";
+const required = [
+	"gitmojis"
+];
+const properties = {
+	gitmojis: {
+		type: "array",
+		minItems: 1,
+		uniqueItems: true,
+		items: {
+			type: "object",
+			required: [
+				"emoji",
+				"entity",
+				"code",
+				"description",
+				"name",
+				"semver"
+			],
+			properties: {
+				code: {
+					type: "string"
+				},
+				entity: {
+					type: "string"
+				},
+				description: {
+					type: "string"
+				},
+				emoji: {
+					type: "string"
+				},
+				name: {
+					type: "string"
+				},
+				semver: {
+					"enum": [
+						"major",
+						"minor",
+						"patch",
+						null
+					]
+				}
+			}
+		}
+	}
+};
+const schema = {
+	type: type,
+	$schema: $schema,
+	required: required,
+	properties: properties
+};
+
+const gitmojis = gitmojisJson.gitmojis;
+
+exports.gitmojis = gitmojis;
+exports.schema = schema;
+
 
 /***/ }),
 
