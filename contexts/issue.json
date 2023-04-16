@@ -6,7 +6,7 @@
         "from": "<!-- @format -->\r\n\r\n<!-- Please use [context] in title to describe the package related to this issue.\r\nValid options are; Release, Label, Variable, Installer\r\ncontext example: bug(installer): {your title here}\r\n-->\r\n\r\n## Describe the bug\r\n\r\n<!-- A clear and concise description of what the bug is. -->\r\n\r\n### To Reproduce\r\n\r\n<!-- Steps to reproduce the behaviour:-->\r\n\r\n1. Go to '...'\r\n2. Click on '....'\r\n3. Scroll down to '....'\r\n4. See error\r\n\r\n### Expected behaviour\r\n\r\n<!-- A clear and concise description of what you expected to happen. -->\r\n\r\n### Screenshots\r\n\r\n### Console Logs\r\n\r\n<!-- Please [set the `ACTIONS_RUNNER_DEBUG` secret to `true` to enable debug logging](https://help.github.com/en/actions/configuring-and-managing-workflows/managing-a-workflow-run#enabling-debug-logging), rerun the labeler workflow, and paste the output below: -->\r\n\r\n```\r\ninsert debug output here\r\n```\r\n\r\n## Device Information\r\n\r\n<!-- Please delete all information not relivent-->\r\n\r\n- Version: [e.g. 22]\r\n- Platform: [e.g. macOS, Google Cloud, ubuntu 18.04]\r\n- Browser: [e.g. stock browser, safari]\r\n- Node Version: [e.g. v16.8.0]\r\n- Yarn Version: [e.g. v1.22.4]\r\n- Docker Version: [e.g. Docker version 19.03.12, build 48a66213fe]\r\n- Package(s): [e.g. @resnovas/release-manager]\r\n- URL: [e.g. https://console.smartcloud.gg/admin]\r\n\r\n## Additional context\r\n\r\n<!-- Add any other context about the problem here. -->\r\n\r\n## Bug Checklist\r\n\r\n<!-- Please be honest here; we don't mind if you haven't done all these steps; however, we need to know where has been tested and how extensively we need to test it ourselves.\r\n\r\nWe would appreciate it if you could maintain this section cleanly and clearly. If someone confirms your bug, add them to the \"Bug confirmed by\" section. Our bot will automatically detect if you have enough users confirmed to tag this bug as \"Bug - Confirmed\".\r\n-->\r\n\r\n- [ ] Have reproduced on my application version\r\n- [ ] Have reproduced on a clean installation\r\n- [ ] Have reproduced on a development build\r\n- [ ] Have included logs or screenshots\r\n- [ ] Have contacted support via the official website\r\n- [ ] Have asked the community for guidance\r\n- [ ] Have linked any related issues\r\n- [ ] Bug confirmed by <!--@yourusername & @friendsusername-->\r\n"
       },
       "title": {
-        "from": "bug(website): Test 2"
+        "from": "bug(condition): Test 4"
       }
     },
     "issue": {
@@ -16,7 +16,7 @@
       "author_association": "MEMBER",
       "body": "<!-- @format -->\r\n\r\n<!-- Please use [context] in title to describe the package related to this issue.\r\nValid options are; Release, Label, Variable, Installer\r\ncontext example: bug(installer): {your title here}\r\n-->\r\n\r\n## Describe the bug\r\n\r\n<!-- A clear and concise description of what the bug is. -->\r\n\r\n### To Reproduce\r\n\r\n<!-- Steps to reproduce the behaviour:-->\r\n\r\n1. Go to '...'\r\n2. Click on '....'\r\n3. Scroll down to '....'\r\n4. See error\r\n\r\n### Expected behaviour\r\n\r\n<!-- A clear and concise description of what you expected to happen. -->\r\n\r\n### Screenshots\r\n\r\n### Console Logs\r\n\r\n<!-- Please [set the `ACTIONS_RUNNER_DEBUG` secret to `true` to enable debug logging](https://help.github.com/en/actions/configuring-and-managing-workflows/managing-a-workflow-run#enabling-debug-logging), rerun the labeler workflow, and paste the output below: -->\r\n\r\n```\r\ninsert debug output here\r\n```\r\n\r\n## Device Information\r\n\r\n<!-- Please delete all information not relivent-->\r\n\r\n- Version: [e.g. 22]\r\n- Platform: [e.g. macOS, Google Cloud, ubuntu 18.04]\r\n- Browser: [e.g. stock browser, safari]\r\n- Node Version: [e.g. v16.8.0]\r\n- Yarn Version: [e.g. v1.22.4]\r\n- Docker Version: [e.g. Docker version 19.03.12, build 48a66213fe]\r\n- Package(s): [e.g. @resnovas/release-manager]\r\n- URL: [e.g. https://console.smartcloud.gg/admin]\r\n\r\n## Additional context\r\n\r\n<!-- Add any other context about the problem here. -->\r\n\r\n## Bug Checklist\r\n\r\n<!-- Please be honest here; we don't mind if you haven't done all these steps; however, we need to know where has been tested and how extensively we need to test it ourselves.\r\n\r\nWe would appreciate it if you could maintain this section cleanly and clearly. If someone confirms your bug, add them to the \"Bug confirmed by\" section. Our bot will automatically detect if you have enough users confirmed to tag this bug as \"Bug - Confirmed\".\r\n-->\r\n\r\n- [ ] Have reproduced on my application version\r\n- [ ] Have reproduced on a clean installation\r\n- [ ] Have reproduced on a development build\r\n- [ ] Have included logs or screenshots\r\n- [ ] Have contacted support via the official website\r\n- [ ] Have asked the community for guidance\r\n- [ ] Have linked any related issues\r\n- [ ] Bug confirmed by <!--@yourusername & @friendsusername-->\r\n",
       "closed_at": null,
-      "comments": 0,
+      "comments": 1,
       "comments_url": "https://api.github.com/repos/Resnovas/smartcloud/issues/473/comments",
       "created_at": "2023-04-13T19:47:00Z",
       "events_url": "https://api.github.com/repos/Resnovas/smartcloud/issues/473/events",
@@ -45,8 +45,8 @@
       "state": "open",
       "state_reason": null,
       "timeline_url": "https://api.github.com/repos/Resnovas/smartcloud/issues/473/timeline",
-      "title": "bug(condition): Test 3",
-      "updated_at": "2023-04-14T15:56:36Z",
+      "title": "🐛 bug(condition): Test 2",
+      "updated_at": "2023-04-16T18:59:09Z",
       "url": "https://api.github.com/repos/Resnovas/smartcloud/issues/473",
       "user": {
         "avatar_url": "https://avatars.githubusercontent.com/u/11413796?v=4",
@@ -138,8 +138,8 @@
       "name": "smartcloud",
       "node_id": "MDEwOlJlcG9zaXRvcnkzMTU5MzkxMDM=",
       "notifications_url": "https://api.github.com/repos/Resnovas/smartcloud/notifications{?since,all,participating}",
-      "open_issues": 12,
-      "open_issues_count": 12,
+      "open_issues": 13,
+      "open_issues_count": 13,
       "owner": {
         "avatar_url": "https://avatars.githubusercontent.com/u/62039749?v=4",
         "events_url": "https://api.github.com/users/Resnovas/events{/privacy}",
@@ -162,9 +162,9 @@
       },
       "private": false,
       "pulls_url": "https://api.github.com/repos/Resnovas/smartcloud/pulls{/number}",
-      "pushed_at": "2023-04-14T12:41:18Z",
+      "pushed_at": "2023-04-16T18:07:10Z",
       "releases_url": "https://api.github.com/repos/Resnovas/smartcloud/releases{/id}",
-      "size": 116862,
+      "size": 114625,
       "ssh_url": "git@github.com:Resnovas/smartcloud.git",
       "stargazers_count": 7,
       "stargazers_url": "https://api.github.com/repos/Resnovas/smartcloud/stargazers",
@@ -205,14 +205,14 @@
     }
   },
   "eventName": "issues",
-  "sha": "cad28cab729f6e14f881c5df9a9a3737e10d5f8e",
+  "sha": "1e432b80e3370bb3634c432995a4c5b7f5681393",
   "ref": "refs/heads/main",
   "workflow": "Project Management",
   "action": "__self",
   "actor": "TGTGamer",
   "job": "release-mastermind",
-  "runNumber": 16084,
-  "runId": 4701623747,
+  "runNumber": 16111,
+  "runId": 4714893743,
   "apiUrl": "https://api.github.com",
   "serverUrl": "https://github.com",
   "graphqlUrl": "https://api.github.com/graphql"

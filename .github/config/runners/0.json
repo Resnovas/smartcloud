@@ -23,20 +23,7 @@
       "condition": [
         {
           "requires": 1,
-          "contexts": [
-            "@resnovas/workflow-mastermind",
-            "@resnovas/release-mastermind",
-            "@resnovas/label-mastermind",
-            "@resnovas/variable-mastermind",
-            "@resnovas/convention-mastermind",
-            "condition",
-            "api",
-            "util",
-            "installer",
-            "deps",
-            "deps-dev"
-          ],
-          "condition": "semanticTitle"
+          "condition": "semanticEmoji"
         }
       ]
     },
