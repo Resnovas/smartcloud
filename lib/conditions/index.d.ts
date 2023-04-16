@@ -110,9 +110,12 @@ export type SharedConventionConditions = {
      */
     requires: number;
     /**
-     * The conditions required for this to succeed. You can use the "semanticTitle" to automatically apply thses conditions
+     * The conditions required for this to succeed.
+     * You can use the "semanticTitle" to automatically apply semantic conditions
+     * You can use the "gitmojis" to automatically apply gitmojis conditions
+     * You can use the "mojiSemantic" to automatically apply gitmojis and semantic conditions combined
      */
-    condition: Condition[] | string;
+    condition: Condition[] | 'semanticTitle' | 'semanticEmoji' | 'gitmojis' | string;
 };
 /**
  * The PR condition configuration
@@ -166,7 +169,7 @@ export type ScheduleConditionConfig = {
      */
     condition: ScheduleCondition[];
 };
-type Conditions = IssueCondition | PrCondition | ProjectCondition | ScheduleCondition | Condition;
+type Conditions = IssueCondition | PrCondition | ProjectCondition;
 export type CurContext = {
     type: 'pr';
     context: PrContext;
@@ -183,4 +186,4 @@ export type CurContext = {
 /**
  * The schedule condition handler.
  */
-export declare function getConditionHandler(this: UtilThis, condition: IssueCondition | PrCondition | ProjectCondition | ScheduleCondition): (this: UtilThis, condition: Conditions, context: PrProps | IssueProps | ProjectProps) => Promise<boolean>;
+export declare function getConditionHandler(this: UtilThis, condition: IssueCondition | PrCondition | ProjectCondition): (this: UtilThis, condition: Conditions, context: PrProps | IssueProps | ProjectProps) => Promise<boolean>;

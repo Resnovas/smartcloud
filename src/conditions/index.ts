@@ -37,6 +37,7 @@
  * Date      	By	Comments
  * ----------	---	---------------------------------------------------------
  */
+/* eslint-disable @typescript-eslint/no-redundant-type-constituents */
 import type {components} from '@octokit/openapi-types/types.js';
 import type {Context} from '@actions/github/lib/context.js';
 import type {PullRequestEvent, IssuesEvent, IssueCommentEvent, ProjectCardEvent} from '@octokit/webhooks-types';
@@ -163,9 +164,12 @@ export type SharedConventionConditions = {
 	 */
 	requires: number;
 	/**
-	 * The conditions required for this to succeed. You can use the "semanticTitle" to automatically apply thses conditions
+	 * The conditions required for this to succeed.
+	 * You can use the "semanticTitle" to automatically apply semantic conditions
+	 * You can use the "gitmojis" to automatically apply gitmojis conditions
+	 * You can use the "mojiSemantic" to automatically apply gitmojis and semantic conditions combined
 	 */
-	condition: Condition[] | string;
+	condition: Condition[] | 'semanticTitle' | 'semanticEmoji' | 'gitmojis' | string;
 };
 
 /**
@@ -224,7 +228,7 @@ export type ScheduleConditionConfig = {
 	condition: ScheduleCondition[];
 };
 
-type Conditions = IssueCondition | PrCondition | ProjectCondition | ScheduleCondition | Condition;
+type Conditions = IssueCondition | PrCondition | ProjectCondition ;
 
 export type CurContext =
 	| {type: 'pr'; context: PrContext}
@@ -249,7 +253,7 @@ type HandlerTypes = [
  */
 export function getConditionHandler(
 	this: UtilThis,
-	condition: IssueCondition | PrCondition | ProjectCondition | ScheduleCondition,
+	condition: IssueCondition | PrCondition | ProjectCondition,
 ) {
 	const handler = handlers.find(handler => handler[0] === condition.type) as HandlerTypes;
 	return handler?.[1];
