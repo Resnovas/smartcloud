@@ -5311,10 +5311,10 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
-docusaurus-plugin-typedoc@^0.19.1:
-  version "0.19.1"
-  resolved "https://registry.yarnpkg.com/docusaurus-plugin-typedoc/-/docusaurus-plugin-typedoc-0.19.1.tgz#f0b103c6cdb24df408ceef4689fd44bf2eaf181e"
-  integrity sha512-7kJufebjg8YBqezfi3OKvjsGLqWeoLNwIRNmsHwc4b8tuPFswUmhyrygsbbBGBVkrmfsPnSki2QFZdv9rhSqyw==
+docusaurus-plugin-typedoc@^0.19.2:
+  version "0.19.2"
+  resolved "https://registry.yarnpkg.com/docusaurus-plugin-typedoc/-/docusaurus-plugin-typedoc-0.19.2.tgz#2507047176b38c862155eedf31e5ced177cd90f7"
+  integrity sha512-N4B2MOaXIyu+FloFn6zVbGgSqszeFQE/7ZIgFakpkVg5F0rfysiDGac2PHbPf4o8DWdyyviJOAuhXk6U7Febeg==
 
 dom-converter@^0.2.0:
   version "0.2.0"
