@@ -82,7 +82,7 @@
 		"@json-editor/json-editor": "^2.9.0-beta.0",
 		"@knodes/typedoc-plugin-code-blocks": "^0.23.1",
 		"@mdx-js/react": "^2.3.0",
-		"@mui/material": "^5.12.1",
+		"@mui/material": "^5.12.3",
 		"@octokit/plugin-rest-endpoint-methods": "^7.0.1",
 		"@octokit/webhooks-types": "^6.6.0",
 		"@svgr/webpack": "^7.0.0",
