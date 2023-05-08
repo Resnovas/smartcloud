@@ -131,7 +131,7 @@
 		"prettier-standard": "^16.4.1",
 		"typescript": "*",
 		"typescript-json-schema": "^0.56.0",
-		"xo": "^0.54.1",
+		"xo": "^0.54.2",
 		"yarn": "^1.22.19"
 	}
 }
