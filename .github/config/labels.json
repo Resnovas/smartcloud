@@ -5,51 +5,6 @@
     "color": "CFD3D7",
     "description": "This issue/pull request has been abandon"
   },
-  "available": {
-    "name": "Status - Available",
-    "color": "CFD3D7",
-    "description": "This issue is available for either Developers or Community contributors to develop"
-  },
-  "blocked": {
-    "name": "Status - Blocked",
-    "color": "CFD3D7",
-    "description": "Another issue is blocking the development of this issue"
-  },
-  "completed": {
-    "name": "Status - Completed",
-    "color": "CFD3D7",
-    "description": "Development has finished and had merged for this issue"
-  },
-  "progress": {
-    "name": "Status - In Progress",
-    "color": "CFD3D7",
-    "description": "Development is underway for this issue"
-  },
-  "hold": {
-    "name": "Status - On Hold",
-    "color": "CFD3D7",
-    "description": "The developers have decided to hold the development of this request"
-  },
-  "pending": {
-    "name": "Status - Pending",
-    "color": "CFD3D7",
-    "description": "The developers have approved the development of this request"
-  },
-  "review": {
-    "name": "Status - Review Needed",
-    "color": "CFD3D7",
-    "description": "This pull request is waiting on review"
-  },
-  "revision": {
-    "name": "Status - Revision Needed",
-    "color": "CFD3D7",
-    "description": "This pull request has been reviewed and requires revision"
-  },
-  "doNotDevelop": {
-    "name": "Status - Do not develop",
-    "color": "CFD3D7",
-    "description": "Development by DevOps or Community contributor shall not happen"
-  },
   "stale": {
     "name": "Status - Stale",
     "color": "CFD3D7",
@@ -108,7 +63,7 @@
   "revert": {
     "name": "Type - Revert",
     "color": "0075CA",
-    "description": "Removes & Discards a previous change as an error"
+    "description": "Removes and discards a previous change as an error"
   },
   "deprecated": {
     "name": "Type - Deprecated",
@@ -123,15 +78,15 @@
   "style": {
     "name": "Type - Style",
     "color": "0075CA",
-    "description": "Changes that do not affect the meaning of the code (white-space formatting missing semi-colons)"
+    "description": "Changes that do not affect the meaning of the code"
   },
   "dependences": {
-    "name": "Type - Dependences",
+    "name": "Type - Dependencies",
     "color": "0075CA",
-    "description": "Changes that affect the dependences"
+    "description": "Changes that affect the dependencies"
   },
   "workflow": {
-    "name": "Context - workflows",
+    "name": "Context - Workflows",
     "color": "f9cea2",
     "description": "Related to ./.github/workflows"
   },
@@ -173,7 +128,7 @@
   "installer": {
     "name": "Context - Installer",
     "color": "f9cea2",
-    "description": "Related to action installer & automatic configuration tools"
+    "description": "Related to action installer and automatic configuration tools"
   },
   "deps": {
     "name": "Context - Dependencies",
@@ -185,25 +140,20 @@
     "color": "f9cea2",
     "description": "Related to developer dependencies"
   },
-  "devOpsAccepted": {
-    "name": "DevOps - Accepted",
+  "stageCompleted": {
+    "name": "Stage - Completed",
     "color": "172875",
-    "description": "DevOPS are planning"
+    "description": "Work has shipped through the full pipeline"
   },
-  "devOpsCompleted": {
-    "name": "DevOps - Completed",
+  "stageDeploying": {
+    "name": "Stage - Deploying",
     "color": "172875",
-    "description": "DevOPS have complete"
+    "description": "Deploying to latest"
   },
-  "devOpsDeploying": {
-    "name": "DevOps - Deploying",
+  "stageDeveloping": {
+    "name": "Stage - Developing",
     "color": "172875",
-    "description": "DevOps is deploying to latest"
-  },
-  "devOpsDeveloping": {
-    "name": "DevOps - Developing",
-    "color": "172875",
-    "description": "DevOPS are Developing"
+    "description": "Development is underway"
   },
   "devOpsRejected": {
     "name": "DevOps - Rejected",
@@ -215,40 +165,15 @@
     "color": "172875",
     "description": "DevOPS awaiting review"
   },
-  "devOpsStaging": {
-    "name": "DevOps - Staging",
+  "stageStaging": {
+    "name": "Stage - Staging",
     "color": "172875",
-    "description": "DevOPS deployed to Staging"
+    "description": "Deployed to the staging environment"
   },
-  "devOpsTesting": {
-    "name": "DevOps - Testing",
+  "stageTesting": {
+    "name": "Stage - Testing",
     "color": "172875",
-    "description": "DevOPS deployed to Testing"
-  },
-  "comOpsAccepted": {
-    "name": "ComOps - Accepted",
-    "color": "bfdadc",
-    "description": "A community contributor is planning to work on this issue"
-  },
-  "comOpsCompleted": {
-    "name": "ComOps - Completed",
-    "color": "bfdadc",
-    "description": "The contributor has completed this issue and handed over to the developers to stage & deploy"
-  },
-  "comOpsDeveloping": {
-    "name": "ComOps - Developing",
-    "color": "bfdadc",
-    "description": "The contributor is developing this issue"
-  },
-  "comOpsAwaiting Review": {
-    "name": "ComOps - Awaiting Review",
-    "color": "bfdadc",
-    "description": "The contributor is awaiting review"
-  },
-  "comOpsTesting": {
-    "name": "ComOps - Testing",
-    "color": "bfdadc",
-    "description": "The contributor is awaiting testing results"
+    "description": "Deployed to the testing environment"
   },
   "android": {
     "name": "Platform - Android",
@@ -263,7 +188,7 @@
     "color": "E0BE84"
   },
   "ios": {
-    "name": "Platform - IOS",
+    "name": "Platform - iOS",
     "color": "E0BE84"
   },
   "ubuntu": {
@@ -279,7 +204,7 @@
     "color": "E0BE84"
   },
   "macos": {
-    "name": "Platform - MacOS",
+    "name": "Platform - macOS",
     "color": "E0BE84"
   },
   "windows": {
@@ -288,22 +213,8 @@
   },
   "platformOther": {
     "name": "Platform - Other",
-    "color": "E0BE84"
-  },
-  "priorityLow": {
-    "name": "Priority - Low",
-    "color": "8de8b3",
-    "description": "This bug isn't a high priority for the next release"
-  },
-  "priorityMedium": {
-    "name": "Priority - Medium",
-    "color": "8de8b3",
-    "description": "This bug affects more than 10% of users and should be patched before the next major release"
-  },
-  "priorityHigh": {
-    "name": "Priority - High",
-    "color": "8de8b3",
-    "description": "This bug affects more than 25% of users and should be patched before the next minor release"
+    "color": "E0BE84",
+    "description": "A platform not covered by the other Platform labels"
   },
   "priorityCritical": {
     "name": "Priority - Critical",
@@ -350,31 +261,6 @@
     "color": "D73A4A",
     "description": "This bug has been confirmed"
   },
-  "new": {
-    "name": "Bug - New",
-    "color": "D73A4A",
-    "description": "This bug is new"
-  },
-  "fixed": {
-    "name": "Bug - Fixed",
-    "color": "D73A4A",
-    "description": "This bug has been fixed"
-  },
-  "claSigned": {
-    "name": "CLA - Signed",
-    "color": "dd6127",
-    "description": "Contributor License Agreement has been signed"
-  },
-  "claUnsigned": {
-    "name": "CLA - Unsigned",
-    "color": "dd6127",
-    "description": "Contributor License Agreement has not been signed"
-  },
-  "claNot Required": {
-    "name": "CLA - Not Required",
-    "color": "dd6127",
-    "description": "Contributor License Agreement not required"
-  },
   "major": {
     "name": "Versioning - Major",
     "color": "e580c8",
@@ -398,7 +284,7 @@
   "build": {
     "name": "Versioning - Build",
     "color": "e580c8",
-    "description": "A build to represent dependencies updates and insignificant changes"
+    "description": "A build to represent dependency updates and insignificant changes"
   },
   "breaking": {
     "name": "Versioning - BREAKING",
