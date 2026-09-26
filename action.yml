@@ -1,47 +1,36 @@
-###
-# Filename: d:\Jonathan\Documents\Repositories\devspace\smartcloud\action.yml
-# Path: d:\Jonathan\Documents\Repositories\devspace\smartcloud
-# Created Date: Monday, September 5th 2022, 7:20:39 pm
-# Author: Jonathan Stevens
-#
-# Copyright (c) 2022 Jonathan Stevens
-###
-
-name: "SmartcloudAction"
-description: "Smartcloud - Github project management automation without limits"
-author: "Resnovas"
+name: smartcloud
+description: Repository automation and policy for GitHub, configured as code.
+author: Resnovas
 branding:
-  icon: "at-sign"
-  color: "purple"
+  icon: at-sign
+  color: purple
 inputs:
   GITHUB_TOKEN:
-    description: "The GITHUB_TOKEN secret"
-    required: true
+    description: The token smartcloud acts with. Settings need an admin token; everything else works with the workflow token.
+    required: false
+    default: ${{ github.token }}
   config:
-    description: "Config file path"
-    default: ".github/config.json"
+    description: The config file. Defaults to the first of .github/smartcloud.yml, .github/smartcloud.yaml or .github/config.json.
     required: false
   configJson:
-    description: "JSON string with configuration data"
-    default: ""
+    description: The config given inline, as YAML or JSON. Wins over the file.
     required: false
   configRef:
-    description: "The ref to use when getting the config"
-    default: ""
-    required: false
-  fillEmpty:
-    description: "Fill Empty context configuration with shared configs"
-    default: "true"
-    required: false
-  skipDelete:
-    description: "Skip deleting labels from repository"
-    default: "false"
+    description: The branch, tag or commit to read the config from. Defaults to the default branch, so a pull request cannot change the rules it is checked against.
     required: false
   dryRun:
-    description: "Allows the running off action without it doing effects"
-    default: "false"
+    description: Set to true to record every write in the job summary instead of making it.
+    required: false
+  features:
+    description: A comma-separated list of the features to run. Defaults to every configured feature.
+    required: false
+  fillEmpty:
+    description: Deprecated and ignored; shared settings now come from `extends`.
+    required: false
+  skipDelete:
+    description: Deprecated and ignored; labels are only deleted when `labelSync.prune` is true.
     required: false
 
 runs:
-  using: "node16"
-  main: "legacy/dist/index.js"
+  using: node24
+  main: dist/index.js

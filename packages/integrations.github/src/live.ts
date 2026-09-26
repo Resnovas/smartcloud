@@ -170,6 +170,8 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     const octokit = new Octokit({
       auth: Redacted.value(options.token),
       userAgent: 'smartcloud',
+      // Every failure already surfaces as a typed error, so Octokit's own request log would only repeat it.
+      log: { debug: () => undefined, info: () => undefined, warn: console.warn, error: () => undefined },
       ...(options.fetch === undefined ? {} : { request: { fetch: options.fetch } }),
     })
     const { owner, repo } = options.coordinates

@@ -1,0 +1,19 @@
+{
+  "name": "@resnovas/action-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "tags": [
+      "type_test",
+      "layer_backend"
+    ]
+  },
+  "devDependencies": {
+    "@effect/platform-node": "^0.108.2",
+    "@resnovas/action": "workspace:*",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*"
+  }
+}
