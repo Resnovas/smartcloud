@@ -1,0 +1,7 @@
+# Synced from Resnovas/.github templates/graphify-out/.gitattributes. Edit it there.
+#
+# Generated output: collapsed in pull request diffs, and graph.json is merged by
+# Graphify's union merge driver (registered by `sh tools/graphify/graphify setup`)
+# instead of producing text conflicts.
+* linguist-generated=true
+graph.json merge=graphify

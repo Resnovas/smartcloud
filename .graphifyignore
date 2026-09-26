@@ -1,0 +1,77 @@
+# house:managed:begin - synced from Resnovas/.github templates/.graphifyignore. Edits inside this block are overwritten.
+#
+# What Graphify must not read when it builds graphify-out/graph.json. The graph
+# is committed and public wherever the repository is, so anything it reads can
+# be published through it.
+#
+# Git-style patterns. Graphify already honours .gitignore, which wins: a rule
+# here cannot re-include a path .gitignore excludes. It also skips .git,
+# node_modules, build output, .env files and key material by itself; the
+# secrets section restates those rather than relying on built-ins alone.
+
+# Secrets and credentials.
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+*.keystore
+.npmrc
+.netrc
+secrets/
+
+# Private and customer data. Never let an export dropped into a clone reach
+# the graph.
+private/
+.data/
+*.dump
+*.sql.gz
+*.csv
+*.xlsx
+
+# Dependencies, lockfiles and build output: large, noisy, and no meaning.
+node_modules/
+vendor/
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+bun.lockb
+Cargo.lock
+poetry.lock
+uv.lock
+dist/
+build/
+out/
+coverage/
+.nx/
+.turbo/
+.next/
+tmp/
+
+# Generated output, including Graphify's own.
+graphify-out/
+*.min.js
+*.map
+
+# Binary assets.
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.webp
+*.ico
+*.pdf
+*.zip
+*.woff
+*.woff2
+*.ttf
+*.mp4
+*.mov
+# house:managed:end
+
+# Repository rules go below this line; the house sync keeps them.
+# house:local
+
+# Vendored upstream source: read directly, never graphed.
+externals/
