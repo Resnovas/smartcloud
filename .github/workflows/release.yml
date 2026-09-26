@@ -22,7 +22,8 @@
 #
 # Every bundle's source map is uploaded to PostHog error tracking for the
 # release and then deleted, so neither the tag nor npm ships one. The upload
-# uses the POSTHOG_CLI_TOKEN secret; see docs/releasing.mdx.
+# uses the POSTHOG_CLI_API_KEY organization secret, pinned to the Smartcloud
+# project by tools/release/sourcemaps.ts; see docs/releasing.mdx.
 #
 # The first release (2.0.0) has no v* tag to count from: run it with specifier
 # 2.0.0 and first-release ticked. See docs/releasing.mdx.
@@ -98,7 +99,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
           # A PostHog personal API key (error tracking write, organization read)
           # for uploading the action's source map; unused in a dry run.
-          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           DRY_RUN: ${{ inputs.dry-run }}
           SPECIFIER: ${{ inputs.specifier }}
           FIRST_RELEASE: ${{ inputs.first-release }}
@@ -230,7 +231,7 @@ jobs:
       # it is compared.
       - name: Check the tagged bundle is the released code
         env:
-          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           VERSION: ${{ needs.release.outputs.version }}
         run: |
           test -f dist/index.js || { echo '::error::the release has no dist/index.js'; exit 1; }
@@ -245,7 +246,7 @@ jobs:
       # Upload the CLI and MCP server's source maps to PostHog and drop them, so npm ships the bundles only.
       - name: Upload the source maps
         env:
-          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
           VERSION: ${{ needs.release.outputs.version }}
         run: node tools/release/sourcemaps.ts "$VERSION" apps/cli/release/smartcloud.js apps/cli/release/smartcloud-mcp.js
 
