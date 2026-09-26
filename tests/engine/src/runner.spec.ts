@@ -61,6 +61,8 @@ describe('runFeatures', () => {
       const result = yield* Fiber.join(fiber)
       expect(result.ran).toStrictEqual(['slow', 'fast'])
       expect(result.findings.map((finding) => finding.feature)).toStrictEqual(['fast', 'slow'])
+      // Each feature's own duration, measured on the clock the run used.
+      expect(result.durations).toStrictEqual({ slow: 2000, fast: 0 })
       expect(result.envelope.kind).toBe('pullRequest')
     }).pipe(Effect.provide(GitHubMemory())),
   )
@@ -72,6 +74,7 @@ describe('runFeatures', () => {
       expect(result.ran).toStrictEqual(['ok'])
       expect(result.failed).toHaveLength(1)
       expect(result.failed[0]).toMatchObject({ feature: 'broken', message: expect.stringContaining('boom') })
+      expect(Object.keys(result.durations).sort()).toStrictEqual(['broken', 'ok'])
     }).pipe(Effect.provide(GitHubMemory())),
   )
 
@@ -173,6 +176,7 @@ describe('runFeatures', () => {
     Effect.gen(function* () {
       const result = yield* runFeatures({ config, event: 'release', payload: {}, features: [feature('any')] })
       expect(result.ran).toStrictEqual([])
+      expect(result.durations).toStrictEqual({})
       expect(result.findings).toStrictEqual([
         { feature: 'engine', rule: 'unsupported-event', level: 'notice', message: 'smartcloud does not act on release events' },
       ])

@@ -37,10 +37,26 @@ export interface Change {
   readonly description: string
 }
 
-/** Everything a run found and changed. */
+/**
+ * A measurement a feature records about what it did, such as how many files
+ * a sync proposed.
+ *
+ * @remarks
+ * Values are counts, outcomes and fixed names only, never titles, paths or
+ * logins, because they are sent to product analytics.
+ */
+export interface Fact {
+  readonly feature: string
+  /** What was measured, such as `sync proposed`. */
+  readonly name: string
+  readonly values: Readonly<Record<string, string | number | boolean>>
+}
+
+/** Everything a run found, changed and measured. */
 export interface ReportSnapshot {
   readonly findings: ReadonlyArray<Finding>
   readonly changes: ReadonlyArray<Change>
+  readonly facts: ReadonlyArray<Fact>
 }
 
 /**
@@ -62,6 +78,8 @@ export class Report extends Context.Tag('@resnovas/engine/Report')<
   {
     readonly add: (finding: Finding) => Effect.Effect<void>
     readonly change: (change: Change) => Effect.Effect<void>
+    /** Records a measurement for product analytics. */
+    readonly measure: (fact: Fact) => Effect.Effect<void>
     readonly snapshot: Effect.Effect<ReportSnapshot>
   }
 >() {}
@@ -113,14 +131,15 @@ const recordFinding = (finding: Finding) =>
  * @returns The report service.
  */
 export const makeReport = Effect.gen(function* () {
-  const state = yield* Ref.make<ReportSnapshot>({ findings: [], changes: [] })
+  const state = yield* Ref.make<ReportSnapshot>({ findings: [], changes: [], facts: [] })
   return Report.of({
     add: (finding) =>
       Effect.zipRight(
-        Ref.update(state, ({ findings, changes }) => ({ findings: [...findings, finding], changes })),
+        Ref.update(state, (snapshot) => ({ ...snapshot, findings: [...snapshot.findings, finding] })),
         recordFinding(finding),
       ),
-    change: (change) => Ref.update(state, ({ findings, changes }) => ({ findings, changes: [...changes, change] })),
+    change: (change) => Ref.update(state, (snapshot) => ({ ...snapshot, changes: [...snapshot.changes, change] })),
+    measure: (fact) => Ref.update(state, (snapshot) => ({ ...snapshot, facts: [...snapshot.facts, fact] })),
     snapshot: Ref.get(state),
   })
 })

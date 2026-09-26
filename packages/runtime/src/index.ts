@@ -24,6 +24,26 @@
  */
 
 export {
+  ANALYTICS_EVENTS,
+  command,
+  CommandRun,
+  commandRun,
+  ConfigResolved,
+  configResolved,
+  FeatureRun,
+  featureRuns,
+  HOUSE_PRESET,
+  measuredEvents,
+  optionNames,
+  presetKind,
+  recordConfig,
+  recordRun,
+  sanitiseRule,
+  SettingsApplied,
+  SyncProposed,
+} from './analytics.js'
+export type { AnalyticsEvent, AnalyticsEventName, CommandOptions } from './analytics.js'
+export {
   CONFIG_CANDIDATES,
   ConfigSourceFromGitHub,
   explainConfig,
@@ -39,9 +59,19 @@ export { FEATURE_FLAGS, featureEnabled, flagFor, turnedOffFeatures } from './fla
 export type { FeatureFlag } from './flags.js'
 export { telemetry } from './telemetry.js'
 // The surfaces opt out and read telemetry through the runtime, never the integration directly.
-export { optOut, Telemetry } from '@resnovas/integrations.posthog'
+export { noteOptions, optOut, Telemetry } from '@resnovas/integrations.posthog'
 export type { Surface } from '@resnovas/integrations.posthog'
-export { gitHubConfigSource, InvalidRepository, liveConnect, MissingToken, parseRepository, presetError, PresetUnreadable, resolveToken } from './github.js'
+export {
+  gitHubConfigSource,
+  InvalidRepository,
+  liveConnect,
+  MissingToken,
+  parseRepository,
+  presetError,
+  PresetUnreadable,
+  resolveToken,
+  targetRepository,
+} from './github.js'
 export type { Connect } from './github.js'
 export {
   NoSection,

@@ -59,5 +59,6 @@ export const inputs = (overrides: Partial<Inputs> = {}): Inputs => ({
   features: Option.none(),
   telemetry: true,
   deprecations: [],
+  given: [],
   ...overrides,
 })

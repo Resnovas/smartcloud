@@ -167,7 +167,7 @@ const eventLine = (result: RunResult) => {
  * import type { RunResult } from '@resnovas/engine'
  * import { summaryMarkdown } from '@resnovas/reporting'
  *
- * const result: RunResult = { envelope: { kind: 'repository', event: 'schedule' }, ran: [], skipped: [], failed: [], findings: [], changes: [] }
+ * const result: RunResult = { envelope: { kind: 'repository', event: 'schedule' }, ran: [], skipped: [], failed: [], durations: {}, findings: [], changes: [], facts: [] }
  * summaryMarkdown(result) // => '## smartcloud\n\nEvent: `schedule`\n'
  * ```
  *
@@ -234,7 +234,7 @@ const LEVEL: Record<Finding['level'], Annotation['level']> = { error: 'failure',
  * import type { RunResult } from '@resnovas/engine'
  * import { checkRunsFor } from '@resnovas/reporting'
  *
- * const result: RunResult = { envelope: { kind: 'repository', event: 'push', headSha: 'abc123' }, ran: ['labels'], skipped: [], failed: [], findings: [], changes: [] }
+ * const result: RunResult = { envelope: { kind: 'repository', event: 'push', headSha: 'abc123' }, ran: ['labels'], skipped: [], failed: [], durations: {}, findings: [], changes: [], facts: [] }
  * checkRunsFor(result, 'abc123')[0]?.conclusion // => 'success'
  * ```
  *

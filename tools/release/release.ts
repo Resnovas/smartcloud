@@ -26,6 +26,8 @@
 // release commit that is never on a branch: its parent is main's head, it adds
 // dist/index.js and the bumped versions, and it drops externals/, which the
 // action does not need and every run of the action would otherwise download.
+// The bundle's source map is uploaded to PostHog error tracking for the
+// release (tools/release/sourcemaps.ts) and never committed.
 // Only the v<version> tag is pushed, so main never carries a release commit or
 // the bundle, and branch protection is never bypassed. Nx then writes the
 // release notes to a GitHub release on that tag, and the v<major> tag moves to
@@ -110,6 +112,15 @@ if (tryGit('rev-parse', '--quiet', '--verify', `refs/tags/${tag}`) !== undefined
 
 // Build the action bundle from this commit's source, with the new versions on disk.
 nx('run', '@resnovas/action:bundle', '--output-style=static')
+
+// Upload its source map to PostHog error tracking for this version, and drop
+// it: the tag ships the bundle only. A dry run uploads nothing.
+const { POSTHOG_CLI_API_KEY: _key, ...withoutKey } = process.env
+execFileSync(process.execPath, [join(root, 'tools/release/sourcemaps.ts'), workspaceVersion, 'dist/index.js'], {
+  cwd: root,
+  stdio: 'inherit',
+  env: dryRun ? withoutKey : process.env,
+})
 
 // The first release has no v* tag, so its notes start at the newest tag of any
 // kind (for v2, the last v1 prerelease) rather than at the first commit.

@@ -7,7 +7,7 @@
   "targets": {
     "bundle": {
       "command": "node tools/release/bundle.ts {projectRoot} apps/cli/release/smartcloud-mcp.js",
-      "outputs": ["{workspaceRoot}/apps/cli/release/smartcloud-mcp.js"]
+      "outputs": ["{workspaceRoot}/apps/cli/release/smartcloud-mcp.js", "{workspaceRoot}/apps/cli/release/smartcloud-mcp.js.map"]
     },
     "docgen": {},
     "contracts": {}

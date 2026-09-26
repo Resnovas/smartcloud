@@ -65,7 +65,16 @@ export const settingsFeature: Feature = {
       if (settings === undefined || !SETTINGS_EVENTS.has(envelope.event)) return
       const report = yield* Report
       const repository = yield* Effect.flatMap(GitHub, (github) => github.getRepository)
-      yield* applySettings(planSettings(settings, config.roles, repository))
+      const { applied, failed } = yield* applySettings(planSettings(settings, config.roles, repository))
+      // Settings GitHub does not offer on a private repository are left alone, and counted as skipped.
+      const skipped = [settings.security?.secretScanning, settings.security?.privateVulnerabilityReporting].filter(
+        (value) => value !== undefined && repository.private,
+      ).length
+      yield* report.measure({
+        feature: FEATURE,
+        name: 'settings applied',
+        values: { applied, failed, skipped, project_type: settings.environments?.projectType ?? 'none' },
+      })
       if (settings.security?.secretScanning !== undefined && repository.private) {
         yield* report.add({
           feature: FEATURE,

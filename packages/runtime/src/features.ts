@@ -15,6 +15,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
+import type { SmartcloudConfig } from '@resnovas/config'
 import type { Feature } from '@resnovas/engine'
 import { commitsFeature } from '@resnovas/feature.commits'
 import { conventions } from '@resnovas/feature.conventions'
@@ -46,6 +47,28 @@ export const FEATURES: ReadonlyArray<Feature> = [
   settingsFeature,
   syncFeature,
 ]
+
+/** A top-level config section a feature can read. */
+export type SectionKey = Exclude<keyof typeof SmartcloudConfig.Encoded, 'version' | 'extends' | '$schema'>
+
+/**
+ * The config sections each feature reads.
+ *
+ * @internal
+ */
+export const FEATURE_SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = new Map<
+  string,
+  ReadonlyArray<SectionKey>
+>([
+  ['conventions', ['conventions']],
+  ['commits', ['commits']],
+  ['disclosure', ['disclosure']],
+  ['reviews', ['reviews', 'roles']],
+  ['labels', ['labels', 'labelSync', 'labelling']],
+  ['stale', ['stale']],
+  ['settings', ['settings', 'roles']],
+  ['sync', ['sync']],
+])
 
 /**
  * A feature was asked for by a name that does not exist.

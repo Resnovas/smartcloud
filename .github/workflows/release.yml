@@ -12,6 +12,10 @@
 # is what that tag's source builds, then publishes the CLI and MCP server to npm
 # with provenance, through trusted publishing.
 #
+# Every bundle's source map is uploaded to PostHog error tracking for the
+# release and then deleted, so neither the tag nor npm ships one. The upload
+# uses the POSTHOG_CLI_TOKEN secret; see docs/releasing.mdx.
+#
 # The first release (2.0.0) has no v* tag to count from: run it with specifier
 # 2.0.0 and first-release ticked. See docs/releasing.mdx.
 name: release
@@ -49,6 +53,7 @@ jobs:
     outputs:
       released: ${{ steps.release.outputs.released }}
       tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -71,6 +76,9 @@ jobs:
         env:
           # Nx creates the GitHub release with this token.
           GITHUB_TOKEN: ${{ github.token }}
+          # A PostHog personal API key (error tracking write, organization read)
+          # for uploading the action's source map; unused in a dry run.
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
           DRY_RUN: ${{ inputs.dry-run }}
           SPECIFIER: ${{ inputs.specifier }}
           FIRST_RELEASE: ${{ inputs.first-release }}
@@ -105,15 +113,29 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # The tagged bundle carries PostHog's chunk id, which is derived from its
+      # content, so the rebuild goes through the same source map step before
+      # it is compared.
       - name: Check the tagged bundle is the released code
+        env:
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
         run: |
           test -f dist/index.js || { echo '::error::the release has no dist/index.js'; exit 1; }
           cp dist/index.js "$RUNNER_TEMP/tagged.js"
-          pnpm nx run @resnovas/action:bundle
+          pnpm nx run @resnovas/action:bundle --skip-nx-cache
+          node tools/release/sourcemaps.ts "$VERSION" dist/index.js
           cmp dist/index.js "$RUNNER_TEMP/tagged.js" || { echo '::error::dist/index.js in the release does not match its source'; exit 1; }
 
       # The tag's package.json files carry the released version, which the bundles stamp as VERSION.
-      - run: pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp
+      - run: pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp --skip-nx-cache
+
+      # Upload the CLI and MCP server's source maps to PostHog and drop them, so npm ships the bundles only.
+      - name: Upload the source maps
+        env:
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: node tools/release/sourcemaps.ts "$VERSION" apps/cli/release/smartcloud.js apps/cli/release/smartcloud-mcp.js
 
       - run: node tools/release/prepare-cli.ts
 

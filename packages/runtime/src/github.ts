@@ -17,7 +17,14 @@
 
 import { Command, CommandExecutor } from '@effect/platform'
 import { ConfigNotFound, ConfigSource, formatExtendsRef, type ExtendsRef } from '@resnovas/config'
-import { makeLiveGitHub, type GitHubError, type GitHubService, type LiveOptions, type RepositoryCoordinates } from '@resnovas/integrations.github'
+import {
+  makeLiveGitHub,
+  type GitHubError,
+  type GitHubService,
+  type LiveOptions,
+  type RepositoryCoordinates,
+} from '@resnovas/integrations.github'
+import { bindRepository, protect } from '@resnovas/integrations.posthog'
 import { Config, Data, Effect, Layer, Redacted, Schedule } from 'effect'
 
 /**
@@ -106,6 +113,26 @@ export const parseRepository = (repository: string): Effect.Effect<RepositoryCoo
   const [owner = '', repo = ''] = repository.split('/')
   return REPOSITORY.test(repository) ? Effect.succeed({ owner, repo }) : Effect.fail(new InvalidRepository({ repository }))
 }
+
+/**
+ * Parses the repository an invocation is about, and names it to telemetry:
+ * the text as given is protected before it is parsed, so even an invalid
+ * name never reaches error tracking, and the invocation's events and logs
+ * then carry the repository's hashed identity.
+ *
+ * @example
+ * ```ts import.meta.vitest name="targetRepository"
+ * import { targetRepository } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * Effect.runSync(targetRepository('Resnovas/smartcloud')).owner // => 'Resnovas'
+ * ```
+ *
+ * @param repository - The repository as given.
+ * @returns Its coordinates.
+ */
+export const targetRepository = (repository: string): Effect.Effect<RepositoryCoordinates, InvalidRepository> =>
+  Effect.zipRight(protect(repository), Effect.tap(parseRepository(repository), bindRepository))
 
 /** Opens the GitHub service for a repository. Tests pass an in-memory one. */
 export type Connect = (

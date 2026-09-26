@@ -15,23 +15,27 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { createHash } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
 /** Where smartcloud runs from. */
 export type Surface = 'action' | 'cli' | 'mcp'
 
 /**
- * Who telemetry is about: a repository and its organisation, both hashed.
+ * Who telemetry is about: a repository and its organisation, both hashed, or
+ * nobody in particular.
  *
  * @remarks
  * The repository is the PostHog person and the organisation a PostHog group
- * of type `organization`. Only the hashes are sent; the names never are.
+ * of type `organization`. Only the hashes are sent; the names never are. An
+ * invocation that names no repository, such as validating a local file, is
+ * anonymous: a random id and no organisation, and PostHog creates no person
+ * for it.
  */
 export interface Identity {
-  /** The SHA-256 of the lower-cased `owner/repo`. */
+  /** The SHA-256 of the lower-cased `owner/repo`, or a random id when anonymous. */
   readonly distinctId: string
-  /** The SHA-256 of the lower-cased owner. */
-  readonly organization: string
+  /** The SHA-256 of the lower-cased owner; undefined when anonymous. */
+  readonly organization: string | undefined
 }
 
 /**
@@ -70,3 +74,23 @@ export const identify = (repository: { readonly owner: string; readonly repo: st
   distinctId: sha256(`${repository.owner}/${repository.repo}`.toLowerCase()),
   organization: sha256(repository.owner.toLowerCase()),
 })
+
+/**
+ * A new anonymous identity: a random id that names nothing, and no
+ * organisation.
+ *
+ * @remarks
+ * Events sent for it are personless in PostHog, so they are counted without
+ * creating a person profile.
+ *
+ * @example
+ * ```ts import.meta.vitest name="anonymousIdentity"
+ * import { anonymousIdentity } from '@resnovas/integrations.posthog'
+ *
+ * anonymousIdentity().organization // => undefined
+ * anonymousIdentity().distinctId === anonymousIdentity().distinctId // => false
+ * ```
+ *
+ * @returns The identity.
+ */
+export const anonymousIdentity = (): Identity => ({ distinctId: randomUUID(), organization: undefined })

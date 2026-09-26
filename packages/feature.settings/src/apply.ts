@@ -147,6 +147,12 @@ const perform = (step: SettingsStep): Effect.Effect<void, GitHubError | Unexpect
   }
 }
 
+/** How many settings steps were applied, and how many failed. */
+export interface AppliedSettings {
+  readonly applied: number
+  readonly failed: number
+}
+
 /**
  * Performs planned steps in order, recording each outcome.
  *
@@ -169,31 +175,40 @@ const perform = (step: SettingsStep): Effect.Effect<void, GitHubError | Unexpect
  * ```
  *
  * @param steps - The steps from `planSettings`.
- * @returns Nothing; outcomes go to the {@link Report}.
+ * @returns How many steps were applied and how many failed; each outcome also goes to the {@link Report}.
  */
-export const applySettings = (steps: ReadonlyArray<SettingsStep>): Effect.Effect<void, never, GitHub | Report> =>
+export const applySettings = (
+  steps: ReadonlyArray<SettingsStep>,
+): Effect.Effect<AppliedSettings, never, GitHub | Report> =>
   Effect.gen(function* () {
     const report = yield* Report
     yield* Effect.logInfo(`settings: ${steps.length} step(s) to apply`).pipe(
       Effect.annotateLogs({ feature: FEATURE, steps: steps.length, optional: steps.filter((step) => step.optional).length }),
     )
+    let applied = 0
     for (const step of steps) {
-      yield* perform(step).pipe(
+      const succeeded = yield* perform(step).pipe(
         Effect.tapBoth({
           onSuccess: () => Effect.logDebug(`settings: ${step.id} applied`).pipe(Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: 'applied' })),
           onFailure: (error) =>
             Effect.logDebug(`settings: ${step.id} failed`).pipe(Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: error._tag })),
         }),
         Effect.matchEffect({
-          onSuccess: () => report.change({ feature: FEATURE, description: step.description }),
+          onSuccess: () => Effect.as(report.change({ feature: FEATURE, description: step.description }), true),
           onFailure: (error) =>
-            report.add({
-              feature: FEATURE,
-              rule: `settings.${step.id}`,
-              level: step.optional ? 'warning' : 'error',
-              message: `${step.description}: ${error.message}`,
-            }),
+            Effect.as(
+              report.add({
+                feature: FEATURE,
+                rule: `settings.${step.id}`,
+                level: step.optional ? 'warning' : 'error',
+                message: `${step.description}: ${error.message}`,
+              }),
+              false,
+            ),
         }),
       )
+      if (succeeded) applied += 1
     }
+    const counts: AppliedSettings = { applied, failed: steps.length - applied }
+    return counts
   })

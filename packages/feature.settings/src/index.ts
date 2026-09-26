@@ -26,6 +26,7 @@
  */
 
 export { applySettings, ensureDeploymentPolicies, FEATURE, UnexpectedResponse, upsertRuleset } from './apply.js'
+export type { AppliedSettings } from './apply.js'
 export { SETTINGS_EVENTS, settingsFeature } from './feature.js'
 export {
   DEFAULT_RULESET_NAME,

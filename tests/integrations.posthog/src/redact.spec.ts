@@ -29,6 +29,10 @@ describe('redact', () => {
   it('removes bearer credentials and emails', () => {
     expect(redact('Authorization: Bearer abc.def-ghi==')).toBe(`Authorization: ${REDACTED}`)
     expect(redact('by jane.doe+x@example.co.uk today')).toBe(`by ${REDACTED} today`)
+    // Package versions in stack frames are not emails.
+    expect(redact('at node_modules/.pnpm/effect@3.22.2/node_modules/effect/dist/esm/Effect.js:10')).toBe(
+      'at node_modules/.pnpm/effect@3.22.2/node_modules/effect/dist/esm/Effect.js:10',
+    )
   })
 
   it('removes given secrets, ignoring case and URL encoding, longest first', () => {

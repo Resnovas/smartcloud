@@ -16,7 +16,7 @@
  */
 
 import { Args, Command, Options, ValidationError } from '@effect/cli'
-import { gitHubConfigSource, liveConnect, parseFeatureList, REPOSITORY_EVENTS, type Connect } from '@resnovas/runtime'
+import { command, gitHubConfigSource, liveConnect, optionNames, parseFeatureList, REPOSITORY_EVENTS, type Connect } from '@resnovas/runtime'
 import { Console, Effect, Option } from 'effect'
 import { checkCommitCommand, dryRunCommand, locateConfig, migrate, planSettingsCommand, syncCommand, validate } from './commands.js'
 import { VERSION } from './version.js'
@@ -27,18 +27,18 @@ const path = Args.text({ name: 'path' }).pipe(
 )
 
 const validateCommand = Command.make('validate', { path }, ({ path }) =>
-  Option.match(path, { onNone: () => locateConfig('.'), onSome: Effect.succeed }).pipe(
-    Effect.flatMap(validate),
-    Effect.provide(gitHubConfigSource()),
-  ),
+  command(Option.match(path, { onNone: () => locateConfig('.'), onSome: Effect.succeed }).pipe(Effect.flatMap(validate), Effect.provide(gitHubConfigSource())), {
+    command: 'validate',
+    options: optionNames({ path }),
+  }),
 ).pipe(Command.withDescription('Check a config and everything it extends.'))
 
 const input = Args.text({ name: 'input' }).pipe(Args.withDescription('The v1 JSON config.'), Args.withDefault('.github/config.json'))
 const out = Options.text('out').pipe(Options.withAlias('o'), Options.withDescription('Write the YAML here instead of printing it.'), Options.optional)
 
-const migrateCommand = Command.make('migrate', { input, out }, ({ input, out }) => migrate(input, Option.getOrUndefined(out))).pipe(
-  Command.withDescription('Convert a v1 config to v2 YAML, warning about anything not carried over.'),
-)
+const migrateCommand = Command.make('migrate', { input, out }, ({ input, out }) =>
+  command(migrate(input, Option.getOrUndefined(out)), { command: 'migrate', options: optionNames({ input, out }) }),
+).pipe(Command.withDescription('Convert a v1 config to v2 YAML, warning about anything not carried over.'))
 
 const checkCommit = Command.make(
   'check-commit',
@@ -49,11 +49,14 @@ const checkCommit = Command.make(
     config: Options.text('config').pipe(Options.withDescription("A config file; the repository's own, or the defaults, when omitted."), Options.optional),
   },
   (options) =>
-    checkCommitCommand(options.file, {
-      authorName: Option.getOrUndefined(options.authorName),
-      authorEmail: Option.getOrUndefined(options.authorEmail),
-      config: Option.getOrUndefined(options.config),
-    }).pipe(Effect.provide(gitHubConfigSource())),
+    command(
+      checkCommitCommand(options.file, {
+        authorName: Option.getOrUndefined(options.authorName),
+        authorEmail: Option.getOrUndefined(options.authorEmail),
+        config: Option.getOrUndefined(options.config),
+      }).pipe(Effect.provide(gitHubConfigSource())),
+      { command: 'check-commit', options: optionNames(options) },
+    ),
 ).pipe(Command.withDescription('Check a commit message for DCO sign-off and AI attribution before committing; usable as a commit-msg hook.'))
 
 const repo = Options.text('repo').pipe(Options.withDescription('The repository, as owner/name.'))
@@ -88,19 +91,25 @@ export const makeSmartcloud = (connect: Connect) => {
       features: Options.text('features').pipe(Options.withDescription('Only these features, comma-separated; every feature when empty.'), Options.optional),
     },
     (options) =>
-      dryRunCommand(connect, {
-        repository: options.repo,
-        config: Option.getOrUndefined(options.config),
-        pr: Option.getOrUndefined(options.pr),
-        issue: Option.getOrUndefined(options.issue),
-        event: Option.getOrUndefined(options.event),
-        // An empty list, such as `--features ,`, means every feature, as the action reads it.
-        features: Option.getOrUndefined(Option.filter(Option.map(options.features, parseFeatureList), (names) => names.length > 0)),
-      }),
+      command(
+        dryRunCommand(connect, {
+          repository: options.repo,
+          config: Option.getOrUndefined(options.config),
+          pr: Option.getOrUndefined(options.pr),
+          issue: Option.getOrUndefined(options.issue),
+          event: Option.getOrUndefined(options.event),
+          // An empty list, such as `--features ,`, means every feature, as the action reads it.
+          features: Option.getOrUndefined(Option.filter(Option.map(options.features, parseFeatureList), (names) => names.length > 0)),
+        }),
+        { command: 'dry-run', options: optionNames(options) },
+      ),
   ).pipe(Command.withDescription('Run every feature against a pull request, an issue or an event, recording writes instead of making them.'))
 
   const planSettings = Command.make('settings', { repo, config }, (options) =>
-    planSettingsCommand(connect, { repository: options.repo, config: Option.getOrUndefined(options.config) }),
+    command(planSettingsCommand(connect, { repository: options.repo, config: Option.getOrUndefined(options.config) }), {
+      command: 'plan settings',
+      options: optionNames(options),
+    }),
   ).pipe(Command.withDescription('Print the repository settings the config would apply, without applying them.'))
 
   const plan = Command.make('plan').pipe(
@@ -111,7 +120,11 @@ export const makeSmartcloud = (connect: Connect) => {
   const sync = Command.make(
     'sync',
     { repo, config, out: Options.text('out').pipe(Options.withAlias('o'), Options.withDescription('The directory to render the files into.')) },
-    (options) => syncCommand(connect, { repository: options.repo, out: options.out, config: Option.getOrUndefined(options.config) }),
+    (options) =>
+      command(syncCommand(connect, { repository: options.repo, out: options.out, config: Option.getOrUndefined(options.config) }), {
+        command: 'sync',
+        options: optionNames(options),
+      }),
   ).pipe(Command.withDescription('Render the synced files for a repository into a local directory, and list conflicting local rules.'))
 
   return Command.make('smartcloud').pipe(
@@ -166,7 +179,9 @@ const oneLine = (message: string) =>
  * @remarks
  * Usage errors are already printed with the help text by the time they
  * arrive here, so only the exit code is set for them. A message that spans
- * lines, such as a schema error's tree, is joined onto the one line.
+ * lines, such as a schema error's tree, is joined onto the one line. A
+ * defect is printed as one `unexpected failure` line; each command has
+ * already reported its failure or defect to error tracking.
  *
  * @example
  * ```ts
@@ -185,6 +200,15 @@ export const main = (argv: ReadonlyArray<string>, connect?: Connect) =>
     Effect.catchAll((error) =>
       Effect.zipRight(
         ValidationError.isValidationError(error) ? Effect.void : Console.error(`smartcloud: ${oneLine(error.message)}`),
+        Effect.sync(() => {
+          process.exitCode = 1
+        }),
+      ),
+    ),
+    // A defect is reported to error tracking by the command; the user gets one line, not a trace.
+    Effect.catchAllDefect((defect) =>
+      Effect.zipRight(
+        Console.error(`smartcloud: unexpected failure: ${oneLine(defect instanceof Error ? defect.message : String(defect))}`),
         Effect.sync(() => {
           process.exitCode = 1
         }),

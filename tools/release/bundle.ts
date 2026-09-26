@@ -51,6 +51,11 @@ await build({
   banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
   legalComments: 'none',
   define: { 'globalThis.__SMARTCLOUD_VERSION__': JSON.stringify(version) },
+  // A linked source map beside the bundle, for error tracking. Its sources are
+  // relative to the bundle, so it names no local path; the release uploads it
+  // to PostHog and deletes it, so no published artefact ships it.
+  sourcemap: 'linked',
+  sourcesContent: true,
   logLevel: 'warning',
 })
 console.log(`Bundled ${projectRoot} ${version} into ${outfile}.`)

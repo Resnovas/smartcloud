@@ -19,7 +19,7 @@
 // Telemetry service shared by the runtime tests.
 
 import { fileKey, type GitHubService, makeMemoryGitHub, type MemoryState } from '@resnovas/integrations.github'
-import { disabledTelemetry, type TelemetryService } from '@resnovas/integrations.posthog'
+import { disabledTelemetry, type Identity, type TelemetryService } from '@resnovas/integrations.posthog'
 import { Telemetry } from '@resnovas/runtime'
 import { ConfigProvider, Effect, Layer } from 'effect'
 import { join } from 'node:path'
@@ -65,8 +65,11 @@ export const PUSH = { name: 'push', payload: { ref: 'refs/heads/main', after: 'a
 
 // A Telemetry service that records what it is asked to send, answering flags from a map.
 export const recording = (flags: Readonly<Record<string, boolean>> = {}) => {
-  const events: Array<{ readonly event: string; readonly properties: Readonly<Record<string, unknown>> }> = []
+  const events: Array<{ readonly event: string; readonly properties: Readonly<Record<string, unknown>>; readonly identity: Identity }> = []
   const errors: Array<unknown> = []
+  const exceptions: Array<{ readonly error: unknown; readonly properties: Readonly<Record<string, unknown>>; readonly identity: Identity }> = []
+  const organisations: Array<Readonly<Record<string, unknown>>> = []
+  const protectedValues: Array<string> = []
   let enabled = true
   const service: TelemetryService = {
     ...disabledTelemetry,
@@ -74,11 +77,19 @@ export const recording = (flags: Readonly<Record<string, boolean>> = {}) => {
     disable: Effect.sync(() => {
       enabled = false
     }),
-    capture: (_identity, event, properties = {}) => Effect.sync(() => void (enabled && events.push({ event, properties }))),
-    captureException: (_identity, error) => Effect.sync(() => void (enabled && errors.push(error))),
+    protect: (value) => Effect.sync(() => void protectedValues.push(value)),
+    capture: (identity, event, properties = {}) => Effect.sync(() => void (enabled && events.push({ event, properties, identity }))),
+    captureException: (identity, error, properties = {}) =>
+      Effect.sync(() => {
+        if (!enabled) return
+        errors.push(error)
+        exceptions.push({ error, properties, identity })
+      }),
+    describeOrganization: (_identity, properties) => Effect.sync(() => void (enabled && organisations.push(properties))),
     evaluateFlag: (_identity, key, fallback) => Effect.sync(() => (enabled ? (flags[key] ?? fallback) : fallback)),
   }
-  return { layer: Layer.succeed(Telemetry, service), events, errors, enabled: () => enabled }
+  const named = (name: string) => events.filter((event) => event.event === name)
+  return { layer: Layer.succeed(Telemetry, service), events, errors, exceptions, organisations, protectedValues, named, enabled: () => enabled }
 }
 
 export const withConfig = (text: string, overrides: Partial<GitHubService> = {}) => {

@@ -26,13 +26,24 @@ describe('makeReport', () => {
   it.effect('starts empty and keeps findings and changes in the order they were recorded', () =>
     Effect.gen(function* () {
       const report = yield* makeReport
-      expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [] })
+      expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [], facts: [] })
       yield* report.add({ feature: 'labels', rule: 'labels.one', level: 'error', message: 'first' })
       yield* report.change({ feature: 'labels', description: 'labelled #7' })
       yield* report.add({ feature: 'labels', rule: 'labels.two', level: 'notice', message: 'second' })
       const snapshot = yield* report.snapshot
       expect(snapshot.findings.map((finding) => finding.rule)).toStrictEqual(['labels.one', 'labels.two'])
       expect(snapshot.changes).toStrictEqual([{ feature: 'labels', description: 'labelled #7' }])
+    }),
+  )
+
+  it.effect('keeps what features measured, in order', () =>
+    Effect.gen(function* () {
+      const report = yield* makeReport
+      yield* report.measure({ feature: 'sync', name: 'sync proposed', values: { created: 1, pull_request: 'created' } })
+      yield* report.add({ feature: 'sync', rule: 'SYNC', level: 'warning', message: 'edited' })
+      const snapshot = yield* report.snapshot
+      expect(snapshot.facts).toStrictEqual([{ feature: 'sync', name: 'sync proposed', values: { created: 1, pull_request: 'created' } }])
+      expect(snapshot.findings).toHaveLength(1)
     }),
   )
 

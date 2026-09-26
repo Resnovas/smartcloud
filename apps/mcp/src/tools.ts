@@ -20,15 +20,18 @@ import { resolveConfig, type ConfigSource, type SmartcloudConfig } from '@resnov
 import { GitHub } from '@resnovas/integrations.github'
 import {
   checkCommitMessage,
+  command,
   dryRun,
   explainRule,
   dryRunText,
   explainConfig,
   loadConfig,
   migrateConfigText,
-  parseRepository,
+  optionNames,
   planRepositorySettings,
+  recordConfig,
   settingsPlanText,
+  targetRepository,
   triggerOf,
   type ConfigLocation,
   type ConfigText,
@@ -49,11 +52,23 @@ export type ToolContext = ConfigSource | CommandExecutor.CommandExecutor | FileS
 
 const text = (value: string) => ({ type: 'text' as const, text: value })
 
-// Every failure is a result the assistant can read, never a protocol error.
-const handle = <E extends { readonly message: string }, R>(effect: Effect.Effect<ReadonlyArray<string>, E, R>): Effect.Effect<ToolResult, never, R> =>
-  effect.pipe(
+// Each call is one telemetry invocation, named by its tool, so its failure is
+// reported; then every failure, and every defect, is a result the assistant
+// can read, never a protocol error.
+const handle = <E extends { readonly message: string }, R>(
+  tool: string,
+  input: object,
+  effect: Effect.Effect<ReadonlyArray<string>, E, R>,
+): Effect.Effect<ToolResult, never, R> =>
+  command(effect, { command: tool, options: optionNames({ ...input }) }).pipe(
     Effect.map((parts): ToolResult => ({ content: parts.map(text) })),
     Effect.catchAll((error) => Effect.succeed<ToolResult>({ content: [text(error.message)], isError: true })),
+    Effect.catchAllDefect((defect) =>
+      Effect.succeed<ToolResult>({
+        content: [text(`unexpected failure: ${defect instanceof Error ? defect.message : String(defect)}`)],
+        isError: true,
+      }),
+    ),
   )
 
 const json = (value: unknown) => JSON.stringify(value, null, 2)
@@ -82,9 +97,13 @@ export interface ConfigInput {
  */
 export const validateConfigTool = (input: ConfigInput) =>
   handle(
-    Effect.map(resolveConfig(input.config, input.source ?? 'smartcloud.yml'), (resolved) => [
-      json({ valid: true, sources: resolved.sources, warnings: resolved.warnings }),
-    ]),
+    'validate_config',
+    input,
+    Effect.flatMap(resolveConfig(input.config, input.source ?? 'smartcloud.yml'), (resolved) =>
+      Effect.as(recordConfig(resolved, input.config), [
+        json({ valid: true, sources: resolved.sources, warnings: resolved.warnings }),
+      ]),
+    ),
   )
 
 /**
@@ -104,7 +123,14 @@ export const validateConfigTool = (input: ConfigInput) =>
  * @returns The YAML, then the warnings as JSON.
  */
 export const migrateConfigTool = (input: ConfigInput) =>
-  handle(Effect.map(migrateConfigText(input.config, input.source ?? 'config.json'), (migrated) => [migrated.yaml, json({ warnings: migrated.warnings })]))
+  handle(
+    'migrate_config',
+    input,
+    Effect.map(migrateConfigText(input.config, input.source ?? 'config.json'), (migrated) => [
+      migrated.yaml,
+      json({ warnings: migrated.warnings }),
+    ]),
+  )
 
 /**
  * Explains a config: which features it enables and the rules each one reads.
@@ -121,7 +147,13 @@ export const migrateConfigTool = (input: ConfigInput) =>
  * @returns The explanation as JSON.
  */
 export const explainConfigTool = (input: ConfigInput) =>
-  handle(Effect.map(resolveConfig(input.config, input.source ?? 'smartcloud.yml'), (resolved) => [json(explainConfig(resolved))]))
+  handle(
+    'explain_config',
+    input,
+    Effect.map(resolveConfig(input.config, input.source ?? 'smartcloud.yml'), (resolved) => [
+      json(explainConfig(resolved)),
+    ]),
+  )
 
 const PASS_TEXT = 'pass the config itself as configText instead.'
 
@@ -226,8 +258,10 @@ export interface DryRunInput extends RepositoryConfigInput {
  */
 export const dryRunTool = (connect: Connect, input: DryRunInput, root: string) =>
   handle(
+    'dry_run',
+    input,
     Effect.gen(function* () {
-      const coordinates = yield* parseRepository(input.repository)
+      const coordinates = yield* targetRepository(input.repository)
       const trigger = yield* triggerOf(input)
       const config = yield* configLocation(root, input)
       const service = yield* connect(coordinates)
@@ -261,8 +295,10 @@ export interface PlanSettingsInput extends RepositoryConfigInput {
  */
 export const planSettingsTool = (connect: Connect, input: PlanSettingsInput, root: string) =>
   handle(
+    'plan_settings',
+    input,
     Effect.gen(function* () {
-      const coordinates = yield* parseRepository(input.repository)
+      const coordinates = yield* targetRepository(input.repository)
       const location = yield* configLocation(root, input)
       const service = yield* connect(coordinates)
       const plan = yield* Effect.flatMap(loadConfig(location), (resolved) => planRepositorySettings(resolved.config)).pipe(
@@ -303,6 +339,8 @@ export interface CommitMessageInput {
  */
 export const checkCommitMessageTool = (input: CommitMessageInput) =>
   handle(
+    'check_commit_message',
+    input,
     Effect.map(configOrDefault(input.config, 'smartcloud.yml'), (config) => {
       const findings = checkCommitMessage(input, config)
       return [json({ passes: findings.length === 0, findings })]
@@ -324,4 +362,11 @@ export const checkCommitMessageTool = (input: CommitMessageInput) =>
  * @returns The explanation as JSON.
  */
 export const explainRuleTool = (input: { readonly rule: string; readonly config?: string | undefined }) =>
-  handle(Effect.map(Effect.flatMap(configOrDefault(input.config, 'smartcloud.yml'), (config) => explainRule(input.rule, config)), (explained) => [json(explained)]))
+  handle(
+    'explain_rule',
+    input,
+    Effect.map(
+      Effect.flatMap(configOrDefault(input.config, 'smartcloud.yml'), (config) => explainRule(input.rule, config)),
+      (explained) => [json(explained)],
+    ),
+  )
