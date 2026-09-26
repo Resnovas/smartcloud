@@ -41,6 +41,9 @@
     },
     {
       "path": "./packages/feature.settings"
+    },
+    {
+      "path": "./packages/feature.sync"
     }
   ]
 }

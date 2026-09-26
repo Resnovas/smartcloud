@@ -61,6 +61,7 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
     requestReviewers: (pullRequest, logins) => record('requestReviewers', { pullRequest, logins }),
     createCheckRun: (run) => Effect.as(record('createCheckRun', { run }), 0),
     updateCheckRun: (id, run) => record('updateCheckRun', { id, run }),
+    proposeChanges: (proposal) => Effect.as(record('proposeChanges', { proposal }), { number: 0, url: '', created: false }),
     repositoryRequest: (request) =>
       request.method === 'GET' ? inner.repositoryRequest(request) : Effect.as(record('repositoryRequest', { request }), null),
     graphql: (query, variables) =>

@@ -20,21 +20,26 @@ export type { GitHubError } from './errors.js'
 export { GitHub } from './service.js'
 export type {
   Annotation,
+  ChangeProposal,
   CheckRun,
   CheckRunFields,
   Comment,
+  CommitIdentity,
+  DirectoryEntry,
+  FileChange,
   FileLocation,
   GitHubService,
   IssueSummary,
   Label,
   NewReview,
+  ProposalResult,
   Repository,
   RepositoryCoordinates,
   RepositoryRequest,
 } from './service.js'
-export { GitHubLive, makeLiveGitHub } from './live.js'
+export { DEFAULT_COMMITTER, GitHubLive, makeLiveGitHub, signOff } from './live.js'
 export type { LiveOptions } from './live.js'
 export { DryRun, DryRunLog, dryRunGitHub } from './dry-run.js'
 export type { RecordedWrite } from './dry-run.js'
 export { fileKey, GitHubMemory, makeMemoryGitHub } from './memory.js'
-export type { MemoryPullRequest, MemoryState } from './memory.js'
+export type { MemoryProposal, MemoryPullRequest, MemoryState } from './memory.js'
