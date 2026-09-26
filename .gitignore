@@ -2,7 +2,7 @@
 node_modules
 
 # Build output. The action bundle in dist/ is committed only by the release
-# workflow, into the release pull request.
+# workflow, into a release commit that only its v* tag points at.
 packages/*/dist
 apps/*/dist
 tests/*/dist
@@ -32,6 +32,6 @@ Thumbs.db
 .env
 .env.*
 
-# The action bundle, committed only on release branches
+# The action bundle, committed only in release commits
 /dist
 apps/cli/release

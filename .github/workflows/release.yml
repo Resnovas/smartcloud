@@ -1,111 +1,98 @@
-# Releases with release-please. Conventional commits on main drive the
-# version and changelog in a release pull request.
+# Releases with Nx release, started by hand from the Actions tab.
 #
-# The action runs from dist/index.js, so the release pull request carries the
-# bundle. On every push to main it is rebuilt from main's source and committed
-# to the open release pull request, whether or not release-please changed it,
-# so the merge always ships a bundle of the code it releases. dist/ reaches
-# main only through that merge. A push made with the workflow token starts no
-# workflows, so CI is dispatched on the release branch afterwards.
+# Conventional commits since the last v* tag decide the version; the tag, not a
+# file on main, holds the current version. tools/release/release.ts bumps the
+# apps' versions, bundles the action from main's source into dist/index.js,
+# commits both in a release commit on no branch (without externals/), and
+# pushes only the v<version> tag, so main never holds a release commit or the
+# bundle and no branch protection is bypassed. It then writes the release notes
+# to a GitHub release and moves the v<major> tag.
 #
-# Once a release is tagged, the publish job rebuilds the bundle and refuses to
-# go on unless it matches the tagged one. Then it moves the v<major> tag and
-# publishes the CLI to npm with provenance, through trusted publishing.
+# The publish job checks out the tag, refuses to go on unless the tagged bundle
+# is what that tag's source builds, then publishes the CLI and MCP server to npm
+# with provenance, through trusted publishing.
+#
+# The first release (2.0.0) has no v* tag to count from: run it with specifier
+# 2.0.0 and first-release ticked. See docs/releasing.mdx.
 name: release
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Print the version and release notes without tagging, releasing or publishing
+        type: boolean
+        default: true
+      specifier:
+        description: Override the conventional commits, with a version (2.0.0) or a bump (major, minor, patch)
+        type: string
+        required: false
+      first-release:
+        description: No v* tag exists yet (the first v2 release only)
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: release
   cancel-in-progress: false
 
 jobs:
-  release-please:
+  release:
     runs-on: ubuntu-latest
-    outputs:
-      release_created: ${{ steps.release.outputs.release_created }}
-      tag_name: ${{ steps.release.outputs.tag_name }}
-      major: ${{ steps.release.outputs.major }}
-      sha: ${{ steps.release.outputs.sha }}
-    steps:
-      - uses: googleapis/release-please-action@v5
-        id: release
-        with:
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
-  bundle:
-    needs: release-please
-    if: needs.release-please.outputs.release_created != 'true'
-    runs-on: ubuntu-latest
+    # Releases come only from main.
+    if: github.ref == 'refs/heads/main'
     permissions:
       contents: write
-      actions: write
-    env:
-      GH_TOKEN: ${{ github.token }}
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+      tag: ${{ steps.release.outputs.tag }}
     steps:
-      - name: Find the open release pull request
-        id: pr
-        run: |
-          branch=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --label 'autorelease: pending' --json headRefName --jq '.[0].headRefName // ""')
-          echo "branch=$branch" >> "$GITHUB_OUTPUT"
-
       - uses: actions/checkout@v7
-        if: steps.pr.outputs.branch != ''
         with:
           ref: main
+          # Nx reads the conventional commits and v* tags from the full history.
+          fetch-depth: 0
+          fetch-tags: true
 
       - uses: pnpm/action-setup@v6
-        if: steps.pr.outputs.branch != ''
 
       - uses: actions/setup-node@v7
-        if: steps.pr.outputs.branch != ''
         with:
           node-version-file: .nvmrc
           cache: pnpm
 
-      - name: Bundle main's source
-        if: steps.pr.outputs.branch != ''
-        run: |
-          pnpm install --frozen-lockfile
-          pnpm nx run @resnovas/action:bundle
-          cp dist/index.js "$RUNNER_TEMP/index.js"
+      - run: pnpm install --frozen-lockfile
 
-      - name: Commit the bundle to the release pull request
-        if: steps.pr.outputs.branch != ''
+      - name: Version, tag and create the GitHub release
+        id: release
         env:
-          BRANCH: ${{ steps.pr.outputs.branch }}
+          # Nx creates the GitHub release with this token.
+          GITHUB_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry-run }}
+          SPECIFIER: ${{ inputs.specifier }}
+          FIRST_RELEASE: ${{ inputs.first-release }}
         run: |
-          git fetch origin "$BRANCH"
-          git checkout -B "$BRANCH" "origin/$BRANCH"
-          mkdir -p dist
-          cp "$RUNNER_TEMP/index.js" dist/index.js
-          git add --force dist/index.js
-          if git diff --cached --quiet; then exit 0; fi
-          git config user.name 'github-actions[bot]'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git commit --signoff --message 'chore(release): bundle the action'
-          git push origin "$BRANCH"
-          # Pushes with the workflow token start no workflows, but a dispatch does.
-          gh workflow run ci.yml --ref "$BRANCH"
+          args=()
+          if [ "$DRY_RUN" = 'true' ]; then args+=(--dry-run); fi
+          if [ "$FIRST_RELEASE" = 'true' ]; then args+=(--first-release); fi
+          if [ -n "$SPECIFIER" ]; then args+=(--specifier "$SPECIFIER"); fi
+          node tools/release/release.ts "${args[@]}"
 
   publish:
-    needs: release-please
-    if: needs.release-please.outputs.release_created == 'true'
+    needs: release
+    if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       id-token: write
     steps:
       - uses: actions/checkout@v7
         with:
-          ref: ${{ needs.release-please.outputs.tag_name }}
+          ref: ${{ needs.release.outputs.tag }}
+          persist-credentials: false
 
       - uses: pnpm/action-setup@v6
 
@@ -125,11 +112,7 @@ jobs:
           pnpm nx run @resnovas/action:bundle
           cmp dist/index.js "$RUNNER_TEMP/tagged.js" || { echo '::error::dist/index.js in the release does not match its source'; exit 1; }
 
-      - name: Move the major tag
-        run: |
-          git tag --force "v${{ needs.release-please.outputs.major }}" "${{ needs.release-please.outputs.sha }}"
-          git push --force origin "v${{ needs.release-please.outputs.major }}"
-
+      # The tag's package.json files carry the released version, which the bundles stamp as VERSION.
       - run: pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp
 
       - run: node tools/release/prepare-cli.ts

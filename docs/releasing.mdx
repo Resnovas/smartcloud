@@ -1,0 +1,55 @@
+---
+title: "Releasing"
+description: "How a smartcloud release is cut with Nx release, and how the first v2 release differs."
+---
+
+smartcloud is released by [Nx release](https://nx.dev/docs/features/manage-releases), from the `release` workflow in `.github/workflows/release.yml`. A maintainer starts it by hand from the Actions tab, on `main`.
+
+The GitHub Action, the CLI and the MCP server (`@resnovas/action`, `@resnovas/smartcloud` and `@resnovas/smartcloud-mcp`) form one fixed release group, so they always share a version. The libraries under `packages/` are bundled into them and are never released on their own.
+
+## What a release does
+
+1. Nx reads the conventional commits since the last `v*` tag and picks the bump: `feat` is minor, `fix`, `perf` and `revert` are patch, and a breaking change is major. Other types appear in the notes, or are hidden, without bumping. A `specifier` input overrides this.
+2. Nx writes the new version to the three apps' `package.json` files, and the action is bundled into `dist/index.js` from that source.
+3. The workflow commits both, removes the vendored `externals/` directory (every run of the action downloads the whole tagged tree), and signs the commit off as `github-actions[bot]`. The commit is on no branch: its parent is the head of `main`.
+4. Only the `v<version>` tag is pushed. `main` never receives a release commit or the bundle, so no branch protection is bypassed.
+5. Nx writes the release notes to a GitHub release on the tag, and the `v<major>` tag moves to it, which is what workflows pin.
+6. A second job checks out the tag, rebuilds the action and stops unless the bundle matches the tagged one. It then bundles the CLI and MCP server, with the released version stamped in, and publishes `@resnovas/smartcloud` to npm with provenance, through trusted publishing.
+
+The tag is the only record of the current version: the apps' versions on `main` stay `0.0.0`, and a local build reports `0.0.0`. The notes live on the GitHub release; `CHANGELOG.md` holds the v1 history and is no longer written.
+
+## Running a release
+
+Open **Actions**, choose **release**, then **Run workflow** on `main`.
+
+| Input | Use |
+| --- | --- |
+| `dry-run` | Ticked by default. Prints the version and the release notes, and builds the bundle, without tagging, releasing or publishing. |
+| `specifier` | Leave empty to follow the commits. Otherwise an exact version (`2.1.0`) or a bump (`major`, `minor`, `patch`). |
+| `first-release` | Only for the first v2 release, below. |
+
+Run it once as a dry run, check the notes, then run it again with `dry-run` cleared. When no commit since the last tag calls for a release, the workflow says so and stops.
+
+<Warning>
+Do not run `nx release` locally except with `--dry-run`. Nx is configured to create the GitHub release, so a real local run pushes and publishes notes against whatever is checked out.
+</Warning>
+
+## The first v2 release
+
+v1's tags, up to `1.0.0-beta.8`, have no `v` prefix, so Nx finds no earlier `v*` tag to count from. Run the first release with:
+
+- `specifier`: `2.0.0`
+- `first-release`: ticked
+
+Its notes start at the newest earlier tag (`1.0.0-beta.8`), so they cover the v2 work rather than the whole history. From then on, leave both inputs empty.
+
+To preview it locally:
+
+```sh
+pnpm release:dry-run --first-release --specifier 2.0.0
+```
+
+## Before the first release
+
+- The workflow pushes tags with its own token. If a tag ruleset protects `v*`, let GitHub Actions bypass it for tag creation and updates.
+- Trusted publishing needs `@resnovas/smartcloud` on npm to trust this repository's `release.yml` workflow.

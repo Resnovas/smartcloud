@@ -44,7 +44,15 @@ export default [
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
   {
-    ignores: ['**/dist', '**/release', '**/out-tsc', '**/coverage', '**/vitest.config.*.timestamp*', 'graphify-out/**'],
+    ignores: [
+      '**/dist',
+      '**/release',
+      '**/out-tsc',
+      '**/coverage',
+      '**/vitest.config.*.timestamp*',
+      'graphify-out/**',
+      'externals/**',
+    ],
   },
   {
     files: ['**/*.ts', '**/*.mts', '**/*.js', '**/*.mjs'],

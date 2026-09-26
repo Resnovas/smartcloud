@@ -1,6 +1,6 @@
 {
   "name": "@resnovas/action",
-  "version": "1.0.0-beta.8",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "description": "The smartcloud GitHub Action: runs every configured feature for the triggering event and reports the result.",
@@ -10,23 +10,6 @@
       "@resnovas/source": "./src/index.ts",
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
-    }
-  },
-  "nx": {
-    "tags": [
-      "type_platform",
-      "layer_backend"
-    ],
-    "targets": {
-      "bundle": {
-        "dependsOn": [
-          "build"
-        ],
-        "command": "esbuild apps/action/dist/main.js --bundle --platform=node --target=node24 --format=esm --outfile=dist/index.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --legal-comments=none",
-        "outputs": [
-          "{workspaceRoot}/dist/index.js"
-        ]
-      }
     }
   },
   "dependencies": {

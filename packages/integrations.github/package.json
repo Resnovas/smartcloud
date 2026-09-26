@@ -12,12 +12,6 @@
       "import": "./dist/index.js"
     }
   },
-  "nx": {
-    "tags": [
-      "type_extension",
-      "layer_backend"
-    ]
-  },
   "dependencies": {
     "@octokit/rest": "^22.0.1",
     "@resnovas/conditions": "workspace:*",

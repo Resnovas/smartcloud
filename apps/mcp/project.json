@@ -1,0 +1,13 @@
+{
+  "name": "@resnovas/smartcloud-mcp",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "apps/mcp/src",
+  "tags": ["type_platform", "layer_backend"],
+  "targets": {
+    "bundle": {
+      "command": "node tools/release/bundle.ts {projectRoot} apps/cli/release/smartcloud-mcp.js",
+      "outputs": ["{workspaceRoot}/apps/cli/release/smartcloud-mcp.js"]
+    }
+  }
+}

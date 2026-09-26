@@ -31,6 +31,7 @@ import {
   migrateConfigTool,
   planSettingsTool,
   readConfinedConfig,
+  stampedVersion,
   validateConfigTool,
   VERSION,
   type ToolContext,
@@ -227,6 +228,8 @@ describe('the MCP server', () => {
     await client.connect(clientTransport)
 
     expect(client.getServerVersion()).toMatchObject({ name: 'smartcloud', version: VERSION })
+    expect(VERSION).toBe('0.0.0')
+    expect(stampedVersion('2.0.0')).toBe('2.0.0')
     const tools = await client.listTools()
     expect(tools.tools.map((tool) => tool.name)).toStrictEqual([
       'validate_config',

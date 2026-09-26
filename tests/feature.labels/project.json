@@ -1,0 +1,7 @@
+{
+  "name": "@resnovas/feature.labels-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tests/feature.labels/src",
+  "tags": ["type_test", "layer_backend"]
+}
