@@ -35,6 +35,7 @@ On `schedule`, `workflow_dispatch` and `push` events, smartcloud renders every t
 - `{{KEY}}` placeholders are replaced from `values`. `{{REPOSITORY}}` is always available as the repository's `owner/name`. A placeholder with no value fails the sync rather than leaving a blank.
 - Excluded templates are neither rendered nor synced, so a repository that keeps its own copy need not supply that template's values.
 - An executable template makes its file executable.
+- The commit is made through the GitHub API as the token's own identity, and signed off as that identity. GitHub signs it when the token is the workflow token or a GitHub App token, so it passes a ruleset that requires signed commits. Setting `SMARTCLOUD_COMMITTER_NAME` and `SMARTCLOUD_COMMITTER_EMAIL` commits and signs off as that identity instead, which GitHub does not sign.
 
 ## Managed blocks
 

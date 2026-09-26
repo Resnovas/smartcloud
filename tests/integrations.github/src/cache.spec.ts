@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Redacted, Ref, Schedule } from 'effect'
-import { dryRunGitHub, makeLiveGitHub, type RecordedWrite } from '@resnovas/integrations.github'
+import { DEFAULT_COMMITTER, dryRunGitHub, makeLiveGitHub, type RecordedWrite } from '@resnovas/integrations.github'
 import { fakeFetch, type Recorded, type Routes } from './fake-fetch.js'
 
 // The live service routes every read through Effect Requests; these tests
@@ -237,7 +237,7 @@ describe('cached reads: invalidation after writes', () => {
         [`POST ${REPO}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
         [`POST ${REPO}/git/trees`]: { status: 201, body: { sha: 'tree' } },
         [`GET ${REPO}/git/ref/heads/sync`]: { status: 404, body: { message: 'Not Found' } },
-        [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'commit' } },
+        [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'commit', author: DEFAULT_COMMITTER } },
         [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
         [`GET ${REPO}/pulls`]: { body: [] },
         [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'u' } },

@@ -16,7 +16,7 @@
 
 import { Octokit } from '@octokit/rest'
 import type { Review } from '@resnovas/conditions'
-import { Config, Effect, Layer, Redacted, Schedule } from 'effect'
+import { Config, Effect, Layer, Option, Redacted, Ref, Schedule } from 'effect'
 import { cacheReads } from './cache.js'
 import { fromGraphqlErrors, fromStatus, type GitHubError, ValidationFailed } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
@@ -39,14 +39,23 @@ export interface LiveOptions {
   readonly fetch?: typeof globalThis.fetch
   /** How rate-limited and failed calls are retried. Defaults to three jittered, exponential retries. */
   readonly retry?: Schedule.Schedule<unknown, GitHubError>
-  /** Who proposed changes are committed and signed off as. Defaults to {@link DEFAULT_COMMITTER}. */
+  /**
+   * Who proposed changes are committed and signed off as. Left unset, GitHub
+   * records the token's own identity and signs the commit.
+   */
   readonly committer?: CommitIdentity
 }
 
 /**
- * The identity `GITHUB_TOKEN` pushes as. Commits name it as author and
- * committer explicitly, so the sign-off always matches the author and the
- * DCO check passes.
+ * The identity the workflow token commits as, and the first guess at the
+ * identity to sign a proposed commit off as.
+ *
+ * @remarks
+ * A proposed commit names no author, so GitHub records the token's own
+ * identity (the workflow token's `github-actions[bot]`, or a GitHub App's
+ * bot) and signs the commit. When the identity GitHub recorded differs from
+ * this guess, the commit is made again signed off as that identity, so the
+ * sign-off always matches the author and the DCO check passes.
  *
  * @example
  * ```ts import.meta.vitest name="DEFAULT_COMMITTER"
@@ -341,7 +350,36 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         ),
       )
 
-    const committer = options.committer ?? DEFAULT_COMMITTER
+    // The identity GitHub last recorded for an unsigned-off commit, so later
+    // proposals in the run sign off right the first time.
+    const signer = yield* Ref.make<CommitIdentity>(DEFAULT_COMMITTER)
+
+    const createCommit = (title: string, tree: string, parent: string, identity: CommitIdentity, named: boolean) =>
+      call('proposeChanges: create commit', () =>
+        octokit.rest.git.createCommit({
+          owner,
+          repo,
+          message: signOff(title, identity),
+          tree,
+          parents: [parent],
+          ...(named ? { author: identity, committer: identity } : {}),
+        }),
+      ).pipe(Effect.map(({ data }) => ({ sha: data.sha, author: { name: data.author.name, email: data.author.email } })))
+
+    // A named committer is written as author and committer, and GitHub leaves
+    // the commit unsigned. Otherwise GitHub records the token's identity and
+    // signs the commit; if that identity is not the one signed off, the
+    // commit is made again with the right sign-off.
+    const commitChanges = (title: string, tree: string, parent: string) =>
+      options.committer === undefined
+        ? Effect.gen(function* () {
+            const guess = yield* Ref.get(signer)
+            const first = yield* createCommit(title, tree, parent, guess, false)
+            if (first.author.name === guess.name && first.author.email === guess.email) return first.sha
+            yield* Ref.set(signer, first.author)
+            return (yield* createCommit(title, tree, parent, first.author, false)).sha
+          })
+        : createCommit(title, tree, parent, options.committer, true).pipe(Effect.map(({ sha }) => sha))
 
     const proposeChanges: GitHubService['proposeChanges'] = (proposal) =>
       Effect.gen(function* () {
@@ -389,25 +427,15 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           current.tree.sha === tree.data.sha &&
           current.parents.map((parent) => parent.sha).join(' ') === baseSha
         if (!upToDate) {
-          const commit = yield* call('proposeChanges: create commit', () =>
-            octokit.rest.git.createCommit({
-              owner,
-              repo,
-              message: signOff(proposal.title, committer),
-              tree: tree.data.sha,
-              parents: [baseSha],
-              author: committer,
-              committer,
-            }),
-          )
+          const commit = yield* commitChanges(proposal.title, tree.data.sha, baseSha)
           yield* branchSha === undefined
             ? call(
                 'proposeChanges: create branch',
-                () => octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${proposal.branch}`, sha: commit.data.sha }),
+                () => octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${proposal.branch}`, sha: commit }),
                 rateLimited,
               )
             : call('proposeChanges: update branch', () =>
-                octokit.rest.git.updateRef({ owner, repo, ref: `heads/${proposal.branch}`, sha: commit.data.sha, force: true }),
+                octokit.rest.git.updateRef({ owner, repo, ref: `heads/${proposal.branch}`, sha: commit, force: true }),
               )
         }
 
@@ -566,9 +594,10 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
 /**
  * The live GitHub service for the repository in `GITHUB_REPOSITORY`,
  * authenticated with `GITHUB_TOKEN`. Both are read through Effect Config,
- * and the token stays redacted. `SMARTCLOUD_COMMITTER_NAME` and
- * `SMARTCLOUD_COMMITTER_EMAIL` override who proposed changes are committed
- * and signed off as, for a token that pushes as another identity.
+ * and the token stays redacted. Proposed commits are made as the token's
+ * own identity, which GitHub signs. `SMARTCLOUD_COMMITTER_NAME` and
+ * `SMARTCLOUD_COMMITTER_EMAIL` name another identity to commit and sign off
+ * as instead; GitHub does not sign such a commit.
  *
  * @example
  * ```ts
@@ -585,11 +614,18 @@ export const GitHubLive = Layer.effect(
     const repository = yield* Config.string('GITHUB_REPOSITORY').pipe(
       Config.validate({ message: 'GITHUB_REPOSITORY must be owner/name', validation: (value) => /^[^/\s]+\/[^/\s]+$/.test(value) }),
     )
-    const committer = yield* Config.all({
-      name: Config.string('SMARTCLOUD_COMMITTER_NAME').pipe(Config.withDefault(DEFAULT_COMMITTER.name)),
-      email: Config.string('SMARTCLOUD_COMMITTER_EMAIL').pipe(Config.withDefault(DEFAULT_COMMITTER.email)),
-    })
+    const name = yield* Config.option(Config.string('SMARTCLOUD_COMMITTER_NAME'))
+    const email = yield* Config.option(Config.string('SMARTCLOUD_COMMITTER_EMAIL'))
+    const committer =
+      Option.isNone(name) && Option.isNone(email)
+        ? {}
+        : {
+            committer: {
+              name: Option.getOrElse(name, () => DEFAULT_COMMITTER.name),
+              email: Option.getOrElse(email, () => DEFAULT_COMMITTER.email),
+            },
+          }
     const [owner = '', repo = ''] = repository.split('/')
-    return yield* makeLiveGitHub({ token, coordinates: { owner, repo }, committer })
+    return yield* makeLiveGitHub({ token, coordinates: { owner, repo }, ...committer })
   }),
 )

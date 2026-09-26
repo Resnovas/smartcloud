@@ -352,10 +352,10 @@ describe('live GitHub: proposing changes', () => {
     [`GET ${REPO}/git/commits/base`]: { body: { sha: 'base', tree: { sha: 'base-tree' }, parents: [] } },
     [`POST ${REPO}/git/blobs`]: [{ status: 201, body: { sha: 'blob-1' } }, { status: 201, body: { sha: 'blob-2' } }],
     [`POST ${REPO}/git/trees`]: { status: 201, body: { sha: 'new-tree' } },
-    [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'new-commit' } },
+    [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'new-commit', author: DEFAULT_COMMITTER } },
   }
 
-  it.effect('builds a signed-off commit on the base, creates the branch and opens a pull request', () =>
+  it.effect('builds a signed-off commit on the base as the token, creates the branch and opens a pull request', () =>
     Effect.gen(function* () {
       const { service, requests } = live({
         ...baseRoutes,
@@ -383,9 +383,8 @@ describe('live GitHub: proposing changes', () => {
         message: `chore(sync): sync files\n\nSigned-off-by: ${DEFAULT_COMMITTER.name} <${DEFAULT_COMMITTER.email}>`,
         tree: 'new-tree',
         parents: ['base'],
-        author: DEFAULT_COMMITTER,
-        committer: DEFAULT_COMMITTER,
       })
+      expect(sent('POST', `${REPO}/git/commits`)).toHaveLength(1)
       expect(sent('POST', `${REPO}/git/refs`)[0]?.body).toStrictEqual({ ref: 'refs/heads/smartcloud/sync', sha: 'new-commit' })
       expect(sent('GET', `${REPO}/pulls`)[0]?.query).toContain('head=Resnovas%3Asmartcloud%2Fsync')
       expect(sent('POST', `${REPO}/pulls`)[0]?.body).toStrictEqual({ head: 'smartcloud/sync', base: 'main', title: proposal.title, body: 'Synced.' })
@@ -418,6 +417,39 @@ describe('live GitHub: proposing changes', () => {
         force: true,
       })
       expect(requests.at(-1)?.body).toStrictEqual({ title: proposal.title, body: 'Synced.' })
+    }),
+  )
+
+  it.effect('signs off as the identity GitHub records for the token, and remembers it for the next proposal', () =>
+    Effect.gen(function* () {
+      const app = { name: 'resnovas-bot[bot]', email: '7+resnovas-bot[bot]@users.noreply.github.com' }
+      const { service, requests } = live({
+        ...baseRoutes,
+        [`POST ${REPO}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
+        [`POST ${REPO}/git/commits`]: [
+          { status: 201, body: { sha: 'guessed', author: app } },
+          { status: 201, body: { sha: 'signed-off', author: app } },
+          { status: 201, body: { sha: 'again', author: app } },
+        ],
+        [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { status: 404, body: { message: 'Not Found' } },
+        [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
+        [`GET ${REPO}/pulls`]: { body: [] },
+        [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'u' } },
+      })
+      const github = yield* service
+      yield* github.proposeChanges(proposal)
+      yield* github.proposeChanges(proposal)
+      const commits = requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)
+      expect(commits.map(({ body }) => (body as { message: string }).message)).toStrictEqual([
+        signOff(proposal.title, DEFAULT_COMMITTER),
+        signOff(proposal.title, app),
+        signOff(proposal.title, app),
+      ])
+      expect(commits.every(({ body }) => !Object.hasOwn(body as object, 'author'))).toBe(true)
+      expect(requests.filter((request) => request.path === `${REPO}/git/refs`).map(({ body }) => body)).toStrictEqual([
+        { ref: 'refs/heads/smartcloud/sync', sha: 'signed-off' },
+        { ref: 'refs/heads/smartcloud/sync', sha: 'again' },
+      ])
     }),
   )
 
@@ -557,6 +589,15 @@ describe('GitHubLive', () => {
     Effect.map(GitHub, (github) => expect(github.coordinates).toStrictEqual({ owner: 'Resnovas', repo: 'smartcloud' })).pipe(
       provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud' }),
     ),
+  )
+
+  it.effect('reads a committer to name instead of the token', () =>
+    Effect.gen(function* () {
+      for (const env of [{ SMARTCLOUD_COMMITTER_NAME: 'Ann' }, { SMARTCLOUD_COMMITTER_EMAIL: 'ann@example.com' }]) {
+        const github = yield* GitHub.pipe(provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud', ...env }))
+        expect(github.coordinates.repo).toBe('smartcloud')
+      }
+    }),
   )
 
   it.effect('rejects a malformed repository name', () =>
