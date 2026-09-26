@@ -42,6 +42,8 @@ export class BadEventPayload extends Data.TaggedError('BadEventPayload')<{ reado
 export type Connect = (options: {
   readonly token: Redacted.Redacted<string>
   readonly coordinates: RepositoryCoordinates
+  /** The token the checks on a commit are read with, when it is not `token`. */
+  readonly checksToken?: Redacted.Redacted<string>
 }) => Effect.Effect<GitHubService>
 
 // Workflow command data needs %, carriage returns and newlines escaped.
@@ -118,6 +120,8 @@ export const program = (connect: Connect) =>
     const env = yield* environment
     const coordinates = yield* targetRepository(env.repository)
     const payload = yield* readPayload(env.eventPath)
+    // The workflow token reads the commit's checks: the job grants it checks and statuses read, which a personal access token may lack.
+    const checksToken = Option.match(inputs.workflowToken, { onNone: () => ({}), onSome: (token) => ({ checksToken: token }) })
     const event = { name: env.eventName, payload }
     const chosen = accessFor({
       token: inputs.token,
@@ -127,7 +131,7 @@ export const program = (connect: Connect) =>
     const { service, access, rejected } = yield* connectWithFallback({
       ...chosen,
       workflowToken: inputs.workflowToken,
-      connect: (token) => connect({ token, coordinates }),
+      connect: (token) => connect({ token, coordinates, ...checksToken }),
     })
     if (rejected !== undefined) {
       yield* Console.log(`::warning title=smartcloud::${escape(`GitHub rejected GITHUB_TOKEN (${rejected}); this run acted with the workflow token and skipped what needs a stronger token. Replace the token.`)}`)

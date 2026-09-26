@@ -153,6 +153,7 @@ Every input is optional.
 | `dryRun` | `false` | Record every write in the job summary instead of making it. |
 | `features` | every configured feature | A comma-separated list of the features to run, for example `labels,stale`. |
 | `checkRunId` | none | The job's own check run, as `${{ job.check_run_id }}` gives it. The [required](/features/required) feature runs only when it is set, so it can wait for every other check and leave this job out. |
+| `workflowToken` | `${{ github.token }}` | The workflow's own token; leave it at its default. The required feature reads the pull request's checks with it, since `GITHUB_TOKEN` can be a personal access token without checks and statuses read. |
 
 The config is read through the GitHub API, so the workflow needs no checkout step. It comes from the default branch unless `configRef` says otherwise, so a pull request cannot loosen the rules it is checked against.
 

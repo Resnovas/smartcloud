@@ -95,6 +95,21 @@ describe('program', () => {
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
+  it.effect('connects with the workflow token as the checks token, when the workflow passes it', () =>
+    Effect.gen(function* () {
+      const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
+      const seen: Array<string | undefined> = []
+      const connect = (options: { readonly checksToken?: Redacted.Redacted<string> }) => {
+        seen.push(options.checksToken === undefined ? undefined : Redacted.value(options.checksToken))
+        return Effect.succeed(service)
+      }
+      const { GITHUB_STEP_SUMMARY: _summary, ...vars } = yield* Effect.promise(() => env(pullRequest('feat: x')))
+      yield* program(connect).pipe(withEnv({ ...vars, INPUT_WORKFLOWTOKEN: 'ghs_workflow' }))
+      yield* program(connect).pipe(withEnv(vars))
+      expect(seen).toStrictEqual(['ghs_workflow', undefined])
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
   it.effect('records writes instead of making them in a dry run', () =>
     Effect.gen(function* () {
       const { service, state } = memory({ '.github/smartcloud.yml': CONVENTIONS })

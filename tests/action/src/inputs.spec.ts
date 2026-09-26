@@ -50,6 +50,16 @@ describe('readInputs', () => {
     }),
   )
 
+  it.effect('reads the workflow token, without listing it among the given inputs', () =>
+    Effect.gen(function* () {
+      const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_WORKFLOWTOKEN: 'ghs_workflow' }))
+      expect(Option.map(read.workflowToken, Redacted.value)).toStrictEqual(Option.some('ghs_workflow'))
+      expect(read.given).not.toContain('workflowToken')
+      const none = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_WORKFLOWTOKEN: ' ' }))
+      expect(none.workflowToken).toStrictEqual(Option.none())
+    }),
+  )
+
   it.effect('reads the job check run id as a number, and rejects anything else', () =>
     Effect.gen(function* () {
       const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_CHECKRUNID: ' 51725241954 ' }))
