@@ -864,6 +864,40 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         Effect.asVoid(
           call('closeIssue', () => octokit.rest.issues.update({ owner, repo, issue_number, state: 'closed' })),
         ),
+      listClosedUnlocked: (kind, closedBefore) =>
+        call('listClosedUnlocked', () =>
+          octokit.paginate(octokit.rest.search.issuesAndPullRequests, {
+            // Search takes whole seconds; apps with a user token must name the kind.
+            q: `repo:${owner}/${repo} ${kind === 'issue' ? 'is:issue' : 'is:pr'} is:closed is:unlocked closed:<${closedBefore.toISOString().slice(0, 19)}Z`,
+            per_page: 100,
+          }),
+        ).pipe(
+          Effect.map((issues) =>
+            issues.map((issue) => ({
+              number: issue.number,
+              title: issue.title,
+              body: issue.body ?? '',
+              author: issue.user?.login ?? '',
+              open: issue.state === 'open',
+              locked: issue.locked,
+              labels: issue.labels.map(labelName),
+              updatedAt: new Date(issue.updated_at),
+              closedAt: new Date(issue.closed_at ?? issue.updated_at),
+              isPullRequest: issue.pull_request !== undefined,
+            })),
+          ),
+        ),
+      lockIssue: (issue_number, reason) =>
+        Effect.asVoid(
+          call('lockIssue', () =>
+            octokit.rest.issues.lock({
+              owner,
+              repo,
+              issue_number,
+              ...(reason === undefined ? {} : { lock_reason: reason }),
+            }),
+          ),
+        ),
       listCommits,
       listFiles,
       listChangedFiles,

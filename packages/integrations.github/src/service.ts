@@ -84,6 +84,14 @@ export interface IssueSummary {
   readonly reactions?: Reactions
 }
 
+/** A closed issue or pull request, as listed for the scheduled sweep that locks old threads. */
+export interface ClosedIssueSummary extends IssueSummary {
+  readonly closedAt: Date
+}
+
+/** Why a conversation is locked, as GitHub shows it on the item. */
+export type LockReason = 'off-topic' | 'too heated' | 'resolved' | 'spam'
+
 /** An open pull request, as listed for scheduled sweeps that act on its head commit. */
 export interface PullRequestSummary {
   readonly number: number
@@ -237,6 +245,17 @@ export interface GitHubService {
   /** The reactions on an issue or pull request itself, not on its comments. */
   readonly getReactions: (issue: number) => Effect.Effect<Reactions, GitHubError>
   readonly closeIssue: (issue: number) => Effect.Effect<void, GitHubError>
+  /**
+   * Lists the closed, unlocked issues or pull requests closed before a time.
+   * Never cached, because a sweep acts on the latest state. GitHub's search
+   * returns at most 1,000 of them.
+   */
+  readonly listClosedUnlocked: (
+    kind: 'issue' | 'pullRequest',
+    closedBefore: Date,
+  ) => Effect.Effect<ReadonlyArray<ClosedIssueSummary>, GitHubError>
+  /** Locks an issue's or pull request's conversation, with an optional reason. */
+  readonly lockIssue: (issue: number, reason?: LockReason) => Effect.Effect<void, GitHubError>
   /** Lists the open pull requests with their head commits. Never cached, because a sweep acts on the latest heads. */
   readonly listOpenPullRequests: Effect.Effect<ReadonlyArray<PullRequestSummary>, GitHubError>
 
