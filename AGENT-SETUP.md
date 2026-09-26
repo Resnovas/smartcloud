@@ -31,7 +31,7 @@ Never write values into repo files.
 ## Setup
 
 - `scripts/agent-setup` (Windows: `scripts\agent-setup.cmd`; any OS: `node scripts/agent-setup.ts`). Idempotent. Non-interactive.
-- Steps: Node check, pnpm, `pnpm install`, `pnpm nx sync`, `pnpm nx run-many -t build`, `pnpm run cli --version`.
+- Steps: Node check, pnpm, `pnpm install`, `pnpm nx sync`, `pnpm nx run-many -t build`, `pnpm run cli --version`, `surfaces install` (not on CI).
 - `--no-build`: stop after `nx sync`.
 - Success: last line `agent-setup: ok`. About 20 s warm, few minutes clean.
 
@@ -49,12 +49,15 @@ Never write values into repo files.
 | headers           | `pnpm run headers` (fix: `pnpm run headers:fix`)                   |
 | bundle            | `pnpm run bundle` (`dist/index.js`, `apps/cli/release/`)           |
 | docs              | `pnpm run docs:reference` (check: `pnpm run docs:reference:check`) |
+| docs server       | `pnpm run docs:dev` (`http://localhost:3000`)                      |
+| code graph        | `pnpm run graph:open`                                              |
+| agent prompts     | `pnpm run surfaces:sync` after editing `.agents/prompts/`          |
 | all CI            | `pnpm run check`                                                   |
 | CLI               | `pnpm run cli <command>` after build                               |
 | MCP               | `pnpm run mcp` (stdio; stdout is protocol)                         |
 | action            | `pnpm run action` with env above                                   |
 
-No ports. No server. Affected only: `pnpm nx affected -t lint typecheck test build`.
+Port 3000 only for `docs:dev`. Affected only: `pnpm nx affected -t lint typecheck test build`.
 
 ## Verify
 
@@ -70,7 +73,9 @@ No ports. No server. Affected only: `pnpm nx affected -t lint typecheck test bui
 | Codex cloud     | `AGENTS.md`                                                         | setup and maintenance scripts both `scripts/agent-setup`; secret `GITHUB_TOKEN` optional; agent internet only for GitHub-facing work |
 | Copilot         | `.github/workflows/copilot-setup-steps.yml`                         | repo secret or variable `GITHUB_TOKEN` optional                                                                                      |
 | Codex desktop   | `.codex/environments/environment.toml`                              | none                                                                                                                                 |
-| Orca            | `orca.yaml`                                                         | Quick Commands: `pnpm run check`, `pnpm run test:file <path>`, `pnpm run headers:fix`                                                |
+| Orca            | `orca.yaml`                                                         | none; `pnpm run surfaces:install` (run by setup) adds quick commands and agent prompts                                               |
+| OpenChamber     | `.opencode/commands/`                                               | none; `pnpm run surfaces:install` (run by setup) adds project actions                                                                |
+| Zed             | `.zed/tasks.json`, `.zed/debug.json`                                | none                                                                                                                                 |
 
 ## Breaks
 

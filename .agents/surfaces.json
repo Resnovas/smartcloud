@@ -1,0 +1,14 @@
+{
+  "name": "smartcloud",
+  "agents": ["claude", "codex"],
+  "actions": [
+    { "id": "setup", "label": "Setup", "script": "setup" },
+    { "id": "dev", "label": "Dev: watch build", "script": "dev", "primary": true },
+    { "id": "docs", "label": "Docs: local server", "script": "docs:dev", "url": "http://localhost:3000" },
+    { "id": "graph", "label": "Graph: open viewer", "script": "graph:open" },
+    { "id": "test", "label": "Test", "script": "test" },
+    { "id": "check", "label": "Check: everything CI runs", "script": "check" },
+    { "id": "fix", "label": "Fix: format and licence headers", "script": "fix" },
+    { "id": "release", "label": "Release: dry run", "script": "release:dry-run" }
+  ]
+}

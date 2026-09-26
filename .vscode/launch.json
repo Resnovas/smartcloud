@@ -11,7 +11,7 @@
       "type": "node",
       "request": "launch",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["--silent", "run", "cli", "validate", ".github/config.json"],
+      "runtimeArgs": ["--silent", "run", "cli", "validate", ".github/smartcloud.yml"],
       "cwd": "${workspaceFolder}",
       "console": "integratedTerminal",
       "preLaunchTask": "build",

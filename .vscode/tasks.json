@@ -1,7 +1,7 @@
 {
   // Every task calls a package script from package.json or the setup script,
   // which stay the one source of truth for commands (house standard
-  // project-dev-surfaces). Zed imports this file too.
+  // project-dev-surfaces). Zed reads .zed/tasks.json instead.
   "version": "2.0.0",
   "tasks": [
     {
@@ -85,6 +85,42 @@
       "detail": "Regenerate docs/reference/configuration.mdx from the JSON Schema",
       "type": "shell",
       "command": "pnpm run docs:reference",
+      "problemMatcher": []
+    },
+    {
+      "label": "docs: local server",
+      "detail": "Serve the Mintlify docs at http://localhost:3000: pnpm run docs:dev",
+      "type": "shell",
+      "command": "pnpm run docs:dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "graph: open viewer",
+      "detail": "Open the committed Graphify code graph: pnpm run graph:open",
+      "type": "shell",
+      "command": "pnpm run graph:open",
+      "problemMatcher": []
+    },
+    {
+      "label": "fix",
+      "detail": "Format and add licence headers: pnpm run fix",
+      "type": "shell",
+      "command": "pnpm run fix",
+      "problemMatcher": []
+    },
+    {
+      "label": "release: dry run",
+      "detail": "Preview the next release without publishing: pnpm run release:dry-run",
+      "type": "shell",
+      "command": "pnpm run release:dry-run",
+      "problemMatcher": []
+    },
+    {
+      "label": "agents: install Orca and OpenChamber actions",
+      "detail": "Register this repo's actions and prompts in Orca and OpenChamber: pnpm run surfaces:install",
+      "type": "shell",
+      "command": "pnpm run surfaces:install",
       "problemMatcher": []
     },
     {

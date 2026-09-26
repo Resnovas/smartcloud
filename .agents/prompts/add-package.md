@@ -1,4 +1,5 @@
 ---
+label: Add a package
 description: Scaffold a workspace package with its mirrored test project
 argument-hint: <name>
 ---

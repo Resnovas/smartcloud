@@ -1,0 +1,95 @@
+// Zed debug configurations (house standard project-dev-surfaces). Each runs a
+// package script under the JavaScript debugger after building. GitHub-facing
+// configs read GITHUB_TOKEN from the environment Zed was started in; set it
+// from `gh auth token` or the Proton Pass item, never in this file.
+[
+  {
+    "label": "CLI: validate",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "runtimeExecutable": "pnpm",
+    "runtimeArgs": ["--silent", "run", "cli", "validate", ".github/smartcloud.yml"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**"],
+    "build": { "command": "pnpm", "args": ["run", "build"] }
+  },
+  {
+    "label": "CLI: migrate",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "runtimeExecutable": "pnpm",
+    "runtimeArgs": ["--silent", "run", "cli", "migrate", ".github/config.json"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**"],
+    "build": { "command": "pnpm", "args": ["run", "build"] }
+  },
+  {
+    "label": "CLI: dry-run",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "runtimeExecutable": "pnpm",
+    "runtimeArgs": ["--silent", "run", "cli", "dry-run", "--repo", "Resnovas/smartcloud", "--event", "schedule"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**"],
+    "build": { "command": "pnpm", "args": ["run", "build"] }
+  },
+  {
+    "label": "Action: schedule (dry run)",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "runtimeExecutable": "pnpm",
+    "runtimeArgs": ["--silent", "run", "action"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "console": "integratedTerminal",
+    "env": {
+      "GITHUB_REPOSITORY": "Resnovas/smartcloud",
+      "GITHUB_EVENT_NAME": "schedule",
+      "GITHUB_EVENT_PATH": "tools/dev/event.schedule.json",
+      "INPUT_DRYRUN": "true"
+    },
+    "skipFiles": ["<node_internals>/**"],
+    "build": { "command": "pnpm", "args": ["run", "build"] }
+  },
+  {
+    "label": "MCP server (stdio)",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "runtimeExecutable": "pnpm",
+    "runtimeArgs": ["--silent", "run", "mcp"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**"],
+    "build": { "command": "pnpm", "args": ["run", "build"] }
+  },
+  {
+    "label": "Vitest: current file",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "runtimeExecutable": "pnpm",
+    "runtimeArgs": ["--silent", "run", "test:file", "$ZED_RELATIVE_FILE"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "console": "integratedTerminal",
+    "autoAttachChildProcesses": true,
+    "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
+  },
+  {
+    "label": "Tool: surfaces install (dry run)",
+    "adapter": "JavaScript",
+    "type": "node",
+    "request": "launch",
+    "program": "$ZED_WORKTREE_ROOT/tools/dev/surfaces.ts",
+    "args": ["install", "--dry-run"],
+    "cwd": "$ZED_WORKTREE_ROOT",
+    "console": "integratedTerminal",
+    "skipFiles": ["<node_internals>/**"]
+  }
+]

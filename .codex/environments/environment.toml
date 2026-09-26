@@ -36,3 +36,23 @@ command = "pnpm run typecheck"
 name = "Check"
 icon = "test"
 command = "pnpm run check"
+
+[[actions]]
+name = "Docs server"
+icon = "run"
+command = "pnpm run docs:dev"
+
+[[actions]]
+name = "Open code graph"
+icon = "run"
+command = "pnpm run graph:open"
+
+[[actions]]
+name = "Fix"
+icon = "run"
+command = "pnpm run fix"
+
+[[actions]]
+name = "Release dry run"
+icon = "test"
+command = "pnpm run release:dry-run"

@@ -5,7 +5,7 @@
     <scripts>
       <script value="cli" />
     </scripts>
-    <arguments value="validate .github/config.json" />
+    <arguments value="validate .github/smartcloud.yml" />
     <node-interpreter value="project" />
     <envs />
     <method v="2">

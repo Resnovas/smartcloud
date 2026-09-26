@@ -6,12 +6,12 @@ House standards apply: the PostHog skill `coding-preferences` (Effect v3, strict
 
 ## Layout
 
-| Path | What lives there |
-| --- | --- |
+| Path              | What lives there                                                                                                                                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/<name>` | Libraries. Tag every project with a type (`type_core`, `type_shared`, `type_database`, `type_extension`, `type_platform`) and a layer (`layer_shared`, `layer_backend`, `layer_frontend`) under `tags` in its `project.json`. GitHub API code only in `packages/integrations.github`. |
-| `apps/<name>` | Platforms: the GitHub Action, the CLI and the MCP server. Their `project.json` sets `projectType: library`, because the test projects import them and Nx forbids importing an application. |
-| `tests/<name>` | One test project per package, mirroring `packages/<name>/src`. Tagged `type_test`. |
-| `tools/` | Workspace scripts, run with Node's built-in TypeScript support. |
+| `apps/<name>`     | Platforms: the GitHub Action, the CLI and the MCP server. Their `project.json` sets `projectType: library`, because the test projects import them and Nx forbids importing an application.                                                                                            |
+| `tests/<name>`    | One test project per package, mirroring `packages/<name>/src`. Tagged `type_test`.                                                                                                                                                                                                    |
+| `tools/`          | Workspace scripts, run with Node's built-in TypeScript support.                                                                                                                                                                                                                       |
 
 ## Commands
 
@@ -26,6 +26,12 @@ pnpm headers                                     # licence header check (pnpm he
 pnpm typecheck:tests                             # type-check every test project (Nx skips them)
 pnpm docs:api                                    # docgen (type-checks @example blocks) and the contracts check
 ```
+
+## Editor and agent surfaces
+
+Every editor task, debug configuration and app action calls a package script. VS Code and Cursor read `.vscode/`, Zed reads `.zed/`, JetBrains reads `.run/`, Codex desktop reads `.codex/environments/environment.toml` and Orca reads `orca.yaml`. Orca quick commands and OpenChamber project actions live in per-user settings, so `.agents/surfaces.json` lists them and `pnpm run surfaces:install` (run by the setup script) registers them for the checkout.
+
+Agent prompts live once in `.agents/prompts/<name>.md`; `pnpm run surfaces:sync` writes them to `.claude/commands`, `.cursor/commands` and `.opencode/commands`, and `pnpm run check` fails when those drift. Edit the prompt, never the generated copies.
 
 ## Adding a package
 

@@ -1,6 +1,5 @@
 ---
 description: Scaffold a workspace package with its mirrored test project
-argument-hint: <name>
 ---
 
 Add a new workspace package named: $ARGUMENTS

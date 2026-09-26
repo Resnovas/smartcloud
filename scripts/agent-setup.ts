@@ -102,6 +102,14 @@ if (build) {
   pnpm('--silent', 'run', 'cli', '--version')
 }
 
+// 6. Register the repo's actions and agent prompts with Orca and OpenChamber,
+// which keep them in per-user settings. Skipped on CI; never fails the setup.
+if (!process.env['CI']) {
+  const result = run(process.execPath, [join(root, 'tools/dev/surfaces.ts'), 'install'])
+  if (result.status !== 0)
+    log('note: registering Orca and OpenChamber actions failed; run `pnpm run surfaces:install`.')
+}
+
 // Secrets are never needed to set up; say where the optional one comes from.
 if (!process.env['GITHUB_TOKEN']?.trim() && probe('gh', ['auth', 'token']) === undefined) {
   log('note: GITHUB_TOKEN is not set and `gh` is not signed in; commands that read GitHub need one of them.')
