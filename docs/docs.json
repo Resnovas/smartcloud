@@ -30,6 +30,7 @@
               "features/disclosure",
               "features/reviews",
               "features/required",
+              "features/freeze",
               "features/labels",
               "features/stale",
               "features/settings",
