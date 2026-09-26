@@ -1,8 +1,16 @@
 # Releases with release-please. Conventional commits on main drive the
-# version and changelog in a release pull request. The action bundle is
-# built into that pull request, so dist/ only ever reaches main through a
-# release. Once the release is tagged, the v<major> tag moves to it and the
-# CLI is published to npm with provenance, through trusted publishing.
+# version and changelog in a release pull request.
+#
+# The action runs from dist/index.js, so the release pull request carries the
+# bundle. On every push to main it is rebuilt from main's source and committed
+# to the open release pull request, whether or not release-please changed it,
+# so the merge always ships a bundle of the code it releases. dist/ reaches
+# main only through that merge. A push made with the workflow token starts no
+# workflows, so CI is dispatched on the release branch afterwards.
+#
+# Once a release is tagged, the publish job rebuilds the bundle and refuses to
+# go on unless it matches the tagged one. Then it moves the v<major> tag and
+# publishes the CLI to npm with provenance, through trusted publishing.
 name: release
 
 on:
@@ -25,7 +33,6 @@ jobs:
       tag_name: ${{ steps.release.outputs.tag_name }}
       major: ${{ steps.release.outputs.major }}
       sha: ${{ steps.release.outputs.sha }}
-      pr_branch: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName }}
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
@@ -33,35 +40,60 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  # Keeps the bundle in the release pull request in step with main.
   bundle:
     needs: release-please
-    if: needs.release-please.outputs.pr_branch
+    if: needs.release-please.outputs.release_created != 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
+      - name: Find the open release pull request
+        id: pr
+        run: |
+          branch=$(gh pr list --repo "$GITHUB_REPOSITORY" --state open --label 'autorelease: pending' --json headRefName --jq '.[0].headRefName // ""')
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
+
       - uses: actions/checkout@v7
+        if: steps.pr.outputs.branch != ''
         with:
-          ref: ${{ needs.release-please.outputs.pr_branch }}
+          ref: main
 
       - uses: pnpm/action-setup@v6
+        if: steps.pr.outputs.branch != ''
 
       - uses: actions/setup-node@v7
+        if: steps.pr.outputs.branch != ''
         with:
           node-version-file: .nvmrc
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm nx run action:bundle
-
-      - name: Commit the bundle
+      - name: Bundle main's source
+        if: steps.pr.outputs.branch != ''
         run: |
+          pnpm install --frozen-lockfile
+          pnpm nx run @resnovas/action:bundle
+          cp dist/index.js "$RUNNER_TEMP/index.js"
+
+      - name: Commit the bundle to the release pull request
+        if: steps.pr.outputs.branch != ''
+        env:
+          BRANCH: ${{ steps.pr.outputs.branch }}
+        run: |
+          git fetch origin "$BRANCH"
+          git checkout -B "$BRANCH" "origin/$BRANCH"
+          mkdir -p dist
+          cp "$RUNNER_TEMP/index.js" dist/index.js
           git add --force dist/index.js
           if git diff --cached --quiet; then exit 0; fi
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit --signoff --message 'chore(release): bundle the action'
-          git push
+          git push origin "$BRANCH"
+          # Pushes with the workflow token start no workflows, but a dispatch does.
+          gh workflow run ci.yml --ref "$BRANCH"
 
   publish:
     needs: release-please
@@ -75,24 +107,35 @@ jobs:
         with:
           ref: ${{ needs.release-please.outputs.tag_name }}
 
+      - uses: pnpm/action-setup@v6
+
+      # No registry-url: it writes an auth token that would stop npm using
+      # trusted publishing.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Check the tagged bundle is the released code
+        run: |
+          test -f dist/index.js || { echo '::error::the release has no dist/index.js'; exit 1; }
+          cp dist/index.js "$RUNNER_TEMP/tagged.js"
+          pnpm nx run @resnovas/action:bundle
+          cmp dist/index.js "$RUNNER_TEMP/tagged.js" || { echo '::error::dist/index.js in the release does not match its source'; exit 1; }
+
       - name: Move the major tag
         run: |
           git tag --force "v${{ needs.release-please.outputs.major }}" "${{ needs.release-please.outputs.sha }}"
           git push --force origin "v${{ needs.release-please.outputs.major }}"
 
-      - uses: pnpm/action-setup@v6
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-          registry-url: https://registry.npmjs.org
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm nx run smartcloud:bundle
+      - run: pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp
 
       - run: node tools/release/prepare-cli.ts
+
+      # Trusted publishing needs npm 11.5 or later.
+      - run: npm install --global npm@latest
 
       - name: Publish the CLI
         working-directory: apps/cli/release

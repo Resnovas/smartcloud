@@ -47,6 +47,21 @@ Converts a v1 JSON config (default `.github/config.json`) to v2 YAML, and prints
 
 A v2 file given to `migrate` is rewritten unchanged. See [Migrating from v1](/migration) for worked examples.
 
+## check-commit
+
+```sh
+smartcloud check-commit <file> [--author-name <name> --author-email <email>] [--config <file>]
+```
+
+Checks a commit message against the DCO sign-off and AI attribution rules before the commit exists, and exits with code 1 when any rule is broken. The author defaults to git's own, and the config to the repository's in the working directory, or smartcloud's defaults when there is none. Comment lines are ignored, as git ignores them.
+
+Use it as a git `commit-msg` hook, so a commit that would fail the pull request check is stopped locally:
+
+```sh .git/hooks/commit-msg
+#!/bin/sh
+exec npx --yes @resnovas/smartcloud check-commit "$1"
+```
+
 ## dry-run
 
 ```sh
@@ -61,7 +76,7 @@ Runs every feature against a real pull request, issue or repository event, throu
 | `--pr`, `--issue` | Simulate this pull request or issue, built from its current state on GitHub. |
 | `--event` | Simulate `schedule`, `push` or `workflow_dispatch`. |
 | `--config` | Use this local config file instead of the repository's own config on its default branch. |
-| `--features` | Only these features, comma separated. |
+| `--features` | Only these features, comma separated. An empty list, such as `--features ,`, runs every feature. |
 
 Give exactly one of `--pr`, `--issue` or `--event`.
 
@@ -79,7 +94,7 @@ Prints every repository settings step the config would apply, with its request, 
 smartcloud sync --repo <owner/name> --out <dir> [--config <file>]
 ```
 
-Renders the files the sync feature would write to the repository into a local directory, with each file's status (added, updated, made executable or unchanged), and lists any conflicts. Nothing is sent to GitHub.
+Renders the files the sync feature would write to the repository into a local directory, with each file's status (added, updated, made executable or unchanged), and lists any conflicts. Nothing is sent to GitHub. Every file is checked before any is written: one that would land outside the directory, or be written through a symlink inside it, stops the command with nothing written.
 
 ## Tokens
 

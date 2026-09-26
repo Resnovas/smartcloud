@@ -20,9 +20,25 @@ import { describe, expect, it } from '@effect/vitest'
 import { parseConfig } from '@resnovas/config'
 import { fileKey, GitHub, type GitHubService, makeMemoryGitHub } from '@resnovas/integrations.github'
 import type { Connect } from '@resnovas/runtime'
-import { ConfigSourceFromGitHub, locateConfig, main, migrate, NoConfig, run, runWith, UnsafePath, validate, VERSION } from '@resnovas/smartcloud'
+import {
+  checkCommitCommand,
+  CommitCheckFailed,
+  ConfigSourceFromGitHub,
+  isWithin,
+  locateConfig,
+  main,
+  migrate,
+  NoConfig,
+  run,
+  runWith,
+  UnknownAuthor,
+  UnsafePath,
+  validate,
+  VERSION,
+} from '@resnovas/smartcloud'
+import { Path } from '@effect/platform'
 import { Effect, Layer } from 'effect'
-import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, vi } from 'vitest'
@@ -228,6 +244,17 @@ describe('dry-run', () => {
       expect(logs[0]).toContain('**Dry run:** nothing would have been written.')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
+
+  it.effect('runs every feature when the feature list is empty', () =>
+    Effect.gen(function* () {
+      const { connect } = repository({ [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: CONVENTIONS })
+      const dry = (...extra: Array<string>) =>
+        Effect.map(runWith(connect)(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--pr', '7', ...extra]), () => logs.splice(0).join('\n'))
+      const all = yield* dry()
+      expect(yield* dry('--features', ',')).toBe(all)
+      expect(yield* dry('--features', 'conventions')).not.toBe(all)
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
 })
 
 describe('plan settings', () => {
@@ -284,10 +311,132 @@ describe('sync', () => {
       process.exitCode = before
     }).pipe(Effect.provide(NodeContext.layer)),
   )
+
+  it.effect('treats every path under a root of / as inside it, and a sibling directory as outside', () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path
+      expect(isWithin(path, '/', '/LICENSE')).toBe(true)
+      expect(isWithin(path, '/', '/')).toBe(true)
+      expect(isWithin(path, '/out', '/out/a/b')).toBe(true)
+      expect(isWithin(path, '/out', '/out-other/a')).toBe(false)
+      expect(isWithin(path, '/out', '/')).toBe(false)
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('refuses to write through a symlink inside the output directory', () =>
+    Effect.gen(function* () {
+      const { connect } = repository({
+        [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: SYNC,
+        [template('LICENSE')]: '(c) {{HOLDER}}\n',
+        [template('tools/run')]: '#!/bin/sh\n',
+      })
+      const out = join(dir, 'out')
+      const outside = join(dir, 'outside')
+      const sync = () => Effect.flip(runWith(connect)(['node', 'smartcloud', 'sync', '--repo', 'Resnovas/example', '--out', out]))
+      yield* Effect.promise(async () => {
+        await mkdir(outside)
+        await mkdir(join(out, 'real'), { recursive: true })
+        await symlink(outside, join(out, 'tools'))
+      })
+      // A directory linked to somewhere outside.
+      const linked = yield* sync()
+      expect(linked).toBeInstanceOf(UnsafePath)
+      expect(linked.message).toBe(`refusing to write tools/run: ${join(out, 'tools')} resolves outside the output directory`)
+      // A dangling link to a file outside, which would be created by the write.
+      yield* Effect.promise(async () => {
+        await rm(join(out, 'tools'))
+        await symlink(join(outside, 'LICENSE'), join(out, 'LICENSE'))
+      })
+      expect((yield* sync()).message).toBe(`refusing to write LICENSE: ${join(out, 'LICENSE')} is a symlink, and smartcloud does not write through symlinks`)
+      // Even a link that stays inside is not written through.
+      yield* Effect.promise(async () => {
+        await rm(join(out, 'LICENSE'))
+        await symlink(join(out, 'real'), join(out, 'tools'))
+      })
+      expect((yield* sync()).message).toContain(`${join(out, 'tools')} is a symlink`)
+      expect(yield* Effect.promise(() => readdir(outside))).toStrictEqual([])
+      expect(yield* Effect.promise(() => readdir(join(out, 'real')))).toStrictEqual([])
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
 })
 
 describe('version', () => {
   it('is kept by release-please', () => {
     expect(VERSION).toMatch(/^\d+\.\d+\.\d+$/)
   })
+})
+
+describe('check-commit', () => {
+  // A fake git on PATH, so the author is read without the real repository.
+  const withFakeGit = async (ident: string) => {
+    const bin = join(dir, 'bin')
+    await mkdir(bin)
+    await writeFile(join(bin, 'git'), `#!/bin/sh\nprintf '%s\\n' '${ident}'\n`)
+    await chmod(join(bin, 'git'), 0o755)
+    vi.stubEnv('PATH', `${bin}:${process.env['PATH'] ?? ''}`)
+  }
+  afterEach(() => vi.unstubAllEnvs())
+
+  const message = async (text: string) => {
+    const file = join(dir, 'COMMIT_EDITMSG')
+    await writeFile(file, text)
+    return file
+  }
+  const jane = { authorName: 'Jane Doe', authorEmail: 'jane@example.com' }
+
+  it.effect('passes a signed-off message, ignoring comment lines, with the author given', () =>
+    Effect.gen(function* () {
+      const file = yield* Effect.promise(() => message('fix: x\n\n# Please enter the commit message\nSigned-off-by: Jane Doe <jane@example.com>\n'))
+      expect(yield* checkCommitCommand(file, jane)).toStrictEqual([])
+      expect(logs).toContain('The commit message passes.')
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect("reads git's author, prints each broken rule to stderr and fails", () =>
+    Effect.gen(function* () {
+      const errors: Array<string> = []
+      vi.spyOn(console, 'error').mockImplementation((...args: Array<unknown>) => void errors.push(args.join(' ')))
+      yield* Effect.promise(() => withFakeGit('Jane Doe <jane@example.com> 1790000000 +0100'))
+      const file = yield* Effect.promise(() => message('fix: x\n'))
+      const failed = yield* Effect.flip(checkCommitCommand(file, {}))
+      expect(failed).toBeInstanceOf(CommitCheckFailed)
+      expect(failed.message).toBe('the commit message breaks 1 rule(s); see above')
+      expect(errors[0]).toMatch(/^DCO: No Signed-off-by matching the author <jane@example\.com>\..* See https:\/\/.*CONTRIBUTING\.md#dco$/)
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('uses a config file, or the repository config in the working directory', () =>
+    Effect.gen(function* () {
+      const file = yield* Effect.promise(() => message('fix: x\n'))
+      const config = join(dir, 'off.yml')
+      yield* Effect.promise(() => writeFile(config, 'version: 2\ncommits: { dco: false }\n'))
+      expect(yield* checkCommitCommand(file, { ...jane, config })).toStrictEqual([])
+      yield* Effect.promise(async () => {
+        await mkdir(join(dir, '.github'))
+        await writeFile(join(dir, '.github/smartcloud.yml'), 'version: 2\ncommits: { dco: false }\n')
+      })
+      const cwd = process.cwd()
+      process.chdir(dir)
+      const found = yield* checkCommitCommand(file, jane).pipe(Effect.ensuring(Effect.sync(() => process.chdir(cwd))))
+      expect(found).toStrictEqual([])
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('says so when git gives no usable author', () =>
+    Effect.gen(function* () {
+      yield* Effect.promise(() => withFakeGit('nobody'))
+      const file = yield* Effect.promise(() => message('fix: x\n'))
+      const error = yield* Effect.flip(checkCommitCommand(file, {}))
+      expect(error).toBeInstanceOf(UnknownAuthor)
+      expect(error.message).toContain('pass --author-name and --author-email')
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('runs from the command line', () =>
+    Effect.gen(function* () {
+      const file = yield* Effect.promise(() => message('fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>\n'))
+      yield* run(['node', 'smartcloud', 'check-commit', file, '--author-name', 'Jane Doe', '--author-email', 'jane@example.com'])
+      expect(logs).toContain('The commit message passes.')
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
 })

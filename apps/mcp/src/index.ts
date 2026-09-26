@@ -1,5 +1,5 @@
 /**
- * @file apps/cli/src/index.ts
+ * @file apps/mcp/src/index.ts
  *
  * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
@@ -15,7 +15,18 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-export { main, makeSmartcloud, run, runWith } from './cli.js'
-export { checkCommitCommand, CommitCheckFailed, dryRunCommand, isWithin, locateConfig, migrate, planSettingsCommand, syncCommand, UnknownAuthor, UnsafePath, validate } from './commands.js'
+export { makeServer } from './server.js'
+export type { RunTool } from './server.js'
+export {
+  checkCommitMessageTool,
+  ConfigRefused,
+  dryRunTool,
+  explainConfigTool,
+  explainRuleTool,
+  migrateConfigTool,
+  planSettingsTool,
+  readConfinedConfig,
+  validateConfigTool,
+} from './tools.js'
+export type { CommitMessageInput, ConfigInput, DryRunInput, PlanSettingsInput, RepositoryConfigInput, ToolContext, ToolResult } from './tools.js'
 export { VERSION } from './version.js'
-export { CONFIG_CANDIDATES, ConfigSourceFromGitHub, gitHubConfigSource, MissingToken, NoConfig, resolveToken } from '@resnovas/runtime'

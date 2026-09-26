@@ -5,6 +5,8 @@ name: CI
 
 on:
   pull_request:
+  # The release workflow dispatches CI after it commits the bundle to a release pull request.
+  workflow_dispatch:
   push:
     branches: [main]
 

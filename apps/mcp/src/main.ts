@@ -1,5 +1,6 @@
+#!/usr/bin/env node
 /**
- * @file apps/cli/src/index.ts
+ * @file apps/mcp/src/main.ts
  *
  * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
@@ -15,7 +16,13 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-export { main, makeSmartcloud, run, runWith } from './cli.js'
-export { checkCommitCommand, CommitCheckFailed, dryRunCommand, isWithin, locateConfig, migrate, planSettingsCommand, syncCommand, UnknownAuthor, UnsafePath, validate } from './commands.js'
-export { VERSION } from './version.js'
-export { CONFIG_CANDIDATES, ConfigSourceFromGitHub, gitHubConfigSource, MissingToken, NoConfig, resolveToken } from '@resnovas/runtime'
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
+import { NodeContext } from '@effect/platform-node'
+import { gitHubConfigSource, liveConnect } from '@resnovas/runtime'
+import { Layer, ManagedRuntime } from 'effect'
+import { makeServer } from './server.js'
+
+// stdout carries the protocol, so nothing here may print to it.
+const runtime = ManagedRuntime.make(Layer.provideMerge(gitHubConfigSource(), NodeContext.layer))
+const server = makeServer({ connect: liveConnect(), run: (effect) => runtime.runPromise(effect) })
+await server.connect(new StdioServerTransport())

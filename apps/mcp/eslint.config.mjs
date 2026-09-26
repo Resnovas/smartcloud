@@ -1,5 +1,5 @@
 /**
- * @file apps/cli/src/index.ts
+ * @file apps/mcp/eslint.config.mjs
  *
  * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
@@ -15,7 +15,6 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-export { main, makeSmartcloud, run, runWith } from './cli.js'
-export { checkCommitCommand, CommitCheckFailed, dryRunCommand, isWithin, locateConfig, migrate, planSettingsCommand, syncCommand, UnknownAuthor, UnsafePath, validate } from './commands.js'
-export { VERSION } from './version.js'
-export { CONFIG_CANDIDATES, ConfigSourceFromGitHub, gitHubConfigSource, MissingToken, NoConfig, resolveToken } from '@resnovas/runtime'
+import baseConfig from '../../eslint.config.mjs'
+
+export default [...baseConfig]

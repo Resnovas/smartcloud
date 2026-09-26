@@ -11,9 +11,14 @@
       "extra-files": [
         "apps/cli/package.json",
         "apps/action/package.json",
+        "apps/mcp/package.json",
         {
           "type": "generic",
           "path": "apps/cli/src/version.ts"
+        },
+        {
+          "type": "generic",
+          "path": "apps/mcp/src/version.ts"
         }
       ],
       "changelog-sections": [

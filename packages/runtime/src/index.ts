@@ -59,3 +59,7 @@ export {
   UnexpectedResponse,
 } from './run.js'
 export type { DryRunOutcome, DryRunRequest, GitHubEvent, RepositoryEvent, RunOutcome, Trigger } from './run.js'
+export { explainRule, UnknownRule } from './rules.js'
+export type { RuleExplanation } from './rules.js'
+// Agents and git hooks check a message before committing, through the same code as the commits feature.
+export { checkCommitMessage } from '@resnovas/feature.commits'
