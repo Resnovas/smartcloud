@@ -21,6 +21,22 @@ import type { Annotation, CheckRun } from '@resnovas/integrations.github'
 /** Marks smartcloud's comment on an issue or pull request, so each run updates it in place. */
 export const MARKER = '<!-- smartcloud:report -->'
 
+/**
+ * How v1 began each of its comments: `<!--${NPM_PACKAGE_NAME}: ${job}-->`.
+ * Actions never set `NPM_PACKAGE_NAME`, so released v1 wrote `undefined`
+ * there; `smartcloud` covers a run that did set it.
+ */
+export const LEGACY_MARKERS: ReadonlyArray<string> = ['<!--smartcloud: ', '<!--undefined: ']
+
+/**
+ * Whether a comment body is a v1 smartcloud comment, which the next report
+ * takes over rather than posting alongside.
+ *
+ * @param body - The comment body.
+ * @returns True for a v1 comment.
+ */
+export const isLegacyReport = (body: string): boolean => LEGACY_MARKERS.some((marker) => body.startsWith(marker))
+
 /** A check run's conclusion. */
 export type Conclusion = 'success' | 'failure' | 'neutral'
 
@@ -63,7 +79,8 @@ export const findingsTable = (findings: ReadonlyArray<Finding>): string =>
     : [
         '| Level | Rule | Where | Finding |',
         '| --- | --- | --- | --- |',
-        ...findings.map((finding) => `| ${finding.level} | ${rule(finding)} | ${where(finding)} | ${cell(finding.message)} |`),
+        // A file name may hold a pipe or a line break, so it is escaped like the message.
+        ...findings.map((finding) => `| ${finding.level} | ${rule(finding)} | ${cell(where(finding))} | ${cell(finding.message)} |`),
       ].join('\n')
 
 const count = (findings: ReadonlyArray<Finding>, level: Finding['level']) =>

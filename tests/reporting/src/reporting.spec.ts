@@ -18,7 +18,7 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect } from 'effect'
 import type { Finding, RunResult } from '@resnovas/engine'
-import { Forbidden, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { DryRun, DryRunLog, Forbidden, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
 import {
   annotationLines,
   checkRunsFor,
@@ -78,6 +78,12 @@ describe('formatting', () => {
     const { line: _line, ...unlocated } = warning
     expect(findingsTable([{ ...unlocated, path: 'x' }])).toContain('| x |')
     expect(findingsTable([notice])).toContain('| notice | `REVIEW` |  | gate open |')
+  })
+
+  it('escapes pipes and line breaks in file names, so a path cannot add columns or rows', () => {
+    const table = findingsTable([{ ...warning, path: 'docs/a|b\r\nc.md' }])
+    expect(table).toContain('| warning | `SYNC` | docs/a\\|b c.md:3 | edits a synced file |')
+    expect(table.split('\n')).toHaveLength(3)
   })
 
   it('writes one comment body with the marker, listing only actionable findings', () => {
@@ -140,6 +146,48 @@ describe('publishReport', () => {
       expect(fixed.comment).toBe('updated')
       expect(state.issues.get(7)?.comments).toHaveLength(1)
       expect(state.issues.get(7)?.comments[0]?.body).toBe(`${MARKER}\nAll smartcloud checks pass.`)
+    }),
+  )
+
+  it.effect('takes over a comment left by v1 instead of adding a second one', () =>
+    Effect.gen(function* () {
+      for (const legacy of ['<!--undefined: Conventions-->\n\r\n\rTitle check failed', '<!--smartcloud: Labels-->']) {
+        const { service, state } = makeMemoryGitHub({
+          issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: 'a person quoting <!--smartcloud: x-->', author: 'jane' }, { id: 2, body: legacy, author: 'bot' }] }]]),
+        })
+        const published = yield* publishReport(run()).pipe(Effect.provideService(GitHub, service))
+        expect(published.comment).toBe('updated')
+        const comments = state.issues.get(7)?.comments ?? []
+        expect(comments.map((comment) => comment.id)).toStrictEqual([1, 2])
+        expect(comments[1]?.body.startsWith(MARKER)).toBe(true)
+        expect(comments[0]?.body).toBe('a person quoting <!--smartcloud: x-->')
+      }
+    }),
+  )
+
+  it.effect('under the dry-run layer records every check run and comment write, and changes nothing', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({
+        issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: `${MARKER}\nold`, author: 'bot' }] }]]),
+      })
+      const { published, writes } = yield* Effect.gen(function* () {
+        const published = yield* publishReport(run())
+        return { published, writes: yield* Effect.flatMap(DryRunLog, (log) => log.writes) }
+      }).pipe(Effect.provide(DryRun), Effect.provideService(GitHub, service))
+      expect(published).toMatchObject({ checkRuns: 3, comment: 'updated', warnings: [] })
+      expect(writes.map((write) => write.operation)).toStrictEqual(['createCheckRun', 'createCheckRun', 'createCheckRun', 'updateComment'])
+      expect(writes[3]?.details).toMatchObject({ id: 1, body: expect.stringContaining('found 1 error(s), 1 warning(s)') })
+      expect(state.checkRuns).toHaveLength(0)
+      expect(state.issues.get(7)?.comments).toStrictEqual([{ id: 1, body: `${MARKER}\nold`, author: 'bot' }])
+
+      const fresh = makeMemoryGitHub()
+      const created = yield* Effect.gen(function* () {
+        const published = yield* publishReport(run())
+        return { published, writes: yield* Effect.flatMap(DryRunLog, (log) => log.writes) }
+      }).pipe(Effect.provide(DryRun), Effect.provideService(GitHub, fresh.service))
+      expect(created.published.comment).toBe('created')
+      expect(created.writes.at(-1)).toMatchObject({ operation: 'createComment', details: { issue: 7 } })
+      expect(fresh.state.issues.get(7)?.comments ?? []).toHaveLength(0)
     }),
   )
 

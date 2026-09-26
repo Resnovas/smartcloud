@@ -18,7 +18,7 @@
 import type { RunResult } from '@resnovas/engine'
 import { GitHub, type GitHubError } from '@resnovas/integrations.github'
 import { Effect } from 'effect'
-import { annotationLines, checkRunsFor, commentBody, MARKER, summaryMarkdown } from './format.js'
+import { annotationLines, checkRunsFor, commentBody, isLegacyReport, MARKER, summaryMarkdown } from './format.js'
 
 /** What publishing did, for the action to log and write out. */
 export interface Published {
@@ -49,6 +49,7 @@ const subjectOf = (result: RunResult) =>
  * a warning and the summary and annotations still carry every finding. The
  * comment is created only when there is something to act on, and once
  * created it is updated in place, including to say that everything passes.
+ * A comment left by v1 is taken over the same way when there is no v2 one.
  *
  * @param result - The run.
  * @param options - Set `comment` to false to leave issues and pull requests alone.
@@ -75,7 +76,8 @@ export const publishReport = (result: RunResult, options: { readonly comment?: b
       const body = commentBody(result.findings)
       const actionable = result.findings.some((finding) => finding.level !== 'notice')
       yield* Effect.gen(function* () {
-        const existing = (yield* github.listComments(number)).find((entry) => entry.body.includes(MARKER))
+        const comments = yield* github.listComments(number)
+        const existing = comments.find((entry) => entry.body.includes(MARKER)) ?? comments.find((entry) => isLegacyReport(entry.body))
         if (existing !== undefined) {
           if (existing.body === body) comment = 'unchanged'
           else {
