@@ -31,7 +31,8 @@ const SWEEP_EVENTS = new Set(['schedule', 'workflow_dispatch'])
  * It runs on `schedule` and `workflow_dispatch` events only, and is enabled
  * when the config has a `stale` section. It writes its own comments, at most
  * one per marker per item: an existing `<!-- smartcloud:stale -->` or
- * `<!-- smartcloud:abandoned -->` comment is edited rather than repeated.
+ * `<!-- smartcloud:abandoned -->` comment is edited rather than repeated,
+ * provided a bot account or a `roles.trustedBots` login wrote it.
  *
  * Labelling or commenting bumps GitHub's `updated_at`, which is the only
  * activity time a sweep sees. Marking an item stale therefore resets its age,

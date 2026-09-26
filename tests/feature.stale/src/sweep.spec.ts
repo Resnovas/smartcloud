@@ -211,13 +211,36 @@ describe('stale feature: marking', () => {
 
   it.effect('edits an existing stale comment instead of adding another', () =>
     Effect.gen(function* () {
-      const old = { id: 5, author: 'smartcloud[bot]', body: `${STALE_MARKER}\nold text` }
+      const old = { id: 5, author: 'smartcloud[bot]', bot: true, body: `${STALE_MARKER}\nold text` }
       const github = memory([item(1, { updatedAt: daysAgo(40) })], {
-        1: [{ id: 4, author: 'sam', body: 'hello' }, old],
+        1: [{ id: 4, author: 'sam', bot: false, body: 'hello' }, old],
       })
       yield* sweep({ version: 2, stale: settings }, github)
       expect(github.state.issues.get(1)?.comments).toStrictEqual([
-        { id: 4, author: 'sam', body: 'hello' },
+        { id: 4, author: 'sam', bot: false, body: 'hello' },
+        { ...old, body: staleBody(settings.staleComment ?? '', new Date(NOW)) },
+      ])
+    }),
+  )
+
+  it.effect("leaves a person's comment carrying the marker alone and writes its own", () =>
+    Effect.gen(function* () {
+      const forged = { id: 5, author: 'mallory', bot: false, body: `${STALE_MARKER}\nplease edit me` }
+      const github = memory([item(1, { updatedAt: daysAgo(40) })], { 1: [forged] })
+      yield* sweep({ version: 2, stale: settings }, github)
+      expect(github.state.issues.get(1)?.comments).toStrictEqual([
+        forged,
+        { id: 100, author: 'smartcloud[bot]', bot: true, body: staleBody(settings.staleComment ?? '', new Date(NOW)) },
+      ])
+    }),
+  )
+
+  it.effect('edits a marker comment from a roles.trustedBots login that is not a bot account', () =>
+    Effect.gen(function* () {
+      const old = { id: 5, author: 'Release-Robot', bot: false, body: `${STALE_MARKER}\nold text` }
+      const github = memory([item(1, { updatedAt: daysAgo(40) })], { 1: [old] })
+      yield* sweep({ version: 2, roles: { trustedBots: ['@release-robot'] }, stale: settings }, github)
+      expect(github.state.issues.get(1)?.comments).toStrictEqual([
         { ...old, body: staleBody(settings.staleComment ?? '', new Date(NOW)) },
       ])
     }),
@@ -313,7 +336,7 @@ describe('stale feature: marking', () => {
 
 describe('stale feature: unmarking', () => {
   const markedAt = daysAgo(3)
-  const marker = { id: 9, author: 'smartcloud[bot]', body: staleBody('quiet', markedAt) }
+  const marker = { id: 9, author: 'smartcloud[bot]', bot: true, body: staleBody('quiet', markedAt) }
 
   it.effect('removes the stale label when there was activity after the mark, beyond the grace period', () =>
     Effect.gen(function* () {
@@ -334,6 +357,18 @@ describe('stale feature: unmarking', () => {
       expect(result.changes.map((change) => change.description)).toStrictEqual([
         'removed "stale" from #1 after new activity',
       ])
+    }),
+  )
+
+  it.effect('ignores a forged mark time in a comment a person wrote', () =>
+    Effect.gen(function* () {
+      // A person backdates the mark so their later comment looks like new
+      // activity, which would otherwise remove the stale label.
+      const forged = { id: 8, author: 'mallory', bot: false, body: staleBody('quiet', daysAgo(30)) }
+      const github = memory([item(1, { labels: ['stale'], updatedAt: daysAgo(1) })], { 1: [forged] })
+      const result = yield* sweep({ version: 2, stale: settings }, github)
+      expect(labelsOf(github, 1)).toStrictEqual(['stale'])
+      expect(result.changes).toStrictEqual([])
     }),
   )
 
@@ -379,7 +414,7 @@ describe('stale feature: abandoning', () => {
   it.effect('uses a custom abandoned label, and neither comments nor closes unless asked', () =>
     Effect.gen(function* () {
       const github = memory([item(1, { labels: ['STALE'], updatedAt: daysAgo(10) })], {
-        1: [{ id: 3, author: 'smartcloud[bot]', body: `${ABANDONED_MARKER}\nold` }],
+        1: [{ id: 3, author: 'smartcloud[bot]', bot: true, body: `${ABANDONED_MARKER}\nold` }],
       })
       const { abandonedComment: _comment, close: _close, ...rest } = settings
       yield* sweep({ version: 2, stale: { ...rest, abandonedLabel: 'gone' } }, github)
@@ -392,7 +427,7 @@ describe('stale feature: abandoning', () => {
   it.effect('edits an existing abandoned comment instead of adding another', () =>
     Effect.gen(function* () {
       const github = memory([item(1, { labels: ['stale'], updatedAt: daysAgo(10) })], {
-        1: [{ id: 3, author: 'smartcloud[bot]', body: `${ABANDONED_MARKER}\nold` }],
+        1: [{ id: 3, author: 'smartcloud[bot]', bot: true, body: `${ABANDONED_MARKER}\nold` }],
       })
       yield* sweep({ version: 2, stale: { ...settings, close: false } }, github)
       expect(commentsOf(github, 1)).toStrictEqual([`${ABANDONED_MARKER}\nClosing as abandoned.`])
@@ -451,22 +486,28 @@ describe('markedSince', () => {
   it.each([
     [
       'reads the mark time from the stale comment',
-      [{ id: 1, author: 'a', body: staleBody('x', new Date(0)) }],
+      [{ id: 1, author: 'a', bot: true, body: staleBody('x', new Date(0)) }],
       new Date(0),
     ],
     [
       'ignores comments without the marker',
-      [{ id: 1, author: 'a', body: '<!-- smartcloud:stale-since 2026-01-01T00:00:00.000Z -->' }],
+      [{ id: 1, author: 'a', bot: true, body: '<!-- smartcloud:stale-since 2026-01-01T00:00:00.000Z -->' }],
       undefined,
     ],
-    ['ignores a stale comment without a mark time', [{ id: 1, author: 'a', body: `${STALE_MARKER}\ntext` }], undefined],
+    ['ignores a stale comment without a mark time', [{ id: 1, author: 'a', bot: true, body: `${STALE_MARKER}\ntext` }], undefined],
     [
       'ignores an unreadable mark time',
-      [{ id: 1, author: 'a', body: `${STALE_MARKER}\n<!-- smartcloud:stale-since 2026-99-99T99:99 -->` }],
+      [{ id: 1, author: 'a', bot: true, body: `${STALE_MARKER}\n<!-- smartcloud:stale-since 2026-99-99T99:99 -->` }],
       undefined,
     ],
     ['finds nothing on an item without comments', [], undefined],
+    ['ignores a stale comment a person wrote', [{ id: 1, author: 'mallory', bot: false, body: staleBody('x', new Date(0)) }], undefined],
   ] as const)('%s', (_name, comments, expected) => {
     expect(markedSince(comments)).toStrictEqual(expected)
+  })
+
+  it('reads a stale comment from a trusted login, ignoring case and a leading @', () => {
+    const comments = [{ id: 1, author: 'Release-Robot', bot: false, body: staleBody('x', new Date(0)) }]
+    expect(markedSince(comments, ['@release-robot'])).toStrictEqual(new Date(0))
   })
 })

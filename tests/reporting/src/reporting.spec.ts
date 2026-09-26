@@ -153,7 +153,7 @@ describe('publishReport', () => {
     Effect.gen(function* () {
       for (const legacy of ['<!--undefined: Conventions-->\n\r\n\rTitle check failed', '<!--smartcloud: Labels-->']) {
         const { service, state } = makeMemoryGitHub({
-          issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: 'a person quoting <!--smartcloud: x-->', author: 'jane' }, { id: 2, body: legacy, author: 'bot' }] }]]),
+          issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: 'a person quoting <!--smartcloud: x-->', author: 'jane', bot: false }, { id: 2, body: legacy, author: 'bot', bot: true }] }]]),
         })
         const published = yield* publishReport(run()).pipe(Effect.provideService(GitHub, service))
         expect(published.comment).toBe('updated')
@@ -165,10 +165,37 @@ describe('publishReport', () => {
     }),
   )
 
+  it.effect("never edits a person's comment that carries the marker, and creates its own instead", () =>
+    Effect.gen(function* () {
+      const forged = [
+        { id: 1, body: `${MARKER}\nplease edit me`, author: 'mallory', bot: false },
+        { id: 2, body: '<!--smartcloud: Labels-->', author: 'mallory', bot: false },
+      ]
+      const { service, state } = makeMemoryGitHub({ issues: new Map([[7, { labels: [], open: true, comments: [...forged] }]]) })
+      const published = yield* publishReport(run()).pipe(Effect.provideService(GitHub, service))
+      expect(published.comment).toBe('created')
+      const comments = state.issues.get(7)?.comments ?? []
+      expect(comments.slice(0, 2)).toStrictEqual(forged)
+      expect(comments[2]).toMatchObject({ author: 'smartcloud[bot]', body: expect.stringContaining(MARKER) })
+    }),
+  )
+
+  it.effect('updates a marker comment from a trusted login that is not a bot account', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({
+        issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: `${MARKER}\nold`, author: 'Release-Robot', bot: false }] }]]),
+      })
+      const published = yield* publishReport(run(), { trustedAuthors: ['@release-robot'] }).pipe(Effect.provideService(GitHub, service))
+      expect(published.comment).toBe('updated')
+      expect(state.issues.get(7)?.comments).toHaveLength(1)
+      expect(state.issues.get(7)?.comments[0]?.body).not.toContain('old')
+    }),
+  )
+
   it.effect('under the dry-run layer records every check run and comment write, and changes nothing', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub({
-        issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: `${MARKER}\nold`, author: 'bot' }] }]]),
+        issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: `${MARKER}\nold`, author: 'bot', bot: true }] }]]),
       })
       const { published, writes } = yield* Effect.gen(function* () {
         const published = yield* publishReport(run())
@@ -178,7 +205,7 @@ describe('publishReport', () => {
       expect(writes.map((write) => write.operation)).toStrictEqual(['createCheckRun', 'createCheckRun', 'createCheckRun', 'updateComment'])
       expect(writes[3]?.details).toMatchObject({ id: 1, body: expect.stringContaining('found 1 error(s), 1 warning(s)') })
       expect(state.checkRuns).toHaveLength(0)
-      expect(state.issues.get(7)?.comments).toStrictEqual([{ id: 1, body: `${MARKER}\nold`, author: 'bot' }])
+      expect(state.issues.get(7)?.comments).toStrictEqual([{ id: 1, body: `${MARKER}\nold`, author: 'bot', bot: true }])
 
       const fresh = makeMemoryGitHub()
       const created = yield* Effect.gen(function* () {

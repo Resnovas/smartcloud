@@ -81,9 +81,9 @@ describe('live GitHub: issues and comments', () => {
       const { service, requests } = live({
         [`POST ${REPO}/issues/3/labels`]: { body: [] },
         [`DELETE ${REPO}/issues/3/labels/bug`]: { body: [] },
-        [`GET ${REPO}/issues/3/comments`]: { body: [{ id: 9, body: null, user: null }] },
+        [`GET ${REPO}/issues/3/comments`]: { body: [{ id: 9, body: null, user: null }, { id: 12, body: 'x', user: { login: 'app[bot]', type: 'Bot' } }] },
         [`POST ${REPO}/issues/3/comments`]: [
-          { status: 201, body: { id: 10, body: 'hi', user: { login: 'bot' } } },
+          { status: 201, body: { id: 10, body: 'hi', user: { login: 'bot', type: 'Bot' } } },
           { status: 201, body: { id: 11, body: null, user: null } },
         ],
         [`PATCH ${REPO}/issues/comments/10`]: { body: {} },
@@ -92,11 +92,14 @@ describe('live GitHub: issues and comments', () => {
       const github = yield* service
       yield* github.addLabels(3, ['bug'])
       yield* github.removeLabel(3, 'bug')
-      expect(yield* github.listComments(3)).toStrictEqual([{ id: 9, body: '', author: '' }])
-      expect(yield* github.createComment(3, 'hi')).toStrictEqual({ id: 10, body: 'hi', author: 'bot' })
+      expect(yield* github.listComments(3)).toStrictEqual([
+        { id: 9, body: '', author: '', bot: false },
+        { id: 12, body: 'x', author: 'app[bot]', bot: true },
+      ])
+      expect(yield* github.createComment(3, 'hi')).toStrictEqual({ id: 10, body: 'hi', author: 'bot', bot: true })
       yield* github.updateComment(10, 'edited')
       yield* github.closeIssue(3)
-      expect(yield* github.createComment(3, '')).toStrictEqual({ id: 11, body: '', author: '' })
+      expect(yield* github.createComment(3, '')).toStrictEqual({ id: 11, body: '', author: '', bot: false })
       expect(requests.map(({ method, body }) => `${method} ${JSON.stringify(body)}`)).toStrictEqual([
         'POST {"labels":["bug"]}',
         'DELETE undefined',

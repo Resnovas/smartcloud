@@ -429,11 +429,18 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         Effect.asVoid(call('removeLabel', () => octokit.rest.issues.removeLabel({ owner, repo, issue_number, name }))),
       listComments: (issue_number) =>
         call('listComments', () => octokit.paginate(octokit.rest.issues.listComments, { owner, repo, issue_number, per_page: 100 })).pipe(
-          Effect.map((comments) => comments.map((comment) => ({ id: comment.id, body: comment.body ?? '', author: comment.user?.login ?? '' }))),
+          Effect.map((comments) =>
+            comments.map((comment) => ({
+              id: comment.id,
+              body: comment.body ?? '',
+              author: comment.user?.login ?? '',
+              bot: comment.user?.type === 'Bot',
+            })),
+          ),
         ),
       createComment: (issue_number, body) =>
         call('createComment', () => octokit.rest.issues.createComment({ owner, repo, issue_number, body }), rateLimited).pipe(
-          Effect.map(({ data }) => ({ id: data.id, body: data.body ?? '', author: data.user?.login ?? '' })),
+          Effect.map(({ data }) => ({ id: data.id, body: data.body ?? '', author: data.user?.login ?? '', bot: data.user?.type === 'Bot' })),
         ),
       updateComment: (comment_id, body) =>
         Effect.asVoid(call('updateComment', () => octokit.rest.issues.updateComment({ owner, repo, comment_id, body }))),

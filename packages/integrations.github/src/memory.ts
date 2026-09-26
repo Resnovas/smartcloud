@@ -173,7 +173,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
     listComments: (number) => Effect.sync(() => [...issue(number).comments]),
     createComment: (number, body) =>
       Effect.sync(() => {
-        const comment = { id: state.nextId++, body, author: 'smartcloud[bot]' }
+        const comment = { id: state.nextId++, body, author: 'smartcloud[bot]', bot: true }
         issue(number).comments.push(comment)
         return comment
       }),
