@@ -46,7 +46,7 @@ settings:
     projectType: saas
 ```
 
-Only what you configure is changed. A section or key left out produces no call, so whatever GitHub has for it stays. Steps run in a fixed order (merging, features, security, the ruleset, then environments), and a failed step is reported without stopping the others.
+Only what you configure is changed. A section or key left out produces no call, so whatever GitHub has for it stays. Steps run in a fixed order (merging, features, security, the ruleset, then environments, each protected one followed by its deployment policies), and a failed step is reported without stopping the others.
 
 ## Merging
 
@@ -95,7 +95,7 @@ On a private repository, rulesets need a paid plan, so a failure there is a warn
 | `library` | Release |
 | `none` | none |
 
-Environments that ship to users deploy only from protected branches. Staging, development, dev, preview and any name ending in "Beta" accept any branch.
+Environments that ship to users deploy only from the default branch and from release tags matching `v*`. smartcloud sets them to use custom deployment branch policies and creates a branch policy for the default branch and a tag policy for `v*` when they are missing; policies you added yourself are kept. It does not rely on GitHub's "protected branches" option, because that counts only classic branch protection, and with none (this feature writes a ruleset instead) every branch could deploy. Staging, development, dev, preview and any name ending in "Beta" accept any branch.
 
 ## By hand
 

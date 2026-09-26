@@ -97,8 +97,25 @@ export interface RulesetStep extends StepBase {
   readonly ruleset: RulesetBody
 }
 
+/** One deployment branch or tag policy, as `POST .../deployment-branch-policies` takes it. */
+export type DeploymentPolicy = {
+  /** A name pattern, for example `main` or `v*`. */
+  readonly name: string
+  readonly type: 'branch' | 'tag'
+}
+
+/** Deployment branch and tag policies an environment must have; missing ones are created. */
+export interface DeploymentPoliciesStep extends StepBase {
+  readonly kind: 'deploymentPolicies'
+  readonly environment: string
+  readonly policies: ReadonlyArray<DeploymentPolicy>
+}
+
 /** One planned change to a repository. */
-export type SettingsStep = RestStep | GraphqlStep | RulesetStep
+export type SettingsStep = RestStep | GraphqlStep | RulesetStep | DeploymentPoliciesStep
+
+/** The tag pattern a protected environment may deploy release tags from. */
+export const RELEASE_TAG_PATTERN = 'v*'
 
 /**
  * The environments to create: explicit `names` win, otherwise `projectType`
@@ -114,10 +131,11 @@ export const environmentsFor = (environments: SettingsConfig['environments']): R
 }
 
 /**
- * Whether an environment deploys only from protected branches.
+ * Whether an environment is protected: it deploys only from the default
+ * branch and release tags.
  *
  * @remarks
- * Anything that ships to users deploys only from protected branches. Staging,
+ * Anything that ships to users is protected. Staging,
  * development, preview and beta channels accept any branch so they stay
  * useful for testing.
  *
@@ -130,12 +148,31 @@ export const isProtectedEnvironment = (name: string): boolean =>
 /**
  * The body of `PUT /environments/{name}`.
  *
+ * @remarks
+ * A protected environment uses custom branch policies rather than
+ * `protected_branches`: GitHub reads "protected branches" as branches with
+ * classic branch protection, and with none (this feature writes a ruleset,
+ * not classic protection) every branch could deploy. The policies themselves
+ * come from {@link deploymentPoliciesFor}.
+ *
  * @param name - The environment name.
  * @returns The deployment branch policy for that environment.
  */
 export const environmentBody = (name: string): Readonly<Record<string, unknown>> => ({
-  deployment_branch_policy: isProtectedEnvironment(name) ? { protected_branches: true, custom_branch_policies: false } : null,
+  deployment_branch_policy: isProtectedEnvironment(name) ? { protected_branches: false, custom_branch_policies: true } : null,
 })
+
+/**
+ * The deployment policies a protected environment gets: the default branch
+ * and release tags.
+ *
+ * @param repository - The repository, for its default branch.
+ * @returns The policies, branch first.
+ */
+export const deploymentPoliciesFor = (repository: Repository): ReadonlyArray<DeploymentPolicy> => [
+  { name: repository.defaultBranch, type: 'branch' },
+  { name: RELEASE_TAG_PATTERN, type: 'tag' },
+]
 
 // Actor 5 is the repository admin role. The owner wants to be able to
 // override the ruleset, including the review gate, whatever else is set.
@@ -312,7 +349,8 @@ const securitySteps = (security: SettingsConfig['security'], repository: Reposit
  * @remarks
  * Only configured fields are planned; a section or field left out produces
  * no call, so whatever GitHub has for it stays. Steps come in a fixed order:
- * merging, features, security, the ruleset, then environments. Optional steps
+ * merging, features, security, the ruleset, then environments, each
+ * protected environment followed by its deployment policies. Optional steps
  * may legitimately fail and are reported as warnings: code scanning (no
  * supported language), secret scanning, and the ruleset on a private
  * repository (rulesets need a paid plan there). Secret scanning is only
@@ -361,14 +399,27 @@ export const planSettings = (
     const ruleset = rulesetBody(settings.ruleset, roles)
     steps.push({ kind: 'ruleset', id: 'ruleset', description: `Ruleset "${ruleset.name}"`, optional: repository.private, ruleset })
   }
+  const policies = deploymentPoliciesFor(repository)
+  const allowed = policies.map((policy) => `${policy.type} ${policy.name}`).join(', ')
   for (const name of environmentsFor(settings.environments)) {
+    const protectedEnvironment = isProtectedEnvironment(name)
     steps.push({
       kind: 'rest',
       id: `environment:${name}`,
-      description: `Environment "${name}"${isProtectedEnvironment(name) ? ' (protected branches only)' : ''}`,
+      description: `Environment "${name}"${protectedEnvironment ? ' (default branch and release tags only)' : ''}`,
       optional: false,
       request: { method: 'PUT', path: `/environments/${encodeURIComponent(name)}`, body: environmentBody(name) },
     })
+    if (protectedEnvironment) {
+      steps.push({
+        kind: 'deploymentPolicies',
+        id: `deployment-policies:${name}`,
+        description: `Deployment policies for "${name}": ${allowed}`,
+        optional: false,
+        environment: name,
+        policies,
+      })
+    }
   }
   return steps
 }

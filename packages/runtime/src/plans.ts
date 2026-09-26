@@ -57,6 +57,8 @@ const stepTarget = (step: SettingsStep) => {
       return `GraphQL ${step.query}`
     case 'ruleset':
       return `create or update by name: ${JSON.stringify(step.ruleset)}`
+    case 'deploymentPolicies':
+      return `create if missing: POST /repos/{owner}/{repo}/environments/${encodeURIComponent(step.environment)}/deployment-branch-policies ${step.policies.map((policy) => JSON.stringify(policy)).join(' ')}`
   }
 }
 

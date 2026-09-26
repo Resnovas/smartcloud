@@ -48,10 +48,12 @@ describe('environmentsFor', () => {
 })
 
 describe('environments', () => {
-  it('shipping environments deploy only from protected branches', () => {
+  it('shipping environments deploy only from the default branch and release tags', () => {
     for (const name of ['Production', 'Windows', 'macOS', 'Release']) expect(isProtectedEnvironment(name), name).toBe(true)
     for (const name of ['Staging', 'Development', 'dev', 'Windows Beta', 'Preview']) expect(isProtectedEnvironment(name), name).toBe(false)
-    expect(environmentBody('Production')).toStrictEqual({ deployment_branch_policy: { protected_branches: true, custom_branch_policies: false } })
+    // protected_branches would let every branch deploy on a repository with no
+    // classic branch protection, so protected environments use custom policies.
+    expect(environmentBody('Production')).toStrictEqual({ deployment_branch_policy: { protected_branches: false, custom_branch_policies: true } })
     expect(environmentBody('Staging')).toStrictEqual({ deployment_branch_policy: null })
   })
 
@@ -63,7 +65,23 @@ describe('environments', () => {
       request: { method: 'PUT', path: '/environments/Windows%20Beta', body: { deployment_branch_policy: null } },
     })
     const release = find(planSettings({ environments: { projectType: 'library' } }, undefined, publicRepository), 'environment:Release')
-    expect(release?.description).toBe('Environment "Release" (protected branches only)')
+    expect(release?.description).toBe('Environment "Release" (default branch and release tags only)')
+  })
+
+  it('a protected environment is followed by its deployment policies: the default branch and release tags', () => {
+    const steps = planSettings({ environments: { names: ['Production', 'Staging'] } }, undefined, { ...publicRepository, defaultBranch: 'trunk' })
+    expect(ids(steps)).toStrictEqual(['environment:Production', 'deployment-policies:Production', 'environment:Staging'])
+    expect(find(steps, 'deployment-policies:Production')).toStrictEqual({
+      kind: 'deploymentPolicies',
+      id: 'deployment-policies:Production',
+      description: 'Deployment policies for "Production": branch trunk, tag v*',
+      optional: false,
+      environment: 'Production',
+      policies: [
+        { name: 'trunk', type: 'branch' },
+        { name: 'v*', type: 'tag' },
+      ],
+    })
   })
 })
 
@@ -106,6 +124,7 @@ describe('planSettings', () => {
       'secret-scanning',
       'ruleset',
       'environment:Production',
+      'deployment-policies:Production',
       'environment:Staging',
       'environment:Development',
     ])
@@ -221,7 +240,7 @@ describe('planSettings', () => {
   })
 
   it('the ruleset is planned only when configured', () => {
-    expect(ids(planSettings({ environments: { projectType: 'library' } }, twoMaintainers, publicRepository))).toStrictEqual(['environment:Release'])
+    expect(ids(planSettings({ environments: { projectType: 'library' } }, twoMaintainers, publicRepository))).toStrictEqual(['environment:Release', 'deployment-policies:Release'])
     const step = find(planSettings({ ruleset: { name: 'main' } }, undefined, publicRepository), 'ruleset')
     expect(step).toMatchObject({ kind: 'ruleset', description: 'Ruleset "main"', optional: false })
   })

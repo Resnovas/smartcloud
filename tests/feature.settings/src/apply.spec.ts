@@ -17,7 +17,15 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { makeReport, Report } from '@resnovas/engine'
-import { applySettings, planSettings, rulesetBody, type SettingsStep, upsertRuleset } from '@resnovas/feature.settings'
+import {
+  applySettings,
+  deploymentPoliciesFor,
+  ensureDeploymentPolicies,
+  planSettings,
+  rulesetBody,
+  type SettingsStep,
+  upsertRuleset,
+} from '@resnovas/feature.settings'
 import {
   Forbidden,
   GitHub,
@@ -31,9 +39,15 @@ import { Effect } from 'effect'
 import { houseSettings, privateRepository, publicRepository, soleMaintainer, twoMaintainers } from './fixtures.js'
 
 // The in-memory GitHub records every request and answers null. These tests
-// answer the rulesets listing and fail chosen calls on top of it.
+// answer the rulesets and deployment policy listings and fail chosen calls
+// on top of it.
 const github = (
-  options: { readonly rulesets?: unknown; readonly fail?: (request: RepositoryRequest) => boolean; readonly failGraphql?: boolean } = {},
+  options: {
+    readonly rulesets?: unknown
+    readonly policies?: unknown
+    readonly fail?: (request: RepositoryRequest) => boolean
+    readonly failGraphql?: boolean
+  } = {},
 ) => {
   const memory = makeMemoryGitHub({ repository: publicRepository })
   const service: GitHubService = {
@@ -47,6 +61,10 @@ const github = (
       }
       if (request.method === 'GET' && request.path.startsWith('/rulesets')) {
         return Effect.as(memory.service.repositoryRequest(request), options.rulesets === undefined ? [] : options.rulesets)
+      }
+      if (request.method === 'GET' && request.path.includes('/deployment-branch-policies')) {
+        const none = { total_count: 0, branch_policies: [] }
+        return Effect.as(memory.service.repositoryRequest(request), options.policies === undefined ? none : options.policies)
       }
       return memory.service.repositoryRequest(request)
     },
@@ -141,7 +159,10 @@ describe('applySettings', () => {
             ],
           },
         },
-        { method: 'PUT', path: '/environments/Production', body: { deployment_branch_policy: { protected_branches: true, custom_branch_policies: false } } },
+        { method: 'PUT', path: '/environments/Production', body: { deployment_branch_policy: { protected_branches: false, custom_branch_policies: true } } },
+        { method: 'GET', path: '/environments/Production/deployment-branch-policies?per_page=100' },
+        { method: 'POST', path: '/environments/Production/deployment-branch-policies', body: { name: 'main', type: 'branch' } },
+        { method: 'POST', path: '/environments/Production/deployment-branch-policies', body: { name: 'v*', type: 'tag' } },
         { method: 'PUT', path: '/environments/Staging', body: { deployment_branch_policy: null } },
         { method: 'PUT', path: '/environments/Development', body: { deployment_branch_policy: null } },
       ])
@@ -155,7 +176,8 @@ describe('applySettings', () => {
         'CodeQL default setup, extended queries',
         'Secret scanning, push protection, Copilot secret detection and non-provider patterns on',
         'Ruleset "house: default branch"',
-        'Environment "Production" (protected branches only)',
+        'Environment "Production" (default branch and release tags only)',
+        'Deployment policies for "Production": branch main, tag v*',
         'Environment "Staging"',
         'Environment "Development"',
       ])
@@ -180,7 +202,63 @@ describe('applySettings', () => {
         'Dependency graph and Dependabot alerts on: PUT /vulnerability-alerts: forbidden (Resource not accessible by integration)',
       )
       expect(snapshot.findings.every((finding) => finding.feature === 'settings')).toBe(true)
-      expect(snapshot.changes).toHaveLength(6)
+      expect(snapshot.changes).toHaveLength(7)
+      expect(state.requests.at(-1)).toMatchObject({ method: 'PUT', path: '/environments/Development' })
+    }),
+  )
+})
+
+describe('ensureDeploymentPolicies', () => {
+  const policies = deploymentPoliciesFor(publicRepository)
+  const path = '/environments/Windows%20Store/deployment-branch-policies'
+
+  it.effect('creates only the policies the environment is missing, matching name and type', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({
+        policies: {
+          total_count: 3,
+          branch_policies: [
+            { id: 1, name: 'main', type: 'branch' },
+            { id: 2, name: 'v*', type: 'branch' },
+            { id: 3, name: 'hotfix/*' },
+          ],
+        },
+      })
+      yield* ensureDeploymentPolicies('Windows Store', policies).pipe(Effect.provideService(GitHub, service))
+      expect(state.requests).toStrictEqual([
+        { method: 'GET', path: `${path}?per_page=100` },
+        { method: 'POST', path, body: { name: 'v*', type: 'tag' } },
+      ])
+    }),
+  )
+
+  it.effect('writes nothing when every policy is already there, reading a policy without a type as a branch', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({
+        policies: { total_count: 2, branch_policies: [{ id: 1, name: 'main' }, { id: 2, name: 'v*', type: 'tag' }] },
+      })
+      yield* ensureDeploymentPolicies('Windows Store', policies).pipe(Effect.provideService(GitHub, service))
+      expect(state.requests).toStrictEqual([{ method: 'GET', path: `${path}?per_page=100` }])
+    }),
+  )
+
+  it.effect('an unexpected listing fails with a typed error and writes nothing', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ policies: [{ name: 'main' }] })
+      const error = yield* Effect.flip(ensureDeploymentPolicies('Windows Store', policies).pipe(Effect.provideService(GitHub, service)))
+      expect(error._tag).toBe('UnexpectedResponse')
+      expect(error.message).toBe(`GET ${path}: unexpected response (expected a list of deployment branch policies)`)
+      expect(state.requests).toHaveLength(1)
+    }),
+  )
+
+  it.effect('a failed listing is an error finding for that environment, and the run keeps going', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ fail: (request) => request.path.startsWith('/environments/Production/deployment-branch-policies') })
+      const snapshot = yield* run(service, planSettings({ environments: { projectType: 'saas' } }, undefined, publicRepository))
+      expect(snapshot.findings.map(({ rule, level }) => ({ rule, level }))).toStrictEqual([
+        { rule: 'settings.deployment-policies:Production', level: 'error' },
+      ])
       expect(state.requests.at(-1)).toMatchObject({ method: 'PUT', path: '/environments/Development' })
     }),
   )
