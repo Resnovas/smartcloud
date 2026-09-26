@@ -287,6 +287,39 @@ describe('stale feature: marking', () => {
     }),
   )
 
+  it.effect('exempts by the reactions in the listing and by comments, which it loads for issues', () =>
+    Effect.gen(function* () {
+      const none = { '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
+      const github = memory(
+        [
+          item(1, { updatedAt: daysAgo(40), reactions: { ...none, '+1': 10 } }),
+          item(2, { updatedAt: daysAgo(40), reactions: { ...none, '+1': 2 } }),
+          item(3, { updatedAt: daysAgo(40), reactions: none }),
+        ],
+        { 3: [{ id: 1, body: 'Still happening on 2.1', author: 'ann', bot: false }] },
+      )
+      yield* sweep(
+        {
+          version: 2,
+          stale: {
+            ...settings,
+            exempt: {
+              when: {
+                requires: 1,
+                condition: [
+                  { type: 'reactionCount', reaction: '+1', min: 10 },
+                  { type: 'commentMatches', condition: '/still happening/i' },
+                ],
+              },
+            },
+          },
+        },
+        github,
+      )
+      expect([1, 2, 3].map((number) => labelsOf(github, number))).toStrictEqual([[], ['stale'], []])
+    }),
+  )
+
   it.effect('exempts by the assignees in the listing, and loads requested reviewers for pull requests', () =>
     Effect.gen(function* () {
       const github = memory([

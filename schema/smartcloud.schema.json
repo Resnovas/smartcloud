@@ -304,6 +304,12 @@
             },
             {
               "$ref": "#/$defs/hasTrailer"
+            },
+            {
+              "$ref": "#/$defs/commentMatches"
+            },
+            {
+              "$ref": "#/$defs/reactionCount"
             }
           ]
         },
@@ -1100,6 +1106,67 @@
       },
       "additionalProperties": false,
       "description": "Commits carry the trailer, with a value matching the pattern when one is given."
+    },
+    "commentMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "commentMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        },
+        "bots": {
+          "type": "boolean",
+          "description": "Also match comments by bot accounts (default false)."
+        }
+      },
+      "additionalProperties": false,
+      "description": "At least one comment matches a pattern; comments by bots count only when bots is set."
+    },
+    "reactionCount": {
+      "type": "object",
+      "required": [
+        "type",
+        "min"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "reactionCount"
+          ]
+        },
+        "reaction": {
+          "type": "string",
+          "enum": [
+            "+1",
+            "-1",
+            "laugh",
+            "hooray",
+            "confused",
+            "heart",
+            "rocket",
+            "eyes"
+          ],
+          "description": "The reaction to count: +1, -1, laugh, hooray, confused, heart, rocket or eyes. Every reaction when omitted."
+        },
+        "min": {
+          "$ref": "#/$defs/NonNegativeInt"
+        },
+        "max": {
+          "$ref": "#/$defs/NonNegativeInt"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The number of reactions (of one kind, when reaction is set) is at least min and below max."
     },
     "$and": {
       "type": "object",

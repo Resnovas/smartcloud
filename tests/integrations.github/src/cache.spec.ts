@@ -70,6 +70,7 @@ describe('cached reads: sharing and caching', () => {
         [`GET ${REPO}/issues`]: { body: [issue(1, ['bug'])] },
         [`GET ${REPO}/issues/3/comments`]: { body: [{ id: 1, body: 'a', user: null }] },
         [`GET ${REPO}/issues/4/comments`]: { body: [] },
+        [`GET ${REPO}/issues/3`]: { body: { number: 3 } },
       })
       const github = yield* service
       // Concurrent equal reads wait on the same call.
@@ -94,12 +95,15 @@ describe('cached reads: sharing and caching', () => {
       yield* github.listOpenIssues
       yield* github.listLabels
       yield* github.listComments(3)
+      yield* github.getReactions(3)
+      yield* github.getReactions(3)
       expect(calls('GET', REPO)).toBe(1)
       expect(calls('GET', `${REPO}/labels`)).toBe(1)
       expect(calls('GET', `${REPO}/issues`)).toBe(1)
       expect(calls('GET', `${REPO}/issues/3/comments`)).toBe(1)
       expect(calls('GET', `${REPO}/issues/4/comments`)).toBe(1)
-      expect(requests).toHaveLength(5)
+      expect(calls('GET', `${REPO}/issues/3`)).toBe(1)
+      expect(requests).toHaveLength(6)
     }),
   )
 

@@ -182,6 +182,18 @@ describe('live GitHub: issues and comments', () => {
               milestone: { title: 'v2.0' },
               updated_at: '2026-01-02T00:00:00Z',
               pull_request: {},
+              reactions: {
+                url: 'u',
+                total_count: 3,
+                '+1': 2,
+                '-1': 0,
+                laugh: 0,
+                hooray: 0,
+                confused: 0,
+                heart: 1,
+                rocket: 0,
+                eyes: 0,
+              },
             },
             {
               number: 3,
@@ -227,6 +239,7 @@ describe('live GitHub: issues and comments', () => {
           milestone: 'v2.0',
           updatedAt: new Date('2026-01-02T00:00:00Z'),
           isPullRequest: true,
+          reactions: { '+1': 2, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 1, rocket: 0, eyes: 0 },
         },
         {
           number: 3,
@@ -243,6 +256,52 @@ describe('live GitHub: issues and comments', () => {
         },
       ])
       expect(requests[0]?.query).toContain('state=open')
+    }),
+  )
+
+  it.effect('reads the reactions on an issue or pull request, as none when GitHub leaves them out', () =>
+    Effect.gen(function* () {
+      const { service } = live({
+        [`GET ${REPO}/issues/3`]: {
+          body: {
+            number: 3,
+            reactions: {
+              url: 'u',
+              total_count: 5,
+              '+1': 4,
+              '-1': 0,
+              laugh: 0,
+              hooray: 0,
+              confused: 0,
+              heart: 0,
+              rocket: 1,
+              eyes: 0,
+            },
+          },
+        },
+        [`GET ${REPO}/issues/4`]: { body: { number: 4 } },
+      })
+      const github = yield* service
+      expect(yield* github.getReactions(3)).toStrictEqual({
+        '+1': 4,
+        '-1': 0,
+        laugh: 0,
+        hooray: 0,
+        confused: 0,
+        heart: 0,
+        rocket: 1,
+        eyes: 0,
+      })
+      expect(yield* github.getReactions(4)).toStrictEqual({
+        '+1': 0,
+        '-1': 0,
+        laugh: 0,
+        hooray: 0,
+        confused: 0,
+        heart: 0,
+        rocket: 0,
+        eyes: 0,
+      })
     }),
   )
 })

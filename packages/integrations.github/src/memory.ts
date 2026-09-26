@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { ChangedFile, Check, Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { ChangedFile, Check, Commit, Mergeable, Reactions, Review } from '@resnovas/conditions'
 import { Effect, Layer } from 'effect'
 import { type GitHubError, NotFound, ValidationFailed } from './errors.js'
 import {
@@ -46,6 +46,15 @@ export interface MemoryPullRequest {
   checks?: Array<Check>
 }
 
+/** An issue's or pull request's labels, comments and reactions in the in-memory GitHub. */
+export interface MemoryIssue {
+  labels: Array<string>
+  comments: Array<Comment>
+  open: boolean
+  /** The reactions on the item itself; none when omitted. */
+  reactions?: Reactions
+}
+
 /** A proposal the in-memory GitHub received, with the pull request it opened. */
 export interface MemoryProposal extends ChangeProposal {
   readonly number: number
@@ -60,8 +69,8 @@ export interface MemoryProposal extends ChangeProposal {
 export interface MemoryState {
   repository: Repository
   labels: Array<Label>
-  /** Labels and comments on each issue or pull request, by number. */
-  issues: Map<number, { labels: Array<string>; comments: Array<Comment>; open: boolean }>
+  /** Labels, comments and reactions on each issue or pull request, by number. */
+  issues: Map<number, MemoryIssue>
   openIssues: Array<IssueSummary>
   pulls: Map<number, MemoryPullRequest>
   /** File contents keyed by `owner/repo/path@ref`, with an empty ref for the default branch. */
@@ -97,6 +106,8 @@ export interface MemoryState {
  */
 export const fileKey = (owner: string, repo: string, path: string, ref = ''): string =>
   `${owner}/${repo}/${path}@${ref}`
+
+const NO_REACTIONS: Reactions = { '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
 
 const defaults = (): MemoryState => ({
   repository: {
@@ -149,7 +160,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
   const issue = (number: number) => {
     const existing = state.issues.get(number)
     if (existing !== undefined) return existing
-    const created = { labels: [], comments: [], open: true }
+    const created: MemoryIssue = { labels: [], comments: [], open: true }
     state.issues.set(number, created)
     return created
   }
@@ -227,6 +238,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
         return Effect.fail(new NotFound({ operation: 'updateComment', detail: `comment ${id}` }))
       }),
     listOpenIssues: Effect.sync(() => state.openIssues.filter((summary) => issue(summary.number).open)),
+    getReactions: (number) => Effect.sync(() => ({ ...(issue(number).reactions ?? NO_REACTIONS) })),
     closeIssue: (number) => Effect.sync(() => void (issue(number).open = false)),
     listCommits: (number) => Effect.map(pull('listCommits', number), (entry) => [...entry.commits]),
     listFiles: (number) => Effect.map(pull('listFiles', number), (entry) => [...entry.files]),

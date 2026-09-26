@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { Association, type Subject } from '@resnovas/conditions'
+import { Association, Reactions, type Subject } from '@resnovas/conditions'
 import { Data, Effect, Either, ParseResult, Schema } from 'effect'
 
 // Only the fields smartcloud reads are decoded; GitHub's payloads carry far
@@ -35,6 +35,8 @@ const IssueFields = {
   labels: Schema.Array(LabelRef),
   assignees: Schema.optional(Schema.NullishOr(Schema.Array(User))),
   milestone: Schema.optional(Schema.NullishOr(Schema.Struct({ title: Schema.String }))),
+  // Issue payloads carry the reaction counts; pull request payloads do not.
+  reactions: Schema.optional(Reactions),
   // An ISO 8601 timestamp, decoded to a valid Date: a malformed one is a decode error, not NaN ages later.
   updated_at: Schema.Date,
 }
@@ -142,6 +144,7 @@ const subjectOf = (kind: Subject['kind'], item: IssueLike): Subject => ({
   assignees: (item.assignees ?? []).map((user) => user.login),
   ...(item.milestone?.title === undefined ? {} : { milestone: item.milestone.title }),
   updatedAt: item.updated_at,
+  ...(item.reactions === undefined ? {} : { reactions: item.reactions }),
 })
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, event: string, payload: unknown) =>

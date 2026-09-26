@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Association, ChangedFile, Check, Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { Association, ChangedFile, Check, Commit, Mergeable, Reactions, Review } from '@resnovas/conditions'
 import { Context, type Effect } from 'effect'
 import type { GitHubError } from './errors.js'
 
@@ -78,6 +78,8 @@ export interface IssueSummary {
   readonly milestone?: string
   readonly updatedAt: Date
   readonly isPullRequest: boolean
+  /** The reactions on the item itself, when the listing reports them. */
+  readonly reactions?: Reactions
 }
 
 /** A file in some repository, for presets and synced templates. */
@@ -222,6 +224,8 @@ export interface GitHubService {
   readonly createComment: (issue: number, body: string) => Effect.Effect<Comment, GitHubError>
   readonly updateComment: (id: number, body: string) => Effect.Effect<void, GitHubError>
   readonly listOpenIssues: Effect.Effect<ReadonlyArray<IssueSummary>, GitHubError>
+  /** The reactions on an issue or pull request itself, not on its comments. */
+  readonly getReactions: (issue: number) => Effect.Effect<Reactions, GitHubError>
   readonly closeIssue: (issue: number) => Effect.Effect<void, GitHubError>
 
   readonly listCommits: (pullRequest: number) => Effect.Effect<ReadonlyArray<Commit>, GitHubError>

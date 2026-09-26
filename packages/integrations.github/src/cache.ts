@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { ChangedFile, Check, Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { ChangedFile, Check, Commit, Mergeable, Reactions, Review } from '@resnovas/conditions'
 import { Duration, Effect, Request, RequestResolver } from 'effect'
 import type { GitHubError } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
@@ -39,6 +39,10 @@ interface ListLabels extends Request.Request<ReadonlyArray<Label>, GitHubError> 
 }
 interface ListOpenIssues extends Request.Request<ReadonlyArray<IssueSummary>, GitHubError> {
   readonly _tag: 'ListOpenIssues'
+}
+interface GetReactions extends Request.Request<Reactions, GitHubError> {
+  readonly _tag: 'GetReactions'
+  readonly issue: number
 }
 interface ListComments extends Request.Request<ReadonlyArray<Comment>, GitHubError> {
   readonly _tag: 'ListComments'
@@ -97,6 +101,7 @@ interface RepositoryGet extends Request.Request<unknown, GitHubError> {
 const GetRepository = Request.tagged<GetRepository>('GetRepository')
 const ListLabels = Request.tagged<ListLabels>('ListLabels')
 const ListOpenIssues = Request.tagged<ListOpenIssues>('ListOpenIssues')
+const GetReactions = Request.tagged<GetReactions>('GetReactions')
 const ListComments = Request.tagged<ListComments>('ListComments')
 const ListCommits = Request.tagged<ListCommits>('ListCommits')
 const ListFiles = Request.tagged<ListFiles>('ListFiles')
@@ -228,6 +233,10 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       caches.issues,
       RequestResolver.fromEffect((_: ListOpenIssues) => inner.listOpenIssues),
     )
+    const getReactions = lookup(
+      caches.issues,
+      RequestResolver.fromEffect(({ issue }: GetReactions) => inner.getReactions(issue)),
+    )
     const listComments = lookup(
       caches.comments,
       RequestResolver.fromEffect(({ issue }: ListComments) => inner.listComments(issue)),
@@ -312,6 +321,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
         writing(inner.createComment(issue, body), [caches.comments.invalidate(ListComments({ issue }))]),
       updateComment: (id, body) => writing(inner.updateComment(id, body), [caches.comments.invalidateAll]),
       listOpenIssues: listOpenIssues(ListOpenIssues({})),
+      getReactions: (issue) => getReactions(GetReactions({ issue })),
       closeIssue: (issue) => writing(inner.closeIssue(issue), [caches.issues.invalidateAll]),
 
       listCommits: (pullRequest) => listCommits(ListCommits({ pullRequest })),

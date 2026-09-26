@@ -114,6 +114,17 @@ describe('decodeEvent', () => {
     }),
   )
 
+  it.effect("reads an issue's reaction counts, leaving out GitHub's total and URL", () =>
+    Effect.gen(function* () {
+      const reactions = { '+1': 12, '-1': 1, laugh: 0, hooray: 2, confused: 0, heart: 3, rocket: 0, eyes: 1 }
+      const rollup = { url: 'https://api.github.com/repos/o/r/issues/3/reactions', total_count: 19, ...reactions }
+      const decoded = yield* decodeEvent('issues', { issue: { ...issuePayload.issue, reactions: rollup } })
+      expect(decoded).toMatchObject({ subject: { reactions } })
+      expect(decoded).not.toHaveProperty('subject.reactions.total_count')
+      expect(yield* decodeEvent('issues', issuePayload)).not.toHaveProperty('subject.reactions')
+    }),
+  )
+
   it.effect('issues and issue comments become an issue subject', () =>
     Effect.gen(function* () {
       expect(yield* decodeEvent('issues', issuePayload)).toMatchObject({

@@ -17,7 +17,7 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Exit, TestClock } from 'effect'
 import { evaluate, MissingFacet, requiredFacets, type Condition, type Subject } from '@resnovas/conditions'
-import { commit, issue, pullRequest } from './fixtures.js'
+import { commit, issue, pullRequest, reactions } from './fixtures.js'
 
 const passes = (condition: Condition, subject: Subject) =>
   Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.passed)
@@ -260,6 +260,55 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
       ],
     }),
     true,
+  ],
+  ['commentMatches, no comments', { type: 'commentMatches', condition: '.*' }, pullRequest(), false],
+  [
+    'commentMatches',
+    { type: 'commentMatches', condition: '/^\\/lgtm/m' },
+    issue({ comments: [{ author: 'ann', body: 'Looks fine\n/lgtm', bot: false }] }),
+    true,
+  ],
+  [
+    'commentMatches ignores comments by bots',
+    { type: 'commentMatches', condition: 'fixed' },
+    issue({ comments: [{ author: 'smartcloud[bot]', body: 'fixed in #3', bot: true }] }),
+    false,
+  ],
+  [
+    'commentMatches counts bots when asked',
+    { type: 'commentMatches', condition: 'fixed', bots: true },
+    issue({ comments: [{ author: 'smartcloud[bot]', body: 'fixed in #3', bot: true }] }),
+    true,
+  ],
+  [
+    'commentMatches, a global pattern restarts on every comment',
+    { type: 'commentMatches', condition: '/repro/g' },
+    issue({
+      comments: [
+        { author: 'ann', body: 'repro attached', bot: false },
+        { author: 'bo', body: 'repro too', bot: false },
+      ],
+    }),
+    true,
+  ],
+  ['reactionCount, none', { type: 'reactionCount', min: 1 }, pullRequest(), false],
+  [
+    'reactionCount counts one reaction',
+    { type: 'reactionCount', reaction: '+1', min: 10 },
+    issue({ reactions: reactions({ '+1': 10, heart: 5 }) }),
+    true,
+  ],
+  [
+    'reactionCount counts every reaction without one',
+    { type: 'reactionCount', min: 15 },
+    issue({ reactions: reactions({ '+1': 10, heart: 5 }) }),
+    true,
+  ],
+  [
+    'reactionCount, max is exclusive',
+    { type: 'reactionCount', reaction: '-1', min: 0, max: 3 },
+    issue({ reactions: reactions({ '-1': 3 }) }),
+    false,
   ],
   ['pendingReview', { type: 'pendingReview', condition: true }, pullRequest({ pendingReviewers: 1 }), true],
   ['pendingReview, none', { type: 'pendingReview', condition: true }, pullRequest(), false],
@@ -802,6 +851,47 @@ describe('evaluate: facets', () => {
           },
         ]),
       ]).toStrictEqual(['files', 'changedFiles'])
+    }),
+  )
+
+  it.effect('commentMatches and reactionCount explain what they found', () =>
+    Effect.gen(function* () {
+      const detail = (condition: Condition, subject: Subject) =>
+        Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.results[0]?.detail)
+      const comments = [
+        { author: 'smartcloud[bot]', body: 'wontfix?', bot: true },
+        { author: 'ann', body: 'please fix', bot: false },
+        { author: 'bo', body: 'wontfix', bot: false },
+      ]
+      const matching = { type: 'commentMatches', condition: 'wontfix' } as const
+      expect(yield* detail(matching, issue({ comments }))).toBe('a comment by @bo matches wontfix')
+      expect(yield* detail(matching, issue({ comments: comments.slice(0, 2) }))).toBe(
+        'none of 1 comment(s) matches wontfix',
+      )
+      const liked = issue({ reactions: reactions({ '+1': 7, rocket: 2 }) })
+      expect(yield* detail({ type: 'reactionCount', reaction: '+1', min: 1 }, liked)).toBe('7 +1 reaction(s)')
+      expect(yield* detail({ type: 'reactionCount', min: 1 }, liked)).toBe('9 reaction(s)')
+    }),
+  )
+
+  it.effect('commentMatches needs comments and reactionCount needs reactions, on issues too', () =>
+    Effect.gen(function* () {
+      const fails = (condition: Condition, facet: 'comments' | 'reactions') =>
+        Effect.map(Effect.exit(evaluate({ condition: [condition] }, issue())), (exit) =>
+          expect(exit).toStrictEqual(Exit.fail(new MissingFacet({ facet, condition: condition.type }))),
+        )
+      yield* fails({ type: 'commentMatches', condition: 'x' }, 'comments')
+      yield* fails({ type: 'reactionCount', min: 1 }, 'reactions')
+      expect([
+        ...requiredFacets([
+          {
+            condition: [
+              { type: 'commentMatches', condition: 'x' },
+              { type: 'reactionCount', reaction: '+1', min: 1 },
+            ],
+          },
+        ]),
+      ]).toStrictEqual(['comments', 'reactions'])
     }),
   )
 
