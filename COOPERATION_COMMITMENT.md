@@ -1,5 +1,5 @@
 <!-- Generated from Resnovas/.github templates/COOPERATION_COMMITMENT.md. Edit it there, not here. -->
-# <a id="top"></a>Eventiva Cooperation Commitment Version 1.2
+# <a id="top"></a>Cooperation Commitment Version 1.2
 
 Before filing or continuing to prosecute any legal proceeding or claim (other than a Defensive Action) arising from termination of a Covered License, we commit to extend to the person or entity ('you') accused of violating the Covered License the following provisions regarding cure and reinstatement, taken from GPL version 3.
 As used here, the term 'this License' refers to the specific Covered License being enforced.
