@@ -18,14 +18,15 @@
 import { Config, Redacted } from 'effect'
 
 /**
- * The public ingestion key of smartcloud's PostHog project (141051).
+ * The public ingestion key of smartcloud's own PostHog project, Smartcloud
+ * (285077), which keeps its data apart from every other product.
  *
  * @remarks
  * A project key only lets its holder send data to the project, never read
  * it, so it is safe to ship in client code. It is still read as a redacted
  * value, so an override never reaches a log.
  */
-export const DEFAULT_PROJECT_KEY = 'phc_1Khp4yiSlPx9agSj3FjCc9bmu8VY68Wb4ptcfB2cT50'
+export const DEFAULT_PROJECT_KEY = 'phc_vSGWgiQzJkTzEJwSRQ2Gd839ZjEwdk5M9pM4oQGRCpJP'
 
 /**
  * The ingestion host of smartcloud's PostHog project, which is hosted in
