@@ -338,8 +338,10 @@ const statusChecksRule = (ruleset: Ruleset, maintainers: number): RulesetRule | 
   }
 }
 
+// The CodeQL gate wins over a `codeScanning.CodeQL` entry, so a repository
+// cannot weaken a gate its preset locks on by adding its own thresholds.
 const codeScanningRule = (ruleset: Ruleset): RulesetRule | undefined => {
-  const tools = { ...(ruleset.codeScanningGate === true ? { CodeQL: CODEQL_GATE } : {}), ...ruleset.codeScanning }
+  const tools = { ...ruleset.codeScanning, ...(ruleset.codeScanningGate === true ? { CodeQL: CODEQL_GATE } : {}) }
   const entries = Object.entries(tools)
   if (entries.length === 0) return undefined
   return {

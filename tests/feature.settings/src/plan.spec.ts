@@ -425,13 +425,16 @@ describe('rulesetBody', () => {
     expect(body.rules).toStrictEqual([])
   })
 
-  it('code coverage writes only the limits it is given, and codeScanning overrides the CodeQL gate', () => {
+  it('code coverage writes only the limits it is given, and the CodeQL gate cannot be weakened', () => {
     expect(rulesetBody({ codeCoverage: { enabled: true, maxDrop: 2 } }, undefined).rules).toStrictEqual([
       { type: 'code_coverage', parameters: { max_coverage_drop: 2 } },
     ])
     expect(rulesetBody({ codeCoverage: { enabled: true, minimum: 90 } }, undefined).rules[0]?.parameters).toStrictEqual({ minimum_coverage: 90 })
     const codeScanning = { CodeQL: { securityAlerts: 'critical', alerts: 'none' } } as const
     expect(rulesetBody({ codeScanningGate: true, codeScanning }, undefined).rules[0]?.parameters).toStrictEqual({
+      code_scanning_tools: [{ tool: 'CodeQL', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' }],
+    })
+    expect(rulesetBody({ codeScanning }, undefined).rules[0]?.parameters).toStrictEqual({
       code_scanning_tools: [{ tool: 'CodeQL', security_alerts_threshold: 'critical', alerts_threshold: 'none' }],
     })
   })
