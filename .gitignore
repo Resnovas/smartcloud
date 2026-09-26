@@ -1,8 +1,8 @@
 # Dependencies
 node_modules
 
-# v2 build output. The action bundle in dist/ is committed only by the release
-# workflow (SMC-19); legacy/dist stays tracked because action.yml runs it.
+# Build output. The action bundle in dist/ is committed only by the release
+# workflow, into the release pull request.
 packages/*/dist
 apps/*/dist
 tests/*/dist
@@ -10,10 +10,6 @@ out-tsc
 coverage
 test-output
 tmp
-
-# v1 legacy tree
-legacy/context.json
-legacy/contexts/config.json
 
 # Nx
 .nx/cache

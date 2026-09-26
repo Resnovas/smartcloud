@@ -1,6 +1,6 @@
 # Working in smartcloud
 
-smartcloud is being rewritten as v2 (Linear project "Smartcloud v2 rewrite", team SMC). The v1 action lives in `legacy/` and keeps running from the root `action.yml` until v2 replaces it; do not change `legacy/` except to remove it (SMC-23).
+smartcloud v2 is tracked in Linear (team SMC). v1 is no longer in the tree; its last release is the `1.0.0-beta.8` tag, and v1 configs are still read through the migration in `packages/config`.
 
 House standards apply: the PostHog skill `coding-preferences` (Effect v3, strict TypeScript, pnpm, Nx module boundaries, FCL-1.0-MIT) and the rules in `Resnovas/.github`.
 
@@ -12,7 +12,6 @@ House standards apply: the PostHog skill `coding-preferences` (Effect v3, strict
 | `apps/<name>` | Platforms: the GitHub Action and the CLI. |
 | `tests/<name>` | One test project per package, mirroring `packages/<name>/src`. Tagged `type_test`. |
 | `tools/` | Workspace scripts, run with Node's built-in TypeScript support. |
-| `legacy/` | The v1 action. Ignored by Nx. |
 
 ## Commands
 
