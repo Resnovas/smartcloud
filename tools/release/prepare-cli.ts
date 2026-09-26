@@ -29,11 +29,13 @@ import { fileURLToPath } from 'node:url'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const release = join(root, 'apps/cli/release')
-const bundle = join(release, 'smartcloud.js')
+const bundles = ['smartcloud.js', 'smartcloud-mcp.js']
 
-if (!existsSync(bundle)) {
-  console.error('apps/cli/release/smartcloud.js is missing: run `pnpm nx run smartcloud:bundle` first.')
-  process.exit(1)
+for (const bundle of bundles) {
+  if (!existsSync(join(release, bundle))) {
+    console.error(`apps/cli/release/${bundle} is missing: run \`pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp\` first.`)
+    process.exit(1)
+  }
 }
 
 const workspace: { version: string; description: string } = JSON.parse(readFileSync(join(root, 'apps/cli/package.json'), 'utf8'))
@@ -44,8 +46,8 @@ const manifest = {
   description: workspace.description,
   license: 'SEE LICENSE IN LICENSE',
   type: 'module',
-  bin: { smartcloud: './smartcloud.js' },
-  files: ['smartcloud.js', 'LICENSE', 'README.md'],
+  bin: { smartcloud: './smartcloud.js', 'smartcloud-mcp': './smartcloud-mcp.js' },
+  files: [...bundles, 'LICENSE', 'README.md'],
   engines: { node: '>=24' },
   repository: { type: 'git', url: 'git+https://github.com/Resnovas/smartcloud.git', directory: 'apps/cli' },
   homepage: 'https://github.com/Resnovas/smartcloud',
@@ -60,7 +62,7 @@ writeFileSync(
   [
     '# @resnovas/smartcloud',
     '',
-    'The smartcloud command line: validate and migrate configs, and dry-run features locally.',
+    'The smartcloud command line and MCP server: validate and migrate configs, dry-run features, and plan settings locally.',
     '',
     '```sh',
     'npx @resnovas/smartcloud validate',

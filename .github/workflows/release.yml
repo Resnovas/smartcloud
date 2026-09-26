@@ -90,7 +90,7 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - run: pnpm nx run smartcloud:bundle
+      - run: pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp
 
       - run: node tools/release/prepare-cli.ts
 

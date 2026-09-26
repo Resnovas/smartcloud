@@ -50,6 +50,9 @@
     },
     {
       "path": "./apps/action"
+    },
+    {
+      "path": "./apps/mcp"
     }
   ]
 }
