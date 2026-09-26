@@ -37,7 +37,8 @@ Each field is the first line starting with its label and a colon, ignoring case 
 
 | Rule | Finding |
 | --- | --- |
-| `AI-01` | The level is missing or not one of the levels above. With `none`: `AI tools` lists something, or a commit credits an AI tool. With any other level: `AI tools` is empty or `none`, or no commit has an AI `Co-authored-by` trailer. |
+| `AI-01` | The level is missing or not one of the levels above. With `none`: `AI tools` lists something, or a commit credits an AI tool. With any other level: `AI tools` is empty or `none`. |
+| `AI-02` | The level is not `none`, but no commit has an AI `Co-authored-by` trailer. The commits feature checks each commit's trailer pairing under the same rule. |
 | `AI-20` | An AI-assisted pull request was opened ready for review. Skipped when `requireDraft` is `false`. |
 | `AI-21` | An AI-assisted pull request is ready for review, but `Accountable human` is not the pull request's author, or `Human review` is empty. |
 
