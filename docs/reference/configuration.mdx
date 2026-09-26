@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -564,6 +564,17 @@ Every non-merge commit has a Signed-off-by trailer matching its author email.
 | Key | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `type` | `commitsSignedOff` | yes |  |
+| `condition` | boolean | yes |  |
+
+Other keys are an error.
+
+### commitsVerified
+
+Every commit has a GPG, SSH or S/MIME signature that GitHub verified.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `commitsVerified` | yes |  |
 | `condition` | boolean | yes |  |
 
 Other keys are an error.

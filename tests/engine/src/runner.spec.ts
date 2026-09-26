@@ -42,7 +42,16 @@ const memory = () =>
       [
         7,
         {
-          commits: [{ sha: 'a', message: 'feat: x', authorName: 'Jane', authorEmail: 'jane@example.com', parents: 1 }],
+          commits: [
+            {
+              sha: 'a',
+              message: 'feat: x',
+              authorName: 'Jane',
+              authorEmail: 'jane@example.com',
+              parents: 1,
+              verified: true,
+            },
+          ],
           files: ['src/a.ts'],
           reviews: [{ author: 'ann', state: 'APPROVED' }],
           requestedReviewers: ['bo'],

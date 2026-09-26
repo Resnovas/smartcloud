@@ -452,6 +452,25 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     pullRequest({ commits: [commit('x\n\nsigned-off-by: Jane <JANE@example.com>')] }),
     true,
   ],
+  ['commitsVerified', { type: 'commitsVerified', condition: true }, pullRequest(), true],
+  [
+    'commitsVerified fails on an unsigned commit',
+    { type: 'commitsVerified', condition: true },
+    pullRequest({ commits: [commit('x'), commit('y', { verified: false })] }),
+    false,
+  ],
+  [
+    'commitsVerified counts merge commits',
+    { type: 'commitsVerified', condition: false },
+    pullRequest({ commits: [commit('x'), commit('Merge main', { parents: 2, verified: false })] }),
+    true,
+  ],
+  [
+    'commitsVerified is not a sign-off',
+    { type: 'commitsVerified', condition: true },
+    pullRequest({ commits: [commit(`x\n\n${signed}`, { verified: false })] }),
+    false,
+  ],
   [
     'hasTrailer, any value',
     { type: 'hasTrailer', trailer: 'Assisted-by', scope: 'any' },
@@ -670,6 +689,28 @@ describe('evaluate: facets', () => {
       expect(yield* detail({ type: 'checkStatus', check: 'e2e', condition: 'pending' }, issue())).toBe(
         'only applies to pull requests',
       )
+    }),
+  )
+
+  it.effect('commitsVerified explains how many commits are not verified', () =>
+    Effect.gen(function* () {
+      const detail = (subject: Subject) =>
+        Effect.map(
+          evaluate({ condition: [{ type: 'commitsVerified', condition: true }] }, subject),
+          (evaluation) => evaluation.results[0]?.detail,
+        )
+      expect(yield* detail(pullRequest())).toBe('every commit has a verified signature')
+      expect(
+        yield* detail(pullRequest({ commits: [commit('x', { verified: false }), commit('y', { verified: false })] })),
+      ).toBe('2 commit(s) without a verified signature')
+      expect(yield* detail(issue())).toBe('only applies to pull requests')
+      const { commits: _, ...unread } = pullRequest()
+      expect(
+        yield* Effect.exit(evaluate({ condition: [{ type: 'commitsVerified', condition: true }] }, unread)),
+      ).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'commits', condition: 'commitsVerified' })))
+      expect([...requiredFacets([{ condition: [{ type: 'commitsVerified', condition: true }] }])]).toStrictEqual([
+        'commits',
+      ])
     }),
   )
 

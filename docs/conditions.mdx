@@ -55,6 +55,7 @@ Conditions that match text take a pattern: a regular expression written either b
 | `isApproved`          | `condition`: count, optional `allowPending`: boolean                | No reviewer is requesting changes, at least this many approved, and no reviewer is pending. With `allowPending: true`, pending reviewers do not block. |
 | `commitMessagesMatch` | `condition`: pattern, optional `scope`                              | Commit messages match.                                                                                                                                 |
 | `commitsSignedOff`    | `condition`: boolean                                                | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`).                                           |
+| `commitsVerified`     | `condition`: boolean                                                | Every commit has a GPG, SSH or S/MIME signature that GitHub verified (`true`), or not (`false`).                                                       |
 | `hasTrailer`          | `trailer`: key, optional `condition`: pattern, optional `scope`     | Commits carry the trailer, with a value matching the pattern when one is given.                                                                        |
 | `hasConflict`         | `condition`: boolean                                                | The pull request conflicts with its base branch (`true`), or does not (`false`).                                                                       |
 | `checksPass`          | `checks`: list of check names, `condition`: boolean                 | Every named check succeeded (`true`), or at least one has not (`false`).                                                                               |
@@ -143,7 +144,7 @@ A Linear key is a team key, a dash and a number. List your teams in `keys` to co
 
 ### Pull request only conditions
 
-`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus`, `linksIssue` and `codeownersTouched` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `commitsVerified`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus`, `linksIssue` and `codeownersTouched` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 
@@ -159,6 +160,25 @@ Trailers are read the way git reads them: only from the final paragraph of the m
   condition: "^(feat|fix|docs|chore)(\\(.+\\))?!?: "
   scope: any
 ```
+
+### Signed commits
+
+`commitsVerified` passes when every commit on the pull request, merge commits included, carries a signature that GitHub verified: GPG, SSH or S/MIME, from a key registered to the signer. It reads the same verification GitHub shows as the "Verified" badge, so a signature from an unknown key, an expired key or an email the signer has not verified on GitHub does not count.
+
+This is separate from `commitsSignedOff`. A `Signed-off-by` trailer is the DCO: text in the message that anyone can write. A verified signature proves who made the commit. Check both when you need both.
+
+```yaml
+labelling:
+  unsigned:
+    label: 'Status: Unsigned commits'
+    on: [pullRequest]
+    when:
+      condition:
+        - type: commitsVerified
+          condition: false
+```
+
+It reads the pull request's commits, the same API call as `commitMessagesMatch`, `commitsSignedOff` and `hasTrailer`, so using them together still costs one call.
 
 ### Merge conflicts
 
