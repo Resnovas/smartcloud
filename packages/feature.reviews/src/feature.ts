@@ -75,15 +75,21 @@ const runGate = (
     }
   })
 
-const runRequestApprovals = (rules: NonNullable<Reviews['requestApprovals']>, subject: Subject) =>
+const runRequestApprovals = (rules: NonNullable<Reviews['requestApprovals']>, subject: Subject, reviews: ReadonlyArray<Review>) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const report = yield* Report
+    // Requesting a review from someone who has already submitted one puts
+    // them back on the pending list and notifies them again, which every
+    // later review event would otherwise repeat.
+    const reviewed = reviews.filter((review) => review.state !== 'PENDING').map((review) => review.author)
     for (const [key, rule] of Object.entries(rules)) {
       const evaluation = yield* evaluate(rule.when, subject)
       if (!evaluation.passed) continue
       // GitHub rejects a request for the author's own review, so drop them.
-      const reviewers = rule.reviewers.filter((login) => !sameLogin(login, subject.author)).map(normaliseLogin)
+      const reviewers = rule.reviewers
+        .filter((login) => !sameLogin(login, subject.author) && !reviewed.some((author) => sameLogin(login, author)))
+        .map(normaliseLogin)
       if (reviewers.length === 0) continue
       yield* github.requestReviewers(subject.number, reviewers)
       yield* report.change({
@@ -131,7 +137,7 @@ const run = (context: FeatureContext): Effect.Effect<void, MissingFacet | GitHub
     if (section === undefined) return
     const { subject, reviews } = yield* withReviews(context.subject, 'reviews')
     if (section.gate !== undefined) yield* runGate(context.config, section.gate, subject, reviews)
-    if (section.requestApprovals !== undefined) yield* runRequestApprovals(section.requestApprovals, subject)
+    if (section.requestApprovals !== undefined) yield* runRequestApprovals(section.requestApprovals, subject, reviews)
     if (section.automaticApprove !== undefined) yield* runAutomaticApprove(section.automaticApprove, subject, reviews)
   })
 

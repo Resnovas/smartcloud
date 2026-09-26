@@ -260,6 +260,20 @@ describe('requestApprovals', () => {
         ])
       }),
     ))
+
+  it('does not request a review again from someone who has already reviewed', () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const config: SmartcloudConfig = {
+          version: 2,
+          reviews: { requestApprovals: { deps: { reviewers: ['owner-one', '@Owner-Two'], when: { condition: [] } } } },
+        }
+        const { state } = yield* run(config, memory([{ author: 'Owner-One', state: 'COMMENTED' }]))
+        expect(pull(state)?.requestedReviewers).toStrictEqual(['Owner-Two'])
+        const { result } = yield* run(config, memory([{ author: 'owner-one', state: 'APPROVED' }, { author: 'owner-two', state: 'CHANGES_REQUESTED' }]))
+        expect(result.changes).toStrictEqual([])
+      }),
+    ))
 })
 
 describe('automaticApprove', () => {

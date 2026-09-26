@@ -66,6 +66,17 @@ export type GateApplied = {
 /** The outcome of the maintainer review gate. */
 export type GateResult = GateOpen | GateApplied
 
+// One account listed twice, in another case or with an `@`, is still one
+// maintainer: it counts once towards the gate and fills one approval.
+const uniqueLogins = (logins: ReadonlyArray<string>): ReadonlyArray<string> => {
+  const unique = new Map<string, string>()
+  for (const login of logins) {
+    const key = normaliseLogin(login).toLowerCase()
+    if (!unique.has(key)) unique.set(key, login)
+  }
+  return [...unique.values()]
+}
+
 /**
  * The latest decisive review state of each reviewer, keyed by lowercased login.
  *
@@ -99,12 +110,13 @@ export const latestDecisive = (reviews: ReadonlyArray<Review>): ReadonlyMap<stri
  * @returns Whether the gate is open, passed or failed, with the approvers.
  */
 export const evaluateGate = (input: GateInput): GateResult => {
-  if (input.maintainers.length < 2) return { status: 'open', reason: 'fewerThanTwoMaintainers' }
+  const maintainers = uniqueLogins(input.maintainers)
+  if (maintainers.length < 2) return { status: 'open', reason: 'fewerThanTwoMaintainers' }
   if (input.trustedBots.some((bot) => sameLogin(bot, input.author))) return { status: 'open', reason: 'trustedBot' }
-  const authorIsMaintainer = input.maintainers.some((login) => sameLogin(login, input.author))
+  const authorIsMaintainer = maintainers.some((login) => sameLogin(login, input.author))
   const required = authorIsMaintainer ? input.maintainer : input.outside
   const latest = latestDecisive(input.reviews)
-  const approvedBy = input.maintainers
+  const approvedBy = maintainers
     .filter(
       (login) => !sameLogin(login, input.author) && latest.get(normaliseLogin(login).toLowerCase()) === 'APPROVED',
     )
