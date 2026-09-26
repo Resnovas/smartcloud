@@ -40,8 +40,8 @@ export type Access = { readonly restricted: false } | { readonly restricted: tru
 export const FULL_ACCESS: Access = { restricted: false }
 
 /**
- * The features only a personal access token or app token (the `ACCESS_TOKEN`
- * secret) can run, and why. A restricted run skips them.
+ * The features only a GitHub App token or personal access token can run,
+ * and why. A restricted run skips them.
  *
  * @example
  * ```ts import.meta.vitest name="PAT_ONLY_FEATURES"
@@ -142,7 +142,7 @@ export const accessFor = (options: {
   return isWorkflowToken
     ? {
         token: options.token,
-        access: { restricted: true, reason: 'the workflow token, without the ACCESS_TOKEN secret' },
+        access: { restricted: true, reason: 'the workflow token, without an app or access token' },
       }
     : { token: options.token, access: FULL_ACCESS }
 }

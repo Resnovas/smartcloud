@@ -109,7 +109,23 @@ Each capability is a feature with its own section in the config. A feature whose
 | `checks: write` | One check run per feature on the commit. |
 | `issues: write` | Labels, stale comments and the report comment on issues. Repository labels are managed through this permission too. |
 
-The settings feature changes repository administration settings, and the sync feature reads its source from another repository and may push workflow files, which the workflow token cannot do. Pass a stronger token, such as a GitHub App or fine-grained token kept in a secret, as `GITHUB_TOKEN`, with the workflow token as the fallback: `${{ secrets.ACCESS_TOKEN || github.token }}`.
+The settings feature changes repository administration settings, and the sync feature reads its source from another repository and may push workflow files, which the workflow token cannot do. Pass a stronger token as `GITHUB_TOKEN`, with the workflow token as the fallback. A GitHub App token is best: GitHub signs the commits smartcloud makes with it, it can create check runs, and its rate limit is the app's own. Mint it with `actions/create-github-app-token`, and skip that step where the key is missing, as on forks and Dependabot runs:
+
+```yaml
+steps:
+  - id: app
+    if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
+    continue-on-error: true
+    uses: actions/create-github-app-token@v3
+    with:
+      app-id: ${{ vars.APP_ID }}
+      private-key: ${{ secrets.APP_PRIVATE_KEY }}
+  - uses: resnovas/smartcloud@v2
+    with:
+      GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+```
+
+Never mint the token in a job that runs pull request code; smartcloud's own job runs a release, not the pull request.
 
 <Note>
   A run with only the workflow token is restricted rather than failed: smartcloud skips settings, sync, private presets in other repositories and every write GitHub refuses, and lists them in the job summary. Pull requests from forks and runs started by Dependabot are always restricted, whatever token the workflow passes; see [Restricted runs](/reporting#restricted-runs).

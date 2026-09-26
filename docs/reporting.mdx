@@ -43,7 +43,7 @@ Every finding is also printed as a workflow command, which Actions shows as an a
 smartcloud runs with the lowest access that still works when it cannot, or should not, use a stronger token:
 
 - **Pull requests from forks and runs started by Dependabot.** smartcloud acts with the workflow token, whatever token the workflow passes as `GITHUB_TOKEN`, so code from outside the repository never runs alongside a stronger token. GitHub already gives such runs a read-only workflow token and no secrets.
-- **The workflow token.** When `GITHUB_TOKEN` is the workflow's own token, for example because `secrets.ACCESS_TOKEN` is not set, the run is restricted too.
+- **The workflow token.** When `GITHUB_TOKEN` is the workflow's own token, for example because no app token was minted, the run is restricted too.
 - **A rejected token.** When GitHub refuses the token given as `GITHUB_TOKEN`, because it is invalid, expired or forbidden by an organisation policy, smartcloud warns, acts with the workflow token instead, and the run is restricted. An outage is not a rejection: it is reported as before.
 
 A restricted run skips what its token cannot do, instead of failing:

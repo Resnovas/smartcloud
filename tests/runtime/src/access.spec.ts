@@ -80,7 +80,7 @@ describe('accessFor', () => {
         .access,
     ).toStrictEqual({
       restricted: true,
-      reason: 'the workflow token, without the ACCESS_TOKEN secret',
+      reason: 'the workflow token, without an app or access token',
     })
     expect(accessFor({ token: pat, workflowToken: Option.some(workflow), external: undefined }).access).toBe(
       FULL_ACCESS,
