@@ -82,7 +82,9 @@ const notGroup = (not: Not): ConditionGroup => {
   if (!isList(condition)) return condition
   const [first] = condition
   if (first !== undefined && !isCondition(first)) return first
-  return not.requires === undefined ? { condition: [...condition].filter(isCondition) } : { requires: not.requires, condition: [...condition].filter(isCondition) }
+  return not.requires === undefined
+    ? { condition: [...condition].filter(isCondition) }
+    : { requires: not.requires, condition: [...condition].filter(isCondition) }
 }
 
 const isList = (condition: Not['condition']): condition is readonly [ConditionGroup] | ReadonlyArray<Condition> =>
@@ -136,7 +138,9 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
   switch (condition.type) {
     case 'titleMatches': {
       const passed = compilePattern(condition.condition).test(subject.title)
-      return Effect.succeed(result(condition.type, passed, `title ${passed ? 'matches' : 'does not match'} ${condition.condition}`))
+      return Effect.succeed(
+        result(condition.type, passed, `title ${passed ? 'matches' : 'does not match'} ${condition.condition}`),
+      )
     }
     case 'descriptionMatches': {
       const passed = subject.body !== '' && compilePattern(condition.condition).test(subject.body)
@@ -146,7 +150,9 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
     }
     case 'creatorMatches': {
       const passed = compilePattern(condition.condition).test(subject.author)
-      return Effect.succeed(result(condition.type, passed, `author @${subject.author} ${passed ? 'matches' : 'does not match'}`))
+      return Effect.succeed(
+        result(condition.type, passed, `author @${subject.author} ${passed ? 'matches' : 'does not match'}`),
+      )
     }
     case 'branchMatches': {
       const branch = subject.headBranch ?? ''
@@ -154,7 +160,9 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
       return Effect.succeed(result(condition.type, passed, `branch ${branch} ${passed ? 'matches' : 'does not match'}`))
     }
     case 'isOpen':
-      return Effect.succeed(result(condition.type, subject.open === condition.condition, subject.open ? 'open' : 'closed'))
+      return Effect.succeed(
+        result(condition.type, subject.open === condition.condition, subject.open ? 'open' : 'closed'),
+      )
     case 'isLocked':
       return Effect.succeed(
         result(condition.type, subject.locked === condition.condition, subject.locked ? 'locked' : 'unlocked'),
@@ -166,7 +174,11 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
     case 'hasLabel': {
       const present = hasLabel(subject, condition.label)
       return Effect.succeed(
-        result(condition.type, present === condition.condition, `label "${condition.label}" ${present ? 'present' : 'absent'}`),
+        result(
+          condition.type,
+          present === condition.condition,
+          `label "${condition.label}" ${present ? 'present' : 'absent'}`,
+        ),
       )
     }
     case 'isStale':
@@ -186,7 +198,11 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
       return Effect.map(facet(subject, 'files', condition.type), (files) => {
         const isMatch = picomatch(condition.condition)
         const passed = files.some((file) => isMatch(file))
-        return result(condition.type, passed, `${passed ? 'a changed file matches' : 'no changed file matches'} ${condition.condition}`)
+        return result(
+          condition.type,
+          passed,
+          `${passed ? 'a changed file matches' : 'no changed file matches'} ${condition.condition}`,
+        )
       })
     case 'changesSize': {
       const changes = subject.changes ?? 0
@@ -200,25 +216,33 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
     case 'requestedChanges':
       return Effect.map(facet(subject, 'reviews', condition.type), (reviews) => {
         const requested = [...latestReviews(reviews).values()].includes('CHANGES_REQUESTED')
-        return result(condition.type, requested === condition.condition, requested ? 'changes requested' : 'no changes requested')
+        return result(
+          condition.type,
+          requested === condition.condition,
+          requested ? 'changes requested' : 'no changes requested',
+        )
       })
     case 'isApproved':
       return Effect.gen(function* () {
         const reviews = yield* facet(subject, 'reviews', condition.type)
-        const pending = yield* facet(subject, 'pendingReviewers', condition.type)
         const states = [...latestReviews(reviews).values()]
         const approvals = states.filter((state) => state === 'APPROVED').length
-        const passed =
-          (condition.allowPending === true || pending === 0) &&
-          !states.includes('CHANGES_REQUESTED') &&
-          approvals >= condition.condition
-        return result(condition.type, passed, `${approvals} approval(s), ${pending} pending`)
+        const approved = !states.includes('CHANGES_REQUESTED') && approvals >= condition.condition
+        // Pending reviews cannot change the outcome when they are allowed, so
+        // they are not read, and a failed lookup of them skips nothing.
+        if (condition.allowPending === true) return result(condition.type, approved, `${approvals} approval(s)`)
+        const pending = yield* facet(subject, 'pendingReviewers', condition.type)
+        return result(condition.type, approved && pending === 0, `${approvals} approval(s), ${pending} pending`)
       })
     case 'commitMessagesMatch':
       return Effect.map(facet(subject, 'commits', condition.type), (commits) => {
         const pattern = compilePattern(condition.condition)
         const passed = scoped(condition.scope, nonMerge(commits), (commit) => matches(pattern, commit.message))
-        return result(condition.type, passed, `commit messages ${passed ? 'match' : 'do not match'} ${condition.condition}`)
+        return result(
+          condition.type,
+          passed,
+          `commit messages ${passed ? 'match' : 'do not match'} ${condition.condition}`,
+        )
       })
     case 'commitsSignedOff':
       return Effect.map(facet(subject, 'commits', condition.type), (commits) => {
@@ -243,7 +267,12 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
       return Effect.map(facet(subject, 'mergeable', condition.type), (mergeable) => {
         // GitHub computes mergeability asynchronously; until it has, treat the pull request as not conflicting.
         const conflicting = mergeable === 'CONFLICTING'
-        const detail = mergeable === 'UNKNOWN' ? 'mergeability not yet known' : conflicting ? 'conflicts with the base branch' : 'no conflicts'
+        const detail =
+          mergeable === 'UNKNOWN'
+            ? 'mergeability not yet known'
+            : conflicting
+              ? 'conflicts with the base branch'
+              : 'no conflicts'
         return result(condition.type, conflicting === condition.condition, detail)
       })
     case '$and':
@@ -273,7 +302,12 @@ const combine = (
     Effect.forEach(groups, (group) => evaluate(group, subject)),
     (inner): ConditionResult => {
       const passed = inner.filter((evaluation) => evaluation.passed).length
-      return { type, passed: decide(passed, inner.length), detail: `${passed} of ${inner.length} group(s) passed`, groups: inner }
+      return {
+        type,
+        passed: decide(passed, inner.length),
+        detail: `${passed} of ${inner.length} group(s) passed`,
+        groups: inner,
+      }
     },
   )
 
@@ -350,7 +384,11 @@ export const requiredFacets = (groups: ReadonlyArray<ConditionGroup>): ReadonlyS
   const needed = new Set<Facet>()
   const visit = (group: ConditionGroup): void => {
     for (const condition of group.condition) {
-      for (const each of FACETS[condition.type] ?? []) needed.add(each)
+      const facets =
+        condition.type === 'isApproved' && condition.allowPending === true
+          ? ['reviews' as const]
+          : FACETS[condition.type]
+      for (const each of facets ?? []) needed.add(each)
       groupsOf(condition).forEach(visit)
     }
   }
