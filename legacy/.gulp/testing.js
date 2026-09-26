@@ -49,11 +49,6 @@ class Testing {
       .pipe(exec(`npm run run`))
       .pipe(exec.reporter());
   };
-  static doc = () => {
-    return src("package.json")
-      .pipe(exec(`npm run build`))
-      .pipe(exec.reporter());
-  };
   static package = () => {
     return src("package.json")
       .pipe(exec(`npm run package`))

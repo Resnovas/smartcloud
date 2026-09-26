@@ -67,7 +67,6 @@ const testall = series(
 	Testing.run,
 	Testing.cleanup,
 	Testing.package,
-	// Testing.doc,
 );
 exports.testall = testall
 

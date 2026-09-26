@@ -12,9 +12,6 @@ test-output
 tmp
 
 # v1 legacy tree
-legacy/docs/output
-legacy/docs/build
-legacy/docs/.docusaurus
 legacy/context.json
 legacy/contexts/config.json
 
