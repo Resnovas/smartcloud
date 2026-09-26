@@ -16,7 +16,7 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect, Layer } from 'effect'
+import { Effect, HashMap, Layer, Logger } from 'effect'
 import { readFileSync } from 'node:fs'
 import { parseConfig, type SmartcloudConfig } from '@resnovas/config'
 import { runFeatures } from '@resnovas/engine'
@@ -167,6 +167,31 @@ describe('labels feature: sync', () => {
         'created label "feature"',
         'deleted label "wontfix"',
       ])
+    }),
+  )
+
+  it.effect('logs what the sync decided, as counts', () =>
+    Effect.gen(function* () {
+      const { service } = makeMemoryGitHub({ labels: [bug, { name: 'wontfix', color: 'ffffff', description: '' }] })
+      const lines: Array<{ readonly message: unknown; readonly annotations: Readonly<Record<string, unknown>> }> = []
+      const capture = Logger.make(({ message, annotations }) => void lines.push({ message, annotations: Object.fromEntries(HashMap.toEntries(annotations)) }))
+      const config: SmartcloudConfig = {
+        version: 2,
+        labels: {
+          defect: { name: 'defect', color: 'd73a4a', aliases: ['bug'] },
+          feature: { name: 'feature', color: 'a2eeef' },
+          docs: { name: 'docs', color: '0075ca' },
+        },
+        labelSync: { prune: true },
+      }
+      yield* runFeatures({ config, event: 'schedule', payload: {}, features: [labels] }).pipe(
+        Effect.provideService(GitHub, service),
+        Effect.provide(Logger.add(capture)),
+      )
+      expect(lines).toContainEqual({
+        message: ['labels: 2 to create, 0 to update, 1 to rename, 1 to delete'],
+        annotations: expect.objectContaining({ feature: 'labels', rule: 'labels.sync', create: 2, update: 0, rename: 1, delete: 1 }),
+      })
     }),
   )
 

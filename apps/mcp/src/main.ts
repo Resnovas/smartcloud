@@ -23,9 +23,9 @@ import { Layer, ManagedRuntime } from 'effect'
 import { makeServer } from './server.js'
 import { VERSION } from './version.js'
 
-// stdout carries the protocol, so nothing here may print to it. Telemetry
-// only logs at debug level, below what is printed, and PostHog's own client
-// writes to stderr.
+// stdout carries the protocol, so nothing here may print to it. The
+// telemetry layer keeps diagnostic logs off the console, and PostHog's own
+// client writes to stderr.
 const runtime = ManagedRuntime.make(Layer.mergeAll(Layer.provideMerge(gitHubConfigSource(), NodeContext.layer), telemetry('mcp', VERSION)))
 const server = makeServer({ connect: liveConnect(), run: (effect) => runtime.runPromise(effect) })
 const transport = new StdioServerTransport()

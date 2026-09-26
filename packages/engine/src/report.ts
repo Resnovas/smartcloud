@@ -15,7 +15,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { Context, Effect, Ref } from 'effect'
+import { Context, Effect, Metric, Ref } from 'effect'
 
 /** Something a feature found: a broken rule, a warning, or a notice. */
 export interface Finding {
@@ -57,14 +57,40 @@ export class Report extends Context.Tag('@resnovas/engine/Report')<
 >() {}
 
 /**
+ * Counts findings as features record them, tagged by `level` and `feature`.
+ *
+ * @remarks
+ * The tags name only the feature and the level, never what a finding is
+ * about, so the counter is safe to send to telemetry.
+ */
+export const findingsCounter = Metric.counter('smartcloud.findings', { description: 'Findings recorded by smartcloud features, by level and feature', incremental: true })
+
+// A finding's message can quote titles and logins, so only its rule, level and feature are logged.
+const recordFinding = (finding: Finding) =>
+  Effect.zipRight(
+    Metric.increment(Metric.tagged(Metric.tagged(findingsCounter, 'level', finding.level), 'feature', finding.feature)),
+    Effect.logDebug(`${finding.feature}: finding ${finding.rule}`).pipe(
+      Effect.annotateLogs({ feature: finding.feature, rule: finding.rule, level: finding.level }),
+    ),
+  )
+
+/**
  * Creates an empty report.
+ *
+ * @remarks
+ * Every finding added also increments {@link findingsCounter} and writes a
+ * debug log naming its feature, rule and level.
  *
  * @returns The report service.
  */
 export const makeReport = Effect.gen(function* () {
   const state = yield* Ref.make<ReportSnapshot>({ findings: [], changes: [] })
   return Report.of({
-    add: (finding) => Ref.update(state, ({ findings, changes }) => ({ findings: [...findings, finding], changes })),
+    add: (finding) =>
+      Effect.zipRight(
+        Ref.update(state, ({ findings, changes }) => ({ findings: [...findings, finding], changes })),
+        recordFinding(finding),
+      ),
     change: (change) => Ref.update(state, ({ findings, changes }) => ({ findings, changes: [...changes, change] })),
     snapshot: Ref.get(state),
   })

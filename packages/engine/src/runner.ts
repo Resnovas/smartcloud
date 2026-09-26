@@ -18,7 +18,7 @@
 import type { Facet, Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { GitHub, type GitHubError } from '@resnovas/integrations.github'
-import { Cause, Effect, Exit } from 'effect'
+import { Cause, type Context, Duration, Effect, Exit, LogLevel, Metric, MetricBoundaries } from 'effect'
 import { decodeEvent, type Envelope, type EventDecodeError, type IssueEnvelope, type PullRequestEnvelope, type RepositoryEnvelope } from './events.js'
 import { makeReport, Report, type ReportSnapshot } from './report.js'
 
@@ -61,7 +61,21 @@ export interface RunResult extends ReportSnapshot {
 }
 
 /**
+ * How long each feature takes, in milliseconds, tagged by `feature` and
+ * `outcome` (`success` or `failure`).
+ */
+export const featureDuration = Metric.histogram(
+  'smartcloud.feature.duration_ms',
+  MetricBoundaries.exponential({ start: 10, factor: 2, count: 12 }),
+  'How long each smartcloud feature takes, in milliseconds, by feature and outcome',
+)
+
+/**
  * Loads the facets a run needs onto a pull request subject, concurrently.
+ *
+ * @remarks
+ * Traced as `smartcloud.engine.loadFacets`, with the subject's kind and the
+ * facets asked for.
  *
  * @param subject - The pull request.
  * @param facets - The facets to load.
@@ -83,7 +97,34 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
       { concurrency: 'unbounded' },
     )
     return Object.assign({}, subject, ...parts)
-  })
+  }).pipe(Effect.withSpan('smartcloud.engine.loadFacets', { captureStackTrace: false, attributes: { 'subject.kind': subject.kind, facets: [...facets] } }))
+
+type Outcome = { readonly feature: string; readonly failure: string | undefined }
+
+// One span per feature, with its duration recorded and its outcome logged.
+// Failure reasons can quote repository names, so only the outcome is recorded.
+const instrument = <R>(feature: Feature, kind: EnvelopeKind, report: Context.Tag.Service<Report>, attempt: Effect.Effect<Outcome, never, R>) =>
+  attempt.pipe(
+    Effect.timed,
+    Effect.tap(([elapsed, outcome]) =>
+      Effect.gen(function* () {
+        const result = outcome.failure === undefined ? 'success' : 'failure'
+        const milliseconds = Math.round(Duration.toMillis(elapsed))
+        const { findings, changes } = yield* report.snapshot
+        const found = findings.filter((finding) => finding.feature === feature.name).length
+        const changed = changes.filter((change) => change.feature === feature.name).length
+        yield* Effect.annotateCurrentSpan({ outcome: result, findings: found, changes: changed })
+        yield* Metric.update(Metric.tagged(Metric.tagged(featureDuration, 'feature', feature.name), 'outcome', result), milliseconds)
+        yield* Effect.logWithLevel(
+          result === 'success' ? LogLevel.Info : LogLevel.Warning,
+          `${feature.name}: ${result} in ${milliseconds} ms, ${found} finding(s), ${changed} change(s)`,
+        ).pipe(Effect.annotateLogs({ outcome: result, findings: found, changes: changed, duration_ms: milliseconds }))
+      }),
+    ),
+    Effect.map(([, outcome]) => outcome),
+    Effect.annotateLogs({ feature: feature.name }),
+    Effect.withSpan(`smartcloud.feature.${feature.name}`, { captureStackTrace: false, attributes: { feature: feature.name, 'event.kind': kind } }),
+  )
 
 /**
  * Runs every applicable feature against one GitHub event.
@@ -97,6 +138,11 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
  * features rather than recording them as failed. Results are listed in the order the
  * features were given, whatever order they finished in. An unsupported
  * event is a clean no-op with a notice.
+ *
+ * The run is traced as `smartcloud.engine.runFeatures` and each feature as
+ * `smartcloud.feature.<name>`, with its duration in
+ * {@link featureDuration}. Spans and logs carry only feature names, the
+ * event, counts and outcomes, never what the event is about.
  *
  * @example
  * ```ts
@@ -118,6 +164,7 @@ export const runFeatures = (options: {
 }): Effect.Effect<RunResult, EventDecodeError, GitHub> =>
   Effect.gen(function* () {
     const envelope = yield* decodeEvent(options.event, options.payload)
+    yield* Effect.annotateCurrentSpan('event.kind', envelope.kind)
     const report = yield* makeReport
     if (envelope.kind === 'unsupported') {
       yield* report.add({ feature: 'engine', rule: 'unsupported-event', level: 'notice', message: envelope.reason })
@@ -141,6 +188,7 @@ export const runFeatures = (options: {
       }
       return true
     })
+    for (const skip of skipped) yield* Effect.logDebug(`${skip.feature}: skipped, ${skip.reason}`).pipe(Effect.annotateLogs({ feature: skip.feature }))
 
     const needs = (feature: Feature) => feature.facets?.(options.config) ?? new Set<Facet>()
     const facets = [...new Set(applicable.flatMap((feature) => [...needs(feature)]))]
@@ -167,16 +215,19 @@ export const runFeatures = (options: {
           const reason = unavailable.get(facet)
           return reason === undefined ? [] : [`could not load ${facet}: ${reason}`]
         })
-        if (missing.length > 0) return Effect.succeed({ feature: feature.name, failure: missing.join('\n') })
         // Effect.exit would turn an interruption into an ordinary failure, so
         // only failures and defects are caught; interrupting the run stops it.
-        return feature.run(context).pipe(
-          Effect.provideService(Report, report),
-          Effect.as({ feature: feature.name, failure: undefined }),
-          Effect.catchAllCause((cause) =>
-            Cause.isInterruptedOnly(cause) ? Effect.interrupt : Effect.succeed({ feature: feature.name, failure: Cause.pretty(cause) }),
-          ),
-        )
+        const attempt: Effect.Effect<Outcome, never, GitHub> =
+          missing.length > 0
+            ? Effect.succeed({ feature: feature.name, failure: missing.join('\n') })
+            : feature.run(context).pipe(
+                Effect.provideService(Report, report),
+                Effect.as({ feature: feature.name, failure: undefined }),
+                Effect.catchAllCause((cause) =>
+                  Cause.isInterruptedOnly(cause) ? Effect.interrupt : Effect.succeed({ feature: feature.name, failure: Cause.pretty(cause) }),
+                ),
+              )
+        return instrument(feature, envelope.kind, report, attempt)
       },
       { concurrency: options.concurrency ?? 4 },
     )
@@ -186,5 +237,11 @@ export const runFeatures = (options: {
       if (outcome.failure === undefined) ran.push(outcome.feature)
       else failed.push({ feature: outcome.feature, message: outcome.failure })
     }
-    return { envelope, ran, skipped, failed, ...(yield* report.snapshot) }
-  })
+    const snapshot = yield* report.snapshot
+    const counts = { ran: ran.length, skipped: skipped.length, failed: failed.length, findings: snapshot.findings.length }
+    yield* Effect.annotateCurrentSpan(counts)
+    yield* Effect.logInfo(`engine: ${counts.ran} ran, ${counts.skipped} skipped, ${counts.failed} failed, ${counts.findings} finding(s)`).pipe(
+      Effect.annotateLogs(counts),
+    )
+    return { envelope, ran, skipped, failed, ...snapshot }
+  }).pipe(Effect.annotateLogs({ github_event: options.event }), Effect.withSpan('smartcloud.engine.runFeatures', { captureStackTrace: false, attributes: { github_event: options.event } }))

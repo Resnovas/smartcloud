@@ -127,8 +127,16 @@ const perform = (step: SettingsStep): Effect.Effect<void, GitHubError | Unexpect
 export const applySettings = (steps: ReadonlyArray<SettingsStep>): Effect.Effect<void, never, GitHub | Report> =>
   Effect.gen(function* () {
     const report = yield* Report
+    yield* Effect.logInfo(`settings: ${steps.length} step(s) to apply`).pipe(
+      Effect.annotateLogs({ feature: FEATURE, steps: steps.length, optional: steps.filter((step) => step.optional).length }),
+    )
     for (const step of steps) {
       yield* perform(step).pipe(
+        Effect.tapBoth({
+          onSuccess: () => Effect.logDebug(`settings: ${step.id} applied`).pipe(Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: 'applied' })),
+          onFailure: (error) =>
+            Effect.logDebug(`settings: ${step.id} failed`).pipe(Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: error._tag })),
+        }),
         Effect.matchEffect({
           onSuccess: () => report.change({ feature: FEATURE, description: step.description }),
           onFailure: (error) =>

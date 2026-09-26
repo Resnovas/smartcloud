@@ -150,15 +150,17 @@ export const commitsFeature: Feature = {
       const { subject, commits } = yield* pullRequestCommits(context, NAME)
       const github = yield* GitHub
       const role = authorRole(subject.author, context.config.roles, github.coordinates.owner)
-      if (role === 'bot') return
+      if (role === 'bot') return yield* Effect.logInfo('commits: skipped, the author is a trusted bot').pipe(Effect.annotateLogs({ feature: NAME, role }))
 
       const report = yield* Report
       const base = policyBase(context.config)
       const isAi = makeAiIdentityMatcher(section.aiIdentities)
-      for (const commit of commits) {
-        for (const draft of checkCommit(commit, section, base, isAi)) {
-          yield* report.add({ feature: NAME, level: levelFor(role, draft.rule, section.maintainerLevel), ...draft })
-        }
+      const drafts = commits.flatMap((commit) => checkCommit(commit, section, base, isAi))
+      for (const draft of drafts) {
+        yield* report.add({ feature: NAME, level: levelFor(role, draft.rule, section.maintainerLevel), ...draft })
       }
+      yield* Effect.logInfo(`commits: ${commits.length} commit(s) checked, ${drafts.length} problem(s)`).pipe(
+        Effect.annotateLogs({ feature: NAME, role, commits: commits.length, problems: drafts.length, rules: [...new Set(drafts.map((draft) => draft.rule))] }),
+      )
     }),
 }

@@ -78,6 +78,16 @@ describe('telemetryLayer, when turned off', () => {
     )
   }
 
+  it.live('prints no diagnostic logs either', () =>
+    Effect.gen(function* () {
+      const printed: Array<string> = []
+      vi.spyOn(console, 'log').mockImplementation((...args: Array<unknown>) => void printed.push(args.map(String).join(' ')))
+      const { fake } = yield* run(Effect.logInfo('labels: 3 to create'), { SMARTCLOUD_TELEMETRY: 'false' })
+      expect(fake.sent).toStrictEqual([])
+      expect(printed).toStrictEqual([])
+    }),
+  )
+
   it.live('sends nothing when the settings cannot be read', () =>
     Effect.gen(function* () {
       const fake = fakeFetch()
@@ -129,6 +139,22 @@ describe('telemetryLayer, when on', () => {
       // The run's own log line goes to PostHog only; stdout belongs to the MCP protocol.
       expect(printed.some((line) => line.includes('smartcloud run: success'))).toBe(false)
       expect(fake.sent.every((request) => request.url.startsWith('https://eu.i.posthog.com/'))).toBe(true)
+    }),
+  )
+
+  it.live('sends diagnostic logs from debug level up to PostHog, and never prints them', () =>
+    Effect.gen(function* () {
+      const printed: Array<string> = []
+      vi.spyOn(console, 'log').mockImplementation((...args: Array<unknown>) => void printed.push(args.map(String).join(' ')))
+      const { exit, fake } = yield* run(
+        Effect.zipRight(Effect.logDebug('labels: 3 to create'), Effect.logWarning('labels: failed').pipe(Effect.annotateLogs({ feature: 'labels' }))),
+      )
+      expect(Exit.isSuccess(exit)).toBe(true)
+      const logs = fake.sent.find((request) => request.path === '/i/v1/logs')?.body ?? ''
+      expect(logs).toContain('labels: 3 to create')
+      expect(logs).toContain('labels: failed')
+      expect(logs).toContain('"feature"')
+      expect(printed).toStrictEqual([])
     }),
   )
 

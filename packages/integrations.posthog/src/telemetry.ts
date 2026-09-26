@@ -168,8 +168,10 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
     const otlp = Layer.mergeAll(
       OtlpTracer.layer({ ...otlpOptions, url: `${settings.host}/i/v1/traces` }),
       OtlpMetrics.layer({ ...otlpOptions, url: `${settings.host}/i/v1/metrics` }),
-      // Everything the program logs goes to PostHog as well as the console.
-      Logger.add(otlpLogger),
+      // Diagnostic logs, debug level included, go to PostHog only: the
+      // console belongs to each surface's own output and the MCP protocol.
+      Logger.replace(Logger.defaultLogger, otlpLogger),
+      Logger.minimumLogLevel(LogLevel.Debug),
     ).pipe(Layer.provide(http))
 
     const base: Properties = { surface: options.surface, smartcloud_version: options.version }
@@ -255,6 +257,10 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
  * shutdown timeout, so a short CLI or action run still delivers its data.
  * The layer never fails: settings it cannot read turn telemetry off.
  *
+ * Diagnostic logs (`Effect.log*`) never reach the console: with telemetry
+ * on they go to PostHog Logs from debug level up, and with it off they are
+ * dropped, so a surface's output is only what it prints itself.
+ *
  * @example
  * ```ts
  * program.pipe(Effect.provide(telemetryLayer({ surface: 'cli', version: VERSION })), NodeRuntime.runMain)
@@ -267,7 +273,8 @@ export const telemetryLayer = (options: TelemetryOptions): Layer.Layer<Telemetry
   Layer.unwrapScoped(
     Effect.gen(function* () {
       const settings = yield* Effect.option(telemetrySettings)
-      if (Option.isNone(settings) || !settings.value.enabled) return Layer.succeed(Telemetry, disabledTelemetry)
+      // With telemetry off, diagnostic logs go nowhere rather than to the console.
+      if (Option.isNone(settings) || !settings.value.enabled) return Layer.merge(Layer.succeed(Telemetry, disabledTelemetry), Logger.remove(Logger.defaultLogger))
       return yield* makeLive(settings.value, options)
     }),
   )
