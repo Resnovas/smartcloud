@@ -15,12 +15,13 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
+import { parseFeatureList } from '@resnovas/runtime'
 import { Config, Effect, Option, Redacted } from 'effect'
 
 /** The action's inputs, read from the `INPUT_*` variables Actions sets. */
 export interface Inputs {
   readonly token: Redacted.Redacted<string>
-  /** The config file; when omitted, the first of {@link CONFIG_CANDIDATES} that exists. */
+  /** The config file; when omitted, the first of the runtime's `CONFIG_CANDIDATES` that exists. */
   readonly config: Option.Option<string>
   /** Config given inline, which wins over the file. */
   readonly configJson: Option.Option<string>
@@ -33,8 +34,6 @@ export interface Inputs {
   readonly deprecations: ReadonlyArray<string>
 }
 
-/** Where the action looks for a config when the `config` input is empty. */
-export const CONFIG_CANDIDATES = ['.github/smartcloud.yml', '.github/smartcloud.yaml', '.github/config.json'] as const
 
 // Actions sets every declared input, empty when not given, so empty means absent.
 const input = (name: string) =>
@@ -76,15 +75,7 @@ export const readInputs = Effect.gen(function* () {
     dryRun: Option.exists(yield* input('dryRun'), (value) => value.toLowerCase() === 'true'),
     // A list with no names, such as `,`, selects nothing, so it means the
     // same as leaving the input out: every feature runs.
-    features: Option.filter(
-      Option.map(features, (list) =>
-        list
-          .split(',')
-          .map((name) => name.trim())
-          .filter((name) => name !== ''),
-      ),
-      (names) => names.length > 0,
-    ),
+    features: Option.filter(Option.map(features, parseFeatureList), (names) => names.length > 0),
     deprecations,
   }
   return inputs

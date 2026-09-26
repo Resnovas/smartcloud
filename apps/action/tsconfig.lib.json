@@ -10,40 +10,13 @@
   "include": ["src/**/*.ts"],
   "references": [
     {
+      "path": "../../packages/runtime/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/reporting/tsconfig.lib.json"
     },
     {
       "path": "../../packages/integrations.github/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/feature.sync/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/feature.stale/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/feature.settings/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/feature.reviews/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/feature.labels/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/feature.disclosure/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/feature.conventions/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/feature.commits/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/engine/tsconfig.lib.json"
-    },
-    {
-      "path": "../../packages/config/tsconfig.lib.json"
     }
   ]
 }

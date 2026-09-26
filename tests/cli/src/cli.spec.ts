@@ -17,22 +17,12 @@
 
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
-import { ConfigSource, parseConfig } from '@resnovas/config'
-import { fileKey, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
-import {
-  ConfigSourceFromGitHub,
-  gitHubConfigSource,
-  main,
-  locateConfig,
-  migrate,
-  MissingToken,
-  NoConfig,
-  resolveToken,
-  run,
-  validate,
-} from '@resnovas/smartcloud'
-import { ConfigProvider, Effect, Either, Layer, Redacted } from 'effect'
-import { chmod, mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises'
+import { parseConfig } from '@resnovas/config'
+import { fileKey, GitHub, type GitHubService, makeMemoryGitHub } from '@resnovas/integrations.github'
+import type { Connect } from '@resnovas/runtime'
+import { ConfigSourceFromGitHub, locateConfig, main, migrate, NoConfig, run, runWith, UnsafePath, validate, VERSION } from '@resnovas/smartcloud'
+import { Effect, Layer } from 'effect'
+import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, vi } from 'vitest'
@@ -47,48 +37,6 @@ beforeEach(async () => {
   vi.spyOn(console, 'log').mockImplementation((...args: Array<unknown>) => void logs.push(args.join(' ')))
 })
 afterEach(() => vi.restoreAllMocks())
-
-const withEnv = (env: Record<string, string>) => Effect.withConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))
-
-// A fake `gh` on PATH, so the fallback is tested without the real CLI.
-const withFakeGh = async (output: string) => {
-  const bin = join(dir, 'bin')
-  await mkdir(bin)
-  await writeFile(join(bin, 'gh'), `#!/bin/sh\nprintf '%s\\n' '${output}'\n`)
-  await chmod(join(bin, 'gh'), 0o755)
-  vi.stubEnv('PATH', `${bin}:${process.env['PATH'] ?? ''}`)
-}
-afterEach(() => vi.unstubAllEnvs())
-
-describe('resolveToken', () => {
-  it.effect('prefers GITHUB_TOKEN and keeps it redacted', () =>
-    Effect.gen(function* () {
-      const token = yield* resolveToken.pipe(withEnv({ GITHUB_TOKEN: 'from-env' }))
-      expect(Redacted.value(token)).toBe('from-env')
-      expect(String(token)).not.toContain('from-env')
-    }).pipe(Effect.provide(NodeContext.layer)),
-  )
-
-  it('falls back to the GitHub CLI when GITHUB_TOKEN is set but blank', async () => {
-    await withFakeGh('from-gh')
-    const token = await Effect.runPromise(resolveToken.pipe(withEnv({ GITHUB_TOKEN: ' ' }), Effect.provide(NodeContext.layer)))
-    expect(Redacted.value(token)).toBe('from-gh')
-  })
-
-  it('falls back to the GitHub CLI, and fails when neither has a token', async () => {
-    await withFakeGh('from-gh')
-    const token = await Effect.runPromise(resolveToken.pipe(withEnv({}), Effect.provide(NodeContext.layer)))
-    expect(Redacted.value(token)).toBe('from-gh')
-    vi.unstubAllEnvs()
-    dir = await mkdtemp(join(tmpdir(), 'smartcloud-cli-'))
-    await withFakeGh('')
-    const missing = await Effect.runPromise(Effect.either(resolveToken.pipe(withEnv({}), Effect.provide(NodeContext.layer))))
-    expect(missing).toStrictEqual(Either.left(new MissingToken()))
-    const blank = await Effect.runPromise(Effect.either(resolveToken.pipe(withEnv({ GITHUB_TOKEN: '  ' }), Effect.provide(NodeContext.layer))))
-    expect(blank).toStrictEqual(Either.left(new MissingToken()))
-    expect(new MissingToken().message).toContain('GITHUB_TOKEN')
-  })
-})
 
 describe('locateConfig', () => {
   it.effect('finds the first candidate, and says where it looked otherwise', () =>
@@ -135,65 +83,6 @@ describe('validate', () => {
       yield* Effect.promise(() => writeFile(file, 'version: 2\nextends: [Resnovas/.github/missing.yml]\n'))
       const error = yield* Effect.flip(validate(file).pipe(Effect.provide(memorySource({}))))
       expect(error._tag).toBe('ConfigNotFound')
-    }).pipe(Effect.provide(NodeContext.layer)),
-  )
-})
-
-const contents = (text: string) =>
-  new Response(JSON.stringify({ type: 'file', content: Buffer.from(text).toString('base64'), encoding: 'base64' }), {
-    status: 200,
-    headers: { 'content-type': 'application/json' },
-  })
-
-describe('gitHubConfigSource', () => {
-  it.effect('reads presets from GitHub with the resolved token', () =>
-    Effect.gen(function* () {
-      const seen: Array<string> = []
-      const fetch: typeof globalThis.fetch = (input, init) => {
-        seen.push(`${String(input)} ${new Headers(init?.headers).get('authorization') ?? ''}`)
-        return Promise.resolve(contents('version: 2\n'))
-      }
-      const text = yield* Effect.flatMap(ConfigSource, (source) => source.read({ owner: 'Resnovas', repo: '.github', path: 'a.yml', ref: 'v1' })).pipe(
-        Effect.provide(gitHubConfigSource({ fetch })),
-        withEnv({ GITHUB_TOKEN: 'secret' }),
-      )
-      expect(text).toBe('version: 2\n')
-      expect(seen[0]).toContain('/repos/Resnovas/.github/contents/a.yml?ref=v1')
-      expect(seen[0]).toContain('secret')
-    }).pipe(Effect.provide(NodeContext.layer)),
-  )
-
-  it.effect('keeps why a preset could not be read when it is not simply missing', () =>
-    Effect.gen(function* () {
-      const read = (fetch: typeof globalThis.fetch, env: Record<string, string>) =>
-        Effect.flip(
-          Effect.flatMap(ConfigSource, (source) => source.read({ owner: 'Resnovas', repo: '.github', path: 'a.yml' })).pipe(
-            Effect.provide(gitHubConfigSource({ fetch })),
-            withEnv(env),
-          ),
-        )
-      const unauthorised: typeof globalThis.fetch = () => Promise.resolve(new Response('{"message":"Bad credentials"}', { status: 401, headers: { 'content-type': 'application/json' } }))
-      const denied = yield* read(unauthorised, { GITHUB_TOKEN: 'secret' })
-      expect(denied).toMatchObject({ _tag: 'ConfigNotFound', source: 'Resnovas/.github/a.yml' })
-      expect(denied.message).toBe('Resnovas/.github/a.yml could not be read: getFile: forbidden (Bad credentials)')
-      expect(denied.message).not.toContain('secret')
-      yield* Effect.promise(() => withFakeGh(''))
-      const unused: typeof globalThis.fetch = () => Promise.reject(new Error('GitHub must not be called without a token'))
-      const signedOut = yield* read(unused, {})
-      expect(signedOut.message).toBe(`Resnovas/.github/a.yml could not be read: ${new MissingToken().message}`)
-    }).pipe(Effect.provide(NodeContext.layer)),
-  )
-
-  it.effect('turns any failure into ConfigNotFound naming the preset', () =>
-    Effect.gen(function* () {
-      const fetch: typeof globalThis.fetch = () => Promise.resolve(new Response('{"message":"Not Found"}', { status: 404 }))
-      const error = yield* Effect.flip(
-        Effect.flatMap(ConfigSource, (source) => source.read({ owner: 'Resnovas', repo: '.github', path: 'a.yml' })).pipe(
-          Effect.provide(gitHubConfigSource({ fetch })),
-          withEnv({ GITHUB_TOKEN: 'secret' }),
-        ),
-      )
-      expect(error).toMatchObject({ _tag: 'ConfigNotFound', source: 'Resnovas/.github/a.yml' })
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })
@@ -287,4 +176,118 @@ describe('the smartcloud command', () => {
       process.exitCode = before
     }).pipe(Effect.provide(NodeContext.layer)),
   )
+})
+
+const CONVENTIONS = 'version: 2\nconventions:\n  rules:\n    title:\n      preset: conventionalCommits\n'
+
+const pull = {
+  number: 7,
+  title: 'Add things',
+  body: '',
+  user: { login: 'jane' },
+  state: 'open',
+  locked: false,
+  labels: [],
+  updated_at: '2026-09-01T00:00:00Z',
+  head: { ref: 'feat/x', sha: 'abc123' },
+}
+
+// The in-memory GitHub, answering the pull request read a dry run makes.
+const repository = (files: Record<string, string>) => {
+  const github = makeMemoryGitHub()
+  for (const [key, text] of Object.entries(files)) github.state.files.set(key, text)
+  github.state.pulls.set(7, { commits: [], files: [], reviews: [], requestedReviewers: [], submittedReviews: [] })
+  const service: GitHubService = {
+    ...github.service,
+    repositoryRequest: (request) =>
+      request.method === 'GET' && request.path === '/pulls/7' ? Effect.succeed(pull) : github.service.repositoryRequest(request),
+  }
+  const connect: Connect = () => Effect.succeed(service)
+  return { connect, state: github.state }
+}
+
+describe('dry-run', () => {
+  it.effect('prints the summary and the writes it recorded, writing nothing', () =>
+    Effect.gen(function* () {
+      const { connect, state } = repository({ [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: CONVENTIONS })
+      yield* runWith(connect)(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--pr', '7', '--features', 'conventions, labels'])
+      expect(logs[0]).toContain('Event: `pull_request` (synchronize) on #7')
+      expect(logs[0]).toContain('**Dry run:** these writes were recorded, not made:\n- createCheckRun')
+      expect(state.checkRuns).toStrictEqual([])
+      expect(state.issues.get(7)?.comments ?? []).toStrictEqual([])
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('takes a local config and an event', () =>
+    Effect.gen(function* () {
+      const file = join(dir, 'smartcloud.yml')
+      yield* Effect.promise(() => writeFile(file, 'version: 2\n'))
+      const { connect } = repository({})
+      yield* runWith(connect)(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--event', 'schedule', '--config', file])
+      expect(logs[0]).toContain('Event: `schedule`')
+      expect(logs[0]).toContain('**Dry run:** nothing would have been written.')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+})
+
+describe('plan settings', () => {
+  it.effect('prints the planned steps without applying them', () =>
+    Effect.gen(function* () {
+      const { connect, state } = repository({
+        [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: 'version: 2\nsettings:\n  merging: { squash: true }\n',
+      })
+      yield* runWith(connect)(['node', 'smartcloud', 'plan', 'settings', '--repo', 'Resnovas/example'])
+      expect(logs[0]).toBe('Settings for Resnovas/example, in order:\n- `merging`: Merging, branches, sign-off and wiki\n  PATCH /repos/{owner}/{repo} {"allow_squash_merge":true}')
+      expect(state.requests).toStrictEqual([])
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+})
+
+describe('sync', () => {
+  const template = (path: string) => fileKey('Resnovas', '.github', `templates/${path}`, 'main')
+  const SYNC = 'version: 2\nsync:\n  source: Resnovas/.github/templates@main\n  values: { HOLDER: Resnovas }\n'
+  const managed = (ecosystem: string) =>
+    `# house:managed:begin\nversion: 2\nupdates:\n  - package-ecosystem: ${ecosystem}\n    directory: /\n# house:managed:end\n# house:local\n`
+
+  it.effect('renders the synced files into a directory and lists conflicts, proposing nothing', () =>
+    Effect.gen(function* () {
+      const { connect, state } = repository({
+        [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: SYNC,
+        [template('LICENSE')]: '(c) {{HOLDER}}\n',
+        [template('tools/run')]: '#!/bin/sh\n',
+        [template('.github/dependabot.yml')]: managed('npm'),
+        [fileKey('Resnovas', 'example', '.github/dependabot.yml')]: `${managed('npm')}  - package-ecosystem: npm\n    directory: /\n`,
+      })
+      state.executables.add(template('tools/run'))
+      const out = join(dir, 'out')
+      yield* runWith(connect)(['node', 'smartcloud', 'sync', '--repo', 'Resnovas/example', '--out', out])
+      expect(yield* Effect.promise(() => readFile(join(out, 'LICENSE'), 'utf8'))).toBe('(c) Resnovas\n')
+      expect((yield* Effect.promise(() => stat(join(out, 'tools/run')))).mode & 0o777).toBe(0o755)
+      expect((yield* Effect.promise(() => stat(join(out, 'LICENSE')))).mode & 0o777).toBe(0o644)
+      expect(logs).toContain(`Rendered 3 file(s) from Resnovas/.github/templates@main into ${out}:`)
+      expect(logs).toContain('- LICENSE (added)')
+      expect(logs).toContain('- .github/dependabot.yml (unchanged)')
+      expect(logs.some((line) => line.startsWith('conflict: .github/dependabot.yml '))).toBe(true)
+      expect(state.proposals).toStrictEqual([])
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('refuses to write outside the output directory', () =>
+    Effect.gen(function* () {
+      const { connect } = repository({ [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: SYNC, [template('../../escape')]: 'x' })
+      const errors: Array<string> = []
+      vi.spyOn(console, 'error').mockImplementation((...args: Array<unknown>) => void errors.push(args.join(' ')))
+      const before = process.exitCode
+      yield* main(['node', 'smartcloud', 'sync', '--repo', 'Resnovas/example', '--out', join(dir, 'out')], connect)
+      expect(errors).toStrictEqual([new UnsafePath({ path: '../../escape' }).message].map((message) => `smartcloud: ${message}`))
+      expect(process.exitCode).toBe(1)
+      process.exitCode = before
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+})
+
+describe('version', () => {
+  it('is kept by release-please', () => {
+    expect(VERSION).toMatch(/^\d+\.\d+\.\d+$/)
+  })
 })

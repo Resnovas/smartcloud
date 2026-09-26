@@ -19,6 +19,9 @@
       "path": "./packages/reporting"
     },
     {
+      "path": "./packages/runtime"
+    },
+    {
       "path": "./apps/cli"
     },
     {
