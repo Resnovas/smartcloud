@@ -34,6 +34,7 @@ Declarative repository automation: labels, conventions and policy.
 | `codeowners` | [CodeOwners](#codeowners) | no |  |
 | `stale` | [Stale](#stale) | no |  |
 | `lock` | [Lock](#lock) | no |  |
+| `backport` | [Backport](#backport) | no |  |
 | `settings` | [Settings](#settings) | no |  |
 | `sync` | [Sync](#sync) | no |  |
 
@@ -427,6 +428,23 @@ Other keys are an error.
 ### LockReason
 
 Type: one of `resolved`, `off-topic`, `too heated`, `spam`.
+
+### Backport
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `prefix` | [BackportPrefix](#backportprefix) | no |  |
+| `labels` | list of string | no |  |
+
+Other keys are an error.
+
+### BackportPrefix
+
+**Backport label prefix**
+
+The start of a backport label, such as `backport `; the rest of the label is the branch. At least 1 character(s).
+
+Type: string.
 
 ### Settings
 

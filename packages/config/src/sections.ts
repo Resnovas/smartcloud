@@ -17,7 +17,7 @@
 import { ConditionGroup, Pattern } from '@resnovas/conditions'
 import { DateTime, Option, Schema } from 'effect'
 
-// The configuration sections of the policy, review, stale, lock, settings and sync
+// The configuration sections of the policy, review, stale, lock, backport, settings and sync
 // features. Each is optional: a feature whose section is absent does not run.
 // Every rule is a keyed record, so presets and repositories merge by key.
 
@@ -260,6 +260,32 @@ export const Lock = Schema.Struct({
   label: opt(Schema.String),
   exempt: opt(Schema.Struct({ labels: opt(Schema.Array(Schema.String)) })),
 }).annotations({ identifier: 'Lock' })
+
+/**
+ * Backports by label: a merged pull request labelled `backport <branch>` is
+ * cherry-picked onto that branch in a new pull request.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Backport"
+ * import { Backport } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Backport)({ prefix: 'backport-to/', labels: ['backport'] }) // => true
+ * Schema.is(Backport)({ prefix: '' }) // => false
+ * ```
+ */
+export const Backport = Schema.Struct({
+  /** Labels starting with this, ignoring case, name the branch to backport to; `backport ` when omitted. */
+  prefix: opt(
+    Schema.String.pipe(Schema.minLength(1)).annotations({
+      identifier: 'BackportPrefix',
+      title: 'Backport label prefix',
+      description: 'The start of a backport label, such as `backport `; the rest of the label is the branch.',
+    }),
+  ),
+  /** Added to every backport pull request. */
+  labels: opt(Schema.Array(Schema.String)),
+}).annotations({ identifier: 'Backport' })
 
 /**
  * How long the aggregate check waits for the others, in minutes, when

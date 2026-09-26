@@ -17,6 +17,7 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Either, Schema } from 'effect'
 import {
+  Backport,
   BranchName,
   Branches,
   CodeOwner,
@@ -63,6 +64,9 @@ lock:
   comment: Locking this closed thread; open a new issue for follow-ups.
   label: locked
   exempt: { labels: [pinned] }
+backport:
+  prefix: 'backport to '
+  labels: [backport]
 settings:
   merging: { mergeCommit: false, squash: true, rebase: true, squashTitle: PR_TITLE, squashMessage: COMMIT_MESSAGES }
   features: { wiki: false, discussions: true, sponsorships: true }
@@ -84,6 +88,7 @@ sync:
       expect(config.settings?.security?.codeScanning).toBe('extended')
       expect(config.sync?.values).toStrictEqual({ ORG_NAME: 'Resnovas' })
       expect(config.lock?.reason).toBe('resolved')
+      expect(config.backport).toStrictEqual({ prefix: 'backport to ', labels: ['backport'] })
       expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(
         config,
       )
@@ -180,6 +185,15 @@ describe('Lock', () => {
     for (const reason of ['resolved', 'off-topic', 'too heated', 'spam'])
       expect(Schema.is(LockReason)(reason)).toBe(true)
     expect(Schema.is(Lock)({ afterDays: 30, reason: 'stale' })).toBe(false)
+  })
+})
+
+describe('Backport', () => {
+  it('takes an optional, non-empty label prefix', () => {
+    expect(Schema.is(Backport)({})).toBe(true)
+    expect(Schema.is(Backport)({ prefix: 'backport ' })).toBe(true)
+    expect(Schema.is(Backport)({ prefix: '' })).toBe(false)
+    expect(Schema.is(Backport)({ labels: [1] })).toBe(false)
   })
 })
 
