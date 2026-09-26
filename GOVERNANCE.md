@@ -51,7 +51,7 @@ A review of an AI-assisted pull request follows [AI-40](AI_POLICY.md#ai-40): an 
 ### <a id="enforcing-review"></a>Enforcement
 
 [smartcloud](https://github.com/Resnovas/smartcloud) counts approvals from the maintainers in the house preset and applies the table above, reporting the result as the `smartcloud / reviews` check.
-As soon as the preset names two or more maintainers, the house ruleset makes the `smartcloud` check required on the default branch; it fails on any policy error, including too few approvals.
+As soon as the preset names two or more maintainers, the house ruleset makes the `smartcloud` check required on the default branch; it fails on any policy error, including too few approvals, and on any other check on the pull request that fails, so it is the only check the ruleset needs.
 With a single maintainer the review gate is always open, so a sole maintainer is never blocked.
 The owner can always bypass the ruleset, including the review gate, whatever the number of maintainers; a bypass is recorded in the pull request.
 
