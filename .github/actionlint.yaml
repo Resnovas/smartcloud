@@ -1,0 +1,7 @@
+# actionlint configuration, read by the house workflow lint.
+paths:
+  .github/workflows/smartcloud.yml:
+    ignore:
+      # The smartcloud workflow bundles the action before `uses: ./` runs it;
+      # dist/index.js is committed only on release tags.
+      - 'file "dist/index.js" does not exist'

@@ -89,7 +89,10 @@ jobs:
           && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
           && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
         continue-on-error: true
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        # The token keeps the app's full permission set, which settings, sync,
+        # labels and checks need between them; it is scoped to this repository
+        # and .github, and never minted for forks or Dependabot.
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0 # zizmor: ignore[github-app]
         with:
           # GitHub accepts the App ID wherever the client ID is asked for.
           client-id: ${{ vars.RESNOVAS_BOT_APP_ID }}
