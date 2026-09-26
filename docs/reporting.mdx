@@ -1,0 +1,47 @@
+---
+title: "Reporting"
+description: "Where findings and changes appear: check runs, one comment, the job summary and annotations."
+---
+
+Every feature records two things while it runs:
+
+- **Findings**: a broken rule, a warning or a notice, each with a rule id, a message and, where there is one, a link to the policy it comes from.
+- **Changes**: what the feature did, such as a label added or a reviewer requested.
+
+After the run, smartcloud publishes them in four places.
+
+## Check runs
+
+Each feature that ran gets one completed check run on the commit, named `smartcloud / <feature>`, for example `smartcloud / reviews`.
+
+| Findings | Conclusion |
+| --- | --- |
+| Any error | failure |
+| Warnings, no errors | neutral |
+| Notices only, or none | success |
+
+A feature that failed to run concludes as failure with the error as its summary, so a broken feature can never pass a required check. Findings with a file and line appear as annotations on the diff.
+
+Because each feature has its own check, you can make just the ones you enforce required in a ruleset.
+
+## One comment
+
+On an issue or pull request, smartcloud keeps a single comment listing its errors and warnings in a table, and updates it in place on every run. Notices are left out of it.
+
+The comment is created only when there is something to act on. Once it exists, it is updated rather than repeated, including to say "All smartcloud checks pass." when everything is fixed. A hidden `<!-- smartcloud:report -->` marker is how the next run finds it.
+
+## Job summary
+
+The job summary shows the event, each feature's result, the features that were skipped and why (not configured, or not handling that event), any failure in full, every finding including notices, and every change.
+
+## Annotations
+
+Every finding is also printed as a workflow command, which Actions shows as an annotation on the run, and on the diff when the finding names a file.
+
+## Pull requests from forks
+
+A pull request from a fork runs with a read-only token, whatever the workflow's `permissions` ask for. smartcloud still runs every feature, but cannot create check runs or write the comment. Publishing records a warning for each step it could not complete and carries on; reporting never fails the run.
+
+The job summary and annotations are written by the job itself, so they always carry every finding, fork or not.
+
+Label sync and settings only run on repository events, never on pull requests, so a fork's read-only token never reaches them. Labelling, review requests and automatic approval do write on pull request events; on a fork's read-only token those features fail, and the failure is shown in the job summary.

@@ -1,0 +1,66 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "smartcloud",
+  "description": "Repository automation and policy for GitHub, configured in one YAML file.",
+  "colors": {
+    "primary": "#4B428E",
+    "light": "#8F86D6",
+    "dark": "#4B428E"
+  },
+  "logo": {
+    "light": "/images/logo.svg",
+    "dark": "/images/logo.svg"
+  },
+  "favicon": "/favicon.ico",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Getting started",
+            "pages": ["introduction", "configuration", "conditions"]
+          },
+          {
+            "group": "Features",
+            "pages": [
+              "features/conventions",
+              "features/commits",
+              "features/disclosure",
+              "features/reviews",
+              "features/labels",
+              "features/stale",
+              "features/settings",
+              "features/sync"
+            ]
+          },
+          {
+            "group": "Running smartcloud",
+            "pages": ["reporting", "cli", "migration", "mcp"]
+          }
+        ]
+      },
+      {
+        "tab": "Reference",
+        "groups": [
+          {
+            "group": "Reference",
+            "pages": ["reference/configuration"]
+          }
+        ]
+      }
+    ]
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/Resnovas/smartcloud"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/Resnovas/smartcloud"
+    }
+  }
+}

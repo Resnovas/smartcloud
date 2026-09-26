@@ -1,0 +1,58 @@
+---
+title: "Stale"
+description: "Mark inactive issues and pull requests stale, then abandon or close them."
+---
+
+The stale feature sweeps every open issue and pull request. It runs on `schedule` and `workflow_dispatch` events only, and is enabled by a `stale` section.
+
+```yaml
+stale:
+  on: [issue, pullRequest]
+  staleAfterDays: 60
+  staleLabel: stale
+  staleComment: This has had no activity for 60 days. Comment or push to keep it open.
+  abandonedAfterDays: 30
+  abandonedLabel: abandoned
+  abandonedComment: Closing this after a further 30 days without activity.
+  close: true
+  exempt:
+    labels: [pinned, security]
+    when:
+      condition:
+        - type: titleMatches
+          condition: "^RFC"
+```
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `on` | both | `issue`, `pullRequest`, or both. |
+| `staleAfterDays` | required | Days without activity before an item is marked stale. |
+| `staleLabel` | required | The label that marks an item stale. |
+| `staleComment` | none | Posted when an item is marked stale. |
+| `abandonedAfterDays` | none | Days after the stale mark before an item is abandoned. Without it, items are never abandoned. |
+| `abandonedLabel` | `abandoned` | The label that marks an item abandoned. |
+| `abandonedComment` | none | Posted when an item is abandoned. |
+| `close` | `false` | Close abandoned items. |
+| `exempt.labels` | none | Items with any of these labels are skipped. |
+| `exempt.when` | none | Items passing this [condition group](/conditions) are skipped. |
+
+`staleLabel` and `abandonedLabel` are label names as GitHub shows them, not keys of the `labels` section. They must differ, ignoring case: if they do not, the sweep records an error and changes nothing.
+
+## Lifecycle
+
+1. An item without the stale label is marked once it has had no activity for `staleAfterDays`: the label is added, and `staleComment` is posted.
+2. A stale item with activity since it was marked loses the stale label.
+3. A stale item that stays quiet for `abandonedAfterDays` gets the abandoned label and `abandonedComment`, and is closed when `close` is `true`.
+4. An item already labelled abandoned is left alone.
+
+Activity is GitHub's `updated_at` time. smartcloud's own label and comment also update it, so `abandonedAfterDays` counts from the stale mark, not from the last human activity.
+
+The stale comment records when the item was marked, which is how later activity is detected. Without a `staleComment` there is no record, and the stale label stays until someone removes it.
+
+smartcloud keeps at most one stale and one abandoned comment per item, and edits an existing one rather than posting again. The stale comment is written before the stale label, so if GitHub fails part way the next sweep marks the item again.
+
+Each item is swept on its own. When GitHub fails on one, the sweep records an error naming it and carries on with the rest.
+
+## Exemptions
+
+When `exempt.when` needs a pull request's files, reviews or commits, the sweep loads them for each pull request it considers. A sweep cannot read a pull request's draft state, branch or size, so if `exempt.when` uses `isDraft`, `branchMatches` or `changesSize`, the sweep records a warning and skips every pull request rather than act on one that should be exempt. Issues are swept as usual, since those conditions never hold for an issue.
