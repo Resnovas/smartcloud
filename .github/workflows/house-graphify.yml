@@ -2,8 +2,9 @@
 #
 # Keeps the committed Graphify graph (graphify-out/graph.json) in step with the
 # code. On pull requests it reports a stale graph without failing; on the
-# default branch it opens a pull request with the rebuilt graph. Uses the same
-# ACCESS_TOKEN organisation secret as the house sync.
+# default branch it opens a pull request with the rebuilt graph, with the same
+# ACCESS_TOKEN organisation secret as the house sync. Pull requests, whose
+# code the check runs, never receive the secret.
 name: House graphify
 
 on:
@@ -20,6 +21,6 @@ jobs:
     permissions:
       contents: read
     secrets:
-      token: ${{ secrets.ACCESS_TOKEN }}
+      token: ${{ github.event_name != 'pull_request' && secrets.ACCESS_TOKEN || '' }}
 # house:managed:end
 # house:local - add further jobs below, indented under jobs.

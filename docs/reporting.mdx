@@ -38,10 +38,19 @@ The job summary shows the event, each feature's result, the features that were s
 
 Every finding is also printed as a workflow command, which Actions shows as an annotation on the run, and on the diff when the finding names a file.
 
-## Pull requests from forks
+## Restricted runs
 
-A pull request from a fork runs with a read-only token, whatever the workflow's `permissions` ask for. smartcloud still runs every feature, but cannot create check runs or write the comment. Publishing records a warning for each step it could not complete and carries on; reporting never fails the run.
+smartcloud runs with the lowest access that still works when it cannot, or should not, use a stronger token:
 
-The job summary and annotations are written by the job itself, so they always carry every finding, fork or not.
+- **Pull requests from forks and runs started by Dependabot.** smartcloud acts with the workflow token, whatever token the workflow passes as `GITHUB_TOKEN`, so code from outside the repository never runs alongside a stronger token. GitHub already gives such runs a read-only workflow token and no secrets.
+- **The workflow token.** When `GITHUB_TOKEN` is the workflow's own token, for example because `secrets.ACCESS_TOKEN` is not set, the run is restricted too.
 
-Label sync and settings only run on repository events, never on pull requests, so a fork's read-only token never reaches them. Labelling, review requests and automatic approval do write on pull request events; on a fork's read-only token those features fail, and the failure is shown in the job summary.
+A restricted run skips what its token cannot do, instead of failing:
+
+- A preset in `extends` from another repository that the token cannot read is left out, and so is any config section that is incomplete without it. Each is a warning finding (`access.config-skipped`), because its rules were not checked in this run. A missing preset in the repository itself still fails the run.
+- The settings and sync features are skipped, with the reason in the job summary.
+- A write GitHub refuses, such as a label, the report comment or a check run on a fork's read-only token, is skipped and listed under **Restricted access** in the job summary.
+
+The run notes the restriction and its reason as a notice (`access.restricted`). The job summary and annotations are written by the job itself, so they always carry every finding.
+
+Publishing records a warning for any other reporting step it could not complete and carries on; reporting never fails the run.

@@ -6,7 +6,11 @@ branding:
   color: purple
 inputs:
   GITHUB_TOKEN:
-    description: The token smartcloud acts with. Settings need an admin token; everything else works with the workflow token.
+    description: The token smartcloud acts with. Settings, sync and private presets in other repositories need a stronger token than the workflow token; without one, smartcloud skips them and says so. Pull requests from forks and runs started by Dependabot always act with the workflow token.
+    required: false
+    default: ${{ github.token }}
+  workflowToken:
+    description: The workflow's own token. Leave it at its default; smartcloud compares GITHUB_TOKEN with it to tell a restricted run, and acts with it on pull requests from forks and runs started by Dependabot.
     required: false
     default: ${{ github.token }}
   config:

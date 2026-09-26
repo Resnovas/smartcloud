@@ -40,6 +40,7 @@ export type {
 export { DEFAULT_COMMITTER, GitHubLive, makeLiveGitHub, signOff } from './live.js'
 export type { LiveOptions } from './live.js'
 export { DryRun, DryRunLog, dryRunGitHub } from './dry-run.js'
+export { Restricted, restrictedGitHub, SkippedWrites } from './restricted.js'
 export { githubDuration, githubRequests, githubSpanName } from './telemetry.js'
 export type { RecordedWrite } from './dry-run.js'
 export { fileKey, GitHubMemory, makeMemoryGitHub } from './memory.js'

@@ -23,6 +23,16 @@
  */
 
 export {
+  accessFindings,
+  accessFor,
+  externalRun,
+  FULL_ACCESS,
+  PAT_ONLY_FEATURES,
+  restrictedFeatures,
+  skippablePreset,
+} from './access.js'
+export type { Access } from './access.js'
+export {
   ANALYTICS_EVENTS,
   command,
   CommandRun,

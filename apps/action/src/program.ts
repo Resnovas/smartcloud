@@ -15,10 +15,10 @@
  */
 
 import { FileSystem } from '@effect/platform'
-import { DryRun, DryRunLog, GitHub, type GitHubService, type RepositoryCoordinates } from '@resnovas/integrations.github'
+import { DryRun, DryRunLog, GitHub, Restricted, SkippedWrites, type GitHubService, type RepositoryCoordinates } from '@resnovas/integrations.github'
 import { conclusionOf } from '@resnovas/reporting'
-import { command, noteOptions, optOut, targetRepository } from '@resnovas/runtime'
-import { Config, Console, Data, Effect, Layer, Redacted } from 'effect'
+import { accessFor, command, externalRun, noteOptions, optOut, targetRepository } from '@resnovas/runtime'
+import { Config, Console, Data, Effect, Layer, Option, Redacted } from 'effect'
 import { readInputs } from './inputs.js'
 import { runAction } from './run.js'
 
@@ -54,6 +54,7 @@ const environment = Config.all({
     Config.validate({ message: 'must be owner/name', validation: (value) => /^[^/\s]+\/[^/\s]+$/.test(value) }),
   ),
   summaryPath: Config.option(Config.string('GITHUB_STEP_SUMMARY')),
+  actor: Config.option(Config.string('GITHUB_ACTOR')),
 })
 
 const readPayload = (path: string) =>
@@ -71,6 +72,11 @@ const dryRunSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
     ? '\n**Dry run:** nothing would have been written.\n'
     : ['', '**Dry run:** these writes were recorded, not made:', ...writes.map((write) => `- ${write.operation}`), ''].join('\n')
 
+const skippedSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
+  writes.length === 0
+    ? ''
+    : ['', '**Restricted access:** the token was not allowed to make these writes, so they were skipped:', ...writes.map((write) => `- ${write.operation}`), ''].join('\n')
+
 /**
  * The whole action: reads inputs and the event, runs, then writes the job
  * summary, annotations and exit code.
@@ -78,8 +84,15 @@ const dryRunSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
  * @remarks
  * Every failure, expected or not, ends as one `::error` annotation and exit
  * code 1, never an unhandled rejection. The run also exits 1 when any
- * finding is an error or any feature failed to run. The whole run is one
- * telemetry invocation (`command run` with the command `run`), so any
+ * finding is an error or any feature failed to run.
+ *
+ * A run from a fork or started by Dependabot acts with the workflow token
+ * whatever token it was given, and a run acting with the workflow token is
+ * restricted: see `accessFor`. A restricted run skips what its token cannot
+ * do, including writes GitHub refuses, and lists them in the job summary
+ * rather than failing.
+ *
+ * The whole run is one telemetry invocation (`command run` with the command `run`), so any
  * failure, from reading the inputs on, is also sent to error tracking.
  *
  * @example
@@ -103,22 +116,36 @@ export const program = (connect: Connect) =>
     const env = yield* environment
     const coordinates = yield* targetRepository(env.repository)
     const payload = yield* readPayload(env.eventPath)
-    const service = yield* connect({ token: inputs.token, coordinates })
-    const base = Layer.succeed(GitHub, service)
-
     const event = { name: env.eventName, payload }
-    const { outcome, dryRun } = inputs.dryRun
+    const { token, access } = accessFor({
+      token: inputs.token,
+      workflowToken: inputs.workflowToken,
+      external: externalRun(event, env.repository, Option.getOrUndefined(env.actor)),
+    })
+    const service = yield* connect({ token, coordinates })
+    // A restricted run skips the writes GitHub refuses; others are made or fail as usual.
+    const base = access.restricted
+      ? Restricted.pipe(Layer.provide(Layer.succeed(GitHub, service)))
+      : Layer.merge(Layer.succeed(GitHub, service), Layer.succeed(SkippedWrites, { writes: Effect.succeed([]) }))
+
+    // Reads the skipped writes inside the same layer the run used.
+    const run = Effect.gen(function* () {
+      const outcome = yield* runAction(inputs, event, access)
+      const writes = yield* Effect.flatMap(SkippedWrites, (log) => log.writes)
+      return { outcome, skipped: skippedSummary(writes) }
+    })
+    const { outcome, skipped, dryRun } = inputs.dryRun
       ? yield* Effect.gen(function* () {
-          const outcome = yield* runAction(inputs, event)
+          const done = yield* run
           const writes = yield* Effect.flatMap(DryRunLog, (log) => log.writes)
-          return { outcome, dryRun: dryRunSummary(writes) }
-        }).pipe(Effect.provide(DryRun.pipe(Layer.provide(base))))
-      : { outcome: yield* runAction(inputs, event).pipe(Effect.provide(base)), dryRun: '' }
+          return { ...done, dryRun: dryRunSummary(writes) }
+        }).pipe(Effect.provide(Layer.provideMerge(DryRun, base)))
+      : { ...(yield* run.pipe(Effect.provide(base))), dryRun: '' }
 
     for (const warning of outcome.warnings) yield* Console.log(`::warning title=smartcloud::${escape(warning)}`)
     for (const line of outcome.published.annotations) yield* Console.log(line)
     if (env.summaryPath._tag === 'Some') {
-      yield* fs.writeFileString(env.summaryPath.value, `${outcome.published.summary}${dryRun}\n`, { flag: 'a' })
+      yield* fs.writeFileString(env.summaryPath.value, `${outcome.published.summary}${dryRun}${skipped}\n`, { flag: 'a' })
     }
     const failed = conclusionOf(outcome.result.findings) === 'failure' || outcome.result.failed.length > 0
     if (failed) {

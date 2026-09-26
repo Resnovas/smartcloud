@@ -21,6 +21,7 @@ import {
   resolveConfig,
   SmartcloudConfig,
   type ResolvedConfig,
+  type ResolveOptions,
 } from '@resnovas/config'
 import type { EnvelopeKind, Feature } from '@resnovas/engine'
 import { GitHub } from '@resnovas/integrations.github'
@@ -141,6 +142,8 @@ export const loadConfigText = (location: ConfigLocation) =>
  * through the dry-run layer like every other read. A config that says
  * `telemetry: false` turns telemetry off for the rest of the process as soon
  * as it is read. Traced as `smartcloud.config.resolve`, with counts only.
+ * `options` decides which unreadable presets are left out rather than
+ * failing, as a restricted run does for a private preset.
  *
  * @example
  * ```ts
@@ -151,12 +154,15 @@ export const loadConfigText = (location: ConfigLocation) =>
  * ```
  *
  * @param location - Where the config is.
+ * @param options - Which unreadable presets may be left out; none by default.
  * @returns The resolved config.
  */
-export const loadConfig = (location: ConfigLocation) =>
+export const loadConfig = (location: ConfigLocation, options: ResolveOptions = {}) =>
   Effect.gen(function* () {
     const { text, source } = yield* loadConfigText(location)
-    const resolved: ResolvedConfig = yield* resolveConfig(text, source).pipe(Effect.provide(ConfigSourceFromGitHub))
+    const resolved: ResolvedConfig = yield* resolveConfig(text, source, options).pipe(
+      Effect.provide(ConfigSourceFromGitHub),
+    )
     // Only counts: sources name presets, their repositories and paths.
     const counts = { sources: resolved.sources.length, warnings: resolved.warnings.length, locked: resolved.locked.size }
     yield* Effect.annotateCurrentSpan(counts)

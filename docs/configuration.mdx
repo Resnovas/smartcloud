@@ -111,4 +111,4 @@ The same rule applies between presets: a later preset cannot change what an earl
 
 ### Reading presets
 
-The action reads presets through the GitHub API with its own token, so a preset in a private repository needs a token that can read that repository. The CLI resolves a token only when a config extends something; see [CLI](/cli#tokens).
+The action reads presets through the GitHub API with its own token, so a preset in a private repository needs a token that can read that repository. A [restricted run](/reporting#restricted-runs), such as a pull request from a fork, leaves out a preset from another repository that its token cannot read, and warns that the preset's rules were not checked, rather than failing. The CLI resolves a token only when a config extends something; see [CLI](/cli#tokens).

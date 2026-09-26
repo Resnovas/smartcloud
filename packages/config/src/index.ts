@@ -38,7 +38,7 @@ export {
   parseConfig,
   resolveConfig,
 } from './load.js'
-export type { ResolvedConfig } from './load.js'
+export type { ResolveOptions, ResolvedConfig } from './load.js'
 export {
   AutomaticApprove,
   Commits,

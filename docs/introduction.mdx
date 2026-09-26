@@ -109,10 +109,10 @@ Each capability is a feature with its own section in the config. A feature whose
 | `checks: write` | One check run per feature on the commit. |
 | `issues: write` | Labels, stale comments and the report comment on issues. Repository labels are managed through this permission too. |
 
-The settings feature changes repository administration settings, which the workflow token cannot do. See [Settings](/features/settings).
+The settings feature changes repository administration settings, and the sync feature reads its source from another repository and may push workflow files, which the workflow token cannot do. Pass a stronger token, such as a GitHub App or fine-grained token kept in a secret, as `GITHUB_TOKEN`, with the workflow token as the fallback: `${{ secrets.ACCESS_TOKEN || github.token }}`.
 
 <Note>
-  Pull requests from forks run with a read-only token whatever the workflow asks for. smartcloud still evaluates every feature and writes its findings to the job summary and annotations; see [Reporting](/reporting#pull-requests-from-forks).
+  A run with only the workflow token is restricted rather than failed: smartcloud skips settings, sync, private presets in other repositories and every write GitHub refuses, and lists them in the job summary. Pull requests from forks and runs started by Dependabot are always restricted, whatever token the workflow passes; see [Restricted runs](/reporting#restricted-runs).
 </Note>
 
 ## Action inputs
@@ -121,7 +121,8 @@ Every input is optional.
 
 | Input | Default | What it does |
 | --- | --- | --- |
-| `GITHUB_TOKEN` | `${{ github.token }}` | The token smartcloud acts with. Settings need an admin token. |
+| `GITHUB_TOKEN` | `${{ github.token }}` | The token smartcloud acts with. Settings, sync and private presets in other repositories need a stronger token than the workflow token. |
+| `workflowToken` | `${{ github.token }}` | The workflow's own token. Leave it at its default: smartcloud compares `GITHUB_TOKEN` with it to tell a [restricted run](/reporting#restricted-runs), and acts with it on forks and Dependabot runs. |
 | `config` | the first of `.github/smartcloud.yml`, `.github/smartcloud.yaml`, `.github/config.json` | The config file's path in the repository. |
 | `configJson` | none | The config given inline, as YAML or JSON. Wins over the file. |
 | `configRef` | the default branch | The branch, tag or commit to read the config from. |

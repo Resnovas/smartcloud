@@ -24,6 +24,7 @@ import { selectFeatures } from './features.js'
 import { turnedOffFeatures } from './flags.js'
 import { recordRun } from './analytics.js'
 import { targetRepository, type Connect } from './github.js'
+import { accessFindings, FULL_ACCESS, restrictedFeatures, skippablePreset, type Access } from './access.js'
 
 /** A GitHub event, as the engine takes it. */
 export interface GitHubEvent {
@@ -69,6 +70,10 @@ export interface RunOutcome {
  * feature whose flag is off is skipped with the flag named as the reason;
  * with telemetry off or PostHog unreachable, every flag keeps its default.
  *
+ * A restricted run (see `accessFor`) leaves out presets from other
+ * repositories that its token cannot read, skips the features only a
+ * stronger token can run, and reports both as findings rather than failing.
+ *
  * @example
  * ```ts
  * import { runEvent } from '@resnovas/runtime'
@@ -77,27 +82,33 @@ export interface RunOutcome {
  * const outcome = runEvent({ config: {}, features: ['labels'], event: { name: 'schedule', payload: {} } })
  * ```
  *
- * @param options - Where the config is, which features to run (all when omitted), and the event.
+ * @param options - Where the config is, which features to run (all when omitted), the event, and the run's access (full when omitted).
  * @returns What the run did.
  */
 export const runEvent = (options: {
   readonly config: ConfigLocation
   readonly features?: ReadonlyArray<string> | undefined
   readonly event: GitHubEvent
+  readonly access?: Access | undefined
 }) =>
   Effect.flatMap(GitHub, (github) => {
     const repository = github.coordinates
+    const access = options.access ?? FULL_ACCESS
     const run = Effect.gen(function* () {
-      const resolved = yield* loadConfig(options.config)
+      const resolved = yield* loadConfig(options.config, { skipUnreadable: skippablePreset(access, repository) })
       const features = yield* selectFeatures(options.features)
-      const turnedOff = yield* turnedOffFeatures(repository, features)
-      const result = yield* runFeatures({
+      const turnedOff = new Map([...(yield* turnedOffFeatures(repository, features)), ...restrictedFeatures(access)])
+      const featureRun = yield* runFeatures({
         config: resolved.config,
         event: options.event.name,
         payload: options.event.payload,
         features,
         turnedOff,
       })
+      const result: RunResult = {
+        ...featureRun,
+        findings: [...accessFindings(access, resolved.skipped ?? []), ...featureRun.findings],
+      }
       for (const failure of result.failed)
         yield* reportError(repository, new FeatureFailed({ feature: failure.feature, reason: failure.message }))
       yield* recordRun(result, options.event.name)

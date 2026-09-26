@@ -1,13 +1,15 @@
-# smartcloud runs on its own repository from the local checkout, so every
-# pull request is checked by the code it changes. The config is read from the
-# default branch, so a pull request cannot loosen its own rules.
+# smartcloud runs on its own repository from its own build, bundled from the
+# default branch rather than a release. The config is read from the default
+# branch too, so a pull request cannot loosen its own rules. The CI workflow
+# tests a pull request's code; this one never runs it.
 #
-# The job runs the pull request's code with the ACCESS_TOKEN organisation
-# secret, because the config extends the house preset in the private
-# Resnovas/.github repository, which the workflow token cannot read. Only
-# people who can already push a branch here, and so could change this
-# workflow, reach that token: pull requests from forks get no secrets and fall
-# back to the read-only workflow token.
+# The job acts with the ACCESS_TOKEN organisation secret, because the config
+# extends the house preset in the private Resnovas/.github repository, which
+# the workflow token cannot read. Building from the default branch keeps that
+# token away from pull request code. Pull requests from forks and Dependabot
+# get no secrets: they fall back to the read-only workflow token, and
+# smartcloud then runs restricted, skipping the private preset, settings,
+# sync and refused writes rather than failing.
 name: smartcloud
 
 on:
@@ -40,6 +42,8 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          # A scheduled run has no repository in its payload; it runs on the default branch anyway.
+          ref: ${{ github.event.repository.default_branch || github.ref }}
           persist-credentials: false
 
       - uses: pnpm/action-setup@v6
@@ -49,7 +53,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      # Lifecycle scripts from the pull request never run with the job token.
+      # Lifecycle scripts never run with the job token.
       - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Bundle the action

@@ -12,8 +12,8 @@ extends:
 # is allowed, but any other value fails the run.
 
 # smartcloud keeps its own LICENSE, first published in 2021, and runs itself
-# from its own build in .github/workflows/smartcloud.yml rather than from a
-# release, so every pull request is checked by the code it changes.
+# from its default branch's build in .github/workflows/smartcloud.yml rather
+# than from a release.
 sync:
   exclude:
     - LICENSE

@@ -197,6 +197,37 @@ describe('resolveConfig: extends and locked presets', () => {
     }),
   )
 
+  it.effect('leaves out a preset the caller allows to be skipped, and drops sections incomplete without it', () =>
+    Effect.gen(function* () {
+      const skipAll = { skipUnreadable: () => true }
+      const resolved = yield* resolveConfig(
+        local('labels:\n  docs: { name: docs, color: 0075ca }\nsync:\n  exclude: [LICENSE]\n'),
+        'repo',
+        skipAll,
+      ).pipe(Effect.provide(presets({})))
+      expect(resolved.config).toStrictEqual({ version: 2, labels: { docs: { name: 'docs', color: '0075ca' } } })
+      expect(resolved.sources).toStrictEqual(['repo'])
+      expect(resolved.locked.size).toBe(0)
+      expect(resolved.skipped).toStrictEqual([
+        `the extends preset ${HOUSE}: ${HOUSE} could not be read`,
+        'the sync section: incomplete without the skipped preset(s)',
+      ])
+    }),
+  )
+
+  it.effect('still fails on an unreadable preset the caller does not allow to be skipped', () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        resolveConfig(local(''), 'repo', { skipUnreadable: (ref) => ref.repo !== '.github' }).pipe(
+          Effect.provide(presets({})),
+        ),
+      )
+      expect(error).toStrictEqual(new ConfigNotFound({ source: HOUSE }))
+      const resolved = yield* resolveConfig(local(''), 'repo').pipe(Effect.provide(presets({ [HOUSE]: house })))
+      expect(resolved.skipped).toBeUndefined()
+    }),
+  )
+
   it.effect('a v1 preset is migrated too, and its warnings carry its name', () =>
     Effect.gen(function* () {
       const resolved = yield* resolveConfig(local(''), 'repo').pipe(

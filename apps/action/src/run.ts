@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { runEvent, type ConfigLocation, type RunOutcome } from '@resnovas/runtime'
+import { FULL_ACCESS, runEvent, type Access, type ConfigLocation, type RunOutcome } from '@resnovas/runtime'
 import { Effect, Option } from 'effect'
 import type { Inputs } from './inputs.js'
 
@@ -56,9 +56,14 @@ export interface Outcome extends RunOutcome {
  *
  * @param inputs - The action's inputs.
  * @param event - The event name and its payload.
+ * @param access - The run's access; full when omitted.
  * @returns What the run did.
  */
-export const runAction = (inputs: Inputs, event: { readonly name: string; readonly payload: unknown }) =>
+export const runAction = (
+  inputs: Inputs,
+  event: { readonly name: string; readonly payload: unknown },
+  access: Access = FULL_ACCESS,
+) =>
   Effect.gen(function* () {
     // Absent inputs are left out rather than set to undefined.
     const config: ConfigLocation = {
@@ -67,7 +72,7 @@ export const runAction = (inputs: Inputs, event: { readonly name: string; readon
       ...Option.match(inputs.configRef, { onNone: () => ({}), onSome: (ref) => ({ ref }) }),
     }
     const features = Option.match(inputs.features, { onNone: () => ({}), onSome: (names) => ({ features: names }) })
-    const outcome = yield* runEvent({ config, event, ...features })
+    const outcome = yield* runEvent({ config, event, access, ...features })
     const result: Outcome = { ...outcome, warnings: [...inputs.deprecations, ...outcome.warnings] }
     return result
   })
