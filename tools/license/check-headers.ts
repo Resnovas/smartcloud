@@ -33,7 +33,8 @@ const template = readFileSync(join(root, 'tools/license/header.txt'), 'utf8').tr
 const fix = process.argv.includes('--fix')
 
 const SOURCE = /\.(ts|mts|cts|js|mjs|cjs)$/
-const EXCLUDED = /^(graphify-out|node_modules)\/|\/dist\/|\.d\.ts$/
+// dist/ at the root is the action bundle, generated and committed only by a release.
+const EXCLUDED = /^(graphify-out|node_modules|dist)\/|\/dist\/|\.d\.ts$/
 
 const header = (file: string) => template.replace('{{FILE}}', file)
 
