@@ -110,6 +110,32 @@ export const Check = Schema.Struct({
 export type Check = typeof Check.Type
 
 /**
+ * How an author is associated with the repository, as GitHub reports it in
+ * `author_association`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Association"
+ * import { Association } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Association)('FIRST_TIME_CONTRIBUTOR') // => true
+ * Schema.is(Association)('first-time') // => false
+ * ```
+ */
+export const Association = Schema.Literal(
+  'OWNER',
+  'MEMBER',
+  'COLLABORATOR',
+  'CONTRIBUTOR',
+  'FIRST_TIME_CONTRIBUTOR',
+  'FIRST_TIMER',
+  'MANNEQUIN',
+  'NONE',
+)
+/** A decoded {@link Association}. */
+export type Association = typeof Association.Type
+
+/**
  * The thing a condition is evaluated against: an issue or a pull request,
  * normalised from whichever GitHub event delivered it.
  *
@@ -135,6 +161,10 @@ export const Subject = Schema.Struct({
   /** The description; an empty string when the body is empty or null. */
   body: Schema.String,
   author: Schema.String,
+  /** How the author is associated with the repository. */
+  association: Schema.optionalWith(Association, { exact: true }),
+  /** Whether the author is a bot account, such as a GitHub App. */
+  bot: Schema.optionalWith(Schema.Boolean, { exact: true }),
   open: Schema.Boolean,
   locked: Schema.Boolean,
   labels: Schema.Array(Schema.String),

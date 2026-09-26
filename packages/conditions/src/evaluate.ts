@@ -17,8 +17,8 @@
 import { Clock, Data, Effect } from 'effect'
 import picomatch from 'picomatch'
 import { compilePattern } from './pattern.js'
-import type { Condition, ConditionGroup, Not } from './schema.js'
-import type { Check, CheckState, Commit, Facet, Review, Subject } from './subject.js'
+import type { AuthorAssociation, Condition, ConditionGroup, Not } from './schema.js'
+import type { Association, Check, CheckState, Commit, Facet, Review, Subject } from './subject.js'
 import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 
 /**
@@ -131,6 +131,26 @@ const checkState = (checks: ReadonlyArray<Check>, name: string): CheckState =>
       undefined,
     ) ?? 'pending'
 
+type AssociationName = (typeof AuthorAssociation.Type)['condition'][number]
+
+// The names each GitHub association answers to: a first-timer's first
+// contribution anywhere is also their first here.
+const ASSOCIATION_NAMES: Record<Association, ReadonlyArray<AssociationName>> = {
+  OWNER: ['owner'],
+  MEMBER: ['member'],
+  COLLABORATOR: ['collaborator'],
+  CONTRIBUTOR: ['contributor'],
+  FIRST_TIME_CONTRIBUTOR: ['firstTimeContributor'],
+  FIRST_TIMER: ['firstTimer', 'firstTimeContributor'],
+  MANNEQUIN: ['mannequin'],
+  NONE: ['none'],
+}
+
+const associationNames = (subject: Subject): ReadonlyArray<AssociationName> => [
+  ...(subject.association === undefined ? [] : ASSOCIATION_NAMES[subject.association]),
+  ...(subject.bot === true ? (['bot'] as const) : []),
+]
+
 const PULL_REQUEST_ONLY = new Set([
   'branchMatches',
   'baseBranchMatches',
@@ -184,6 +204,15 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
       return Effect.succeed(
         result(condition.type, passed, `base branch ${branch} ${passed ? 'matches' : 'does not match'}`),
       )
+    }
+    case 'authorAssociation': {
+      const names = associationNames(subject)
+      const passed = names.some((name) => condition.condition.includes(name))
+      const detail =
+        names.length === 0
+          ? `author @${subject.author}'s association is unknown`
+          : `author @${subject.author} is ${names.join(', ')}`
+      return Effect.succeed(result(condition.type, passed, detail))
     }
     case 'isOpen':
       return Effect.succeed(

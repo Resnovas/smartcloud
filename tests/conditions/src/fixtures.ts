@@ -33,6 +33,8 @@ export const pullRequest = (overrides: Partial<Subject> = {}): Subject => ({
   title: 'feat(labels): sync labels',
   body: 'Adds label sync.',
   author: 'jane',
+  association: 'CONTRIBUTOR',
+  bot: false,
   open: true,
   locked: false,
   labels: ['Type - Feature'],

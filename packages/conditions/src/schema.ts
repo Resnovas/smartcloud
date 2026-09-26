@@ -101,6 +101,52 @@ export const BaseBranchMatches = matches(
 )
 
 /**
+ * The author is associated with the repository in one of the listed ways, or
+ * is a bot when `bot` is listed.
+ *
+ * @remarks
+ * The associations are GitHub's `author_association`, in camel case: `owner`,
+ * `member` (of the owning organisation), `collaborator` (an outside
+ * collaborator), `contributor` (has a merged contribution), `firstTimeContributor`,
+ * `firstTimer` (a first contribution anywhere on GitHub), `mannequin` and `none`.
+ * `firstTimeContributor` also matches a first-timer, since their first
+ * contribution anywhere is also their first here. `bot` matches a bot
+ * account whatever its association.
+ *
+ * @example
+ * ```ts import.meta.vitest name="AuthorAssociation"
+ * import { AuthorAssociation } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(AuthorAssociation)({ type: 'authorAssociation', condition: ['firstTimeContributor', 'bot'] }) // => true
+ * Schema.is(AuthorAssociation)({ type: 'authorAssociation', condition: [] }) // => false
+ * ```
+ */
+export const AuthorAssociation = Schema.Struct({
+  type: Schema.Literal('authorAssociation'),
+  condition: Schema.NonEmptyArray(
+    Schema.Literal(
+      'owner',
+      'member',
+      'collaborator',
+      'contributor',
+      'firstTimeContributor',
+      'firstTimer',
+      'mannequin',
+      'none',
+      'bot',
+    ).annotations({
+      description:
+        'owner, member, collaborator (an outside collaborator), contributor, firstTimeContributor (includes first-timers), firstTimer, mannequin, none or bot.',
+    }),
+  ).annotations({ description: 'The associations that pass; any one is enough.' }),
+}).annotations({
+  identifier: 'authorAssociation',
+  description:
+    "The author's association with the repository is one of these, or the author is a bot when bot is listed.",
+})
+
+/**
  * The subject is open (true) or closed (false).
  *
  * @example
@@ -420,6 +466,7 @@ const Leaf = Schema.Union(
   CreatorMatches,
   BranchMatches,
   BaseBranchMatches,
+  AuthorAssociation,
   IsOpen,
   IsLocked,
   IsDraft,

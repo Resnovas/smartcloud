@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -421,6 +421,17 @@ The pull request's base branch, the one it merges into, matches a pattern.
 | --- | --- | --- | --- |
 | `type` | `baseBranchMatches` | yes |  |
 | `condition` | [Pattern](#pattern) | yes |  |
+
+Other keys are an error.
+
+### authorAssociation
+
+The author's association with the repository is one of these, or the author is a bot when bot is listed.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `authorAssociation` | yes |  |
+| `condition` | list of one of `owner`, `member`, `collaborator`, `contributor`, `firstTimeContributor`, `firstTimer`, `mannequin`, `none`, `bot` | yes | The associations that pass; any one is enough. At least 1 item(s). |
 
 Other keys are an error.
 

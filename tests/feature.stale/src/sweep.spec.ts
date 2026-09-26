@@ -244,6 +244,31 @@ describe('stale feature: marking', () => {
     }),
   )
 
+  it.effect('exempts by the author association in the listing', () =>
+    Effect.gen(function* () {
+      const github = memory([
+        item(1, { updatedAt: daysAgo(40), isPullRequest: true, association: 'NONE', bot: true }),
+        item(2, { updatedAt: daysAgo(40), association: 'FIRST_TIME_CONTRIBUTOR', bot: false }),
+        item(3, { updatedAt: daysAgo(40), association: 'MEMBER', bot: false }),
+        item(4, { updatedAt: daysAgo(40) }),
+      ])
+      const result = yield* sweep(
+        {
+          version: 2,
+          stale: {
+            ...settings,
+            exempt: {
+              when: { condition: [{ type: 'authorAssociation', condition: ['bot', 'firstTimeContributor'] }] },
+            },
+          },
+        },
+        github,
+      )
+      expect([1, 2, 3, 4].map((number) => labelsOf(github, number))).toStrictEqual([[], [], ['stale'], ['stale']])
+      expect(result.findings).toStrictEqual([])
+    }),
+  )
+
   it.effect('warns once when exempt.when needs pull request details a sweep cannot read, and skips pull requests', () =>
     Effect.gen(function* () {
       const github = memory([

@@ -16,6 +16,7 @@
 
 export { compilePattern, Pattern } from './pattern.js'
 export {
+  AuthorAssociation,
   BaseBranchMatches,
   BranchMatches,
   ChangesSize,
@@ -42,7 +43,7 @@ export {
   TitleMatches,
 } from './schema.js'
 export type { And, LeafCondition, Not, Only, Or } from './schema.js'
-export { Check, CheckState, Commit, Mergeable, Review, Subject } from './subject.js'
+export { Association, Check, CheckState, Commit, Mergeable, Review, Subject } from './subject.js'
 export type { Facet } from './subject.js'
 export { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 export type { Trailer } from './trailers.js'

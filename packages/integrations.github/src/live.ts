@@ -15,8 +15,8 @@
  */
 
 import { Octokit } from '@octokit/rest'
-import type { CheckState, Mergeable, Review } from '@resnovas/conditions'
-import { Config, Effect, Layer, Option, Redacted, Ref, Schedule } from 'effect'
+import { Association, type CheckState, type Mergeable, type Review } from '@resnovas/conditions'
+import { Config, Effect, Layer, Option, Redacted, Ref, Schedule, Schema } from 'effect'
 import { cacheReads } from './cache.js'
 import { fromGraphqlErrors, fromStatus, type GitHubError, ValidationFailed } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
@@ -137,6 +137,9 @@ export const signOff = (message: string, identity: CommitIdentity): string =>
 
 // Mode 120000 is a symbolic link and type `commit` a submodule: neither is a
 // file whose text can be read, so listings leave them out.
+// GitHub may add associations; an unknown one is left out of a listed item.
+const isAssociation = Schema.is(Association)
+
 const EXECUTABLE = '100755'
 const REGULAR = '100644'
 
@@ -791,6 +794,8 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             title: issue.title,
             body: issue.body ?? '',
             author: issue.user?.login ?? '',
+            ...(isAssociation(issue.author_association) ? { association: issue.author_association } : {}),
+            ...(issue.user?.type === undefined ? {} : { bot: issue.user.type === 'Bot' }),
             open: issue.state === 'open',
             locked: issue.locked,
             labels: issue.labels.map(labelName),

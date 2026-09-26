@@ -32,6 +32,7 @@ Conditions that match text take a pattern: a regular expression written either b
 | `titleMatches`        | `condition`: pattern                                                | The title matches.                                                                                                                                     |
 | `descriptionMatches`  | `condition`: pattern                                                | The description matches. An empty description never matches.                                                                                           |
 | `creatorMatches`      | `condition`: pattern                                                | The author's login matches.                                                                                                                            |
+| `authorAssociation`   | `condition`: list of associations                                   | The author's association with the repository is one of those listed, or the author is a bot when `bot` is listed.                                      |
 | `branchMatches`       | `condition`: pattern                                                | The pull request's head branch matches.                                                                                                                |
 | `baseBranchMatches`   | `condition`: pattern                                                | The pull request's base branch, the one it merges into, matches.                                                                                       |
 | `isOpen`              | `condition`: boolean                                                | The subject is open (`true`) or closed (`false`).                                                                                                      |
@@ -70,6 +71,27 @@ Reviews count each reviewer's latest decisive review: comments and pending revie
 - type: baseBranchMatches
   condition: '^release/'
 ```
+
+`authorAssociation` reads GitHub's author association, so a rule can treat newcomers, outside collaborators or bots differently from maintainers. It passes when any listed value applies:
+
+| Value                  | The author                                                                     |
+| ---------------------- | ------------------------------------------------------------------------------ |
+| `owner`                | Owns the repository.                                                           |
+| `member`               | Is a member of the organisation that owns the repository.                      |
+| `collaborator`         | Was invited to collaborate on the repository: an outside collaborator.         |
+| `contributor`          | Has had a contribution merged before.                                          |
+| `firstTimeContributor` | Is contributing to the repository for the first time, including a first-timer. |
+| `firstTimer`           | Is contributing to GitHub for the first time.                                  |
+| `mannequin`            | Is a placeholder for an imported user.                                         |
+| `none`                 | Has no association with the repository.                                        |
+| `bot`                  | Is a bot account, such as a GitHub App, whatever its association.              |
+
+```yaml
+- type: authorAssociation
+  condition: [firstTimeContributor, bot]
+```
+
+It applies to issues and pull requests, and works in a stale sweep's `exempt.when`. When GitHub reports an association smartcloud does not know, only `bot` can match.
 
 ### Pull request only conditions
 

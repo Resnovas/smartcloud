@@ -32,6 +32,7 @@ const running = (name: string) => ({ name, state: 'pending' as const })
 // Subjects without an optional field, which is how a decoded event leaves it out.
 const { headBranch: _headBranch, ...withoutBranch } = pullRequest()
 const { baseBranch: _baseBranch, ...withoutBase } = pullRequest()
+const { association: _association, bot: _bot, ...withoutAssociation } = pullRequest()
 const { draft: _draft, ...withoutDraft } = pullRequest()
 const { changes: _changes, ...withoutChanges } = pullRequest()
 const { reviews: _reviews, ...withoutReviews } = pullRequest()
@@ -52,6 +53,44 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['baseBranchMatches, missing base', { type: 'baseBranchMatches', condition: '.*' }, withoutBase, false],
   ['baseBranchMatches, missing base, anchored', { type: 'baseBranchMatches', condition: '^main$' }, withoutBase, false],
   ['baseBranchMatches, on an issue', { type: 'baseBranchMatches', condition: '.*' }, issue(), false],
+  ['authorAssociation', { type: 'authorAssociation', condition: ['contributor'] }, pullRequest(), true],
+  [
+    'authorAssociation, other association',
+    { type: 'authorAssociation', condition: ['member', 'owner'] },
+    pullRequest(),
+    false,
+  ],
+  [
+    'authorAssociation, first-timer is a first-time contributor',
+    { type: 'authorAssociation', condition: ['firstTimeContributor'] },
+    pullRequest({ association: 'FIRST_TIMER' }),
+    true,
+  ],
+  [
+    'authorAssociation, first-time contributor is not a first-timer',
+    { type: 'authorAssociation', condition: ['firstTimer'] },
+    pullRequest({ association: 'FIRST_TIME_CONTRIBUTOR' }),
+    false,
+  ],
+  [
+    'authorAssociation, bot whatever its association',
+    { type: 'authorAssociation', condition: ['bot'] },
+    pullRequest({ association: 'NONE', bot: true }),
+    true,
+  ],
+  ['authorAssociation, not a bot', { type: 'authorAssociation', condition: ['bot'] }, pullRequest(), false],
+  [
+    'authorAssociation, unknown association',
+    { type: 'authorAssociation', condition: ['none'] },
+    withoutAssociation,
+    false,
+  ],
+  [
+    'authorAssociation, on an issue',
+    { type: 'authorAssociation', condition: ['collaborator'] },
+    issue({ association: 'COLLABORATOR' }),
+    true,
+  ],
   ['isOpen', { type: 'isOpen', condition: true }, pullRequest(), true],
   ['isOpen false on a closed item', { type: 'isOpen', condition: false }, pullRequest({ open: false }), true],
   ['isLocked', { type: 'isLocked', condition: true }, issue({ locked: true }), true],
@@ -351,6 +390,25 @@ describe('evaluate: base branch', () => {
         )
       expect(yield* detail('^release/')).toBe('base branch release/2 matches')
       expect(yield* detail('^main$')).toBe('base branch release/2 does not match')
+    }),
+  )
+})
+
+describe('evaluate: author association', () => {
+  it.effect('explains the association', () =>
+    Effect.gen(function* () {
+      const detail = (subject: Subject) =>
+        Effect.map(
+          evaluate({ condition: [{ type: 'authorAssociation', condition: ['member'] }] }, subject),
+          (evaluation) => evaluation.results[0]?.detail,
+        )
+      expect(yield* detail(pullRequest({ association: 'FIRST_TIMER' }))).toBe(
+        'author @jane is firstTimer, firstTimeContributor',
+      )
+      expect(yield* detail(pullRequest({ author: 'ci[bot]', association: 'NONE', bot: true }))).toBe(
+        'author @ci[bot] is none, bot',
+      )
+      expect(yield* detail(withoutAssociation)).toBe("author @jane's association is unknown")
     }),
   )
 })
