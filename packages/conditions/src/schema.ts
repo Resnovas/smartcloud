@@ -186,7 +186,8 @@ export interface Only {
 /** Any condition, including the combinators. */
 export type Condition = LeafCondition | And | Or | Not | Only
 
-const LazyCondition = Schema.suspend((): Schema.Schema<Condition> => Condition)
+// Recursive references carry identifiers so the JSON Schema can name them.
+const LazyCondition = Schema.suspend((): Schema.Schema<Condition> => Condition).annotations({ identifier: 'Condition' })
 
 /** A list of conditions and how many must pass. */
 export const ConditionGroup: Schema.Schema<ConditionGroup> = Schema.Struct({
@@ -194,7 +195,9 @@ export const ConditionGroup: Schema.Schema<ConditionGroup> = Schema.Struct({
   condition: Schema.Array(LazyCondition),
 }).annotations({ identifier: 'ConditionGroup' })
 
-const LazyGroup = Schema.suspend((): Schema.Schema<ConditionGroup> => ConditionGroup)
+const LazyGroup = Schema.suspend((): Schema.Schema<ConditionGroup> => ConditionGroup).annotations({
+  identifier: 'ConditionGroup',
+})
 
 const AndSchema: Schema.Schema<And> = Schema.Struct({
   type: Schema.Literal('$and'),
