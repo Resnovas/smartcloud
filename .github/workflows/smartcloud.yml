@@ -1,6 +1,11 @@
 # smartcloud runs on its own repository from the local checkout, so every
 # pull request is checked by the code it changes. The config is read from the
 # default branch, so a pull request cannot loosen its own rules.
+#
+# The job runs the pull request's code with a token that can write checks,
+# issues and pull requests. Only people who can already push a branch here,
+# and so could change this workflow, reach that token: pull requests from
+# forks get a read-only one.
 name: smartcloud
 
 on:
@@ -42,10 +47,11 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      # Lifecycle scripts from the pull request never run with the job token.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Bundle the action
-        run: pnpm nx run action:bundle
+        run: pnpm nx run @resnovas/action:bundle
 
       - name: Run smartcloud
         uses: ./
