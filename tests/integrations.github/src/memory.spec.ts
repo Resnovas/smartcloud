@@ -1,0 +1,169 @@
+/**
+ * @file tests/integrations.github/src/memory.spec.ts
+ *
+ * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Licensed under the Fair Core License, Version 1.0, MIT Future License
+ * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
+ * the licence key functionality, or modify any part of the software that the
+ * licence key protects.
+ *
+ * Contributions are made under the Developer Certificate of Origin (DCO.md) and
+ * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
+ * (CODE_OF_CONDUCT.md) and the Eventiva Cooperation Commitment
+ * (COOPERATION_COMMITMENT.md).
+ *
+ * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
+ */
+
+import { describe, expect, it } from '@effect/vitest'
+import { Effect } from 'effect'
+import { DryRun, DryRunLog, fileKey, fromStatus, GitHub, GitHubMemory, makeMemoryGitHub } from '@resnovas/integrations.github'
+
+const bug = { name: 'bug', color: 'd73a4a', description: '' }
+
+describe('in-memory GitHub', () => {
+  it.effect('behaves like GitHub for labels: unique, renames carry over, deletes clean up', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({ labels: [bug] })
+      yield* service.addLabels(1, ['BUG', 'bug'])
+      yield* service.addLabels(2, ['docs'])
+      expect(state.issues.get(1)?.labels).toStrictEqual(['BUG'])
+      expect((yield* Effect.flip(service.createLabel({ ...bug, name: 'Bug' })))._tag).toBe('ValidationFailed')
+      yield* service.updateLabel('bug', { ...bug, name: 'defect' })
+      expect(state.issues.get(1)?.labels).toStrictEqual(['defect'])
+      expect(state.issues.get(2)?.labels).toStrictEqual(['docs'])
+      expect((yield* Effect.flip(service.updateLabel('nope', bug)))._tag).toBe('NotFound')
+      yield* service.createLabel(bug)
+      yield* service.deleteLabel('defect')
+      expect(state.labels.map((label) => label.name)).toStrictEqual(['bug'])
+      expect(state.issues.get(1)?.labels).toStrictEqual([])
+      expect((yield* Effect.flip(service.deleteLabel('defect')))._tag).toBe('NotFound')
+      expect(yield* service.listLabels).toStrictEqual([bug])
+    }),
+  )
+
+  it.effect('removes labels, and fails to remove one that is not there', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub()
+      yield* service.addLabels(2, ['bug', 'docs'])
+      yield* service.removeLabel(2, 'BUG')
+      expect(state.issues.get(2)?.labels).toStrictEqual(['docs'])
+      expect((yield* Effect.flip(service.removeLabel(2, 'bug')))._tag).toBe('NotFound')
+    }),
+  )
+
+  it.effect('creates, lists and updates comments, and closes issues', () =>
+    Effect.gen(function* () {
+      const { service } = makeMemoryGitHub({
+        openIssues: [
+          { number: 3, title: 't', body: '', author: 'a', open: true, locked: false, labels: [], updatedAt: new Date(0), isPullRequest: false },
+        ],
+      })
+      const comment = yield* service.createComment(3, 'first')
+      yield* service.updateComment(comment.id, 'edited')
+      expect(yield* service.listComments(3)).toStrictEqual([{ id: comment.id, body: 'edited', author: 'smartcloud[bot]' }])
+      expect((yield* Effect.flip(service.updateComment(999, 'x')))._tag).toBe('NotFound')
+      expect(yield* service.listOpenIssues).toHaveLength(1)
+      yield* service.closeIssue(3)
+      expect(yield* service.listOpenIssues).toHaveLength(0)
+    }),
+  )
+
+  it.effect('serves pull request data and records reviews', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({
+        pulls: new Map([[7, { commits: [], files: ['a.ts'], reviews: [{ author: 'ann', state: 'APPROVED' }], requestedReviewers: ['bo'], submittedReviews: [] }]]),
+      })
+      expect(yield* service.listCommits(7)).toStrictEqual([])
+      expect(yield* service.listFiles(7)).toStrictEqual(['a.ts'])
+      expect(yield* service.listReviews(7)).toHaveLength(1)
+      expect(yield* service.countRequestedReviewers(7)).toBe(1)
+      yield* service.requestReviewers(7, ['cy'])
+      yield* service.createReview(7, { event: 'APPROVE', body: 'ok' })
+      expect(state.pulls.get(7)).toMatchObject({ requestedReviewers: ['bo', 'cy'], submittedReviews: [{ event: 'APPROVE', body: 'ok' }] })
+      const missing = yield* Effect.flip(service.listFiles(8))
+      expect(missing.message).toBe('listFiles: not found (pull request #8)')
+    }),
+  )
+
+  it.effect('records check runs, files, requests and GraphQL calls', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({ files: new Map([[fileKey('o', 'r', 'p.yml', 'v2'), 'version: 2']]) })
+      const run = { name: 'n', headSha: 'h', status: 'in_progress' as const, title: 't', summary: 's' }
+      const id = yield* service.createCheckRun(run)
+      yield* service.updateCheckRun(id, { ...run, status: 'completed', conclusion: 'success' })
+      expect(state.checkRuns).toStrictEqual([{ ...run, status: 'completed', conclusion: 'success', id }])
+      expect((yield* Effect.flip(service.updateCheckRun(999, run)))._tag).toBe('NotFound')
+      expect(yield* service.getFile({ owner: 'o', repo: 'r', path: 'p.yml', ref: 'v2' })).toBe('version: 2')
+      expect((yield* Effect.flip(service.getFile({ owner: 'o', repo: 'r', path: 'p.yml' })))._tag).toBe('NotFound')
+      yield* service.repositoryRequest({ method: 'PUT', path: '/vulnerability-alerts' })
+      yield* service.graphql('query { viewer { login } }', {})
+      expect(state.requests).toStrictEqual([{ method: 'PUT', path: '/vulnerability-alerts' }])
+      expect(state.graphql).toHaveLength(1)
+      expect((yield* service.getRepository).fullName).toBe('Resnovas/example')
+    }),
+  )
+})
+
+describe('dry run', () => {
+  it.effect('passes reads through and records writes in order, touching nothing', () =>
+    Effect.gen(function* () {
+      const github = yield* GitHub
+      const log = yield* DryRunLog
+      expect(yield* github.listLabels).toStrictEqual([bug])
+      yield* github.createLabel({ ...bug, name: 'docs' })
+      yield* github.updateLabel('bug', bug)
+      yield* github.deleteLabel('bug')
+      yield* github.addLabels(1, ['bug'])
+      yield* github.removeLabel(1, 'bug')
+      expect(yield* github.createComment(1, 'hi')).toStrictEqual({ id: 0, body: 'hi', author: '' })
+      yield* github.updateComment(5, 'x')
+      yield* github.closeIssue(1)
+      yield* github.createReview(7, { event: 'COMMENT', body: 'b' })
+      yield* github.requestReviewers(7, ['ann'])
+      const run = { name: 'n', headSha: 'h', status: 'completed' as const, title: 't', summary: 's' }
+      expect(yield* github.createCheckRun(run)).toBe(0)
+      yield* github.updateCheckRun(0, run)
+      expect(yield* github.repositoryRequest({ method: 'PATCH', path: '', body: { has_wiki: false } })).toBeNull()
+      yield* github.repositoryRequest({ method: 'GET', path: '/rulesets' })
+      yield* github.graphql('mutation { x }', {})
+      yield* github.graphql('query { y }', {})
+      const writes = yield* log.writes
+      expect(writes.map((write) => write.operation)).toStrictEqual([
+        'createLabel',
+        'updateLabel',
+        'deleteLabel',
+        'addLabels',
+        'removeLabel',
+        'createComment',
+        'updateComment',
+        'closeIssue',
+        'createReview',
+        'requestReviewers',
+        'createCheckRun',
+        'updateCheckRun',
+        'repositoryRequest',
+        'graphql',
+      ])
+      expect(yield* github.listLabels).toStrictEqual([bug])
+    }).pipe(Effect.provide(DryRun), Effect.provide(GitHubMemory({ labels: [bug] }))),
+  )
+})
+
+describe('fromStatus', () => {
+  it('maps every status family', () => {
+    expect(fromStatus('op', 404, 'x')._tag).toBe('NotFound')
+    expect(fromStatus('op', 429, 'x')._tag).toBe('RateLimited')
+    expect(fromStatus('op', 401, 'API rate limit exceeded')._tag).toBe('RateLimited')
+    expect(fromStatus('op', 401, 'Bad credentials')._tag).toBe('Forbidden')
+    expect(fromStatus('op', 409, 'x')._tag).toBe('ValidationFailed')
+    expect(fromStatus('op', undefined, 'x')._tag).toBe('Unavailable')
+  })
+
+  it('writes messages that name the operation', () => {
+    expect(fromStatus('listLabels', 404, 'Not Found').message).toBe('listLabels: not found (Not Found)')
+    expect(fromStatus('listLabels', 403, 'nope').message).toBe('listLabels: forbidden (nope)')
+    expect(fromStatus('listLabels', 429, 'slow down').message).toBe('listLabels: rate limited (slow down)')
+    expect(fromStatus('createLabel', 422, 'exists').message).toBe('createLabel: rejected (exists)')
+  })
+})
