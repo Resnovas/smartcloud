@@ -65,6 +65,8 @@ Conditions that match text take a pattern: a regular expression written either b
 | `checkStatus`         | `check`: check name, `condition`: `success`, `failure` or `pending` | The named check is in that state.                                                                                                                      |
 | `commentMatches`      | `condition`: pattern, optional `bots`: boolean                      | At least one comment matches. Comments by bots count only with `bots: true`.                                                                           |
 | `reactionCount`       | `min`, optional `max`: count, optional `reaction`                   | Reactions on the subject (only the `reaction` kind, when set) are at least `min` and below `max`.                                                      |
+| `createdBefore`       | `condition`: days or an ISO 8601 date                               | The subject was opened at least this many days ago, or before the date.                                                                                |
+| `timeWindow`          | `condition`: boolean, optional `days`, `from`, `to`, `timeZone`     | Now is inside the weekly window of days and hours (`true`), or outside it (`false`).                                                                   |
 
 Activity is GitHub's `updated_at` time for the issue or pull request.
 
@@ -328,6 +330,45 @@ stale:
 ```
 
 GitHub starts no workflow when someone reacts, so a label follows on the next event smartcloud runs on, while a scheduled stale sweep reads the latest counts every time it runs. A new comment is such an event on an issue only when your workflow subscribes to `issue_comment`. A comment on a pull request arrives as an `issue_comment` event without the pull request's data, which smartcloud does not act on, so there `commentMatches` is read on the next pull request event. `commentMatches` reads the comments, one API call covered by `issues: read` (`pull-requests: read` on a pull request). `reactionCount` needs no call on an issue event or in a stale sweep, whose payload and listing carry the counts; on a pull request event it reads the pull request, one call under the same permission.
+
+### Dates and times
+
+`createdBefore` looks at when the issue or pull request was opened. A number is an age in days, so `condition: 30` passes for anything opened at least 30 days ago. A date passes for anything opened before it: `2026-01-01` means midnight UTC, and a time needs an offset, as in `2026-01-01T09:00:00+01:00`. For "opened after", wrap it in `$not`.
+
+`timeWindow` looks at the time now, when the rule runs. It passes inside a weekly window, or outside it with `condition: false`:
+
+- `days`: the days the window opens on, from `mon`, `tue`, `wed`, `thu`, `fri`, `sat` and `sun`. Every day when omitted.
+- `from` and `to`: `HH:MM` on the 24-hour clock. `from` is inclusive and `to` exclusive; the window opens at midnight without `from` and closes at midnight without `to`. When `to` is at or before `from`, the window runs past midnight, and the early hours belong to the day it opened: `days: [fri]` from `22:00` to `06:00` covers early Saturday, not early Friday.
+- `timeZone`: an IANA name such as `Europe/London`, so daylight saving time follows the zone. UTC when omitted. An unknown zone is a config error.
+
+To hold dependency updates outside working hours, and to leave old issues out of a stale sweep:
+
+```yaml
+labelling:
+  hold:
+    label: 'Status - On Hold'
+    on: [pullRequest]
+    when:
+      condition:
+        - type: creatorMatches
+          condition: '^dependabot'
+        - type: timeWindow
+          condition: false
+          days: [mon, tue, wed, thu, fri]
+          from: '09:00'
+          to: '17:30'
+          timeZone: Europe/London
+stale:
+  staleAfterDays: 60
+  staleLabel: 'Status - Stale'
+  exempt:
+    when:
+      condition:
+        - type: createdBefore
+          condition: '2025-01-01'
+```
+
+Both cost no API call: the event or listing carries the creation time, and `timeWindow` reads the clock. A rule only runs when an event or a schedule starts it, so `timeWindow` decides on whatever runs inside the window; use a scheduled workflow to act at a set time. If the event carries no creation time, `createdBefore` fails and its explanation says so.
 
 Conditions that need a pull request's files, reviews, commits, mergeability, checks or CODEOWNERS, or a subject's comments or reactions, cost an API call each. smartcloud loads only the ones the configured rules use.
 

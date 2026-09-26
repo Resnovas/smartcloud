@@ -48,6 +48,7 @@ describe('decodeEvent', () => {
             assignees: ['jane', 'ann'],
             milestone: 'v2.0',
             updatedAt: new Date('2026-09-01T00:00:00Z'),
+            createdAt: new Date('2026-08-01T00:00:00Z'),
             draft: true,
             headBranch: 'feat/labels',
             baseBranch: 'main',
@@ -103,6 +104,16 @@ describe('decodeEvent', () => {
       expect(yield* decodeEvent('issues', { issue: { ...issuePayload.issue, assignees: null } })).toMatchObject({
         subject: { assignees: [] },
       })
+    }),
+  )
+
+  it.effect('reads when the item was opened, and leaves it out when the payload does not say', () =>
+    Effect.gen(function* () {
+      expect(yield* decodeEvent('issues', issuePayload)).toMatchObject({
+        subject: { createdAt: new Date('2026-08-01T00:00:00Z') },
+      })
+      const { created_at: _created, ...undated } = issuePayload.issue
+      expect(yield* decodeEvent('issues', { issue: undated })).not.toHaveProperty('subject.createdAt')
     }),
   )
 

@@ -25,6 +25,7 @@ const issueFields = {
   state: 'open',
   locked: false,
   labels: [{ name: 'bug' }],
+  created_at: '2026-08-01T00:00:00Z',
   updated_at: '2026-09-01T00:00:00Z',
 }
 
