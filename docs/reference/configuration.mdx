@@ -30,6 +30,7 @@ Declarative repository automation: labels, conventions and policy.
 | `reviews` | [Reviews](#reviews) | no |  |
 | `required` | [Required](#required) | no |  |
 | `freeze` | [Freeze](#freeze) | no |  |
+| `branches` | [Branches](#branches) | no |  |
 | `stale` | [Stale](#stale) | no |  |
 | `settings` | [Settings](#settings) | no |  |
 | `sync` | [Sync](#sync) | no |  |
@@ -306,6 +307,40 @@ Other keys are an error.
 | `reason` | string | no | Why merges are frozen, shown on the check and in the report. |
 
 Other keys are an error.
+
+### Branches
+
+A branch naming policy: the head branch of every pull request must match one of the accepted names.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `names` | map of string to [BranchName](#branchname) | no | The accepted forms of branch name, by key, so presets and repositories merge them. A head branch passes when it matches any of them. |
+| `level` | one of `error`, `warning` | no | error fails the check; warning only reports. Defaults to error. |
+| `message` | string | no | Shown instead of the list of accepted names. |
+| `exempt` | object | no |  |
+| `exempt.branches` | list of [Pattern](#pattern) | no | Head branches matching any of these patterns are not checked, such as ^dependabot/. |
+| `exempt.authors` | list of string | no | Pull requests opened by these logins are not checked, such as renovate[bot]. |
+
+Other keys are an error.
+
+### BranchName
+
+One accepted form of branch name: a preset, a pattern, or both, when the name must meet both.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `preset` | one of `prefixed`, `issueKey` | no | prefixed: &lt;prefix>/&lt;description>, such as ann/fix-typo or feat/labels. issueKey: an issue key such as SMC-12 anywhere in the name, between separators. |
+| `prefixes` | list of [NonEmptyTrimmedString](#nonemptytrimmedstring) | no | The prefixes the prefixed preset accepts, such as feat and fix, or the names of people. Any prefix when left out. |
+| `keys` | list of string | no | The issue tracker keys the issueKey preset accepts, such as SMC. Any key when left out. |
+| `pattern` | [Pattern](#pattern) | no |  |
+
+Other keys are an error.
+
+### NonEmptyTrimmedString
+
+a non empty string Pattern: `^\S[\s\S]*\S$|^\S$|^$`. At least 1 character(s).
+
+Type: string.
 
 ### Stale
 

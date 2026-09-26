@@ -431,6 +431,122 @@ export const Freeze = Schema.Struct({
 /** A decoded {@link Freeze}. */
 export type Freeze = typeof Freeze.Type
 
+const BranchKey = Schema.String.pipe(
+  Schema.pattern(/^[A-Za-z][A-Za-z0-9]{0,9}$/),
+  Schema.annotations({ description: 'An issue tracker key, such as SMC. Matched in any case, so smc-12 counts.' }),
+)
+
+/**
+ * One accepted form of branch name: a preset, a pattern, or both, when the
+ * name must meet both.
+ *
+ * @example
+ * ```ts import.meta.vitest name="BranchName"
+ * import { BranchName } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(BranchName)({ preset: 'prefixed', prefixes: ['feat', 'fix'] }) // => true
+ * Schema.is(BranchName)({ preset: 'issueKey', keys: ['SMC'] }) // => true
+ * Schema.is(BranchName)({ pattern: '^release/' }) // => true
+ * Schema.is(BranchName)({ keys: ['SMC'] }) // => false
+ * ```
+ */
+export const BranchName = Schema.Struct({
+  /** A built-in form. */
+  preset: opt(
+    Schema.Literal('prefixed', 'issueKey').annotations({
+      description:
+        'prefixed: <prefix>/<description>, such as ann/fix-typo or feat/labels. issueKey: an issue key such as SMC-12 anywhere in the name, between separators.',
+    }),
+  ),
+  /** The prefixes the `prefixed` preset accepts. */
+  prefixes: opt(
+    Schema.Array(Schema.NonEmptyTrimmedString).annotations({
+      description:
+        'The prefixes the prefixed preset accepts, such as feat and fix, or the names of people. Any prefix when left out.',
+    }),
+  ),
+  /** The issue keys the `issueKey` preset accepts. */
+  keys: opt(
+    Schema.Array(BranchKey).annotations({
+      description: 'The issue tracker keys the issueKey preset accepts, such as SMC. Any key when left out.',
+    }),
+  ),
+  /** A regular expression the name must match. */
+  pattern: opt(Pattern),
+}).pipe(
+  Schema.filter(
+    (name) =>
+      (name.preset !== undefined || name.pattern !== undefined) &&
+      (name.prefixes === undefined || name.preset === 'prefixed') &&
+      (name.keys === undefined || name.preset === 'issueKey'),
+    {
+      message: () =>
+        'a branch name needs a preset or a pattern; prefixes go with the prefixed preset, keys with issueKey',
+      // Wrapped in allOf so Effect merges it with the struct's properties
+      // rather than replacing them.
+      jsonSchema: { allOf: [{ anyOf: [{ required: ['preset'] }, { required: ['pattern'] }] }] },
+    },
+  ),
+  Schema.annotations({
+    identifier: 'BranchName',
+    description: 'One accepted form of branch name: a preset, a pattern, or both, when the name must meet both.',
+  }),
+)
+/** A decoded {@link BranchName}. */
+export type BranchName = typeof BranchName.Type
+
+/**
+ * The branch naming policy for pull requests: a head branch must match one
+ * of the accepted names.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Branches"
+ * import { Branches } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Branches)({ names: { person: { preset: 'prefixed' }, issue: { preset: 'issueKey' } }, exempt: { authors: ['dependabot[bot]'] } }) // => true
+ * Schema.is(Branches)({ names: [] }) // => false
+ * ```
+ */
+export const Branches = Schema.Struct({
+  /** The accepted forms, by key; a branch passes when it matches any. */
+  names: opt(
+    Schema.Record({ key: Schema.String, value: BranchName }).annotations({
+      description:
+        'The accepted forms of branch name, by key, so presets and repositories merge them. A head branch passes when it matches any of them.',
+    }),
+  ),
+  /** The finding's level. */
+  level: opt(
+    Schema.Literal('error', 'warning').annotations({
+      description: 'error fails the check; warning only reports. Defaults to error.',
+    }),
+  ),
+  /** Replaces the explanation of the accepted names. */
+  message: opt(Schema.String.annotations({ description: 'Shown instead of the list of accepted names.' })),
+  /** Pull requests the policy does not check. */
+  exempt: opt(
+    Schema.Struct({
+      branches: opt(
+        Schema.Array(Pattern).annotations({
+          description: 'Head branches matching any of these patterns are not checked, such as ^dependabot/.',
+        }),
+      ),
+      authors: opt(
+        Schema.Array(Schema.String).annotations({
+          description: 'Pull requests opened by these logins are not checked, such as renovate[bot].',
+        }),
+      ),
+    }),
+  ),
+}).annotations({
+  identifier: 'Branches',
+  description: 'A branch naming policy: the head branch of every pull request must match one of the accepted names.',
+})
+/** A decoded {@link Branches}. */
+export type Branches = typeof Branches.Type
+
 /**
  * The repository settings baseline. Anything omitted is left as it is.
  *
