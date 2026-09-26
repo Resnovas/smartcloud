@@ -1,0 +1,238 @@
+---
+title: "Migrating from v1"
+description: "Convert a v1 .github/config.json to a v2 .github/smartcloud.yml."
+---
+
+v2 replaces v1's `runners` and per-context JSON with one flat YAML file where each feature has its own section. `smartcloud migrate` converts a v1 config for you, and warns about every v1 key it does not carry over.
+
+<Steps>
+  <Step title="Convert the config">
+    ```sh
+    smartcloud migrate .github/config.json --out .github/smartcloud.yml
+    ```
+
+    See [CLI](/cli) for how to run the command. Read every warning it prints.
+  </Step>
+  <Step title="Review the result">
+    Rule keys are generated from v1's contexts and positions, such as `pr.xs` or `shared.0`. Rename them if you like: keys only need to be unique. Then add the v2 features v1 did not have, such as [commits](/features/commits) or [reviews](/features/reviews) `gate`.
+  </Step>
+  <Step title="Validate">
+    ```sh
+    smartcloud validate
+    ```
+  </Step>
+  <Step title="Switch the workflow">
+    Point the workflow at `resnovas/smartcloud@v2`, as in the [quick start](/introduction#quick-start), and delete `.github/config.json`.
+  </Step>
+</Steps>
+
+<Note>
+  Until you switch, v2 still reads a v1 config: a file without `version: 2` is migrated on the fly on every run, with the same warnings. Converting once keeps the warnings out of your runs and lets you use v2's own sections.
+</Note>
+
+## What maps where
+
+| v1 | v2 |
+| --- | --- |
+| `labels` (a list or a map) | `labels`, keyed by the v1 key, or for a list by the label's name in lower case with other characters replaced by `-`. |
+| `runners[].<context>.labels` | `labelling`, one rule per label keyed `<context>.<label>`. |
+| `runners[].<context>.enforceConventions` | `conventions.rules`, keyed `<context>.<position>`. The named conventions `semanticTitle`, `gitmojis` and `semanticEmoji` become a `preset`; condition lists become `when`. `failedComment` becomes `message`, and `contexts` is kept. |
+| `enforceConventions.commentHeader`, `commentFooter` | `conventions.comment.header`, `footer`. |
+| `runners[].<context>.stale` | `stale`. `stale.days` becomes `staleAfterDays` (default 60), `abandoned.days` becomes `abandonedAfterDays`, and the comments and labels carry over. |
+| `runners[].<context>.automaticApprove` | `reviews.automaticApprove`, keyed `<context>.<position>`. |
+| `runners[].<context>.requestApprovals` | `reviews.requestApprovals`, keyed `<context>.<name>`. |
+| The `skipDelete` action input | `labelSync.prune`. v2 never deletes labels unless `prune` is `true`. |
+| The `fillEmpty` action input | `extends`. Shared settings now come from presets; the input is ignored with a warning. |
+| The `config: .github/config.json` input | Nothing. v2 finds `.github/config.json` on its own and migrates it on the fly, with a warning for each dropped key, until you commit `.github/smartcloud.yml`. |
+
+v1's contexts become the `on` of each rule: `pr` rules get `on: [pullRequest]`, `issue` rules get `on: [issue]`, and `sharedConfig` and `schedule` rules apply to both. In keys, `sharedConfig` is written `shared`. With more than one runner, keys are prefixed `r0.`, `r1.` and so on so none collide.
+
+v1 conditions carry over unchanged: v2 keeps the same field names, pattern forms and `$not` shapes. See [Conditions](/conditions).
+
+### What is dropped
+
+| v1 key | Why |
+| --- | --- |
+| `versioning`, `prereleaseName`, `manageRelease` | Versioning and releases belong to release-please, as the v1 README advised. |
+| `duplicateHotfix`, `createMilestone`, `assignMilestone`, `createBranch`, `openBranch` | v1 never implemented them. |
+| `assignProject`, the `project` context, `onColumn`, `moveToColumn` | They used classic Projects, which GitHub has retired. |
+| `syncRemote` | It used classic Projects or was never implemented. |
+| `root` | v1 never read it. |
+| `branch` | v2 runs on the event it receives. |
+| `retryLimit` | v2 retries GitHub API calls itself. |
+| `$schema` | v2 uses its own schema. |
+
+Any other key is reported as unknown and ignored. v2 has a single `stale` section, so a second `stale` in another context is dropped with a warning.
+
+### Check your stale labels
+
+`stale.staleLabel` and `stale.abandonedLabel` are label names as GitHub shows them, not keys of `labels`. If your v1 config gave the stale label a different display name, for example a `stale` entry named `Status - Stale`, set `staleLabel` to that name.
+
+## Example: labels only
+
+The Eventiva config defines labels and nothing else. Two of its ten labels:
+
+```json .github/config.json
+{
+  "labels": [
+    {
+      "name": "type:core",
+      "color": "0E8A16",
+      "description": "Core module - can be depended on by any other module"
+    },
+    {
+      "name": "layer:backend",
+      "color": "5319E7",
+      "description": "Backend layer - can depend on backend and shared layers"
+    }
+  ]
+}
+```
+
+`smartcloud migrate` output for those two, with no warnings:
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+labels:
+  type:core:
+    name: type:core
+    color: 0E8A16
+    description: Core module - can be depended on by any other module
+  layer:backend:
+    name: layer:backend
+    color: "5319E7"
+    description: Backend layer - can depend on backend and shared layers
+```
+
+The list becomes a map keyed by each label's name. A colour that YAML would read as a number, such as `5319E7`, is quoted.
+
+## Example: a full v1 config
+
+The v1 smartcloud config uses one runner with `sharedConfig`, `pr`, `issue` and `schedule` contexts, 94 labels, labelling rules, a convention, approvals and stale handling. The excerpts below are from the real `smartcloud migrate` output.
+
+### Labelling
+
+```json v1
+"sharedConfig": {
+  "labels": {
+    "bug": {
+      "requires": 1,
+      "condition": [
+        { "type": "titleMatches", "condition": "/^bug(\\(.*\\))?(!)?:/i" },
+        { "type": "descriptionMatches", "condition": "/(created|new|opened|made)( an| a)? bug/i" }
+      ]
+    }
+  }
+},
+"pr": {
+  "labels": {
+    "xs": { "requires": 1, "condition": [{ "type": "changesSize", "min": 0, "max": 10 }] }
+  }
+}
+```
+
+```yaml v2
+labelling:
+  shared.bug:
+    label: bug
+    when:
+      requires: 1
+      condition:
+        - type: titleMatches
+          condition: /^bug(\(.*\))?(!)?:/i
+        - type: descriptionMatches
+          condition: /(created|new|opened|made)( an| a)? bug/i
+  pr.xs:
+    label: xs
+    on:
+      - pullRequest
+    when:
+      requires: 1
+      condition:
+        - type: changesSize
+          min: 0
+          max: 10
+```
+
+### Conventions, approvals and stale
+
+```json v1
+"sharedConfig": {
+  "enforceConventions": {
+    "condition": [{ "requires": 1, "condition": "semanticEmoji" }]
+  },
+  "stale": {
+    "staleLabel": "stale",
+    "stale": { "days": 60, "comment": "This has been automatically marked as stale by the bot." },
+    "abandoned": { "days": 30, "label": "abandoned", "comment": "This has been automatically marked as abandoned by the bot." }
+  }
+},
+"pr": {
+  "automaticApprove": {
+    "condition": [
+      { "requires": 1, "condition": [{ "type": "creatorMatches", "condition": "/^dependabot/i" }] }
+    ]
+  },
+  "requestApprovals": {
+    "all": {
+      "reviewers": ["tgtgamer"],
+      "requires": 1,
+      "condition": [
+        { "type": "$not", "requires": 1, "condition": [{ "type": "creatorMatches", "condition": "/^dependabot/i" }] }
+      ]
+    }
+  }
+}
+```
+
+```yaml v2
+conventions:
+  rules:
+    shared.0:
+      preset: semanticEmoji
+reviews:
+  requestApprovals:
+    pr.all:
+      reviewers:
+        - tgtgamer
+      when:
+        requires: 1
+        condition:
+          - type: $not
+            requires: 1
+            condition:
+              - type: creatorMatches
+                condition: /^dependabot/i
+  automaticApprove:
+    pr.0:
+      when:
+        requires: 1
+        condition:
+          - type: creatorMatches
+            condition: /^dependabot/i
+stale:
+  staleAfterDays: 60
+  staleLabel: stale
+  staleComment: This has been automatically marked as stale by the bot.
+  abandonedAfterDays: 30
+  abandonedLabel: abandoned
+  abandonedComment: This has been automatically marked as abandoned by the bot.
+```
+
+### Warnings
+
+The run printed these warnings for the keys it did not carry over:
+
+```text
+warning: .github/config.json: runners[0].$schema: dropped, v2 uses its own schema
+warning: .github/config.json: runners[0].root: dropped, v1 never read it
+warning: .github/config.json: runners[0].versioning: dropped, version bumping is release-please territory, as the v1 README advised
+warning: .github/config.json: runners[0].prereleaseName: dropped, version bumping is release-please territory, as the v1 README advised
+warning: .github/config.json: runners[0].pr.manageRelease: dropped, releases are release-please territory, as the v1 README advised
+warning: .github/config.json: runners[0].pr.duplicateHotfix: dropped, v1 never implemented it
+warning: .github/config.json: runners[0].pr.createMilestone: dropped, v1 never implemented it
+warning: .github/config.json: runners[0].issue.createBranch: dropped, v1 never implemented it
+```
+
+In this config the `stale` label entry is named `Status - Stale`, while `staleLabel` is `stale`: see [Check your stale labels](#check-your-stale-labels).

@@ -1,0 +1,77 @@
+---
+title: "Labels"
+description: "Keep repository labels in line with the config, and apply them by condition."
+---
+
+The labels feature does two jobs:
+
+- **Label sync.** On repository events (push, schedule, manual dispatch, repository dispatch and merge queue), it makes the repository's labels match the `labels` section.
+- **Labelling.** On pull request and issue events, it adds and removes labels on the subject as its `labelling` rules pass and fail.
+
+It is enabled when the config has a `labels` or a `labelling` section.
+
+```yaml
+labels:
+  bug:
+    name: "Type: Bug"
+    color: D73A4A
+    description: Something is not working
+    aliases: [bug, defect]
+  docs:
+    name: "Type: Documentation"
+    color: "#0075CA"
+  xs:
+    name: "Size: XS"
+    color: C2E0C6
+
+labelSync:
+  prune: false
+
+labelling:
+  docs:
+    label: docs
+    when:
+      condition:
+        - type: filesMatch
+          condition: "docs/**"
+  xs:
+    label: xs
+    on: [pullRequest]
+    when:
+      condition:
+        - type: changesSize
+          min: 0
+          max: 10
+  bug-issue:
+    label: bug
+    on: [issue]
+    when:
+      condition:
+        - type: titleMatches
+          condition: "/\\bbug\\b/i"
+```
+
+## Label sync
+
+Each entry in `labels` is keyed by an id you choose, and has a `name`, a `color` (six hex digits, with or without `#`), and optionally a `description` and `aliases`.
+
+- A configured label is matched to a repository label by name, ignoring case, and updated when its colour or description differs.
+- Failing that, a repository label named in `aliases` is renamed, so issues carrying the old name keep the label. Exact names are matched before aliases, so an alias never takes a label another entry names directly.
+- Anything else is created.
+- A `description` left out of the config is left as it is on GitHub.
+- With `labelSync.prune: true`, repository labels the config does not define are deleted. Pruning is off by default.
+
+Label sync never runs on pull request events: those from forks carry a read-only token.
+
+<Note>
+  v1's `skipDelete` input deleted unconfigured labels unless it was set. v2 never deletes a label unless `labelSync.prune` is `true`.
+</Note>
+
+## Labelling
+
+Each rule in `labelling` names a `label`, an optional `on` (`pullRequest`, `issue`, or both by default), and a `when` [condition group](/conditions).
+
+- `label` is a key of `labels`, and the label's `name` is what gets applied. A value that is not a key is used as the label's name itself.
+- A label is added when any rule for it passes, and removed when every rule for it fails. Several rules may name the same label, for example one per subject kind.
+- Names compare ignoring case, as GitHub does.
+- If a label has already gone when smartcloud removes it, that is a warning, not a failure.

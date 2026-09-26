@@ -1,0 +1,53 @@
+---
+title: "Conventions"
+description: "Title and description conventions for pull requests and issues."
+---
+
+The conventions feature checks each pull request and issue against the rules in `conventions.rules`. It runs on pull request and issue events, and is enabled when there is at least one rule.
+
+```yaml
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+      contexts: [labels, config, cli]
+    linked-issue:
+      on: [pullRequest]
+      level: warning
+      message: Link the issue this pull request closes, for example "Closes #123".
+      when:
+        condition:
+          - type: descriptionMatches
+            condition: "/(closes|fixes|resolves) #\\d+/i"
+```
+
+## Rules
+
+Each rule has a `preset`, a `when` [condition group](/conditions), or both; a rule with neither is rejected. When both are set, both must pass, and both are always checked so the finding explains everything that needs fixing.
+
+| Key | Meaning |
+| --- | --- |
+| `on` | `pullRequest`, `issue`, or both (the default). |
+| `preset` | A named title convention, below. |
+| `contexts` | Scopes a preset allows. |
+| `when` | Conditions the subject must meet. |
+| `level` | `error` (the default) or `warning`. |
+| `message` | The finding's text. Without it, smartcloud explains what was expected and which conditions failed. |
+
+A failing rule becomes a finding with the rule id `conventions.<key>`, for example `conventions.title`. The feature only records findings; see [Reporting](/reporting) for where they appear.
+
+## Presets
+
+| Preset | Accepts |
+| --- | --- |
+| `conventionalCommits` | `type(scope)!: description`, where the scope and `!` are optional. Types: feat, fix, perf, refactor, test, docs, chore, build, ci, style, revert. With `contexts`, a scope, when there is one, must be one of them. |
+| `semanticTitle` | A title starting with a semantic type, optionally a scope in parentheses, then a colon, for example `feat(scope): description`. Types: bug, chore, opt, optimisation, style, maint, maintenance, ref, refactor, revert, dep, deprecated, removal, docs, documentation, feat, enhance, feature, enhancement, fix. |
+| `gitmojis` | A title starting with a gitmoji (the emoji, its `:code:` or its HTML entity), for example `:bug:(scope): description`. |
+| `semanticEmoji` | A gitmoji, then a semantic type, for example `:bug: fix(scope): description`. |
+
+`semanticTitle`, `gitmojis` and `semanticEmoji` accept exactly the titles v1 accepted. With `contexts`, those three also require one of the contexts in parentheses before the colon.
+
+## Comment header and footer
+
+`conventions.comment.header` and `conventions.comment.footer` are accepted, and `smartcloud migrate` carries v1's `commentHeader` and `commentFooter` into them. The current reporter does not add them to its comment yet.

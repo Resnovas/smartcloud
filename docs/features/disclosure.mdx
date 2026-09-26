@@ -1,0 +1,50 @@
+---
+title: "Disclosure"
+description: "The AI disclosure a pull request description must carry."
+---
+
+The disclosure feature reads how AI was used from the pull request description and checks it against the pull request's commits. It runs on pull request events and is enabled by a `disclosure` section, even an empty one.
+
+```yaml
+disclosure:
+  requireDraft: true
+  maintainerLevel: warning
+  fields:
+    level: AI level
+    tools: AI tools
+    accountable: Accountable human
+    review: Human review
+```
+
+The fields above are the defaults, matching the Resnovas pull request template. Set `fields` only if your template names them differently.
+
+A description that satisfies the check:
+
+```markdown
+AI level: agent
+AI tools: example-tool (example-model-1)
+Accountable human: @jane
+Human review: Read the whole diff, ran the test suite and tried the CLI by hand.
+```
+
+Each field is the first line starting with its label and a colon, ignoring case and leading spaces. HTML comments are ignored, so guidance inside a template's comments is never read as an answer. Backticks are dropped from values.
+
+## Levels
+
+`none`, `autocomplete`, `chat`, `agent` or `autonomous`.
+
+## Rules
+
+| Rule | Finding |
+| --- | --- |
+| `AI-01` | The level is missing or not one of the levels above. With `none`: `AI tools` lists something, or a commit credits an AI tool. With any other level: `AI tools` is empty or `none`, or no commit has an AI `Co-authored-by` trailer. |
+| `AI-20` | An AI-assisted pull request was opened ready for review. Skipped when `requireDraft` is `false`. |
+| `AI-21` | An AI-assisted pull request is ready for review, but `Accountable human` is not the pull request's author, or `Human review` is empty. |
+
+`AI-20` is checked only when the pull request is opened; `AI-21` whenever it is not a draft. Together they mean AI-assisted work starts as a draft and leaves draft only once the accountable person has reviewed it.
+
+AI tools are recognised the same way as in the [commits feature](/features/commits#ai-identities), including `commits.aiIdentities`.
+
+## Roles
+
+Trusted bots are skipped. On a maintainer's own pull request, or the repository owner's, errors are reported at `maintainerLevel` (`warning` by default).

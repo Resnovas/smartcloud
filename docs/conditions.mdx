@@ -1,0 +1,117 @@
+---
+title: "Conditions"
+description: "The condition language used by labelling, conventions, reviews and stale exemptions."
+---
+
+A condition group is a list of conditions and the number of them that must pass. It appears wherever a rule has a `when`: labelling rules, convention rules, requested and automatic approvals, and `stale.exempt.when`.
+
+```yaml
+when:
+  requires: 1
+  condition:
+    - type: titleMatches
+      condition: "/^fix/i"
+    - type: branchMatches
+      condition: "^hotfix/"
+```
+
+`requires` defaults to the number of conditions, so without it every condition must pass. With `requires: 1` any one is enough.
+
+Field names are the same as v1 (`type`, `condition`, `requires`, `label`, `min`, `max`), so v1 conditions work unchanged.
+
+## Patterns
+
+Conditions that match text take a pattern: a regular expression written either bare (`^feat`) or delimited with flags (`/^feat/i`). An invalid pattern is rejected when the config is loaded, not on the first event.
+
+`filesMatch` is the exception: it takes a glob such as `docs/**` or `**/*.md`.
+
+## Conditions
+
+| Type | Fields | Passes when |
+| --- | --- | --- |
+| `titleMatches` | `condition`: pattern | The title matches. |
+| `descriptionMatches` | `condition`: pattern | The description matches. An empty description never matches. |
+| `creatorMatches` | `condition`: pattern | The author's login matches. |
+| `branchMatches` | `condition`: pattern | The pull request's head branch matches. |
+| `isOpen` | `condition`: boolean | The subject is open (`true`) or closed (`false`). |
+| `isLocked` | `condition`: boolean | The conversation is locked (`true`) or unlocked (`false`). |
+| `isDraft` | `condition`: boolean | The pull request is a draft (`true`) or ready for review (`false`). |
+| `hasLabel` | `label`: name, `condition`: boolean | The subject has the label (`true`) or lacks it (`false`). Names compare ignoring case. |
+| `isStale` | `condition`: days | There has been no activity for at least this many days. |
+| `isAbandoned` | `condition`: days, `label`: name | The subject carries `label` and has had no activity for at least this many days. |
+| `filesMatch` | `condition`: glob | At least one changed file matches. |
+| `changesSize` | `min`, optional `max`: lines | Lines added plus deleted are at least `min` and below `max`. |
+| `pendingReview` | `condition`: boolean | Some requested reviewers have not reviewed yet (`true`), or none are pending (`false`). |
+| `requestedChanges` | `condition`: boolean | A reviewer's latest review requests changes (`true`), or none does (`false`). |
+| `isApproved` | `condition`: count | No reviewer is pending or requesting changes, and at least this many approved. |
+| `commitMessagesMatch` | `condition`: pattern, optional `scope` | Commit messages match. |
+| `commitsSignedOff` | `condition`: boolean | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`). |
+| `hasTrailer` | `trailer`: key, optional `condition`: pattern, optional `scope` | Commits carry the trailer, with a value matching the pattern when one is given. |
+
+Activity is GitHub's `updated_at` time for the issue or pull request.
+
+Reviews count each reviewer's latest decisive review: comments and pending reviews do not change an earlier approval or change request.
+
+### Pull request only conditions
+
+`branchMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff` and `hasTrailer` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+
+### Commit conditions
+
+`commitMessagesMatch`, `commitsSignedOff` and `hasTrailer` ignore merge commits. `scope` is `all` (the default: every commit must match) or `any` (at least one must).
+
+Trailers are read the way git reads them: only from the final paragraph of the message, with keys compared ignoring case. A message with a single paragraph has no trailers, so a subject such as `feat: add x` is never read as a trailer.
+
+```yaml
+- type: hasTrailer
+  trailer: Signed-off-by
+  scope: all
+- type: commitMessagesMatch
+  condition: "^(feat|fix|docs|chore)(\\(.+\\))?!?: "
+  scope: any
+```
+
+Conditions that need a pull request's files, reviews or commits cost an API call each. smartcloud loads only the ones the configured rules use.
+
+## Combinators
+
+Combinators nest condition groups.
+
+| Type | Fields | Passes when |
+| --- | --- | --- |
+| `$and` | `condition`: list of groups | Every group passes. |
+| `$or` | `condition`: list of groups | At least one group passes. |
+| `$only` | `requires`: count, `condition`: list of groups | Exactly `requires` of the groups pass. |
+| `$not` | `condition`: a group | The group fails. |
+
+```yaml
+when:
+  condition:
+    - type: $or
+      condition:
+        - condition:
+            - type: filesMatch
+              condition: "docs/**"
+        - condition:
+            - type: titleMatches
+              condition: "^docs"
+    - type: $not
+      condition:
+        condition:
+          - type: creatorMatches
+            condition: "^dependabot"
+```
+
+`$not` also accepts the two forms v1 wrote: a one-item list holding the group, or the conditions inline with `requires` on the `$not` itself.
+
+```yaml
+- type: $not
+  requires: 1
+  condition:
+    - type: creatorMatches
+      condition: "/^dependabot/i"
+```
+
+## Explanations
+
+Every condition produces a one-line explanation, such as `title does not match ^feat` or `3 changed line(s)`. The conventions feature uses these to say why a rule failed when the rule has no `message` of its own.

@@ -1,0 +1,52 @@
+---
+title: "CLI"
+description: "Validate and migrate smartcloud configs from the command line."
+---
+
+The `smartcloud` command checks configs and converts v1 configs, without running the action.
+
+The CLI is not published to a registry yet. Run it from a checkout of this repository:
+
+```sh
+pnpm install
+pnpm nx run @resnovas/smartcloud:build
+node apps/cli/dist/main.js --help
+```
+
+The examples below write `smartcloud` for `node apps/cli/dist/main.js`.
+
+## validate
+
+```sh
+smartcloud validate [path]
+```
+
+Checks a config and every preset it extends, merges them under the [locked preset rules](/configuration#add-never-change), and prints where the config was built from and any migration warnings.
+
+Without a path, it uses the first of `.github/smartcloud.yml`, `.github/smartcloud.yaml` and `.github/config.json` in the current directory.
+
+```text
+$ smartcloud validate
+.github/smartcloud.yml is a valid smartcloud config.
+Built from: Resnovas/.github/smartcloud/house.yml@main, .github/smartcloud.yml
+```
+
+A config that fails prints one line starting `smartcloud:` and exits with code 1.
+
+## migrate
+
+```sh
+smartcloud migrate [input] [--out <file>]
+```
+
+Converts a v1 JSON config (default `.github/config.json`) to v2 YAML, and prints a warning for every v1 key it does not carry over. The output starts with a schema hint for editors, and is proven to decode before it is written.
+
+| Option | Meaning |
+| --- | --- |
+| `--out`, `-o` | Write the YAML to this file instead of printing it. |
+
+A v2 file given to `migrate` is rewritten unchanged. See [Migrating from v1](/migration) for worked examples.
+
+## Tokens
+
+The CLI needs a GitHub token only to read presets named in `extends`, so validating a config without presets works offline. When it does need one, it uses `GITHUB_TOKEN` if set, and otherwise the token of the signed-in GitHub CLI (`gh auth token`). The token is never printed.

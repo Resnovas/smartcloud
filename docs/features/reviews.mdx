@@ -1,0 +1,58 @@
+---
+title: "Reviews"
+description: "The maintainer review gate, requested reviewers and automatic approval."
+---
+
+The reviews feature runs on pull request events, including `pull_request_review`, so it re-evaluates whenever a review is submitted or dismissed. It is enabled by a `reviews` section.
+
+```yaml
+roles:
+  maintainers: [octocat, hubot, monalisa]
+  trustedBots: ["dependabot[bot]"]
+
+reviews:
+  gate:
+    outside: 2
+    maintainer: 1
+  requestApprovals:
+    docs:
+      reviewers: ["@monalisa"]
+      when:
+        condition:
+          - type: filesMatch
+            condition: "docs/**"
+  automaticApprove:
+    dependabot:
+      message: Approved automatically for a dependency update.
+      when:
+        condition:
+          - type: creatorMatches
+            condition: "^dependabot\\[bot\\]$"
+```
+
+## The review gate
+
+`gate` sets how many maintainer approvals a pull request needs before merge:
+
+| Key | Default | Applies when |
+| --- | --- | --- |
+| `outside` | `2` | The author is not a maintainer. |
+| `maintainer` | `1` | The author is a maintainer. |
+
+Each maintainer's latest decisive review counts: comments and pending reviews are ignored, and a later change request or dismissal withdraws an approval. The author's own review never counts.
+
+- While fewer than two maintainers are listed in `roles.maintainers`, the gate is open and records a notice: the owner merges at their discretion.
+- Pull requests from trusted bots skip the gate, with a notice.
+- Too few approvals is an error with the rule id `REVIEW`, linking to `GOVERNANCE.md#review` under [`links.policyBase`](/configuration#links).
+
+Make the `smartcloud / reviews` check required in the branch ruleset to enforce the gate.
+
+## Requested reviewers
+
+Each entry in `requestApprovals` requests reviews from its `reviewers` when its `when` passes. The pull request's author is left out, as GitHub rejects a request for your own review. A leading `@` on a login is optional.
+
+## Automatic approval
+
+Each entry in `automaticApprove` approves the pull request when its `when` passes, with its `message` as the review body (default: "Approved automatically by smartcloud."). One approval is made per run, by the first rule that passes.
+
+smartcloud does not approve again while any reviewer's standing review is an approval, so new pushes do not stack approvals. Once a stale approval is dismissed, the next run approves again.

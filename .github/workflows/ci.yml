@@ -1,5 +1,6 @@
 # CI for the v2 workspace: lint, typecheck, test with coverage, and build the
-# projects a change affects, plus the licence header check. The v1 tree under
+# projects a change affects, plus the licence header check and the check that
+# docs/reference/configuration.mdx matches the JSON Schema. The v1 tree under
 # legacy/ keeps its own workflows until it is removed (SMC-23).
 name: CI
 
@@ -41,3 +42,6 @@ jobs:
 
       - name: Licence headers
         run: pnpm headers
+
+      - name: Configuration reference is up to date
+        run: pnpm docs:reference:check
