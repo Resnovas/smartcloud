@@ -15,6 +15,7 @@
  */
 
 import { Schema } from 'effect'
+import { UpdateType } from './dependency.js'
 import { Pattern } from './pattern.js'
 import { CheckState, Reaction } from './subject.js'
 import { TimeOfDay, TimeZone, Weekday } from './time.js'
@@ -823,6 +824,44 @@ export const TimeWindow = Schema.Struct({
   description: 'Now is inside the weekly window of days and hours, or outside it when false.',
 })
 
+/**
+ * A Dependabot or Renovate pull request updates dependencies by one of the
+ * listed types: `patch`, `minor` or `major`.
+ *
+ * @remarks
+ * The pull request must be opened by `dependabot[bot]` or `renovate[bot]`, or
+ * a login listed in `bots`, such as a self-hosted Renovate's. GitHub reserves
+ * the `[bot]` suffix for apps, so nobody else can pose as them. The type is
+ * the largest version change in the title and description, so a grouped
+ * update with one major change is major. An update with no numeric version
+ * change, such as a digest bump or lockfile maintenance, never passes.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DependencyUpdateType"
+ * import { DependencyUpdateType } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(DependencyUpdateType)({ type: 'dependencyUpdateType', condition: ['patch', 'minor'] }) // => true
+ * Schema.is(DependencyUpdateType)({ type: 'dependencyUpdateType', condition: ['digest'] }) // => false
+ * ```
+ */
+export const DependencyUpdateType = Schema.Struct({
+  type: Schema.Literal('dependencyUpdateType'),
+  condition: Schema.NonEmptyArray(UpdateType).annotations({
+    description: 'The update types that pass; any one is enough.',
+  }),
+  bots: Schema.optionalWith(
+    Schema.NonEmptyArray(Schema.NonEmptyTrimmedString).annotations({
+      description:
+        'More logins that open dependency updates, such as a self-hosted Renovate app; dependabot[bot] and renovate[bot] always count.',
+    }),
+    { exact: true },
+  ),
+}).annotations({
+  identifier: 'dependencyUpdateType',
+  description: "A Dependabot or Renovate pull request's largest version change is one of these: patch, minor or major.",
+})
+
 const Leaf = Schema.Union(
   TitleMatches,
   DescriptionMatches,
@@ -862,6 +901,7 @@ const Leaf = Schema.Union(
   ReactionCount,
   CreatedBefore,
   TimeWindow,
+  DependencyUpdateType,
 )
 /** Any condition that does not contain other conditions. */
 export type LeafCondition = typeof Leaf.Type

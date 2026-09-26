@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [lockfileChanged](#lockfilechanged), [fileCount](#filecount), [binaryFilesAdded](#binaryfilesadded), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [commentMatches](#commentmatches), [reactionCount](#reactioncount), [createdBefore](#createdbefore), [timeWindow](#timewindow), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [lockfileChanged](#lockfilechanged), [fileCount](#filecount), [binaryFilesAdded](#binaryfilesadded), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [commentMatches](#commentmatches), [reactionCount](#reactioncount), [createdBefore](#createdbefore), [timeWindow](#timewindow), [dependencyUpdateType](#dependencyupdatetype), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -120,6 +120,18 @@ Type: one of `mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun`.
 ### TimeZone
 
 An IANA time zone name, such as Europe/London, or UTC.
+
+Type: string.
+
+### UpdateType
+
+A version update: patch, minor or major.
+
+Type: one of `patch`, `minor`, `major`.
+
+### NonEmptyTrimmedString
+
+a non empty string Pattern: `^\S[\s\S]*\S$|^\S$|^$`. At least 1 character(s).
 
 Type: string.
 
@@ -820,6 +832,18 @@ Now is inside the weekly window of days and hours, or outside it when false.
 | `from` | string | no | When the window opens, as HH:MM (inclusive); midnight when omitted. Pattern: `^(?:[01]\d\|2[0-3]):[0-5]\d$`. |
 | `to` | string | no | When the window closes, as HH:MM (exclusive); midnight when omitted. Pattern: `^(?:[01]\d\|2[0-3]):[0-5]\d$`. |
 | `timeZone` | [TimeZone](#timezone) | no |  |
+
+Other keys are an error.
+
+### dependencyUpdateType
+
+A Dependabot or Renovate pull request's largest version change is one of these: patch, minor or major.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `dependencyUpdateType` | yes |  |
+| `condition` | list of [UpdateType](#updatetype) | yes | The update types that pass; any one is enough. At least 1 item(s). |
+| `bots` | list of [NonEmptyTrimmedString](#nonemptytrimmedstring) | no | More logins that open dependency updates, such as a self-hosted Renovate app; dependabot[bot] and renovate[bot] always count. At least 1 item(s). |
 
 Other keys are an error.
 

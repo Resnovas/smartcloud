@@ -1078,6 +1078,42 @@ describe('evaluate: creation time and time windows', () => {
   )
 })
 
+describe('evaluate: dependency update type', () => {
+  const bump = (title: string, author = 'dependabot[bot]', body = '') => pullRequest({ author, bot: true, title, body })
+  const detail = (condition: Condition, subject: Subject) =>
+    Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.results[0]?.detail)
+  const safe = { type: 'dependencyUpdateType', condition: ['patch', 'minor'] } as const
+
+  it.effect('passes for the listed types of a Dependabot or Renovate update', () =>
+    Effect.gen(function* () {
+      expect(yield* passes(safe, bump('Bump x from 1.0.0 to 1.1.0'))).toBe(true)
+      expect(yield* passes(safe, bump('Bump x from 1.0.0 to 2.0.0'))).toBe(false)
+      expect(yield* detail(safe, bump('Bump x from 1.0.0 to 2.0.0'))).toBe('major update from 1.0.0 to 2.0.0')
+      const renovate = bump('Update dependency x to v1.0.1', 'Renovate[bot]', '| x | `1.0.0` -> `1.0.1` |')
+      expect(yield* passes(safe, renovate)).toBe(true)
+    }),
+  )
+
+  it.effect('fails for anyone else, unless listed in bots', () =>
+    Effect.gen(function* () {
+      const human = bump('Bump x from 1.0.0 to 1.0.1', 'jane')
+      expect(yield* passes(safe, human)).toBe(false)
+      expect(yield* detail(safe, human)).toBe('author @jane is not a dependency bot')
+      expect(yield* passes({ ...safe, bots: ['Jane'] }, human)).toBe(true)
+    }),
+  )
+
+  it.effect('fails without a version change, and on issues', () =>
+    Effect.gen(function* () {
+      expect(yield* detail(safe, bump('Lock file maintenance', 'renovate[bot]'))).toBe(
+        'no version change in the title or description',
+      )
+      expect(yield* passes(safe, bump('Lock file maintenance', 'renovate[bot]'))).toBe(false)
+      expect(yield* passes(safe, issue({ author: 'dependabot[bot]', title: 'Bump x from 1.0.0 to 1.0.1' }))).toBe(false)
+    }),
+  )
+})
+
 describe('evaluate: groups and combinators', () => {
   const draft = { condition: [{ type: 'isDraft', condition: true }] } as const
   const open = { condition: [{ type: 'isOpen', condition: true }] } as const
