@@ -53,6 +53,8 @@ const listsNoTools = (tools: string | undefined) => tools === undefined || tools
 const checkDisclosure = (evidence: Evidence): ReadonlyArray<Draft> => {
   const { disclosure, labels, subject, base } = evidence
   const ai01 = `${base}/AI_POLICY.md#ai-01`
+  // Crediting the tool as a co-author is AI-02 in the house policy, even when a disclosure prompts the check.
+  const ai02 = `${base}/AI_POLICY.md#ai-02`
   const levels = LEVELS.join(', ')
   if (disclosure.level === undefined) {
     return [{ rule: 'AI-01', message: `The AI disclosure is missing. Fill in "${labels.level}:" with one of: ${levels}.`, link: ai01 }]
@@ -72,7 +74,7 @@ const checkDisclosure = (evidence: Evidence): ReadonlyArray<Draft> => {
     found.push({ rule: 'AI-01', message: `${labels.level} is ${disclosure.level}; name every tool and model in "${labels.tools}:".`, link: ai01 })
   }
   if (!evidence.aiCoAuthored) {
-    found.push({ rule: 'AI-01', message: `${labels.level} is ${disclosure.level} but no commit has a Co-authored-by trailer for the AI tool.`, link: ai01 })
+    found.push({ rule: 'AI-02', message: `${labels.level} is ${disclosure.level} but no commit has a Co-authored-by trailer for the AI tool.`, link: ai02 })
   }
   // AI-assisted pull requests start as drafts and leave draft only once the
   // accountable human has reviewed them.
@@ -106,7 +108,8 @@ const checkDisclosure = (evidence: Evidence): ReadonlyArray<Draft> => {
  * comments, and checks them against the pull request's commits:
  *
  * - AI-01: the level is valid; `none` lists no tools and no commit credits
- *   an AI tool; any other level names its tools and some commit has an AI
+ *   an AI tool; any other level names its tools.
+ * - AI-02: any level other than `none` has some commit with an AI
  *   `Co-authored-by`.
  * - AI-20: an AI-assisted pull request is opened as a draft, unless
  *   `disclosure.requireDraft` is false.

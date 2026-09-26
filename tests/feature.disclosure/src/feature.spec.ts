@@ -85,7 +85,7 @@ describe('disclosureFeature', () => {
       const result = yield* runOn(disclosureFeature, { config, body: body({ tools: 'none' }), commits: [commit(`x\n\n${signed}`)] })
       expect(result.findings.map((finding) => [finding.rule, finding.message])).toStrictEqual([
         ['AI-01', 'AI level is agent; name every tool and model in "AI tools:".'],
-        ['AI-01', 'AI level is agent but no commit has a Co-authored-by trailer for the AI tool.'],
+        ['AI-02', 'AI level is agent but no commit has a Co-authored-by trailer for the AI tool.'],
       ])
     }),
   )
@@ -93,7 +93,7 @@ describe('disclosureFeature', () => {
   it.effect('an Assisted-by alone does not count as crediting a co-author', () =>
     Effect.gen(function* () {
       const result = yield* runOn(disclosureFeature, { config, body: body(), commits: [commit(`x\n\nAssisted-by: aider:gpt-5\n${signed}`)] })
-      expect(rules(result.findings, 'error')).toStrictEqual(['AI-01'])
+      expect(rules(result.findings, 'error')).toStrictEqual(['AI-02'])
     }),
   )
 
