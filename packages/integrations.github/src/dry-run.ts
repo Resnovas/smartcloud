@@ -45,6 +45,28 @@ export class DryRunLog extends Context.Tag('@resnovas/integrations.github/DryRun
   { readonly writes: Effect.Effect<ReadonlyArray<RecordedWrite>> }
 >() {}
 
+// A URL in a request body, such as a webhook's, can carry a token in its path
+// or query, so the recorded copy keeps only its origin.
+const originOnly = (value: string): string => {
+  try {
+    const url = new URL(value)
+    return url.pathname === '/' && url.search === '' && url.username === '' ? value : `${url.origin}/...`
+  } catch {
+    return '[redacted]'
+  }
+}
+
+const redactUrls = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(redactUrls)
+  if (typeof value !== 'object' || value === null) return value
+  return Object.fromEntries(
+    Object.entries(value).map(([key, inner]) => [
+      key,
+      key === 'url' && typeof inner === 'string' ? originOnly(inner) : redactUrls(inner),
+    ]),
+  )
+}
+
 /**
  * Wraps a GitHub service so reads reach GitHub and writes are only recorded.
  *
@@ -74,7 +96,11 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
   // The details can name labels, people and files, so only the operation is logged.
   const record = (operation: string, details: Readonly<Record<string, unknown>>) =>
     Ref.update(log, (writes) => [...writes, { operation, details }]).pipe(
-      Effect.zipRight(Effect.logDebug(`dry run: recorded ${operation}`).pipe(Effect.annotateLogs({ 'github.operation': operation, dry_run: true }))),
+      Effect.zipRight(
+        Effect.logDebug(`dry run: recorded ${operation}`).pipe(
+          Effect.annotateLogs({ 'github.operation': operation, dry_run: true }),
+        ),
+      ),
     )
   return {
     ...inner,
@@ -83,18 +109,24 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
     deleteLabel: (name) => record('deleteLabel', { name }),
     addLabels: (issue, labels) => record('addLabels', { issue, labels }),
     removeLabel: (issue, label) => record('removeLabel', { issue, label }),
-    createComment: (issue, body) => Effect.as(record('createComment', { issue, body }), { id: 0, body, author: '', bot: true }),
+    createComment: (issue, body) =>
+      Effect.as(record('createComment', { issue, body }), { id: 0, body, author: '', bot: true }),
     updateComment: (id, body) => record('updateComment', { id, body }),
     closeIssue: (issue) => record('closeIssue', { issue }),
     createReview: (pullRequest, review) => record('createReview', { pullRequest, review }),
     requestReviewers: (pullRequest, logins) => record('requestReviewers', { pullRequest, logins }),
     createCheckRun: (run) => Effect.as(record('createCheckRun', { run }), 0),
     updateCheckRun: (id, run) => record('updateCheckRun', { id, run }),
-    proposeChanges: (proposal) => Effect.as(record('proposeChanges', { proposal }), { number: 0, url: '', created: false }),
+    proposeChanges: (proposal) =>
+      Effect.as(record('proposeChanges', { proposal }), { number: 0, url: '', created: false }),
     repositoryRequest: (request) =>
-      request.method === 'GET' ? inner.repositoryRequest(request) : Effect.as(record('repositoryRequest', { request }), null),
+      request.method === 'GET'
+        ? inner.repositoryRequest(request)
+        : Effect.as(record('repositoryRequest', { request: redactUrls(request) }), null),
     graphql: (query, variables) =>
-      isGraphqlWrite(query) ? Effect.as(record('graphql', { query, variables }), null) : inner.graphql(query, variables),
+      isGraphqlWrite(query)
+        ? Effect.as(record('graphql', { query, variables }), null)
+        : inner.graphql(query, variables),
   }
 }
 
