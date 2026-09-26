@@ -945,6 +945,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/runtime
 
+  tests/tools:
+    devDependencies:
+      nx:
+        specifier: 23.2.1
+        version: 23.2.1(@swc-node/register@1.12.1(@swc/core@1.16.2(@swc/helpers@0.5.23))(@swc/types@0.1.28)(supports-color@7.2.0)(typescript@6.0.3))(@swc/core@1.16.2(@swc/helpers@0.5.23))
+
 packages:
 
   '@babel/code-frame@7.29.7':

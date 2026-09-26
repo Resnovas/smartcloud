@@ -30,14 +30,17 @@
 // Only the v<version> tag is pushed, so main never carries a release commit or
 // the bundle, and branch protection is never bypassed. Nx then writes the
 // release notes to a GitHub release on that tag, and the v<major> tag moves to
-// it. Publishing to npm is a separate job that builds from the tag.
+// it. Nx also writes the notes to CHANGELOG.md and to each app's CHANGELOG.md,
+// which this script formats; they are left in the working tree for the
+// workflow's changelogs job, which opens a pull request to bring them to main.
+// Publishing to npm is a separate job that builds from the tag.
 //
 // The first release has no v* tag to count from, so it takes an explicit
 // specifier and --first-release; its notes start at the newest earlier tag.
 //
 // With --dry-run nothing is written, committed, pushed or published: Nx prints
-// the version and the release notes it would use. Runs on Node's built-in
-// TypeScript support.
+// the version, the release notes it would use and the changes it would make to
+// each changelog file. Runs on Node's built-in TypeScript support.
 
 import { releaseChangelog, releaseVersion } from 'nx/release'
 import { execFileSync } from 'node:child_process'
@@ -45,6 +48,7 @@ import { appendFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { fileURLToPath } from 'node:url'
+import { changedChangelogs } from './changelogs.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const { values } = parseArgs({
@@ -85,6 +89,7 @@ if (!dryRun && git('status', '--porcelain', '--untracked-files=no') !== '') {
   console.error('The working tree has uncommitted changes; release from a clean checkout of main.')
   process.exit(1)
 }
+const base = git('rev-parse', 'HEAD')
 
 const { workspaceVersion, projectsVersionData, releaseGraph } = await releaseVersion({
   ...(specifier === undefined ? {} : { specifier }),
@@ -174,4 +179,23 @@ if (!dryRun) {
 output('released', dryRun ? 'false' : 'true')
 output('version', workspaceVersion)
 output('tag', tag)
+// The main commit the release was cut from, which the changelog pull request branches from.
+output('base', base)
+
+// The changelog files go to main through a pull request, which the format
+// check runs on. The release is already out, so a failure here only warns: the
+// pull request's own checks then show what to fix.
+if (!dryRun) {
+  const changelogs = changedChangelogs(git('ls-files', '--modified', '--others', '--exclude-standard'))
+  try {
+    if (changelogs.length > 0) {
+      execFileSync(join(root, 'node_modules', '.bin', 'prettier'), ['--write', ...changelogs], {
+        cwd: root,
+        stdio: 'inherit',
+      })
+    }
+  } catch {
+    console.warn(`::warning::Prettier could not format ${changelogs.join(', ')}.`)
+  }
+}
 console.log(dryRun ? `Dry run of ${tag} complete.` : `Released ${tag}.`)

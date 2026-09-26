@@ -8,6 +8,14 @@
 # bundle and no branch protection is bypassed. It then writes the release notes
 # to a GitHub release and moves the v<major> tag.
 #
+# Nx writes the same notes to CHANGELOG.md and each app's CHANGELOG.md. They
+# reach main through a pull request, since main takes changes only through
+# pull requests and the merge queue: the changelogs job commits them through
+# the GitHub API as the Resnovas Bot app, so the commit is signed by GitHub,
+# and opens "chore(release): changelogs for v<version>". The app's token is
+# minted only in that job, which checks out and runs none of the repository's
+# code or dependencies; the release job hands it the files as an artifact.
+#
 # The publish job checks out the tag, refuses to go on unless the tagged bundle
 # is what that tag's source builds, then publishes the CLI and MCP server to npm
 # with provenance, through trusted publishing.
@@ -51,10 +59,22 @@ jobs:
     permissions:
       contents: write
     outputs:
+      base: ${{ steps.release.outputs.base }}
       released: ${{ steps.release.outputs.released }}
       tag: ${{ steps.release.outputs.tag }}
       version: ${{ steps.release.outputs.version }}
     steps:
+      # The changelogs job needs the app, so a real release stops before it tags anything without it.
+      - name: Check the Resnovas Bot app is configured
+        if: ${{ !inputs.dry-run }}
+        env:
+          HAS_APP: ${{ vars.RESNOVAS_BOT_APP_ID != '' && secrets.RESNOVAS_BOT_PRIVATE_KEY != '' }}
+        run: |
+          if [ "$HAS_APP" != 'true' ]; then
+            echo '::error::set the RESNOVAS_BOT_APP_ID variable and the RESNOVAS_BOT_PRIVATE_KEY secret; see docs/releasing.mdx'
+            exit 1
+          fi
+
       - uses: actions/checkout@v7
         with:
           ref: main
@@ -88,6 +108,98 @@ jobs:
           if [ "$FIRST_RELEASE" = 'true' ]; then args+=(--first-release); fi
           if [ -n "$SPECIFIER" ]; then args+=(--specifier "$SPECIFIER"); fi
           node tools/release/release.ts "${args[@]}"
+
+      - name: Keep the changelog files for the changelogs job
+        if: steps.release.outputs.released == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: changelogs
+          path: |
+            CHANGELOG.md
+            apps/*/CHANGELOG.md
+          if-no-files-found: error
+          retention-days: 7
+
+  changelogs:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    # Every write goes through the app's token.
+    permissions: {}
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: changelogs
+          path: changelogs
+
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        id: app
+        with:
+          app-id: ${{ vars.RESNOVAS_BOT_APP_ID }}
+          private-key: ${{ secrets.RESNOVAS_BOT_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      # A commit made through the API with an app token is signed by GitHub, so
+      # it passes a signed-commits rule. Its author is the app's bot account,
+      # which signs it off for the DCO check. It branches from the main commit
+      # the release was cut from, so if main has changed the changelogs since,
+      # the pull request shows a conflict rather than dropping those changes.
+      - name: Open the changelog pull request
+        working-directory: changelogs
+        env:
+          GH_TOKEN: ${{ steps.app.outputs.token }}
+          APP_SLUG: ${{ steps.app.outputs.app-slug }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ needs.release.outputs.version }}
+          BASE: ${{ needs.release.outputs.base }}
+        run: |
+          set -euo pipefail
+          # The outputs come from the job that ran repository code, so check
+          # them before this token acts on them: a version, and a commit on main.
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "::error::unexpected version: $VERSION"; exit 1; }
+          [[ "$BASE" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected base commit: $BASE"; exit 1; }
+          case "$(gh api "repos/$REPO/compare/$BASE...main" --jq .status)" in
+            ahead | identical) ;;
+            *) echo "::error::$BASE is not on main"; exit 1 ;;
+          esac
+          branch="release/changelogs-v$VERSION"
+          title="chore(release): changelogs for v$VERSION"
+          base_tree=$(gh api "repos/$REPO/git/commits/$BASE" --jq .tree.sha)
+
+          # Only the known changelog paths, whatever else the artifact holds.
+          tree='[]'
+          for file in CHANGELOG.md apps/action/CHANGELOG.md apps/cli/CHANGELOG.md apps/mcp/CHANGELOG.md; do
+            [ -f "$file" ] || continue
+            blob=$(base64 --wrap=0 "$file" | jq --raw-input '{content: ., encoding: "base64"}' |
+              gh api "repos/$REPO/git/blobs" --input - --jq .sha)
+            tree=$(jq --arg path "$file" --arg sha "$blob" '. + [{path: $path, mode: "100644", type: "blob", sha: $sha}]' <<<"$tree")
+          done
+          tree=$(jq --arg base "$base_tree" '{base_tree: $base, tree: .}' <<<"$tree" |
+            gh api "repos/$REPO/git/trees" --input - --jq .sha)
+
+          user_id=$(gh api "users/$APP_SLUG[bot]" --jq .id)
+          message=$(printf '%s\n\nSigned-off-by: %s[bot] <%s+%s[bot]@users.noreply.github.com>' "$title" "$APP_SLUG" "$user_id" "$APP_SLUG")
+          commit=$(jq --null-input --arg message "$message" --arg tree "$tree" --arg parent "$BASE" \
+            '{message: $message, tree: $tree, parents: [$parent]}' |
+            gh api "repos/$REPO/git/commits" --input - --jq .sha)
+
+          # A rerun finds the branch and pull request from the first attempt:
+          # point the branch at the new commit and keep the open pull request.
+          if gh api "repos/$REPO/git/ref/heads/$branch" --silent 2>/dev/null; then
+            gh api --method PATCH "repos/$REPO/git/refs/heads/$branch" --field sha="$commit" --field force=true --silent
+          else
+            gh api "repos/$REPO/git/refs" --field ref="refs/heads/$branch" --field sha="$commit" --silent
+          fi
+          if [ "$(gh pr list --repo "$REPO" --head "$branch" --state open --json number --jq length)" -gt 0 ]; then
+            exit 0
+          fi
+          gh pr create --repo "$REPO" --base main --head "$branch" --title "$title" --body "$(cat <<EOF
+          The workspace and app changelogs for [v$VERSION](https://github.com/$REPO/releases/tag/v$VERSION), written by the release workflow. The GitHub release holds the same notes.
+
+          Merge it before the next release, which builds on these files.
+          EOF
+          )"
 
   publish:
     needs: release
