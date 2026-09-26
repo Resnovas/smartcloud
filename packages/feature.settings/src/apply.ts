@@ -42,7 +42,10 @@ export const FEATURE = 'settings'
  * error.message // => 'GET /rulesets: unexpected response (expected a list)'
  * ```
  */
-export class UnexpectedResponse extends Data.TaggedError('UnexpectedResponse')<{ readonly operation: string; readonly detail: string }> {
+export class UnexpectedResponse extends Data.TaggedError('UnexpectedResponse')<{
+  readonly operation: string
+  readonly detail: string
+}> {
   override get message() {
     return `${this.operation}: unexpected response (${this.detail})`
   }
@@ -74,9 +77,13 @@ export const upsertRuleset = (ruleset: RulesetBody): Effect.Effect<void, GitHubE
   Effect.gen(function* () {
     const github = yield* GitHub
     const operation = 'GET /rulesets'
-    const response = yield* github.repositoryRequest({ method: 'GET', path: '/rulesets?per_page=100&includes_parents=false' })
+    const response = yield* github.repositoryRequest({
+      method: 'GET',
+      path: '/rulesets?per_page=100&includes_parents=false',
+    })
     const listed = Schema.decodeUnknownEither(RulesetList)(response)
-    if (Either.isLeft(listed)) return yield* new UnexpectedResponse({ operation, detail: 'expected a list of rulesets' })
+    if (Either.isLeft(listed))
+      return yield* new UnexpectedResponse({ operation, detail: 'expected a list of rulesets' })
     const existing = listed.right.find((entry) => entry.name === ruleset.name)
     yield* github.repositoryRequest(
       existing === undefined
@@ -89,7 +96,10 @@ export const upsertRuleset = (ruleset: RulesetBody): Effect.Effect<void, GitHubE
 // one without it predates tag policies, so it is a branch policy.
 const PolicyList = Schema.Struct({
   branch_policies: Schema.Array(
-    Schema.Struct({ name: Schema.String, type: Schema.optionalWith(Schema.Literal('branch', 'tag'), { default: () => 'branch' as const }) }),
+    Schema.Struct({
+      name: Schema.String,
+      type: Schema.optionalWith(Schema.Literal('branch', 'tag'), { default: () => 'branch' as const }),
+    }),
   ),
 })
 
@@ -124,7 +134,10 @@ export const ensureDeploymentPolicies = (
     const response = yield* github.repositoryRequest({ method: 'GET', path: `${path}?per_page=100` })
     const listed = Schema.decodeUnknownEither(PolicyList)(response)
     if (Either.isLeft(listed)) {
-      return yield* new UnexpectedResponse({ operation: `GET ${path}`, detail: 'expected a list of deployment branch policies' })
+      return yield* new UnexpectedResponse({
+        operation: `GET ${path}`,
+        detail: 'expected a list of deployment branch policies',
+      })
     }
     const existing = listed.right.branch_policies
     for (const policy of policies) {
@@ -144,9 +157,13 @@ export const ensureDeploymentPolicies = (
  * error.message // => 'missing DEPLOY_URL (where the site deploys); set it in Settings > Secrets and variables > Actions > Variables'
  * ```
  */
-export class MissingVariables extends Data.TaggedError('MissingVariables')<{ readonly variables: Readonly<Record<string, string>> }> {
+export class MissingVariables extends Data.TaggedError('MissingVariables')<{
+  readonly variables: Readonly<Record<string, string>>
+}> {
   override get message() {
-    const missing = Object.entries(this.variables).map(([name, purpose]) => (purpose === '' ? name : `${name} (${purpose})`))
+    const missing = Object.entries(this.variables).map(([name, purpose]) =>
+      purpose === '' ? name : `${name} (${purpose})`,
+    )
     return `missing ${missing.join(', ')}; set ${missing.length === 1 ? 'it' : 'them'} in Settings > Secrets and variables > Actions > Variables`
   }
 }
@@ -187,15 +204,20 @@ const TeamLookup = Schema.Struct({
 export const grantTeam = (step: TeamStep): Effect.Effect<void, GitHubError | UnexpectedResponse, GitHub> =>
   Effect.gen(function* () {
     const github = yield* GitHub
-    const response = yield* github.graphql('query($org: String!, $slug: String!) { organization(login: $org) { team(slug: $slug) { id } } }', {
-      org: step.organization,
-      slug: step.slug,
-    })
+    const response = yield* github.graphql(
+      'query($org: String!, $slug: String!) { organization(login: $org) { team(slug: $slug) { id } } }',
+      {
+        org: step.organization,
+        slug: step.slug,
+      },
+    )
     const operation = `team ${step.organization}/${step.slug}`
     const decoded = Schema.decodeUnknownEither(TeamLookup)(response)
-    if (Either.isLeft(decoded)) return yield* new UnexpectedResponse({ operation, detail: 'expected an organisation lookup' })
+    if (Either.isLeft(decoded))
+      return yield* new UnexpectedResponse({ operation, detail: 'expected an organisation lookup' })
     const team = decoded.right.organization?.team
-    if (team === null || team === undefined) return yield* new UnexpectedResponse({ operation, detail: `no team ${step.slug} in ${step.organization}` })
+    if (team === null || team === undefined)
+      return yield* new UnexpectedResponse({ operation, detail: `no team ${step.slug} in ${step.organization}` })
     yield* github.graphql(
       'mutation($repository: ID!, $team: ID!, $permission: RepositoryPermission!) { updateTeamsRepository(input: { repositoryId: $repository, teamIds: [$team], permission: $permission }) { clientMutationId } }',
       { repository: step.repositoryId, team: team.id, permission: step.permission },
@@ -203,7 +225,9 @@ export const grantTeam = (step: TeamStep): Effect.Effect<void, GitHubError | Une
   })
 
 // Only the fields the match needs; GitHub sends many more.
-const HookList = Schema.Array(Schema.Struct({ id: Schema.Number, config: Schema.Struct({ url: Schema.optional(Schema.String) }) }))
+const HookList = Schema.Array(
+  Schema.Struct({ id: Schema.Number, config: Schema.Struct({ url: Schema.optional(Schema.String) }) }),
+)
 
 const hookConfig = (webhook: WebhookConfig): Record<string, unknown> => ({
   ...(webhook.contentType === undefined ? {} : { content_type: webhook.contentType }),
@@ -235,14 +259,20 @@ export const upsertWebhook = (webhook: WebhookConfig): Effect.Effect<void, GitHu
     const github = yield* GitHub
     const response = yield* github.repositoryRequest({ method: 'GET', path: '/hooks?per_page=100' })
     const listed = Schema.decodeUnknownEither(HookList)(response)
-    if (Either.isLeft(listed)) return yield* new UnexpectedResponse({ operation: 'GET /hooks', detail: 'expected a list of webhooks' })
+    if (Either.isLeft(listed))
+      return yield* new UnexpectedResponse({ operation: 'GET /hooks', detail: 'expected a list of webhooks' })
     const existing = listed.right.find((hook) => hook.config.url === webhook.url)
     const config = hookConfig(webhook)
     if (existing === undefined) {
       yield* github.repositoryRequest({
         method: 'POST',
         path: '/hooks',
-        body: { name: 'web', active: webhook.active ?? true, events: webhook.events ?? ['push'], config: { url: webhook.url, ...config } },
+        body: {
+          name: 'web',
+          active: webhook.active ?? true,
+          events: webhook.events ?? ['push'],
+          config: { url: webhook.url, ...config },
+        },
       })
       return
     }
@@ -250,8 +280,10 @@ export const upsertWebhook = (webhook: WebhookConfig): Effect.Effect<void, GitHu
       ...(webhook.active === undefined ? {} : { active: webhook.active }),
       ...(webhook.events === undefined ? {} : { events: webhook.events }),
     }
-    if (Object.keys(hook).length > 0) yield* github.repositoryRequest({ method: 'PATCH', path: `/hooks/${existing.id}`, body: hook })
-    if (Object.keys(config).length > 0) yield* github.repositoryRequest({ method: 'PATCH', path: `/hooks/${existing.id}/config`, body: config })
+    if (Object.keys(hook).length > 0)
+      yield* github.repositoryRequest({ method: 'PATCH', path: `/hooks/${existing.id}`, body: hook })
+    if (Object.keys(config).length > 0)
+      yield* github.repositoryRequest({ method: 'PATCH', path: `/hooks/${existing.id}/config`, body: config })
   })
 
 /**
@@ -260,8 +292,11 @@ export const upsertWebhook = (webhook: WebhookConfig): Effect.Effect<void, GitHu
  * @remarks
  * The site is read first: a missing one is created, then updated when the
  * config sets fields only an update takes (the custom domain and HTTPS); an
- * existing one is updated with whatever the config sets. Unpublishing a
- * site that does not exist does nothing.
+ * existing one is updated with whatever the config sets. HTTPS is enforced
+ * in a call of its own after the rest, because GitHub refuses it until the
+ * custom domain has a certificate: the domain is then stored, and a later
+ * run enforces HTTPS once the certificate is issued. Unpublishing a site
+ * that does not exist does nothing.
  *
  * @example
  * ```ts
@@ -279,19 +314,29 @@ export const ensurePages = (step: PagesStep): Effect.Effect<void, GitHubError, G
   Effect.gen(function* () {
     const github = yield* GitHub
     if (!step.enabled) {
-      yield* github.repositoryRequest({ method: 'DELETE', path: '/pages' }).pipe(Effect.catchTag('NotFound', () => Effect.void))
+      yield* github
+        .repositoryRequest({ method: 'DELETE', path: '/pages' })
+        .pipe(Effect.catchTag('NotFound', () => Effect.void))
       return
     }
     const site = yield* github.repositoryRequest({ method: 'GET', path: '/pages' }).pipe(
       Effect.map(Option.some),
       Effect.catchTag('NotFound', () => Effect.succeedNone),
     )
-    const update = Option.isNone(site) ? Object.fromEntries(Object.entries(step.update).filter(([key]) => !(key in step.create))) : step.update
+    const update = Option.isNone(site)
+      ? Object.fromEntries(Object.entries(step.update).filter(([key]) => !(key in step.create)))
+      : step.update
     if (Option.isNone(site)) yield* github.repositoryRequest({ method: 'POST', path: '/pages', body: step.create })
-    if (Object.keys(update).length > 0) yield* github.repositoryRequest({ method: 'PUT', path: '/pages', body: update })
+    const { https_enforced: https, ...rest } = update
+    if (Object.keys(rest).length > 0) yield* github.repositoryRequest({ method: 'PUT', path: '/pages', body: rest })
+    if (https !== undefined)
+      yield* github.repositoryRequest({ method: 'PUT', path: '/pages', body: { https_enforced: https } })
   })
 
-const VariableList = Schema.Struct({ total_count: Schema.Number, variables: Schema.Array(Schema.Struct({ name: Schema.String })) })
+const VariableList = Schema.Struct({
+  total_count: Schema.Number,
+  variables: Schema.Array(Schema.Struct({ name: Schema.String })),
+})
 
 /**
  * Checks the repository has the named Actions variables, without reading
@@ -320,9 +365,16 @@ export const checkVariables = (
     const present = new Set<string>()
     // 30 is the most GitHub returns per page for variables.
     for (let page = 1; ; page += 1) {
-      const response = yield* github.repositoryRequest({ method: 'GET', path: `/actions/variables?per_page=30&page=${page}` })
+      const response = yield* github.repositoryRequest({
+        method: 'GET',
+        path: `/actions/variables?per_page=30&page=${page}`,
+      })
       const listed = Schema.decodeUnknownEither(VariableList)(response)
-      if (Either.isLeft(listed)) return yield* new UnexpectedResponse({ operation: 'GET /actions/variables', detail: 'expected a list of variables' })
+      if (Either.isLeft(listed))
+        return yield* new UnexpectedResponse({
+          operation: 'GET /actions/variables',
+          detail: 'expected a list of variables',
+        })
       for (const variable of listed.right.variables) present.add(variable.name.toUpperCase())
       if (listed.right.variables.length === 0 || present.size >= listed.right.total_count) break
     }
@@ -330,7 +382,9 @@ export const checkVariables = (
     if (missing.length > 0) return yield* new MissingVariables({ variables: Object.fromEntries(missing) })
   })
 
-const perform = (step: SettingsStep): Effect.Effect<void, GitHubError | UnexpectedResponse | MissingVariables, GitHub> => {
+const perform = (
+  step: SettingsStep,
+): Effect.Effect<void, GitHubError | UnexpectedResponse | MissingVariables, GitHub> => {
   switch (step.kind) {
     case 'ruleset':
       return upsertRuleset(step.ruleset)
@@ -389,7 +443,11 @@ export const applySettings = (
   Effect.gen(function* () {
     const report = yield* Report
     yield* Effect.logInfo(`settings: ${steps.length} step(s) to apply`).pipe(
-      Effect.annotateLogs({ feature: FEATURE, steps: steps.length, optional: steps.filter((step) => step.optional).length }),
+      Effect.annotateLogs({
+        feature: FEATURE,
+        steps: steps.length,
+        optional: steps.filter((step) => step.optional).length,
+      }),
     )
     let applied = 0
     let failed = 0
@@ -398,12 +456,20 @@ export const applySettings = (
       const writes = step.kind !== 'variables'
       const outcome = yield* perform(step).pipe(
         Effect.tapBoth({
-          onSuccess: () => Effect.logDebug(`settings: ${step.id} applied`).pipe(Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: 'applied' })),
+          onSuccess: () =>
+            Effect.logDebug(`settings: ${step.id} applied`).pipe(
+              Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: 'applied' }),
+            ),
           onFailure: (error) =>
-            Effect.logDebug(`settings: ${step.id} failed`).pipe(Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: error._tag })),
+            Effect.logDebug(`settings: ${step.id} failed`).pipe(
+              Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: error._tag }),
+            ),
         }),
         Effect.matchEffect({
-          onSuccess: () => (writes ? Effect.as(report.change({ feature: FEATURE, description: step.description }), 'applied' as const) : Effect.succeed('checked' as const)),
+          onSuccess: () =>
+            writes
+              ? Effect.as(report.change({ feature: FEATURE, description: step.description }), 'applied' as const)
+              : Effect.succeed('checked' as const),
           onFailure: (error) =>
             Effect.as(
               report.add({
