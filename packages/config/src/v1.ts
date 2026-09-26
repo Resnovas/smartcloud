@@ -63,25 +63,67 @@ const CONTEXTS: ReadonlyMap<string, 'shared' | 'pr' | 'issue' | 'schedule' | 'pr
 
 const slug = (name: string) => name.toLowerCase().replace(/[^a-z0-9_.:-]+/g, '-')
 
-const migrateLabels = (labels: Json | undefined): Record<string, JsonRecord> => {
-  const out: Record<string, JsonRecord> = {}
+// Labels are collected in a Map and turned into an object with
+// Object.fromEntries, so a key such as `__proto__` stays data and the schema
+// can report it, rather than vanishing into the object's prototype.
+const migrateLabels = (labels: Json | undefined, warnings: Array<string>): JsonRecord => {
+  const out = new Map<string, JsonRecord>()
   const add = (id: string, label: Json) => {
     if (!isRecord(label) || typeof label['name'] !== 'string' || typeof label['color'] !== 'string') return
     const { name, color, description } = label
-    out[id] = typeof description === 'string' ? { name, color, description } : { name, color }
+    out.set(id, typeof description === 'string' ? { name, color, description } : { name, color })
   }
-  if (Array.isArray(labels)) labels.forEach((label) => isRecord(label) && typeof label['name'] === 'string' && add(slug(label['name']), label))
-  else if (isRecord(labels)) Object.entries(labels).forEach(([id, label]) => add(id, label))
-  return out
+  if (Array.isArray(labels)) {
+    labels.forEach((label, index) => {
+      if (!isRecord(label) || typeof label['name'] !== 'string') return
+      const name = label['name']
+      const id = slug(name)
+      // Distinct names such as `A B` and `A-B` slug alike; keep both.
+      let unique = id
+      for (let suffix = 2; out.has(unique); suffix++) unique = `${id}-${suffix}`
+      if (unique !== id) warnings.push(`labels[${index}]: "${name}" has the same key as an earlier label, migrated as "${unique}"`)
+      add(unique, label)
+    })
+  } else if (isRecord(labels)) Object.entries(labels).forEach(([id, label]) => add(id, label))
+  return Object.fromEntries(out)
 }
 
 const PRESETS = new Set(['semanticTitle', 'gitmojis', 'semanticEmoji'])
 
-// v1 stale: { staleLabel, stale: { days, comment }, abandoned: { days, label, comment } }.
-const migrateStale = (setting: JsonRecord, on: ReadonlyArray<string> | undefined): JsonRecord => {
+// v1 stale keys that v2 does not carry, and why. v1 declared close and lock
+// on abandoned items but never acted on them, so they are not turned into
+// v2's close, which would start closing items v1 left open.
+const STALE_DROPPED: Readonly<Record<string, string>> = {
+  resolve: 'v2 posts no comment when an item stops being stale',
+  condition: 'v2 stale has no extra conditions; use exempt',
+  requires: 'v2 stale has no extra conditions; use exempt',
+  commentHeader: 'v2 stale comments have no header or footer',
+  commentFooter: 'v2 stale comments have no header or footer',
+  close: 'v1 never implemented it',
+  lock: 'v1 never implemented it',
+}
+
+const warnUncarried = (warnings: Array<string>, where: string, record: JsonRecord, carried: ReadonlyArray<string>) => {
+  for (const key of Object.keys(record)) {
+    if (carried.includes(key)) continue
+    const reason = STALE_DROPPED[key]
+    warnings.push(`${where}.${key}: ${reason === undefined ? 'unknown v1 key, ignored' : `dropped, ${reason}`}`)
+  }
+}
+
+// v1 stale: { staleLabel, condition, stale: { days, comment, ... }, abandoned: { days, label, comment, ... } }.
+const migrateStale = (
+  setting: JsonRecord,
+  on: ReadonlyArray<string> | undefined,
+  where: string,
+  warnings: Array<string>,
+): JsonRecord => {
   const out: Record<string, Json> = on === undefined ? {} : { on: [...on] }
   const inner = isRecord(setting['stale']) ? setting['stale'] : {}
   const abandoned = isRecord(setting['abandoned']) ? setting['abandoned'] : {}
+  warnUncarried(warnings, where, setting, ['staleLabel', 'stale', 'abandoned'])
+  warnUncarried(warnings, `${where}.stale`, inner, ['days', 'comment'])
+  warnUncarried(warnings, `${where}.abandoned`, abandoned, ['days', 'label', 'comment'])
   out['staleAfterDays'] = typeof inner['days'] === 'number' ? inner['days'] : 60
   out['staleLabel'] = typeof setting['staleLabel'] === 'string' ? setting['staleLabel'] : 'stale'
   if (typeof inner['comment'] === 'string') out['staleComment'] = inner['comment']
@@ -108,6 +150,18 @@ export const migrateV1 = (input: JsonRecord): Migration => {
   const labelling: Record<string, JsonRecord> = {}
   const rules: Record<string, JsonRecord> = {}
   const comment: Record<string, string> = {}
+  // Where each comment part came from, so a replaced one can be reported.
+  const commentFrom: Record<string, string> = {}
+  const takeComment = (setting: JsonRecord, where: string, part: 'header' | 'footer', field: string) => {
+    const text = setting[field]
+    if (typeof text !== 'string') return
+    const earlier = commentFrom[part]
+    if (earlier !== undefined && comment[part] !== text) {
+      warnings.push(`${earlier}: dropped, v2 has one conventions.comment and ${where}.${field} replaced it`)
+    }
+    comment[part] = text
+    commentFrom[part] = `${where}.${field}`
+  }
   const automaticApprove: Record<string, JsonRecord> = {}
   const requestApprovals: Record<string, JsonRecord> = {}
   let stale: JsonRecord | undefined
@@ -131,12 +185,15 @@ export const migrateV1 = (input: JsonRecord): Migration => {
       for (const [feature, setting] of Object.entries(value)) {
         const where = `runners[${index}].${key}.${feature}`
         if (feature === 'labels' && isRecord(setting)) {
+          if (context === 'schedule') {
+            warnings.push(`${where}: now evaluated when an issue or pull request event arrives, v2 has no scheduled labelling`)
+          }
           for (const [label, when] of Object.entries(setting)) {
             labelling[`${prefix}${context}.${label}`] = on === undefined ? { label, when } : { label, on, when }
           }
         } else if (feature === 'enforceConventions' && isRecord(setting)) {
-          if (typeof setting['commentHeader'] === 'string') comment['header'] = setting['commentHeader']
-          if (typeof setting['commentFooter'] === 'string') comment['footer'] = setting['commentFooter']
+          takeComment(setting, where, 'header', 'commentHeader')
+          takeComment(setting, where, 'footer', 'commentFooter')
           if (setting['onColumn'] !== undefined || setting['moveToColumn'] !== undefined) {
             warnings.push(`${where}: onColumn and moveToColumn dropped, ${DROPPED['assignProject']}`)
           }
@@ -156,7 +213,7 @@ export const migrateV1 = (input: JsonRecord): Migration => {
             warnings.push(`${where}: dropped, v2 has one stale section and an earlier context already set it`)
             continue
           }
-          stale = migrateStale(setting, on)
+          stale = migrateStale(setting, on, where, warnings)
         } else if (feature === 'automaticApprove' && isRecord(setting)) {
           const groups = Array.isArray(setting['condition']) ? setting['condition'] : []
           groups.forEach((when, position) => {
@@ -177,7 +234,7 @@ export const migrateV1 = (input: JsonRecord): Migration => {
   })
 
   const config: Record<string, Json> = { version: 2 }
-  const labels = migrateLabels(input['labels'])
+  const labels = migrateLabels(input['labels'], warnings)
   if (Object.keys(labels).length > 0) config['labels'] = labels
   if (Object.keys(labelling).length > 0) config['labelling'] = labelling
   if (Object.keys(rules).length > 0 || Object.keys(comment).length > 0) {

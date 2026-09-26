@@ -162,6 +162,92 @@ describe('migrateV1: edge cases', () => {
     })
   })
 
+  it('keeps array labels whose names slug to the same key, and says so', () => {
+    const { config, warnings } = migrateV1({
+      labels: [
+        { name: 'A B', color: '111111' },
+        { name: 'A-B', color: '222222' },
+        { name: 'a b', color: '333333' },
+      ],
+    })
+    expect(config['labels']).toStrictEqual({
+      'a-b': { name: 'A B', color: '111111' },
+      'a-b-2': { name: 'A-B', color: '222222' },
+      'a-b-3': { name: 'a b', color: '333333' },
+    })
+    expect(warnings).toStrictEqual([
+      'labels[1]: "A-B" has the same key as an earlier label, migrated as "a-b-2"',
+      'labels[2]: "a b" has the same key as an earlier label, migrated as "a-b-3"',
+    ])
+  })
+
+  it('keeps a label keyed __proto__ as data, so decoding reports it', () => {
+    const input: unknown = JSON.parse('{"labels": {"__proto__": {"name": "x", "color": "111111"}}}')
+    const { config } = migrateV1(typeof input === 'object' && input !== null && !Array.isArray(input) ? input : {})
+    const labels = config['labels']
+    expect(typeof labels === 'object' && labels !== null && Object.hasOwn(labels, '__proto__')).toBe(true)
+  })
+
+  it('warns when a later convention comment replaces a different earlier one', () => {
+    const { config, warnings } = migrateV1({
+      runners: [
+        {
+          sharedConfig: { enforceConventions: { commentHeader: 'Shared', commentFooter: 'Same' } },
+          pr: { enforceConventions: { commentHeader: 'Pull request', commentFooter: 'Same' } },
+        },
+        { issue: { enforceConventions: { commentFooter: 'Issue' } } },
+      ],
+    })
+    expect(config['conventions']).toMatchObject({ comment: { header: 'Pull request', footer: 'Issue' } })
+    expect(warnings).toStrictEqual([
+      'runners[0].sharedConfig.enforceConventions.commentHeader: dropped, v2 has one conventions.comment and runners[0].pr.enforceConventions.commentHeader replaced it',
+      'runners[0].pr.enforceConventions.commentFooter: dropped, v2 has one conventions.comment and runners[1].issue.enforceConventions.commentFooter replaced it',
+    ])
+  })
+
+  it('warns about every v1 stale key it does not carry over', () => {
+    const { config, warnings } = migrateV1({
+      runners: [
+        {
+          pr: {
+            stale: {
+              staleLabel: 'old',
+              mystery: true,
+              stale: { days: 10, resolve: 'fresh', condition: [], requires: 1, commentHeader: 'h', commentFooter: 'f' },
+              abandoned: { days: 5, label: 'gone', close: true, lock: true },
+            },
+          },
+        },
+      ],
+    })
+    // v1 declared close and lock but never acted on them, so v2 must not start closing items.
+    expect(config['stale']).toStrictEqual({
+      on: ['pullRequest'],
+      staleAfterDays: 10,
+      staleLabel: 'old',
+      abandonedAfterDays: 5,
+      abandonedLabel: 'gone',
+    })
+    expect(warnings).toStrictEqual([
+      'runners[0].pr.stale.mystery: unknown v1 key, ignored',
+      'runners[0].pr.stale.stale.resolve: dropped, v2 posts no comment when an item stops being stale',
+      'runners[0].pr.stale.stale.condition: dropped, v2 stale has no extra conditions; use exempt',
+      'runners[0].pr.stale.stale.requires: dropped, v2 stale has no extra conditions; use exempt',
+      'runners[0].pr.stale.stale.commentHeader: dropped, v2 stale comments have no header or footer',
+      'runners[0].pr.stale.stale.commentFooter: dropped, v2 stale comments have no header or footer',
+      'runners[0].pr.stale.abandoned.close: dropped, v1 never implemented it',
+      'runners[0].pr.stale.abandoned.lock: dropped, v1 never implemented it',
+    ])
+  })
+
+  it('warns that scheduled label rules now run on events', () => {
+    const { config, warnings } = migrateV1({ runners: [{ schedule: { labels: { old: { condition: [] } } } }] })
+    expect(config['labelling']).toStrictEqual({ 'schedule.old': { label: 'old', when: { condition: [] } } })
+    expect(warnings).toStrictEqual([
+      'runners[0].schedule.labels: now evaluated when an issue or pull request event arrives, v2 has no scheduled labelling',
+    ])
+  })
+
   it('produces a bare version 2 config from an empty v1 config', () => {
     expect(migrateV1({}).config).toStrictEqual({ version: 2 })
   })

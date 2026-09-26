@@ -27,7 +27,14 @@ import { Commits, Disclosure, Links, Reviews, Roles, Settings, Stale, Sync } fro
  * A key naming a label or rule: any non-empty text without leading or
  * trailing spaces. v1 configs use keys such as `claNot Required`.
  */
-export const RuleId = Schema.NonEmptyTrimmedString.annotations({ identifier: 'RuleId', description: 'A label or rule key.' })
+export const RuleId = Schema.NonEmptyTrimmedString.pipe(
+  // JavaScript treats an object key of __proto__ as the prototype, so a rule
+  // with that key would vanish without a word. It is rejected instead.
+  Schema.filter((key) => key !== '__proto__' || 'the key __proto__ is reserved; choose another name', {
+    jsonSchema: { not: { const: '__proto__' } },
+  }),
+  Schema.annotations({ identifier: 'RuleId', description: 'A label or rule key.' }),
+)
 
 /** A label colour: six hexadecimal digits, with or without a leading `#`. */
 export const Color = Schema.String.pipe(
@@ -72,7 +79,11 @@ export const ConventionRule = Schema.Struct({
   contexts: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
   when: Schema.optionalWith(ConditionGroup, { exact: true }),
 }).pipe(
-  Schema.filter((rule) => rule.preset !== undefined || rule.when !== undefined || 'a convention needs a preset or when'),
+  Schema.filter((rule) => rule.preset !== undefined || rule.when !== undefined || 'a convention needs a preset or when', {
+    // Wrapped in allOf so Effect merges it with the struct's properties
+    // rather than replacing them.
+    jsonSchema: { allOf: [{ anyOf: [{ required: ['preset'] }, { required: ['when'] }] }] },
+  }),
   Schema.annotations({ identifier: 'ConventionRule' }),
 )
 export type ConventionRule = typeof ConventionRule.Type

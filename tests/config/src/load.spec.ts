@@ -89,6 +89,13 @@ describe('parseConfig', () => {
     }),
   )
 
+  it.effect('rejects a rule key of __proto__ instead of dropping it silently', () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(parseConfig('version: 2\nlabels:\n  __proto__: { name: x, color: "111111" }\n  ok: { name: y, color: "222222" }\n', 'x.yml'))
+      expect(error.message).toContain('__proto__')
+    }),
+  )
+
   it('needs a preset or conditions for every convention', () => {
     expect(() => Schema.decodeUnknownSync(SmartcloudConfig)({ version: 2, conventions: { rules: { a: {} } } })).toThrow(
       'a convention needs a preset or when',
@@ -205,6 +212,15 @@ describe('extends entries', () => {
     expect(parseExtendsRef('not-a-ref')).toBeUndefined()
   })
 
+  it('reject dot segments, so a preset cannot point outside its repository', () => {
+    expect(parseExtendsRef('o/r/../other.yml')).toBeUndefined()
+    expect(parseExtendsRef('o/r/a/./b.yml')).toBeUndefined()
+    expect(parseExtendsRef('../../repos/x.yml')).toBeUndefined()
+    expect(parseExtendsRef('o/./p.yml')).toBeUndefined()
+    expect(parseExtendsRef('o/r/a//b.yml')).toBeUndefined()
+    expect(parseExtendsRef('o/r/.github/..x.yml@v1')).toStrictEqual({ owner: 'o', repo: 'r', path: '.github/..x.yml', ref: 'v1' })
+  })
+
   it('are validated when the config is decoded', () => {
     expect(() => Schema.decodeUnknownSync(SmartcloudConfig)({ version: 2, extends: ['nope'] })).toThrow(
       'expected owner/repo/path@ref, got "nope"',
@@ -230,6 +246,50 @@ describe('mergeLocked', () => {
     expect(merged.value).toStrictEqual({ labels: { bug: { name: 'bug', color: 'd73a4a', description: 'x' } } })
     expect(merged.origins.get('labels.bug.description')).toBe('repo')
     expect(merged.origins.get('labels.bug.color')).toBe('house')
+  })
+
+  it('treats keys named like Object.prototype members as ordinary keys', () => {
+    const base = Either.getOrThrow(mergeLocked(empty, { labels: { bug: { name: 'bug' } } }, 'house'))
+    const merged = mergeLocked(base, { labels: { constructor: { name: 'c' }, toString: { name: 't' } } }, 'repo')
+    // toStrictEqual compares constructors, which an own `constructor` key replaces, so compare the JSON.
+    expect(JSON.stringify(Either.getOrThrow(merged).value)).toBe(
+      JSON.stringify({ labels: { bug: { name: 'bug' }, constructor: { name: 'c' }, toString: { name: 't' } } }),
+    )
+    const restated = mergeLocked(Either.getOrThrow(merged), { labels: { constructor: { name: 'c', hasOwnProperty: 1 } } }, 'x')
+    expect(Either.isRight(restated)).toBe(true)
+  })
+
+  it('keeps a __proto__ key as data rather than a prototype', () => {
+    const next: unknown = JSON.parse('{"labels": {"__proto__": {"name": "p"}}}')
+    const merged = Either.getOrThrow(mergeLocked(empty, { labels: {} }, 'house'))
+    const result = Either.getOrThrow(
+      mergeLocked(merged, typeof next === 'object' && next !== null && !Array.isArray(next) ? next : {}, 'repo'),
+    )
+    const labels = result.value['labels']
+    expect(typeof labels === 'object' && labels !== null && Object.hasOwn(labels, '__proto__')).toBe(true)
+  })
+
+  it('does not confuse a rule whose key contains a dot with a field of another rule', () => {
+    const base = Either.getOrThrow(mergeLocked(empty, { rules: { x: { preset: 'a' } } }, 'house'))
+    const merged = Either.getOrThrow(mergeLocked(base, { rules: { 'x.preset': { preset: 'b' } } }, 'repo'))
+    expect(merged.origins.get('rules.x.preset')).toBe('house')
+    expect(merged.origins.get('rules.x\\.preset')).toBe('repo')
+    const error = mergeLocked(merged, { rules: { x: { preset: 'c' } } }, 'late')
+    expect(Either.isLeft(error) && error.left).toStrictEqual(new LockedRule({ path: 'rules.x.preset', preset: 'house', source: 'late' }))
+  })
+
+  it('cannot add requires or other fields to an inherited condition group', () => {
+    const base = Either.getOrThrow(
+      mergeLocked(empty, { labelling: { bug: { label: 'bug', when: { condition: [{ type: 'isOpen', condition: true }] } } } }, 'house'),
+    )
+    const weakened = mergeLocked(
+      base,
+      { labelling: { bug: { label: 'bug', when: { requires: 0, condition: [{ type: 'isOpen', condition: true }] } } } },
+      'repo',
+    )
+    expect(Either.isLeft(weakened) && weakened.left).toStrictEqual(
+      new LockedRule({ path: 'labelling.bug.when.requires', preset: 'house', source: 'repo' }),
+    )
   })
 
   it('locks a scalar against an object and an object against a scalar', () => {

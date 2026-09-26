@@ -91,7 +91,9 @@
       "title": "smartcloud configuration"
     },
     "ExtendsEntry": {
-      "type": "string"
+      "type": "string",
+      "description": "A preset to extend, as owner/repo/path@ref. The ref is optional.",
+      "pattern": "^(?!\\.\\.?\\/)([A-Za-z0-9_.-]+)\\/(?!\\.\\.?\\/)([A-Za-z0-9_.-]+)\\/((?!\\.\\.?(?:\\/|@|$))[^/@]+(?:\\/(?!\\.\\.?(?:\\/|@|$))[^/@]+)*)(?:@([^@\\s]+))?$"
     },
     "Label": {
       "type": "object",
@@ -128,7 +130,10 @@
       "description": "A label or rule key.",
       "title": "nonEmptyString",
       "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
-      "minLength": 1
+      "minLength": 1,
+      "not": {
+        "const": "__proto__"
+      }
     },
     "LabelRule": {
       "type": "object",
@@ -842,7 +847,23 @@
           "$ref": "#/$defs/ConditionGroup"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "required": [
+                "preset"
+              ]
+            },
+            {
+              "required": [
+                "when"
+              ]
+            }
+          ]
+        }
+      ]
     },
     "Roles": {
       "type": "object",

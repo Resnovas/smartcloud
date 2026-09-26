@@ -22,7 +22,11 @@ import { Data, Either } from 'effect'
  * locked: a repository may add rules, never replace or remove inherited ones.
  */
 export class LockedRule extends Data.TaggedError('LockedRule')<{
-  /** Dotted path of the value, for example `labelling.bug.when`. */
+  /**
+   * Dotted path of the value, for example `labelling.bug.when`. A dot or
+   * backslash inside a key is escaped with a backslash, so the single key
+   * `a.b` reads `a\.b`.
+   */
   readonly path: string
   /** The preset that set it. */
   readonly preset: string
@@ -39,14 +43,33 @@ type Json = null | boolean | number | string | ReadonlyArray<Json> | { readonly 
 const isRecord = (value: unknown): value is Readonly<Record<string, Json>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
+// Keys come from config files, so a key such as `constructor` or `__proto__`
+// must be read and written as data, never through Object.prototype.
+const own = (record: Readonly<Record<string, Json>>, key: string): Json | undefined =>
+  Object.hasOwn(record, key) ? record[key] : undefined
+
 const same = (a: Json, b: Json): boolean => {
   if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((item, i) => same(item, b[i] ?? null))
   if (isRecord(a) && isRecord(b)) {
     const keys = Object.keys(a)
-    return keys.length === Object.keys(b).length && keys.every((key) => key in b && same(a[key] ?? null, b[key] ?? null))
+    return (
+      keys.length === Object.keys(b).length &&
+      keys.every((key) => Object.hasOwn(b, key) && same(own(a, key) ?? null, own(b, key) ?? null))
+    )
   }
   return a === b
 }
+
+// Rule keys may contain dots, so each segment escapes its own backslashes and
+// dots before the segments are joined: rule `x.preset` and the `preset` field
+// of rule `x` must never share an origin.
+const pathOf = (path: ReadonlyArray<string>): string =>
+  path.map((segment) => segment.replaceAll('\\', '\\\\').replaceAll('.', '\\.')).join('.')
+
+// A condition group is inherited whole: adding `requires: 0` or any other
+// field to a preset's group would change what it tests without changing any
+// value the preset set.
+const isGroup = (value: Readonly<Record<string, Json>>): boolean => Array.isArray(own(value, 'condition'))
 
 /**
  * The result of merging configs: the merged value, and which source set each
@@ -65,7 +88,9 @@ export const empty: Merged = { value: {}, origins: new Map() }
  *
  * @remarks
  * Objects merge key by key, so a config can add a new label or rule, or a
- * new field to an inherited rule. Repeating a value exactly as it already is
+ * new field to an inherited rule. A condition group is the exception: it is
+ * inherited whole, so a field such as `requires` cannot be added to one.
+ * Repeating a value exactly as it already is
  * changes nothing and is allowed. Any other value already present, whether a
  * scalar, a list, or an object meeting a non-object, belongs to whichever
  * source set it first, and setting it differently is a {@link LockedRule}.
@@ -84,7 +109,7 @@ export const mergeLocked = (
   // Every path under a newly added value belongs to this source, so a later
   // conflict can name the exact field and the preset that set it.
   const claim = (value: Json, path: ReadonlyArray<string>): void => {
-    origins.set(path.join('.'), source)
+    origins.set(pathOf(path), source)
     if (isRecord(value)) for (const [key, inner] of Object.entries(value)) claim(inner, [...path, key])
   }
   const visit = (
@@ -92,13 +117,18 @@ export const mergeLocked = (
     next: Readonly<Record<string, Json>>,
     path: ReadonlyArray<string>,
   ): Either.Either<Readonly<Record<string, Json>>, LockedRule> => {
-    const out: Record<string, Json> = { ...base }
+    // A Map, turned into an object with Object.fromEntries, stores every key
+    // as an own property, including `__proto__`.
+    const out = new Map<string, Json>(Object.entries(base))
     for (const [key, value] of Object.entries(next)) {
       const here = [...path, key]
-      const dotted = here.join('.')
-      const existing = base[key]
+      const dotted = pathOf(here)
+      const existing = own(base, key)
       if (existing === undefined) {
-        out[key] = value
+        if (path.length > 0 && isGroup(base)) {
+          return Either.left(new LockedRule({ path: dotted, preset: origins.get(pathOf(path)) ?? 'a preset', source }))
+        }
+        out.set(key, value)
         claim(value, here)
         continue
       }
@@ -106,12 +136,12 @@ export const mergeLocked = (
       if (isRecord(existing) && isRecord(value)) {
         const inner = visit(existing, value, here)
         if (Either.isLeft(inner)) return inner
-        out[key] = inner.right
+        out.set(key, inner.right)
         continue
       }
       return Either.left(new LockedRule({ path: dotted, preset: origins.get(dotted) ?? 'a preset', source }))
     }
-    return Either.right(out)
+    return Either.right(Object.fromEntries(out))
   }
   return Either.map(visit(merged.value, config, []), (value) => ({ value, origins }))
 }

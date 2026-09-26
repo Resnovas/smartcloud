@@ -28,7 +28,12 @@ export interface ExtendsRef {
   readonly ref?: string
 }
 
-const REF = /^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)\/([^@]+?)(?:@([^@\s]+))?$/
+// owner/repo/path@ref. No segment may be empty, `.` or `..`, so an entry can
+// only name a file inside the repository it names. Segments cannot contain
+// `/` or `@`, so each lookahead checks a fixed width and matching stays linear.
+// The JSON Schema carries the same expression, so editors agree with startup.
+const REF =
+  /^(?!\.\.?\/)([A-Za-z0-9_.-]+)\/(?!\.\.?\/)([A-Za-z0-9_.-]+)\/((?!\.\.?(?:\/|@|$))[^/@]+(?:\/(?!\.\.?(?:\/|@|$))[^/@]+)*)(?:@([^@\s]+))?$/
 
 /**
  * Parses an `extends` entry of the form `owner/repo/path@ref`.
@@ -64,5 +69,6 @@ export const ExtendsEntry = Schema.String.pipe(
   Schema.filter((entry) => parseExtendsRef(entry) !== undefined || `expected owner/repo/path@ref, got "${entry}"`, {
     identifier: 'ExtendsEntry',
     description: 'A preset to extend, as owner/repo/path@ref. The ref is optional.',
+    jsonSchema: { pattern: REF.source },
   }),
 )

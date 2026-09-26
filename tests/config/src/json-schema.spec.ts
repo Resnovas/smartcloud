@@ -17,7 +17,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
-import { configJsonSchema } from '@resnovas/config'
+import { configJsonSchema, parseExtendsRef } from '@resnovas/config'
 
 // The committed JSON Schema must match the Effect Schema. Regenerate it with:
 //   SMARTCLOUD_UPDATE_SCHEMA=1 pnpm nx test @resnovas/config-tests
@@ -34,5 +34,20 @@ describe('JSON Schema', () => {
     const schema = configJsonSchema()
     expect(JSON.stringify(schema)).toContain('"version"')
     expect(JSON.stringify(schema)).toContain('ConditionGroup')
+  })
+
+  it('carries the runtime checks that editors can express', () => {
+    const schema: unknown = JSON.parse(JSON.stringify(configJsonSchema()))
+    const at = (...keys: ReadonlyArray<string>): unknown =>
+      keys.reduce<unknown>((value, key) => (typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined), schema)
+    const pattern = at('$defs', 'ExtendsEntry', 'pattern')
+    expect(typeof pattern).toBe('string')
+    const matches = new RegExp(typeof pattern === 'string' ? pattern : '$^', 'u')
+    for (const entry of ['o/r/p.yml', 'Resnovas/.github/smartcloud/house.yml@main', 'nope', 'o/r/../p.yml', 'o/r/p@a@b', 'o/r/a//b']) {
+      expect([entry, matches.test(entry)]).toStrictEqual([entry, parseExtendsRef(entry) !== undefined])
+    }
+    expect(at('$defs', 'ConventionRule', 'allOf')).toStrictEqual([{ anyOf: [{ required: ['preset'] }, { required: ['when'] }] }])
+    expect(at('$defs', 'ConventionRule', 'additionalProperties')).toBe(false)
+    expect(at('$defs', 'RuleId', 'not')).toStrictEqual({ const: '__proto__' })
   })
 })
