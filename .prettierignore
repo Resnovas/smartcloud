@@ -47,3 +47,11 @@ dist
 coverage
 pnpm-lock.yaml
 externals
+# Generated, and checked byte for byte against their generator: the schema by
+# tests/config (json-schema.spec.ts), the reference by docs:reference:check.
+schema/smartcloud.schema.json
+docs/reference/configuration.mdx
+# Written by the all-contributors bot.
+.all-contributorsrc
+# Real v1 configs, kept verbatim as migration fixtures.
+tests/config/src/fixtures/
