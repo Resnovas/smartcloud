@@ -80,7 +80,9 @@ export const Commits = Schema.Struct({
   /** AI co-authors carry `Co-authored-by` and `Assisted-by` together, and never sign off. */
   aiAttribution: opt(Schema.Boolean),
   /** Extra patterns identifying AI tools by email or name, on top of the built-in list. */
-  aiIdentities: opt(Schema.Struct({ emails: opt(Schema.Array(Schema.String)), names: opt(Schema.Array(Schema.String)) })),
+  aiIdentities: opt(
+    Schema.Struct({ emails: opt(Schema.Array(Schema.String)), names: opt(Schema.Array(Schema.String)) }),
+  ),
   /** Level for maintainers' own pull requests. An AI sign-off is always an error. */
   maintainerLevel: opt(Level),
 }).annotations({ identifier: 'Commits' })
@@ -203,6 +205,13 @@ export const Stale = Schema.Struct({
 // (GitHub reserves the GITHUB_ prefix).
 const Login = /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/
 const Slug = /^[a-z0-9][a-z0-9_-]*$/
+
+// The pattern documents the shape; the filter rejects what only looks like a
+// URL, such as `http://[`, before GitHub does.
+const WebhookUrl = Schema.String.pipe(
+  Schema.pattern(/^https?:\/\/\S+$/),
+  Schema.filter((url) => URL.canParse(url) || `expected an http or https URL, got "${url}"`, { jsonSchema: {} }),
+)
 const VariableName = /^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$/
 const REPOSITORY_ROLES = ['read', 'triage', 'write', 'maintain', 'admin'] as const
 
@@ -296,15 +305,22 @@ export const Settings = Schema.Struct({
     }),
   ),
   /** Collaborators by login, with their role; `none` removes one. */
-  collaborators: opt(Schema.Record({ key: Schema.String.pipe(Schema.pattern(Login)), value: Schema.Literal(...REPOSITORY_ROLES, 'none') })),
+  collaborators: opt(
+    Schema.Record({
+      key: Schema.String.pipe(Schema.pattern(Login)),
+      value: Schema.Literal(...REPOSITORY_ROLES, 'none'),
+    }),
+  ),
   /** Organisation teams by slug, with their role on the repository. */
-  teams: opt(Schema.Record({ key: Schema.String.pipe(Schema.pattern(Slug)), value: Schema.Literal(...REPOSITORY_ROLES) })),
+  teams: opt(
+    Schema.Record({ key: Schema.String.pipe(Schema.pattern(Slug)), value: Schema.Literal(...REPOSITORY_ROLES) }),
+  ),
   /** Webhooks, keyed by a name of your choosing and matched on GitHub by URL. */
   webhooks: opt(
     Schema.Record({
       key: Schema.String,
       value: Schema.Struct({
-        url: Schema.String.pipe(Schema.pattern(/^https?:\/\/\S+$/)),
+        url: WebhookUrl,
         /** The events that trigger it; `push` when a new webhook leaves it out. */
         events: opt(Schema.Array(Schema.String)),
         contentType: opt(Schema.Literal('json', 'form')),

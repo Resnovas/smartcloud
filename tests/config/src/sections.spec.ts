@@ -59,13 +59,16 @@ sync:
       expect(config.reviews?.gate).toStrictEqual({ outside: 2, maintainer: 1 })
       expect(config.settings?.security?.codeScanning).toBe('extended')
       expect(config.sync?.values).toStrictEqual({ ORG_NAME: 'Resnovas' })
-      expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(config)
+      expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(
+        config,
+      )
     }),
   )
 
   it.effect('reject sync values whose keys are not SCREAMING_SNAKE_CASE', () =>
-    Effect.map(Effect.flip(parseConfig('version: 2\nsync: { source: o/r/t, values: { orgName: x } }\n', 'x.yml')), (error) =>
-      expect(error._tag).toBe('ConfigDecodeError'),
+    Effect.map(
+      Effect.flip(parseConfig('version: 2\nsync: { source: o/r/t, values: { orgName: x } }\n', 'x.yml')),
+      (error) => expect(error._tag).toBe('ConfigDecodeError'),
     ),
   )
 
@@ -101,10 +104,13 @@ settings:
     ['a team slug with capitals', 'teams: { Docs: read }'],
     ['a role GitHub does not have', 'collaborators: { octocat: owner }'],
     ['a webhook URL that is not http', "webhooks: { x: { url: 'ftp://example.com' } }"],
+    ['a webhook URL that does not parse', "webhooks: { x: { url: 'http://[' } }"],
   ] as const
   for (const [what, yaml] of rejected) {
     it.effect(`reject ${what}`, () =>
-      Effect.map(Effect.flip(parseConfig(`version: 2\nsettings:\n  ${yaml}\n`, 'x.yml')), (error) => expect(error._tag).toBe('ConfigDecodeError')),
+      Effect.map(Effect.flip(parseConfig(`version: 2\nsettings:\n  ${yaml}\n`, 'x.yml')), (error) =>
+        expect(error._tag).toBe('ConfigDecodeError'),
+      ),
     )
   }
 })
