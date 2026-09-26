@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect } from 'effect'
+import { Effect, Layer } from 'effect'
 import { DryRun, DryRunLog, GitHub, GitHubMemory } from '@resnovas/integrations.github'
 
 const bug = { name: 'bug', color: 'd73a4a', description: '' }
@@ -68,6 +68,6 @@ describe('dry run', () => {
         'graphql',
       ])
       expect(yield* github.listLabels).toStrictEqual([bug])
-    }).pipe(Effect.provide(DryRun), Effect.provide(GitHubMemory({ labels: [bug] }))),
+    }).pipe(Effect.provide(Layer.provideMerge(DryRun, GitHubMemory({ labels: [bug] })))),
   )
 })

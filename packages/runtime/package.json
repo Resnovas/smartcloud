@@ -14,6 +14,7 @@
     }
   },
   "dependencies": {
+    "@effect/experimental": "^0.61.1",
     "@effect/platform": "^0.97.2",
     "@resnovas/config": "workspace:*",
     "@resnovas/engine": "workspace:*",

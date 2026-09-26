@@ -9,6 +9,7 @@
     "node": ">=24"
   },
   "scripts": {
+    "prepare": "effect-language-service patch",
     "setup": "node scripts/agent-setup.ts",
     "dev": "tsc --build tsconfig.json --watch --preserveWatchOutput",
     "build": "nx run-many -t build",
@@ -38,6 +39,7 @@
   "devDependencies": {
     "@effect/docgen": "4.0.0-rc.117",
     "@effect/doctest": "4.0.0-rc.117",
+    "@effect/language-service": "^0.87.2",
     "@effect/vitest": "^0.30.0",
     "@eslint/js": "^10.0.1",
     "@nx/eslint": "23.2.1",

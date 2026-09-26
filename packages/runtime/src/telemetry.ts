@@ -15,7 +15,8 @@
  */
 
 import { telemetryLayer, type Surface, type Telemetry, type TelemetryOptions } from '@resnovas/integrations.posthog'
-import type { Layer } from 'effect'
+import { Layer } from 'effect'
+import { devTools } from './devtools.js'
 
 /**
  * The telemetry a smartcloud process runs with: PostHog events, error
@@ -25,7 +26,8 @@ import type { Layer } from 'effect'
  * Every surface provides this once, around everything it runs. It sends
  * nothing when `SMARTCLOUD_TELEMETRY=false`, `DO_NOT_TRACK=1` or the action
  * input `telemetry: false` is set, and stops sending once a config says
- * `telemetry: false`. Closing it flushes what is queued.
+ * `telemetry: false`. Closing it flushes what is queued. With
+ * `EFFECT_DEVTOOLS` set it also connects to Effect Dev Tools ({@link devTools}).
  *
  * @example
  * ```ts
@@ -40,5 +42,8 @@ import type { Layer } from 'effect'
  * @param options - A `fetch` to use instead of the global one, for tests.
  * @returns The layer.
  */
-export const telemetry = (surface: Surface, version: string, options: Pick<TelemetryOptions, 'fetch'> = {}): Layer.Layer<Telemetry> =>
-  telemetryLayer({ surface, version, ...options })
+export const telemetry = (
+  surface: Surface,
+  version: string,
+  options: Pick<TelemetryOptions, 'fetch'> = {},
+): Layer.Layer<Telemetry> => Layer.provideMerge(devTools, telemetryLayer({ surface, version, ...options }))

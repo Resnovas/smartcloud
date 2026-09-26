@@ -68,6 +68,7 @@ describe('runFeatures', () => {
 
   it.effect('isolates a failing feature: the others still run, and the failure is recorded', () =>
     Effect.gen(function* () {
+      // @effect-diagnostics-next-line globalErrorInEffectFailure:off - a plain Error on purpose: any failure must be handled
       const broken = feature('broken', { run: () => Effect.fail(new Error('boom')) })
       const result = yield* runFeatures({ config, event: 'issues', payload: issuePayload, features: [broken, feature('ok')] })
       expect(result.ran).toStrictEqual(['ok'])
@@ -232,6 +233,7 @@ const noting: Feature = {
       ),
     ),
 }
+// @effect-diagnostics-next-line globalErrorInEffectFailure:off - a plain Error on purpose: any failure must be handled
 const broken: Feature = { name: 'broken', handles: ['pullRequest'], run: () => Effect.fail(new Error('boom in Resnovas/example')) }
 const issuesOnly: Feature = { name: 'issues-only', handles: ['issue'], run: () => Effect.void }
 

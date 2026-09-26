@@ -32,7 +32,7 @@ import {
   UnsafePath,
   validate,
 } from '@resnovas/smartcloud'
-import { Effect } from 'effect'
+import { Effect, Layer } from 'effect'
 import { chmod, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -243,7 +243,7 @@ describe('check-commit', () => {
       const file = yield* Effect.promise(() => message('fix: x\n\n# Please enter the commit message\nSigned-off-by: Jane Doe <jane@example.com>\n'))
       expect(yield* checkCommitCommand(file, jane)).toStrictEqual([])
       expect(logs).toContain('The commit message passes.')
-    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(Layer.merge(memorySource({}), NodeContext.layer))),
   )
 
   it.effect("reads git's author, prints each broken rule to stderr and fails", () =>
@@ -256,7 +256,7 @@ describe('check-commit', () => {
       expect(failed).toBeInstanceOf(CommitCheckFailed)
       expect(failed.message).toBe('the commit message breaks 1 rule(s); see above')
       expect(errors[0]).toMatch(/^DCO: No Signed-off-by matching the author <jane@example\.com>\..* See https:\/\/.*CONTRIBUTING\.md#dco$/)
-    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(Layer.merge(memorySource({}), NodeContext.layer))),
   )
 
   it.effect('uses a config file, or the repository config in the working directory', () =>
@@ -273,7 +273,7 @@ describe('check-commit', () => {
       process.chdir(dir)
       const found = yield* checkCommitCommand(file, jane).pipe(Effect.ensuring(Effect.sync(() => process.chdir(cwd))))
       expect(found).toStrictEqual([])
-    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(Layer.merge(memorySource({}), NodeContext.layer))),
   )
 
   it.effect('says so when git gives no usable author', () =>
@@ -283,7 +283,7 @@ describe('check-commit', () => {
       const error = yield* Effect.flip(checkCommitCommand(file, {}))
       expect(error).toBeInstanceOf(UnknownAuthor)
       expect(error.message).toContain('pass --author-name and --author-email')
-    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(Layer.merge(memorySource({}), NodeContext.layer))),
   )
 
 })

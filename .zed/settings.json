@@ -1,0 +1,11 @@
+// Zed project settings. The Effect Language Service is a TypeScript plugin,
+// so vtsls must run the workspace TypeScript rather than its bundled copy.
+{
+  "lsp": {
+    "vtsls": {
+      "settings": {
+        "typescript": { "tsdk": "node_modules/typescript/lib" }
+      }
+    }
+  }
+}
