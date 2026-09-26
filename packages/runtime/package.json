@@ -19,6 +19,7 @@
     "@resnovas/config": "workspace:*",
     "@resnovas/engine": "workspace:*",
     "@resnovas/feature.branches": "workspace:*",
+    "@resnovas/feature.codeowners": "workspace:*",
     "@resnovas/feature.commits": "workspace:*",
     "@resnovas/feature.conventions": "workspace:*",
     "@resnovas/feature.disclosure": "workspace:*",

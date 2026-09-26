@@ -16,6 +16,7 @@
 
 import type { SmartcloudConfig } from '@resnovas/config'
 import { BRANCH_RULE, describeBranches } from '@resnovas/feature.branches'
+import { GENERATED_RULE, SHADOWED_RULE, SYNTAX_RULE } from '@resnovas/feature.codeowners'
 import { policyBase } from '@resnovas/feature.commits'
 import { presetDescription } from '@resnovas/feature.conventions'
 import { Data, Effect } from 'effect'
@@ -99,8 +100,26 @@ const NOTICE_FEATURES: ReadonlyArray<string> = [
   'sync',
   'required',
   'freeze',
+  'codeowners',
   'engine',
 ]
+
+// The codeowners feature's rules, which check the repository's own CODEOWNERS rather than a linked policy.
+const CODEOWNERS: Readonly<Record<string, { readonly summary: string; readonly fix: string }>> = {
+  [SYNTAX_RULE]: {
+    summary: 'A CODEOWNERS line GitHub rejects or ignores, so the paths on it get no owners.',
+    fix: 'Fix the line: owners are @login, @org/team or an email address with write access, and patterns cannot use !, [ ] or spaces.',
+  },
+  [SHADOWED_RULE]: {
+    summary:
+      'A CODEOWNERS rule that never applies, because a later rule has the same pattern and the last matching rule wins.',
+    fix: 'Remove the earlier rule, or merge its owners into the later one.',
+  },
+  [GENERATED_RULE]: {
+    summary: 'A pull request edits the CODEOWNERS block generated from codeowners.rules.',
+    fix: 'Change codeowners.rules in the smartcloud config instead, and leave the block as generated.',
+  },
+}
 
 /**
  * Explains a rule from its id, as a finding reports it.
@@ -158,6 +177,8 @@ const explain = (rule: string, config: SmartcloudConfig): RuleExplanation | unde
       fix: describeBranches(config.branches),
     }
   }
+  const codeowners = CODEOWNERS[rule]
+  if (codeowners !== undefined) return { rule, ...codeowners }
   if (NOTICE_FEATURES.includes(feature) && id !== '') {
     return {
       rule,

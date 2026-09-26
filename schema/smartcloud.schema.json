@@ -1979,6 +1979,96 @@
         }
       ]
     },
+    "CodeOwners": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "path": {
+          "type": "string",
+          "enum": [
+            ".github/CODEOWNERS",
+            "CODEOWNERS",
+            "docs/CODEOWNERS"
+          ],
+          "description": "Where the file lives, one of the locations GitHub reads. By default, the first that exists, or .github/CODEOWNERS."
+        },
+        "rules": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": {
+            "$ref": "#/$defs/CodeOwnersRule"
+          },
+          "description": "Rules to generate, by key, so presets and repositories merge them. They are written in order, and the last matching rule wins."
+        },
+        "check": {
+          "type": "boolean",
+          "description": "Check pull requests that change CODEOWNERS. On by default."
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning"
+          ],
+          "description": "error fails the check; warning only reports. Defaults to error."
+        },
+        "branch": {
+          "$ref": "#/$defs/Trimmed",
+          "description": "The branch generated changes are proposed from. Defaults to smartcloud/codeowners.",
+          "title": "nonEmptyString",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false,
+      "description": "CODEOWNERS: check the file on pull requests that change it, and generate a block of it from rules in the config."
+    },
+    "CodeOwnersRule": {
+      "type": "object",
+      "required": [
+        "paths",
+        "owners"
+      ],
+      "properties": {
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/CodeOwnersPath"
+          },
+          "description": "The path patterns these owners own, each written as its own CODEOWNERS line."
+        },
+        "owners": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CodeOwner"
+          },
+          "description": "The owners of the paths. An empty list leaves them without an owner, overriding an earlier rule."
+        },
+        "comment": {
+          "type": "string",
+          "description": "A comment written above the lines, such as Documentation."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Paths and their owners, written to the generated block of CODEOWNERS."
+    },
+    "CodeOwnersPath": {
+      "type": "string",
+      "description": "A path pattern such as *.md, /docs/ or apps/**/*.ts. GitHub does not support !, [ ] or spaces in CODEOWNERS patterns.",
+      "pattern": "^[^!#\\s[\\]][^\\s[\\]]*$"
+    },
+    "CodeOwner": {
+      "type": "string",
+      "description": "A user as @login, a team as @org/team, or an email address.",
+      "pattern": "^(@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\\/[A-Za-z0-9][A-Za-z0-9._-]*)?|[^@\\s]+@[^@\\s]+\\.[^@\\s]+)$"
+    },
+    "Trimmed": {
+      "type": "string",
+      "description": "a string with no leading or trailing whitespace",
+      "title": "trimmed",
+      "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$"
+    },
     "Stale": {
       "type": "object",
       "required": [

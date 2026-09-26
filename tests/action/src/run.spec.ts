@@ -173,6 +173,7 @@ describe('runAction', () => {
         'required',
         'freeze',
         'branches',
+        'codeowners',
       ])
     }),
   )
