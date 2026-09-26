@@ -1,0 +1,22 @@
+{
+  "name": "@resnovas/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The smartcloud configuration: the v2 schema, extends with locked presets, and v1 compatibility.",
+  "license": "SEE LICENSE IN LICENSE",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "nx": { "tags": ["type_core", "layer_shared"] },
+  "dependencies": {
+    "@resnovas/conditions": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1",
+    "yaml": "^2.9.1"
+  }
+}

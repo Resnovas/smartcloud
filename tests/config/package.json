@@ -1,0 +1,11 @@
+{
+  "name": "@resnovas/config-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "nx": { "tags": ["type_test", "layer_shared"] },
+  "devDependencies": {
+    "@resnovas/config": "workspace:*",
+    "@resnovas/conditions": "workspace:*"
+  }
+}

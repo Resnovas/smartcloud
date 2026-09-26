@@ -1,0 +1,54 @@
+{
+    "labels": [
+        {
+            "name": "type:core",
+            "color": "0E8A16",
+            "description": "Core module - can be depended on by any other module"
+        },
+        {
+            "name": "type:database",
+            "color": "1D76DB",
+            "description": "Database module - can only be depended on by platforms (except devDependencies)"
+        },
+        {
+            "name": "type:extension",
+            "color": "FBCA04",
+            "description": "Extension module - can depend on core and other extensions, can be depended on by extensions and platforms"
+        },
+        {
+            "name": "type:platform",
+            "color": "B60205",
+            "description": "Platform module - top level, nothing can depend on this"
+        },
+        {
+            "name": "layer:backend",
+            "color": "5319E7",
+            "description": "Backend layer - can depend on backend and shared layers"
+        },
+        {
+            "name": "layer:frontend",
+            "color": "E99695",
+            "description": "Frontend layer - can depend on frontend and shared layers"
+        },
+        {
+            "name": "layer:shared",
+            "color": "C2E0C6",
+            "description": "Shared layer - can only depend on shared layer"
+        },
+        {
+            "name": "capability:entities",
+            "color": "BFD4F2",
+            "description": "Contains entity definitions and CRUD operations"
+        },
+        {
+            "name": "capability:workflows",
+            "color": "D4C5F9",
+            "description": "Contains workflow definitions and execution logic"
+        },
+        {
+            "name": "capability:ui",
+            "color": "FAD8C7",
+            "description": "Contains UI components and frontend interfaces"
+        }
+    ]
+}
