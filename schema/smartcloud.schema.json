@@ -1415,17 +1415,217 @@
             "blockForcePush": {
               "type": "boolean"
             },
-            "copilotReview": {
+            "mergeQueue": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "method": {
+                  "type": "string",
+                  "enum": [
+                    "squash",
+                    "rebase",
+                    "merge"
+                  ]
+                },
+                "grouping": {
+                  "type": "string",
+                  "enum": [
+                    "allGreen",
+                    "headGreen"
+                  ]
+                },
+                "checkTimeoutMinutes": {
+                  "$ref": "#/$defs/Int",
+                  "description": "a number between 1 and 360",
+                  "title": "between(1, 360)",
+                  "minimum": 1,
+                  "maximum": 360
+                },
+                "maxEntriesToBuild": {
+                  "$ref": "#/$defs/Int",
+                  "description": "a number between 0 and 100",
+                  "title": "between(0, 100)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "minEntriesToMerge": {
+                  "$ref": "#/$defs/Int",
+                  "description": "a number between 0 and 100",
+                  "title": "between(0, 100)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "maxEntriesToMerge": {
+                  "$ref": "#/$defs/Int",
+                  "description": "a number between 0 and 100",
+                  "title": "between(0, 100)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "minEntriesToMergeWaitMinutes": {
+                  "$ref": "#/$defs/Int",
+                  "description": "a number between 0 and 360",
+                  "title": "between(0, 360)",
+                  "minimum": 0,
+                  "maximum": 360
+                }
+              },
+              "additionalProperties": false
+            },
+            "requiredDeployments": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "signedCommits": {
               "type": "boolean"
             },
-            "codeScanningGate": {
-              "type": "boolean"
+            "pullRequest": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "requiredApprovals": {
+                  "$ref": "#/$defs/NonNegativeInt",
+                  "description": "a number less than or equal to 10",
+                  "title": "lessThanOrEqualTo(10)",
+                  "maximum": 10
+                },
+                "dismissStaleReviews": {
+                  "type": "boolean"
+                },
+                "codeOwnerReview": {
+                  "type": "boolean"
+                },
+                "lastPushApproval": {
+                  "type": "boolean"
+                },
+                "conversationResolution": {
+                  "type": "boolean"
+                },
+                "extraApprovalForUnattributedCopilot": {
+                  "type": "boolean"
+                },
+                "mergeMethods": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "squash",
+                      "rebase",
+                      "merge"
+                    ]
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "statusChecks": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "checks": {
+                  "type": "object",
+                  "required": [],
+                  "properties": {},
+                  "additionalProperties": {
+                    "type": "boolean"
+                  }
+                },
+                "strict": {
+                  "type": "boolean"
+                },
+                "skipOnCreation": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": false
             },
             "requiredChecks": {
               "type": "array",
               "items": {
                 "type": "string"
               }
+            },
+            "codeScanningGate": {
+              "type": "boolean"
+            },
+            "codeScanning": {
+              "type": "object",
+              "required": [],
+              "properties": {},
+              "additionalProperties": {
+                "type": "object",
+                "required": [
+                  "securityAlerts",
+                  "alerts"
+                ],
+                "properties": {
+                  "securityAlerts": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "critical",
+                      "high_or_higher",
+                      "medium_or_higher",
+                      "all"
+                    ]
+                  },
+                  "alerts": {
+                    "type": "string",
+                    "enum": [
+                      "none",
+                      "errors",
+                      "errors_and_warnings",
+                      "all"
+                    ]
+                  }
+                },
+                "additionalProperties": false
+              }
+            },
+            "codeQuality": {
+              "type": "string",
+              "enum": [
+                "errors",
+                "warnings",
+                "notes",
+                "all"
+              ]
+            },
+            "codeCoverage": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "enabled": {
+                  "type": "boolean"
+                },
+                "minimum": {
+                  "type": "number",
+                  "description": "a number between 0 and 100",
+                  "title": "between(0, 100)",
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "maxDrop": {
+                  "type": "number",
+                  "description": "a number between 0 and 100",
+                  "title": "between(0, 100)",
+                  "minimum": 0,
+                  "maximum": 100
+                }
+              },
+              "additionalProperties": false
+            },
+            "secretScanningAlerts": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "string"
+              }
+            },
+            "copilotReview": {
+              "type": "boolean"
             },
             "adminBypass": {
               "type": "boolean"
@@ -1647,6 +1847,11 @@
         }
       },
       "additionalProperties": false
+    },
+    "Int": {
+      "type": "integer",
+      "description": "an integer",
+      "title": "int"
     },
     "Sync": {
       "type": "object",

@@ -281,22 +281,104 @@ export const deploymentPoliciesFor = (repository: Repository): ReadonlyArray<Dep
 // override the ruleset, including the review gate, whatever else is set.
 const ADMIN_BYPASS: BypassActor = { actor_id: 5, actor_type: 'RepositoryRole', bypass_mode: 'always' }
 
+type Ruleset = NonNullable<SettingsConfig['ruleset']>
+
+// What `codeScanningGate` has always meant: CodeQL blocks at high or higher
+// security alerts and at errors.
+const CODEQL_GATE = { securityAlerts: 'high_or_higher', alerts: 'errors' } as const
+
+// One account listed twice, in another case or with an `@`, is one maintainer.
+const maintainerCount = (roles: RolesConfig | undefined): number =>
+  new Set((roles?.maintainers ?? []).map((login) => login.replace(/^@/, '').toLowerCase())).size
+
+// GitHub's own defaults for a merge queue, except the method: a merge commit
+// would break linear history, so the queue squashes unless told otherwise.
+const mergeQueueRule = (queue: NonNullable<Ruleset['mergeQueue']>): RulesetRule => ({
+  type: 'merge_queue',
+  parameters: {
+    merge_method: (queue.method ?? 'squash').toUpperCase(),
+    grouping_strategy: queue.grouping === 'headGreen' ? 'HEADGREEN' : 'ALLGREEN',
+    check_response_timeout_minutes: queue.checkTimeoutMinutes ?? 60,
+    max_entries_to_build: queue.maxEntriesToBuild ?? 5,
+    min_entries_to_merge: queue.minEntriesToMerge ?? 1,
+    max_entries_to_merge: queue.maxEntriesToMerge ?? 5,
+    min_entries_to_merge_wait_minutes: queue.minEntriesToMergeWaitMinutes ?? 5,
+  },
+})
+
+// Approvals bind only once two or more maintainers are configured, as the
+// review gate does: a sole maintainer cannot approve their own pull request.
+const pullRequestRule = (pullRequest: NonNullable<Ruleset['pullRequest']>, maintainers: number): RulesetRule => ({
+  type: 'pull_request',
+  parameters: {
+    required_approving_review_count: maintainers >= 2 ? (pullRequest.requiredApprovals ?? 0) : 0,
+    dismiss_stale_reviews_on_push: pullRequest.dismissStaleReviews ?? false,
+    require_code_owner_review: pullRequest.codeOwnerReview ?? false,
+    require_last_push_approval: pullRequest.lastPushApproval ?? false,
+    required_review_thread_resolution: pullRequest.conversationResolution ?? false,
+    require_extra_approval_for_unattributed_changes: pullRequest.extraApprovalForUnattributedCopilot ?? false,
+    allowed_merge_methods: pullRequest.mergeMethods ?? ['merge', 'squash', 'rebase'],
+  },
+})
+
+// `statusChecks.checks` always binds; the older `requiredChecks` list keeps
+// binding only once two or more maintainers are configured.
+const statusChecksRule = (ruleset: Ruleset, maintainers: number): RulesetRule | undefined => {
+  const keyed = Object.entries(ruleset.statusChecks?.checks ?? {}).flatMap(([context, required]) => (required ? [context] : []))
+  const listed = maintainers >= 2 ? (ruleset.requiredChecks ?? []) : []
+  const contexts = [...new Set([...keyed, ...listed])]
+  if (contexts.length === 0) return undefined
+  return {
+    type: 'required_status_checks',
+    parameters: {
+      strict_required_status_checks_policy: ruleset.statusChecks?.strict ?? false,
+      do_not_enforce_on_create: ruleset.statusChecks?.skipOnCreation ?? false,
+      required_status_checks: contexts.map((context) => ({ context })),
+    },
+  }
+}
+
+const codeScanningRule = (ruleset: Ruleset): RulesetRule | undefined => {
+  const tools = { ...(ruleset.codeScanningGate === true ? { CodeQL: CODEQL_GATE } : {}), ...ruleset.codeScanning }
+  const entries = Object.entries(tools)
+  if (entries.length === 0) return undefined
+  return {
+    type: 'code_scanning',
+    parameters: {
+      code_scanning_tools: entries.map(([tool, gate]) => ({ tool, security_alerts_threshold: gate.securityAlerts, alerts_threshold: gate.alerts })),
+    },
+  }
+}
+
+const codeCoverageRule = (coverage: Ruleset['codeCoverage']): RulesetRule | undefined => {
+  if (coverage?.enabled !== true) return undefined
+  const parameters: Record<string, number> = {}
+  if (coverage.minimum !== undefined) parameters['minimum_coverage'] = coverage.minimum
+  if (coverage.maxDrop !== undefined) parameters['max_coverage_drop'] = coverage.maxDrop
+  return { type: 'code_coverage', parameters }
+}
+
 /**
  * The ruleset for the default branch.
  *
  * @remarks
- * A rule is present only when its switch is true: the ruleset is written
- * whole, so a switch left out means the rule is not enforced. Required
- * status checks bind only once two or more maintainers are configured, so a
- * sole maintainer is never blocked by the review gate. Admins may bypass
- * unless `adminBypass` is false.
+ * A rule is present only when it is configured: the ruleset is written
+ * whole, so a rule left out is not enforced. Required approvals and the
+ * older `requiredChecks` list bind only once two or more distinct
+ * maintainers are configured, so a sole maintainer is never blocked by the
+ * review gate; `statusChecks` always binds. Code coverage is enforced only
+ * when `codeCoverage.enabled` is true, as it needs coverage uploaded to
+ * GitHub. Admins may bypass unless `adminBypass` is false. Rules follow
+ * GitHub's order: branch protections, merge queue, deployments, signatures,
+ * pull request, status checks, code scanning, code quality, code coverage,
+ * secret scanning, then Copilot review.
  *
  * @example
  * ```ts import.meta.vitest name="rulesetBody"
  * import { rulesetBody } from '@resnovas/feature.settings'
  *
- * const body = rulesetBody({ blockForcePush: true, adminBypass: false }, undefined)
- * body.rules.map((rule) => rule.type).join(', ') // => 'non_fast_forward'
+ * const body = rulesetBody({ blockForcePush: true, signedCommits: true, adminBypass: false }, undefined)
+ * body.rules.map((rule) => rule.type).join(', ') // => 'non_fast_forward, required_signatures'
  * body.bypass_actors.length // => 0
  * ```
  *
@@ -304,41 +386,40 @@ const ADMIN_BYPASS: BypassActor = { actor_id: 5, actor_type: 'RepositoryRole', b
  * @param roles - The `roles` section, for the maintainer count.
  * @returns The request body.
  */
-export const rulesetBody = (ruleset: NonNullable<SettingsConfig['ruleset']>, roles: RolesConfig | undefined): RulesetBody => {
-  const rules: Array<RulesetRule> = []
-  if (ruleset.blockDeletion === true) rules.push({ type: 'deletion' })
-  if (ruleset.blockForcePush === true) rules.push({ type: 'non_fast_forward' })
-  if (ruleset.linearHistory === true) rules.push({ type: 'required_linear_history' })
-  // AI review on every pull request, drafts included, so problems surface
-  // before the accountable human marks it ready.
-  if (ruleset.copilotReview === true) {
-    rules.push({ type: 'copilot_code_review', parameters: { review_draft_pull_requests: true, review_on_push: true } })
-  }
-  if (ruleset.codeScanningGate === true) {
-    rules.push({
-      type: 'code_scanning',
-      parameters: { code_scanning_tools: [{ tool: 'CodeQL', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' }] },
-    })
-  }
-  const checks = ruleset.requiredChecks ?? []
-  // One account listed twice, in another case or with an `@`, is one maintainer.
-  const maintainers = new Set((roles?.maintainers ?? []).map((login) => login.replace(/^@/, '').toLowerCase()))
-  if (checks.length > 0 && maintainers.size >= 2) {
-    rules.push({
-      type: 'required_status_checks',
-      parameters: {
-        strict_required_status_checks_policy: false,
-        required_status_checks: checks.map((context) => ({ context })),
-      },
-    })
-  }
+export const rulesetBody = (ruleset: Ruleset, roles: RolesConfig | undefined): RulesetBody => {
+  const maintainers = maintainerCount(roles)
+  const rules: Array<RulesetRule | undefined> = [
+    ruleset.blockDeletion === true ? { type: 'deletion' } : undefined,
+    ruleset.blockForcePush === true ? { type: 'non_fast_forward' } : undefined,
+    ruleset.linearHistory === true ? { type: 'required_linear_history' } : undefined,
+    ruleset.mergeQueue === undefined ? undefined : mergeQueueRule(ruleset.mergeQueue),
+    (ruleset.requiredDeployments ?? []).length > 0
+      ? { type: 'required_deployments', parameters: { required_deployment_environments: ruleset.requiredDeployments } }
+      : undefined,
+    ruleset.signedCommits === true ? { type: 'required_signatures' } : undefined,
+    ruleset.pullRequest === undefined ? undefined : pullRequestRule(ruleset.pullRequest, maintainers),
+    statusChecksRule(ruleset, maintainers),
+    codeScanningRule(ruleset),
+    ruleset.codeQuality === undefined ? undefined : { type: 'code_quality', parameters: { severity: ruleset.codeQuality } },
+    codeCoverageRule(ruleset.codeCoverage),
+    // Public preview: GitHub's published REST description does not list this
+    // rule yet; the shape is the one GitHub returns for a ruleset that has it.
+    ruleset.secretScanningAlerts === undefined
+      ? undefined
+      : { type: 'require_secret_scanning_alert_resolution', parameters: { secret_types: ruleset.secretScanningAlerts } },
+    // AI review on every pull request, drafts included, so problems surface
+    // before the accountable human marks it ready.
+    ruleset.copilotReview === true
+      ? { type: 'copilot_code_review', parameters: { review_draft_pull_requests: true, review_on_push: true } }
+      : undefined,
+  ]
   return {
     name: ruleset.name ?? DEFAULT_RULESET_NAME,
     target: 'branch',
     enforcement: 'active',
     conditions: { ref_name: { include: ['~DEFAULT_BRANCH'], exclude: [] } },
     bypass_actors: ruleset.adminBypass === false ? [] : [ADMIN_BYPASS],
-    rules,
+    rules: rules.filter((rule) => rule !== undefined),
   }
 }
 

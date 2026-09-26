@@ -195,22 +195,19 @@ describe('applySettings', () => {
               { type: 'deletion' },
               { type: 'non_fast_forward' },
               { type: 'required_linear_history' },
-              { type: 'copilot_code_review', parameters: { review_draft_pull_requests: true, review_on_push: true } },
-              {
-                type: 'code_scanning',
-                parameters: {
-                  code_scanning_tools: [
-                    { tool: 'CodeQL', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' },
-                  ],
-                },
-              },
               {
                 type: 'required_status_checks',
                 parameters: {
                   strict_required_status_checks_policy: false,
+                  do_not_enforce_on_create: false,
                   required_status_checks: [{ context: 'house-policy / policy' }, { context: 'house-policy / reviews' }],
                 },
               },
+              {
+                type: 'code_scanning',
+                parameters: { code_scanning_tools: [{ tool: 'CodeQL', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' }] },
+              },
+              { type: 'copilot_code_review', parameters: { review_draft_pull_requests: true, review_on_push: true } },
             ],
           },
         },

@@ -25,7 +25,7 @@ import {
   rulesetBody,
   type SettingsStep,
 } from '@resnovas/feature.settings'
-import { houseSettings, privateRepository, publicRepository, soleMaintainer, twoMaintainers } from './fixtures.js'
+import { houseSettings, privateRepository, publicRepository, soleMaintainer, strongRuleset, twoMaintainers } from './fixtures.js'
 
 const ids = (steps: ReadonlyArray<SettingsStep>) => steps.map((step) => step.id)
 const find = (steps: ReadonlyArray<SettingsStep>, id: string) => steps.find((step) => step.id === id)
@@ -277,13 +277,13 @@ describe('rulesetBody', () => {
       'deletion',
       'non_fast_forward',
       'required_linear_history',
-      'copilot_code_review',
       'code_scanning',
+      'copilot_code_review',
     ])
-    expect(body.rules[3]?.parameters).toStrictEqual({ review_draft_pull_requests: true, review_on_push: true })
-    expect(body.rules[4]?.parameters).toStrictEqual({
+    expect(body.rules[3]?.parameters).toStrictEqual({
       code_scanning_tools: [{ tool: 'CodeQL', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' }],
     })
+    expect(body.rules[4]?.parameters).toStrictEqual({ review_draft_pull_requests: true, review_on_push: true })
   })
 
   it('a sole maintainer can bypass and has no required checks', () => {
@@ -298,6 +298,7 @@ describe('rulesetBody', () => {
     expect(body.bypass_actors).toStrictEqual([{ actor_id: 5, actor_type: 'RepositoryRole', bypass_mode: 'always' }])
     expect(body.rules.find((rule) => rule.type === 'required_status_checks')?.parameters).toStrictEqual({
       strict_required_status_checks_policy: false,
+      do_not_enforce_on_create: false,
       required_status_checks: [{ context: 'house-policy / policy' }, { context: 'house-policy / reviews' }],
     })
   })
@@ -327,6 +328,117 @@ describe('rulesetBody', () => {
       rules: [],
     })
     expect(rulesetBody({ adminBypass: true }, undefined).bypass_actors).toHaveLength(1)
+  })
+
+  it('the full house ruleset writes every rule in GitHub\'s order', () => {
+    const body = rulesetBody(strongRuleset, twoMaintainers)
+    expect(body.rules).toStrictEqual([
+      { type: 'deletion' },
+      { type: 'non_fast_forward' },
+      { type: 'required_linear_history' },
+      {
+        type: 'merge_queue',
+        parameters: {
+          merge_method: 'SQUASH',
+          grouping_strategy: 'ALLGREEN',
+          check_response_timeout_minutes: 60,
+          max_entries_to_build: 5,
+          min_entries_to_merge: 1,
+          max_entries_to_merge: 5,
+          min_entries_to_merge_wait_minutes: 5,
+        },
+      },
+      { type: 'required_deployments', parameters: { required_deployment_environments: ['Staging'] } },
+      { type: 'required_signatures' },
+      {
+        type: 'pull_request',
+        parameters: {
+          required_approving_review_count: 1,
+          dismiss_stale_reviews_on_push: true,
+          require_code_owner_review: false,
+          require_last_push_approval: false,
+          required_review_thread_resolution: true,
+          require_extra_approval_for_unattributed_changes: true,
+          allowed_merge_methods: ['squash', 'rebase'],
+        },
+      },
+      {
+        type: 'required_status_checks',
+        parameters: {
+          strict_required_status_checks_policy: true,
+          do_not_enforce_on_create: true,
+          required_status_checks: [{ context: 'smartcloud' }, { context: 'check' }],
+        },
+      },
+      {
+        type: 'code_scanning',
+        parameters: {
+          code_scanning_tools: [
+            { tool: 'CodeQL', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' },
+            { tool: 'ESLint', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' },
+          ],
+        },
+      },
+      { type: 'code_quality', parameters: { severity: 'errors' } },
+      { type: 'code_coverage', parameters: { minimum_coverage: 80, max_coverage_drop: 5 } },
+      { type: 'require_secret_scanning_alert_resolution', parameters: { secret_types: ['provider_patterns'] } },
+      { type: 'copilot_code_review', parameters: { review_draft_pull_requests: true, review_on_push: true } },
+    ])
+  })
+
+  it('a sole maintainer needs no approvals, but keyed status checks still bind', () => {
+    const body = rulesetBody(strongRuleset, soleMaintainer)
+    expect(body.rules.find((rule) => rule.type === 'pull_request')?.parameters?.['required_approving_review_count']).toBe(0)
+    expect(body.rules.find((rule) => rule.type === 'required_status_checks')?.parameters?.['required_status_checks']).toStrictEqual([
+      { context: 'smartcloud' },
+      { context: 'check' },
+    ])
+  })
+
+  it('omitted merge queue and pull request fields take GitHub\'s defaults', () => {
+    const body = rulesetBody({ mergeQueue: { method: 'rebase', grouping: 'headGreen', maxEntriesToBuild: 1 }, pullRequest: {} }, twoMaintainers)
+    expect(body.rules[0]?.parameters).toMatchObject({ merge_method: 'REBASE', grouping_strategy: 'HEADGREEN', max_entries_to_build: 1, max_entries_to_merge: 5 })
+    expect(body.rules[1]?.parameters).toStrictEqual({
+      required_approving_review_count: 0,
+      dismiss_stale_reviews_on_push: false,
+      require_code_owner_review: false,
+      require_last_push_approval: false,
+      required_review_thread_resolution: false,
+      require_extra_approval_for_unattributed_changes: false,
+      allowed_merge_methods: ['merge', 'squash', 'rebase'],
+    })
+    const queue = { checkTimeoutMinutes: 30, minEntriesToMerge: 2, maxEntriesToMerge: 3, minEntriesToMergeWaitMinutes: 0 }
+    expect(rulesetBody({ mergeQueue: queue }, undefined).rules[0]?.parameters).toMatchObject({
+      merge_method: 'SQUASH',
+      check_response_timeout_minutes: 30,
+      min_entries_to_merge: 2,
+      max_entries_to_merge: 3,
+      min_entries_to_merge_wait_minutes: 0,
+    })
+  })
+
+  it('checks switched off, empty deployments and disabled coverage add no rules', () => {
+    const body = rulesetBody(
+      { statusChecks: { checks: { smartcloud: false }, strict: true }, requiredDeployments: [], codeCoverage: { minimum: 80 }, signedCommits: false },
+      twoMaintainers,
+    )
+    expect(body.rules).toStrictEqual([])
+  })
+
+  it('code coverage writes only the limits it is given, and codeScanning overrides the CodeQL gate', () => {
+    expect(rulesetBody({ codeCoverage: { enabled: true, maxDrop: 2 } }, undefined).rules).toStrictEqual([
+      { type: 'code_coverage', parameters: { max_coverage_drop: 2 } },
+    ])
+    expect(rulesetBody({ codeCoverage: { enabled: true, minimum: 90 } }, undefined).rules[0]?.parameters).toStrictEqual({ minimum_coverage: 90 })
+    const codeScanning = { CodeQL: { securityAlerts: 'critical', alerts: 'none' } } as const
+    expect(rulesetBody({ codeScanningGate: true, codeScanning }, undefined).rules[0]?.parameters).toStrictEqual({
+      code_scanning_tools: [{ tool: 'CodeQL', security_alerts_threshold: 'critical', alerts_threshold: 'none' }],
+    })
+  })
+
+  it('a context in both lists is required once', () => {
+    const body = rulesetBody({ statusChecks: { checks: { smartcloud: true } }, requiredChecks: ['smartcloud', 'check'] }, twoMaintainers)
+    expect(body.rules[0]?.parameters?.['required_status_checks']).toStrictEqual([{ context: 'smartcloud' }, { context: 'check' }])
   })
 })
 

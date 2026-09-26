@@ -52,6 +52,34 @@ export const houseSettings: SettingsConfig = {
   environments: { projectType: 'saas' },
 }
 
+// The strengthened default-branch ruleset from the house preset, with the
+// per-repository additions a deploying repository that uploads ESLint and
+// coverage results would make.
+export const strongRuleset: NonNullable<SettingsConfig['ruleset']> = {
+  blockDeletion: true,
+  blockForcePush: true,
+  linearHistory: true,
+  mergeQueue: { method: 'squash', grouping: 'allGreen' },
+  requiredDeployments: ['Staging'],
+  signedCommits: true,
+  pullRequest: {
+    requiredApprovals: 1,
+    dismissStaleReviews: true,
+    conversationResolution: true,
+    extraApprovalForUnattributedCopilot: true,
+    mergeMethods: ['squash', 'rebase'],
+  },
+  statusChecks: { checks: { smartcloud: true, check: true }, strict: true, skipOnCreation: true },
+  codeScanning: {
+    CodeQL: { securityAlerts: 'high_or_higher', alerts: 'errors' },
+    ESLint: { securityAlerts: 'high_or_higher', alerts: 'errors' },
+  },
+  codeQuality: 'errors',
+  codeCoverage: { enabled: true, minimum: 80, maxDrop: 5 },
+  secretScanningAlerts: ['provider_patterns'],
+  copilotReview: true,
+}
+
 export const soleMaintainer = { maintainers: ['TGTGamer'] }
 export const twoMaintainers = { maintainers: ['TGTGamer', 'second'] }
 
