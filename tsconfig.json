@@ -35,6 +35,9 @@
     },
     {
       "path": "./packages/feature.labels"
+    },
+    {
+      "path": "./packages/feature.stale"
     }
   ]
 }
