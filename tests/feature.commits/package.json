@@ -1,0 +1,19 @@
+{
+  "name": "@resnovas/feature.commits-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "tags": [
+      "type_test",
+      "layer_backend"
+    ]
+  },
+  "devDependencies": {
+    "@resnovas/feature.commits": "workspace:*",
+    "@resnovas/conditions": "workspace:*",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*"
+  }
+}
