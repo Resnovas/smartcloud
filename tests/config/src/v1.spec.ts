@@ -32,10 +32,18 @@ describe('v1 compatibility: the real configs', () => {
       expect(config.labelling?.['shared.bug']?.label).toBe('bug')
       expect(config.labelling?.['shared.bug']?.on).toBeUndefined()
       expect(config.conventions?.rules?.['shared.0']).toStrictEqual({ preset: 'semanticEmoji' })
+      expect(config.stale).toStrictEqual({
+        staleAfterDays: 60,
+        staleLabel: 'stale',
+        staleComment: 'This has been automatically marked as stale by the bot.',
+        abandonedAfterDays: 30,
+        abandonedLabel: 'abandoned',
+        abandonedComment: 'This has been automatically marked as abandoned by the bot.',
+      })
+      expect(config.reviews?.automaticApprove?.['pr.0']?.when.condition[0]).toMatchObject({ type: 'creatorMatches' })
+      expect(config.reviews?.requestApprovals?.['pr.all']).toMatchObject({ reviewers: ['tgtgamer'], when: { requires: 1 } })
       expect(warnings).toEqual(
         expect.arrayContaining([
-          'smartcloud/.github/config.json: runners[0].sharedConfig.stale: not migrated yet, it arrives with stale handling (SMC-11)',
-          'smartcloud/.github/config.json: runners[0].pr.automaticApprove: not migrated yet, it arrives with the reviews feature (SMC-10)',
           'smartcloud/.github/config.json: runners[0].pr.manageRelease: dropped, releases are release-please territory, as the v1 README advised',
           'smartcloud/.github/config.json: runners[0].issue.createBranch: dropped, v1 never implemented it',
           'smartcloud/.github/config.json: runners[0].root: dropped, v1 never read it',
@@ -107,7 +115,6 @@ describe('migrateV1: edge cases', () => {
       'runners[1].project: dropped, it used classic Projects, which GitHub has retired',
       'runners[1].mystery: unknown v1 key, ignored',
       'runners[1].pr.wat: unknown v1 key, ignored',
-      'runners[1].pr.requestApprovals: not migrated yet, it arrives with the reviews feature (SMC-10)',
       'extra: unknown v1 key, ignored',
     ])
   })
@@ -128,6 +135,30 @@ describe('migrateV1: edge cases', () => {
     const { config } = migrateV1({ runners: [{ sharedConfig: { enforceConventions: { condition: [{ requires: 1 }, {}] } } }] })
     expect(config['conventions']).toStrictEqual({
       rules: { 'shared.0': { when: { requires: 1, condition: [] } }, 'shared.1': { when: { condition: [] } } },
+    })
+  })
+
+  it('maps stale, approvals and review requests, keeping only the first stale section', () => {
+    const { config, warnings } = migrateV1({
+      runners: [
+        {
+          issue: { stale: { stale: {} } },
+          pr: {
+            stale: { staleLabel: 'old' },
+            automaticApprove: { condition: [{ condition: [{ type: 'isDraft', condition: false }] }, 'x'] },
+            requestApprovals: { team: { reviewers: ['ann'], condition: [] }, bad: { condition: [] }, odd: 'x' },
+          },
+        },
+      ],
+    })
+    expect(config['stale']).toStrictEqual({ on: ['issue'], staleAfterDays: 60, staleLabel: 'stale' })
+    expect(config['reviews']).toStrictEqual({
+      requestApprovals: { 'pr.team': { reviewers: ['ann'], when: { condition: [] } } },
+      automaticApprove: { 'pr.0': { when: { condition: [{ type: 'isDraft', condition: false }] } } },
+    })
+    expect(warnings).toStrictEqual(['runners[0].pr.stale: dropped, v2 has one stale section and an earlier context already set it'])
+    expect(migrateV1({ runners: [{ pr: { requestApprovals: { a: { reviewers: [] } }, automaticApprove: {} } }] }).config['reviews']).toStrictEqual({
+      requestApprovals: { 'pr.a': { reviewers: [], when: { condition: [] } } },
     })
   })
 

@@ -60,6 +60,30 @@
         },
         "conventions": {
           "$ref": "#/$defs/Conventions"
+        },
+        "roles": {
+          "$ref": "#/$defs/Roles"
+        },
+        "links": {
+          "$ref": "#/$defs/Links"
+        },
+        "commits": {
+          "$ref": "#/$defs/Commits"
+        },
+        "disclosure": {
+          "$ref": "#/$defs/Disclosure"
+        },
+        "reviews": {
+          "$ref": "#/$defs/Reviews"
+        },
+        "stale": {
+          "$ref": "#/$defs/Stale"
+        },
+        "settings": {
+          "$ref": "#/$defs/Settings"
+        },
+        "sync": {
+          "$ref": "#/$defs/Sync"
         }
       },
       "additionalProperties": false,
@@ -816,6 +840,433 @@
         },
         "when": {
           "$ref": "#/$defs/ConditionGroup"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Roles": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "maintainers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "trustedBots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Links": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "policyBase": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Commits": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "dco": {
+          "type": "boolean"
+        },
+        "aiAttribution": {
+          "type": "boolean"
+        },
+        "aiIdentities": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "emails": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "maintainerLevel": {
+          "$ref": "#/$defs/Level"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Level": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warning"
+      ]
+    },
+    "Disclosure": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "fields": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "level": {
+              "type": "string"
+            },
+            "tools": {
+              "type": "string"
+            },
+            "accountable": {
+              "type": "string"
+            },
+            "review": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "requireDraft": {
+          "type": "boolean"
+        },
+        "maintainerLevel": {
+          "$ref": "#/$defs/Level"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Reviews": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "gate": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "outside": {
+              "$ref": "#/$defs/NonNegativeInt"
+            },
+            "maintainer": {
+              "$ref": "#/$defs/NonNegativeInt"
+            }
+          },
+          "additionalProperties": false
+        },
+        "requestApprovals": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": {
+            "$ref": "#/$defs/RequestApproval"
+          }
+        },
+        "automaticApprove": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": {
+            "$ref": "#/$defs/AutomaticApprove"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "RequestApproval": {
+      "type": "object",
+      "required": [
+        "reviewers",
+        "when"
+      ],
+      "properties": {
+        "reviewers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "when": {
+          "$ref": "#/$defs/ConditionGroup"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AutomaticApprove": {
+      "type": "object",
+      "required": [
+        "when"
+      ],
+      "properties": {
+        "when": {
+          "$ref": "#/$defs/ConditionGroup"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Stale": {
+      "type": "object",
+      "required": [
+        "staleAfterDays",
+        "staleLabel"
+      ],
+      "properties": {
+        "on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "pullRequest",
+              "issue"
+            ]
+          }
+        },
+        "staleAfterDays": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "staleLabel": {
+          "type": "string"
+        },
+        "staleComment": {
+          "type": "string"
+        },
+        "abandonedAfterDays": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "abandonedLabel": {
+          "type": "string"
+        },
+        "abandonedComment": {
+          "type": "string"
+        },
+        "close": {
+          "type": "boolean"
+        },
+        "exempt": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "when": {
+              "$ref": "#/$defs/ConditionGroup"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "NonNegative": {
+      "type": "number",
+      "description": "a non-negative number",
+      "title": "nonNegative",
+      "minimum": 0
+    },
+    "Settings": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "merging": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "mergeCommit": {
+              "type": "boolean"
+            },
+            "squash": {
+              "type": "boolean"
+            },
+            "rebase": {
+              "type": "boolean"
+            },
+            "autoMerge": {
+              "type": "boolean"
+            },
+            "updateBranch": {
+              "type": "boolean"
+            },
+            "deleteBranchOnMerge": {
+              "type": "boolean"
+            },
+            "webCommitSignoff": {
+              "type": "boolean"
+            },
+            "squashTitle": {
+              "type": "string",
+              "enum": [
+                "PR_TITLE",
+                "COMMIT_OR_PR_TITLE"
+              ]
+            },
+            "squashMessage": {
+              "type": "string",
+              "enum": [
+                "COMMIT_MESSAGES",
+                "PR_BODY",
+                "BLANK"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "features": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "wiki": {
+              "type": "boolean"
+            },
+            "discussions": {
+              "type": "boolean"
+            },
+            "sponsorships": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "security": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "immutableReleases": {
+              "type": "boolean"
+            },
+            "privateVulnerabilityReporting": {
+              "type": "boolean"
+            },
+            "dependabotAlerts": {
+              "type": "boolean"
+            },
+            "dependabotSecurityUpdates": {
+              "type": "boolean"
+            },
+            "codeScanning": {
+              "type": "string",
+              "enum": [
+                "default",
+                "extended",
+                "off"
+              ]
+            },
+            "secretScanning": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "ruleset": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "linearHistory": {
+              "type": "boolean"
+            },
+            "blockDeletion": {
+              "type": "boolean"
+            },
+            "blockForcePush": {
+              "type": "boolean"
+            },
+            "copilotReview": {
+              "type": "boolean"
+            },
+            "codeScanningGate": {
+              "type": "boolean"
+            },
+            "requiredChecks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "adminBypass": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "environments": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "projectType": {
+              "type": "string",
+              "enum": [
+                "saas",
+                "desktop",
+                "library",
+                "none"
+              ]
+            },
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "Sync": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "values": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "type": "string"
+            }
+          },
+          "propertyNames": {
+            "type": "string",
+            "description": "a string matching the pattern ^[A-Z][A-Z0-9_]*$",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "branch": {
+          "type": "string"
+        },
+        "check": {
+          "type": "boolean"
         }
       },
       "additionalProperties": false

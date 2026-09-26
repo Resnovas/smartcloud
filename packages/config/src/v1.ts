@@ -52,12 +52,6 @@ const DROPPED: Readonly<Record<string, string>> = {
   $schema: 'v2 uses its own schema',
 }
 
-// Keys whose feature has not been rebuilt in v2 yet.
-const LATER: Readonly<Record<string, string>> = {
-  stale: 'stale handling (SMC-11)',
-  automaticApprove: 'the reviews feature (SMC-10)',
-  requestApprovals: 'the reviews feature (SMC-10)',
-}
 
 const CONTEXTS: ReadonlyMap<string, 'shared' | 'pr' | 'issue' | 'schedule' | 'project'> = new Map([
   ['sharedConfig', 'shared'],
@@ -83,6 +77,20 @@ const migrateLabels = (labels: Json | undefined): Record<string, JsonRecord> => 
 
 const PRESETS = new Set(['semanticTitle', 'gitmojis', 'semanticEmoji'])
 
+// v1 stale: { staleLabel, stale: { days, comment }, abandoned: { days, label, comment } }.
+const migrateStale = (setting: JsonRecord, on: ReadonlyArray<string> | undefined): JsonRecord => {
+  const out: Record<string, Json> = on === undefined ? {} : { on: [...on] }
+  const inner = isRecord(setting['stale']) ? setting['stale'] : {}
+  const abandoned = isRecord(setting['abandoned']) ? setting['abandoned'] : {}
+  out['staleAfterDays'] = typeof inner['days'] === 'number' ? inner['days'] : 60
+  out['staleLabel'] = typeof setting['staleLabel'] === 'string' ? setting['staleLabel'] : 'stale'
+  if (typeof inner['comment'] === 'string') out['staleComment'] = inner['comment']
+  if (typeof abandoned['days'] === 'number') out['abandonedAfterDays'] = abandoned['days']
+  if (typeof abandoned['label'] === 'string') out['abandonedLabel'] = abandoned['label']
+  if (typeof abandoned['comment'] === 'string') out['abandonedComment'] = abandoned['comment']
+  return out
+}
+
 /**
  * Converts a v1 configuration into the v2 shape.
  *
@@ -100,6 +108,9 @@ export const migrateV1 = (input: JsonRecord): Migration => {
   const labelling: Record<string, JsonRecord> = {}
   const rules: Record<string, JsonRecord> = {}
   const comment: Record<string, string> = {}
+  const automaticApprove: Record<string, JsonRecord> = {}
+  const requestApprovals: Record<string, JsonRecord> = {}
+  let stale: JsonRecord | undefined
 
   const runners = Array.isArray(input['runners']) ? input['runners'] : []
   runners.forEach((runner, index) => {
@@ -140,8 +151,24 @@ export const migrateV1 = (input: JsonRecord): Migration => {
             else rule['when'] = typeof requires === 'number' ? { requires, condition: condition ?? [] } : { condition: condition ?? [] }
             rules[`${prefix}${context}.${position}`] = rule
           })
-        } else if (LATER[feature] !== undefined) {
-          warnings.push(`${where}: not migrated yet, it arrives with ${LATER[feature]}`)
+        } else if (feature === 'stale' && isRecord(setting)) {
+          if (stale !== undefined) {
+            warnings.push(`${where}: dropped, v2 has one stale section and an earlier context already set it`)
+            continue
+          }
+          stale = migrateStale(setting, on)
+        } else if (feature === 'automaticApprove' && isRecord(setting)) {
+          const groups = Array.isArray(setting['condition']) ? setting['condition'] : []
+          groups.forEach((when, position) => {
+            if (isRecord(when)) automaticApprove[`${prefix}${context}.${position}`] = { when }
+          })
+        } else if (feature === 'requestApprovals' && isRecord(setting)) {
+          for (const [name, request] of Object.entries(setting)) {
+            if (!isRecord(request) || !Array.isArray(request['reviewers'])) continue
+            const { reviewers, requires, condition } = request
+            const when: Json = typeof requires === 'number' ? { requires, condition: condition ?? [] } : { condition: condition ?? [] }
+            requestApprovals[`${prefix}${context}.${name}`] = { reviewers, when }
+          }
         } else {
           warnings.push(`${where}: ${DROPPED[feature] === undefined ? 'unknown v1 key, ignored' : `dropped, ${DROPPED[feature]}`}`)
         }
@@ -156,6 +183,13 @@ export const migrateV1 = (input: JsonRecord): Migration => {
   if (Object.keys(rules).length > 0 || Object.keys(comment).length > 0) {
     config['conventions'] = Object.keys(comment).length > 0 ? { comment, rules } : { rules }
   }
+  if (Object.keys(automaticApprove).length > 0 || Object.keys(requestApprovals).length > 0) {
+    const reviews: Record<string, Json> = {}
+    if (Object.keys(requestApprovals).length > 0) reviews['requestApprovals'] = requestApprovals
+    if (Object.keys(automaticApprove).length > 0) reviews['automaticApprove'] = automaticApprove
+    config['reviews'] = reviews
+  }
+  if (stale !== undefined) config['stale'] = stale
   for (const key of Object.keys(input)) {
     if (key !== 'labels' && key !== 'runners' && key !== '$schema') warnings.push(`${key}: unknown v1 key, ignored`)
   }

@@ -40,6 +40,18 @@ export {
   resolveConfig,
 } from './load.js'
 export type { ResolvedConfig } from './load.js'
+export {
+  AutomaticApprove,
+  Commits,
+  Disclosure,
+  Links,
+  RequestApproval,
+  Reviews,
+  Roles,
+  Settings,
+  Stale,
+  Sync,
+} from './sections.js'
 export { migrateV1 } from './v1.js'
 export type { Migration } from './v1.js'
 export { configJsonSchema } from './json-schema.js'

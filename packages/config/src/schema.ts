@@ -18,6 +18,7 @@
 import { ConditionGroup } from '@resnovas/conditions'
 import { Schema } from 'effect'
 import { ExtendsEntry } from './extends.js'
+import { Commits, Disclosure, Links, Reviews, Roles, Settings, Stale, Sync } from './sections.js'
 
 // Every rule is a keyed record, never a list, so presets and repositories
 // merge by key and a locked rule can be named in an error.
@@ -92,8 +93,9 @@ export const Conventions = Schema.Struct({
  * A smartcloud v2 configuration, as written in `.github/smartcloud.yml`.
  *
  * @remarks
- * Feature sections are added by the feature that reads them. Unknown keys
- * are an error, so a typo in a section name fails at startup.
+ * Every feature section is optional: a feature whose section is absent does
+ * not run. Unknown keys are an error, so a typo in a section name fails at
+ * startup.
  */
 export const SmartcloudConfig = Schema.Struct({
   $schema: Schema.optionalWith(Schema.String, { exact: true }),
@@ -109,6 +111,14 @@ export const SmartcloudConfig = Schema.Struct({
   ),
   labelling: Schema.optionalWith(Schema.Record({ key: RuleId, value: LabelRule }), { exact: true }),
   conventions: Schema.optionalWith(Conventions, { exact: true }),
+  roles: Schema.optionalWith(Roles, { exact: true }),
+  links: Schema.optionalWith(Links, { exact: true }),
+  commits: Schema.optionalWith(Commits, { exact: true }),
+  disclosure: Schema.optionalWith(Disclosure, { exact: true }),
+  reviews: Schema.optionalWith(Reviews, { exact: true }),
+  stale: Schema.optionalWith(Stale, { exact: true }),
+  settings: Schema.optionalWith(Settings, { exact: true }),
+  sync: Schema.optionalWith(Sync, { exact: true }),
 }).annotations({
   identifier: 'SmartcloudConfig',
   title: 'smartcloud configuration',
