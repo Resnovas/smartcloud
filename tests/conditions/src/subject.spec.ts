@@ -16,8 +16,8 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Either, Schema } from 'effect'
-import { ChangedFile, Commit, Review, Subject } from '@resnovas/conditions'
-import { commit, issue, pullRequest } from './fixtures.js'
+import { ChangedFile, Comment, Commit, Reaction, Reactions, Review, Subject } from '@resnovas/conditions'
+import { commit, issue, pullRequest, reactions } from './fixtures.js'
 
 describe('Subject', () => {
   it('accepts an issue without any pull request field, and a pull request with every facet', () => {
@@ -44,6 +44,24 @@ describe('ChangedFile', () => {
     expect(Schema.is(ChangedFile)({ path: 'logo.png', status: 'renamed', binary: true })).toBe(true)
     expect(Schema.is(ChangedFile)({ path: 'logo.png', status: 'moved', binary: true })).toBe(false)
     expect(Schema.is(ChangedFile)({ path: 'logo.png', status: 'added' })).toBe(false)
+  })
+})
+
+describe('Comment', () => {
+  it('needs the author, the body and whether a bot wrote it', () => {
+    expect(Schema.is(Comment)({ author: 'sam', body: '+1', bot: false })).toBe(true)
+    expect(Schema.is(Comment)({ author: 'sam', body: '+1' })).toBe(false)
+  })
+})
+
+describe('Reactions', () => {
+  it('counts every reaction GitHub offers, by its API name', () => {
+    expect(Schema.is(Reaction)('rocket')).toBe(true)
+    expect(Schema.is(Reaction)('total_count')).toBe(false)
+    expect(Schema.is(Reactions)(reactions({ '+1': 3 }))).toBe(true)
+    const { eyes: _eyes, ...partial } = reactions()
+    expect(Schema.is(Reactions)(partial)).toBe(false)
+    expect(Schema.is(Reactions)(reactions({ heart: -1 }))).toBe(false)
   })
 })
 

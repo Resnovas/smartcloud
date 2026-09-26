@@ -15,7 +15,7 @@
  */
 
 import { Octokit } from '@octokit/rest'
-import { Association, type CheckState, type Mergeable, type Review } from '@resnovas/conditions'
+import { Association, type CheckState, type Mergeable, type Reactions, type Review } from '@resnovas/conditions'
 import { Config, Effect, Layer, Option, Redacted, Ref, Schedule, Schema } from 'effect'
 import { cacheReads } from './cache.js'
 import { fromGraphqlErrors, fromStatus, type GitHubError, ValidationFailed } from './errors.js'
@@ -298,6 +298,20 @@ const statusCheck = (status: {
   detail: status.state,
   ...(status.target_url === null ? {} : { url: status.target_url }),
 })
+
+// GitHub's reaction rollup on an issue or pull request, without its total and URL.
+const reactionsOf = (rollup: Reactions): Reactions => ({
+  '+1': rollup['+1'],
+  '-1': rollup['-1'],
+  laugh: rollup.laugh,
+  hooray: rollup.hooray,
+  confused: rollup.confused,
+  heart: rollup.heart,
+  rocket: rollup.rocket,
+  eyes: rollup.eyes,
+})
+
+const NO_REACTIONS: Reactions = { '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
 
 const labelName = (label: string | { readonly name?: string | undefined }): string =>
   typeof label === 'string' ? label : (label.name ?? '')
@@ -825,9 +839,14 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             ...(issue.milestone?.title === undefined ? {} : { milestone: issue.milestone.title }),
             updatedAt: new Date(issue.updated_at),
             isPullRequest: issue.pull_request !== undefined,
+            ...(issue.reactions === undefined ? {} : { reactions: reactionsOf(issue.reactions) }),
           })),
         ),
       ),
+      getReactions: (issue_number) =>
+        call('getReactions', () => octokit.rest.issues.get({ owner, repo, issue_number })).pipe(
+          Effect.map(({ data }) => reactionsOf(data.reactions ?? NO_REACTIONS)),
+        ),
       closeIssue: (issue_number) =>
         Effect.asVoid(
           call('closeIssue', () => octokit.rest.issues.update({ owner, repo, issue_number, state: 'closed' })),

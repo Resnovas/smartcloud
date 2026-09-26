@@ -24,7 +24,7 @@ import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 
 /**
  * A condition needed a facet (files, changed files with their status, reviews, pending or requested reviewers,
- * commits, mergeability, checks or CODEOWNERS) that was not loaded onto the subject. This is an
+ * commits, mergeability, checks, CODEOWNERS, comments or reactions) that was not loaded onto the subject. This is an
  * engine bug, not a user error: the engine loads every facet `requiredFacets`
  * reports.
  *
@@ -453,6 +453,32 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
           added.length === 0 ? 'no binary file added' : `binary file(s) added: ${added.join(', ')}`,
         )
       })
+    case 'commentMatches':
+      return Effect.map(facet(subject, 'comments', condition.type), (comments) => {
+        const pattern = compilePattern(condition.condition)
+        const counted = comments.filter((comment) => condition.bots === true || !comment.bot)
+        const match = counted.find((comment) => matches(pattern, comment.body))
+        return result(
+          condition.type,
+          match !== undefined,
+          match === undefined
+            ? `none of ${counted.length} comment(s) matches ${condition.condition}`
+            : `a comment by @${match.author} matches ${condition.condition}`,
+        )
+      })
+    case 'reactionCount':
+      return Effect.map(facet(subject, 'reactions', condition.type), (reactions) => {
+        const count =
+          condition.reaction === undefined
+            ? Object.values(reactions).reduce((total, each) => total + each, 0)
+            : reactions[condition.reaction]
+        const passed = count >= condition.min && (condition.max === undefined || count < condition.max)
+        return result(
+          condition.type,
+          passed,
+          condition.reaction === undefined ? `${count} reaction(s)` : `${count} ${condition.reaction} reaction(s)`,
+        )
+      })
     case 'pendingReview':
       return Effect.map(facet(subject, 'pendingReviewers', condition.type), (pending) =>
         result(condition.type, pending > 0 === condition.condition, `${pending} review(s) pending`),
@@ -649,6 +675,8 @@ const FACETS: Partial<Record<Condition['type'], ReadonlyArray<Facet>>> = {
   checksPass: ['checks'],
   checkStatus: ['checks'],
   codeownersTouched: ['files', 'codeowners'],
+  commentMatches: ['comments'],
+  reactionCount: ['reactions'],
 }
 
 const groupsOf = (condition: Condition): ReadonlyArray<ConditionGroup> => {

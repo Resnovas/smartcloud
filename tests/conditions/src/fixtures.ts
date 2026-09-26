@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Commit, Subject } from '@resnovas/conditions'
+import type { Commit, Reactions, Subject } from '@resnovas/conditions'
 
 /** A signed-off, verified, ordinary commit by Jane. */
 export const commit = (message: string, overrides: Partial<Commit> = {}): Commit => ({
@@ -24,6 +24,19 @@ export const commit = (message: string, overrides: Partial<Commit> = {}): Commit
   authorEmail: 'jane@example.com',
   parents: 1,
   verified: true,
+  ...overrides,
+})
+
+/** No reactions at all, with some of each kind overridden. */
+export const reactions = (overrides: Partial<Reactions> = {}): Reactions => ({
+  '+1': 0,
+  '-1': 0,
+  laugh: 0,
+  hooray: 0,
+  confused: 0,
+  heart: 0,
+  rocket: 0,
+  eyes: 0,
   ...overrides,
 })
 
@@ -56,6 +69,8 @@ export const pullRequest = (overrides: Partial<Subject> = {}): Subject => ({
   commits: [commit('feat: sync\n\nSigned-off-by: Jane Doe <jane@example.com>')],
   mergeable: 'MERGEABLE',
   checks: [],
+  comments: [],
+  reactions: reactions(),
   ...overrides,
 })
 

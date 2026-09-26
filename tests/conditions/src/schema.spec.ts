@@ -80,6 +80,10 @@ describe('ConditionGroup', () => {
       { type: 'isApproved', condition: 2, allowPending: true },
       { type: 'commitMessagesMatch', condition: '^feat', scope: 'any' },
       { type: 'hasTrailer', trailer: 'Assisted-by', condition: ':', scope: 'all' },
+      { type: 'commentMatches', condition: '^/lgtm' },
+      { type: 'commentMatches', condition: 'x', bots: true },
+      { type: 'reactionCount', min: 5 },
+      { type: 'reactionCount', reaction: '+1', min: 10, max: 100 },
     ]
     for (const leaf of leaves) {
       expect(Either.isRight(Schema.decodeUnknownEither(Condition)(leaf)), leaf.type).toBe(true)
@@ -93,6 +97,9 @@ describe('ConditionGroup', () => {
     expect(Either.isLeft(decode({ condition: [{ type: 'linksIssue', condition: true, keys: [] }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'linksIssue', condition: true, keys: ['SMC-'] }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'codeownersTouched', condition: 'core' }] }))).toBe(true)
+    expect(Either.isLeft(decode({ condition: [{ type: 'commentMatches', condition: '(' }] }))).toBe(true)
+    expect(Either.isLeft(decode({ condition: [{ type: 'reactionCount', reaction: 'thumbsup', min: 1 }] }))).toBe(true)
+    expect(Either.isLeft(decode({ condition: [{ type: 'reactionCount', min: -1 }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'codeownersTouched', condition: '@org/core team' }] }))).toBe(
       true,
     )
