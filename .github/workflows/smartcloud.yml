@@ -28,6 +28,8 @@ on:
     types: [opened, edited, reopened, labeled, unlabeled]
   push:
     branches: [main]
+  # The required "smartcloud" check must also report on merge queue groups.
+  merge_group:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:

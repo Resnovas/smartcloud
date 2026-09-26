@@ -23,6 +23,14 @@ sync:
 settings:
   environments:
     projectType: library
+  # The CI job gates merging alongside the preset's own checks. smartcloud
+  # deploys no pre-production environment, uploads no ESLint results to code
+  # scanning and no coverage to GitHub yet, so it adds no required
+  # deployments, ESLint gate or coverage limits.
+  ruleset:
+    statusChecks:
+      checks:
+        check: true
 
 # The aggregate check waits for smartcloud's CI job too, so a renamed or
 # deleted CI job cannot let the aggregate pass with nothing to wait for.

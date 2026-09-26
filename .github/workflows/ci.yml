@@ -5,6 +5,9 @@ name: CI
 
 on:
   pull_request:
+  # The default branch merges through a merge queue, which needs the required
+  # "check" context on every queued group.
+  merge_group:
   workflow_dispatch:
   push:
     branches: [main]
