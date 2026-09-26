@@ -19,11 +19,12 @@
 // in-memory GitHub answering the reads a dry run makes.
 
 import { NodeContext } from '@effect/platform-node'
-import { fileKey, GitHub, type GitHubService, makeMemoryGitHub } from '@resnovas/integrations.github'
-import { ConfigSourceFromGitHub, type Connect } from '@resnovas/runtime'
+import { fileKey, GitHub, type GitHubService, makeMemoryGitHub, NotFound } from '@resnovas/integrations.github'
+import { ConfigSourceFromGitHub, telemetry, type Connect } from '@resnovas/runtime'
 import type { ToolResult } from '@resnovas/smartcloud-mcp'
-import { Effect, Layer } from 'effect'
+import { ConfigProvider, Effect, Layer, Logger } from 'effect'
 import { join } from 'node:path'
+import { vi } from 'vitest'
 
 export const fixture = (name: string) => join(import.meta.dirname, '../../config/src/fixtures', name)
 
@@ -61,3 +62,40 @@ export const memory = () => {
 export const ROOT = import.meta.dirname
 
 export const textOf = (result: ToolResult) => result.content.map((part) => part.text).join('\n')
+
+// The live telemetry layer over a fetch that records every request and
+// answers it locally: what a failure would send to PostHog, without a network.
+export const liveTelemetry = () => {
+  const sent: Array<{ readonly path: string; readonly body: string }> = []
+  const fetch: typeof globalThis.fetch = async (input, init) => {
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+    sent.push({ path: new URL(url).pathname, body: typeof init?.body === 'string' ? init.body : '' })
+    return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })
+  }
+  // NodeRuntime.runMain adds the pretty logger around everything, so the tests do too.
+  const run = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    effect.pipe(
+      Effect.provide(telemetry('mcp', '9.9.9', { fetch })),
+      Effect.provide(Logger.add(Logger.prettyLoggerDefault)),
+      Effect.withConfigProvider(ConfigProvider.fromMap(new Map())),
+    )
+  const batch = () => sent.filter((request) => request.path === '/batch/').map((request) => request.body).join('\n')
+  const logs = () => sent.filter((request) => request.path === '/i/v1/logs').map((request) => request.body).join('\n')
+  return { run, sent, batch, logs }
+}
+
+// Everything written to the console, from any method.
+export const captureConsole = () => {
+  const lines: Array<string> = []
+  for (const method of ['log', 'error', 'warn', 'info', 'debug'] as const)
+    vi.spyOn(console, method).mockImplementation((...args: Array<unknown>) => void lines.push(args.map(String).join(' ')))
+  return lines
+}
+
+// A repository GitHub says does not exist, as the live service reports it.
+export const missingRepository: Connect = (coordinates) =>
+  Effect.succeed({
+    ...makeMemoryGitHub().service,
+    coordinates,
+    getRepository: Effect.zipRight(Effect.logDebug('github getRepository: NotFound (404)'), Effect.fail(new NotFound({ operation: 'getRepository', detail: '404' }))),
+  })

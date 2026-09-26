@@ -18,8 +18,8 @@
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { program } from '@resnovas/action'
-import { disabledTelemetry, Telemetry } from '@resnovas/integrations.posthog'
-import { Effect, Layer } from 'effect'
+import { disabledTelemetry, Telemetry, telemetryLayer } from '@resnovas/integrations.posthog'
+import { Effect, Layer, Logger } from 'effect'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -126,4 +126,52 @@ describe('program', () => {
       expect(process.exitCode).toBe(1)
     }).pipe(Effect.provide(NodeContext.layer)),
   )
+
+  // The live telemetry layer over a fetch that records every request, with
+  // the pretty logger NodeRuntime.runMain adds around everything.
+  const live = () => {
+    const sent: Array<{ readonly path: string; readonly body: string }> = []
+    const fetch: typeof globalThis.fetch = async (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url
+      sent.push({ path: new URL(url).pathname, body: typeof init?.body === 'string' ? init.body : '' })
+      return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })
+    }
+    const layer = Layer.merge(telemetryLayer({ surface: 'action', version: '9.9.9', fetch }), Logger.add(Logger.prettyLoggerDefault))
+    const batch = () => sent.filter((request) => request.path === '/batch/').map((request) => request.body).join('\n')
+    return { layer, batch }
+  }
+
+  it.effect('reports a failed run as one exception, with the inputs it was given, and prints only the annotation', () =>
+    Effect.gen(function* () {
+      const printed: Array<string> = []
+      vi.spyOn(console, 'error').mockImplementation((...args: Array<unknown>) => void printed.push(args.join(' ')))
+      const { service } = memory()
+      const vars = yield* Effect.promise(() => env({ action: 'opened' }, { GITHUB_EVENT_NAME: 'push', INPUT_DRYRUN: 'true', INPUT_CONFIGREF: 'main' }))
+      const telemetry = live()
+      yield* program(() => Effect.succeed(service)).pipe(Effect.provide(telemetry.layer), withEnv(vars))
+      expect(process.exitCode).toBe(1)
+      expect(out).toHaveLength(1)
+      expect(out[0]).toMatch(/^::error title=smartcloud::no smartcloud config in \[redacted\]|^::error title=smartcloud::no smartcloud config in Resnovas\/example/)
+      expect(printed).toStrictEqual([])
+      const batch = telemetry.batch()
+      expect(batch.split('"event":"$exception"')).toHaveLength(2)
+      expect(batch).toContain('"error_tag":"NoConfig"')
+      expect(batch).toContain('"command":"run"')
+      expect(batch).toContain('"surface":"action"')
+      expect(batch).toContain('"options":["configRef","dryRun"]')
+      expect(batch).not.toContain('Resnovas/example')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('reports a run that cannot read its inputs', () =>
+    Effect.gen(function* () {
+      const telemetry = live()
+      yield* program(() => Effect.die('unreachable')).pipe(Effect.provide(telemetry.layer), withEnv({}))
+      expect(process.exitCode).toBe(1)
+      expect(out[0]).toMatch(/^::error title=smartcloud::/)
+      expect(telemetry.batch()).toContain('"event":"$exception"')
+      expect(telemetry.batch()).toContain('"error_tag":"ConfigError"')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
 })

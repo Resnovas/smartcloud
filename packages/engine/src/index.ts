@@ -18,6 +18,6 @@
 export { decodeEvent, EventDecodeError } from './events.js'
 export type { Envelope, IssueEnvelope, PullRequestEnvelope, RepositoryEnvelope, UnsupportedEnvelope } from './events.js'
 export { findingsCounter, makeReport, Report } from './report.js'
-export type { Change, Finding, ReportSnapshot } from './report.js'
+export type { Change, Fact, Finding, ReportSnapshot } from './report.js'
 export { featureDuration, loadFacets, runFeatures } from './runner.js'
 export type { EnvelopeKind, Feature, FeatureContext, RunResult, SupportedEnvelope } from './runner.js'

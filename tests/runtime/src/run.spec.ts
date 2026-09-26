@@ -18,7 +18,7 @@
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { GitHub, Unavailable } from '@resnovas/integrations.github'
-import { describeWrite, dryRun, dryRunRepository, dryRunText, FeatureFailed, InvalidTrigger, runEvent, syntheticEvent, triggerOf, UnexpectedResponse, type Connect } from '@resnovas/runtime'
+import { command, describeWrite, dryRun, dryRunRepository, dryRunText, FeatureFailed, InvalidTrigger, runEvent, syntheticEvent, triggerOf, UnexpectedResponse, type Connect } from '@resnovas/runtime'
 import { Effect } from 'effect'
 import { CONVENTIONS, fixture, issue, LABELS, memory, pull, PUSH, recording, withConfig } from './fixtures.js'
 import { carried, observe, spanNamed } from './observe.js'
@@ -190,29 +190,32 @@ describe('runEvent with telemetry', () => {
   it.effect('skips a feature its flag turns off and records the run', () =>
     Effect.gen(function* () {
       const flagged = recording({ 'smartcloud-labels': false })
-      const outcome = yield* runEvent({ config: {}, event: PUSH }).pipe(
+      const outcome = yield* command(runEvent({ config: {}, event: PUSH }), { command: 'run' }).pipe(
         Effect.provideService(GitHub, withConfig(LABELS)),
         Effect.provide(flagged.layer),
       )
       expect(outcome.result.skipped).toContainEqual({ feature: 'labels', reason: 'turned off by feature flag smartcloud-labels' })
       expect(outcome.result.ran).not.toContain('labels')
-      expect(flagged.events).toHaveLength(1)
-      expect(flagged.events[0]?.event).toBe('smartcloud run')
-      expect(flagged.events[0]?.properties).toMatchObject({ github_event: 'push', outcome: 'success', ran: [], failed: [], findings: 0 })
-      expect(flagged.events[0]?.properties['skipped']).toContain('labels')
+      expect(flagged.named('command run')).toHaveLength(1)
+      expect(flagged.named('command run')[0]?.properties).toMatchObject({ command: 'run', outcome: 'success', options: [] })
+      const labels = flagged.named('feature run').find((event) => event.properties['feature'] === 'labels')
+      expect(labels?.properties).toMatchObject({ outcome: 'skipped', skip_reason: 'flag', github_event: 'push', event_kind: 'repository' })
+      expect(flagged.named('config resolved')[0]?.properties).toMatchObject({ config_version: 2, features_enabled: expect.arrayContaining(['labels']) })
+      expect(flagged.organisations[0]).toMatchObject({ uses_house_preset: false })
     }),
   )
 
   it.effect('keeps the flag defaults, and sends nothing, when the config opts out', () =>
     Effect.gen(function* () {
       const flagged = recording({ 'smartcloud-labels': false })
-      const outcome = yield* runEvent({ config: {}, event: PUSH }).pipe(
+      const outcome = yield* command(runEvent({ config: {}, event: PUSH }), { command: 'run' }).pipe(
         Effect.provideService(GitHub, withConfig(`${LABELS}telemetry: false\n`)),
         Effect.provide(flagged.layer),
       )
       expect(flagged.enabled()).toBe(false)
       expect(outcome.result.ran).toContain('labels')
       expect(flagged.events).toStrictEqual([])
+      expect(flagged.organisations).toStrictEqual([])
     }),
   )
 
@@ -230,5 +233,37 @@ describe('runEvent with telemetry', () => {
       expect(error).toBeInstanceOf(FeatureFailed)
       expect(error instanceof FeatureFailed ? error.message : '').toMatch(/^the labels feature failed: /)
     }),
+  )
+})
+
+describe('dry runs as invocations', () => {
+  it.effect('reads the synthetic event inside the invocation span, and binds the repository first', () =>
+    Effect.gen(function* () {
+      const recorded = recording()
+      const { service } = memory({ '.github/smartcloud.yml': LABELS })
+      const observed = yield* observe(
+        command(dryRunRepository(() => Effect.succeed(service), { repository: 'Resnovas/example', event: 'push' }), { command: 'dry-run', options: ['event', 'repo'] }),
+      ).pipe(Effect.provide(recorded.layer))
+      const root = spanNamed(observed, 'smartcloud.command')
+      const run = spanNamed(observed, 'smartcloud.run')
+      expect(run.parent._tag === 'Some' && run.parent.value.spanId).toBeTruthy()
+      // Every span of the dry run, the reads for the push included, shares the invocation's trace.
+      expect(observed.spans.every((span) => span.traceId === root.traceId)).toBe(true)
+      expect(recorded.named('command run')[0]?.properties).toMatchObject({ command: 'dry-run', options: ['event', 'repo'], outcome: 'success' })
+      expect(recorded.named('feature run').map((event) => event.properties['feature'])).toContain('labels')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('reports a dry run that cannot start, with the name as typed protected', () =>
+    Effect.gen(function* () {
+      const recorded = recording()
+      const failure = yield* Effect.flip(
+        command(dryRunRepository(() => Effect.succeed(memory().service), { repository: 'not a repo', pr: 7 }), { command: 'dry-run' }).pipe(Effect.provide(recorded.layer)),
+      )
+      expect(failure._tag).toBe('InvalidRepository')
+      expect(recorded.protectedValues).toStrictEqual(['not a repo'])
+      expect(recorded.exceptions[0]?.properties).toMatchObject({ command: 'dry-run', error_tag: 'InvalidRepository', expected: true })
+      expect(recorded.named('command run')[0]?.properties).toMatchObject({ outcome: 'failure', error_tag: 'InvalidRepository' })
+    }).pipe(Effect.provide(NodeContext.layer)),
   )
 })

@@ -23,7 +23,8 @@ import { Data, Effect, Either, Schema } from 'effect'
 import { loadConfig, readLocalConfig, type ConfigLocation } from './config.js'
 import { selectFeatures } from './features.js'
 import { turnedOffFeatures } from './flags.js'
-import { parseRepository, type Connect } from './github.js'
+import { recordRun } from './analytics.js'
+import { targetRepository, type Connect } from './github.js'
 
 /** A GitHub event, as the engine takes it. */
 export interface GitHubEvent {
@@ -63,8 +64,9 @@ export interface RunOutcome {
  * @remarks
  * Everything goes through the provided GitHub service, so the same run is a
  * dry run under the dry-run layer. The run is recorded in telemetry when the
- * `Telemetry` service is provided: a span, an event with the features that
- * ran, were skipped or failed, and every failure for error tracking. A
+ * `Telemetry` service is provided: a span, a `feature run` event for each
+ * feature, `sync proposed` and `settings applied` when those features
+ * measured something, and each failed feature for error tracking. A
  * feature whose flag is off is skipped with the flag named as the reason;
  * with telemetry off or PostHog unreachable, every flag keeps its default.
  *
@@ -90,8 +92,16 @@ export const runEvent = (options: {
       const resolved = yield* loadConfig(options.config)
       const features = yield* selectFeatures(options.features)
       const turnedOff = yield* turnedOffFeatures(repository, features)
-      const result = yield* runFeatures({ config: resolved.config, event: options.event.name, payload: options.event.payload, features, turnedOff })
-      for (const failure of result.failed) yield* reportError(repository, new FeatureFailed({ feature: failure.feature, reason: failure.message }))
+      const result = yield* runFeatures({
+        config: resolved.config,
+        event: options.event.name,
+        payload: options.event.payload,
+        features,
+        turnedOff,
+      })
+      for (const failure of result.failed)
+        yield* reportError(repository, new FeatureFailed({ feature: failure.feature, reason: failure.message }))
+      yield* recordRun(result, options.event.name)
       const published = yield* publishReport(result, { trustedAuthors: resolved.config.roles?.trustedBots ?? [] })
       const outcome: RunOutcome = { result, published, warnings: [...resolved.warnings, ...published.warnings] }
       return outcome
@@ -366,7 +376,7 @@ export const configLocationFor = (file: string | undefined) =>
  */
 export const dryRunRepository = (connect: Connect, request: DryRunRequest) =>
   Effect.gen(function* () {
-    const coordinates = yield* parseRepository(request.repository)
+    const coordinates = yield* targetRepository(request.repository)
     const trigger = yield* triggerOf(request)
     const config = yield* configLocationFor(request.config)
     const service = yield* connect(coordinates)

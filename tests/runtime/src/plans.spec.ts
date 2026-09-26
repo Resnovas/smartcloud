@@ -18,7 +18,8 @@
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { fileKey, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
-import { NoSection, planRepositorySettings, planSettingsForRepository, renderRepositorySync, renderSyncForRepository, settingsPlanText, type Connect } from '@resnovas/runtime'
+import { identify } from '@resnovas/integrations.posthog'
+import { command, NoSection, planRepositorySettings, planSettingsForRepository, renderRepositorySync, renderSyncForRepository, settingsPlanText, type Connect } from '@resnovas/runtime'
 import { Effect } from 'effect'
 import { memory, recording, withConfig } from './fixtures.js'
 
@@ -126,30 +127,39 @@ describe('sync renders', () => {
 })
 
 describe('runEvent with telemetry', () => {
-  it.effect('records settings plans and sync renders', () =>
+  it.effect('records settings plans and sync renders as their invocations, for the bound repository', () =>
     Effect.gen(function* () {
       const recorded = recording()
       const service = withConfig('version: 2\nsettings:\n  merging: { squash: true }\n')
-      yield* planSettingsForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }).pipe(Effect.provide(recorded.layer))
-      yield* Effect.flip(renderSyncForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }).pipe(Effect.provide(recorded.layer)))
-      expect(recorded.events.map((event) => [event.event, event.properties['outcome']])).toStrictEqual([
-        ['smartcloud settings plan', 'success'],
-        ['smartcloud sync render', 'failure'],
+      yield* command(planSettingsForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }), { command: 'plan settings' }).pipe(
+        Effect.provide(recorded.layer),
+      )
+      yield* Effect.flip(
+        command(renderSyncForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }), { command: 'sync' }).pipe(Effect.provide(recorded.layer)),
+      )
+      expect(recorded.named('command run').map((event) => [event.properties['command'], event.properties['outcome']])).toStrictEqual([
+        ['plan settings', 'success'],
+        ['sync', 'failure'],
       ])
-      expect(recorded.events[0]?.properties['steps']).toBe(1)
+      expect(recorded.named('config resolved')).toHaveLength(2)
+      expect(recorded.exceptions.map((exception) => exception.properties['error_tag'])).toStrictEqual(['NoSection'])
+      expect(new Set(recorded.events.map((event) => event.identity.distinctId))).toStrictEqual(new Set([identify({ owner: 'Resnovas', repo: 'example' }).distinctId]))
+      expect(recorded.protectedValues).toContain('Resnovas/example')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
-  it.effect('describes the files a sync render produced', () =>
+  it.effect('reports a sync render for the repository it rendered', () =>
     Effect.gen(function* () {
       const recorded = recording()
       const github = makeMemoryGitHub()
       github.state.files.set(fileKey('Resnovas', 'example', '.github/smartcloud.yml'), 'version: 2\nsync:\n  source: Resnovas/.github/templates@main\n')
       github.state.files.set(fileKey('Resnovas', '.github', 'templates/NEW.md', 'main'), 'new\n')
-      const render = yield* renderSyncForRepository(() => Effect.succeed(github.service), { repository: 'Resnovas/example' }).pipe(
+      const render = yield* command(renderSyncForRepository(() => Effect.succeed(github.service), { repository: 'Resnovas/example' }), { command: 'sync' }).pipe(
         Effect.provide(recorded.layer),
       )
-      expect(recorded.events[0]?.properties['files']).toBe(render.files.length)
+      expect(render.files.length).toBeGreaterThan(0)
+      expect(recorded.named('command run')[0]?.identity).toStrictEqual(identify({ owner: 'Resnovas', repo: 'example' }))
+      expect(recorded.named('config resolved')[0]?.properties).toMatchObject({ features_enabled: expect.arrayContaining(['sync']) })
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })

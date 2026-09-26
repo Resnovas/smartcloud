@@ -25,6 +25,7 @@ import {
   migrateConfigText,
   NoConfig,
   planSettingsForRepository,
+  recordConfig,
   renderSyncForRepository,
   settingsPlanText,
   type Connect,
@@ -75,7 +76,9 @@ export const locateConfig = (directory: string) =>
 export const validate = (file: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
-    const resolved: ResolvedConfig = yield* resolveConfig(yield* fs.readFileString(file), file)
+    const text = yield* fs.readFileString(file)
+    const resolved: ResolvedConfig = yield* resolveConfig(text, file)
+    yield* recordConfig(resolved, text)
     yield* Console.log(`${file} is a valid smartcloud config.`)
     if (resolved.sources.length > 1) yield* Console.log(`Built from: ${resolved.sources.join(', ')}`)
     for (const warning of resolved.warnings) yield* Console.log(`warning: ${warning}`)

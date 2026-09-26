@@ -122,7 +122,7 @@ describe('reviewsFeature', () => {
         yield* reviewsFeature
           .run({ config: { version: 2 }, envelope: { kind: 'repository', event: 'schedule' } })
           .pipe(Effect.provideService(Report, report), Effect.provideService(GitHub, memory().service))
-        expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [] })
+        expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [], facts: [] })
       }),
     ))
 

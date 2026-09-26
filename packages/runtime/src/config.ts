@@ -28,7 +28,8 @@ import { GitHub } from '@resnovas/integrations.github'
 import { optOut } from '@resnovas/integrations.posthog'
 import { Data, Effect, Layer, Option, Schema } from 'effect'
 import { stringify } from 'yaml'
-import { FEATURES } from './features.js'
+import { recordConfig } from './analytics.js'
+import { FEATURE_SECTIONS, FEATURES } from './features.js'
 import { presetError } from './github.js'
 
 /**
@@ -160,8 +161,12 @@ export const loadConfig = (location: ConfigLocation) =>
     // Only counts: sources name presets, their repositories and paths.
     const counts = { sources: resolved.sources.length, warnings: resolved.warnings.length, locked: resolved.locked.size }
     yield* Effect.annotateCurrentSpan(counts)
-    yield* Effect.logDebug(`config: resolved from ${counts.sources} source(s) with ${counts.warnings} warning(s)`).pipe(Effect.annotateLogs(counts))
+    yield* Effect.logDebug(`config: resolved from ${counts.sources} source(s) with ${counts.warnings} warning(s)`).pipe(
+      Effect.annotateLogs(counts),
+    )
+    // Opting out comes first, so a config that turns telemetry off sends nothing about itself.
     if (resolved.config.telemetry === false) yield* optOut
+    yield* recordConfig(resolved, text)
     return resolved
   }).pipe(Effect.withSpan('smartcloud.config.resolve', { captureStackTrace: false, attributes: { 'config.from': location.text === undefined ? 'repository' : 'text' } }))
 
@@ -225,20 +230,6 @@ export const migrateConfigText = (text: string, source: string) =>
     }),
   )
 
-type SectionKey = Exclude<keyof typeof SmartcloudConfig.Encoded, 'version' | 'extends' | '$schema'>
-
-// The config sections each feature reads.
-const SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = new Map<string, ReadonlyArray<SectionKey>>([
-  ['conventions', ['conventions']],
-  ['commits', ['commits']],
-  ['disclosure', ['disclosure']],
-  ['reviews', ['reviews', 'roles']],
-  ['labels', ['labels', 'labelSync', 'labelling']],
-  ['stale', ['stale']],
-  ['settings', ['settings', 'roles']],
-  ['sync', ['sync']],
-])
-
 /** One feature, as a resolved config sets it up. */
 export interface FeatureExplanation {
   readonly name: string
@@ -283,8 +274,14 @@ export const explainConfig = (resolved: ResolvedConfig, features: ReadonlyArray<
     warnings: resolved.warnings,
     features: features.map((feature) => {
       const rules: Record<string, unknown> = {}
-      for (const key of SECTIONS.get(feature.name) ?? []) if (encoded[key] !== undefined) rules[key] = encoded[key]
-      return { name: feature.name, enabled: feature.enabled?.(resolved.config) ?? true, handles: feature.handles, rules }
+      for (const key of FEATURE_SECTIONS.get(feature.name) ?? [])
+        if (encoded[key] !== undefined) rules[key] = encoded[key]
+      return {
+        name: feature.name,
+        enabled: feature.enabled?.(resolved.config) ?? true,
+        handles: feature.handles,
+        rules,
+      }
     }),
   }
 }

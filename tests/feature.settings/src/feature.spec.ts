@@ -71,6 +71,10 @@ describe('settingsFeature', () => {
           pushLimit,
         ])
         expect(result.changes).toHaveLength(11)
+        // Only counts are measured: 11 steps applied, the ruleset and deployment policies failed.
+        expect(result.facts).toStrictEqual([
+          { feature: 'settings', name: 'settings applied', values: { applied: 11, failed: 2, skipped: 0, project_type: houseSettings.environments?.projectType ?? 'none' } },
+        ])
         expect(state.requests).toHaveLength(12)
         expect(state.graphql).toHaveLength(1)
       }),
@@ -106,7 +110,7 @@ describe('settingsFeature', () => {
       yield* settingsFeature
         .run({ config: { version: 2 }, envelope: { kind: 'repository', event: 'schedule' } })
         .pipe(Effect.provideService(Report, report), Effect.provideService(GitHub, service))
-      expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [] })
+      expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [], facts: [] })
       expect(state.requests).toStrictEqual([])
     }),
   )

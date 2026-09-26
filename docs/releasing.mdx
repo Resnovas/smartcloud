@@ -16,6 +16,8 @@ The GitHub Action, the CLI and the MCP server (`@resnovas/action`, `@resnovas/sm
 5. Nx writes the release notes to a GitHub release on the tag, and the `v<major>` tag moves to it, which is what workflows pin.
 6. A second job checks out the tag, rebuilds the action and stops unless the bundle matches the tagged one. It then bundles the CLI and MCP server, with the released version stamped in, and publishes `@resnovas/smartcloud` to npm with provenance, through trusted publishing.
 
+Every bundle is built with a source map. Before the action's bundle is committed, and before the CLI and MCP server are published, `tools/release/sourcemaps.ts` has [PostHog's CLI](https://posthog.com/docs/error-tracking/upload-source-maps/cli) inject a chunk id into the bundle and upload its map to [error tracking](telemetry#what-is-collected) as the release `smartcloud@<version>`, then deletes the map. Neither the tag nor the npm package ships a map: the tagged tree is downloaded by every run of the action, and PostHog resolves stack traces from its own copy. The maps name sources relative to the bundle, never a path on the machine that built it.
+
 The tag is the only record of the current version: the apps' versions on `main` stay `0.0.0`, and a local build reports `0.0.0`. The notes live on the GitHub release; `CHANGELOG.md` holds the v1 history and is no longer written.
 
 ## Running a release
@@ -51,5 +53,6 @@ pnpm release:dry-run --first-release --specifier 2.0.0
 
 ## Before the first release
 
+- Add a repository secret named `POSTHOG_CLI_TOKEN`: a PostHog [personal API key](https://eu.posthog.com/settings/user-api-keys) with the `error tracking write` and `organization read` scopes, for the Smartcloud project (285077) in PostHog's EU cloud. The workflow passes it to PostHog's CLI as `POSTHOG_CLI_API_KEY`. Without it the maps are still deleted, but none is uploaded, so errors from that release show bundle lines rather than source lines. A dry run never uploads.
 - The workflow pushes tags with its own token. If a tag ruleset protects `v*`, let GitHub Actions bypass it for tag creation and updates.
 - Trusted publishing needs `@resnovas/smartcloud` on npm to trust this repository's `release.yml` workflow.

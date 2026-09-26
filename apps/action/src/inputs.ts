@@ -34,6 +34,8 @@ export interface Inputs {
   readonly telemetry: boolean
   /** Notices about v1 inputs that no longer do anything. */
   readonly deprecations: ReadonlyArray<string>
+  /** The names of the optional inputs the workflow set, for telemetry; never their values. */
+  readonly given: ReadonlyArray<string>
 }
 
 
@@ -80,19 +82,34 @@ export const readInputs = Effect.gen(function* () {
   )
   const features = yield* input('features')
   const deprecations: Array<string> = []
-  for (const [name, notice] of DEPRECATED) if (Option.isSome(yield* input(name))) deprecations.push(notice)
-  const inputs: Inputs = {
-    token,
+  const given: Array<string> = []
+  for (const [name, notice] of DEPRECATED) {
+    if (Option.isNone(yield* input(name))) continue
+    deprecations.push(notice)
+    given.push(name)
+  }
+  const optional = {
     config: yield* input('config'),
     configJson: yield* input('configJson'),
     configRef: yield* input('configRef'),
-    dryRun: Option.exists(yield* input('dryRun'), (value) => value.toLowerCase() === 'true'),
+    dryRun: yield* input('dryRun'),
+    features,
+    telemetry: yield* input('telemetry'),
+  }
+  for (const [name, value] of Object.entries(optional)) if (Option.isSome(value)) given.push(name)
+  const inputs: Inputs = {
+    token,
+    config: optional.config,
+    configJson: optional.configJson,
+    configRef: optional.configRef,
+    dryRun: Option.exists(optional.dryRun, (value) => value.toLowerCase() === 'true'),
     // Only an explicit false opts out; telemetry is on by default.
-    telemetry: !Option.exists(yield* input('telemetry'), (value) => value.toLowerCase() === 'false'),
+    telemetry: !Option.exists(optional.telemetry, (value) => value.toLowerCase() === 'false'),
     // A list with no names, such as `,`, selects nothing, so it means the
     // same as leaving the input out: every feature runs.
     features: Option.filter(Option.map(features, parseFeatureList), (names) => names.length > 0),
     deprecations,
+    given: given.sort(),
   }
   return inputs
 })

@@ -25,10 +25,21 @@
 
 export { DEFAULT_HOST, DEFAULT_PROJECT_KEY, telemetrySettings } from './config.js'
 export type { TelemetrySettings } from './config.js'
-export { identify, ORGANIZATION_GROUP } from './identity.js'
+export { anonymousIdentity, identify, ORGANIZATION_GROUP } from './identity.js'
 export type { Identity, Surface } from './identity.js'
+export {
+  bindRepository,
+  describeOrganization,
+  emit,
+  errorTag,
+  invocation,
+  noteOptions,
+  protect,
+  track,
+} from './invocation.js'
+export type { InvocationOptions, InvocationSummary, TelemetryEvent, TrackOptions } from './invocation.js'
 export { redact, REDACTED } from './redact.js'
-export { disabledTelemetry, evaluateFlag, optOut, reportError, Telemetry, telemetryLayer, track } from './telemetry.js'
-export type { Properties, PropertyValue, RepositoryName, TelemetryOptions, TelemetryService, TrackOptions } from './telemetry.js'
+export { disabledTelemetry, evaluateFlag, optOut, reportError, Telemetry, telemetryLayer } from './telemetry.js'
+export type { Properties, PropertyValue, RepositoryName, TelemetryOptions, TelemetryService } from './telemetry.js'
 export { makeTransport } from './transport.js'
 export type { Fetch, TransportOptions } from './transport.js'

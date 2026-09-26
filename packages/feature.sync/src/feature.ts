@@ -226,7 +226,21 @@ const runSync = (config: SmartcloudConfig, sync: SyncConfig) =>
     for (const { path, problem } of plan.conflicts) {
       yield* report.add({ feature: FEATURE, rule: 'SYNC', level: 'warning', message: `${path} ${problem}`, path, link: linkFor(config) })
     }
-    if (plan.files.length === 0) return
+    // Only counts are measured: paths name the repository's files.
+    const count = (reason: PlannedFile['reason']) => plan.files.filter((file) => file.reason === reason).length
+    const proposed = (pullRequest: 'created' | 'updated' | 'none' | 'dry-run') =>
+      report.measure({
+        feature: FEATURE,
+        name: 'sync proposed',
+        values: {
+          created: count('create'),
+          updated: count('update'),
+          mode: count('mode'),
+          conflicts: plan.conflicts.length,
+          pull_request: pullRequest,
+        },
+      })
+    if (plan.files.length === 0) return yield* proposed('none')
     const branch = sync.branch ?? DEFAULT_SYNC_BRANCH
     // The proposal branch is force-updated, so it must never be the branch
     // the pull request merges into.
@@ -238,7 +252,10 @@ const runSync = (config: SmartcloudConfig, sync: SyncConfig) =>
       body: proposalBody(source, plan.files),
       files: plan.files.map(({ path, content, executable }) => ({ path, content, executable })),
     })
-    for (const file of plan.files) yield* report.change({ feature: FEATURE, description: `${file.path} ${REASONS[file.reason]}` })
+    // A dry run proposes nothing, so its pull request number is 0.
+    yield* proposed(result.number === 0 ? 'dry-run' : result.created ? 'created' : 'updated')
+    for (const file of plan.files)
+      yield* report.change({ feature: FEATURE, description: `${file.path} ${REASONS[file.reason]}` })
     // A dry run proposes nothing, so it has no pull request number to name.
     const where = result.number === 0 ? '' : ` in ${result.created ? 'new ' : ''}pull request #${result.number}`
     yield* report.change({ feature: FEATURE, description: `Proposed ${plan.files.length} synced file(s) on ${branch}${where}` })

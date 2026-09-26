@@ -24,13 +24,27 @@ import { OpenFeature } from '@openfeature/server-sdk'
 import { PostHogServerProvider } from '@posthog/openfeature-node-provider'
 import { PostHog, type PostHogOptions } from 'posthog-node'
 import { homedir } from 'node:os'
-import { Cause, Clock, Context, Effect, Exit, FiberRef, HashSet, Layer, Logger, LogLevel, Metric, MetricBoundaries, Option, Redacted, Runtime } from 'effect'
+import {
+  Context,
+  Effect,
+  FiberRef,
+  FiberRefs,
+  HashMap,
+  HashSet,
+  Layer,
+  Logger,
+  LogLevel,
+  Option,
+  Redacted,
+  Runtime,
+  type Tracer,
+} from 'effect'
 import { telemetrySettings, type TelemetrySettings } from './config.js'
 import { identify, ORGANIZATION_GROUP, type Identity, type Surface } from './identity.js'
 import { makeTransport, type Fetch } from './transport.js'
 
-/** A property value telemetry may send. */
-export type PropertyValue = string | number | boolean | ReadonlyArray<string>
+/** A property value telemetry may send: text, a number, a flag, a list of names, or counts by name. */
+export type PropertyValue = string | number | boolean | ReadonlyArray<string> | Readonly<Record<string, number>>
 
 /** Properties sent with an event. Callers must only pass values that name nothing. */
 export type Properties = Readonly<Record<string, PropertyValue>>
@@ -49,10 +63,16 @@ export interface TelemetryService {
   readonly disable: Effect.Effect<void>
   /** Removes a value, such as a repository's full name, from everything sent from now on. */
   readonly protect: (value: string) => Effect.Effect<void>
-  /** Records an event for a repository. */
+  /**
+   * Records an event. For a repository it also sets the person's
+   * `smartcloud_version` and `last_surface`; for an anonymous identity it
+   * creates no person.
+   */
   readonly capture: (identity: Identity, event: string, properties?: Properties) => Effect.Effect<void>
   /** Records an error for error tracking. */
   readonly captureException: (identity: Identity, error: unknown, properties?: Properties) => Effect.Effect<void>
+  /** Sets properties on the identity's `organization` group; does nothing for an anonymous identity. */
+  readonly describeOrganization: (identity: Identity, properties: Properties) => Effect.Effect<void>
   /** Writes a log line to PostHog Logs only, never to the console, linked to the repository. */
   readonly log: (identity: Identity, level: LogLevel.LogLevel, message: string, properties?: Properties) => Effect.Effect<void>
   /**
@@ -95,6 +115,7 @@ export const disabledTelemetry: TelemetryService = {
   protect: () => Effect.void,
   capture: () => Effect.void,
   captureException: () => Effect.void,
+  describeOrganization: () => Effect.void,
   log: () => Effect.void,
   evaluateFlag: (_identity, _key, fallback) => Effect.succeed(fallback),
 }
@@ -110,6 +131,64 @@ export interface TelemetryOptions {
   /** How long flushing may take when the layer closes; 3 seconds by default. */
   readonly shutdownTimeoutMs?: number | undefined
 }
+
+/**
+ * What telemetry knows about the invocation a fiber belongs to.
+ *
+ * @internal
+ */
+export interface InvocationState {
+  /** Who the invocation is about: anonymous until a repository is bound. */
+  identity: Identity
+  /** The invocation's span, which is given the identity once it is known. */
+  span: Option.Option<Tracer.Span>
+  /** The names of the options given, which may be added to once they are read. */
+  readonly options: Set<string>
+}
+
+/**
+ * The invocation the current fiber belongs to, if any. Set by `invocation`
+ * and read by the loggers, so every diagnostic log is linked to it.
+ *
+ * @internal
+ *
+ * @example
+ * ```ts
+ * import { Effect, FiberRef } from 'effect'
+ * import { currentInvocation } from './telemetry.js'
+ *
+ * const inside = Effect.map(FiberRef.get(currentInvocation), (state) => state._tag === 'Some')
+ * ```
+ */
+export const currentInvocation: FiberRef.FiberRef<Option.Option<InvocationState>> = FiberRef.unsafeMake<
+  Option.Option<InvocationState>
+>(Option.none())
+
+// Adds the invocation's distinct id to a log line, so logs link to the
+// repository's person in PostHog however deep they were written.
+const linkedToInvocation = <O>(logger: Logger.Logger<unknown, O>): Logger.Logger<unknown, O> =>
+  Logger.mapInputOptions(logger, (options) =>
+    Option.match(FiberRefs.getOrDefault(options.context, currentInvocation), {
+      onNone: () => options,
+      onSome: (state) => ({
+        ...options,
+        annotations: HashMap.set(options.annotations, 'posthogDistinctId', state.identity.distinctId),
+      }),
+    }),
+  )
+
+// Every logger that writes to the console is dropped, whichever the runtime
+// installed (the default logger, or the pretty logger NodeRuntime.runMain
+// adds), and only the tracer's span-event logger and the given ones remain.
+const onlyLoggers = (loggers: ReadonlyArray<Logger.Logger<unknown, unknown>>) =>
+  Layer.scopedDiscard(
+    Effect.locallyScopedWith(FiberRef.currentLoggers, (current) =>
+      HashSet.union(
+        HashSet.filter(current, (logger) => logger === Logger.tracerLogger),
+        HashSet.fromIterable(loggers),
+      ),
+    ),
+  )
 
 // The OpenFeature domain smartcloud's flags are evaluated in.
 const FLAG_DOMAIN = 'smartcloud'
@@ -186,18 +265,29 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
       FetchHttpClient.layer.pipe(Layer.provide(Layer.succeed(FetchHttpClient.Fetch, transport))),
       OtlpSerialization.layerJson,
     )
-    const otlpLogger = yield* OtlpLogger.make({ ...otlpOptions, url: `${settings.host}/i/v1/logs`, excludeLogSpans: true }).pipe(Effect.provide(http))
+    const otlpLogger = linkedToInvocation(
+      yield* OtlpLogger.make({ ...otlpOptions, url: `${settings.host}/i/v1/logs`, excludeLogSpans: true }).pipe(
+        Effect.provide(http),
+      ),
+    )
     const otlp = Layer.mergeAll(
       OtlpTracer.layer({ ...otlpOptions, url: `${settings.host}/i/v1/traces` }),
       OtlpMetrics.layer({ ...otlpOptions, url: `${settings.host}/i/v1/metrics` }),
       // Diagnostic logs, debug level included, go to PostHog only: the
       // console belongs to each surface's own output and the MCP protocol.
-      Logger.replace(Logger.defaultLogger, otlpLogger),
+      onlyLoggers([otlpLogger]),
       Logger.minimumLogLevel(LogLevel.Debug),
     ).pipe(Layer.provide(http))
 
     const base: Properties = { surface: options.surface, smartcloud_version: options.version }
+    // Set on the repository's person with every event it sends.
+    const person = { smartcloud_version: options.version, last_surface: options.surface }
     const identified = new Set<string>()
+    // PostHog creates no person for an anonymous identity's events.
+    const about = (identity: Identity) =>
+      identity.organization === undefined
+        ? { properties: { $process_person_profile: false }, groups: {} }
+        : { properties: { $set: person }, groups: { [ORGANIZATION_GROUP]: identity.organization } }
 
     const service: TelemetryService = {
       isEnabled: Effect.sync(() => enabled),
@@ -212,15 +302,16 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
         quietly('capturing an event')(
           Effect.sync(() => {
             if (!enabled) return
-            if (!identified.has(identity.organization)) {
+            if (identity.organization !== undefined && !identified.has(identity.organization)) {
               identified.add(identity.organization)
               client.groupIdentify({ groupType: ORGANIZATION_GROUP, groupKey: identity.organization, distinctId: identity.distinctId })
             }
+            const { properties: extra, groups } = about(identity)
             client.capture({
               distinctId: identity.distinctId,
               event,
-              properties: { ...base, ...properties },
-              groups: { [ORGANIZATION_GROUP]: identity.organization },
+              properties: { ...base, ...properties, ...extra },
+              groups,
             })
           }),
           undefined,
@@ -229,10 +320,21 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
         quietly('capturing an exception')(
           Effect.sync(() => {
             if (!enabled) return
-            client.captureException(error, identity.distinctId, {
-              ...base,
-              ...properties,
-              $groups: { [ORGANIZATION_GROUP]: identity.organization },
+            const { properties: extra, groups } = about(identity)
+            client.captureException(error, identity.distinctId, { ...base, ...properties, ...extra, $groups: groups })
+          }),
+          undefined,
+        ),
+      describeOrganization: (identity, properties) =>
+        quietly('describing an organisation')(
+          Effect.sync(() => {
+            if (!enabled || identity.organization === undefined) return
+            identified.add(identity.organization)
+            client.groupIdentify({
+              groupType: ORGANIZATION_GROUP,
+              groupKey: identity.organization,
+              distinctId: identity.distinctId,
+              properties,
             })
           }),
           undefined,
@@ -254,7 +356,9 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
                 Effect.tryPromise(() =>
                   flags.getBooleanValue(key, fallback, {
                     targetingKey: identity.distinctId,
-                    groups: { [ORGANIZATION_GROUP]: identity.organization },
+                    ...(identity.organization === undefined
+                      ? {}
+                      : { groups: { [ORGANIZATION_GROUP]: identity.organization } }),
                   }),
                 ).pipe(Effect.timeoutFail({ duration: REQUEST_TIMEOUT_MS, onTimeout: () => new Error('timed out') })),
                 fallback,
@@ -281,7 +385,9 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
  *
  * Diagnostic logs (`Effect.log*`) never reach the console: with telemetry
  * on they go to PostHog Logs from debug level up, and with it off they are
- * dropped, so a surface's output is only what it prints itself.
+ * dropped, so a surface's output is only what it prints itself. Every
+ * console logger is removed, including the pretty logger that
+ * `NodeRuntime.runMain` installs.
  *
  * @example
  * ```ts
@@ -300,7 +406,8 @@ export const telemetryLayer = (options: TelemetryOptions): Layer.Layer<Telemetry
     Effect.gen(function* () {
       const settings = yield* Effect.option(telemetrySettings)
       // With telemetry off, diagnostic logs go nowhere rather than to the console.
-      if (Option.isNone(settings) || !settings.value.enabled) return Layer.merge(Layer.succeed(Telemetry, disabledTelemetry), Logger.remove(Logger.defaultLogger))
+      if (Option.isNone(settings) || !settings.value.enabled)
+        return Layer.merge(Layer.succeed(Telemetry, disabledTelemetry), onlyLoggers([]))
       return yield* makeLive(settings.value, options)
     }),
   )
@@ -311,11 +418,29 @@ export interface RepositoryName {
   readonly repo: string
 }
 
-const withTelemetry = <A>(use: (telemetry: TelemetryService) => Effect.Effect<A>, fallback: A) =>
-  Effect.flatMap(
-    Effect.serviceOption(Telemetry),
-    Option.match({ onNone: () => Effect.succeed(fallback), onSome: use }),
-  )
+/**
+ * Uses the telemetry service when it is provided, and returns the fallback
+ * when it is not.
+ *
+ * @internal
+ *
+ * @example
+ * ```ts
+ * import { Effect } from 'effect'
+ * import { withTelemetry } from './telemetry.js'
+ *
+ * const enabled = withTelemetry((telemetry) => telemetry.isEnabled, false)
+ * ```
+ *
+ * @param use - What to do with the service.
+ * @param fallback - The result without it.
+ * @returns The result.
+ */
+export const withTelemetry = <A>(
+  use: (telemetry: TelemetryService) => Effect.Effect<A>,
+  fallback: A,
+): Effect.Effect<A> =>
+  Effect.flatMap(Effect.serviceOption(Telemetry), Option.match({ onNone: () => Effect.succeed(fallback), onSome: use }))
 
 /**
  * Turns telemetry off for the rest of the process, as a config's
@@ -370,76 +495,3 @@ export const evaluateFlag = (repository: RepositoryName, key: string, fallback: 
  */
 export const reportError = (repository: RepositoryName, error: unknown, properties?: Properties): Effect.Effect<void> =>
   withTelemetry((telemetry) => telemetry.captureException(identify(repository), error, properties), undefined)
-
-const runs = Metric.counter('smartcloud.runs', { description: 'smartcloud operations, by operation and outcome', incremental: true })
-const durations = Metric.histogram(
-  'smartcloud.duration_ms',
-  MetricBoundaries.exponential({ start: 50, factor: 2, count: 12 }),
-  'How long smartcloud operations take, in milliseconds',
-)
-
-/** What {@link track} records about an operation. */
-export interface TrackOptions<A> {
-  /** The operation, such as `run`; the event is `smartcloud <operation>` and the span `smartcloud.<operation>`. */
-  readonly operation: string
-  readonly repository: RepositoryName
-  /** Sent with the event and on the span. */
-  readonly properties?: Properties | undefined
-  /** More properties from the result, when it succeeds. */
-  readonly describe?: ((value: A) => Properties) | undefined
-}
-
-/**
- * Records an operation on a repository: a span around it, its logs linked to
- * the repository, a count and a duration, an event and a PostHog-only log
- * line with its outcome, and its failure or defect for error tracking.
- *
- * @remarks
- * The repository's full name is protected before anything is recorded, so
- * error messages that mention it are redacted. Without the {@link Telemetry}
- * service the effect runs unchanged. The effect's own result, failure or
- * interruption is returned as it was.
- *
- * @example
- * ```ts import.meta.vitest name="track"
- * import { Effect } from 'effect'
- * import { track } from '@resnovas/integrations.posthog'
- *
- * const run = track(Effect.succeed(3), { operation: 'run', repository: { owner: 'Resnovas', repo: 'smartcloud' } })
- * await Effect.runPromise(run) // => 3
- * ```
- *
- * @param effect - The operation.
- * @param options - Its name, repository and properties.
- * @returns The operation, recorded.
- */
-export const track = <A, E, R>(effect: Effect.Effect<A, E, R>, options: TrackOptions<A>): Effect.Effect<A, E, R> =>
-  Effect.flatMap(
-    Effect.serviceOption(Telemetry),
-    Option.match({
-      onNone: () => effect,
-      onSome: (telemetry) =>
-        Effect.gen(function* () {
-          const identity = identify(options.repository)
-          const properties = { operation: options.operation, ...options.properties }
-          yield* telemetry.protect(`${options.repository.owner}/${options.repository.repo}`)
-          const start = yield* Clock.currentTimeMillis
-          const exit = yield* effect.pipe(
-            Effect.withSpan(`smartcloud.${options.operation}`, { attributes: { ...properties, posthogDistinctId: identity.distinctId } }),
-            Effect.annotateLogs({ posthogDistinctId: identity.distinctId }),
-            Effect.exit,
-          )
-          const duration = (yield* Clock.currentTimeMillis) - start
-          const outcome = Exit.isSuccess(exit) ? 'success' : Cause.isInterruptedOnly(exit.cause) ? 'interrupted' : 'failure'
-          const tags = (metric: typeof runs) => metric.pipe(Metric.tagged('operation', options.operation), Metric.tagged('outcome', outcome))
-          yield* Metric.increment(tags(runs))
-          yield* Metric.update(durations.pipe(Metric.tagged('operation', options.operation)), duration)
-          if (Exit.isFailure(exit) && outcome === 'failure') yield* telemetry.captureException(identity, Cause.squash(exit.cause), properties)
-          const described = Exit.isSuccess(exit) && options.describe !== undefined ? options.describe(exit.value) : {}
-          const summary = { ...properties, ...described, outcome, duration_ms: duration }
-          yield* telemetry.capture(identity, `smartcloud ${options.operation}`, summary)
-          yield* telemetry.log(identity, outcome === 'failure' ? LogLevel.Error : LogLevel.Info, `smartcloud ${options.operation}: ${outcome}`, summary)
-          return yield* exit
-        }),
-    }),
-  )

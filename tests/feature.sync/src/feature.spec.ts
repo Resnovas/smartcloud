@@ -98,6 +98,9 @@ describe('sync run', () => {
         'tools/run made executable',
         'Proposed 3 synced file(s) on smartcloud/sync in new pull request #1',
       ])
+      expect(result.facts).toStrictEqual([
+        { feature: 'sync', name: 'sync proposed', values: { created: 0, updated: 2, mode: 1, conflicts: 1, pull_request: 'created' } },
+      ])
       expect(result.findings).toStrictEqual([
         {
           feature: 'sync',
@@ -122,6 +125,7 @@ describe('sync run', () => {
       expect(state.proposals[0]?.branch).toBe('chore/house')
       expect(state.proposals[0]?.body).toContain('- `LICENSE` added')
       expect(second.changes.at(-1)?.description).toBe('Proposed 3 synced file(s) on chore/house in pull request #1')
+      expect(second.facts[0]?.values).toMatchObject({ created: 1, pull_request: 'updated' })
       expect(second.findings[0]?.link).toBe('https://example.com/policy/GOVERNANCE.md#synced-files')
     }),
   )
@@ -137,6 +141,7 @@ describe('sync run', () => {
       expect(state.proposals).toStrictEqual([])
       expect(result.changes).toStrictEqual([])
       expect(result.findings).toStrictEqual([])
+      expect(result.facts[0]?.values).toStrictEqual({ created: 0, updated: 0, mode: 0, conflicts: 0, pull_request: 'none' })
     }),
   )
 
@@ -162,6 +167,7 @@ describe('sync run', () => {
         const github = yield* GitHub
         const result = yield* run(github, config(), 'schedule')
         expect(result.changes.at(-1)?.description).toBe('Proposed 3 synced file(s) on smartcloud/sync')
+        expect(result.facts[0]?.values['pull_request']).toBe('dry-run')
         return yield* (yield* DryRunLog).writes
       }).pipe(Effect.provide(DryRun), Effect.provideService(GitHub, service))
       expect(writes.map((write) => write.operation)).toStrictEqual(['proposeChanges'])
@@ -333,7 +339,7 @@ describe('syncFeature', () => {
       if (issue.kind === 'unsupported' || repository.kind === 'unsupported') return expect.unreachable()
       yield* syncFeature.run({ config: config(), envelope: issue }).pipe(Effect.provideService(Report, report))
       yield* syncFeature.run({ config: { version: 2 }, envelope: repository }).pipe(Effect.provideService(Report, report))
-      expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [] })
+      expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [], facts: [] })
       expect(state.proposals).toStrictEqual([])
     }).pipe(Effect.provideService(GitHub, service))
   })

@@ -37,8 +37,10 @@ const PATTERNS: ReadonlyArray<RegExp> = [
   /\bgithub_pat_[A-Za-z0-9_]{20,255}/g,
   // Bearer credentials, as an Authorization header value.
   /\bBearer\s+[\w.~+/-]+=*/gi,
-  // Email addresses.
-  /(?<![\w.%+-])[\w.%+-]+@[\w-]+\.[\w.-]+/g,
+  // Email addresses. The domain must end in an alphabetic top-level domain,
+  // so package versions such as effect@3.22.2 in stack frames are kept.
+  // Dots are the only separator between labels, so this stays linear.
+  /(?<![\w.%+-])[\w.%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}(?![\w-])/g,
 ]
 
 // A literal secret as a pattern, with every special character escaped, so it

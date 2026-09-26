@@ -49,5 +49,7 @@ export const run = (overrides: Partial<RunResult> = {}): RunResult => ({
   failed: [],
   findings: [error, warning, notice],
   changes: [{ feature: 'labels', description: 'added label bug to #7' }],
+  facts: [],
+  durations: {},
   ...overrides,
 })

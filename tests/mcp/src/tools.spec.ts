@@ -34,7 +34,7 @@ import { Effect } from 'effect'
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { CONVENTIONS, fixture, memory, ROOT, textOf } from './fixtures.js'
+import { captureConsole, CONVENTIONS, fixture, liveTelemetry, memory, missingRepository, ROOT, textOf } from './fixtures.js'
 
 describe('tool handlers', () => {
   const { connect, layer, state } = memory()
@@ -172,5 +172,49 @@ describe('agent self-checks', () => {
       const unknown = yield* explainRuleTool({ rule: 'nope' })
       expect(unknown.isError).toBe(true)
     }).pipe(Effect.provide(memory().layer)),
+  )
+})
+
+describe('telemetry for every tool call', () => {
+  const { layer } = memory()
+
+  it.live('reports a failed call as one exception, named by its tool, and prints nothing', () =>
+    Effect.gen(function* () {
+      const lines = captureConsole()
+      const live = liveTelemetry()
+      const result = yield* live.run(dryRunTool(missingRepository, { repository: 'Resnovas/this-repo-does-not-exist-xyz', event: 'push' }, ROOT))
+      expect(result.isError).toBe(true)
+      expect(lines).toStrictEqual([])
+      const batch = live.batch()
+      expect(batch.split('"event":"$exception"')).toHaveLength(2)
+      expect(batch).toContain('"command":"dry_run"')
+      expect(batch).toContain('"error_tag":"NotFound"')
+      expect(batch).toContain('"options":["event","repository"]')
+      expect(batch).not.toContain('this-repo-does-not-exist-xyz')
+      expect(live.logs()).toContain('github getRepository: NotFound (404)')
+    }).pipe(Effect.provide(layer)),
+  )
+
+  it.live('reports an invalid config as an expected failure of its tool', () =>
+    Effect.gen(function* () {
+      captureConsole()
+      const live = liveTelemetry()
+      const result = yield* live.run(validateConfigTool({ config: 'version: 2\nlabels: nope\n' }))
+      expect(result.isError).toBe(true)
+      expect(live.batch()).toContain('"command":"validate_config"')
+      expect(live.batch()).toContain('"error_tag":"ConfigDecodeError"')
+    }).pipe(Effect.provide(layer)),
+  )
+
+  it.live('turns a defect into an error result, reported as unexpected', () =>
+    Effect.gen(function* () {
+      captureConsole()
+      const live = liveTelemetry()
+      const broken = yield* live.run(planSettingsTool(() => Effect.die(new TypeError('broken')), { repository: 'Resnovas/example' }, ROOT))
+      expect(broken).toStrictEqual({ content: [{ type: 'text', text: 'unexpected failure: broken' }], isError: true })
+      expect(live.batch()).toContain('"expected":false')
+      const plain = yield* planSettingsTool(() => Effect.die('not an error'), { repository: 'Resnovas/example' }, ROOT)
+      expect(textOf(plain)).toBe('unexpected failure: not an error')
+    }).pipe(Effect.provide(layer)),
   )
 })

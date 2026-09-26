@@ -22,7 +22,7 @@ import { GitHub, type Repository } from '@resnovas/integrations.github'
 import { track } from '@resnovas/integrations.posthog'
 import { Data, Effect } from 'effect'
 import { loadConfig } from './config.js'
-import { parseRepository, type Connect } from './github.js'
+import { targetRepository, type Connect } from './github.js'
 import { configLocationFor } from './run.js'
 
 /**
@@ -118,7 +118,7 @@ export const settingsPlanText = (plan: SettingsPlan): string =>
  */
 export const planSettingsForRepository = (connect: Connect, request: { readonly repository: string; readonly config?: string | undefined }) =>
   Effect.gen(function* () {
-    const coordinates = yield* parseRepository(request.repository)
+    const coordinates = yield* targetRepository(request.repository)
     const location = yield* configLocationFor(request.config)
     const service = yield* connect(coordinates)
     const plan = Effect.flatMap(loadConfig(location), (resolved) => planRepositorySettings(resolved.config))
@@ -195,7 +195,7 @@ export const renderRepositorySync = (config: SmartcloudConfig) =>
  */
 export const renderSyncForRepository = (connect: Connect, request: { readonly repository: string; readonly config?: string | undefined }) =>
   Effect.gen(function* () {
-    const coordinates = yield* parseRepository(request.repository)
+    const coordinates = yield* targetRepository(request.repository)
     const location = yield* configLocationFor(request.config)
     const service = yield* connect(coordinates)
     const render = Effect.flatMap(loadConfig(location), (resolved) => renderRepositorySync(resolved.config))

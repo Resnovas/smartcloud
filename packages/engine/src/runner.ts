@@ -59,6 +59,8 @@ export interface RunResult extends ReportSnapshot {
   readonly ran: ReadonlyArray<string>
   readonly skipped: ReadonlyArray<{ readonly feature: string; readonly reason: string }>
   readonly failed: ReadonlyArray<{ readonly feature: string; readonly message: string }>
+  /** How long each feature that ran or failed took, in milliseconds. */
+  readonly durations: Readonly<Record<string, number>>
 }
 
 /**
@@ -117,11 +119,16 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
     return Object.assign({}, subject, ...parts)
   }).pipe(Effect.withSpan('smartcloud.engine.loadFacets', { captureStackTrace: false, attributes: { 'subject.kind': subject.kind, facets: [...facets] } }))
 
-type Outcome = { readonly feature: string; readonly failure: string | undefined }
+type Outcome = { readonly feature: string; readonly failure: string | undefined; readonly duration: number }
 
 // One span per feature, with its duration recorded and its outcome logged.
 // Failure reasons can quote repository names, so only the outcome is recorded.
-const instrument = <R>(feature: Feature, kind: EnvelopeKind, report: Context.Tag.Service<Report>, attempt: Effect.Effect<Outcome, never, R>) =>
+const instrument = <R>(
+  feature: Feature,
+  kind: EnvelopeKind,
+  report: Context.Tag.Service<Report>,
+  attempt: Effect.Effect<Omit<Outcome, 'duration'>, never, R>,
+): Effect.Effect<Outcome, never, R> =>
   attempt.pipe(
     Effect.timed,
     Effect.tap(([elapsed, outcome]) =>
@@ -139,7 +146,7 @@ const instrument = <R>(feature: Feature, kind: EnvelopeKind, report: Context.Tag
         ).pipe(Effect.annotateLogs({ outcome: result, findings: found, changes: changed, duration_ms: milliseconds }))
       }),
     ),
-    Effect.map(([, outcome]) => outcome),
+    Effect.map(([elapsed, outcome]) => ({ ...outcome, duration: Math.round(Duration.toMillis(elapsed)) })),
     Effect.annotateLogs({ feature: feature.name }),
     Effect.withSpan(`smartcloud.feature.${feature.name}`, { captureStackTrace: false, attributes: { feature: feature.name, 'event.kind': kind } }),
   )
@@ -191,7 +198,7 @@ export const runFeatures = (options: {
     const report = yield* makeReport
     if (envelope.kind === 'unsupported') {
       yield* report.add({ feature: 'engine', rule: 'unsupported-event', level: 'notice', message: envelope.reason })
-      return { envelope, ran: [], skipped: [], failed: [], ...(yield* report.snapshot) }
+      return { envelope, ran: [], skipped: [], failed: [], durations: {}, ...(yield* report.snapshot) }
     }
 
     const skipped: Array<{ feature: string; reason: string }> = []
@@ -240,31 +247,40 @@ export const runFeatures = (options: {
         })
         // Effect.exit would turn an interruption into an ordinary failure, so
         // only failures and defects are caught; interrupting the run stops it.
-        const attempt: Effect.Effect<Outcome, never, GitHub> =
-          missing.length > 0
-            ? Effect.succeed({ feature: feature.name, failure: missing.join('\n') })
-            : feature.run(context).pipe(
-                Effect.provideService(Report, report),
-                Effect.as({ feature: feature.name, failure: undefined }),
-                Effect.catchAllCause((cause) =>
-                  Cause.isInterruptedOnly(cause) ? Effect.interrupt : Effect.succeed({ feature: feature.name, failure: Cause.pretty(cause) }),
-                ),
-              )
+        const attempt: Effect.Effect<Omit<Outcome, 'duration'>, never, GitHub> = missing.length > 0
+          ? Effect.succeed({ feature: feature.name, failure: missing.join('\n') })
+          : feature.run(context).pipe(
+              Effect.provideService(Report, report),
+              Effect.as({ feature: feature.name, failure: undefined }),
+              Effect.catchAllCause((cause) =>
+                Cause.isInterruptedOnly(cause)
+                  ? Effect.interrupt
+                  : Effect.succeed({ feature: feature.name, failure: Cause.pretty(cause) }),
+              ),
+            )
         return instrument(feature, envelope.kind, report, attempt)
       },
       { concurrency: options.concurrency ?? 4 },
     )
     const ran: Array<string> = []
     const failed: Array<{ feature: string; message: string }> = []
+    const durations: Record<string, number> = {}
     for (const outcome of outcomes) {
+      durations[outcome.feature] = outcome.duration
       if (outcome.failure === undefined) ran.push(outcome.feature)
       else failed.push({ feature: outcome.feature, message: outcome.failure })
     }
     const snapshot = yield* report.snapshot
     const counts = { ran: ran.length, skipped: skipped.length, failed: failed.length, findings: snapshot.findings.length }
     yield* Effect.annotateCurrentSpan(counts)
-    yield* Effect.logInfo(`engine: ${counts.ran} ran, ${counts.skipped} skipped, ${counts.failed} failed, ${counts.findings} finding(s)`).pipe(
-      Effect.annotateLogs(counts),
-    )
-    return { envelope, ran, skipped, failed, ...snapshot }
-  }).pipe(Effect.annotateLogs({ github_event: options.event }), Effect.withSpan('smartcloud.engine.runFeatures', { captureStackTrace: false, attributes: { github_event: options.event } }))
+    yield* Effect.logInfo(
+      `engine: ${counts.ran} ran, ${counts.skipped} skipped, ${counts.failed} failed, ${counts.findings} finding(s)`,
+    ).pipe(Effect.annotateLogs(counts))
+    return { envelope, ran, skipped, failed, durations, ...snapshot }
+  }).pipe(
+    Effect.annotateLogs({ github_event: options.event }),
+    Effect.withSpan('smartcloud.engine.runFeatures', {
+      captureStackTrace: false,
+      attributes: { github_event: options.event },
+    }),
+  )

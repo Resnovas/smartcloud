@@ -18,7 +18,7 @@
 import { FileSystem } from '@effect/platform'
 import { DryRun, DryRunLog, GitHub, type GitHubService, type RepositoryCoordinates } from '@resnovas/integrations.github'
 import { conclusionOf } from '@resnovas/reporting'
-import { optOut } from '@resnovas/runtime'
+import { command, noteOptions, optOut, targetRepository } from '@resnovas/runtime'
 import { Config, Console, Data, Effect, Layer, Redacted } from 'effect'
 import { readInputs } from './inputs.js'
 import { runAction } from './run.js'
@@ -79,7 +79,9 @@ const dryRunSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
  * @remarks
  * Every failure, expected or not, ends as one `::error` annotation and exit
  * code 1, never an unhandled rejection. The run also exits 1 when any
- * finding is an error or any feature failed to run.
+ * finding is an error or any feature failed to run. The whole run is one
+ * telemetry invocation (`command run` with the command `run`), so any
+ * failure, from reading the inputs on, is also sent to error tracking.
  *
  * @example
  * ```ts
@@ -98,10 +100,11 @@ export const program = (connect: Connect) =>
     const fs = yield* FileSystem.FileSystem
     const inputs = yield* readInputs
     if (!inputs.telemetry) yield* optOut
+    yield* noteOptions(inputs.given)
     const env = yield* environment
+    const coordinates = yield* targetRepository(env.repository)
     const payload = yield* readPayload(env.eventPath)
-    const [owner = '', repo = ''] = env.repository.split('/')
-    const service = yield* connect({ token: inputs.token, coordinates: { owner, repo } })
+    const service = yield* connect({ token: inputs.token, coordinates })
     const base = Layer.succeed(GitHub, service)
 
     const event = { name: env.eventName, payload }
@@ -124,6 +127,8 @@ export const program = (connect: Connect) =>
       process.exitCode = 1
     }
   }).pipe(
+    // The whole run is one invocation, so a failure at any step, even reading the inputs, is reported.
+    (run) => command(run, { command: 'run' }),
     Effect.catchAll((error) =>
       Effect.zipRight(
         Console.log(`::error title=smartcloud::${escape(error.message)}`),

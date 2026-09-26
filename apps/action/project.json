@@ -7,7 +7,7 @@
   "targets": {
     "bundle": {
       "command": "node tools/release/bundle.ts {projectRoot} dist/index.js",
-      "outputs": ["{workspaceRoot}/dist/index.js"]
+      "outputs": ["{workspaceRoot}/dist/index.js", "{workspaceRoot}/dist/index.js.map"]
     },
     "docgen": {},
     "contracts": {}
