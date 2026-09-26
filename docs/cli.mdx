@@ -76,7 +76,7 @@ Runs every feature against a real pull request, issue or repository event, throu
 | `--pr`, `--issue` | Simulate this pull request or issue, built from its current state on GitHub. |
 | `--event` | Simulate `schedule`, `push` or `workflow_dispatch`. |
 | `--config` | Use this local config file instead of the repository's own config on its default branch. |
-| `--features` | Only these features, comma separated. |
+| `--features` | Only these features, comma separated. An empty list, such as `--features ,`, runs every feature. |
 
 Give exactly one of `--pr`, `--issue` or `--event`.
 
@@ -94,7 +94,7 @@ Prints every repository settings step the config would apply, with its request, 
 smartcloud sync --repo <owner/name> --out <dir> [--config <file>]
 ```
 
-Renders the files the sync feature would write to the repository into a local directory, with each file's status (added, updated, made executable or unchanged), and lists any conflicts. Nothing is sent to GitHub.
+Renders the files the sync feature would write to the repository into a local directory, with each file's status (added, updated, made executable or unchanged), and lists any conflicts. Nothing is sent to GitHub. Every file is checked before any is written: one that would land outside the directory, or be written through a symlink inside it, stops the command with nothing written.
 
 ## Tokens
 

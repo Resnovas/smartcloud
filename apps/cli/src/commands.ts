@@ -112,12 +112,53 @@ export const dryRunCommand = (connect: Connect, request: DryRunRequest) =>
 export const planSettingsCommand = (connect: Connect, request: { readonly repository: string; readonly config?: string | undefined }) =>
   Effect.tap(planSettingsForRepository(connect, request), (plan) => Console.log(settingsPlanText(plan)))
 
-/** A synced file's path would land outside the output directory. */
-export class UnsafePath extends Data.TaggedError('UnsafePath')<{ readonly path: string }> {
+/** A synced file would be written outside the output directory, or through a symlink. */
+export class UnsafePath extends Data.TaggedError('UnsafePath')<{ readonly path: string; readonly reason?: string | undefined }> {
   override get message() {
-    return `refusing to write ${this.path}: it is outside the output directory`
+    return `refusing to write ${this.path}: ${this.reason ?? 'it is outside the output directory'}`
   }
 }
+
+/**
+ * Whether a path lies inside a directory, or is the directory itself.
+ *
+ * @remarks
+ * Compared through `path.relative`, so a root of `/` contains everything and
+ * a sibling such as `/out-other` is not inside `/out`.
+ *
+ * @param path - The platform's path service.
+ * @param root - The directory, resolved.
+ * @param target - The path, resolved.
+ * @returns Whether `target` is `root` or below it.
+ */
+export const isWithin = (path: Path.Path, root: string, target: string): boolean => {
+  const relative = path.relative(root, target)
+  return relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative)
+}
+
+// Checks where a synced file would really land. Each step from the output
+// root down to the file is checked while it exists: its real path must stay
+// inside the output's, and it must not be a symlink (dangling or not), so no
+// link placed inside the output can redirect the write.
+const checkTarget = (root: string, realRoot: string, file: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem
+    const path = yield* Path.Path
+    const target = path.resolve(root, file)
+    if (target === root || !isWithin(path, root, target)) return yield* new UnsafePath({ path: file })
+    let current = root
+    for (const step of path.relative(root, target).split(path.sep)) {
+      current = path.join(current, step)
+      const exists = yield* fs.exists(current)
+      if (exists && !isWithin(path, realRoot, yield* fs.realPath(current)))
+        return yield* new UnsafePath({ path: file, reason: `${current} resolves outside the output directory` })
+      // readLink succeeds only on a symlink.
+      if (yield* Effect.isSuccess(fs.readLink(current)))
+        return yield* new UnsafePath({ path: file, reason: `${current} is a symlink, and smartcloud does not write through symlinks` })
+      if (!exists) break
+    }
+    return target
+  })
 
 /**
  * Renders a repository's synced files into a local directory, as they would
@@ -137,9 +178,11 @@ export const syncCommand = (
     const path = yield* Path.Path
     const render = yield* renderSyncForRepository(connect, request)
     const root = path.resolve(request.out)
-    for (const file of render.files) {
-      const target = path.resolve(root, file.path)
-      if (!target.startsWith(`${root}${path.sep}`)) return yield* new UnsafePath({ path: file.path })
+    yield* fs.makeDirectory(root, { recursive: true })
+    const realRoot = yield* fs.realPath(root)
+    // Every target is checked before anything is written, so a refusal leaves the output untouched.
+    const targets = yield* Effect.forEach(render.files, (file) => Effect.map(checkTarget(root, realRoot, file.path), (target) => ({ file, target })))
+    for (const { file, target } of targets) {
       yield* fs.makeDirectory(path.dirname(target), { recursive: true })
       yield* fs.writeFileString(target, file.content)
       yield* fs.chmod(target, file.executable ? 0o755 : 0o644)

@@ -77,7 +77,7 @@ export const makeSmartcloud = (connect: Connect) => {
       pr: Options.integer('pr').pipe(Options.withDescription('Simulate this pull request.'), Options.optional),
       issue: Options.integer('issue').pipe(Options.withDescription('Simulate this issue.'), Options.optional),
       event: Options.choice('event', REPOSITORY_EVENTS).pipe(Options.withDescription('Simulate this repository event.'), Options.optional),
-      features: Options.text('features').pipe(Options.withDescription('Only these features, comma-separated.'), Options.optional),
+      features: Options.text('features').pipe(Options.withDescription('Only these features, comma-separated; every feature when empty.'), Options.optional),
     },
     (options) =>
       dryRunCommand(connect, {
@@ -86,7 +86,8 @@ export const makeSmartcloud = (connect: Connect) => {
         pr: Option.getOrUndefined(options.pr),
         issue: Option.getOrUndefined(options.issue),
         event: Option.getOrUndefined(options.event),
-        features: Option.getOrUndefined(Option.map(options.features, parseFeatureList)),
+        // An empty list, such as `--features ,`, means every feature, as the action reads it.
+        features: Option.getOrUndefined(Option.filter(Option.map(options.features, parseFeatureList), (names) => names.length > 0)),
       }),
   ).pipe(Command.withDescription('Run every feature against a pull request, an issue or an event, recording writes instead of making them.'))
 

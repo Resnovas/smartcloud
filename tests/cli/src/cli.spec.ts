@@ -20,9 +20,25 @@ import { describe, expect, it } from '@effect/vitest'
 import { parseConfig } from '@resnovas/config'
 import { fileKey, GitHub, type GitHubService, makeMemoryGitHub } from '@resnovas/integrations.github'
 import type { Connect } from '@resnovas/runtime'
-import { checkCommitCommand, CommitCheckFailed, ConfigSourceFromGitHub, locateConfig, main, migrate, NoConfig, run, runWith, UnknownAuthor, UnsafePath, validate, VERSION } from '@resnovas/smartcloud'
+import {
+  checkCommitCommand,
+  CommitCheckFailed,
+  ConfigSourceFromGitHub,
+  isWithin,
+  locateConfig,
+  main,
+  migrate,
+  NoConfig,
+  run,
+  runWith,
+  UnknownAuthor,
+  UnsafePath,
+  validate,
+  VERSION,
+} from '@resnovas/smartcloud'
+import { Path } from '@effect/platform'
 import { Effect, Layer } from 'effect'
-import { chmod, mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, vi } from 'vitest'
@@ -228,6 +244,17 @@ describe('dry-run', () => {
       expect(logs[0]).toContain('**Dry run:** nothing would have been written.')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
+
+  it.effect('runs every feature when the feature list is empty', () =>
+    Effect.gen(function* () {
+      const { connect } = repository({ [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: CONVENTIONS })
+      const dry = (...extra: Array<string>) =>
+        Effect.map(runWith(connect)(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--pr', '7', ...extra]), () => logs.splice(0).join('\n'))
+      const all = yield* dry()
+      expect(yield* dry('--features', ',')).toBe(all)
+      expect(yield* dry('--features', 'conventions')).not.toBe(all)
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
 })
 
 describe('plan settings', () => {
@@ -282,6 +309,53 @@ describe('sync', () => {
       expect(errors).toStrictEqual([new UnsafePath({ path: '../../escape' }).message].map((message) => `smartcloud: ${message}`))
       expect(process.exitCode).toBe(1)
       process.exitCode = before
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('treats every path under a root of / as inside it, and a sibling directory as outside', () =>
+    Effect.gen(function* () {
+      const path = yield* Path.Path
+      expect(isWithin(path, '/', '/LICENSE')).toBe(true)
+      expect(isWithin(path, '/', '/')).toBe(true)
+      expect(isWithin(path, '/out', '/out/a/b')).toBe(true)
+      expect(isWithin(path, '/out', '/out-other/a')).toBe(false)
+      expect(isWithin(path, '/out', '/')).toBe(false)
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('refuses to write through a symlink inside the output directory', () =>
+    Effect.gen(function* () {
+      const { connect } = repository({
+        [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: SYNC,
+        [template('LICENSE')]: '(c) {{HOLDER}}\n',
+        [template('tools/run')]: '#!/bin/sh\n',
+      })
+      const out = join(dir, 'out')
+      const outside = join(dir, 'outside')
+      const sync = () => Effect.flip(runWith(connect)(['node', 'smartcloud', 'sync', '--repo', 'Resnovas/example', '--out', out]))
+      yield* Effect.promise(async () => {
+        await mkdir(outside)
+        await mkdir(join(out, 'real'), { recursive: true })
+        await symlink(outside, join(out, 'tools'))
+      })
+      // A directory linked to somewhere outside.
+      const linked = yield* sync()
+      expect(linked).toBeInstanceOf(UnsafePath)
+      expect(linked.message).toBe(`refusing to write tools/run: ${join(out, 'tools')} resolves outside the output directory`)
+      // A dangling link to a file outside, which would be created by the write.
+      yield* Effect.promise(async () => {
+        await rm(join(out, 'tools'))
+        await symlink(join(outside, 'LICENSE'), join(out, 'LICENSE'))
+      })
+      expect((yield* sync()).message).toBe(`refusing to write LICENSE: ${join(out, 'LICENSE')} is a symlink, and smartcloud does not write through symlinks`)
+      // Even a link that stays inside is not written through.
+      yield* Effect.promise(async () => {
+        await rm(join(out, 'LICENSE'))
+        await symlink(join(out, 'real'), join(out, 'tools'))
+      })
+      expect((yield* sync()).message).toContain(`${join(out, 'tools')} is a symlink`)
+      expect(yield* Effect.promise(() => readdir(outside))).toStrictEqual([])
+      expect(yield* Effect.promise(() => readdir(join(out, 'real')))).toStrictEqual([])
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })
