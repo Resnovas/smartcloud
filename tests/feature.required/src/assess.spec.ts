@@ -46,4 +46,11 @@ describe('assessChecks', () => {
     expect(assessment.counted.map((check) => check.name)).toStrictEqual(['ci / test', 'ci / build'])
     expect(assessment.failed).toStrictEqual([])
   })
+
+  it('leaves out every name a global or sticky ignore pattern matches', () => {
+    for (const pattern of ['/^ci/g', '/^ci/y']) {
+      const assessment = assessChecks(checks, { checkRunId: 1, ignore: [pattern] })
+      expect(assessment.counted.map((check) => check.name)).toStrictEqual(['smartcloud', 'Codecov/patch'])
+    }
+  })
 })

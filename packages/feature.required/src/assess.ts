@@ -73,7 +73,11 @@ export const assessChecks = (
     (check) =>
       check.id !== options.checkRunId &&
       !(check.source === 'checkRun' && check.name.startsWith(OWN_CHECK_PREFIX)) &&
-      !ignored.some((pattern) => pattern.test(check.name)),
+      !ignored.some((pattern) => {
+        // A global or sticky pattern moves lastIndex after a hit, so every name starts from 0.
+        pattern.lastIndex = 0
+        return pattern.test(check.name)
+      }),
   )
   return {
     counted,
