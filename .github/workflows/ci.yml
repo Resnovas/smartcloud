@@ -1,7 +1,6 @@
 # CI for the v2 workspace: lint, typecheck, test with coverage, and build the
 # projects a change affects, plus the licence header check and the check that
-# docs/reference/configuration.mdx matches the JSON Schema. The v1 tree under
-# legacy/ keeps its own workflows until it is removed (SMC-23).
+# docs/reference/configuration.mdx matches the JSON Schema.
 name: CI
 
 on:

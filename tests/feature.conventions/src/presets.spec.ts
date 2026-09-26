@@ -19,7 +19,7 @@ import { describe, expect, it } from '@effect/vitest'
 import { gitmojis } from 'gitmojis'
 import { CONVENTIONAL_TYPES, matchesPreset, type Preset, presetDescription, SEMANTIC_TYPES } from '@resnovas/feature.conventions'
 
-// v1's presets, rebuilt from legacy/src/contexts/methods/conventions.ts: the
+// v1's presets, rebuilt from v1's src/contexts/methods/conventions.ts (tag 1.0.0-beta.8): the
 // same patterns and the same `requires`. Used only as an oracle on the fixed
 // titles below, never on user input.
 const v1 = (preset: Exclude<Preset, 'conventionalCommits'>, contexts: ReadonlyArray<string> | undefined) => {
