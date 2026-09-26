@@ -1,0 +1,50 @@
+---
+title: "MCP server"
+description: "Let AI assistants validate, explain and dry-run smartcloud configs through the Model Context Protocol."
+---
+
+`smartcloud-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. Assistants and agents use the same code as the action and the CLI to work with a repository's smartcloud config, rather than guessing at it.
+
+Every tool only reads. `dry_run` runs through the dry-run layer, so it lists the writes a run would make and never makes them.
+
+## Connect it
+
+The server speaks MCP over stdio. Add it to your client's MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "smartcloud": {
+      "command": "npx",
+      "args": ["-y", "-p", "@resnovas/smartcloud", "smartcloud-mcp"]
+    }
+  }
+}
+```
+
+Tools that read GitHub use `GITHUB_TOKEN`, or the token of the signed-in GitHub CLI (`gh auth login`). The token is resolved only when a tool needs GitHub, so validating a config without `extends` works offline.
+
+## Tools
+
+| Tool | Input | What it returns |
+| --- | --- | --- |
+| `validate_config` | `config` (YAML or JSON), optional `source` | Whether the config is valid once every `extends` preset is applied, with migration warnings. |
+| `migrate_config` | `config` (a v1 `config.json`), optional `source` | The v2 YAML, and a warning for everything not carried over. |
+| `explain_config` | `config`, optional `source` | Which features the resolved config enables and the rules each one applies. |
+| `dry_run` | `repository` (`owner/name`), one of `pr`, `issue` or `event`, optional `config` or `configText`, optional `features` | The run's summary and the writes it would make. |
+| `plan_settings` | `repository`, optional `config` or `configText` | Every repository settings step the config would apply. |
+| `check_commit_message` | `message`, `authorName`, `authorEmail`, optional `config` | Whether a commit message passes the DCO and AI attribution rules, and every finding. An agent should call it before each commit. |
+| `explain_rule` | `rule` (the id a finding reports, such as `AI-02`, `DCO` or `conventions.title`), optional `config` | What the rule asks for, how to satisfy it, and a link to the policy text. |
+
+`event` is one of `schedule`, `push` or `workflow_dispatch`. An empty `features` list runs every feature, as leaving it out does. Without `config` or `configText`, `dry_run` and `plan_settings` read the repository's config from its default branch, as the action does.
+
+## Local config files
+
+`dry_run` and `plan_settings` take the config to use in one of two ways:
+
+- `configText`: the config itself, YAML or JSON. Prefer this: the server reads nothing from disk.
+- `config`: a path to a config file. The server reads it only when the path is relative, resolves inside the directory the server was started in (after following symlinks), and names a regular file. Any other path is refused with a tool error, and nothing is read.
+
+The restriction matters because these tools are marked read-only, so a client may run them without asking. Without it, an assistant steered by text it had read could have the server read any file the server's user can.
+
+Failures come back as tool errors with a message, never as protocol errors.

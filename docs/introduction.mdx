@@ -1,0 +1,147 @@
+---
+title: "Introduction"
+description: "What smartcloud does, and how to run it in a repository."
+---
+
+smartcloud is a GitHub Action that automates repository housekeeping and enforces contribution policy from one declarative file, `.github/smartcloud.yml`. It labels pull requests and issues, checks titles and commits, gates reviews, marks inactive work stale, keeps repository settings in line, and syncs shared files from a template repository.
+
+Each capability is a feature with its own section in the config. A feature whose section is absent does not run, so you opt in to exactly what you need.
+
+<CardGroup cols={2}>
+  <Card title="Configuration" icon="file-code" href="/configuration">
+    The config file, shared presets and the "add, never change" rule.
+  </Card>
+  <Card title="Conditions" icon="filter" href="/conditions">
+    The condition language that labelling, conventions and reviews use.
+  </Card>
+  <Card title="Reporting" icon="list-check" href="/reporting">
+    Check runs, the single comment and the job summary.
+  </Card>
+  <Card title="Migrating from v1" icon="arrow-right-arrow-left" href="/migration">
+    Convert `.github/config.json` with `smartcloud migrate`.
+  </Card>
+</CardGroup>
+
+## Quick start
+
+<Steps>
+  <Step title="Write a config">
+    Create `.github/smartcloud.yml`. This one keeps two labels in sync, labels documentation changes, and asks for conventional commit titles:
+
+    ```yaml .github/smartcloud.yml
+    # yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+    version: 2
+
+    labels:
+      docs:
+        name: documentation
+        color: 0075CA
+        description: Improvements or additions to documentation
+      bug:
+        name: bug
+        color: D73A4A
+
+    labelling:
+      docs:
+        label: docs
+        on: [pullRequest]
+        when:
+          condition:
+            - type: filesMatch
+              condition: "docs/**"
+
+    conventions:
+      rules:
+        title:
+          on: [pullRequest]
+          preset: conventionalCommits
+    ```
+
+    The first line points editors at the JSON Schema, so they complete and check keys as you type.
+  </Step>
+  <Step title="Check it locally">
+    ```sh
+    smartcloud validate
+    ```
+
+    Validation reads every preset the config extends and reports anything the schema rejects. See [CLI](/cli) for how to run it.
+  </Step>
+  <Step title="Add the workflow">
+    Add a workflow that runs smartcloud on the events its features act on:
+
+    ```yaml .github/workflows/smartcloud.yml
+    name: smartcloud
+
+    on:
+      pull_request:
+        types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft]
+      pull_request_review:
+        types: [submitted, dismissed]
+      issues:
+        types: [opened, edited, reopened, labeled, unlabeled]
+      push:
+        branches: [main]
+      schedule:
+        - cron: "0 6 * * *"
+      workflow_dispatch:
+
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+      issues: write
+
+    jobs:
+      smartcloud:
+        runs-on: ubuntu-latest
+        steps:
+          - uses: resnovas/smartcloud@v2
+    ```
+  </Step>
+</Steps>
+
+## Permissions
+
+| Permission | Why smartcloud needs it |
+| --- | --- |
+| `contents: write` | The sync feature pushes a branch with synced files. Reading presets and templates needs at least `read`. |
+| `pull-requests: write` | Labels, review requests, automatic approvals and the report comment on pull requests. |
+| `checks: write` | One check run per feature on the commit. |
+| `issues: write` | Labels, stale comments and the report comment on issues. Repository labels are managed through this permission too. |
+
+The settings feature changes repository administration settings, which the workflow token cannot do. See [Settings](/features/settings).
+
+<Note>
+  Pull requests from forks run with a read-only token whatever the workflow asks for. smartcloud still evaluates every feature and writes its findings to the job summary and annotations; see [Reporting](/reporting#pull-requests-from-forks).
+</Note>
+
+## Action inputs
+
+Every input is optional.
+
+| Input | Default | What it does |
+| --- | --- | --- |
+| `GITHUB_TOKEN` | `${{ github.token }}` | The token smartcloud acts with. Settings need an admin token. |
+| `config` | the first of `.github/smartcloud.yml`, `.github/smartcloud.yaml`, `.github/config.json` | The config file's path in the repository. |
+| `configJson` | none | The config given inline, as YAML or JSON. Wins over the file. |
+| `configRef` | the default branch | The branch, tag or commit to read the config from. |
+| `dryRun` | `false` | Record every write in the job summary instead of making it. |
+| `features` | every configured feature | A comma-separated list of the features to run, for example `labels,stale`. |
+
+The config is read through the GitHub API, so the workflow needs no checkout step. It comes from the default branch unless `configRef` says otherwise, so a pull request cannot loosen the rules it is checked against.
+
+The run fails when any finding is an error or a feature fails to run. Any other failure, such as a missing config, is one error annotation, never a stack trace.
+
+The v1 inputs `fillEmpty` and `skipDelete` are still accepted and ignored with a warning. See [Migrating from v1](/migration).
+
+## Which events run which features
+
+| Event | Features |
+| --- | --- |
+| `pull_request`, `pull_request_target`, `pull_request_review`, `pull_request_review_comment` | conventions, commits, disclosure, reviews, labels (labelling rules), sync (the edit check) |
+| `issues`, `issue_comment` on an issue | conventions, labels (labelling rules) |
+| `push` | labels (label sync), settings, sync |
+| `schedule`, `workflow_dispatch` | labels (label sync), stale, settings, sync |
+| `repository_dispatch`, `merge_group` | labels (label sync) |
+
+Any other event is a clean no-op that records a notice. A comment on a pull request carries no pull request data, so smartcloud acts on the pull request events instead.

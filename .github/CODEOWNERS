@@ -1,5 +1,56 @@
-* @Videndum
-*.yml @resnovas/automation
-docs/*/** @resnovas/community
-docs\getting-started\contributing\CODE_OF_CONDUCT.md @resnovas/admins
-docs\getting-started\contributing\AGREEMENT.md @resnovas/security
+# house:local - add this repository's own owners below this line, above the managed block.
+# Previous content of this file, kept when it was first synced. Re-add what is still needed as local rules, then delete this.
+# * @Videndum
+# *.yml @resnovas/automation
+# docs/*/** @resnovas/community
+# docs\getting-started\contributing\CODE_OF_CONDUCT.md @resnovas/admins
+# docs\getting-started\contributing\AGREEMENT.md @resnovas/security
+# The managed block comes last because the last matching rule wins, so synced owners always apply.
+
+# Fallback owner for anything no rule below matches. Change it freely.
+*                            @TGTGamer
+
+# house:managed:begin - synced from Resnovas/.github templates/.github/CODEOWNERS. Edits inside this block are overwritten.
+#
+# Owners are set by role in the house smartcloud preset. Owners for the repository's own
+# directories go in the local section above this block.
+#
+#   OWNERS_ADMIN     project administration: governance, licence, repository configuration
+#   OWNERS_DOCS      technical writing and customer success: documentation
+#   OWNERS_QA        quality assurance: tests
+#   OWNERS_WORKFLOW  workflow management: CI, tooling, dev environments, scripts
+
+# Documentation.
+*.adoc                       @TGTGamer
+*.md                         @TGTGamer
+/docs/                       @TGTGamer
+
+# Tests.
+*.spec.ts                    @TGTGamer
+*.test.ts                    @TGTGamer
+*.spec.tsx                   @TGTGamer
+*.test.tsx                   @TGTGamer
+/tests/                      @TGTGamer
+/e2e/                        @TGTGamer
+
+# Tooling, CI and development environments.
+/.github/                    @TGTGamer
+/.devcontainer/              @TGTGamer
+/.vscode/                    @TGTGamer
+/scripts/                    @TGTGamer
+/tools/                      @TGTGamer
+
+# Governance, licensing and repository-wide configuration.
+/.github/CODEOWNERS          @TGTGamer
+/.github/smartcloud.yml      @TGTGamer
+/LICENSE                     @TGTGamer
+/AI_POLICY.md              @TGTGamer
+/CODE_OF_CONDUCT.md        @TGTGamer
+/CONTRIBUTING.md           @TGTGamer
+/COOPERATION_COMMITMENT.md @TGTGamer
+/DCO.md                    @TGTGamer
+/GOVERNANCE.md             @TGTGamer
+/SECURITY.md               @TGTGamer
+/package.json                @TGTGamer
+/.editorconfig               @TGTGamer
+# house:managed:end

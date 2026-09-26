@@ -1,16 +1,157 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  // VS Code and Cursor debug configurations (house standard
+  // project-dev-surfaces). Secrets come from the environment the editor was
+  // started in, never from this file. Zed reads .zed/debug.json instead.
   "version": "0.2.0",
   "configurations": [
+    // house:managed:begin - synced from Resnovas/.github templates/.vscode/launch.json. Edits inside this block are overwritten.
     {
+      "name": "Node: current file",
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
+      "program": "${file}",
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
       "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}\\lib\\index.js",
-      "outFiles": ["${workspaceFolder}/**/*.js"]
-    }
-  ]
+    },
+    {
+      "name": "Surfaces: install (dry run)",
+      "type": "node",
+      "request": "launch",
+      "program": "${workspaceFolder}/tools/dev/surfaces.mjs",
+      "args": ["install", "--dry-run"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "skipFiles": ["<node_internals>/**"],
+    },
+    // house:managed:end
+    // house:local - add this repository's own debug configurations below this line.
+    {
+      "name": "CLI: validate",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--silent",
+        "run",
+        "cli",
+        "validate",
+        ".github/smartcloud.yml"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "preLaunchTask": "build",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "CLI: migrate",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--silent",
+        "run",
+        "cli",
+        "migrate",
+        ".github/config.json"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "preLaunchTask": "build",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "CLI: dry-run",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--silent",
+        "run",
+        "cli",
+        "dry-run",
+        "--repo",
+        "Resnovas/smartcloud",
+        "--event",
+        "schedule"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+      },
+      "preLaunchTask": "build",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Action: schedule (dry run)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--silent",
+        "run",
+        "action"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "GITHUB_TOKEN": "${env:GITHUB_TOKEN}",
+        "GITHUB_REPOSITORY": "Resnovas/smartcloud",
+        "GITHUB_EVENT_NAME": "schedule",
+        "GITHUB_EVENT_PATH": "${workspaceFolder}/tools/dev/event.schedule.json",
+        "INPUT_DRYRUN": "true"
+      },
+      "preLaunchTask": "build",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "MCP server (stdio)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--silent",
+        "run",
+        "mcp"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "GITHUB_TOKEN": "${env:GITHUB_TOKEN}"
+      },
+      "preLaunchTask": "build",
+      "skipFiles": [
+        "<node_internals>/**"
+      ]
+    },
+    {
+      "name": "Vitest: current file",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "--silent",
+        "run",
+        "test:file",
+        "${relativeFile}"
+      ],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "smartStep": true,
+      "skipFiles": [
+        "<node_internals>/**",
+        "**/node_modules/**"
+      ]
+    },
+  ],
 }

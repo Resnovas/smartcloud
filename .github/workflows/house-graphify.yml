@@ -1,0 +1,25 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-graphify.yml. Edits inside this block are overwritten.
+#
+# Keeps the committed Graphify graph (graphify-out/graph.json) in step with the
+# code. On pull requests it reports a stale graph without failing; on the
+# default branch it opens a pull request with the rebuilt graph. Uses the same
+# ACCESS_TOKEN organisation secret as the house sync.
+name: House graphify
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  house-graphify:
+    uses: Resnovas/.github/.github/workflows/graphify.yml@main
+    permissions:
+      contents: read
+    secrets:
+      token: ${{ secrets.ACCESS_TOKEN }}
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.

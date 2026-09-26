@@ -1,0 +1,93 @@
+---
+title: "Telemetry"
+description: "What smartcloud sends to PostHog, what it never sends, how to turn it off, and how feature flags work."
+---
+
+smartcloud sends anonymous telemetry to [PostHog](https://posthog.com): usage events, logs, traces, metrics and errors. It is how problems are noticed and fixed, how we learn which features are used, and how a broken feature can be switched off quickly with a [feature flag](#feature-flags). The action, the CLI and the MCP server all send it the same way.
+
+## What is collected
+
+Every run of the action, every CLI command (`validate`, `migrate`, `check-commit`, `dry-run`, `plan settings` and `sync`) and every MCP tool call is one **invocation**, and each is recorded from start to finish, whether it succeeds or fails, even when it fails before any repository is read.
+
+### Events
+
+Each event also carries `surface` (`action`, `cli` or `mcp`) and `smartcloud_version`. The events and their properties are defined, with a schema for each, in one module, `packages/runtime/src/analytics.ts`, so nothing else can send an event under another name or with another shape.
+
+| Event | When | Properties |
+| --- | --- | --- |
+| `command run` | Once, when an invocation ends. | `command` (the CLI command, such as `dry-run` or `plan settings`; the MCP tool, such as `dry_run`; or `run` for the action), `options` (the names of the options or inputs given, never their values), `outcome` (`success`, `failure` or `interrupted`), `duration_ms`, and on failure `error_tag` (the error's type, such as `NotFound`) and `expected` (true for an expected failure, such as an invalid config or a missing repository; false for a bug). |
+| `config resolved` | Each time a config is read. | `config_version` (1 or 2, as the repository's file is written), `migrated_from_v1`, `extends_count` (presets included, directly or through other presets), `presets` (each one only as `house`, for `Resnovas/.github/smartcloud/house.yml`, or `other`), `features_enabled` and `rule_counts` (the number of entries in each enabled feature's sections). The event is only sent while telemetry is on, so a config that says `telemetry: false` never sends it. |
+| `feature run` | For each feature a run considered. | `feature`, `outcome` (`success`, `failure` or `skipped`), `skip_reason` (`flag`, `not configured` or `unsupported event`), `event_kind` (`pullRequest`, `issue`, `repository` or `unsupported`), `github_event` (such as `push`), `findings`, `findings_error`, `findings_warning`, `findings_notice`, `findings_by_rule` (counts by rule id), `rules`, `changes` (a count) and `duration_ms`. |
+| `sync proposed` | When the sync feature plans a proposal. | `created`, `updated` and `mode` (files to add, update or make executable), `conflicts`, and `pull_request` (`created`, `updated`, `none` when there is nothing to propose, or `dry-run`). |
+| `settings applied` | When the settings feature applies a config's settings. | `applied`, `failed` and `skipped` (settings GitHub does not offer on a private repository), and `project_type` (`saas`, `desktop`, `library` or `none`). |
+
+Evaluating a [feature flag](#feature-flags) also records PostHog's standard `$feature_flag_called` event.
+
+Rule ids are sent as smartcloud's code names them. Policy ids such as `DCO`, `AI-02`, `SYNC` and `REVIEW` are sent as they are; a feature's own rules keep only the part smartcloud writes (`settings.environment:production` becomes `settings.environment`); every convention rule, which the repository names, becomes `conventions.custom`; and anything else becomes `other`.
+
+The repository's PostHog person has two properties, set with every event: `smartcloud_version` and `last_surface`. Its `organization` group has two more, set when a config is read: `features_enabled` and `uses_house_preset`.
+
+Earlier v2 builds sent `smartcloud run`, `smartcloud settings plan` and `smartcloud sync render`; `command run` and `feature run` replace them.
+
+### Errors, logs, traces and metrics
+
+- **Errors** for error tracking: one `$exception` for each invocation that fails, with the surface, the command, the outcome, `error_tag` and `expected`, and its message and stack trace; and one for each feature that fails while the run completes. Stack traces from a release are resolved to the TypeScript sources by the source maps uploaded when it is released (see [Releasing](releasing)).
+- **Logs**: a line for each invocation and each run with its outcome, and the diagnostic logs smartcloud writes while it runs, from debug level up: what each feature decided, as counts (such as `labels: 3 to create, 1 to rename`), the rule id of each finding, and the outcome of each GitHub API call. Logs go to PostHog only, never to your terminal, whatever path the invocation takes; with telemetry off they are dropped.
+- **Traces**: a span for the invocation (`smartcloud.command`), holding everything it does, including the GitHub reads that build a dry run's event, with child spans for the run (`smartcloud.run`), resolving the config (`smartcloud.config.resolve`), evaluating feature flags, running the features (`smartcloud.engine.runFeatures`), each feature (`smartcloud.feature.<name>`), loading pull request details, publishing the report (`smartcloud.reporting.publish`) and each GitHub API call (`smartcloud.github.<operation>`), with their durations, outcomes, counts and, for GitHub calls, the HTTP status.
+- **Metrics**: invocations by command and outcome (`smartcloud.commands`) and their durations (`smartcloud.command.duration_ms`); runs by operation and outcome, and their durations; findings by level and feature (`smartcloud.findings`); feature durations by feature and outcome (`smartcloud.feature.duration_ms`); and GitHub API calls by operation and outcome (`smartcloud.github.requests`), with their durations (`smartcloud.github.duration_ms`).
+
+Spans, logs and metrics carry only feature names, rule ids, event names, counts, outcomes and HTTP statuses. They never carry what a finding says, and a GitHub call is named by its operation, never by its path.
+
+### Identity
+
+The repository is identified only by a hash: the SHA-256 of its lower-cased `owner/repo` is the PostHog person, and the SHA-256 of its lower-cased owner is an `organization` group. Logs and the invocation's span carry the same hash as `posthogDistinctId`, so they link to the repository's person in PostHog. An invocation that names no repository, such as validating a local file, is anonymous: its events carry a random id and create no person. GeoIP lookups are turned off.
+
+## What is never collected
+
+- Repository, organisation or user names, and logins.
+- Pull request and issue titles, descriptions, comments and code.
+- Tokens and credentials.
+- File paths, branch names, the values of options and inputs, and the ids of rules a repository names itself.
+- Preset names: a preset is only ever `house` or `other`.
+
+Before anything leaves the process it passes through one redaction step, which removes GitHub tokens (`ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_` and `github_pat_`), bearer credentials, email addresses, the value of `GITHUB_TOKEN` (the environment variable and the action input), the repository's `owner/repo`, as parsed and as it was typed, and your home and working directories, wherever they appear, including inside error messages and stack traces. Anything it cannot inspect is not sent.
+
+Telemetry never slows down or fails a run. Requests time out after five seconds, a failure to send is logged only at debug level, and what is queued is flushed when the run ends, within three seconds.
+
+## Turning it off
+
+We ask you not to: telemetry holds no repository data, and without it we cannot see when smartcloud breaks for you. If you must, any one of these turns it off.
+
+| Where | Setting |
+| --- | --- |
+| The config | `telemetry: false` at the top level of `.github/smartcloud.yml` |
+| The action | the `telemetry` input set to `false` |
+| The environment | `SMARTCLOUD_TELEMETRY=false`, or `DO_NOT_TRACK=1` |
+
+```yaml
+version: 2
+telemetry: false
+```
+
+The action input and the environment variables stop telemetry before anything is set up, so nothing at all is sent. The config's setting takes effect as soon as the config is read, and stops everything queued from being sent. In the MCP server, one config that turns telemetry off turns it off for the rest of the session.
+
+`SMARTCLOUD_POSTHOG_KEY` and `SMARTCLOUD_POSTHOG_HOST` send telemetry to a different PostHog project instead.
+
+## Feature flags
+
+Each feature has a flag in PostHog, named `smartcloud-<feature>`, that can turn it off for every repository, or for some, without a release:
+
+| Flag | Feature | Default |
+| --- | --- | --- |
+| `smartcloud-conventions` | [Conventions](features/conventions) | on |
+| `smartcloud-commits` | [Commits](features/commits) | on |
+| `smartcloud-disclosure` | [Disclosure](features/disclosure) | on |
+| `smartcloud-reviews` | [Reviews](features/reviews) | on |
+| `smartcloud-labels` | [Labels](features/labels) | on |
+| `smartcloud-stale` | [Stale](features/stale) | on |
+| `smartcloud-settings` | [Settings](features/settings) | on |
+| `smartcloud-sync` | [Sync](features/sync) | on |
+
+Flags are evaluated through [OpenFeature](https://openfeature.dev), with PostHog as the provider, for the repository's hashed identity and its organisation group. A feature whose flag is off is listed as skipped, with the reason `turned off by feature flag smartcloud-<feature>`.
+
+When telemetry is off, PostHog cannot be reached, or a flag does not exist, every flag keeps its default, which is the behaviour smartcloud has without flags. Turning telemetry off therefore never changes what smartcloud does. The flags are temporary: each is removed once its v2 feature has been stable for 30 days.

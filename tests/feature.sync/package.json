@@ -1,0 +1,12 @@
+{
+  "name": "@resnovas/feature.sync-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/feature.sync": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "name": "@resnovas/action",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "apps/action/src",
+  "tags": ["type_platform", "layer_backend"],
+  "targets": {
+    "bundle": {
+      "command": "node tools/release/bundle.ts {projectRoot} dist/index.js",
+      "outputs": ["{workspaceRoot}/dist/index.js", "{workspaceRoot}/dist/index.js.map"]
+    },
+    "docgen": {},
+    "contracts": {}
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "name": "@resnovas/reporting-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@resnovas/reporting": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*"
+  }
+}

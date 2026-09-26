@@ -1,0 +1,102 @@
+---
+title: "Settings"
+description: "Repository settings as code: merging, features, security, the default branch ruleset and environments."
+---
+
+The settings feature brings the repository's settings in line with the `settings` section. It runs on `schedule`, `workflow_dispatch` and `push` events, and is enabled by a `settings` section.
+
+<Warning>
+  Changing repository settings needs a token with administration write access to the repository, such as a GitHub App or fine-grained token. The workflow's `GITHUB_TOKEN` cannot do it: without a suitable token every step fails and is reported as a finding.
+</Warning>
+
+```yaml
+roles:
+  maintainers: [octocat, hubot]
+
+settings:
+  merging:
+    mergeCommit: false
+    squash: true
+    rebase: false
+    autoMerge: true
+    updateBranch: true
+    deleteBranchOnMerge: true
+    webCommitSignoff: true
+    squashTitle: PR_TITLE
+    squashMessage: PR_BODY
+  features:
+    wiki: false
+    discussions: true
+    sponsorships: false
+  security:
+    immutableReleases: true
+    privateVulnerabilityReporting: true
+    dependabotAlerts: true
+    dependabotSecurityUpdates: true
+    codeScanning: default
+    secretScanning: true
+  ruleset:
+    linearHistory: true
+    blockDeletion: true
+    blockForcePush: true
+    copilotReview: true
+    codeScanningGate: true
+    requiredChecks: ["smartcloud / reviews", "check"]
+  environments:
+    projectType: saas
+```
+
+Only what you configure is changed. A section or key left out produces no call, so whatever GitHub has for it stays. Steps run in a fixed order (merging, features, security, the ruleset, then environments, each protected one followed by its deployment policies), and a failed step is reported without stopping the others.
+
+## Merging
+
+`mergeCommit`, `squash` and `rebase` choose the allowed merge methods. `autoMerge`, `updateBranch`, `deleteBranchOnMerge` and `webCommitSignoff` switch those repository options. `squashTitle` is `PR_TITLE` or `COMMIT_OR_PR_TITLE`, and `squashMessage` is `COMMIT_MESSAGES`, `PR_BODY` or `BLANK`.
+
+## Features
+
+`wiki`, `discussions` and `sponsorships` turn those repository features on or off.
+
+## Security
+
+| Key | Values |
+| --- | --- |
+| `immutableReleases`, `privateVulnerabilityReporting`, `dependabotAlerts`, `dependabotSecurityUpdates` | `true` or `false` |
+| `codeScanning` | `default` or `extended` turn on CodeQL default setup with that query suite; `off` turns it off. |
+| `secretScanning` | `true` or `false`, for secret scanning, push protection, Copilot secret detection and non-provider patterns together. |
+
+Secret scanning is only changed on public repositories; on a private one it needs a paid Advanced Security licence, so smartcloud leaves it to the organisation and records a notice. Private vulnerability reporting is likewise only changed on public repositories, as GitHub does not offer it on private ones; a notice says so. Code scanning fails when the repository has no language CodeQL supports, and secret scanning can fail too; both are reported as warnings rather than errors.
+
+## Ruleset
+
+`ruleset` manages one ruleset on the default branch, matched by `name` (default `house: default branch`), so each run updates it in place.
+
+The ruleset is written whole: a switch left out, or `false`, means that rule is not enforced.
+
+| Key | Rule |
+| --- | --- |
+| `blockDeletion` | The branch cannot be deleted. |
+| `blockForcePush` | No force pushes. |
+| `linearHistory` | No merge commits on the branch. |
+| `copilotReview` | Copilot reviews every pull request, drafts included, and on every push. |
+| `codeScanningGate` | CodeQL results block merging at high or higher security alerts and at errors. |
+| `requiredChecks` | These status checks must pass. They apply only once two or more distinct maintainers are configured (logins compare ignoring case and a leading `@`), so a sole maintainer is never blocked by the review gate. |
+| `adminBypass` | Repository admins may bypass the ruleset. On by default; set `false` to remove the bypass. |
+
+On a private repository, rulesets need a paid plan, so a failure there is a warning.
+
+## Environments
+
+`environments.names` lists deployment environments to create. Without it, `projectType` picks a set:
+
+| `projectType` | Environments |
+| --- | --- |
+| `saas` | Production, Staging, Development |
+| `desktop` | Windows, Linux, macOS, Windows Beta, Linux Beta, macOS Beta |
+| `library` | Release |
+| `none` | none |
+
+Environments that ship to users deploy only from the default branch and from release tags matching `v*`. smartcloud sets them to use custom deployment branch policies and creates a branch policy for the default branch and a tag policy for `v*` when they are missing; policies you added yourself are kept. It does not rely on GitHub's "protected branches" option, because that counts only classic branch protection, and with none (this feature writes a ruleset instead) every branch could deploy. Staging, development, dev, preview and any name ending in "Beta" accept any branch.
+
+## By hand
+
+The push limit (Settings, General, Pushes) has no API, so every run records a notice to set it by hand.

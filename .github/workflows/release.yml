@@ -1,0 +1,147 @@
+# Releases with Nx release, started by hand from the Actions tab.
+#
+# Conventional commits since the last v* tag decide the version; the tag, not a
+# file on main, holds the current version. tools/release/release.ts bumps the
+# apps' versions, bundles the action from main's source into dist/index.js,
+# commits both in a release commit on no branch (without externals/), and
+# pushes only the v<version> tag, so main never holds a release commit or the
+# bundle and no branch protection is bypassed. It then writes the release notes
+# to a GitHub release and moves the v<major> tag.
+#
+# The publish job checks out the tag, refuses to go on unless the tagged bundle
+# is what that tag's source builds, then publishes the CLI and MCP server to npm
+# with provenance, through trusted publishing.
+#
+# Every bundle's source map is uploaded to PostHog error tracking for the
+# release and then deleted, so neither the tag nor npm ships one. The upload
+# uses the POSTHOG_CLI_TOKEN secret; see docs/releasing.mdx.
+#
+# The first release (2.0.0) has no v* tag to count from: run it with specifier
+# 2.0.0 and first-release ticked. See docs/releasing.mdx.
+name: release
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Print the version and release notes without tagging, releasing or publishing
+        type: boolean
+        default: true
+      specifier:
+        description: Override the conventional commits, with a version (2.0.0) or a bump (major, minor, patch)
+        type: string
+        required: false
+      first-release:
+        description: No v* tag exists yet (the first v2 release only)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    # Releases come only from main.
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+    outputs:
+      released: ${{ steps.release.outputs.released }}
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          # Nx reads the conventional commits and v* tags from the full history.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Version, tag and create the GitHub release
+        id: release
+        env:
+          # Nx creates the GitHub release with this token.
+          GITHUB_TOKEN: ${{ github.token }}
+          # A PostHog personal API key (error tracking write, organization read)
+          # for uploading the action's source map; unused in a dry run.
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
+          DRY_RUN: ${{ inputs.dry-run }}
+          SPECIFIER: ${{ inputs.specifier }}
+          FIRST_RELEASE: ${{ inputs.first-release }}
+        run: |
+          args=()
+          if [ "$DRY_RUN" = 'true' ]; then args+=(--dry-run); fi
+          if [ "$FIRST_RELEASE" = 'true' ]; then args+=(--first-release); fi
+          if [ -n "$SPECIFIER" ]; then args+=(--specifier "$SPECIFIER"); fi
+          node tools/release/release.ts "${args[@]}"
+
+  publish:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+
+      # No registry-url: it writes an auth token that would stop npm using
+      # trusted publishing.
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The tagged bundle carries PostHog's chunk id, which is derived from its
+      # content, so the rebuild goes through the same source map step before
+      # it is compared.
+      - name: Check the tagged bundle is the released code
+        env:
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          test -f dist/index.js || { echo '::error::the release has no dist/index.js'; exit 1; }
+          cp dist/index.js "$RUNNER_TEMP/tagged.js"
+          pnpm nx run @resnovas/action:bundle --skip-nx-cache
+          node tools/release/sourcemaps.ts "$VERSION" dist/index.js
+          cmp dist/index.js "$RUNNER_TEMP/tagged.js" || { echo '::error::dist/index.js in the release does not match its source'; exit 1; }
+
+      # The tag's package.json files carry the released version, which the bundles stamp as VERSION.
+      - run: pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp --skip-nx-cache
+
+      # Upload the CLI and MCP server's source maps to PostHog and drop them, so npm ships the bundles only.
+      - name: Upload the source maps
+        env:
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: node tools/release/sourcemaps.ts "$VERSION" apps/cli/release/smartcloud.js apps/cli/release/smartcloud-mcp.js
+
+      - run: node tools/release/prepare-cli.ts
+
+      # Trusted publishing needs npm 11.5 or later.
+      - run: npm install --global npm@latest
+
+      - name: Publish the CLI
+        working-directory: apps/cli/release
+        run: npm publish --provenance --access public

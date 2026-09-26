@@ -1,0 +1,22 @@
+{
+  "name": "@resnovas/integrations.github",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The GitHub integration: one Effect service over the REST and GraphQL APIs, with live, dry-run and in-memory layers.",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@octokit/rest": "^22.0.1",
+    "@resnovas/conditions": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc",
+    "rootDir": "../..",
+    "types": [
+      "node",
+      "vitest"
+    ],
+    "noEmit": true,
+    "composite": false,
+    "emitDeclarationOnly": false
+  },
+  "include": [
+    "src/**/*.ts",
+    "vitest.config.mts"
+  ],
+  "references": [
+    {
+      "path": "../../packages/conditions"
+    }
+  ]
+}

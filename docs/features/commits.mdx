@@ -1,0 +1,56 @@
+---
+title: "Commits"
+description: "DCO sign-off and AI attribution rules for the commits on a pull request."
+---
+
+The commits feature checks every commit on a pull request: each is signed off by its author, and AI tools are credited but never sign off. It runs on pull request events and is enabled by a `commits` section, even an empty one.
+
+```yaml
+roles:
+  maintainers: [octocat]
+  trustedBots: ["dependabot[bot]"]
+
+commits:
+  dco: true
+  aiAttribution: true
+  aiIdentities:
+    emails: ["@example-ai\\.dev$"]
+    names: ["^Robo$"]
+  maintainerLevel: warning
+```
+
+| Key | Default | Meaning |
+| --- | --- | --- |
+| `dco` | `true` | Check the DCO sign-off. |
+| `aiAttribution` | `true` | Check AI attribution trailers. |
+| `aiIdentities.emails`, `aiIdentities.names` | none | Extra patterns identifying AI tools, added to the built-in list. |
+| `maintainerLevel` | `warning` | The level for errors on a maintainer's own pull request. |
+
+## Rules
+
+| Rule | Finding |
+| --- | --- |
+| `DCO` | A non-merge commit has no `Signed-off-by` whose email matches the commit author's. An AI sign-off never counts, even when its email matches. Fix with `git commit -s`. |
+| `AI-02` | A commit has `Assisted-by` but no AI `Co-authored-by`, or an AI `Co-authored-by` but no `Assisted-by: TOOL:MODEL`. The two travel together. |
+| `AI-03` | A `Signed-off-by` names an AI tool. Only a person can sign off. |
+
+A correctly attributed AI-assisted commit ends like this:
+
+```text
+feat(labels): sync label aliases
+
+Co-authored-by: Example Assistant <assistant@example-tool.invalid>
+Assisted-by: example-tool:example-model-1
+Signed-off-by: Jane Doe <jane@example.com>
+```
+
+Findings link to `AI_POLICY.md#ai-02`, `AI_POLICY.md#ai-03` and `CONTRIBUTING.md#dco` under [`links.policyBase`](/configuration#links).
+
+## AI identities
+
+An identity in a trailer is an AI tool when its email ends in `@anthropic.com`, `@openai.com`, `@cursor.com`, `@cursor.sh`, `copilot` or `.invalid` (the reserved domain for a tool with no address of its own), or when its name contains a known tool name such as Claude, Codex, ChatGPT, Copilot, Cursor, Gemini, Devin or Aider. `aiIdentities` adds regular expressions, bare or as `/source/flags`; one that does not compile is matched as literal text, ignoring case.
+
+## Roles
+
+- Pull requests from trusted bots are skipped.
+- On a pull request opened by a maintainer, or by the repository owner, errors are reported at `maintainerLevel`. `AI-03` is never downgraded.

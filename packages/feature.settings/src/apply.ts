@@ -1,0 +1,213 @@
+/**
+ * @file packages/feature.settings/src/apply.ts
+ *
+ * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Licensed under the Fair Core License, Version 1.0, MIT Future License
+ * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
+ * the licence key functionality, or modify any part of the software that the
+ * licence key protects.
+ *
+ * Contributions are made under the Developer Certificate of Origin (DCO.md) and
+ * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
+ * (CODE_OF_CONDUCT.md) and the Cooperation Commitment (COOPERATION_COMMITMENT.md).
+ *
+ * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
+ */
+
+import { Report } from '@resnovas/engine'
+import { GitHub, type GitHubError } from '@resnovas/integrations.github'
+import { Data, Effect, Either, Schema } from 'effect'
+import type { DeploymentPolicy, RulesetBody, SettingsStep } from './plan.js'
+
+/**
+ * The feature name findings and changes are recorded under.
+ *
+ * @example
+ * ```ts import.meta.vitest name="FEATURE"
+ * import { FEATURE } from '@resnovas/feature.settings'
+ *
+ * FEATURE // => 'settings'
+ * ```
+ */
+export const FEATURE = 'settings'
+
+/**
+ * GitHub answered with something other than the documented shape.
+ *
+ * @example
+ * ```ts import.meta.vitest name="UnexpectedResponse"
+ * import { UnexpectedResponse } from '@resnovas/feature.settings'
+ *
+ * const error = new UnexpectedResponse({ operation: 'GET /rulesets', detail: 'expected a list' })
+ * error.message // => 'GET /rulesets: unexpected response (expected a list)'
+ * ```
+ */
+export class UnexpectedResponse extends Data.TaggedError('UnexpectedResponse')<{ readonly operation: string; readonly detail: string }> {
+  override get message() {
+    return `${this.operation}: unexpected response (${this.detail})`
+  }
+}
+
+// Only the fields the upsert needs; GitHub sends many more.
+const RulesetList = Schema.Array(Schema.Struct({ id: Schema.Number, name: Schema.String }))
+
+/**
+ * Creates or updates a repository ruleset, matched by name.
+ *
+ * @remarks
+ * Matching by name means re-running updates the ruleset in place instead of
+ * stacking duplicates. Rulesets inherited from the organisation are left out
+ * of the listing: they cannot be updated through the repository endpoint.
+ *
+ * @example
+ * ```ts
+ * import { rulesetBody, upsertRuleset } from '@resnovas/feature.settings'
+ *
+ * // Needs the GitHub service, for example from the live or dry-run layer.
+ * const program = upsertRuleset(rulesetBody({ blockForcePush: true }, undefined))
+ * ```
+ *
+ * @param ruleset - The ruleset body.
+ * @returns Nothing; fails when GitHub rejects a call or lists rulesets in an unexpected shape.
+ */
+export const upsertRuleset = (ruleset: RulesetBody): Effect.Effect<void, GitHubError | UnexpectedResponse, GitHub> =>
+  Effect.gen(function* () {
+    const github = yield* GitHub
+    const operation = 'GET /rulesets'
+    const response = yield* github.repositoryRequest({ method: 'GET', path: '/rulesets?per_page=100&includes_parents=false' })
+    const listed = Schema.decodeUnknownEither(RulesetList)(response)
+    if (Either.isLeft(listed)) return yield* new UnexpectedResponse({ operation, detail: 'expected a list of rulesets' })
+    const existing = listed.right.find((entry) => entry.name === ruleset.name)
+    yield* github.repositoryRequest(
+      existing === undefined
+        ? { method: 'POST', path: '/rulesets', body: ruleset }
+        : { method: 'PUT', path: `/rulesets/${existing.id}`, body: ruleset },
+    )
+  })
+
+// Only the fields the check needs. GitHub sends `type` on every policy now;
+// one without it predates tag policies, so it is a branch policy.
+const PolicyList = Schema.Struct({
+  branch_policies: Schema.Array(
+    Schema.Struct({ name: Schema.String, type: Schema.optionalWith(Schema.Literal('branch', 'tag'), { default: () => 'branch' as const }) }),
+  ),
+})
+
+/**
+ * Creates the deployment branch and tag policies an environment is missing.
+ *
+ * @remarks
+ * Existing policies are listed first and matched by name and type, so
+ * re-running creates nothing new. Policies the environment has that are not
+ * asked for are left alone. The environment must already use custom branch
+ * policies, which `environmentBody` sets for a protected environment.
+ *
+ * @example
+ * ```ts
+ * import { ensureDeploymentPolicies } from '@resnovas/feature.settings'
+ *
+ * // Needs the GitHub service, for example from the live or dry-run layer.
+ * const program = ensureDeploymentPolicies('Production', [{ name: 'main', type: 'branch' }])
+ * ```
+ *
+ * @param environment - The environment name.
+ * @param policies - The policies it must have.
+ * @returns Nothing; fails when GitHub rejects a call or lists policies in an unexpected shape.
+ */
+export const ensureDeploymentPolicies = (
+  environment: string,
+  policies: ReadonlyArray<DeploymentPolicy>,
+): Effect.Effect<void, GitHubError | UnexpectedResponse, GitHub> =>
+  Effect.gen(function* () {
+    const github = yield* GitHub
+    const path = `/environments/${encodeURIComponent(environment)}/deployment-branch-policies`
+    const response = yield* github.repositoryRequest({ method: 'GET', path: `${path}?per_page=100` })
+    const listed = Schema.decodeUnknownEither(PolicyList)(response)
+    if (Either.isLeft(listed)) {
+      return yield* new UnexpectedResponse({ operation: `GET ${path}`, detail: 'expected a list of deployment branch policies' })
+    }
+    const existing = listed.right.branch_policies
+    for (const policy of policies) {
+      if (existing.some((entry) => entry.name === policy.name && entry.type === policy.type)) continue
+      yield* github.repositoryRequest({ method: 'POST', path, body: policy })
+    }
+  })
+
+const perform = (step: SettingsStep): Effect.Effect<void, GitHubError | UnexpectedResponse, GitHub> => {
+  switch (step.kind) {
+    case 'ruleset':
+      return upsertRuleset(step.ruleset)
+    case 'graphql':
+      return Effect.flatMap(GitHub, (github) => github.graphql(step.query, step.variables))
+    case 'rest':
+      return Effect.flatMap(GitHub, (github) => github.repositoryRequest(step.request))
+    case 'deploymentPolicies':
+      return ensureDeploymentPolicies(step.environment, step.policies)
+  }
+}
+
+/** How many settings steps were applied, and how many failed. */
+export interface AppliedSettings {
+  readonly applied: number
+  readonly failed: number
+}
+
+/**
+ * Performs planned steps in order, recording each outcome.
+ *
+ * @remarks
+ * Every applied step is a change. A failed step is a finding and does not
+ * stop the others: a warning when the step is optional, an error otherwise.
+ * Under the dry-run layer writes are only recorded, so the changes read as
+ * what would change.
+ *
+ * @example
+ * ```ts
+ * import { applySettings, planSettings } from '@resnovas/feature.settings'
+ * import { GitHub } from '@resnovas/integrations.github'
+ * import { Effect } from 'effect'
+ *
+ * // Needs the GitHub service and a Report, as the engine provides them.
+ * const program = Effect.flatMap(GitHub, (github) => github.getRepository).pipe(
+ *   Effect.flatMap((repository) => applySettings(planSettings({ merging: { squash: true } }, undefined, repository))),
+ * )
+ * ```
+ *
+ * @param steps - The steps from `planSettings`.
+ * @returns How many steps were applied and how many failed; each outcome also goes to the {@link Report}.
+ */
+export const applySettings = (
+  steps: ReadonlyArray<SettingsStep>,
+): Effect.Effect<AppliedSettings, never, GitHub | Report> =>
+  Effect.gen(function* () {
+    const report = yield* Report
+    yield* Effect.logInfo(`settings: ${steps.length} step(s) to apply`).pipe(
+      Effect.annotateLogs({ feature: FEATURE, steps: steps.length, optional: steps.filter((step) => step.optional).length }),
+    )
+    let applied = 0
+    for (const step of steps) {
+      const succeeded = yield* perform(step).pipe(
+        Effect.tapBoth({
+          onSuccess: () => Effect.logDebug(`settings: ${step.id} applied`).pipe(Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: 'applied' })),
+          onFailure: (error) =>
+            Effect.logDebug(`settings: ${step.id} failed`).pipe(Effect.annotateLogs({ feature: FEATURE, rule: `settings.${step.id}`, outcome: error._tag })),
+        }),
+        Effect.matchEffect({
+          onSuccess: () => Effect.as(report.change({ feature: FEATURE, description: step.description }), true),
+          onFailure: (error) =>
+            Effect.as(
+              report.add({
+                feature: FEATURE,
+                rule: `settings.${step.id}`,
+                level: step.optional ? 'warning' : 'error',
+                message: `${step.description}: ${error.message}`,
+              }),
+              false,
+            ),
+        }),
+      )
+      if (succeeded) applied += 1
+    }
+    const counts: AppliedSettings = { applied, failed: steps.length - applied }
+    return counts
+  })

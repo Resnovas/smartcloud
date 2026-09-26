@@ -1,0 +1,7 @@
+{
+  "name": "@resnovas/cli-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tests/cli/src",
+  "tags": ["type_test", "layer_backend"]
+}

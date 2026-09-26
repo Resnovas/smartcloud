@@ -1,0 +1,16 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+  - 'tests/*'
+  # Vendored upstream source (externals/) is reference material, never a workspace package.
+  - '!externals/**'
+allowBuilds:
+  # Optional native accelerators pulled in by @effect/platform-node. smartcloud
+  # uses neither file watching nor MessagePack, so their build scripts are denied.
+  '@parcel/watcher': false
+  msgpackr-extract: false
+  '@swc/core': true
+  esbuild: true
+  nx: true
+catalog:
+  effect: 3.22.2

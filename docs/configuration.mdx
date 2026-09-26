@@ -1,0 +1,114 @@
+---
+title: "Configuration"
+description: "The config file, its sections, and how shared presets lock what they set."
+---
+
+smartcloud reads `.github/smartcloud.yml` (`.github/smartcloud.yaml` also works). The file is YAML; JSON is valid YAML, so a JSON file works too.
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+extends:
+  - Resnovas/.github/smartcloud/house.yml@main
+
+roles:
+  maintainers: [octocat, hubot]
+  trustedBots: ["dependabot[bot]", "renovate[bot]"]
+
+links:
+  policyBase: https://github.com/my-org/.github/blob/main
+```
+
+`version: 2` is required. A file without it is treated as a v1 config and migrated on the fly, with a warning for everything the migration drops; see [Migrating from v1](/migration).
+
+Unknown keys are an error, so a typo in a section name fails at startup instead of silently turning a feature off. The [configuration reference](/reference/configuration) lists every key.
+
+## Sections
+
+| Section | Feature |
+| --- | --- |
+| `labels`, `labelSync`, `labelling` | [Labels](/features/labels) |
+| `conventions` | [Conventions](/features/conventions) |
+| `commits` | [Commits](/features/commits) |
+| `disclosure` | [Disclosure](/features/disclosure) |
+| `reviews` | [Reviews](/features/reviews) |
+| `stale` | [Stale](/features/stale) |
+| `settings` | [Settings](/features/settings) |
+| `sync` | [Sync](/features/sync) |
+| `roles`, `links` | Shared by several features, below. |
+
+Every rule is a keyed map, never a list. Keys are how presets and repositories merge, and how an error names the rule it is about.
+
+### Roles
+
+`roles.maintainers` and `roles.trustedBots` are lists of GitHub logins. Logins compare ignoring case, and a leading `@` is optional.
+
+- Trusted bots skip the commits and disclosure checks and the review gate.
+- On a maintainer's own pull request, the commits and disclosure features report errors at their `maintainerLevel` (`warning` by default). The repository owner counts as a maintainer for this.
+- The review gate and the ruleset's required checks only apply once two or more maintainers are listed.
+
+### Links
+
+`links.policyBase` is the base URL of your governance documents. Findings link to pages under it, for example `AI_POLICY.md#ai-02`, `CONTRIBUTING.md#dco` and `GOVERNANCE.md#review`. The default is `https://github.com/Resnovas/.github/blob/main`.
+
+## Presets and `extends`
+
+`extends` lists preset files to build on, each written as `owner/repo/path@ref`. The ref (a branch, tag or commit) is optional; without it the repository's default branch is read.
+
+```yaml
+extends:
+  - Resnovas/.github/smartcloud/house.yml@main
+  - my-org/.github/smartcloud/typescript.yml@v1.2.0
+```
+
+A preset is an ordinary config file with `version: 2`, and may extend presets of its own. Presets are merged first, in the order listed, each preset's own presets before it, and the repository's config last. Presets extending each other in a loop are an error, as is nesting more than five deep.
+
+### Add, never change
+
+Everything a preset sets is locked. A repository may add to what it inherits, but never change or remove it:
+
+- **Adding is allowed.** A new label, a new rule, or a new field on an inherited rule that the preset left unset.
+- **Identical restatements are allowed.** Repeating an inherited value exactly as it already is changes nothing, so a repository can keep a full copy of a rule without error.
+- **Changing is an error.** Any other value for something already set, whether a scalar, a list or a different shape, fails the whole run.
+
+Lists are values, not collections to append to: if a preset sets `roles.maintainers`, a repository cannot add a name to it.
+
+Given this preset:
+
+```yaml Resnovas/.github/smartcloud/house.yml
+version: 2
+labels:
+  bug:
+    name: bug
+    color: D73A4A
+```
+
+This repository config is valid: it restates `bug` identically, adds a description the preset left unset, and adds a new label.
+
+```yaml .github/smartcloud.yml
+version: 2
+extends:
+  - Resnovas/.github/smartcloud/house.yml@main
+labels:
+  bug:
+    name: bug
+    color: D73A4A
+    description: Something is not working
+  docs:
+    name: documentation
+    color: 0075CA
+```
+
+Changing the colour instead fails with an error naming the path and the preset that set it:
+
+```text
+.github/smartcloud.yml cannot change "labels.bug.color": it is set by Resnovas/.github/smartcloud/house.yml@main. Add a new rule instead.
+```
+
+The same rule applies between presets: a later preset cannot change what an earlier one set.
+
+`version`, `extends` and `$schema` describe a file rather than rules, so they are never merged.
+
+### Reading presets
+
+The action reads presets through the GitHub API with its own token, so a preset in a private repository needs a token that can read that repository. The CLI resolves a token only when a config extends something; see [CLI](/cli#tokens).

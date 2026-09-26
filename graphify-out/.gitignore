@@ -1,0 +1,32 @@
+# Synced from Resnovas/.github templates/graphify-out/.gitignore. Edit it there.
+#
+# Commit what is shared or what cost money to produce; ignore the rest.
+#
+# Committed:
+#   graph.json              the graph agents query; merged by Graphify's union
+#                           merge driver (see .gitattributes)
+#   cache/semantic*/        model output per document, keyed by content hash,
+#                           so an unchanged document is never paid for twice
+#
+# Ignored:
+#   GRAPH_REPORT.md,
+#   .graphify_labels.json*  rebuilt from graph.json with no model on every
+#                           update; committing them only causes merge conflicts
+#   cache/ast/              local parser output: free to rebuild in seconds,
+#                           and discarded on every Graphify upgrade anyway
+#   cache/stat-index.json,
+#   manifest.json           file timestamps from one machine
+#   .graphify_root          an absolute path on one machine
+#   graph.html              a large viewer page rebuilt on demand
+#   cost.json, memory/      personal spend and query history
+
+*
+!.gitignore
+!.gitattributes
+!graph.json
+!cache/
+cache/*
+!cache/semantic/
+!cache/semantic/**
+!cache/semantic-deep/
+!cache/semantic-deep/**

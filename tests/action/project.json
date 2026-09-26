@@ -1,0 +1,7 @@
+{
+  "name": "@resnovas/action-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tests/action/src",
+  "tags": ["type_test", "layer_backend"]
+}

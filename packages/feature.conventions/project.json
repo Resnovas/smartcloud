@@ -1,0 +1,11 @@
+{
+  "name": "@resnovas/feature.conventions",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/feature.conventions/src",
+  "tags": ["type_extension", "layer_backend"],
+  "targets": {
+    "docgen": {},
+    "contracts": {}
+  }
+}

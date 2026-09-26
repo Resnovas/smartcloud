@@ -1,0 +1,23 @@
+{
+  "name": "@resnovas/feature.settings",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The smartcloud settings feature: repository settings, security, rulesets and environments as code.",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1"
+  }
+}

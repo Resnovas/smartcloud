@@ -1,0 +1,30 @@
+{
+  "name": "@resnovas/smartcloud-mcp",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The smartcloud MCP server: validate, migrate and explain configs, dry-run features and plan settings from an AI assistant, over stdio.",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
+  "bin": {
+    "smartcloud-mcp": "./dist/main.js"
+  },
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@effect/platform": "^0.97.2",
+    "@effect/platform-node": "^0.108.2",
+    "@modelcontextprotocol/sdk": "^1.30.1",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/runtime": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1",
+    "zod": "^4.6.5"
+  }
+}

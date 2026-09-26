@@ -1,0 +1,13 @@
+{
+  "name": "@resnovas/feature.reviews-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@resnovas/feature.reviews": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/conditions": "workspace:*",
+    "@resnovas/config": "workspace:*"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@resnovas/conditions-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@resnovas/conditions": "workspace:*"
+  }
+}

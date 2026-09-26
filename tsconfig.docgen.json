@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "noEmit": true,
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "target": "es2024",
+    "lib": ["es2024"],
+    "types": ["node"],
+    "customConditions": ["@resnovas/source"]
+  }
+}

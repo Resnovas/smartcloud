@@ -1,0 +1,15 @@
+{
+  "name": "@resnovas/mcp-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@effect/platform": "^0.97.2",
+    "@effect/platform-node": "^0.108.2",
+    "@modelcontextprotocol/sdk": "^1.30.1",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/runtime": "workspace:*",
+    "@resnovas/smartcloud-mcp": "workspace:*"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "install": "scripts/agent-setup",
+  "terminals": [
+    {
+      "name": "dev",
+      "command": "pnpm run dev",
+      "description": "tsc --build --watch over every library and app; rebuilds dist/ on change. No server, no ports. Run the CLI with `pnpm run cli <command>`."
+    }
+  ]
+}

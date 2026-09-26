@@ -1,0 +1,9 @@
+{
+  "name": "@resnovas/integrations.github-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@resnovas/integrations.github": "workspace:*"
+  }
+}

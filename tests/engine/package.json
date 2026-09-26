@@ -1,0 +1,12 @@
+{
+  "name": "@resnovas/engine-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/conditions": "workspace:*",
+    "@resnovas/config": "workspace:*"
+  }
+}

@@ -1,0 +1,1304 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$defs": {
+    "SmartcloudConfig": {
+      "type": "object",
+      "required": [
+        "version"
+      ],
+      "properties": {
+        "$schema": {
+          "type": "string"
+        },
+        "version": {
+          "type": "number",
+          "enum": [
+            2
+          ]
+        },
+        "extends": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ExtendsEntry"
+          }
+        },
+        "telemetry": {
+          "type": "boolean",
+          "description": "Set to false to stop smartcloud sending anonymous telemetry (hashed usage events, logs, traces, metrics and errors) to PostHog. On by default; turning it off is discouraged, because telemetry is how problems are found and fixed. The telemetry page of the documentation lists what is and is not collected."
+        },
+        "labels": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "$ref": "#/$defs/Label"
+            }
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/RuleId"
+          }
+        },
+        "labelSync": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "prune": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "labelling": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "$ref": "#/$defs/LabelRule"
+            }
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/RuleId"
+          }
+        },
+        "conventions": {
+          "$ref": "#/$defs/Conventions"
+        },
+        "roles": {
+          "$ref": "#/$defs/Roles"
+        },
+        "links": {
+          "$ref": "#/$defs/Links"
+        },
+        "commits": {
+          "$ref": "#/$defs/Commits"
+        },
+        "disclosure": {
+          "$ref": "#/$defs/Disclosure"
+        },
+        "reviews": {
+          "$ref": "#/$defs/Reviews"
+        },
+        "stale": {
+          "$ref": "#/$defs/Stale"
+        },
+        "settings": {
+          "$ref": "#/$defs/Settings"
+        },
+        "sync": {
+          "$ref": "#/$defs/Sync"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Declarative repository automation: labels, conventions and policy.",
+      "title": "smartcloud configuration"
+    },
+    "ExtendsEntry": {
+      "type": "string",
+      "description": "A preset to extend, as owner/repo/path@ref. The ref is optional.",
+      "pattern": "^(?!\\.\\.?\\/)([A-Za-z0-9_.-]+)\\/(?!\\.\\.?\\/)([A-Za-z0-9_.-]+)\\/((?!\\.\\.?(?:\\/|@|$))[^/@]+(?:\\/(?!\\.\\.?(?:\\/|@|$))[^/@]+)*)(?:@([^@\\s]+))?$"
+    },
+    "Label": {
+      "type": "object",
+      "required": [
+        "name",
+        "color"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "color": {
+          "$ref": "#/$defs/Color"
+        },
+        "description": {
+          "type": "string"
+        },
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Color": {
+      "type": "string",
+      "description": "Six hex digits, for example 0E8A16.",
+      "pattern": "^#?[0-9a-fA-F]{6}$"
+    },
+    "RuleId": {
+      "type": "string",
+      "description": "A label or rule key.",
+      "title": "nonEmptyString",
+      "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+      "minLength": 1,
+      "not": {
+        "const": "__proto__"
+      }
+    },
+    "LabelRule": {
+      "type": "object",
+      "required": [
+        "label",
+        "when"
+      ],
+      "properties": {
+        "label": {
+          "$ref": "#/$defs/RuleId"
+        },
+        "on": {
+          "$ref": "#/$defs/Subjects"
+        },
+        "when": {
+          "$ref": "#/$defs/ConditionGroup"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Subjects": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "pullRequest",
+          "issue"
+        ]
+      },
+      "description": "The subjects a rule applies to. Omitted means pull requests and issues."
+    },
+    "ConditionGroup": {
+      "type": "object",
+      "required": [
+        "condition"
+      ],
+      "properties": {
+        "requires": {
+          "$ref": "#/$defs/NonNegativeInt"
+        },
+        "condition": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Condition"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "NonNegativeInt": {
+      "type": "integer",
+      "description": "an integer",
+      "title": "int",
+      "minimum": 0
+    },
+    "Condition": {
+      "anyOf": [
+        {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/titleMatches"
+            },
+            {
+              "$ref": "#/$defs/descriptionMatches"
+            },
+            {
+              "$ref": "#/$defs/creatorMatches"
+            },
+            {
+              "$ref": "#/$defs/branchMatches"
+            },
+            {
+              "$ref": "#/$defs/isOpen"
+            },
+            {
+              "$ref": "#/$defs/isLocked"
+            },
+            {
+              "$ref": "#/$defs/isDraft"
+            },
+            {
+              "$ref": "#/$defs/pendingReview"
+            },
+            {
+              "$ref": "#/$defs/requestedChanges"
+            },
+            {
+              "$ref": "#/$defs/commitsSignedOff"
+            },
+            {
+              "$ref": "#/$defs/hasLabel"
+            },
+            {
+              "$ref": "#/$defs/isStale"
+            },
+            {
+              "$ref": "#/$defs/isAbandoned"
+            },
+            {
+              "$ref": "#/$defs/filesMatch"
+            },
+            {
+              "$ref": "#/$defs/changesSize"
+            },
+            {
+              "$ref": "#/$defs/isApproved"
+            },
+            {
+              "$ref": "#/$defs/commitMessagesMatch"
+            },
+            {
+              "$ref": "#/$defs/hasTrailer"
+            }
+          ]
+        },
+        {
+          "$ref": "#/$defs/$and"
+        },
+        {
+          "$ref": "#/$defs/$or"
+        },
+        {
+          "$ref": "#/$defs/$not"
+        },
+        {
+          "$ref": "#/$defs/$only"
+        }
+      ]
+    },
+    "titleMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "titleMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The title matches a pattern."
+    },
+    "Pattern": {
+      "type": "string"
+    },
+    "descriptionMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "descriptionMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The description matches a pattern."
+    },
+    "creatorMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "creatorMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The author's login matches a pattern."
+    },
+    "branchMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "branchMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The pull request's head branch matches a pattern."
+    },
+    "isOpen": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "isOpen"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The subject is open, or closed when false."
+    },
+    "isLocked": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "isLocked"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The conversation is locked, or unlocked when false."
+    },
+    "isDraft": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "isDraft"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The pull request is a draft, or ready when false."
+    },
+    "pendingReview": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "pendingReview"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Requested reviewers have not reviewed yet."
+    },
+    "requestedChanges": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "requestedChanges"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "A reviewer's latest review requests changes."
+    },
+    "commitsSignedOff": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "commitsSignedOff"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Every non-merge commit has a Signed-off-by trailer matching its author email."
+    },
+    "hasLabel": {
+      "type": "object",
+      "required": [
+        "type",
+        "label",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "hasLabel"
+          ]
+        },
+        "label": {
+          "type": "string"
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The subject has the label, or lacks it when false."
+    },
+    "isStale": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "isStale"
+          ]
+        },
+        "condition": {
+          "type": "number",
+          "description": "A number of days.",
+          "title": "nonNegative",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false,
+      "description": "No activity for at least this many days."
+    },
+    "isAbandoned": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition",
+        "label"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "isAbandoned"
+          ]
+        },
+        "condition": {
+          "type": "number",
+          "description": "A number of days.",
+          "title": "nonNegative",
+          "minimum": 0
+        },
+        "label": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Carries the stale label and has had no activity for at least this many days."
+    },
+    "filesMatch": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "filesMatch"
+          ]
+        },
+        "condition": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false,
+      "description": "At least one changed file matches a glob."
+    },
+    "changesSize": {
+      "type": "object",
+      "required": [
+        "type",
+        "min"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "changesSize"
+          ]
+        },
+        "min": {
+          "$ref": "#/$defs/NonNegativeInt"
+        },
+        "max": {
+          "$ref": "#/$defs/NonNegativeInt"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Lines added plus deleted are at least min and below max."
+    },
+    "isApproved": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "isApproved"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/NonNegativeInt"
+        }
+      },
+      "additionalProperties": false,
+      "description": "No reviewer is pending or requesting changes, and at least this many approved."
+    },
+    "commitMessagesMatch": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "commitMessagesMatch"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "all",
+            "any"
+          ],
+          "description": "Whether every commit (all) or at least one commit (any) must match."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Commit messages match a pattern."
+    },
+    "hasTrailer": {
+      "type": "object",
+      "required": [
+        "type",
+        "trailer"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "hasTrailer"
+          ]
+        },
+        "trailer": {
+          "type": "string"
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        },
+        "scope": {
+          "type": "string",
+          "enum": [
+            "all",
+            "any"
+          ],
+          "description": "Whether every commit (all) or at least one commit (any) must match."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Commits carry the trailer, with a value matching the pattern when one is given."
+    },
+    "$and": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "$and"
+          ]
+        },
+        "condition": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConditionGroup"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Every group passes."
+    },
+    "$or": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "$or"
+          ]
+        },
+        "condition": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConditionGroup"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "At least one group passes."
+    },
+    "$not": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "$not"
+          ]
+        },
+        "requires": {
+          "$ref": "#/$defs/NonNegativeInt"
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConditionGroup"
+            },
+            {
+              "type": "array",
+              "minItems": 1,
+              "items": [
+                {
+                  "$ref": "#/$defs/ConditionGroup"
+                }
+              ],
+              "additionalItems": false
+            },
+            {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/Condition"
+              }
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "The group fails."
+    },
+    "$only": {
+      "type": "object",
+      "required": [
+        "type",
+        "requires",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "$only"
+          ]
+        },
+        "requires": {
+          "$ref": "#/$defs/NonNegativeInt"
+        },
+        "condition": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConditionGroup"
+          }
+        }
+      },
+      "additionalProperties": false,
+      "description": "Exactly this many of the groups pass."
+    },
+    "Conventions": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "comment": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "header": {
+              "type": "string"
+            },
+            "footer": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "rules": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "$ref": "#/$defs/ConventionRule"
+            }
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/RuleId"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "ConventionRule": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "on": {
+          "$ref": "#/$defs/Subjects"
+        },
+        "level": {
+          "type": "string",
+          "enum": [
+            "error",
+            "warning"
+          ]
+        },
+        "message": {
+          "type": "string"
+        },
+        "preset": {
+          "type": "string",
+          "enum": [
+            "conventionalCommits",
+            "semanticTitle",
+            "gitmojis",
+            "semanticEmoji"
+          ]
+        },
+        "contexts": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "when": {
+          "$ref": "#/$defs/ConditionGroup"
+        }
+      },
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "required": [
+                "preset"
+              ]
+            },
+            {
+              "required": [
+                "when"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "Roles": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "maintainers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "trustedBots": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "Links": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "policyBase": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Commits": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "dco": {
+          "type": "boolean"
+        },
+        "aiAttribution": {
+          "type": "boolean"
+        },
+        "aiIdentities": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "emails": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "maintainerLevel": {
+          "$ref": "#/$defs/Level"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Level": {
+      "type": "string",
+      "enum": [
+        "error",
+        "warning"
+      ]
+    },
+    "Disclosure": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "fields": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "level": {
+              "type": "string"
+            },
+            "tools": {
+              "type": "string"
+            },
+            "accountable": {
+              "type": "string"
+            },
+            "review": {
+              "type": "string"
+            }
+          },
+          "additionalProperties": false
+        },
+        "requireDraft": {
+          "type": "boolean"
+        },
+        "maintainerLevel": {
+          "$ref": "#/$defs/Level"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Reviews": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "gate": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "outside": {
+              "$ref": "#/$defs/NonNegativeInt"
+            },
+            "maintainer": {
+              "$ref": "#/$defs/NonNegativeInt"
+            }
+          },
+          "additionalProperties": false
+        },
+        "requestApprovals": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": {
+            "$ref": "#/$defs/RequestApproval"
+          }
+        },
+        "automaticApprove": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": {
+            "$ref": "#/$defs/AutomaticApprove"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "RequestApproval": {
+      "type": "object",
+      "required": [
+        "reviewers",
+        "when"
+      ],
+      "properties": {
+        "reviewers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "when": {
+          "$ref": "#/$defs/ConditionGroup"
+        }
+      },
+      "additionalProperties": false
+    },
+    "AutomaticApprove": {
+      "type": "object",
+      "required": [
+        "when"
+      ],
+      "properties": {
+        "when": {
+          "$ref": "#/$defs/ConditionGroup"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "Stale": {
+      "type": "object",
+      "required": [
+        "staleAfterDays",
+        "staleLabel"
+      ],
+      "properties": {
+        "on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "pullRequest",
+              "issue"
+            ]
+          }
+        },
+        "staleAfterDays": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "staleLabel": {
+          "type": "string"
+        },
+        "staleComment": {
+          "type": "string"
+        },
+        "abandonedAfterDays": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "abandonedLabel": {
+          "type": "string"
+        },
+        "abandonedComment": {
+          "type": "string"
+        },
+        "close": {
+          "type": "boolean"
+        },
+        "exempt": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "when": {
+              "$ref": "#/$defs/ConditionGroup"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "NonNegative": {
+      "type": "number",
+      "description": "a non-negative number",
+      "title": "nonNegative",
+      "minimum": 0
+    },
+    "Settings": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "merging": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "mergeCommit": {
+              "type": "boolean"
+            },
+            "squash": {
+              "type": "boolean"
+            },
+            "rebase": {
+              "type": "boolean"
+            },
+            "autoMerge": {
+              "type": "boolean"
+            },
+            "updateBranch": {
+              "type": "boolean"
+            },
+            "deleteBranchOnMerge": {
+              "type": "boolean"
+            },
+            "webCommitSignoff": {
+              "type": "boolean"
+            },
+            "squashTitle": {
+              "type": "string",
+              "enum": [
+                "PR_TITLE",
+                "COMMIT_OR_PR_TITLE"
+              ]
+            },
+            "squashMessage": {
+              "type": "string",
+              "enum": [
+                "COMMIT_MESSAGES",
+                "PR_BODY",
+                "BLANK"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "features": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "wiki": {
+              "type": "boolean"
+            },
+            "discussions": {
+              "type": "boolean"
+            },
+            "sponsorships": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "security": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "immutableReleases": {
+              "type": "boolean"
+            },
+            "privateVulnerabilityReporting": {
+              "type": "boolean"
+            },
+            "dependabotAlerts": {
+              "type": "boolean"
+            },
+            "dependabotSecurityUpdates": {
+              "type": "boolean"
+            },
+            "codeScanning": {
+              "type": "string",
+              "enum": [
+                "default",
+                "extended",
+                "off"
+              ]
+            },
+            "secretScanning": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "ruleset": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "name": {
+              "type": "string"
+            },
+            "linearHistory": {
+              "type": "boolean"
+            },
+            "blockDeletion": {
+              "type": "boolean"
+            },
+            "blockForcePush": {
+              "type": "boolean"
+            },
+            "copilotReview": {
+              "type": "boolean"
+            },
+            "codeScanningGate": {
+              "type": "boolean"
+            },
+            "requiredChecks": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "adminBypass": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "environments": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "projectType": {
+              "type": "string",
+              "enum": [
+                "saas",
+                "desktop",
+                "library",
+                "none"
+              ]
+            },
+            "names": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "Sync": {
+      "type": "object",
+      "required": [
+        "source"
+      ],
+      "properties": {
+        "source": {
+          "type": "string"
+        },
+        "values": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "type": "string"
+            }
+          },
+          "propertyNames": {
+            "type": "string",
+            "description": "a string matching the pattern ^[A-Z][A-Z0-9_]*$",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "branch": {
+          "type": "string"
+        },
+        "check": {
+          "type": "boolean"
+        },
+        "maintainerLevel": {
+          "$ref": "#/$defs/Level"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "$ref": "#/$defs/SmartcloudConfig"
+}

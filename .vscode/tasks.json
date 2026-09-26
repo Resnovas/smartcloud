@@ -1,0 +1,121 @@
+{
+  // VS Code and Cursor tasks (house standard project-dev-surfaces). Every
+  // task runs a package script with `node --run`, or a house tool, so
+  // package.json stays the one source of truth for commands. Zed reads
+  // .zed/tasks.json instead.
+  "version": "2.0.0",
+  "tasks": [
+    // house:managed:begin - synced from Resnovas/.github templates/.vscode/tasks.json. Edits inside this block are overwritten.
+    { "label": "setup", "detail": "node --run setup", "type": "shell", "command": "node --run setup", "problemMatcher": [] },
+    { "label": "check", "detail": "Everything CI runs: node --run check", "type": "shell", "command": "node --run check", "problemMatcher": [] },
+    {
+      "label": "test",
+      "detail": "node --run test",
+      "type": "shell",
+      "command": "node --run test",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": [],
+    },
+    { "label": "graph: open viewer", "detail": "Open graphify-out/graph.html", "type": "shell", "command": "node tools/dev/open.mjs graphify-out/graph.html", "problemMatcher": [] },
+    { "label": "graph: update", "detail": "Refresh the code graph", "type": "shell", "command": "sh tools/graphify/graphify update", "problemMatcher": [] },
+    { "label": "graph: check", "detail": "Fail if the committed graph is stale", "type": "shell", "command": "sh tools/graphify/graphify check", "problemMatcher": [] },
+    { "label": "agents: sync prompt commands", "detail": "Write .agents/prompts to the agent command folders", "type": "shell", "command": "node tools/dev/surfaces.mjs sync", "problemMatcher": [] },
+    { "label": "agents: install Orca and OpenChamber actions", "detail": "Register quick commands, agent prompts and project actions", "type": "shell", "command": "node tools/dev/surfaces.mjs install", "problemMatcher": [] },
+    // house:managed:end
+    // house:local - add this repository's own tasks below this line.
+    {
+      "label": "dev",
+      "detail": "Rebuild every library and app on change: pnpm run dev",
+      "type": "shell",
+      "command": "pnpm run dev",
+      "isBackground": true,
+      "problemMatcher": "$tsc-watch"
+    },
+    {
+      "label": "build",
+      "detail": "Build every project: pnpm run build",
+      "type": "shell",
+      "command": "pnpm run build",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "test: current file",
+      "detail": "Test the open file or its mirrored spec: pnpm run test:file",
+      "type": "shell",
+      "command": "pnpm run test:file \"${relativeFile}\"",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "lint",
+      "detail": "Lint every project: pnpm run lint",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "problemMatcher": "$eslint-stylish"
+    },
+    {
+      "label": "typecheck",
+      "detail": "Type-check every project, then the test projects",
+      "type": "shell",
+      "command": "pnpm run typecheck && pnpm run typecheck:tests",
+      "windows": {
+        "command": "pnpm run typecheck; if ($?) { pnpm run typecheck:tests }"
+      },
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "format",
+      "detail": "Format the workspace with Prettier: pnpm run format",
+      "type": "shell",
+      "command": "pnpm run format",
+      "problemMatcher": []
+    },
+    {
+      "label": "headers",
+      "detail": "Add or correct licence headers: pnpm run headers:fix",
+      "type": "shell",
+      "command": "pnpm run headers:fix",
+      "problemMatcher": []
+    },
+    {
+      "label": "bundle",
+      "detail": "Bundle the action, CLI and MCP server with esbuild: pnpm run bundle",
+      "type": "shell",
+      "command": "pnpm run bundle",
+      "problemMatcher": []
+    },
+    {
+      "label": "docs",
+      "detail": "Regenerate docs/reference/configuration.mdx from the JSON Schema",
+      "type": "shell",
+      "command": "pnpm run docs:reference",
+      "problemMatcher": []
+    },
+    {
+      "label": "docs: local server",
+      "detail": "Serve the Mintlify docs at http://localhost:3000: pnpm run docs:dev",
+      "type": "shell",
+      "command": "pnpm run docs:dev",
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "fix",
+      "detail": "Format and add licence headers: pnpm run fix",
+      "type": "shell",
+      "command": "pnpm run fix",
+      "problemMatcher": []
+    },
+    {
+      "label": "release: dry run",
+      "detail": "Preview the next release without publishing: pnpm run release:dry-run",
+      "type": "shell",
+      "command": "pnpm run release:dry-run",
+      "problemMatcher": []
+    },
+  ],
+}

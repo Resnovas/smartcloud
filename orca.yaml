@@ -1,0 +1,22 @@
+# house:managed:begin - synced from Resnovas/.github templates/orca.yaml. Edits inside this block are overwritten.
+#
+# Orca worktree settings (house standard project-dev-surfaces). Quick commands
+# and agent prompts are Orca app settings, so they come from
+# .agents/surfaces.json through tools/dev/surfaces.mjs, which setup runs.
+scripts:
+  # Runs after each worktree is created. node, not a shell launcher, so the
+  # same line works on Windows.
+  setup: node --run setup
+setupAgentStartupPolicy: wait-for-setup
+# house:managed:end
+# house:local - add this repository's own settings below this line, such as
+# defaultTabs (an agent tab, a dev server) and worktree.sharedDirectories.
+defaultTabs:
+  - title: dev
+    command: pnpm run dev
+  - title: claude
+    command: claude
+worktree:
+  # The Nx task cache is content-addressed, so worktrees can share it.
+  sharedDirectories:
+    - .nx/cache

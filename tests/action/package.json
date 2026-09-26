@@ -1,0 +1,14 @@
+{
+  "name": "@resnovas/action-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@effect/platform-node": "^0.108.2",
+    "@resnovas/action": "workspace:*",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/integrations.posthog": "workspace:*"
+  }
+}
