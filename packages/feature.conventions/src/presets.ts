@@ -265,11 +265,9 @@ const list = (items: ReadonlyArray<string>) => items.join(', ')
 const contextsLine = (contexts: ReadonlyArray<string>, text: string) =>
   contexts.length > 0 ? [`${text}: ${list(contexts)}.`] : []
 
-const gitmojiLines = () =>
-  gitmojis.filter((gitmoji) => gitmoji.semver !== null).map((gitmoji) => `- ${gitmoji.emoji} or ${gitmoji.code}: ${gitmoji.description}`)
-
 const CONVENTIONAL_LINK = 'For more information, see https://www.conventionalcommits.org/en/v1.0.0/'
-const GITMOJI_LINK = 'For more information on gitmoji, see https://gitmoji.dev/'
+// The full gitmoji list is too long for an annotation or comment, so messages link to it.
+const GITMOJI_LINK = 'The gitmojis are listed at https://gitmoji.dev/'
 
 /**
  * Explains what a convention preset expects of a title.
@@ -307,16 +305,12 @@ export const presetDescription = (preset: Preset, contexts: ReadonlyArray<string
     case 'gitmojis':
       return [
         'Start the title with a gitmoji (the emoji, its code or its HTML entity), optionally followed by a scope in parentheses, then a colon, for example `:bug:(scope): description`.',
-        'Gitmojis:',
-        ...gitmojiLines(),
         ...contextsLine(contexts, 'Name one of these contexts in parentheses'),
         GITMOJI_LINK,
       ].join('\n')
     case 'semanticEmoji':
       return [
         'Start the title with a gitmoji, then a semantic type, optionally followed by a scope in parentheses, then a colon, for example `:bug: fix(scope): description`.',
-        'Gitmojis:',
-        ...gitmojiLines(),
         `Types: ${list(SEMANTIC_TYPES)}.`,
         ...contextsLine(contexts, 'Name one of these contexts in parentheses'),
         CONVENTIONAL_LINK,

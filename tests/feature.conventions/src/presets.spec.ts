@@ -151,18 +151,15 @@ describe('presetDescription', () => {
     expect(presetDescription('conventionalCommits', ['labels', 'config'])).toContain('Scopes, when given: labels, config.')
     expect(presetDescription('semanticTitle', ['labels'])).toContain('Types: bug, chore, opt')
     expect(presetDescription('semanticTitle', ['labels'])).toContain('contexts in parentheses: labels.')
-    expect(presetDescription('gitmojis')).toContain(`- ${bug.emoji} or ${bug.code}: ${bug.description}`)
     expect(presetDescription('gitmojis')).toContain('https://gitmoji.dev/')
     const emoji = presetDescription('semanticEmoji', ['labels'])
-    expect(emoji).toContain(`- ${zap.emoji} or ${zap.code}: ${zap.description}`)
     expect(emoji).toContain('Types: bug, chore')
     expect(emoji).toContain('https://www.conventionalcommits.org/en/v1.0.0/')
     expect(emoji).toContain('contexts in parentheses: labels.')
   })
 
-  it('lists only the gitmojis that carry a semver bump, as v1 did', () => {
-    const art = byName('art')
-    expect(art.semver).toBeNull()
-    expect(presetDescription('gitmojis')).not.toContain(art.code)
+  it('links to the gitmoji list instead of inlining it, so annotations stay short', () => {
+    expect(presetDescription('gitmojis')).not.toContain(zap.code)
+    expect(presetDescription('semanticEmoji').split('\n').length).toBeLessThanOrEqual(4)
   })
 })
