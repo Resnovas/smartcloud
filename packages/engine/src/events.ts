@@ -44,11 +44,15 @@ const IssueFields = {
 
 const PullRequestPayload = Schema.Struct({
   action: Schema.optional(Schema.String),
+  // The label a `labeled` or `unlabeled` event added or removed.
+  label: Schema.optional(LabelRef),
   pull_request: Schema.Struct({
     ...IssueFields,
     draft: Schema.optional(Schema.Boolean),
     head: Schema.Struct({ ref: Schema.String, sha: Schema.String }),
     base: Schema.optional(Schema.Struct({ ref: Schema.String })),
+    merged: Schema.optional(Schema.Boolean),
+    merge_commit_sha: Schema.optional(Schema.NullOr(Schema.String)),
     additions: Schema.optional(Schema.Number),
     deletions: Schema.optional(Schema.Number),
   }),
@@ -69,6 +73,14 @@ const PushPayload = Schema.Struct({ ref: Schema.String, after: Schema.String })
 // `action` is the caller's `event_type`, which says what the dispatch is for.
 const RepositoryDispatchPayload = Schema.Struct({ action: Schema.optional(Schema.String) })
 
+/** Where a merged pull request's changes landed. */
+export interface PullRequestMerge {
+  /** The commit the merge made on the base branch: a merge, squash or the last rebased commit. */
+  readonly sha: string
+  /** The branch it was merged into. */
+  readonly base: string
+}
+
 /** A pull request event, with the pull request as a subject. */
 export interface PullRequestEnvelope {
   readonly kind: 'pullRequest'
@@ -76,6 +88,10 @@ export interface PullRequestEnvelope {
   readonly action?: string
   readonly subject: Subject
   readonly headSha: string
+  /** Set when the pull request has been merged. */
+  readonly merge?: PullRequestMerge
+  /** The label a `labeled` or `unlabeled` event is about. */
+  readonly label?: string
 }
 
 /** An issue event, with the issue as a subject. */
@@ -192,7 +208,7 @@ const REPOSITORY_EVENTS = new Set(['schedule', 'workflow_dispatch'])
  */
 export const decodeEvent = (event: string, payload: unknown): Effect.Effect<Envelope, EventDecodeError> => {
   if (PULL_REQUEST_EVENTS.has(event)) {
-    return Effect.map(decode(PullRequestPayload, event, payload), ({ action, pull_request: pr }) =>
+    return Effect.map(decode(PullRequestPayload, event, payload), ({ action, label, pull_request: pr }) =>
       withAction(
         {
           kind: 'pullRequest' as const,
@@ -205,6 +221,10 @@ export const decodeEvent = (event: string, payload: unknown): Effect.Effect<Enve
             ...(pr.base === undefined ? {} : { baseBranch: pr.base.ref }),
             changes: (pr.additions ?? 0) + (pr.deletions ?? 0),
           },
+          ...(pr.merged === true && typeof pr.merge_commit_sha === 'string' && pr.base !== undefined
+            ? { merge: { sha: pr.merge_commit_sha, base: pr.base.ref } }
+            : {}),
+          ...(label === undefined ? {} : { label: label.name }),
         },
         action,
       ),
