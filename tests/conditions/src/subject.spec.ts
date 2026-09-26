@@ -45,4 +45,10 @@ describe('Commit', () => {
     const { parents: _parents, ...orphan } = commit('fix: x')
     expect(Schema.is(Commit)(orphan)).toBe(false)
   })
+
+  it('needs the signature verification', () => {
+    expect(Schema.is(Commit)(commit('fix: x', { verified: false }))).toBe(true)
+    const { verified: _verified, ...unchecked } = commit('fix: x')
+    expect(Schema.is(Commit)(unchecked)).toBe(false)
+  })
 })

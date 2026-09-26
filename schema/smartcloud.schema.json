@@ -258,6 +258,9 @@
               "$ref": "#/$defs/commitsSignedOff"
             },
             {
+              "$ref": "#/$defs/commitsVerified"
+            },
+            {
               "$ref": "#/$defs/hasConflict"
             },
             {
@@ -698,6 +701,26 @@
       },
       "additionalProperties": false,
       "description": "Every non-merge commit has a Signed-off-by trailer matching its author email."
+    },
+    "commitsVerified": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "commitsVerified"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Every commit has a GPG, SSH or S/MIME signature that GitHub verified."
     },
     "hasConflict": {
       "type": "object",

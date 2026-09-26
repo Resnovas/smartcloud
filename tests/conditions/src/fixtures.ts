@@ -16,13 +16,14 @@
 
 import type { Commit, Subject } from '@resnovas/conditions'
 
-/** A signed-off, ordinary commit by Jane. */
+/** A signed-off, verified, ordinary commit by Jane. */
 export const commit = (message: string, overrides: Partial<Commit> = {}): Commit => ({
   sha: 'a'.repeat(40),
   message,
   authorName: 'Jane Doe',
   authorEmail: 'jane@example.com',
   parents: 1,
+  verified: true,
   ...overrides,
 })
 

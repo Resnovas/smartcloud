@@ -367,6 +367,28 @@ export const CommitsSignedOff = flag(
 )
 
 /**
+ * Every commit carries a signature GitHub verified: GPG, SSH or S/MIME.
+ *
+ * @remarks
+ * This is signing, not the DCO: a `Signed-off-by` trailer is text anyone can
+ * write, while a verified signature proves the commit came from a key
+ * registered to the signer. Merge commits count too, as they do for GitHub's
+ * "Require signed commits" rule.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CommitsVerified"
+ * import { CommitsVerified } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CommitsVerified)({ type: 'commitsVerified', condition: true }) // => true
+ * ```
+ */
+export const CommitsVerified = flag(
+  'commitsVerified',
+  'Every commit has a GPG, SSH or S/MIME signature that GitHub verified.',
+)
+
+/**
  * The pull request conflicts (or, when false, does not conflict) with its
  * base branch.
  *
@@ -623,6 +645,7 @@ const Leaf = Schema.Union(
   RequestedChanges,
   ReviewerMatches,
   CommitsSignedOff,
+  CommitsVerified,
   HasConflict,
   ChecksPass,
   CheckStatus,

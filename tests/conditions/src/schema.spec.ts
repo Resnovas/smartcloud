@@ -61,6 +61,7 @@ describe('ConditionGroup', () => {
       { type: 'requestedChanges', condition: true },
       { type: 'reviewerMatches', condition: 'x' },
       { type: 'commitsSignedOff', condition: true },
+      { type: 'commitsVerified', condition: false },
       { type: 'hasConflict', condition: true },
       { type: 'checksPass', checks: ['build', 'test'], condition: true },
       { type: 'checkStatus', check: 'test', condition: 'pending' },
