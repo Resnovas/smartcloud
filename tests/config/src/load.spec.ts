@@ -69,6 +69,14 @@ describe('parseConfig', () => {
     }),
   )
 
+  it.effect('rejects an unknown project type, so settings never plan environments for a typo', () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(parseConfig('version: 2\nsettings:\n  environments: { projectType: webapp }\n', 'x.yml'))
+      expect(error._tag).toBe('ConfigDecodeError')
+      expect(error.message).toContain('webapp')
+    }),
+  )
+
   it.effect('reports YAML syntax errors and non-mapping documents', () =>
     Effect.gen(function* () {
       const bad = yield* Effect.flip(parseConfig('version: [2\n', 'bad.yml'))
