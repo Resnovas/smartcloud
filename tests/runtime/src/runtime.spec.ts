@@ -369,6 +369,25 @@ describe('runEvent and dryRun', () => {
     }),
   )
 
+  it.effect('lets the report reuse a marker comment only from a bot or a roles.trustedBots login', () =>
+    Effect.gen(function* () {
+      const config = `${CONVENTIONS}roles:\n  trustedBots: ["release-robot"]\n`
+      const comments = [
+        { id: 1, body: '<!-- smartcloud:report -->\nforged', author: 'mallory', bot: false },
+        { id: 2, body: '<!-- smartcloud:report -->\nold', author: 'Release-Robot', bot: false },
+      ]
+      const { service, state } = memory({ '.github/smartcloud.yml': config }, { issues: new Map([[7, { labels: [], open: true, comments }]]) })
+      const outcome = yield* Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) => runEvent({ config: {}, event })).pipe(
+        Effect.provideService(GitHub, service),
+      )
+      expect(outcome.published.comment).toBe('updated')
+      const after = state.issues.get(7)?.comments ?? []
+      expect(after).toHaveLength(2)
+      expect(after[0]?.body).toBe('<!-- smartcloud:report -->\nforged')
+      expect(after[1]?.body).not.toContain('old')
+    }),
+  )
+
   it.effect('records every write instead of making it', () =>
     Effect.gen(function* () {
       const { service, state } = memory({ '.github/smartcloud.yml': CONVENTIONS })

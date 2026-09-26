@@ -57,7 +57,7 @@ export const runEvent = (options: {
     const resolved = yield* loadConfig(options.config)
     const features = yield* selectFeatures(options.features)
     const result = yield* runFeatures({ config: resolved.config, event: options.event.name, payload: options.event.payload, features })
-    const published = yield* publishReport(result)
+    const published = yield* publishReport(result, { trustedAuthors: resolved.config.roles?.trustedBots ?? [] })
     const outcome: RunOutcome = { result, published, warnings: [...resolved.warnings, ...published.warnings] }
     return outcome
   })

@@ -48,6 +48,8 @@ export interface Comment {
   readonly id: number
   readonly body: string
   readonly author: string
+  /** Whether the author is a bot account, such as a GitHub App. */
+  readonly bot: boolean
 }
 
 /** An open issue or pull request, as listed for scheduled sweeps. */

@@ -16,7 +16,7 @@
  */
 
 import type { RunResult } from '@resnovas/engine'
-import { GitHub, type GitHubError } from '@resnovas/integrations.github'
+import { GitHub, type GitHubError, isTrustedComment } from '@resnovas/integrations.github'
 import { Effect } from 'effect'
 import { annotationLines, checkRunsFor, commentBody, isLegacyReport, MARKER, summaryMarkdown } from './format.js'
 
@@ -50,12 +50,20 @@ const subjectOf = (result: RunResult) =>
  * comment is created only when there is something to act on, and once
  * created it is updated in place, including to say that everything passes.
  * A comment left by v1 is taken over the same way when there is no v2 one.
+ * The marker is public, so only a marker comment written by a bot account or
+ * by one of `trustedAuthors` is taken over; one anyone else wrote is left
+ * alone and a new comment is created.
  *
  * @param result - The run.
- * @param options - Set `comment` to false to leave issues and pull requests alone.
+ * @param options - Set `comment` to false to leave issues and pull requests
+ *   alone; `trustedAuthors` lists logins, besides bot accounts, whose marker
+ *   comments may be updated (normally `roles.trustedBots`).
  * @returns What was published.
  */
-export const publishReport = (result: RunResult, options: { readonly comment?: boolean } = {}): Effect.Effect<Published, never, GitHub> =>
+export const publishReport = (
+  result: RunResult,
+  options: { readonly comment?: boolean; readonly trustedAuthors?: ReadonlyArray<string> } = {},
+): Effect.Effect<Published, never, GitHub> =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const warnings: Array<string> = []
@@ -76,7 +84,7 @@ export const publishReport = (result: RunResult, options: { readonly comment?: b
       const body = commentBody(result.findings)
       const actionable = result.findings.some((finding) => finding.level !== 'notice')
       yield* Effect.gen(function* () {
-        const comments = yield* github.listComments(number)
+        const comments = (yield* github.listComments(number)).filter((entry) => isTrustedComment(entry, options.trustedAuthors))
         const existing = comments.find((entry) => entry.body.includes(MARKER)) ?? comments.find((entry) => isLegacyReport(entry.body))
         if (existing !== undefined) {
           if (existing.body === body) comment = 'unchanged'

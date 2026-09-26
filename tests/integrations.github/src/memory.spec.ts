@@ -17,7 +17,17 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Layer } from 'effect'
-import { DryRun, DryRunLog, fileKey, fromGraphqlErrors, fromStatus, GitHub, GitHubMemory, makeMemoryGitHub } from '@resnovas/integrations.github'
+import {
+  DryRun,
+  DryRunLog,
+  fileKey,
+  fromGraphqlErrors,
+  fromStatus,
+  GitHub,
+  GitHubMemory,
+  isTrustedComment,
+  makeMemoryGitHub,
+} from '@resnovas/integrations.github'
 
 const bug = { name: 'bug', color: 'd73a4a', description: '' }
 
@@ -73,7 +83,7 @@ describe('in-memory GitHub', () => {
       })
       const comment = yield* service.createComment(3, 'first')
       yield* service.updateComment(comment.id, 'edited')
-      expect(yield* service.listComments(3)).toStrictEqual([{ id: comment.id, body: 'edited', author: 'smartcloud[bot]' }])
+      expect(yield* service.listComments(3)).toStrictEqual([{ id: comment.id, body: 'edited', author: 'smartcloud[bot]', bot: true }])
       expect((yield* Effect.flip(service.updateComment(999, 'x')))._tag).toBe('NotFound')
       expect(yield* service.listOpenIssues).toHaveLength(1)
       yield* service.closeIssue(3)
@@ -164,7 +174,7 @@ describe('dry run', () => {
       yield* github.deleteLabel('bug')
       yield* github.addLabels(1, ['bug'])
       yield* github.removeLabel(1, 'bug')
-      expect(yield* github.createComment(1, 'hi')).toStrictEqual({ id: 0, body: 'hi', author: '' })
+      expect(yield* github.createComment(1, 'hi')).toStrictEqual({ id: 0, body: 'hi', author: '', bot: true })
       yield* github.updateComment(5, 'x')
       yield* github.closeIssue(1)
       yield* github.createReview(7, { event: 'COMMENT', body: 'b' })
@@ -260,5 +270,20 @@ describe('fromStatus', () => {
   it('maps GraphQL errors: rate limits are retried, anything else is the request itself', () => {
     expect(fromGraphqlErrors('graphql', 'API rate limit exceeded')._tag).toBe('RateLimited')
     expect(fromGraphqlErrors('graphql', 'Field x does not exist')._tag).toBe('ValidationFailed')
+  })
+})
+
+describe('isTrustedComment', () => {
+  const by = (author: string, bot: boolean) => ({ id: 1, body: '<!-- smartcloud:report -->', author, bot })
+
+  it('trusts bot accounts and listed logins, ignoring case and a leading @', () => {
+    expect(isTrustedComment(by('smartcloud[bot]', true))).toBe(true)
+    expect(isTrustedComment(by('Release-Robot', false), ['@release-robot'])).toBe(true)
+    expect(isTrustedComment(by('@release-robot', false), ['Release-Robot'])).toBe(true)
+  })
+
+  it('does not trust a person, however their comment is worded', () => {
+    expect(isTrustedComment(by('mallory', false))).toBe(false)
+    expect(isTrustedComment(by('mallory', false), ['release-robot'])).toBe(false)
   })
 })

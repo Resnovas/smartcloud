@@ -18,7 +18,7 @@
 import { type ConditionGroup, evaluate, requiredFacets, type Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { loadFacets, Report } from '@resnovas/engine'
-import { GitHub, type Comment, type GitHubError, type IssueSummary } from '@resnovas/integrations.github'
+import { GitHub, isTrustedComment, type Comment, type GitHubError, type IssueSummary } from '@resnovas/integrations.github'
 import { Clock, Effect } from 'effect'
 
 const FEATURE = 'stale'
@@ -62,19 +62,29 @@ const SINCE = /<!-- smartcloud:stale-since ([0-9TZ:.+-]{1,40}) -->/
 export const staleBody = (text: string, since: Date): string =>
   `${STALE_MARKER}\n<!-- smartcloud:stale-since ${since.toISOString()} -->\n${text}`
 
+// The comment carrying a marker, when a bot or a trusted login wrote it:
+// anyone can type a marker, so a human's comment never counts.
+const markerComment = (comments: ReadonlyArray<Comment>, marker: string, trusted: ReadonlyArray<string>) =>
+  comments.find((comment) => comment.body.includes(marker) && isTrustedComment(comment, trusted))
+
 /**
  * Reads when an item was marked stale from smartcloud's stale comment.
  *
+ * @remarks
+ * Only a stale comment written by a bot account or a trusted login is read,
+ * so nobody can forge the mark time by posting the marker themselves.
+ *
  * @example
  * ```ts
- * markedSince([{ id: 1, author: 'bot', body: staleBody('text', new Date(0)) }]) // Date(0)
+ * markedSince([{ id: 1, author: 'smartcloud[bot]', bot: true, body: staleBody('text', new Date(0)) }]) // Date(0)
  * ```
  *
  * @param comments - The item's comments.
+ * @param trusted - Logins trusted as well as bot accounts, normally `roles.trustedBots`.
  * @returns The mark time, or undefined when there is no readable stale comment.
  */
-export const markedSince = (comments: ReadonlyArray<Comment>): Date | undefined => {
-  const found = comments.find((comment) => comment.body.includes(STALE_MARKER))?.body.match(SINCE)?.[1]
+export const markedSince = (comments: ReadonlyArray<Comment>, trusted: ReadonlyArray<string> = []): Date | undefined => {
+  const found = markerComment(comments, STALE_MARKER, trusted)?.body.match(SINCE)?.[1]
   const since = found === undefined ? Number.NaN : Date.parse(found)
   return Number.isNaN(since) ? undefined : new Date(since)
 }
@@ -100,11 +110,12 @@ export const subjectOf = (item: IssueSummary): Subject => ({
 const has = (subject: Subject, label: string) =>
   subject.labels.some((name) => name.toLowerCase() === label.toLowerCase())
 
-// One comment per marker: an existing one is edited rather than repeated.
-const upsertComment = (number: number, marker: string, body: string, comments: ReadonlyArray<Comment>) =>
+// One comment per marker: an existing trusted one is edited rather than
+// repeated, and one anyone else wrote is left alone.
+const upsertComment = (number: number, marker: string, body: string, comments: ReadonlyArray<Comment>, trusted: ReadonlyArray<string>) =>
   Effect.gen(function* () {
     const github = yield* GitHub
-    const existing = comments.find((comment) => comment.body.includes(marker))
+    const existing = markerComment(comments, marker, trusted)
     if (existing === undefined) yield* github.createComment(number, body)
     else yield* github.updateComment(existing.id, body)
   })
@@ -114,14 +125,14 @@ const upsertComment = (number: number, marker: string, body: string, comments: R
 // label with no mark time. The mark time is read just before the writes, not
 // at the start of the sweep, so a long sweep's own writes stay within
 // MARK_GRACE_MS of it and are not taken for activity.
-const markStale = (stale: StaleConfig, subject: Subject) =>
+const markStale = (stale: StaleConfig, subject: Subject, trusted: ReadonlyArray<string>) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const report = yield* Report
     if (stale.staleComment !== undefined) {
       const comments = yield* github.listComments(subject.number)
       const since = new Date(yield* Clock.currentTimeMillis)
-      yield* upsertComment(subject.number, STALE_MARKER, staleBody(stale.staleComment, since), comments)
+      yield* upsertComment(subject.number, STALE_MARKER, staleBody(stale.staleComment, since), comments, trusted)
       yield* report.change({ feature: FEATURE, description: `commented on #${subject.number} that it is stale` })
     }
     yield* github.addLabels(subject.number, [stale.staleLabel])
@@ -150,14 +161,14 @@ const unmark = (stale: StaleConfig, subject: Subject) =>
     )
   })
 
-const abandon = (stale: StaleConfig, subject: Subject, label: string, comments: ReadonlyArray<Comment>) =>
+const abandon = (stale: StaleConfig, subject: Subject, label: string, comments: ReadonlyArray<Comment>, trusted: ReadonlyArray<string>) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const report = yield* Report
     yield* github.addLabels(subject.number, [label])
     yield* report.change({ feature: FEATURE, description: `labelled #${subject.number} "${label}"` })
     if (stale.abandonedComment !== undefined) {
-      yield* upsertComment(subject.number, ABANDONED_MARKER, `${ABANDONED_MARKER}\n${stale.abandonedComment}`, comments)
+      yield* upsertComment(subject.number, ABANDONED_MARKER, `${ABANDONED_MARKER}\n${stale.abandonedComment}`, comments, trusted)
       yield* report.change({ feature: FEATURE, description: `commented on #${subject.number} that it is abandoned` })
     }
     if (stale.close === true) {
@@ -184,27 +195,30 @@ const abandon = (stale: StaleConfig, subject: Subject, label: string, comments: 
  * @param stale - The config's `stale` section.
  * @param subject - The item, as a subject.
  * @param now - The current time, in milliseconds.
+ * @param trusted - Logins whose marker comments count as well as bot
+ *   accounts', normally `roles.trustedBots`.
  * @returns Nothing; the changes are in the report.
  */
 export const sweepItem = (
   stale: StaleConfig,
   subject: Subject,
   now: number,
+  trusted: ReadonlyArray<string> = [],
 ): Effect.Effect<void, GitHubError, GitHub | Report> =>
   Effect.gen(function* () {
     const age = (now - subject.updatedAt.getTime()) / DAY
     if (!has(subject, stale.staleLabel)) {
-      if (age >= stale.staleAfterDays) yield* markStale(stale, subject)
+      if (age >= stale.staleAfterDays) yield* markStale(stale, subject, trusted)
       return
     }
     const abandonedLabel = stale.abandonedLabel ?? 'abandoned'
     if (has(subject, abandonedLabel)) return
     const comments = yield* (yield* GitHub).listComments(subject.number)
-    const since = markedSince(comments)
+    const since = markedSince(comments, trusted)
     if (since !== undefined && subject.updatedAt.getTime() > since.getTime() + MARK_GRACE_MS)
       return yield* unmark(stale, subject)
     if (stale.abandonedAfterDays !== undefined && age >= stale.abandonedAfterDays) {
-      yield* abandon(stale, subject, abandonedLabel, comments)
+      yield* abandon(stale, subject, abandonedLabel, comments, trusted)
     }
   })
 
@@ -234,7 +248,8 @@ const conditionTypes = (value: unknown): ReadonlyArray<string> => {
  * Each item is swept on its own: a GitHub failure on one is reported as an
  * error naming the item, and the sweep carries on. A `staleLabel` that is
  * also the abandoned label, ignoring case, is a config error and nothing is
- * swept. Age is read from Effect's `Clock`.
+ * swept. Age is read from Effect's `Clock`. Marker comments count only when a
+ * bot account or a `roles.trustedBots` login wrote them.
  *
  * @example
  * ```ts
@@ -284,7 +299,7 @@ export const sweepStale = (config: SmartcloudConfig): Effect.Effect<void, GitHub
         // With the facets loaded evaluation cannot fail, so a failure here
         // would be a bug, not a user error.
         if (when !== undefined && (yield* Effect.orDie(evaluate(when, subject))).passed) return
-        yield* sweepItem(stale, subject, now)
+        yield* sweepItem(stale, subject, now, config.roles?.trustedBots ?? [])
       }).pipe(
         Effect.catchAll((error) =>
           report.add({ feature: FEATURE, rule: 'stale.sweep', level: 'error', message: `#${item.number} was not swept: ${error.message}` }),

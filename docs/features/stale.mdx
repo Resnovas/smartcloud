@@ -49,7 +49,7 @@ Activity is GitHub's `updated_at` time. smartcloud's own label and comment also 
 
 The stale comment records when the item was marked, which is how later activity is detected. Without a `staleComment` there is no record, and the stale label stays until someone removes it.
 
-smartcloud keeps at most one stale and one abandoned comment per item, and edits an existing one rather than posting again. The stale comment is written before the stale label, so if GitHub fails part way the next sweep marks the item again.
+smartcloud keeps at most one stale and one abandoned comment per item, and edits an existing one rather than posting again. Only a marker comment written by a bot account or by a login in `roles.trustedBots` counts, for both editing and reading the mark time, so a person cannot take over the comment or forge when an item was marked. The stale comment is written before the stale label, so if GitHub fails part way the next sweep marks the item again.
 
 Each item is swept on its own. When GitHub fails on one, the sweep records an error naming it and carries on with the rest.
 

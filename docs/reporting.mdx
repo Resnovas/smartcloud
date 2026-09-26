@@ -28,7 +28,7 @@ Because each feature has its own check, you can make just the ones you enforce r
 
 On an issue or pull request, smartcloud keeps a single comment listing its errors and warnings in a table, and updates it in place on every run. Notices are left out of it.
 
-The comment is created only when there is something to act on. Once it exists, it is updated rather than repeated, including to say "All smartcloud checks pass." when everything is fixed. A hidden `<!-- smartcloud:report -->` marker is how the next run finds it.
+The comment is created only when there is something to act on. Once it exists, it is updated rather than repeated, including to say "All smartcloud checks pass." when everything is fixed. A hidden `<!-- smartcloud:report -->` marker is how the next run finds it. Anyone can type that marker, so only a marker comment written by a bot account or by a login in `roles.trustedBots` is updated; smartcloud never edits anyone else's comment and posts its own instead.
 
 ## Job summary
 
