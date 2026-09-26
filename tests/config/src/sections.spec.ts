@@ -15,8 +15,16 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect, Schema } from 'effect'
-import { parseConfig, Required, REQUIRED_TIMEOUT, SmartcloudConfig } from '@resnovas/config'
+import { Effect, Either, Schema } from 'effect'
+import {
+  Freeze,
+  FreezeWindow,
+  parseConfig,
+  parseFreezeTime,
+  Required,
+  REQUIRED_TIMEOUT,
+  SmartcloudConfig,
+} from '@resnovas/config'
 
 describe('feature sections', () => {
   const full = `
@@ -146,4 +154,83 @@ describe('Required', () => {
   it('is a section of the config', () => {
     expect(Schema.is(SmartcloudConfig)({ version: 2, required: { timeout: 30 } })).toBe(true)
   })
+})
+
+describe('Freeze', () => {
+  it('reads daily and weekly times', () => {
+    expect(parseFreezeTime('00:00')).toStrictEqual({ day: undefined, minutes: 0 })
+    expect(parseFreezeTime('Sun 23:59')).toStrictEqual({ day: 0, minutes: 1439 })
+    expect(parseFreezeTime('Sat 08:05')).toStrictEqual({ day: 6, minutes: 485 })
+    for (const text of ['24:00', '9:00', 'fri 16:00', 'Friday 16:00', 'Fri16:00', ''])
+      expect(parseFreezeTime(text)).toBeUndefined()
+  })
+
+  it('takes dated windows with offsets, ending after they start', () => {
+    const is = Schema.is(FreezeWindow)
+    expect(is({ start: '2026-12-24T00:00:00Z', end: '2026-12-24T00:00:01Z', reason: 'Holidays' })).toBe(true)
+    expect(is({ start: '2026-12-24T00:00+01:00', end: '2026-12-24T00:00:00.5Z' })).toBe(true)
+    expect(is({ start: '2026-12-24T00:00:00Z', end: '2026-12-24T00:00:00Z' })).toBe(false)
+    expect(is({ start: '2026-12-24T00:00:00', end: '2026-12-25T00:00:00' })).toBe(false)
+    expect(is({ start: '2026-13-45T00:00:00Z', end: '2026-12-25T00:00:00Z' })).toBe(false)
+  })
+
+  it('takes recurring windows whose times both name a day or neither does, in a known time zone', () => {
+    const is = Schema.is(FreezeWindow)
+    expect(is({ from: 'Fri 16:00', to: 'Mon 08:00', timezone: 'Europe/London' })).toBe(true)
+    expect(is({ from: '22:00', to: '06:00' })).toBe(true)
+    expect(is({ from: 'Fri 16:00', to: '08:00' })).toBe(false)
+    expect(is({ from: '16:00', to: 'Mon 08:00' })).toBe(false)
+    expect(is({ from: 'Fri 16:00', to: 'Fri 16:00' })).toBe(false)
+    expect(is({ from: '16:00', to: '16:00' })).toBe(false)
+    expect(is({ from: 'Fri 16:00', to: 'Sat 16:00' })).toBe(true)
+    expect(is({ from: '22:00', to: '06:00', timezone: 'Mars/Olympus' })).toBe(false)
+  })
+
+  it('says what is wrong with a window', () => {
+    const problem = (input: unknown) =>
+      Either.match(Schema.decodeUnknownEither(FreezeWindow)(input), {
+        onLeft: (error) => error.message,
+        onRight: () => '',
+      })
+    expect(problem({ start: '2026-13-01T00:00:00Z', end: '2027-01-02T00:00:00Z' })).toContain(
+      'not a valid date and time',
+    )
+    expect(problem({ start: '2027-01-02T00:00:00Z', end: '2026-12-24T00:00:00Z' })).toContain('end must be after start')
+    expect(problem({ from: '22:00', to: '06:00', timezone: 'Mars/Olympus' })).toContain(
+      'unknown time zone Mars/Olympus',
+    )
+    expect(problem({ from: 'Fri 16:00', to: '06:00' })).toContain('from and to must both name a day')
+  })
+
+  it('is a section of the config, with windows by key and exempt labels', () => {
+    expect(Schema.is(Freeze)({})).toBe(true)
+    const config = {
+      version: 2,
+      freeze: {
+        active: false,
+        reason: 'Release',
+        windows: {
+          weekend: { from: 'Fri 16:00', to: 'Mon 08:00' },
+          holidays: { start: '2026-12-24T00:00:00Z', end: '2027-01-02T00:00:00Z' },
+        },
+        exempt: { labels: ['hotfix'] },
+      },
+    }
+    expect(Schema.is(SmartcloudConfig)(config)).toBe(true)
+    expect(Schema.is(SmartcloudConfig)({ version: 2, freeze: { windows: [{ from: '22:00', to: '06:00' }] } })).toBe(
+      false,
+    )
+  })
+
+  it.effect('rejects a window mixing dated and recurring keys', () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(
+        parseConfig(
+          'version: 2\nfreeze:\n  windows:\n    x: { start: "2026-12-24T00:00:00Z", end: "2027-01-02T00:00:00Z", from: "22:00" }\n',
+          'smartcloud.yml',
+        ),
+      )
+      expect(error._tag).toBe('ConfigDecodeError')
+    }),
+  )
 })
