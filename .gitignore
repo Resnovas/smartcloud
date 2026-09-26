@@ -39,3 +39,4 @@ Thumbs.db
 
 # The action bundle, committed only on release branches
 /dist
+apps/cli/release

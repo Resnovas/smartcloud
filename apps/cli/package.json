@@ -1,6 +1,6 @@
 {
   "name": "@resnovas/smartcloud",
-  "version": "0.0.0",
+  "version": "1.0.0-beta.8",
   "private": true,
   "type": "module",
   "description": "The smartcloud command line: validate and migrate configs, dry-run features and plan settings locally.",
@@ -19,7 +19,18 @@
     "tags": [
       "type_platform",
       "layer_backend"
-    ]
+    ],
+    "targets": {
+      "bundle": {
+        "dependsOn": [
+          "build"
+        ],
+        "command": "esbuild apps/cli/dist/main.js --bundle --platform=node --target=node24 --format=esm --outfile=apps/cli/release/smartcloud.js --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\" --legal-comments=none",
+        "outputs": [
+          "{projectRoot}/release/smartcloud.js"
+        ]
+      }
+    }
   },
   "dependencies": {
     "@effect/cli": "^0.77.2",
