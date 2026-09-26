@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -380,6 +380,17 @@ The pull request's head branch matches a pattern.
 | Key | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `type` | `branchMatches` | yes |  |
+| `condition` | [Pattern](#pattern) | yes |  |
+
+Other keys are an error.
+
+### baseBranchMatches
+
+The pull request's base branch, the one it merges into, matches a pattern.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `baseBranchMatches` | yes |  |
 | `condition` | [Pattern](#pattern) | yes |  |
 
 Other keys are an error.

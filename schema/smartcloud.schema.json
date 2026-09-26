@@ -216,6 +216,9 @@
               "$ref": "#/$defs/branchMatches"
             },
             {
+              "$ref": "#/$defs/baseBranchMatches"
+            },
+            {
               "$ref": "#/$defs/isOpen"
             },
             {
@@ -364,6 +367,26 @@
       },
       "additionalProperties": false,
       "description": "The pull request's head branch matches a pattern."
+    },
+    "baseBranchMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "baseBranchMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The pull request's base branch, the one it merges into, matches a pattern."
     },
     "isOpen": {
       "type": "object",

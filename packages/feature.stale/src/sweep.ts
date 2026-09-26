@@ -271,7 +271,7 @@ export const sweepItem = (
   })
 
 // Fields a sweep's listing does not carry, and that facets do not load.
-const UNLOADED = new Set(['isDraft', 'branchMatches', 'changesSize'])
+const UNLOADED = new Set(['isDraft', 'branchMatches', 'baseBranchMatches', 'changesSize'])
 
 // Every condition type in a group, however deeply nested.
 const conditionTypes = (value: unknown): ReadonlyArray<string> => {
@@ -287,7 +287,7 @@ const conditionTypes = (value: unknown): ReadonlyArray<string> => {
  * Items of a kind not in `stale.on` (both when omitted) are skipped, as are
  * exempt ones: those carrying an `exempt.labels` label, or passing
  * `exempt.when`. A pull request's files, reviews, commits, mergeability and
- * checks are loaded when `exempt.when` needs them. Its draft state, branch and size are not in a
+ * checks are loaded when `exempt.when` needs them. Its draft state, branches and size are not in a
  * sweep's listing, so an `exempt.when` that uses them cannot be answered for
  * a pull request: that is reported once as a warning, and pull requests are
  * skipped rather than risk acting on one that should be exempt. Issues are
@@ -336,7 +336,7 @@ export const sweepStale = (config: SmartcloudConfig): Effect.Effect<void, GitHub
         rule: 'stale.exempt',
         level: 'warning',
         message:
-          'stale.exempt.when uses isDraft, branchMatches or changesSize, which a sweep cannot read for a pull request; pull requests are skipped',
+          'stale.exempt.when uses isDraft, branchMatches, baseBranchMatches or changesSize, which a sweep cannot read for a pull request; pull requests are skipped',
       })
     }
     const now = yield* Clock.currentTimeMillis

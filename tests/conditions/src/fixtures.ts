@@ -39,6 +39,7 @@ export const pullRequest = (overrides: Partial<Subject> = {}): Subject => ({
   updatedAt: new Date(0),
   draft: false,
   headBranch: 'feat/labels',
+  baseBranch: 'main',
   changes: 40,
   files: ['packages/labels/src/sync.ts', 'README.md'],
   reviews: [],

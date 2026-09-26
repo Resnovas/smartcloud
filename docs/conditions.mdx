@@ -33,6 +33,7 @@ Conditions that match text take a pattern: a regular expression written either b
 | `descriptionMatches` | `condition`: pattern | The description matches. An empty description never matches. |
 | `creatorMatches` | `condition`: pattern | The author's login matches. |
 | `branchMatches` | `condition`: pattern | The pull request's head branch matches. |
+| `baseBranchMatches` | `condition`: pattern | The pull request's base branch, the one it merges into, matches. |
 | `isOpen` | `condition`: boolean | The subject is open (`true`) or closed (`false`). |
 | `isLocked` | `condition`: boolean | The conversation is locked (`true`) or unlocked (`false`). |
 | `isDraft` | `condition`: boolean | The pull request is a draft (`true`) or ready for review (`false`). |
@@ -63,9 +64,16 @@ Reviews count each reviewer's latest decisive review: comments and pending revie
   allowPending: true
 ```
 
+`baseBranchMatches` matches the branch a pull request targets, so a rule can treat pull requests into a release branch differently from those into `main`. Anchor the pattern to match the whole name: `^main$` does not match `maintenance`.
+
+```yaml
+- type: baseBranchMatches
+  condition: "^release/"
+```
+
 ### Pull request only conditions
 
-`branchMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass` and `checkStatus` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `baseBranchMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass` and `checkStatus` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 

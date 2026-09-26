@@ -16,6 +16,7 @@
 
 export { compilePattern, Pattern } from './pattern.js'
 export {
+  BaseBranchMatches,
   BranchMatches,
   ChangesSize,
   CheckStatus,

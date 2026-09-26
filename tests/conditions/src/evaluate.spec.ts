@@ -31,6 +31,7 @@ const running = (name: string) => ({ name, state: 'pending' as const })
 // [name, condition, subject, expected]
 // Subjects without an optional field, which is how a decoded event leaves it out.
 const { headBranch: _headBranch, ...withoutBranch } = pullRequest()
+const { baseBranch: _baseBranch, ...withoutBase } = pullRequest()
 const { draft: _draft, ...withoutDraft } = pullRequest()
 const { changes: _changes, ...withoutChanges } = pullRequest()
 const { reviews: _reviews, ...withoutReviews } = pullRequest()
@@ -46,6 +47,11 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['creatorMatches, other author', { type: 'creatorMatches', condition: '^bot' }, pullRequest(), false],
   ['branchMatches', { type: 'branchMatches', condition: '^feat/' }, pullRequest(), true],
   ['branchMatches, missing branch', { type: 'branchMatches', condition: '^feat/' }, withoutBranch, false],
+  ['baseBranchMatches', { type: 'baseBranchMatches', condition: '^main$' }, pullRequest(), true],
+  ['baseBranchMatches, other base', { type: 'baseBranchMatches', condition: '^release/' }, pullRequest(), false],
+  ['baseBranchMatches, missing base', { type: 'baseBranchMatches', condition: '.*' }, withoutBase, true],
+  ['baseBranchMatches, missing base, anchored', { type: 'baseBranchMatches', condition: '^main$' }, withoutBase, false],
+  ['baseBranchMatches, on an issue', { type: 'baseBranchMatches', condition: '.*' }, issue(), false],
   ['isOpen', { type: 'isOpen', condition: true }, pullRequest(), true],
   ['isOpen false on a closed item', { type: 'isOpen', condition: false }, pullRequest({ open: false }), true],
   ['isLocked', { type: 'isLocked', condition: true }, issue({ locked: true }), true],
@@ -331,6 +337,20 @@ describe('evaluate: pull request conditions on issues', () => {
       const evaluation = yield* evaluate({ condition: [{ type: 'filesMatch', condition: '**' }] }, issue())
       expect(evaluation.passed).toBe(false)
       expect(evaluation.results[0]?.detail).toBe('only applies to pull requests')
+    }),
+  )
+})
+
+describe('evaluate: base branch', () => {
+  it.effect('explains the match', () =>
+    Effect.gen(function* () {
+      const detail = (condition: string) =>
+        Effect.map(
+          evaluate({ condition: [{ type: 'baseBranchMatches', condition }] }, pullRequest({ baseBranch: 'release/2' })),
+          (evaluation) => evaluation.results[0]?.detail,
+        )
+      expect(yield* detail('^release/')).toBe('base branch release/2 matches')
+      expect(yield* detail('^main$')).toBe('base branch release/2 does not match')
     }),
   )
 })

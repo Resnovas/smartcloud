@@ -141,6 +141,8 @@ export const Subject = Schema.Struct({
   updatedAt: Schema.DateFromSelf,
   draft: Schema.optionalWith(Schema.Boolean, { exact: true }),
   headBranch: Schema.optionalWith(Schema.String, { exact: true }),
+  /** The branch the pull request merges into. */
+  baseBranch: Schema.optionalWith(Schema.String, { exact: true }),
   /** Lines added plus lines deleted. */
   changes: Schema.optionalWith(Schema.Number, { exact: true }),
   files: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
