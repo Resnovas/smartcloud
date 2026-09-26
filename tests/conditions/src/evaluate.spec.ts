@@ -239,6 +239,21 @@ describe('evaluate: groups and combinators', () => {
     }),
   )
 
+  it.effect('$not accepts the inline form from smartcloud\'s own v1 config', () =>
+    Effect.gen(function* () {
+      // requestApprovals in smartcloud's v1 .github/config.json
+      const notDependabot = {
+        type: '$not',
+        requires: 1,
+        condition: [{ type: 'creatorMatches', condition: '/^dependabot/i' }],
+      } as const
+      expect(yield* passes(notDependabot, subject)).toBe(true)
+      expect(yield* passes(notDependabot, pullRequest({ author: 'dependabot[bot]' }))).toBe(false)
+      const allOf = { type: '$not', condition: [{ type: 'isOpen', condition: true }, { type: 'isDraft', condition: true }] } as const
+      expect(yield* passes(allOf, subject)).toBe(true)
+    }),
+  )
+
   it.effect('explains combinators with their nested groups', () =>
     Effect.gen(function* () {
       const evaluation = yield* evaluate({ condition: [{ type: '$or', condition: [draft, open] }] }, subject)

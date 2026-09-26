@@ -69,11 +69,20 @@ const latestReviews = (reviews: ReadonlyArray<Review>): ReadonlyMap<string, Revi
   return latest
 }
 
-// v1 wrote a $not group on its own or as a one-item list.
-const notGroup = (condition: Not['condition']): ConditionGroup =>
-  isGroupList(condition) ? condition[0] : condition
+// v1 wrote a $not group on its own, as a one-item list, or inline: a list of
+// conditions with `requires` on the $not itself.
+const notGroup = (not: Not): ConditionGroup => {
+  const { condition } = not
+  if (!isList(condition)) return condition
+  const [first] = condition
+  if (first !== undefined && !isCondition(first)) return first
+  return not.requires === undefined ? { condition: [...condition].filter(isCondition) } : { requires: not.requires, condition: [...condition].filter(isCondition) }
+}
 
-const isGroupList = (condition: Not['condition']): condition is readonly [ConditionGroup] => Array.isArray(condition)
+const isList = (condition: Not['condition']): condition is readonly [ConditionGroup] | ReadonlyArray<Condition> =>
+  Array.isArray(condition)
+
+const isCondition = (entry: ConditionGroup | Condition): entry is Condition => 'type' in entry
 
 const nonMerge = (commits: ReadonlyArray<Commit>) => commits.filter((commit) => commit.parents <= 1)
 
@@ -219,7 +228,7 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
     case '$only':
       return combine(condition.type, condition.condition, subject, (passed) => passed === condition.requires)
     case '$not': {
-      return Effect.map(evaluate(notGroup(condition.condition), subject), (inner) => ({
+      return Effect.map(evaluate(notGroup(condition), subject), (inner) => ({
         type: condition.type,
         passed: !inner.passed,
         detail: inner.passed ? 'the group passed' : 'the group failed',
@@ -289,7 +298,7 @@ const groupsOf = (condition: Condition): ReadonlyArray<ConditionGroup> => {
     case '$only':
       return condition.condition
     case '$not':
-      return [notGroup(condition.condition)]
+      return [notGroup(condition)]
     default:
       return []
   }

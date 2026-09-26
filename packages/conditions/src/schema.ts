@@ -165,11 +165,15 @@ export interface Or {
   readonly condition: ReadonlyArray<ConditionGroup>
 }
 
-/** The group fails. v1 wrote the group either on its own or as a one-item list. */
+/**
+ * The group fails. v1 configs wrote the group three ways: on its own, as a
+ * one-item list, or inline, with `requires` on the `$not` and a list of
+ * conditions as `condition`.
+ */
 export interface Not {
   readonly type: '$not'
   readonly requires?: number
-  readonly condition: ConditionGroup | readonly [ConditionGroup]
+  readonly condition: ConditionGroup | readonly [ConditionGroup] | ReadonlyArray<Condition>
 }
 
 /** Exactly `requires` of the groups pass. */
@@ -205,7 +209,7 @@ const OrSchema: Schema.Schema<Or> = Schema.Struct({
 const NotSchema: Schema.Schema<Not> = Schema.Struct({
   type: Schema.Literal('$not'),
   requires: Schema.optionalWith(Count, { exact: true }),
-  condition: Schema.Union(LazyGroup, Schema.Tuple(LazyGroup)),
+  condition: Schema.Union(LazyGroup, Schema.Tuple(LazyGroup), Schema.Array(LazyCondition)),
 }).annotations({ identifier: '$not', description: 'The group fails.' })
 
 const OnlySchema: Schema.Schema<Only> = Schema.Struct({

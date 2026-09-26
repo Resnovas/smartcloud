@@ -45,6 +45,7 @@ describe('ConditionGroup', () => {
         { type: '$not', condition: { requires: 1, condition: [{ type: 'isDraft', condition: true }] } },
         { type: '$not', requires: 1, condition: [{ requires: 1, condition: [{ type: 'isDraft', condition: true }] }] },
         { type: '$only', requires: 1, condition: [{ requires: 1, condition: [{ type: 'isLocked', condition: false }] }] },
+        { type: '$not', requires: 1, condition: [{ type: 'creatorMatches', condition: '/^dependabot/i' }] },
       ],
     }
     expect(Either.isRight(decode(v1))).toBe(true)
@@ -98,6 +99,7 @@ describe('requiredFacets', () => {
         condition: [
           { type: '$or', condition: [{ condition: [{ type: 'isApproved', condition: 1 }] }] },
           { type: '$not', condition: [{ condition: [{ type: 'hasTrailer', trailer: 'X' }] }] },
+          { type: '$not', requires: 1, condition: [{ type: 'isApproved', condition: 1 }] },
           { type: 'titleMatches', condition: 'x' },
         ],
       },
