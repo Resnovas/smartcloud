@@ -5,6 +5,9 @@
   "references": [
     {
       "path": "./packages/conditions"
+    },
+    {
+      "path": "./packages/config"
     }
   ]
 }
