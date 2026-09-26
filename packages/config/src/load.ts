@@ -17,7 +17,7 @@
 
 import { Context, Data, Effect, Either, ParseResult, Schema } from 'effect'
 import { parse as parseYaml } from 'yaml'
-import { type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
+import { ExtendsEntry, type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
 import { empty, type Merged, mergeLocked } from './merge.js'
 import { SmartcloudConfig } from './schema.js'
 import { migrateV1 } from './v1.js'
@@ -122,6 +122,37 @@ export const parseConfig = (
     return { config: decoded.right, warnings: migrated.warnings.map((warning) => `${source}: ${warning}`) }
   })
 
+const decodeExtends = Schema.decodeUnknownEither(Schema.Array(ExtendsEntry))
+
+/**
+ * Reads one file of an extends chain: parsed, migrated when it is v1, and
+ * normalised when it is a complete config on its own.
+ *
+ * @remarks
+ * A file that extends presets may leave out keys a preset provides, so it is
+ * not rejected for being incomplete here; resolveConfig checks the merged
+ * result. Its extends entries are always checked.
+ */
+const parseLayer = (text: string, source: string) =>
+  Effect.gen(function* () {
+    const raw = yield* Effect.try({
+      try: (): unknown => parseYaml(text),
+      catch: (error) => new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
+    })
+    if (!isRecord(raw)) return yield* new ConfigDecodeError({ source, reason: 'expected a mapping at the top level' })
+    const migrated = raw['version'] === 2 ? { config: raw, warnings: [] } : migrateV1(raw)
+    const warnings = migrated.warnings.map((warning) => `${source}: ${warning}`)
+    const entries = decodeExtends(migrated.config['extends'] ?? [])
+    if (Either.isLeft(entries)) {
+      return yield* new ConfigDecodeError({ source, reason: ParseResult.TreeFormatter.formatErrorSync(entries.left) })
+    }
+    // A complete file is normalised through the schema; an incomplete one is
+    // merged as written and checked once merged.
+    const decoded = decodeV2(migrated.config)
+    const json = Either.isRight(decoded) ? toJson(decoded.right) : migrated.config
+    return { json, extends: entries.right, warnings }
+  })
+
 /**
  * Loads a config and every preset it extends, and merges them.
  *
@@ -158,27 +189,33 @@ export const resolveConfig = (text: string, source: string): Effect.Effect<Resol
         if (chain.length > MAX_DEPTH) {
           return yield* new ConfigDecodeError({ source: name, reason: `extends is nested more than ${MAX_DEPTH} deep` })
         }
-        const parsed = yield* parseConfig(contents, name)
-        warnings.push(...parsed.warnings)
+        const layer = yield* parseLayer(contents, name)
+        warnings.push(...layer.warnings)
         let next = merged
-        for (const entry of parsed.config.extends ?? []) {
-          // Entries were validated by the schema, so this always parses.
+        for (const entry of layer.extends) {
+          // Entries were validated by parseLayer, so this always parses.
           const ref = parseExtendsRef(entry) ?? { owner: '', repo: '', path: entry }
           const preset = formatExtendsRef(ref)
           const presetText = yield* configSource.read(ref)
           next = yield* include(next, presetText, preset, [...chain, name])
         }
         // version, extends and $schema describe the file itself, not rules to merge.
-        const { version: _version, extends: _extends, $schema: _schema, ...own } = toJson(parsed.config)
+        const { version: _version, extends: _extends, $schema: _schema, ...own } = layer.json
         sources.push(name)
         return yield* mergeLocked(next, own, name)
       })
 
     const merged = yield* include(empty, text, source, [])
     const localStart = sources.length - 1
-    // Every part was decoded on its own, and merging valid configs key by key
-    // cannot make an invalid one, so a failure here is a bug, not bad input.
-    const config = yield* Schema.decodeUnknown(SmartcloudConfig)({ ...merged.value, version: 2 }).pipe(Effect.orDie)
+    // A file may rely on its presets for required keys, such as sync.source,
+    // so the whole config is only checked once everything is merged.
+    const decoded = decodeV2({ ...merged.value, version: 2 })
+    if (Either.isLeft(decoded)) {
+      const presets = sources.slice(0, -1)
+      const from = presets.length === 0 ? source : `${source} with ${presets.join(', ')}`
+      return yield* new ConfigDecodeError({ source: from, reason: ParseResult.TreeFormatter.formatErrorSync(decoded.left) })
+    }
+    const config = decoded.right
     const locked = new Set([...merged.origins].filter(([, origin]) => origin !== sources[localStart]).map(([path]) => path))
     return { config, sources, locked, warnings }
   })

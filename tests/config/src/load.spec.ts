@@ -131,6 +131,34 @@ describe('resolveConfig: extends and locked presets', () => {
     }).pipe(Effect.provide(presets({ [HOUSE]: house }))),
   )
 
+  it.effect('lets a repository add to a preset section whose required keys the preset provides', () =>
+    Effect.gen(function* () {
+      const sync = 'version: 2\nsync:\n  source: Resnovas/.github/templates@main\n'
+      const resolved = yield* resolveConfig(local('sync:\n  exclude: [LICENSE]\n'), 'repo').pipe(Effect.provide(presets({ [HOUSE]: sync })))
+      expect(resolved.config.sync).toStrictEqual({ source: 'Resnovas/.github/templates@main', exclude: ['LICENSE'] })
+      expect(resolved.locked.has('sync.source')).toBe(true)
+      expect(resolved.locked.has('sync.exclude')).toBe(false)
+    }),
+  )
+
+  it.effect('still rejects a merged config that is incomplete or wrong, naming the file and its presets', () =>
+    Effect.gen(function* () {
+      const incomplete = yield* Effect.flip(resolveConfig(local('sync:\n  exclude: [LICENSE]\n'), 'repo'))
+      expect(incomplete).toMatchObject({ _tag: 'ConfigDecodeError', source: `repo with ${HOUSE}` })
+      expect(incomplete.message).toContain('source')
+      const alone = yield* Effect.flip(resolveConfig('version: 2\nsync:\n  exclude: [LICENSE]\n', 'repo'))
+      expect(alone).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
+      const typo = yield* Effect.flip(resolveConfig(local('lables: {}\n'), 'repo'))
+      expect(typo.message).toContain('lables')
+      const badExtends = yield* Effect.flip(resolveConfig('version: 2\nextends: [nope]\n', 'repo'))
+      expect(badExtends).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
+      const notMapping = yield* Effect.flip(resolveConfig(`version: 2\nextends: [${HOUSE}]\n`, 'repo').pipe(Effect.provide(presets({ [HOUSE]: '- 1\n' }))))
+      expect(notMapping).toMatchObject({ _tag: 'ConfigDecodeError', source: HOUSE })
+      const unparsable = yield* Effect.flip(resolveConfig(`version: 2\nextends: [${HOUSE}]\n`, 'repo').pipe(Effect.provide(presets({ [HOUSE]: 'version: [2\n' }))))
+      expect(unparsable).toMatchObject({ _tag: 'ConfigParseError', source: HOUSE })
+    }).pipe(Effect.provide(presets({ [HOUSE]: house }))),
+  )
+
   it.effect('may add a field to an inherited rule, restating the values it keeps', () =>
     Effect.map(resolveConfig(local('labels:\n  bug: { name: bug, color: d73a4a, description: A defect }\n'), 'repo'), (resolved) => {
       expect(resolved.config.labels?.['bug']).toStrictEqual({ name: 'bug', color: 'd73a4a', description: 'A defect' })
