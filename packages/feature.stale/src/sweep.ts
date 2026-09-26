@@ -17,7 +17,7 @@
 
 import { type ConditionGroup, evaluate, requiredFacets, type Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
-import { Report } from '@resnovas/engine'
+import { loadFacets, Report } from '@resnovas/engine'
 import { GitHub, type Comment, type GitHubError, type IssueSummary } from '@resnovas/integrations.github'
 import { Clock, Effect } from 'effect'
 
@@ -109,20 +109,23 @@ const upsertComment = (number: number, marker: string, body: string, comments: R
     else yield* github.updateComment(existing.id, body)
   })
 
-const markStale = (stale: StaleConfig, subject: Subject, now: number) =>
+// The label is what later sweeps read as "marked", so it is written last: if
+// the comment fails, the next sweep marks the item again instead of leaving a
+// label with no mark time. The mark time is read just before the writes, not
+// at the start of the sweep, so a long sweep's own writes stay within
+// MARK_GRACE_MS of it and are not taken for activity.
+const markStale = (stale: StaleConfig, subject: Subject) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const report = yield* Report
+    if (stale.staleComment !== undefined) {
+      const comments = yield* github.listComments(subject.number)
+      const since = new Date(yield* Clock.currentTimeMillis)
+      yield* upsertComment(subject.number, STALE_MARKER, staleBody(stale.staleComment, since), comments)
+      yield* report.change({ feature: FEATURE, description: `commented on #${subject.number} that it is stale` })
+    }
     yield* github.addLabels(subject.number, [stale.staleLabel])
     yield* report.change({ feature: FEATURE, description: `labelled #${subject.number} "${stale.staleLabel}"` })
-    if (stale.staleComment === undefined) return
-    yield* upsertComment(
-      subject.number,
-      STALE_MARKER,
-      staleBody(stale.staleComment, new Date(now)),
-      yield* github.listComments(subject.number),
-    )
-    yield* report.change({ feature: FEATURE, description: `commented on #${subject.number} that it is stale` })
   })
 
 const unmark = (stale: StaleConfig, subject: Subject) =>
@@ -191,7 +194,7 @@ export const sweepItem = (
   Effect.gen(function* () {
     const age = (now - subject.updatedAt.getTime()) / DAY
     if (!has(subject, stale.staleLabel)) {
-      if (age >= stale.staleAfterDays) yield* markStale(stale, subject, now)
+      if (age >= stale.staleAfterDays) yield* markStale(stale, subject)
       return
     }
     const abandonedLabel = stale.abandonedLabel ?? 'abandoned'
@@ -205,15 +208,33 @@ export const sweepItem = (
     }
   })
 
+// Fields a sweep's listing does not carry, and that facets do not load.
+const UNLOADED = new Set(['isDraft', 'branchMatches', 'changesSize'])
+
+// Every condition type in a group, however deeply nested.
+const conditionTypes = (value: unknown): ReadonlyArray<string> => {
+  if (typeof value !== 'object' || value === null) return []
+  const own = 'type' in value && typeof value.type === 'string' ? [value.type] : []
+  return [...own, ...Object.values(value).flatMap(conditionTypes)]
+}
+
 /**
  * Sweeps every open issue and pull request through the stale lifecycle.
  *
  * @remarks
  * Items of a kind not in `stale.on` (both when omitted) are skipped, as are
  * exempt ones: those carrying an `exempt.labels` label, or passing
- * `exempt.when`. A sweep lists items without facets, so an `exempt.when`
- * that needs files, reviews or commits cannot be answered; it is reported
- * once as a warning and exempts nothing. Age is read from Effect's `Clock`.
+ * `exempt.when`. A pull request's files, reviews and commits are loaded when
+ * `exempt.when` needs them. Its draft state, branch and size are not in a
+ * sweep's listing, so an `exempt.when` that uses them cannot be answered for
+ * a pull request: that is reported once as a warning, and pull requests are
+ * skipped rather than risk acting on one that should be exempt. Issues are
+ * unaffected, as those conditions never hold for an issue.
+ *
+ * Each item is swept on its own: a GitHub failure on one is reported as an
+ * error naming the item, and the sweep carries on. A `staleLabel` that is
+ * also the abandoned label, ignoring case, is a config error and nothing is
+ * swept. Age is read from Effect's `Clock`.
  *
  * @example
  * ```ts
@@ -221,7 +242,7 @@ export const sweepItem = (
  * ```
  *
  * @param config - The whole config; only `stale` is read.
- * @returns Nothing; the changes and warnings are in the report.
+ * @returns Nothing; the changes, warnings and errors are in the report.
  */
 export const sweepStale = (config: SmartcloudConfig): Effect.Effect<void, GitHubError, GitHub | Report> =>
   Effect.gen(function* () {
@@ -229,27 +250,45 @@ export const sweepStale = (config: SmartcloudConfig): Effect.Effect<void, GitHub
     if (stale === undefined) return
     const github = yield* GitHub
     const report = yield* Report
+    const abandonedLabel = stale.abandonedLabel ?? 'abandoned'
+    if (stale.staleLabel.toLowerCase() === abandonedLabel.toLowerCase()) {
+      return yield* report.add({
+        feature: FEATURE,
+        rule: 'stale.config',
+        level: 'error',
+        message: `stale.staleLabel and stale.abandonedLabel are both "${abandonedLabel}", so a stale item would look abandoned; give them different names`,
+      })
+    }
     const kinds = stale.on ?? ['pullRequest', 'issue']
     const exemptLabels = stale.exempt?.labels ?? []
-    let when: ConditionGroup | undefined = stale.exempt?.when
-    if (when !== undefined && requiredFacets([when]).size > 0) {
+    const when: ConditionGroup | undefined = stale.exempt?.when
+    const facets = requiredFacets(when === undefined ? [] : [when])
+    const unanswerable = conditionTypes(when).some((type) => UNLOADED.has(type))
+    if (unanswerable) {
       yield* report.add({
         feature: FEATURE,
         rule: 'stale.exempt',
         level: 'warning',
         message:
-          'stale.exempt.when uses conditions that need pull request files, reviews or commits, which a sweep does not load; it exempts nothing',
+          'stale.exempt.when uses isDraft, branchMatches or changesSize, which a sweep cannot read for a pull request; pull requests are skipped',
       })
-      when = undefined
     }
     const now = yield* Clock.currentTimeMillis
     for (const item of yield* github.listOpenIssues) {
-      const subject = subjectOf(item)
-      if (!kinds.includes(subject.kind)) continue
-      if (exemptLabels.some((label) => has(subject, label))) continue
-      // Without facet conditions evaluation cannot fail, so a failure here
-      // would be a bug in the check above, not a user error.
-      if (when !== undefined && (yield* Effect.orDie(evaluate(when, subject))).passed) continue
-      yield* sweepItem(stale, subject, now)
+      const listed = subjectOf(item)
+      if (!kinds.includes(listed.kind)) continue
+      if (exemptLabels.some((label) => has(listed, label))) continue
+      if (unanswerable && listed.kind === 'pullRequest') continue
+      yield* Effect.gen(function* () {
+        const subject = yield* loadFacets(listed, facets)
+        // With the facets loaded evaluation cannot fail, so a failure here
+        // would be a bug, not a user error.
+        if (when !== undefined && (yield* Effect.orDie(evaluate(when, subject))).passed) return
+        yield* sweepItem(stale, subject, now)
+      }).pipe(
+        Effect.catchAll((error) =>
+          report.add({ feature: FEATURE, rule: 'stale.sweep', level: 'error', message: `#${item.number} was not swept: ${error.message}` }),
+        ),
+      )
     }
   })

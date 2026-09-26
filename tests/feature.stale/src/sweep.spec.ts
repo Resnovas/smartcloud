@@ -16,7 +16,7 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect, TestClock } from 'effect'
+import { Effect, Layer, TestClock } from 'effect'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
 import {
@@ -29,7 +29,15 @@ import {
   sweepStale,
   type StaleConfig,
 } from '@resnovas/feature.stale'
-import { GitHub, makeMemoryGitHub, type Comment, type IssueSummary } from '@resnovas/integrations.github'
+import {
+  DryRun,
+  DryRunLog,
+  GitHub,
+  makeMemoryGitHub,
+  Unavailable,
+  type Comment,
+  type IssueSummary,
+} from '@resnovas/integrations.github'
 
 const DAY = 86_400_000
 const NOW = Date.UTC(2026, 8, 26)
@@ -73,14 +81,17 @@ const settings: StaleConfig = {
   close: true,
 }
 
-const sweep = (config: SmartcloudConfig, github: ReturnType<typeof memory>, event = 'schedule') =>
+const sweep = (
+  config: SmartcloudConfig,
+  github: ReturnType<typeof memory>,
+  event = 'schedule',
+  service: GitHub['Type'] = github.service,
+) =>
   Effect.gen(function* () {
     yield* TestClock.setTime(NOW)
     // A push payload must carry what GitHub sends for one; the others need nothing.
     const payload = event === 'push' ? { ref: 'refs/heads/main', after: 'abc123' } : {}
-    return yield* runFeatures({ config, event, payload, features: [stale] }).pipe(
-      Effect.provideService(GitHub, github.service),
-    )
+    return yield* runFeatures({ config, event, payload, features: [stale] }).pipe(Effect.provideService(GitHub, service))
   })
 
 const labelsOf = (github: ReturnType<typeof memory>, number: number) => github.state.issues.get(number)?.labels
@@ -102,11 +113,99 @@ describe('stale feature: marking', () => {
       expect(commentsOf(github, 1)).toStrictEqual([staleBody(settings.staleComment ?? '', new Date(NOW))])
       expect(commentsOf(github, 1)?.[0]).toContain(STALE_MARKER)
       expect(result.changes.map((change) => change.description)).toStrictEqual([
-        'labelled #1 "stale"',
         'commented on #1 that it is stale',
-        'labelled #3 "stale"',
+        'labelled #1 "stale"',
         'commented on #3 that it is stale',
+        'labelled #3 "stale"',
       ])
+    }),
+  )
+
+  it.effect('stamps each mark with the time it is written, not the start of the sweep', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1, { updatedAt: daysAgo(40) }), item(2, { updatedAt: daysAgo(40) })])
+      // Each item's comment listing takes twenty minutes, longer than the grace period.
+      const slow: GitHub['Type'] = {
+        ...github.service,
+        listComments: (number) => Effect.zipRight(TestClock.adjust('20 minutes'), github.service.listComments(number)),
+      }
+      yield* sweep({ version: 2, stale: settings }, github, 'schedule', slow)
+      expect(commentsOf(github, 2)).toStrictEqual([staleBody(settings.staleComment ?? '', new Date(NOW + 40 * 60_000))])
+    }),
+  )
+
+  it.effect('writes the label last, so a failed comment leaves the item to be marked again', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1, { updatedAt: daysAgo(40) })])
+      const failing: GitHub['Type'] = {
+        ...github.service,
+        createComment: () => Effect.fail(new Unavailable({ operation: 'createComment', detail: 'boom' })),
+      }
+      yield* sweep({ version: 2, stale: settings }, github, 'schedule', failing)
+      expect(labelsOf(github, 1)).toStrictEqual([])
+    }),
+  )
+
+  it.effect('reports an item GitHub fails on, and still sweeps the items after it', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1, { updatedAt: daysAgo(40) }), item(2, { updatedAt: daysAgo(40) })])
+      const failing: GitHub['Type'] = {
+        ...github.service,
+        listComments: (number) =>
+          number === 1 ? Effect.fail(new Unavailable({ operation: 'listComments', detail: 'boom' })) : github.service.listComments(number),
+      }
+      const result = yield* sweep({ version: 2, stale: settings }, github, 'schedule', failing)
+      expect(result.failed).toStrictEqual([])
+      expect(labelsOf(github, 2)).toStrictEqual(['stale'])
+      expect(result.findings).toStrictEqual([
+        {
+          feature: 'stale',
+          rule: 'stale.sweep',
+          level: 'error',
+          message: '#1 was not swept: listComments: GitHub unavailable (boom)',
+        },
+      ])
+    }),
+  )
+
+  it.effect('refuses to sweep when the stale and abandoned labels are the same', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1, { updatedAt: daysAgo(40) })])
+      const result = yield* sweep({ version: 2, stale: { ...settings, staleLabel: 'Abandoned' } }, github)
+      expect(labelsOf(github, 1)).toStrictEqual([])
+      expect(result.findings).toStrictEqual([
+        {
+          feature: 'stale',
+          rule: 'stale.config',
+          level: 'error',
+          message:
+            'stale.staleLabel and stale.abandonedLabel are both "abandoned", so a stale item would look abandoned; give them different names',
+        },
+      ])
+    }),
+  )
+
+  it.effect('in a dry run, records every write it would make and changes nothing', () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(NOW)
+      const github = memory([item(1, { updatedAt: daysAgo(40) }), item(2, { labels: ['stale'], updatedAt: daysAgo(10) })])
+      const layer = DryRun.pipe(Layer.provide(Layer.succeed(GitHub, github.service)))
+      const { result, writes } = yield* Effect.gen(function* () {
+        const result = yield* runFeatures({ config: { version: 2, stale: settings }, event: 'schedule', payload: {}, features: [stale] })
+        return { result, writes: yield* (yield* DryRunLog).writes }
+      }).pipe(Effect.provide(layer))
+      expect(result.failed).toStrictEqual([])
+      expect(writes.map((write) => write.operation)).toStrictEqual([
+        'createComment',
+        'addLabels',
+        'addLabels',
+        'createComment',
+        'closeIssue',
+      ])
+      expect(labelsOf(github, 1)).toStrictEqual([])
+      expect(labelsOf(github, 2)).toStrictEqual(['stale'])
+      expect(commentsOf(github, 1)).toStrictEqual([])
+      expect(github.state.issues.get(2)?.open).toBe(true)
     }),
   )
 
@@ -158,7 +257,29 @@ describe('stale feature: marking', () => {
     }),
   )
 
-  it.effect('warns once when exempt.when needs facets, and exempts nothing by it', () =>
+  it.effect('loads the facets exempt.when needs for pull requests', () =>
+    Effect.gen(function* () {
+      const github = memory([
+        item(1, { updatedAt: daysAgo(40), isPullRequest: true }),
+        item(2, { updatedAt: daysAgo(40), isPullRequest: true }),
+        item(3, { updatedAt: daysAgo(40) }),
+      ])
+      for (const [number, files] of [[1, ['docs/a.md']], [2, ['src/a.ts']]] as const) {
+        github.state.pulls.set(number, { commits: [], files: [...files], reviews: [], requestedReviewers: [], submittedReviews: [] })
+      }
+      const result = yield* sweep(
+        {
+          version: 2,
+          stale: { ...settings, exempt: { when: { condition: [{ type: 'filesMatch', condition: 'docs/**' }] } } },
+        },
+        github,
+      )
+      expect([1, 2, 3].map((number) => labelsOf(github, number))).toStrictEqual([[], ['stale'], ['stale']])
+      expect(result.findings).toStrictEqual([])
+    }),
+  )
+
+  it.effect('warns once when exempt.when needs pull request details a sweep cannot read, and skips pull requests', () =>
     Effect.gen(function* () {
       const github = memory([
         item(1, { updatedAt: daysAgo(40), isPullRequest: true }),
@@ -167,11 +288,15 @@ describe('stale feature: marking', () => {
       const result = yield* sweep(
         {
           version: 2,
-          stale: { ...settings, exempt: { when: { condition: [{ type: 'filesMatch', condition: '**' }] } } },
+          stale: {
+            ...settings,
+            // Exempting drafts: nested, and a draft pull request looks ready in a sweep's listing.
+            exempt: { when: { condition: [{ type: '$or', condition: [{ condition: [{ type: 'isDraft', condition: true }] }] }] } },
+          },
         },
         github,
       )
-      expect(labelsOf(github, 1)).toStrictEqual(['stale'])
+      expect(labelsOf(github, 1)).toStrictEqual([])
       expect(labelsOf(github, 2)).toStrictEqual(['stale'])
       expect(result.findings).toStrictEqual([
         {
@@ -179,7 +304,7 @@ describe('stale feature: marking', () => {
           rule: 'stale.exempt',
           level: 'warning',
           message:
-            'stale.exempt.when uses conditions that need pull request files, reviews or commits, which a sweep does not load; it exempts nothing',
+            'stale.exempt.when uses isDraft, branchMatches or changesSize, which a sweep cannot read for a pull request; pull requests are skipped',
         },
       ])
     }),
