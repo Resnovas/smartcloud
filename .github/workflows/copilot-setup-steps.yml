@@ -11,6 +11,9 @@ on:
   pull_request:
     paths: [.github/workflows/copilot-setup-steps.yml, scripts/agent-setup*]
 
+# Each job asks for the access it needs; the workflow grants none.
+permissions: {}
+
 jobs:
   copilot-setup-steps:
     runs-on: ubuntu-latest

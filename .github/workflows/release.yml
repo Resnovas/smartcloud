@@ -49,8 +49,8 @@ on:
         type: boolean
         default: false
 
-permissions:
-  contents: read
+# Each job asks for the access it needs; the workflow grants none.
+permissions: {}
 
 concurrency:
   group: release
