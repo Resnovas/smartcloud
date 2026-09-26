@@ -18,7 +18,7 @@
 import { describe, expect, it } from '@effect/vitest'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report } from '@resnovas/engine'
-import { commitsFeature, CommitsNotLoaded } from '@resnovas/feature.commits'
+import { checkCommitMessage, commitsFeature, CommitsNotLoaded } from '@resnovas/feature.commits'
 import { GitHubMemory } from '@resnovas/integrations.github'
 import { Effect, Exit } from 'effect'
 import { coAuthor, commit, roles, rules, runOn, signed } from './fixtures.js'
@@ -240,4 +240,28 @@ describe('commitsFeature', () => {
       )
     }).pipe(Effect.provide(GitHubMemory())),
   )
+})
+
+describe('checkCommitMessage', () => {
+  const author = { authorName: 'Jane Doe', authorEmail: 'jane@example.com' }
+  const config: SmartcloudConfig = { version: 2, links: { policyBase: 'https://x/' } }
+
+  it('passes a signed-off message and flags a missing sign-off as an error, without a commit id', () => {
+    expect(checkCommitMessage({ ...author, message: 'fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>' }, config)).toStrictEqual([])
+    expect(checkCommitMessage({ ...author, message: 'fix: x' }, config)).toStrictEqual([
+      {
+        feature: 'commits',
+        level: 'error',
+        rule: 'DCO',
+        message: 'No Signed-off-by matching the author <jane@example.com>. Commit with "git commit -s".',
+        link: 'https://x/CONTRIBUTING.md#dco',
+      },
+    ])
+  })
+
+  it('checks AI attribution with the config, and the defaults without a commits section', () => {
+    const message = 'fix: x\n\nCo-authored-by: Claude <noreply@anthropic.com>\nSigned-off-by: Jane Doe <jane@example.com>'
+    expect(checkCommitMessage({ ...author, message }, config).map((finding) => finding.rule)).toStrictEqual(['AI-02'])
+    expect(checkCommitMessage({ ...author, message }, { ...config, commits: { aiAttribution: false } })).toStrictEqual([])
+  })
 })

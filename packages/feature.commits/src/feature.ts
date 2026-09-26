@@ -97,6 +97,34 @@ const checkCommit = (commit: Commit, section: CommitsSection, base: string, isAi
 }
 
 /**
+ * Checks one commit message the way the commits feature checks each commit
+ * on a pull request, before the commit exists.
+ *
+ * @remarks
+ * For agents and git hooks: run it on a message and its author to find DCO
+ * and AI attribution problems before committing. Every finding is an error,
+ * because the author's role on a future pull request is not known.
+ *
+ * @example
+ * ```ts
+ * checkCommitMessage({ message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com' }, { version: 2 })
+ * // [{ rule: 'DCO', level: 'error', ... }]
+ * ```
+ *
+ * @param commit - The message and author.
+ * @param config - The config whose `commits` section and links apply; the defaults when it has none.
+ * @returns The findings, empty when the message passes.
+ */
+export const checkCommitMessage = (
+  commit: { readonly message: string; readonly authorName: string; readonly authorEmail: string },
+  config: SmartcloudConfig,
+): ReadonlyArray<Finding> => {
+  const section = config.commits ?? {}
+  const drafts = checkCommit({ sha: '', parents: 1, ...commit }, section, policyBase(config), makeAiIdentityMatcher(section.aiIdentities))
+  return drafts.map(({ commit: _sha, ...draft }) => ({ feature: NAME, level: 'error', ...draft }))
+}
+
+/**
  * The commits feature (SMC-8): every commit on a pull request is signed off
  * by its author, and AI tools are credited but never sign off.
  *
