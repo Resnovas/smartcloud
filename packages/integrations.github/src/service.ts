@@ -104,6 +104,24 @@ export type CheckRun = CheckRunFields &
     | { readonly status: 'completed'; readonly conclusion: 'success' | 'failure' | 'neutral' | 'skipped' }
   )
 
+/**
+ * A check on a commit, as the commit's checks list shows it: a check run, or
+ * a commit status from a service that reports through the statuses API.
+ */
+export interface CommitCheck {
+  /** The check run's name, or the status's context. */
+  readonly name: string
+  readonly source: 'checkRun' | 'status'
+  /** The check run's id; statuses have none. */
+  readonly id?: number
+  /** Pending until it finishes; then whether it lets a pull request merge. */
+  readonly state: 'pending' | 'success' | 'failure'
+  /** GitHub's own word for it, such as `in_progress`, `skipped` or `timed_out`. */
+  readonly detail: string
+  /** Where to read more, when GitHub gives a link. */
+  readonly url?: string
+}
+
 /** A pull request review to submit. */
 export interface NewReview {
   readonly event: 'APPROVE' | 'REQUEST_CHANGES' | 'COMMENT'
@@ -195,6 +213,11 @@ export interface GitHubService {
 
   readonly createCheckRun: (run: CheckRun) => Effect.Effect<number, GitHubError>
   readonly updateCheckRun: (id: number, run: CheckRun) => Effect.Effect<void, GitHubError>
+  /**
+   * Lists the latest check run of each name and the latest status of each
+   * context on a commit. Never cached, because callers poll it.
+   */
+  readonly listCommitChecks: (sha: string) => Effect.Effect<ReadonlyArray<CommitCheck>, GitHubError>
 
   /** Reads a text file from any repository the token can see. */
   readonly getFile: (location: FileLocation) => Effect.Effect<string, GitHubError>

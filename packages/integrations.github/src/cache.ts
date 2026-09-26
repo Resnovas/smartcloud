@@ -134,6 +134,8 @@ interface Caches {
  *   reviewers, and a review request its requested reviewers;
  * - a proposal invalidates every file and directory read and the open
  *   issues, which gain its pull request;
+ * - the checks on a commit are never cached, because a caller polling them
+ *   needs every change;
  * - every write invalidates raw repository `GET`s, which can read anything,
  *   and a raw repository write or a GraphQL mutation invalidates everything.
  *
@@ -228,6 +230,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
 
       createCheckRun: (run) => writing(inner.createCheckRun(run), []),
       updateCheckRun: (id, run) => writing(inner.updateCheckRun(id, run), []),
+      listCommitChecks: inner.listCommitChecks,
 
       getFile: (location) => getFile(GetFile(locationKey(location))),
       listDirectory: (location) => listDirectory(ListDirectory(locationKey(location))),

@@ -21,6 +21,7 @@ import {
   type ChangeProposal,
   type CheckRun,
   type Comment,
+  type CommitCheck,
   GitHub,
   type GitHubService,
   type IssueSummary,
@@ -64,6 +65,8 @@ export interface MemoryState {
   /** Pull requests opened by `proposeChanges`, latest content last. */
   proposals: Array<MemoryProposal>
   checkRuns: Array<CheckRun & { readonly id: number }>
+  /** The checks on each commit, by SHA, as `listCommitChecks` returns them; tests change them between polls. */
+  commitChecks: Map<string, Array<CommitCheck>>
   requests: Array<RepositoryRequest>
   graphql: Array<{ readonly query: string; readonly variables: Readonly<Record<string, unknown>> }>
   nextId: number
@@ -105,6 +108,7 @@ const defaults = (): MemoryState => ({
   executables: new Set(),
   proposals: [],
   checkRuns: [],
+  commitChecks: new Map(),
   requests: [],
   graphql: [],
   nextId: 1,
@@ -230,6 +234,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
         state.checkRuns[index] = { ...run, id }
         return Effect.void
       }),
+    listCommitChecks: (sha) => Effect.sync(() => [...(state.commitChecks.get(sha) ?? [])]),
     getFile: (location) =>
       Effect.suspend(() => {
         const text = state.files.get(fileKey(location.owner, location.repo, location.path, location.ref))
