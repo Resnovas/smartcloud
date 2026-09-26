@@ -17,8 +17,9 @@
 import { Clock, Data, Effect } from 'effect'
 import picomatch from 'picomatch'
 import { codeownersOf, parseCodeowners } from './codeowners.js'
+import { dependencyUpdate } from './dependency.js'
 import { compilePattern } from './pattern.js'
-import type { AuthorAssociation, Condition, ConditionGroup, Not } from './schema.js'
+import type { AuthorAssociation, Condition, ConditionGroup, DependencyUpdateType, Not } from './schema.js'
 import type { Association, Check, CheckState, Commit, Facet, Review, Subject } from './subject.js'
 import { inWindow, localTime } from './time.js'
 import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
@@ -259,6 +260,24 @@ const issueLink = (subject: Subject, keys: ReadonlyArray<string> | undefined): s
   return title === undefined ? undefined : `Linear key ${title} in the title`
 }
 
+// The GitHub Apps that open dependency updates. GitHub reserves the `[bot]`
+// suffix for apps, so no user can take these logins.
+const DEPENDENCY_BOTS = ['dependabot[bot]', 'renovate[bot]']
+
+const dependencyUpdateType = (condition: typeof DependencyUpdateType.Type, subject: Subject): ConditionResult => {
+  const bots = [...DEPENDENCY_BOTS, ...(condition.bots ?? [])].map((login) => login.toLowerCase())
+  if (!bots.includes(subject.author.toLowerCase())) {
+    return result(condition.type, false, `author @${subject.author} is not a dependency bot`)
+  }
+  const update = dependencyUpdate(subject.title, subject.body)
+  if (update === undefined) return result(condition.type, false, 'no version change in the title or description')
+  return result(
+    condition.type,
+    condition.condition.includes(update.type),
+    `${update.type} update from ${update.from} to ${update.to}`,
+  )
+}
+
 const PULL_REQUEST_ONLY = new Set([
   'branchMatches',
   'baseBranchMatches',
@@ -281,6 +300,7 @@ const PULL_REQUEST_ONLY = new Set([
   'reviewerMatches',
   'linksIssue',
   'codeownersTouched',
+  'dependencyUpdateType',
 ])
 
 const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effect<ConditionResult, MissingFacet> => {
@@ -432,6 +452,8 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
           `${time.weekday} ${clock} ${timeZone} is ${inside ? 'inside' : 'outside'} the window`,
         )
       })
+    case 'dependencyUpdateType':
+      return Effect.succeed(dependencyUpdateType(condition, subject))
     case 'filesMatch':
       return Effect.map(facet(subject, 'files', condition.type), (files) => {
         const isMatch = picomatch(condition.condition)

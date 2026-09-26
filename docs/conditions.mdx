@@ -27,46 +27,47 @@ Conditions that match text take a pattern: a regular expression written either b
 
 ## Conditions
 
-| Type                  | Fields                                                              | Passes when                                                                                                                                            |
-| --------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `titleMatches`        | `condition`: pattern                                                | The title matches.                                                                                                                                     |
-| `descriptionMatches`  | `condition`: pattern                                                | The description matches. An empty description never matches.                                                                                           |
-| `creatorMatches`      | `condition`: pattern                                                | The author's login matches.                                                                                                                            |
-| `authorAssociation`   | `condition`: list of associations                                   | The author's association with the repository is one of those listed, or the author is a bot when `bot` is listed.                                      |
-| `hasAssignee`         | `condition`: boolean                                                | Someone is assigned (`true`), or nobody is (`false`).                                                                                                  |
-| `assigneeMatches`     | `condition`: pattern                                                | An assignee's login matches.                                                                                                                           |
-| `hasMilestone`        | `condition`: boolean                                                | The subject is in a milestone (`true`), or in none (`false`).                                                                                          |
-| `milestoneMatches`    | `condition`: pattern                                                | The title of the subject's milestone matches. A subject in no milestone never matches.                                                                 |
-| `linksIssue`          | `condition`: boolean, optional `keys`: list of Linear team keys     | The pull request closes an issue in its description, or carries a Linear key in its branch or title (`true`), or links none (`false`).                 |
-| `reviewerMatches`     | `condition`: pattern                                                | A reviewer of the pull request matches: someone asked to review (a login, or a team's slug), or someone who has reviewed.                              |
-| `branchMatches`       | `condition`: pattern                                                | The pull request's head branch matches.                                                                                                                |
-| `baseBranchMatches`   | `condition`: pattern                                                | The pull request's base branch, the one it merges into, matches.                                                                                       |
-| `isOpen`              | `condition`: boolean                                                | The subject is open (`true`) or closed (`false`).                                                                                                      |
-| `isLocked`            | `condition`: boolean                                                | The conversation is locked (`true`) or unlocked (`false`).                                                                                             |
-| `isDraft`             | `condition`: boolean                                                | The pull request is a draft (`true`) or ready for review (`false`).                                                                                    |
-| `hasLabel`            | `label`: name, `condition`: boolean                                 | The subject has the label (`true`) or lacks it (`false`). Names compare ignoring case.                                                                 |
-| `isStale`             | `condition`: days                                                   | There has been no activity for at least this many days.                                                                                                |
-| `isAbandoned`         | `condition`: days, `label`: name                                    | The subject carries `label` and has had no activity for at least this many days.                                                                       |
-| `filesMatch`          | `condition`: glob                                                   | At least one changed file matches.                                                                                                                     |
-| `codeownersTouched`   | `condition`: owner                                                  | At least one changed file is owned, in CODEOWNERS, by the owner: `@org/team`, `@user` or an email.                                                     |
-| `changesSize`         | `min`, optional `max`: lines                                        | Lines added plus deleted are at least `min` and below `max`.                                                                                           |
-| `lockfileChanged`     | `condition`: boolean                                                | A dependency lockfile changed (`true`), or none did (`false`).                                                                                         |
-| `fileCount`           | `min`, optional `max`: files                                        | The number of changed files is at least `min` and below `max`.                                                                                         |
-| `binaryFilesAdded`    | `condition`: boolean                                                | The pull request adds a binary file (`true`), or adds none (`false`).                                                                                  |
-| `pendingReview`       | `condition`: boolean                                                | Some requested reviewers have not reviewed yet (`true`), or none are pending (`false`).                                                                |
-| `requestedChanges`    | `condition`: boolean                                                | A reviewer's latest review requests changes (`true`), or none does (`false`).                                                                          |
-| `isApproved`          | `condition`: count, optional `allowPending`: boolean                | No reviewer is requesting changes, at least this many approved, and no reviewer is pending. With `allowPending: true`, pending reviewers do not block. |
-| `commitMessagesMatch` | `condition`: pattern, optional `scope`                              | Commit messages match.                                                                                                                                 |
-| `commitsSignedOff`    | `condition`: boolean                                                | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`).                                           |
-| `commitsVerified`     | `condition`: boolean                                                | Every commit has a GPG, SSH or S/MIME signature that GitHub verified (`true`), or not (`false`).                                                       |
-| `hasTrailer`          | `trailer`: key, optional `condition`: pattern, optional `scope`     | Commits carry the trailer, with a value matching the pattern when one is given.                                                                        |
-| `hasConflict`         | `condition`: boolean                                                | The pull request conflicts with its base branch (`true`), or does not (`false`).                                                                       |
-| `checksPass`          | `checks`: list of check names, `condition`: boolean                 | Every named check succeeded (`true`), or at least one has not (`false`).                                                                               |
-| `checkStatus`         | `check`: check name, `condition`: `success`, `failure` or `pending` | The named check is in that state.                                                                                                                      |
-| `commentMatches`      | `condition`: pattern, optional `bots`: boolean                      | At least one comment matches. Comments by bots count only with `bots: true`.                                                                           |
-| `reactionCount`       | `min`, optional `max`: count, optional `reaction`                   | Reactions on the subject (only the `reaction` kind, when set) are at least `min` and below `max`.                                                      |
-| `createdBefore`       | `condition`: days or an ISO 8601 date                               | The subject was opened at least this many days ago, or before the date.                                                                                |
-| `timeWindow`          | `condition`: boolean, optional `days`, `from`, `to`, `timeZone`     | Now is inside the weekly window of days and hours (`true`), or outside it (`false`).                                                                   |
+| Type                   | Fields                                                                  | Passes when                                                                                                                                            |
+| ---------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `titleMatches`         | `condition`: pattern                                                    | The title matches.                                                                                                                                     |
+| `descriptionMatches`   | `condition`: pattern                                                    | The description matches. An empty description never matches.                                                                                           |
+| `creatorMatches`       | `condition`: pattern                                                    | The author's login matches.                                                                                                                            |
+| `authorAssociation`    | `condition`: list of associations                                       | The author's association with the repository is one of those listed, or the author is a bot when `bot` is listed.                                      |
+| `hasAssignee`          | `condition`: boolean                                                    | Someone is assigned (`true`), or nobody is (`false`).                                                                                                  |
+| `assigneeMatches`      | `condition`: pattern                                                    | An assignee's login matches.                                                                                                                           |
+| `hasMilestone`         | `condition`: boolean                                                    | The subject is in a milestone (`true`), or in none (`false`).                                                                                          |
+| `milestoneMatches`     | `condition`: pattern                                                    | The title of the subject's milestone matches. A subject in no milestone never matches.                                                                 |
+| `linksIssue`           | `condition`: boolean, optional `keys`: list of Linear team keys         | The pull request closes an issue in its description, or carries a Linear key in its branch or title (`true`), or links none (`false`).                 |
+| `reviewerMatches`      | `condition`: pattern                                                    | A reviewer of the pull request matches: someone asked to review (a login, or a team's slug), or someone who has reviewed.                              |
+| `branchMatches`        | `condition`: pattern                                                    | The pull request's head branch matches.                                                                                                                |
+| `baseBranchMatches`    | `condition`: pattern                                                    | The pull request's base branch, the one it merges into, matches.                                                                                       |
+| `isOpen`               | `condition`: boolean                                                    | The subject is open (`true`) or closed (`false`).                                                                                                      |
+| `isLocked`             | `condition`: boolean                                                    | The conversation is locked (`true`) or unlocked (`false`).                                                                                             |
+| `isDraft`              | `condition`: boolean                                                    | The pull request is a draft (`true`) or ready for review (`false`).                                                                                    |
+| `hasLabel`             | `label`: name, `condition`: boolean                                     | The subject has the label (`true`) or lacks it (`false`). Names compare ignoring case.                                                                 |
+| `isStale`              | `condition`: days                                                       | There has been no activity for at least this many days.                                                                                                |
+| `isAbandoned`          | `condition`: days, `label`: name                                        | The subject carries `label` and has had no activity for at least this many days.                                                                       |
+| `filesMatch`           | `condition`: glob                                                       | At least one changed file matches.                                                                                                                     |
+| `codeownersTouched`    | `condition`: owner                                                      | At least one changed file is owned, in CODEOWNERS, by the owner: `@org/team`, `@user` or an email.                                                     |
+| `changesSize`          | `min`, optional `max`: lines                                            | Lines added plus deleted are at least `min` and below `max`.                                                                                           |
+| `lockfileChanged`      | `condition`: boolean                                                    | A dependency lockfile changed (`true`), or none did (`false`).                                                                                         |
+| `fileCount`            | `min`, optional `max`: files                                            | The number of changed files is at least `min` and below `max`.                                                                                         |
+| `binaryFilesAdded`     | `condition`: boolean                                                    | The pull request adds a binary file (`true`), or adds none (`false`).                                                                                  |
+| `pendingReview`        | `condition`: boolean                                                    | Some requested reviewers have not reviewed yet (`true`), or none are pending (`false`).                                                                |
+| `requestedChanges`     | `condition`: boolean                                                    | A reviewer's latest review requests changes (`true`), or none does (`false`).                                                                          |
+| `isApproved`           | `condition`: count, optional `allowPending`: boolean                    | No reviewer is requesting changes, at least this many approved, and no reviewer is pending. With `allowPending: true`, pending reviewers do not block. |
+| `commitMessagesMatch`  | `condition`: pattern, optional `scope`                                  | Commit messages match.                                                                                                                                 |
+| `commitsSignedOff`     | `condition`: boolean                                                    | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`).                                           |
+| `commitsVerified`      | `condition`: boolean                                                    | Every commit has a GPG, SSH or S/MIME signature that GitHub verified (`true`), or not (`false`).                                                       |
+| `hasTrailer`           | `trailer`: key, optional `condition`: pattern, optional `scope`         | Commits carry the trailer, with a value matching the pattern when one is given.                                                                        |
+| `hasConflict`          | `condition`: boolean                                                    | The pull request conflicts with its base branch (`true`), or does not (`false`).                                                                       |
+| `checksPass`           | `checks`: list of check names, `condition`: boolean                     | Every named check succeeded (`true`), or at least one has not (`false`).                                                                               |
+| `checkStatus`          | `check`: check name, `condition`: `success`, `failure` or `pending`     | The named check is in that state.                                                                                                                      |
+| `commentMatches`       | `condition`: pattern, optional `bots`: boolean                          | At least one comment matches. Comments by bots count only with `bots: true`.                                                                           |
+| `reactionCount`        | `min`, optional `max`: count, optional `reaction`                       | Reactions on the subject (only the `reaction` kind, when set) are at least `min` and below `max`.                                                      |
+| `createdBefore`        | `condition`: days or an ISO 8601 date                                   | The subject was opened at least this many days ago, or before the date.                                                                                |
+| `timeWindow`           | `condition`: boolean, optional `days`, `from`, `to`, `timeZone`         | Now is inside the weekly window of days and hours (`true`), or outside it (`false`).                                                                   |
+| `dependencyUpdateType` | `condition`: list of `patch`, `minor`, `major`, optional `bots`: logins | A Dependabot or Renovate pull request's largest version change is one of those listed.                                                                 |
 
 Activity is GitHub's `updated_at` time for the issue or pull request.
 
@@ -151,7 +152,7 @@ A Linear key is a team key, a dash and a number. List your teams in `keys` to co
 
 ### Pull request only conditions
 
-`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `lockfileChanged`, `fileCount`, `binaryFilesAdded`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `commitsVerified`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus`, `linksIssue` and `codeownersTouched` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `lockfileChanged`, `fileCount`, `binaryFilesAdded`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `commitsVerified`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus`, `linksIssue`, `codeownersTouched` and `dependencyUpdateType` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 
@@ -369,6 +370,38 @@ stale:
 ```
 
 Both cost no API call: the event or listing carries the creation time, and `timeWindow` reads the clock. A rule only runs when an event or a schedule starts it, so `timeWindow` decides on whatever runs inside the window; use a scheduled workflow to act at a set time. If the event carries no creation time, `createdBefore` fails and its explanation says so.
+
+### Dependency updates
+
+`dependencyUpdateType` passes when a dependency bot's pull request updates by one of the listed types. The type comes from the first part of the version that changed: `major` for `1.4.2` to `2.0.0`, `minor` for `1.4.2` to `1.5.0`, and `patch` for anything later, such as `1.4.2` to `1.4.3` or a change only in a suffix such as `-rc.1`, `.post1` or Maven's `.Final`. A missing part counts as zero, so `v4` to `v4.1` is minor, and a change of PEP 440 epoch, as in `1!2.0`, is major.
+
+- The author must be `dependabot[bot]` or `renovate[bot]`. GitHub reserves the `[bot]` suffix for apps, so nobody can pose as them with a branch name or title. A self-hosted Renovate runs under its own login: list it in `bots`. Anyone else fails, with an explanation naming the author.
+- Dependabot writes `from 1.4.2 to 1.4.3` in the title and description, once per dependency in a grouped update. Renovate writes a table with a `1.4.2 -> 1.4.3` change per dependency. Every change counts and the largest wins, so a group holding one major update is major.
+- Release notes, changelogs and commit lists are skipped: collapsed `<details>` sections, HTML comments and quoted lines. They quote other projects, whose text can mention any version.
+- An update without a numeric version change, such as a digest bump, a pin or lockfile maintenance, fails, and its explanation says no version change was found.
+
+To label the updates that are safe to merge and flag the breaking ones:
+
+```yaml
+labelling:
+  safe:
+    label: 'Dependencies - Safe'
+    on: [pullRequest]
+    when:
+      condition:
+        - type: dependencyUpdateType
+          condition: [patch, minor]
+  breaking:
+    label: 'Dependencies - Breaking'
+    on: [pullRequest]
+    when:
+      condition:
+        - type: dependencyUpdateType
+          condition: [major]
+          bots: ['acme-renovate[bot]']
+```
+
+It costs no API call: the event carries the author, title and description.
 
 Conditions that need a pull request's files, reviews, commits, mergeability, checks or CODEOWNERS, or a subject's comments or reactions, cost an API call each. smartcloud loads only the ones the configured rules use.
 
