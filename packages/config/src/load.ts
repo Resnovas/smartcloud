@@ -18,7 +18,7 @@ import { Context, Data, Effect, Either, Option, ParseResult, Schema } from 'effe
 import { parse as parseYaml } from 'yaml'
 import { ExtendsEntry, type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
 import { empty, type Merged, mergeLocked } from './merge.js'
-import { SmartcloudConfig } from './schema.js'
+import { conventionNeedsPresetOrWhen, SmartcloudConfig } from './schema.js'
 import { migrateV1 } from './v1.js'
 
 /**
@@ -141,7 +141,8 @@ export interface ResolveOptions {
   readonly skipUnreadable?: (ref: ExtendsRef, error: ConfigNotFound) => boolean
 }
 
-type ConfigError = ConfigParseError | ConfigDecodeError | ConfigNotFound | ExtendsCycle | import('./merge.js').LockedRule
+type ConfigError =
+  ConfigParseError | ConfigDecodeError | ConfigNotFound | ExtendsCycle | import('./merge.js').LockedRule
 
 // Presets may extend presets, but a chain this deep is a mistake, not a design.
 const MAX_DEPTH = 5
@@ -182,11 +183,15 @@ const toJson = (config: SmartcloudConfig): Readonly<Record<string, Json>> => {
 export const parseConfig = (
   text: string,
   source: string,
-): Effect.Effect<{ readonly config: SmartcloudConfig; readonly warnings: ReadonlyArray<string> }, ConfigParseError | ConfigDecodeError> =>
+): Effect.Effect<
+  { readonly config: SmartcloudConfig; readonly warnings: ReadonlyArray<string> },
+  ConfigParseError | ConfigDecodeError
+> =>
   Effect.gen(function* () {
     const raw = yield* Effect.try({
       try: (): unknown => parseYaml(text),
-      catch: (error) => new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
+      catch: (error) =>
+        new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
     })
     if (!isRecord(raw)) return yield* new ConfigDecodeError({ source, reason: 'expected a mapping at the top level' })
     const migrated = raw['version'] === 2 ? { config: raw, warnings: [] } : migrateV1(raw)
@@ -212,7 +217,8 @@ const parseLayer = (text: string, source: string) =>
   Effect.gen(function* () {
     const raw = yield* Effect.try({
       try: (): unknown => parseYaml(text),
-      catch: (error) => new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
+      catch: (error) =>
+        new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
     })
     if (!isRecord(raw)) return yield* new ConfigDecodeError({ source, reason: 'expected a mapping at the top level' })
     const migrated = raw['version'] === 2 ? { config: raw, warnings: [] } : migrateV1(raw)
@@ -230,7 +236,8 @@ const parseLayer = (text: string, source: string) =>
 
 // For a config whose presets were partly left out, drops each top-level
 // section that fails only for keys it is missing, which a skipped preset may
-// have set, and names them. Any other failure, such as an unknown key or a
+// have set, and names them. A convention rule with neither preset nor when is
+// missing keys too: it tweaks a rule the skipped preset defined. Any other failure, such as an unknown key or a
 // malformed value, is kept, so it still fails the config.
 const decodeSections = (value: Readonly<Record<string, Json>>) => {
   const kept: Record<string, Json> = {}
@@ -239,7 +246,10 @@ const decodeSections = (value: Readonly<Record<string, Json>>) => {
     const decoded = decodeV2({ version: 2, [key]: section })
     const incomplete =
       Either.isLeft(decoded) &&
-      ParseResult.ArrayFormatter.formatErrorSync(decoded.left).every((issue) => issue._tag === 'Missing')
+      ParseResult.ArrayFormatter.formatErrorSync(decoded.left).every(
+        (issue) =>
+          issue._tag === 'Missing' || (issue._tag === 'Refinement' && issue.message === conventionNeedsPresetOrWhen),
+      )
     if (incomplete) dropped.push(key)
     else kept[key] = section
   }
@@ -345,9 +355,14 @@ export const resolveConfig = (
     if (Either.isLeft(decoded)) {
       const presets = sources.slice(0, -1)
       const from = presets.length === 0 ? source : `${source} with ${presets.join(', ')}`
-      return yield* new ConfigDecodeError({ source: from, reason: ParseResult.TreeFormatter.formatErrorSync(decoded.left) })
+      return yield* new ConfigDecodeError({
+        source: from,
+        reason: ParseResult.TreeFormatter.formatErrorSync(decoded.left),
+      })
     }
     const config = decoded.right
-    const locked = new Set([...merged.origins].filter(([, origin]) => origin !== sources[localStart]).map(([path]) => path))
+    const locked = new Set(
+      [...merged.origins].filter(([, origin]) => origin !== sources[localStart]).map(([path]) => path),
+    )
     return skipped.length === 0 ? { config, sources, locked, warnings } : { config, sources, locked, warnings, skipped }
   })
