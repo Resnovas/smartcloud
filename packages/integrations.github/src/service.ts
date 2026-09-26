@@ -72,6 +72,8 @@ export interface IssueSummary {
   readonly open: boolean
   readonly locked: boolean
   readonly labels: ReadonlyArray<string>
+  /** The logins of the people assigned; none when omitted. */
+  readonly assignees?: ReadonlyArray<string>
   readonly updatedAt: Date
   readonly isPullRequest: boolean
 }
@@ -224,6 +226,8 @@ export interface GitHubService {
   readonly listFiles: (pullRequest: number) => Effect.Effect<ReadonlyArray<string>, GitHubError>
   readonly listReviews: (pullRequest: number) => Effect.Effect<ReadonlyArray<Review>, GitHubError>
   readonly countRequestedReviewers: (pullRequest: number) => Effect.Effect<number, GitHubError>
+  /** The logins and team slugs asked to review the pull request that have not reviewed yet. */
+  readonly listRequestedReviewers: (pullRequest: number) => Effect.Effect<ReadonlyArray<string>, GitHubError>
   /** Whether the pull request can merge into its base branch; `UNKNOWN` while GitHub is still computing it. */
   readonly getMergeable: (pullRequest: number) => Effect.Effect<Mergeable, GitHubError>
   /** The check runs and latest commit statuses on the pull request's head commit. */

@@ -33,6 +33,7 @@ const running = (name: string) => ({ name, state: 'pending' as const })
 const { headBranch: _headBranch, ...withoutBranch } = pullRequest()
 const { baseBranch: _baseBranch, ...withoutBase } = pullRequest()
 const { association: _association, bot: _bot, ...withoutAssociation } = pullRequest()
+const { assignees: _assignees, ...withoutAssignees } = pullRequest()
 const { draft: _draft, ...withoutDraft } = pullRequest()
 const { changes: _changes, ...withoutChanges } = pullRequest()
 const { reviews: _reviews, ...withoutReviews } = pullRequest()
@@ -90,6 +91,51 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     { type: 'authorAssociation', condition: ['collaborator'] },
     issue({ association: 'COLLABORATOR' }),
     true,
+  ],
+  ['hasAssignee', { type: 'hasAssignee', condition: true }, pullRequest(), true],
+  ['hasAssignee false, assigned', { type: 'hasAssignee', condition: false }, pullRequest(), false],
+  ['hasAssignee false, unassigned', { type: 'hasAssignee', condition: false }, issue({ assignees: [] }), true],
+  ['hasAssignee, assignees not reported', { type: 'hasAssignee', condition: true }, withoutAssignees, false],
+  ['hasAssignee, on an issue', { type: 'hasAssignee', condition: true }, issue({ assignees: ['sam'] }), true],
+  ['assigneeMatches', { type: 'assigneeMatches', condition: '^jane$' }, pullRequest(), true],
+  [
+    'assigneeMatches, any assignee',
+    { type: 'assigneeMatches', condition: '^ann$' },
+    issue({ assignees: ['sam', 'ann'] }),
+    true,
+  ],
+  ['assigneeMatches, no match', { type: 'assigneeMatches', condition: '^ann$' }, pullRequest(), false],
+  ['assigneeMatches, unassigned', { type: 'assigneeMatches', condition: '.*' }, issue(), false],
+  [
+    'reviewerMatches, requested reviewer',
+    { type: 'reviewerMatches', condition: '^ann$' },
+    pullRequest({ requestedReviewers: ['ann'] }),
+    true,
+  ],
+  [
+    'reviewerMatches, requested team',
+    { type: 'reviewerMatches', condition: '^security$' },
+    pullRequest({ requestedReviewers: ['ann', 'security'] }),
+    true,
+  ],
+  [
+    'reviewerMatches, someone who reviewed',
+    { type: 'reviewerMatches', condition: '^ann$' },
+    pullRequest({ reviews: [{ author: 'ann', state: 'COMMENTED' }] }),
+    true,
+  ],
+  [
+    'reviewerMatches, no match',
+    { type: 'reviewerMatches', condition: '^ann$' },
+    pullRequest({ requestedReviewers: ['bob'], reviews: [approved('sam')] }),
+    false,
+  ],
+  ['reviewerMatches, no reviewers', { type: 'reviewerMatches', condition: '.*' }, pullRequest(), false],
+  [
+    'reviewerMatches, on an issue',
+    { type: 'reviewerMatches', condition: '.*' },
+    issue({ requestedReviewers: ['ann'] }),
+    false,
   ],
   ['isOpen', { type: 'isOpen', condition: true }, pullRequest(), true],
   ['isOpen false on a closed item', { type: 'isOpen', condition: false }, pullRequest({ open: false }), true],
@@ -413,6 +459,42 @@ describe('evaluate: author association', () => {
   )
 })
 
+describe('evaluate: assignees and reviewers', () => {
+  const detail = (condition: Condition, subject: Subject) =>
+    Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.results[0]?.detail)
+
+  it.effect('explains the assignees', () =>
+    Effect.gen(function* () {
+      const assigned = issue({ assignees: ['sam', 'ann'] })
+      expect(yield* detail({ type: 'hasAssignee', condition: true }, assigned)).toBe('assigned to @sam, @ann')
+      expect(yield* detail({ type: 'hasAssignee', condition: true }, issue())).toBe('unassigned')
+      expect(yield* detail({ type: 'assigneeMatches', condition: '^ann$' }, assigned)).toBe(
+        'an assignee matches among @sam, @ann',
+      )
+      expect(yield* detail({ type: 'assigneeMatches', condition: '^bob$' }, assigned)).toBe(
+        'no assignee matches among @sam, @ann',
+      )
+      expect(yield* detail({ type: 'assigneeMatches', condition: '.*' }, issue())).toBe('unassigned')
+    }),
+  )
+
+  it.effect('explains the reviewers, each once, leaving out reviews by a deleted account', () =>
+    Effect.gen(function* () {
+      const reviewed = pullRequest({
+        requestedReviewers: ['ann', 'security'],
+        reviews: [{ author: 'bob', state: 'COMMENTED' }, approved('bob'), approved('')],
+      })
+      expect(yield* detail({ type: 'reviewerMatches', condition: '^bob$' }, reviewed)).toBe(
+        'a reviewer matches among @ann, @security, @bob',
+      )
+      expect(yield* detail({ type: 'reviewerMatches', condition: '^sam$' }, reviewed)).toBe(
+        'no reviewer matches among @ann, @security, @bob',
+      )
+      expect(yield* detail({ type: 'reviewerMatches', condition: '.*' }, pullRequest())).toBe('no reviewers')
+    }),
+  )
+})
+
 describe('evaluate: facets', () => {
   it.effect('a facet that was not loaded fails with MissingFacet', () =>
     Effect.gen(function* () {
@@ -426,6 +508,19 @@ describe('evaluate: facets', () => {
       const { mergeable: _, ...unloaded } = pullRequest()
       const exit = yield* Effect.exit(evaluate({ condition: [{ type: 'hasConflict', condition: true }] }, unloaded))
       expect(exit).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'mergeable', condition: 'hasConflict' })))
+    }),
+  )
+
+  it.effect('reviewerMatches needs the requested reviewers and reviews facets', () =>
+    Effect.gen(function* () {
+      const { requestedReviewers: _, ...unrequested } = pullRequest()
+      const condition = { condition: [{ type: 'reviewerMatches', condition: 'x' }] } as const
+      expect(yield* Effect.exit(evaluate(condition, unrequested))).toStrictEqual(
+        Exit.fail(new MissingFacet({ facet: 'requestedReviewers', condition: 'reviewerMatches' })),
+      )
+      expect(yield* Effect.exit(evaluate(condition, withoutReviews))).toStrictEqual(
+        Exit.fail(new MissingFacet({ facet: 'reviews', condition: 'reviewerMatches' })),
+      )
     }),
   )
 
@@ -634,6 +729,11 @@ describe('requiredFacets', () => {
   it('needs only reviews for isApproved when pending reviews are allowed', () => {
     const facets = requiredFacets([{ condition: [{ type: 'isApproved', condition: 1, allowPending: true }] }])
     expect([...facets]).toStrictEqual(['reviews'])
+  })
+
+  it('needs requested reviewers and reviews for reviewerMatches', () => {
+    const facets = requiredFacets([{ condition: [{ type: 'reviewerMatches', condition: 'x' }] }])
+    expect([...facets].sort()).toStrictEqual(['requestedReviewers', 'reviews'])
   })
 
   it('needs nothing for conditions on the event payload alone', () => {

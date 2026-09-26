@@ -235,7 +235,10 @@ describe('cached reads: invalidation after writes', () => {
           [`GET ${REPO}/pulls/7/reviews`]: [{ body: [] }, { body: [{ user: { login: 'bot' }, state: 'COMMENTED' }] }],
           [`GET ${REPO}/pulls/7/requested_reviewers`]: [
             { body: { users: [], teams: [] } },
-            { body: { users: [{}], teams: [] } },
+            { body: { users: [], teams: [] } },
+            { body: { users: [{ login: 'ann' }], teams: [] } },
+            { body: { users: [{ login: 'ann' }], teams: [] } },
+            { body: { users: [], teams: [] } },
             { body: { users: [], teams: [] } },
           ],
           [`POST ${REPO}/pulls/7/requested_reviewers`]: { status: 201, body: {} },
@@ -247,21 +250,24 @@ describe('cached reads: invalidation after writes', () => {
           github.listFiles(7),
           github.listReviews(7),
           github.countRequestedReviewers(7),
+          github.listRequestedReviewers(7),
           github.getMergeable(7),
         ])
         yield* read
         yield* github.requestReviewers(7, ['ann'])
         expect(yield* github.countRequestedReviewers(7)).toBe(1)
+        expect(yield* github.listRequestedReviewers(7)).toStrictEqual(['ann'])
         expect(yield* github.listReviews(7)).toStrictEqual([])
         yield* github.createReview(7, { event: 'COMMENT', body: 'b' })
         expect(yield* github.listReviews(7)).toStrictEqual([{ author: 'bot', state: 'COMMENTED' }])
         expect(yield* github.countRequestedReviewers(7)).toBe(0)
+        expect(yield* github.listRequestedReviewers(7)).toStrictEqual([])
         yield* read
         expect(calls('GET', `${REPO}/pulls/7/commits`)).toBe(1)
         expect(calls('GET', `${REPO}/pulls/7/files`)).toBe(1)
         expect(calls('GET', `${REPO}/pulls/7`)).toBe(1)
         expect(calls('GET', `${REPO}/pulls/7/reviews`)).toBe(2)
-        expect(calls('GET', `${REPO}/pulls/7/requested_reviewers`)).toBe(3)
+        expect(calls('GET', `${REPO}/pulls/7/requested_reviewers`)).toBe(6)
       }),
   )
 

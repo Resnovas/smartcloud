@@ -231,6 +231,8 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
     listReviews: (number) => Effect.map(pull('listReviews', number), (entry) => [...entry.reviews]),
     countRequestedReviewers: (number) =>
       Effect.map(pull('countRequestedReviewers', number), (entry) => entry.requestedReviewers.length),
+    listRequestedReviewers: (number) =>
+      Effect.map(pull('listRequestedReviewers', number), (entry) => [...entry.requestedReviewers]),
     getMergeable: (number) => Effect.map(pull('getMergeable', number), (entry) => entry.mergeable ?? 'MERGEABLE'),
     listChecks: (number) => Effect.map(pull('listChecks', number), (entry) => [...(entry.checks ?? [])]),
     createReview: (number, review) =>

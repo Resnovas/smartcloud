@@ -267,12 +267,21 @@ describe('loadFacets', () => {
           labels: [],
           updatedAt: new Date(0),
         },
-        new Set(['files', 'reviews', 'pendingReviewers', 'commits', 'mergeable', 'checks'] as const),
+        new Set([
+          'files',
+          'reviews',
+          'pendingReviewers',
+          'requestedReviewers',
+          'commits',
+          'mergeable',
+          'checks',
+        ] as const),
       ).pipe(Effect.provideService(GitHub, service))
       expect(subject).toMatchObject({
         files: ['src/a.ts'],
         reviews: [{ author: 'ann' }],
         pendingReviewers: 1,
+        requestedReviewers: ['bo'],
         commits: [{ sha: 'a' }],
         mergeable: 'MERGEABLE',
         checks: [],

@@ -128,6 +128,7 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
         load('files', github.listFiles),
         load('reviews', github.listReviews),
         load('pendingReviewers', github.countRequestedReviewers),
+        load('requestedReviewers', github.listRequestedReviewers),
         load('commits', github.listCommits),
         load('mergeable', github.getMergeable),
         load('checks', github.listChecks),

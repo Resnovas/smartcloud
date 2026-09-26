@@ -140,8 +140,8 @@ export type Association = typeof Association.Type
  * normalised from whichever GitHub event delivered it.
  *
  * @remarks
- * `files`, `reviews`, `pendingReviewers`, `commits`, `mergeable` and `checks`
- * are facets that cost an API call each, so the engine loads only the ones a
+ * `files`, `reviews`, `pendingReviewers`, `requestedReviewers`, `commits`,
+ * `mergeable` and `checks` are facets that cost an API call each, so the engine loads only the ones a
  * config needs (see `requiredFacets`). Evaluating a condition whose facet was not loaded fails
  * with `MissingFacet` rather than guessing.
  *
@@ -168,6 +168,8 @@ export const Subject = Schema.Struct({
   open: Schema.Boolean,
   locked: Schema.Boolean,
   labels: Schema.Array(Schema.String),
+  /** The logins of the people assigned; none when omitted. */
+  assignees: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
   updatedAt: Schema.DateFromSelf,
   draft: Schema.optionalWith(Schema.Boolean, { exact: true }),
   headBranch: Schema.optionalWith(Schema.String, { exact: true }),
@@ -178,6 +180,8 @@ export const Subject = Schema.Struct({
   files: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
   reviews: Schema.optionalWith(Schema.Array(Review), { exact: true }),
   pendingReviewers: Schema.optionalWith(Schema.Number, { exact: true }),
+  /** The logins and team slugs asked to review that have not reviewed yet. */
+  requestedReviewers: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
   commits: Schema.optionalWith(Schema.Array(Commit), { exact: true }),
   mergeable: Schema.optionalWith(Mergeable, { exact: true }),
   /** The CI checks on the head commit. */
@@ -187,4 +191,4 @@ export const Subject = Schema.Struct({
 export type Subject = typeof Subject.Type
 
 /** A subject property that is loaded on demand. */
-export type Facet = 'files' | 'reviews' | 'pendingReviewers' | 'commits' | 'mergeable' | 'checks'
+export type Facet = 'files' | 'reviews' | 'pendingReviewers' | 'requestedReviewers' | 'commits' | 'mergeable' | 'checks'
