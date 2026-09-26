@@ -23,18 +23,22 @@ import { fileKey, GitHub, type GitHubService, makeMemoryGitHub } from '@resnovas
 import { ConfigSourceFromGitHub, type Connect } from '@resnovas/runtime'
 import {
   checkCommitMessageTool,
+  ConfigRefused,
   dryRunTool,
   explainConfigTool,
   explainRuleTool,
   makeServer,
   migrateConfigTool,
   planSettingsTool,
+  readConfinedConfig,
   validateConfigTool,
   VERSION,
+  type ToolContext,
   type ToolResult,
 } from '@resnovas/smartcloud-mcp'
 import { Effect, Layer } from 'effect'
-import { readFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
+import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 
 const fixture = (name: string) => join(import.meta.dirname, '../../config/src/fixtures', name)
@@ -68,6 +72,9 @@ const memory = () => {
   const layer = Layer.mergeAll(NodeContext.layer, ConfigSourceFromGitHub.pipe(Layer.provide(Layer.succeed(GitHub, service))))
   return { connect, layer, state: github.state }
 }
+
+// The directory the server may read config files from, in tests that read none.
+const ROOT = import.meta.dirname
 
 const textOf = (result: ToolResult) => result.content.map((part) => part.text).join('\n')
 
@@ -104,16 +111,82 @@ describe('tool handlers', () => {
 
   it.effect('dry-runs a pull request without writing, and plans settings without applying them', () =>
     Effect.gen(function* () {
-      const dry = yield* dryRunTool(connect, { repository: 'Resnovas/example', pr: 7, features: ['conventions'] })
+      const dry = yield* dryRunTool(connect, { repository: 'Resnovas/example', pr: 7, features: ['conventions'] }, ROOT)
       expect(textOf(dry)).toContain('**Dry run:** these writes were recorded, not made:\n- createCheckRun')
       expect(state.checkRuns).toStrictEqual([])
-      const plan = yield* planSettingsTool(connect, { repository: 'Resnovas/example' })
+      const plan = yield* planSettingsTool(connect, { repository: 'Resnovas/example' }, ROOT)
       expect(textOf(plan)).toContain('PATCH /repos/{owner}/{repo} {"allow_squash_merge":true}')
       expect(state.requests).toStrictEqual([])
-      const invalid = yield* dryRunTool(connect, { repository: 'Resnovas/example' })
+      const invalid = yield* dryRunTool(connect, { repository: 'Resnovas/example' }, ROOT)
       expect(invalid.isError).toBe(true)
       expect(textOf(invalid)).toMatch(/^nothing to simulate/)
     }).pipe(Effect.provide(layer)),
+  )
+})
+
+describe('config files named by an assistant', () => {
+  // A working directory holding a config, a subdirectory, and symlinks in and out; a secret sits beside it.
+  const workspace = Effect.acquireRelease(
+    Effect.promise(async () => {
+      const base = await mkdtemp(join(tmpdir(), 'smartcloud-mcp-'))
+      const root = join(base, 'work')
+      await mkdir(join(root, 'nested'), { recursive: true })
+      await writeFile(join(root, 'smartcloud.yml'), CONVENTIONS)
+      await writeFile(join(base, 'secret.yml'), 'version: 2\n')
+      await symlink(join(base, 'secret.yml'), join(root, 'escape.yml'))
+      await symlink(join(root, 'smartcloud.yml'), join(root, 'inside.yml'))
+      return { base, root }
+    }),
+    ({ base }) => Effect.promise(() => rm(base, { recursive: true, force: true })),
+  )
+
+  const refusal = (root: string, file: string) =>
+    Effect.flip(readConfinedConfig(root, file)).pipe(Effect.map((error) => (error instanceof ConfigRefused ? error.message : 'not refused')))
+
+  it.scoped('reads only a relative path to a regular file inside the working directory', () =>
+    Effect.gen(function* () {
+      const { base, root } = yield* workspace
+      expect(yield* readConfinedConfig(root, 'smartcloud.yml')).toStrictEqual({ text: CONVENTIONS, source: 'smartcloud.yml' })
+      expect((yield* readConfinedConfig(root, 'inside.yml')).text).toBe(CONVENTIONS)
+      expect(yield* refusal(root, join(base, 'secret.yml'))).toMatch(/^refusing to read ".*secret\.yml": it is an absolute path\. /)
+      expect(yield* refusal(root, '../secret.yml')).toContain('it resolves outside the working directory')
+      expect(yield* refusal(root, 'escape.yml')).toContain('it resolves outside the working directory')
+      expect(yield* refusal(root, '.')).toContain('it resolves outside the working directory')
+      expect(yield* refusal(root, 'nested')).toContain('it is not a regular file')
+      expect(yield* refusal(root, 'missing.yml')).toContain('it does not exist or cannot be read')
+      expect(yield* refusal(root, 'missing.yml')).toContain('pass the config itself as configText instead')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.scoped('refuses such a path in dry_run and plan_settings, and takes the config as text instead', () =>
+    Effect.gen(function* () {
+      const { base, root } = yield* workspace
+      const { connect, layer } = memory()
+      const run = (effect: Effect.Effect<ToolResult, never, ToolContext>) =>
+        Effect.map(Effect.provide(effect, layer), (result) => ({ error: result.isError === true, text: textOf(result) }))
+      const repository = 'Resnovas/example'
+      const absolute = yield* run(dryRunTool(connect, { repository, pr: 7, config: join(base, 'secret.yml') }, root))
+      expect(absolute).toMatchObject({ error: true, text: expect.stringContaining('it is an absolute path') })
+      const escaped = yield* run(planSettingsTool(connect, { repository, config: 'escape.yml' }, root))
+      expect(escaped).toMatchObject({ error: true, text: expect.stringContaining('it resolves outside the working directory') })
+      const inside = yield* run(dryRunTool(connect, { repository, pr: 7, config: 'smartcloud.yml' }, root))
+      expect(inside).toMatchObject({ error: false, text: expect.stringContaining('on #7') })
+      const inline = yield* run(planSettingsTool(connect, { repository, configText: 'version: 2\nsettings:\n  merging: { rebase: false }\n' }, root))
+      expect(inline.text).toContain('{"allow_rebase_merge":false}')
+      const both = yield* run(dryRunTool(connect, { repository, pr: 7, config: 'smartcloud.yml', configText: CONVENTIONS }, root))
+      expect(both).toMatchObject({ error: true, text: expect.stringMatching(/^give config or configText, not both\. /) })
+    }),
+  )
+
+  it.effect('runs every feature when the feature list is empty', () =>
+    Effect.gen(function* () {
+      const { connect, layer } = memory()
+      const dry = (features: ReadonlyArray<string> | undefined) =>
+        Effect.map(Effect.provide(dryRunTool(connect, { repository: 'Resnovas/example', pr: 7, configText: CONVENTIONS, features }, ROOT), layer), textOf)
+      const all = yield* dry([])
+      expect(all).toBe(yield* dry(undefined))
+      expect(all).not.toBe(yield* dry(['conventions']))
+    }),
   )
 })
 
@@ -177,6 +250,12 @@ describe('the MCP server', () => {
     expect(dry.isError).toBeFalsy()
     expect(dry.text).toContain('Event: `pull_request` (synchronize) on #7')
     expect((await call('plan_settings', { repository: 'Resnovas/example' })).text).toContain('Settings for Resnovas/example')
+    // A host file outside the working directory is never read, however the path is given.
+    const outside = await call('dry_run', { repository: 'Resnovas/example', pr: 7, config: '/etc/passwd' })
+    expect(outside).toMatchObject({ isError: true, text: expect.stringContaining('refusing to read "/etc/passwd": it is an absolute path') })
+    const escaped = await call('plan_settings', { repository: 'Resnovas/example', config: '../../../../../../../../../../etc/passwd' })
+    expect(escaped).toMatchObject({ isError: true, text: expect.stringContaining('it resolves outside the working directory') })
+    expect((await call('plan_settings', { repository: 'Resnovas/example', configText: 'version: 2\n' })).text).toContain('Nothing to apply')
     expect((await call('check_commit_message', { message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com' })).text).toContain('"passes": false')
     expect((await call('explain_rule', { rule: 'DCO' })).text).toContain('git commit -s')
     expect(state.checkRuns).toStrictEqual([])

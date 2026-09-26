@@ -15,20 +15,26 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { CommandExecutor, FileSystem } from '@effect/platform'
+import { FileSystem, Path, type CommandExecutor } from '@effect/platform'
 import { resolveConfig, type ConfigSource, type SmartcloudConfig } from '@resnovas/config'
+import { GitHub } from '@resnovas/integrations.github'
 import {
   checkCommitMessage,
-  dryRunRepository,
+  dryRun,
   explainRule,
   dryRunText,
   explainConfig,
+  loadConfig,
   migrateConfigText,
-  planSettingsForRepository,
+  parseRepository,
+  planRepositorySettings,
   settingsPlanText,
+  triggerOf,
+  type ConfigLocation,
+  type ConfigText,
   type Connect,
 } from '@resnovas/runtime'
-import { Effect } from 'effect'
+import { Data, Effect } from 'effect'
 
 /** What a tool returns: text for the assistant, flagged when the call failed. */
 export interface ToolResult {
@@ -39,7 +45,7 @@ export interface ToolResult {
 }
 
 /** Everything the tools may need from the host. */
-export type ToolContext = ConfigSource | CommandExecutor.CommandExecutor | FileSystem.FileSystem
+export type ToolContext = ConfigSource | CommandExecutor.CommandExecutor | FileSystem.FileSystem | Path.Path
 
 const text = (value: string) => ({ type: 'text' as const, text: value })
 
@@ -91,14 +97,71 @@ export const migrateConfigTool = (input: ConfigInput) =>
 export const explainConfigTool = (input: ConfigInput) =>
   handle(Effect.map(resolveConfig(input.config, input.source ?? 'smartcloud.yml'), (resolved) => [json(explainConfig(resolved))]))
 
+const PASS_TEXT = 'pass the config itself as configText instead.'
+
+/** The server will not read the config it was asked to. */
+export class ConfigRefused extends Data.TaggedError('ConfigRefused')<{ readonly reason: string }> {
+  override get message() {
+    return `${this.reason}. The MCP server only reads a config file given as a relative path to a regular file inside its working directory; ${PASS_TEXT}`
+  }
+}
+
+/**
+ * Reads a config file named by an assistant, confined to the server's
+ * working directory.
+ *
+ * @remarks
+ * An assistant may be steered by what it reads, and clients may approve
+ * read-only tools without asking, so the path is never trusted: it must be
+ * relative, resolve (symlinks included) inside `root`, and be a regular file.
+ *
+ * @param root - The directory the server may read from, its working directory.
+ * @param file - The path the assistant gave.
+ * @returns The text, named by the path given, or {@link ConfigRefused}.
+ */
+export const readConfinedConfig = (root: string, file: string) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem
+    const path = yield* Path.Path
+    const refuse = (why: string) => new ConfigRefused({ reason: `refusing to read "${file}": ${why}` })
+    const unreadable = () => refuse('it does not exist or cannot be read')
+    if (path.isAbsolute(file)) return yield* refuse('it is an absolute path')
+    const realRoot = yield* Effect.mapError(fs.realPath(root), unreadable)
+    const real = yield* Effect.mapError(fs.realPath(path.resolve(realRoot, file)), unreadable)
+    const relative = path.relative(realRoot, real)
+    if (relative === '' || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))
+      return yield* refuse('it resolves outside the working directory')
+    const info = yield* Effect.mapError(fs.stat(real), unreadable)
+    if (info.type !== 'File') return yield* refuse('it is not a regular file')
+    const text = yield* Effect.mapError(fs.readFileString(real), unreadable)
+    const config: ConfigText = { text, source: file }
+    return config
+  })
+
+/** Where a repository tool takes its config from. */
+export interface RepositoryConfigInput {
+  /** A config file, relative to the server's working directory; the repository's own config when omitted. */
+  readonly config?: string | undefined
+  /** The config itself, YAML or JSON, instead of a file. */
+  readonly configText?: string | undefined
+}
+
+// Text given directly, a confined local file, or the repository's own config.
+const configLocation = (root: string, input: RepositoryConfigInput) => {
+  if (input.configText !== undefined && input.config !== undefined)
+    return Effect.fail(new ConfigRefused({ reason: 'give config or configText, not both' }))
+  if (input.configText !== undefined) return Effect.succeed<ConfigLocation>({ text: { text: input.configText, source: 'smartcloud.yml' } })
+  if (input.config !== undefined) return Effect.map(readConfinedConfig(root, input.config), (text): ConfigLocation => ({ text }))
+  return Effect.succeed<ConfigLocation>({})
+}
+
 /** The inputs of `dry_run`, as the CLI's `dry-run` takes them. */
-export interface DryRunInput {
+export interface DryRunInput extends RepositoryConfigInput {
   readonly repository: string
   readonly pr?: number | undefined
   readonly issue?: number | undefined
   readonly event?: string | undefined
-  /** A local config file; the repository's own config when omitted. */
-  readonly config?: string | undefined
+  /** Only these features; every feature when omitted or empty. */
   readonly features?: ReadonlyArray<string> | undefined
 }
 
@@ -107,20 +170,48 @@ export interface DryRunInput {
  *
  * @param connect - Opens the GitHub service.
  * @param input - The repository, what to simulate, the config and the features.
+ * @param root - The only directory a config file may be read from.
  * @returns The job summary and every write that would have been made.
  */
-export const dryRunTool = (connect: Connect, input: DryRunInput) =>
-  handle(Effect.map(dryRunRepository(connect, input), (outcome) => [dryRunText(outcome)]))
+export const dryRunTool = (connect: Connect, input: DryRunInput, root: string) =>
+  handle(
+    Effect.gen(function* () {
+      const coordinates = yield* parseRepository(input.repository)
+      const trigger = yield* triggerOf(input)
+      const config = yield* configLocation(root, input)
+      const service = yield* connect(coordinates)
+      // An empty list means no filter, as the action reads it.
+      const features = input.features === undefined || input.features.length === 0 ? undefined : input.features
+      const outcome = yield* dryRun({ trigger, config, features }).pipe(Effect.provideService(GitHub, service))
+      return [dryRunText(outcome)]
+    }),
+  )
+
+/** The inputs of `plan_settings`. */
+export interface PlanSettingsInput extends RepositoryConfigInput {
+  readonly repository: string
+}
 
 /**
  * Plans a repository's settings without applying them.
  *
  * @param connect - Opens the GitHub service.
- * @param input - The repository, and a local config file to use instead of its own.
+ * @param input - The repository, and the config to use instead of its own.
+ * @param root - The only directory a config file may be read from.
  * @returns The planned steps.
  */
-export const planSettingsTool = (connect: Connect, input: { readonly repository: string; readonly config?: string | undefined }) =>
-  handle(Effect.map(planSettingsForRepository(connect, input), (plan) => [settingsPlanText(plan)]))
+export const planSettingsTool = (connect: Connect, input: PlanSettingsInput, root: string) =>
+  handle(
+    Effect.gen(function* () {
+      const coordinates = yield* parseRepository(input.repository)
+      const location = yield* configLocation(root, input)
+      const service = yield* connect(coordinates)
+      const plan = yield* Effect.flatMap(loadConfig(location), (resolved) => planRepositorySettings(resolved.config)).pipe(
+        Effect.provideService(GitHub, service),
+      )
+      return [settingsPlanText(plan)]
+    }),
+  )
 
 // A tool given no config checks against smartcloud's defaults.
 const configOrDefault = (config: string | undefined, source: string) =>

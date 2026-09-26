@@ -41,19 +41,33 @@ const configInput = {
 }
 
 const repository = z.string().describe('The repository, as owner/name.')
-const localConfig = z.string().optional().describe("A local config file to use instead of the repository's own config on its default branch.")
+const localConfig = z
+  .string()
+  .optional()
+  .describe(
+    "A config file to use instead of the repository's own config on its default branch: " +
+      "a relative path to a regular file inside the server's working directory. Anything else is refused.",
+  )
+const configText = z
+  .string()
+  .optional()
+  .describe("The config itself, YAML or JSON, to use instead of the repository's own config. Give this or config, not both.")
 
 /**
  * Builds the smartcloud MCP server and registers its tools.
  *
  * @remarks
  * Every tool only reads: `dry_run` goes through the dry-run layer, so writes
- * are recorded and listed, never made.
+ * are recorded and listed, never made. A config file named by an assistant is
+ * only read when it is a regular file inside `root`.
  *
- * @param options - `connect` opens the GitHub service; `run` runs a tool's effect.
+ * @param options - `connect` opens the GitHub service; `run` runs a tool's
+ * effect; `root` is the only directory a config file may be read from, the
+ * working directory when the server is made, if omitted.
  * @returns The server, ready to connect to a transport.
  */
-export const makeServer = (options: { readonly connect: Connect; readonly run: RunTool }): McpServer => {
+export const makeServer = (options: { readonly connect: Connect; readonly run: RunTool; readonly root?: string | undefined }): McpServer => {
+  const root = options.root ?? process.cwd()
   const server = new McpServer({ name: 'smartcloud', version: VERSION })
   const readOnly = { readOnlyHint: true, openWorldHint: true }
 
@@ -99,21 +113,22 @@ export const makeServer = (options: { readonly connect: Connect; readonly run: R
         issue: z.number().int().positive().optional().describe('Simulate this issue.'),
         event: z.enum(REPOSITORY_EVENTS).optional().describe('Simulate this repository event.'),
         config: localConfig,
-        features: z.array(z.string()).optional().describe('Only these features; all when omitted.'),
+        configText,
+        features: z.array(z.string()).optional().describe('Only these features; all when omitted or empty.'),
       },
       annotations: readOnly,
     },
-    (input) => options.run(dryRunTool(options.connect, input)),
+    (input) => options.run(dryRunTool(options.connect, input, root)),
   )
   server.registerTool(
     'plan_settings',
     {
       title: 'Plan repository settings',
       description: 'List the repository settings the config would apply, in order, without applying them.',
-      inputSchema: { repository, config: localConfig },
+      inputSchema: { repository, config: localConfig, configText },
       annotations: readOnly,
     },
-    (input) => options.run(planSettingsTool(options.connect, input)),
+    (input) => options.run(planSettingsTool(options.connect, input, root)),
   )
   server.registerTool(
     'check_commit_message',

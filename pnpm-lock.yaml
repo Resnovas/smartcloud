@@ -295,6 +295,9 @@ importers:
       '@resnovas/config':
         specifier: workspace:*
         version: link:../../packages/config
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../../packages/integrations.github
       '@resnovas/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime

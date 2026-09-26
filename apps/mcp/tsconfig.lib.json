@@ -13,6 +13,9 @@
       "path": "../../packages/runtime/tsconfig.lib.json"
     },
     {
+      "path": "../../packages/integrations.github/tsconfig.lib.json"
+    },
+    {
       "path": "../../packages/config/tsconfig.lib.json"
     }
   ]
