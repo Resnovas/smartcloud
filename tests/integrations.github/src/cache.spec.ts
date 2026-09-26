@@ -199,6 +199,7 @@ describe('cached reads: invalidation after writes', () => {
       const { service, calls } = live({
         [`GET ${REPO}/pulls/7/commits`]: { body: [] },
         [`GET ${REPO}/pulls/7/files`]: { body: [] },
+        [`GET ${REPO}/pulls/7`]: { body: { mergeable: true } },
         [`GET ${REPO}/pulls/7/reviews`]: [{ body: [] }, { body: [{ user: { login: 'bot' }, state: 'COMMENTED' }] }],
         [`GET ${REPO}/pulls/7/requested_reviewers`]: [
           { body: { users: [], teams: [] } },
@@ -209,7 +210,13 @@ describe('cached reads: invalidation after writes', () => {
         [`POST ${REPO}/pulls/7/reviews`]: { body: {} },
       })
       const github = yield* service
-      const read = Effect.all([github.listCommits(7), github.listFiles(7), github.listReviews(7), github.countRequestedReviewers(7)])
+      const read = Effect.all([
+        github.listCommits(7),
+        github.listFiles(7),
+        github.listReviews(7),
+        github.countRequestedReviewers(7),
+        github.getMergeable(7),
+      ])
       yield* read
       yield* github.requestReviewers(7, ['ann'])
       expect(yield* github.countRequestedReviewers(7)).toBe(1)
@@ -220,6 +227,7 @@ describe('cached reads: invalidation after writes', () => {
       yield* read
       expect(calls('GET', `${REPO}/pulls/7/commits`)).toBe(1)
       expect(calls('GET', `${REPO}/pulls/7/files`)).toBe(1)
+      expect(calls('GET', `${REPO}/pulls/7`)).toBe(1)
       expect(calls('GET', `${REPO}/pulls/7/reviews`)).toBe(2)
       expect(calls('GET', `${REPO}/pulls/7/requested_reviewers`)).toBe(3)
     }),

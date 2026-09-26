@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, it, vi } from '@effect/vitest'
-import { ConfigProvider, Effect, Exit, Layer, Redacted, Schedule } from 'effect'
+import { ConfigProvider, Effect, Exit, Fiber, Layer, Redacted, Schedule, TestClock } from 'effect'
 import { DEFAULT_COMMITTER, GitHub, GitHubLive, makeLiveGitHub, signOff } from '@resnovas/integrations.github'
 import { fakeFetch, type Routes } from './fake-fetch.js'
 
@@ -198,6 +198,51 @@ describe('live GitHub: pull requests', () => {
       yield* github.listReviews(7)
       yield* github.countRequestedReviewers(7)
       expect(requests).toHaveLength(4)
+    }),
+  )
+
+  it.effect('reads whether a pull request conflicts with its base branch', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        [`GET ${REPO}/pulls/7`]: { body: { mergeable: false } },
+        [`GET ${REPO}/pulls/8`]: { body: { mergeable: true } },
+      })
+      const github = yield* service
+      expect(yield* github.getMergeable(7)).toBe('CONFLICTING')
+      expect(yield* github.getMergeable(8)).toBe('MERGEABLE')
+      yield* github.getMergeable(7)
+      expect(requests).toHaveLength(2)
+    }),
+  )
+
+  it.effect('reads mergeability again while GitHub is still computing it', () =>
+    Effect.gen(function* () {
+      const fake = fakeFetch({
+        [`GET ${REPO}/pulls/7`]: [{ body: { mergeable: null } }, { body: { mergeable: null } }, { body: { mergeable: false } }],
+        [`GET ${REPO}/pulls/8`]: { body: { mergeable: null } },
+      })
+      const github = yield* makeLiveGitHub({
+        token: Redacted.make('test-token'),
+        coordinates: { owner: 'Resnovas', repo: 'example' },
+        fetch: fake.fetch,
+        mergeablePoll: Schedule.recurs(3),
+      })
+      expect(yield* github.getMergeable(7)).toBe('CONFLICTING')
+      expect(fake.requests).toHaveLength(3)
+      // Still unknown after every poll: the answer stays unknown rather than failing.
+      expect(yield* github.getMergeable(8)).toBe('UNKNOWN')
+      expect(fake.requests).toHaveLength(7)
+    }),
+  )
+
+  it.effect('waits between mergeability reads by default', () =>
+    Effect.gen(function* () {
+      const fake = fakeFetch({ [`GET ${REPO}/pulls/7`]: [{ body: { mergeable: null } }, { body: { mergeable: true } }] })
+      const github = yield* makeLiveGitHub({ token: Redacted.make('test-token'), coordinates: { owner: 'Resnovas', repo: 'example' }, fetch: fake.fetch })
+      const read = yield* Effect.fork(github.getMergeable(7))
+      yield* TestClock.adjust('2 seconds')
+      expect(yield* Fiber.join(read)).toBe('MERGEABLE')
+      expect(fake.requests).toHaveLength(2)
     }),
   )
 

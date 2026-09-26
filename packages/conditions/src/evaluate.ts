@@ -22,9 +22,9 @@ import type { Commit, Facet, Review, Subject } from './subject.js'
 import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 
 /**
- * A condition needed a facet (files, reviews, pending reviewers or commits)
- * that was not loaded onto the subject. This is an engine bug, not a user
- * error: the engine loads every facet `requiredFacets` reports.
+ * A condition needed a facet (files, reviews, pending reviewers, commits or
+ * mergeability) that was not loaded onto the subject. This is an engine bug,
+ * not a user error: the engine loads every facet `requiredFacets` reports.
  *
  * @example
  * ```ts import.meta.vitest name="MissingFacet"
@@ -126,6 +126,7 @@ const PULL_REQUEST_ONLY = new Set([
   'commitMessagesMatch',
   'commitsSignedOff',
   'hasTrailer',
+  'hasConflict',
 ])
 
 const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effect<ConditionResult, MissingFacet> => {
@@ -235,6 +236,13 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
         const passed = scoped(condition.scope, nonMerge(commits), carries)
         return result(condition.type, passed, `${condition.trailer} trailer ${passed ? 'present' : 'missing'}`)
       })
+    case 'hasConflict':
+      return Effect.map(facet(subject, 'mergeable', condition.type), (mergeable) => {
+        // GitHub computes mergeability asynchronously; until it has, treat the pull request as not conflicting.
+        const conflicting = mergeable === 'CONFLICTING'
+        const detail = mergeable === 'UNKNOWN' ? 'mergeability not yet known' : conflicting ? 'conflicts with the base branch' : 'no conflicts'
+        return result(condition.type, conflicting === condition.condition, detail)
+      })
     case '$and':
       return combine(condition.type, condition.condition, subject, (passed, total) => passed === total)
     case '$or':
@@ -306,6 +314,7 @@ const FACETS: Partial<Record<Condition['type'], ReadonlyArray<Facet>>> = {
   commitMessagesMatch: ['commits'],
   commitsSignedOff: ['commits'],
   hasTrailer: ['commits'],
+  hasConflict: ['mergeable'],
 }
 
 const groupsOf = (condition: Condition): ReadonlyArray<ConditionGroup> => {

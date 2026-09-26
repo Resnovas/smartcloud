@@ -89,11 +89,14 @@ describe('in-memory GitHub', () => {
       expect(yield* service.listFiles(7)).toStrictEqual(['a.ts'])
       expect(yield* service.listReviews(7)).toHaveLength(1)
       expect(yield* service.countRequestedReviewers(7)).toBe(1)
+      expect(yield* service.getMergeable(7)).toBe('MERGEABLE')
+      state.pulls.set(8, { commits: [], files: [], reviews: [], requestedReviewers: [], submittedReviews: [], mergeable: 'CONFLICTING' })
+      expect(yield* service.getMergeable(8)).toBe('CONFLICTING')
       yield* service.requestReviewers(7, ['cy'])
       yield* service.createReview(7, { event: 'APPROVE', body: 'ok' })
       expect(state.pulls.get(7)).toMatchObject({ requestedReviewers: ['bo', 'cy'], submittedReviews: [{ event: 'APPROVE', body: 'ok' }] })
-      const missing = yield* Effect.flip(service.listFiles(8))
-      expect(missing.message).toBe('listFiles: not found (pull request #8)')
+      const missing = yield* Effect.flip(service.listFiles(9))
+      expect(missing.message).toBe('listFiles: not found (pull request #9)')
     }),
   )
 

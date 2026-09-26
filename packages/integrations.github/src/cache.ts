@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Commit, Review } from '@resnovas/conditions'
+import type { Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Duration, Effect, Request, RequestResolver } from 'effect'
 import type { GitHubError } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
@@ -52,6 +52,10 @@ interface CountRequestedReviewers extends Request.Request<number, GitHubError> {
   readonly _tag: 'CountRequestedReviewers'
   readonly pullRequest: number
 }
+interface GetMergeable extends Request.Request<Mergeable, GitHubError> {
+  readonly _tag: 'GetMergeable'
+  readonly pullRequest: number
+}
 // `ref` is always present, so every key for the default branch has the same shape.
 interface Location {
   readonly owner: string
@@ -78,6 +82,7 @@ const ListCommits = Request.tagged<ListCommits>('ListCommits')
 const ListFiles = Request.tagged<ListFiles>('ListFiles')
 const ListReviews = Request.tagged<ListReviews>('ListReviews')
 const CountRequestedReviewers = Request.tagged<CountRequestedReviewers>('CountRequestedReviewers')
+const GetMergeable = Request.tagged<GetMergeable>('GetMergeable')
 const GetFile = Request.tagged<GetFile>('GetFile')
 const ListDirectory = Request.tagged<ListDirectory>('ListDirectory')
 const RepositoryGet = Request.tagged<RepositoryGet>('RepositoryGet')
@@ -186,6 +191,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       caches.pulls,
       RequestResolver.fromEffect(({ pullRequest }: CountRequestedReviewers) => inner.countRequestedReviewers(pullRequest)),
     )
+    const getMergeable = lookup(caches.pulls, RequestResolver.fromEffect(({ pullRequest }: GetMergeable) => inner.getMergeable(pullRequest)))
     const getFile = lookup(caches.contents, RequestResolver.fromEffect((request: GetFile) => inner.getFile(locationOf(request))))
     const listDirectory = lookup(caches.contents, RequestResolver.fromEffect((request: ListDirectory) => inner.listDirectory(locationOf(request))))
     const repositoryGet = lookup(
@@ -220,6 +226,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       listFiles: (pullRequest) => listFiles(ListFiles({ pullRequest })),
       listReviews: (pullRequest) => listReviews(ListReviews({ pullRequest })),
       countRequestedReviewers: (pullRequest) => countRequestedReviewers(CountRequestedReviewers({ pullRequest })),
+      getMergeable: (pullRequest) => getMergeable(GetMergeable({ pullRequest })),
       createReview: (pullRequest, review) =>
         writing(inner.createReview(pullRequest, review), [
           caches.pulls.invalidate(ListReviews({ pullRequest })),

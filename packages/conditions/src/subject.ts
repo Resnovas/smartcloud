@@ -58,13 +58,29 @@ export const Commit = Schema.Struct({
 export type Commit = typeof Commit.Type
 
 /**
+ * Whether a pull request can merge into its base branch, as GitHub reports
+ * it: `UNKNOWN` while GitHub is still computing it.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Mergeable"
+ * import { Mergeable } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Mergeable)('CONFLICTING') // => true
+ * ```
+ */
+export const Mergeable = Schema.Literal('MERGEABLE', 'CONFLICTING', 'UNKNOWN')
+/** A decoded {@link Mergeable}. */
+export type Mergeable = typeof Mergeable.Type
+
+/**
  * The thing a condition is evaluated against: an issue or a pull request,
  * normalised from whichever GitHub event delivered it.
  *
  * @remarks
- * `files`, `reviews`, `pendingReviewers` and `commits` are facets that cost an
- * API call each, so the engine loads only the ones a config needs (see
- * `requiredFacets`). Evaluating a condition whose facet was not loaded fails
+ * `files`, `reviews`, `pendingReviewers`, `commits` and `mergeable` are facets
+ * that cost an API call each, so the engine loads only the ones a config
+ * needs (see `requiredFacets`). Evaluating a condition whose facet was not loaded fails
  * with `MissingFacet` rather than guessing.
  *
  * @example
@@ -95,9 +111,10 @@ export const Subject = Schema.Struct({
   reviews: Schema.optionalWith(Schema.Array(Review), { exact: true }),
   pendingReviewers: Schema.optionalWith(Schema.Number, { exact: true }),
   commits: Schema.optionalWith(Schema.Array(Commit), { exact: true }),
+  mergeable: Schema.optionalWith(Mergeable, { exact: true }),
 })
 /** A decoded {@link Subject}. */
 export type Subject = typeof Subject.Type
 
 /** A subject property that is loaded on demand. */
-export type Facet = 'files' | 'reviews' | 'pendingReviewers' | 'commits'
+export type Facet = 'files' | 'reviews' | 'pendingReviewers' | 'commits' | 'mergeable'

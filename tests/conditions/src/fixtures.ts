@@ -44,6 +44,7 @@ export const pullRequest = (overrides: Partial<Subject> = {}): Subject => ({
   reviews: [],
   pendingReviewers: 0,
   commits: [commit('feat: sync\n\nSigned-off-by: Jane Doe <jane@example.com>')],
+  mergeable: 'MERGEABLE',
   ...overrides,
 })
 

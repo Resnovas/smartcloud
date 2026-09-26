@@ -158,6 +158,27 @@ export const CommitsSignedOff = flag(
 )
 
 /**
+ * The pull request conflicts (or, when false, does not conflict) with its
+ * base branch.
+ *
+ * @remarks
+ * GitHub computes mergeability asynchronously. While it is still unknown, the
+ * pull request is treated as not conflicting.
+ *
+ * @example
+ * ```ts import.meta.vitest name="HasConflict"
+ * import { HasConflict } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(HasConflict)({ type: 'hasConflict', condition: true }) // => true
+ * ```
+ */
+export const HasConflict = flag(
+  'hasConflict',
+  'The pull request conflicts with its base branch, or does not when false. Unknown mergeability counts as not conflicting.',
+)
+
+/**
  * The subject has (or, when false, lacks) a label.
  *
  * @example
@@ -308,6 +329,7 @@ const Leaf = Schema.Union(
   PendingReview,
   RequestedChanges,
   CommitsSignedOff,
+  HasConflict,
   HasLabel,
   IsStale,
   IsAbandoned,
