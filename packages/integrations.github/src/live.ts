@@ -18,6 +18,7 @@
 import { Octokit } from '@octokit/rest'
 import type { Review } from '@resnovas/conditions'
 import { Config, Effect, Layer, Redacted, Schedule } from 'effect'
+import { cacheReads } from './cache.js'
 import { fromGraphqlErrors, fromStatus, type GitHubError, ValidationFailed } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
 import {
@@ -159,8 +160,10 @@ const labelName = (label: string | { readonly name?: string | undefined }): stri
  * for calls that create something (comments, reviews, labels, check runs,
  * branches, pull requests, REST `POST`s and GraphQL mutations), where
  * GitHub may already have acted and a repeat would duplicate it. Other
- * failures surface at once as typed errors. Pull request reads are cached for the life of the
- * service, because a run sees a single, fixed pull request.
+ * failures surface at once as typed errors. Every read is an Effect
+ * Request, cached for the life of the service and invalidated by the
+ * service's own writes (see {@link cacheReads}), so a run makes each read
+ * once and never reads stale data after its own write.
  *
  * @param options - Token, repository and optional test hooks.
  * @returns The service.
@@ -223,7 +226,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       return call('graphql', () => octokit.graphql(query, { ...variables }), isGraphqlWrite(query) ? rateLimited : transient)
     }
 
-    const listCommits = yield* Effect.cachedFunction((pull_number: number) =>
+    const listCommits: GitHubService['listCommits'] = (pull_number) =>
       call('listCommits', () => octokit.paginate(octokit.rest.pulls.listCommits, { owner, repo, pull_number, per_page: 100 })).pipe(
         Effect.map((commits) =>
           commits.map((commit) => ({
@@ -234,26 +237,22 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             parents: commit.parents.length,
           })),
         ),
-      ),
-    )
+      )
 
-    const listFiles = yield* Effect.cachedFunction((pull_number: number) =>
+    const listFiles: GitHubService['listFiles'] = (pull_number) =>
       call('listFiles', () => octokit.paginate(octokit.rest.pulls.listFiles, { owner, repo, pull_number, per_page: 100 })).pipe(
         Effect.map((files) => files.map((file) => file.filename)),
-      ),
-    )
+      )
 
-    const listReviews = yield* Effect.cachedFunction((pull_number: number) =>
+    const listReviews: GitHubService['listReviews'] = (pull_number) =>
       call('listReviews', () => octokit.paginate(octokit.rest.pulls.listReviews, { owner, repo, pull_number, per_page: 100 })).pipe(
         Effect.map((reviews) => reviews.map((review) => ({ author: review.user?.login ?? '', state: reviewState(review.state) }))),
-      ),
-    )
+      )
 
-    const countRequestedReviewers = yield* Effect.cachedFunction((pull_number: number) =>
+    const countRequestedReviewers: GitHubService['countRequestedReviewers'] = (pull_number) =>
       call('countRequestedReviewers', () => octokit.rest.pulls.listRequestedReviewers({ owner, repo, pull_number })).pipe(
         Effect.map(({ data }) => data.users.length + data.teams.length),
-      ),
-    )
+      )
 
     const getFile: GitHubService['getFile'] = (location) =>
       call('getFile', () =>
@@ -392,7 +391,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         return { number: created.data.number, url: created.data.html_url, created: true }
       })
 
-    return {
+    return yield* cacheReads({
       coordinates: options.coordinates,
       getRepository: call('getRepository', () => octokit.rest.repos.get({ owner, repo })).pipe(
         Effect.map(({ data }) => ({
@@ -515,7 +514,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       proposeChanges,
       repositoryRequest,
       graphql,
-    }
+    })
   })
 
 /**
