@@ -1,11 +1,34 @@
+# house:managed:begin - synced from Resnovas/.github templates/.codex/environments/environment.toml. Edits inside this block are overwritten.
+#
 # Codex desktop local environment (house standard project-dev-surfaces).
 # Codex cloud does not read this file; see AGENT-SETUP.md.
-
 version = 1
-name = "smartcloud"
+name = "Resnovas/smartcloud"
 
 [setup]
-script = "node scripts/agent-setup.ts"
+script = "node --run setup"
+
+[[actions]]
+name = "Check"
+icon = "test"
+command = "node --run check"
+
+[[actions]]
+name = "Test"
+icon = "test"
+command = "node --run test"
+
+[[actions]]
+name = "Open code graph"
+icon = "run"
+command = "node tools/dev/open.mjs graphify-out/graph.html"
+
+[[actions]]
+name = "Update code graph"
+icon = "run"
+command = "sh tools/graphify/graphify update"
+# house:managed:end
+# house:local - add this repository's own [[actions]] below this line.
 
 [[actions]]
 name = "Dev"
@@ -18,11 +41,6 @@ icon = "run"
 command = "pnpm run build"
 
 [[actions]]
-name = "Test"
-icon = "test"
-command = "pnpm run test"
-
-[[actions]]
 name = "Lint"
 icon = "test"
 command = "pnpm run lint"
@@ -33,6 +51,16 @@ icon = "test"
 command = "pnpm run typecheck"
 
 [[actions]]
-name = "Check"
+name = "Docs server"
+icon = "run"
+command = "pnpm run docs:dev"
+
+[[actions]]
+name = "Fix"
+icon = "run"
+command = "pnpm run fix"
+
+[[actions]]
+name = "Release dry run"
 icon = "test"
-command = "pnpm run check"
+command = "pnpm run release:dry-run"

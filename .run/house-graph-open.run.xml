@@ -1,0 +1,6 @@
+<!-- Synced from Resnovas/.github templates/.run. Add this repository's own run configurations as other files in .run/. -->
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="graph: open viewer" type="NodeJSConfigurationType" application-parameters="graphify-out/graph.html" path-to-js-file="tools/dev/open.mjs" working-dir="$PROJECT_DIR$">
+    <method v="2" />
+  </configuration>
+</component>

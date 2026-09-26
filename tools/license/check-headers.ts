@@ -34,8 +34,10 @@ const fix = process.argv.includes('--fix')
 
 const SOURCE = /\.(ts|mts|cts|js|mjs|cjs)$/
 // dist/ at the root is the action bundle, generated and committed only by a release.
-// externals/ is vendored upstream source under its own licence.
-const EXCLUDED = /^(graphify-out|node_modules|dist|externals)\/|\/dist\/|\.d\.ts$/
+// externals/ is vendored upstream source under its own licence. The house
+// tools in tools/dev/*.mjs are synced whole from Resnovas/.github, so they
+// cannot carry a local header.
+const EXCLUDED = /^(graphify-out|node_modules|dist|externals)\/|\/dist\/|\.d\.ts$|^tools\/dev\/(surfaces|open)\.mjs$/
 
 const header = (file: string) => template.replace('{{FILE}}', file)
 

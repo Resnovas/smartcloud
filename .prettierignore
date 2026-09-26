@@ -1,5 +1,49 @@
+# house:managed:begin - synced from Resnovas/.github templates/.prettierignore. Edits inside this block are overwritten.
+#
+# Files synced from Resnovas/.github. The sync owns their formatting: a
+# formatter rewriting them would edit the managed block and fail the check.
+AI_POLICY.md
+CODE_OF_CONDUCT.md
+CONTRIBUTING.md
+COOPERATION_COMMITMENT.md
+DCO.md
+GOVERNANCE.md
+SECURITY.md
+SUPPORT.md
+LICENSE
+.github/CODEOWNERS
+.github/dependabot.yml
+.github/FUNDING.yml
+.github/ISSUE_TEMPLATE/
+.github/PULL_REQUEST_TEMPLATE.md
+.github/smartcloud.yml
+.github/workflows/house-graphify.yml
+.github/workflows/smartcloud.yml
+.graphifyignore
+.agents/skills/graphify/
+.claude/skills/graphify/
+tools/graphify/
+tools/dev/surfaces.mjs
+tools/dev/open.mjs
+.agents/surfaces.json
+.agents/prompts/verify.md
+.agents/prompts/review.md
+.agents/prompts/address-review.md
+.zed/
+.vscode/tasks.json
+.vscode/launch.json
+.run/house-*.run.xml
+.codex/environments/environment.toml
+orca.yaml
+# Generated from .agents/prompts by tools/dev/surfaces.mjs.
+.claude/commands/
+.cursor/commands/
+.opencode/commands/
+# The committed code graph.
+graphify-out/
+# house:managed:end
+# house:local - add this repository's own ignores below this line.
 dist
 coverage
 pnpm-lock.yaml
-graphify-out
 externals

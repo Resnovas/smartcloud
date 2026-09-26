@@ -1,3 +1,8 @@
+---
+label: Verify
+description: Run the gate CI runs and fix what fails
+---
+
 Run the same gate CI runs and fix what fails, without deleting tests or lowering coverage thresholds.
 
 1. Read `AGENTS.md` (or `README.md`) for any gate beyond the house ones.

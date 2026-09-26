@@ -1,4 +1,4 @@
-Add a new workspace package named in the text after this command.
+Add a new workspace package named: $ARGUMENTS
 
 1. Follow "Adding a package" in `AGENTS.md`: `packages/<name>/package.json` with `nx.tags` (one type, one layer) and the `@resnovas/source` export first, `tsconfig.json` and `tsconfig.lib.json`, `eslint.config.mjs`, and the mirrored test project under `tests/<name>/`.
 2. Add the package to the root `tsconfig.json` references.

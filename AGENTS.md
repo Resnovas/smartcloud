@@ -6,12 +6,12 @@ House standards apply: the PostHog skill `coding-preferences` (Effect v3, strict
 
 ## Layout
 
-| Path | What lives there |
-| --- | --- |
+| Path              | What lives there                                                                                                                                                                                                                                                                      |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/<name>` | Libraries. Tag every project with a type (`type_core`, `type_shared`, `type_database`, `type_extension`, `type_platform`) and a layer (`layer_shared`, `layer_backend`, `layer_frontend`) under `tags` in its `project.json`. GitHub API code only in `packages/integrations.github`. |
-| `apps/<name>` | Platforms: the GitHub Action, the CLI and the MCP server. Their `project.json` sets `projectType: library`, because the test projects import them and Nx forbids importing an application. |
-| `tests/<name>` | One test project per package, mirroring `packages/<name>/src`. Tagged `type_test`. |
-| `tools/` | Workspace scripts, run with Node's built-in TypeScript support. |
+| `apps/<name>`     | Platforms: the GitHub Action, the CLI and the MCP server. Their `project.json` sets `projectType: library`, because the test projects import them and Nx forbids importing an application.                                                                                            |
+| `tests/<name>`    | One test project per package, mirroring `packages/<name>/src`. Tagged `type_test`.                                                                                                                                                                                                    |
+| `tools/`          | Workspace scripts, run with Node's built-in TypeScript support.                                                                                                                                                                                                                       |
 
 ## Commands
 
@@ -26,6 +26,12 @@ pnpm headers                                     # licence header check (pnpm he
 pnpm typecheck:tests                             # type-check every test project (Nx skips them)
 pnpm docs:api                                    # docgen (type-checks @example blocks) and the contracts check
 ```
+
+## Editor and agent surfaces
+
+The editor tasks, debug configurations and app actions are synced from `Resnovas/.github` with managed blocks: `.zed/`, `.vscode/tasks.json` and `launch.json`, `.run/house-*.run.xml`, `.codex/environments/environment.toml`, `orca.yaml`, `.agents/surfaces.json` and the `verify`, `review` and `address-review` prompts. Never edit inside a `house:managed` block; add smartcloud's own entries after the `house:local` line (or, for JetBrains and prompts, as other files). Every entry calls a package script or a synced tool.
+
+Orca quick commands and OpenChamber project actions live in per-user settings, so `node tools/dev/surfaces.mjs install` (run by the setup script) registers everything in `.agents/surfaces.json` for the checkout. Agent prompts live once in `.agents/prompts/<name>.md`; `node tools/dev/surfaces.mjs sync` writes them to `.claude/commands`, `.cursor/commands` and `.opencode/commands`, and `pnpm run check` fails when those drift. Edit the prompt, never the generated copies.
 
 ## Adding a package
 
