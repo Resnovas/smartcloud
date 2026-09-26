@@ -155,6 +155,14 @@ jobs:
           BASE: ${{ needs.release.outputs.base }}
         run: |
           set -euo pipefail
+          # The outputs come from the job that ran repository code, so check
+          # them before this token acts on them: a version, and a commit on main.
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "::error::unexpected version: $VERSION"; exit 1; }
+          [[ "$BASE" =~ ^[0-9a-f]{40}$ ]] || { echo "::error::unexpected base commit: $BASE"; exit 1; }
+          case "$(gh api "repos/$REPO/compare/$BASE...main" --jq .status)" in
+            ahead | identical) ;;
+            *) echo "::error::$BASE is not on main"; exit 1 ;;
+          esac
           branch="release/changelogs-v$VERSION"
           title="chore(release): changelogs for v$VERSION"
           base_tree=$(gh api "repos/$REPO/git/commits/$BASE" --jq .tree.sha)
@@ -183,7 +191,7 @@ jobs:
           else
             gh api "repos/$REPO/git/refs" --field ref="refs/heads/$branch" --field sha="$commit" --silent
           fi
-          if [ -n "$(gh pr list --repo "$REPO" --head "$branch" --state open --json number --jq '.[0].number')" ]; then
+          if [ "$(gh pr list --repo "$REPO" --head "$branch" --state open --json number --jq length)" -gt 0 ]; then
             exit 0
           fi
           gh pr create --repo "$REPO" --base main --head "$branch" --title "$title" --body "$(cat <<EOF
