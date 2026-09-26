@@ -123,6 +123,18 @@ describe('commitsFeature', () => {
         link: 'https://github.com/Resnovas/.github/blob/main/AI_POLICY.md#ai-02',
         commit: sha,
       })
+      for (const value of ['unknown', 'aider:', ':gpt-5', 'aider gpt-5:x']) {
+        const malformed = yield* runOn(commitsFeature, {
+          config,
+          commits: [commit(`x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: ${value}\n${signed}`)],
+        })
+        expect(rules(malformed.findings, 'error')).toStrictEqual(['AI-02'])
+      }
+      const withTools = yield* runOn(commitsFeature, {
+        config,
+        commits: [commit(`x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: claude-code:claude-opus-5-5 ripgrep\n${signed}`)],
+      })
+      expect(withTools.findings).toStrictEqual([])
       const assistedOnly = yield* runOn(commitsFeature, { config, commits: [commit(`x\n\nAssisted-by: aider:gpt-5\n${signed}`)] })
       expect(rules(assistedOnly.findings, 'error')).toStrictEqual(['AI-02'])
       expect(assistedOnly.findings[0]?.message).toBe('This commit has Assisted-by but no Co-authored-by trailer for the AI tool.')

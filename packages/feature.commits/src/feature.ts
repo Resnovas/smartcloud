@@ -33,6 +33,12 @@ type Draft = Omit<Finding, 'feature' | 'level'>
 
 const formatIdentity = (identity: Identity) => `${identity.name} <${identity.email}>`
 
+// `Assisted-by` names the tool and model as `TOOL:MODEL`, optionally followed
+// by further tools: the first word needs text on both sides of a colon.
+// Anchored, with one quantifier bounded by the colon it excludes: linear.
+const TOOL_AND_MODEL = /^[^\s:]+:\S/
+const namesToolAndModel = (value: string): boolean => TOOL_AND_MODEL.test(value.trim())
+
 /**
  * Checks one commit against the DCO and AI attribution rules.
  *
@@ -54,7 +60,7 @@ const checkCommit = (commit: Commit, section: CommitsSection, base: string, isAi
     // Assisted-by records the exact tool and model.
     if (attribution.aiAttributed && !attribution.aiCoAuthored) {
       found.push({ rule: 'AI-02', message: 'This commit has Assisted-by but no Co-authored-by trailer for the AI tool.', link, commit: commit.sha })
-    } else if (attribution.aiCoAuthored && attribution.assistedBy.length === 0) {
+    } else if (attribution.aiCoAuthored && !attribution.assistedBy.some(namesToolAndModel)) {
       found.push({
         rule: 'AI-02',
         message: 'This commit credits an AI co-author but has no "Assisted-by: TOOL:MODEL" trailer.',
