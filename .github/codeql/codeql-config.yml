@@ -1,0 +1,8 @@
+# Tunes the house CodeQL workflow (.github/workflows/house-codeql.yml), which
+# adds the security-extended queries to whatever this file lists.
+name: smartcloud
+
+# externals/ vendors Effect's source for reference only; nothing there is
+# built, imported or shipped, so its findings are not smartcloud's.
+paths-ignore:
+  - externals/**
