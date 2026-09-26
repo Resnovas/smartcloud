@@ -66,6 +66,8 @@ describe('conventions feature', () => {
     })
     expect(conventions.enabled?.(config)).toBe(true)
     expect([...(conventions.facets?.(config) ?? [])]).toStrictEqual(['commits'])
+    const issueOnly = configWith({ signed: { on: ['issue'], when: { condition: [{ type: 'commitsSignedOff', condition: true }] } } })
+    expect([...(conventions.facets?.(issueOnly) ?? [])]).toStrictEqual([])
     expect(conventions.handles).toStrictEqual(['pullRequest', 'issue'])
   })
 
@@ -157,6 +159,29 @@ describe('conventions feature', () => {
       }),
     ).toBe('Expected 2 of 2 condition(s) to pass, but 0 did: not expected: title matches x')
   })
+
+  it('explains a failed $and or $or by the conditions inside it that failed, and keeps the count for $only', () => {
+    const group = {
+      passed: false,
+      matched: 0,
+      required: 1,
+      results: [{ type: 'titleMatches', passed: false, detail: 'title does not match ^feat' }],
+    }
+    expect(
+      describeEvaluation({
+        passed: false,
+        matched: 0,
+        required: 3,
+        results: [
+          { type: '$and', passed: false, detail: '0 of 1 group(s) passed', groups: [group] },
+          { type: '$or', passed: false, detail: '0 of 1 group(s) passed' },
+          { type: '$only', passed: false, detail: '0 of 1 group(s) passed', groups: [group] },
+        ],
+      }),
+    ).toBe(
+      'Expected 3 of 3 condition(s) to pass, but 0 did: 0 of 1 group(s) passed (title does not match ^feat); 0 of 1 group(s) passed; 0 of 1 group(s) passed',
+    )
+  })
 })
 
 describe("smartcloud's own v1 config", () => {
@@ -194,8 +219,8 @@ describe('house style through when and $not', () => {
             condition: {
               requires: 1,
               condition: [
-                { type: 'titleMatches', condition: '/\\p{Extended_Pictographic}/u' },
-                { type: 'descriptionMatches', condition: '/\\p{Extended_Pictographic}/u' },
+                { type: 'titleMatches', condition: '/[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u20E3]/u' },
+                { type: 'descriptionMatches', condition: '/[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u20E3]/u' },
               ],
             },
           },
@@ -251,6 +276,9 @@ describe('house style through when and $not', () => {
     Effect.gen(function* () {
       expect(yield* failing(`feat: sync ${String.fromCodePoint(0x1f680)}`, null)).toStrictEqual(['conventions.house.noEmoji'])
       expect(yield* failing('feat: sync', `Done ${String.fromCodePoint(0x2728)}`)).toStrictEqual(['conventions.house.noEmoji'])
+      // Flags are regional-indicator pairs and keycaps end in U+20E3; neither is Extended_Pictographic.
+      expect(yield* failing(`feat: sync ${String.fromCodePoint(0x1f1ec, 0x1f1e7)}`, null)).toStrictEqual(['conventions.house.noEmoji'])
+      expect(yield* failing('feat: sync', 'Step 1\ufe0f\u20e3')).toStrictEqual(['conventions.house.noEmoji'])
     }),
   )
 

@@ -38,18 +38,25 @@ const rulesOf = (config: SmartcloudConfig): ReadonlyArray<readonly [string, Conv
   Object.entries(config.conventions?.rules ?? {})
 
 // A failed `$not` only says "the group passed"; what the reader needs is
-// which of the forbidden conditions held.
-const explain = (result: ConditionResult): ReadonlyArray<string> =>
-  result.type === '$not'
-    ? (result.groups ?? []).flatMap((group) => group.results.filter((inner) => inner.passed).map((inner) => `not expected: ${inner.detail}`))
-    : [result.detail]
+// which of the forbidden conditions held. A failed `$and` or `$or` only
+// counts its groups, so it also names the conditions inside that failed.
+// `$only` keeps its count: it can fail because too many groups passed.
+const explain = (result: ConditionResult): ReadonlyArray<string> => {
+  if (result.type === '$not') {
+    return (result.groups ?? []).flatMap((group) => group.results.filter((inner) => inner.passed).map((inner) => `not expected: ${inner.detail}`))
+  }
+  if (result.type !== '$and' && result.type !== '$or') return [result.detail]
+  const inner = (result.groups ?? []).flatMap((group) => group.results.filter((entry) => !entry.passed).flatMap(explain))
+  return [inner.length === 0 ? result.detail : `${result.detail} (${inner.join('; ')})`]
+}
 
 /**
  * Explains why a rule's `when` failed.
  *
  * @remarks
  * Lists every condition that did not pass. For a `$not`, it lists the
- * conditions inside it that held, since those are what must change.
+ * conditions inside it that held, since those are what must change; for a
+ * failed `$and` or `$or`, the conditions inside it that failed.
  *
  * @example
  * ```ts
@@ -134,6 +141,13 @@ export const conventions: Feature = {
   name: FEATURE,
   handles: ['pullRequest', 'issue'],
   enabled: (config) => rulesOf(config).length > 0,
-  facets: (config) => requiredFacets(rulesOf(config).flatMap(([, rule]) => (rule.when === undefined ? [] : [rule.when]))),
+  // Facets are only loaded for pull requests, so a rule that never runs on
+  // one must not make every pull-request run read them.
+  facets: (config) =>
+    requiredFacets(
+      rulesOf(config).flatMap(([, rule]) =>
+        rule.when === undefined || (rule.on !== undefined && !rule.on.includes('pullRequest')) ? [] : [rule.when],
+      ),
+    ),
   run,
 }
