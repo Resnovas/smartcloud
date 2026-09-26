@@ -74,6 +74,8 @@ export interface IssueSummary {
   readonly labels: ReadonlyArray<string>
   /** The logins of the people assigned; none when omitted. */
   readonly assignees?: ReadonlyArray<string>
+  /** The title of the milestone the item is in; omitted when it is in none. */
+  readonly milestone?: string
   readonly updatedAt: Date
   readonly isPullRequest: boolean
 }

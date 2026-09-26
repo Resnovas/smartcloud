@@ -807,6 +807,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             locked: issue.locked,
             labels: issue.labels.map(labelName),
             assignees: (issue.assignees ?? []).map((user) => user.login),
+            ...(issue.milestone?.title === undefined ? {} : { milestone: issue.milestone.title }),
             updatedAt: new Date(issue.updated_at),
             isPullRequest: issue.pull_request !== undefined,
           })),

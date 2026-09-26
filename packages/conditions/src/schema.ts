@@ -193,6 +193,34 @@ export const ReviewerMatches = matches(
 )
 
 /**
+ * The subject is in a milestone (true), or in none (false).
+ *
+ * @example
+ * ```ts import.meta.vitest name="HasMilestone"
+ * import { HasMilestone } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(HasMilestone)({ type: 'hasMilestone', condition: true }) // => true
+ * ```
+ */
+export const HasMilestone = flag('hasMilestone', 'The subject is in a milestone, or in none when false.')
+/**
+ * The title of the subject's milestone matches a pattern.
+ *
+ * @remarks
+ * A subject in no milestone never matches.
+ *
+ * @example
+ * ```ts import.meta.vitest name="MilestoneMatches"
+ * import { MilestoneMatches } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(MilestoneMatches)({ type: 'milestoneMatches', condition: '^v2' }) // => true
+ * ```
+ */
+export const MilestoneMatches = matches('milestoneMatches', "The title of the subject's milestone matches a pattern.")
+
+/**
  * The subject is open (true) or closed (false).
  *
  * @example
@@ -515,6 +543,8 @@ const Leaf = Schema.Union(
   AuthorAssociation,
   HasAssignee,
   AssigneeMatches,
+  HasMilestone,
+  MilestoneMatches,
   IsOpen,
   IsLocked,
   IsDraft,

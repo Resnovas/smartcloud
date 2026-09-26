@@ -46,6 +46,7 @@ describe('decodeEvent', () => {
             locked: false,
             labels: ['bug'],
             assignees: ['jane', 'ann'],
+            milestone: 'v2.0',
             updatedAt: new Date('2026-09-01T00:00:00Z'),
             draft: true,
             headBranch: 'feat/labels',
@@ -102,6 +103,14 @@ describe('decodeEvent', () => {
       expect(yield* decodeEvent('issues', { issue: { ...issuePayload.issue, assignees: null } })).toMatchObject({
         subject: { assignees: [] },
       })
+    }),
+  )
+
+  it.effect('reads no milestone when the payload has none or leaves it out', () =>
+    Effect.gen(function* () {
+      for (const issue of [issuePayload.issue, { ...issuePayload.issue, milestone: null }]) {
+        expect(yield* decodeEvent('issues', { issue })).not.toHaveProperty('subject.milestone')
+      }
     }),
   )
 

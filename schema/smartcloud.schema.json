@@ -228,6 +228,12 @@
               "$ref": "#/$defs/assigneeMatches"
             },
             {
+              "$ref": "#/$defs/hasMilestone"
+            },
+            {
+              "$ref": "#/$defs/milestoneMatches"
+            },
+            {
               "$ref": "#/$defs/isOpen"
             },
             {
@@ -476,6 +482,46 @@
       },
       "additionalProperties": false,
       "description": "An assignee's login matches a pattern."
+    },
+    "hasMilestone": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "hasMilestone"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The subject is in a milestone, or in none when false."
+    },
+    "milestoneMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "milestoneMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The title of the subject's milestone matches a pattern."
     },
     "isOpen": {
       "type": "object",

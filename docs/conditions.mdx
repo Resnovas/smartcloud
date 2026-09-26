@@ -35,6 +35,8 @@ Conditions that match text take a pattern: a regular expression written either b
 | `authorAssociation`   | `condition`: list of associations                                   | The author's association with the repository is one of those listed, or the author is a bot when `bot` is listed.                                      |
 | `hasAssignee`         | `condition`: boolean                                                | Someone is assigned (`true`), or nobody is (`false`).                                                                                                  |
 | `assigneeMatches`     | `condition`: pattern                                                | An assignee's login matches.                                                                                                                           |
+| `hasMilestone`        | `condition`: boolean                                                | The subject is in a milestone (`true`), or in none (`false`).                                                                                          |
+| `milestoneMatches`    | `condition`: pattern                                                | The title of the subject's milestone matches. A subject in no milestone never matches.                                                                 |
 | `reviewerMatches`     | `condition`: pattern                                                | A reviewer of the pull request matches: someone asked to review (a login, or a team's slug), or someone who has reviewed.                              |
 | `branchMatches`       | `condition`: pattern                                                | The pull request's head branch matches.                                                                                                                |
 | `baseBranchMatches`   | `condition`: pattern                                                | The pull request's base branch, the one it merges into, matches.                                                                                       |
@@ -111,6 +113,16 @@ exempt:
 ```yaml
 - type: reviewerMatches
   condition: '^security$'
+```
+
+`hasMilestone` and `milestoneMatches` read the milestone the subject is in, matched by its title, so a rule can flag planned work that has no milestone yet, or label everything in a release. Both apply to issues and pull requests, and work in a stale sweep's `exempt.when`: to keep work planned for a release open, exempt its milestone.
+
+```yaml
+exempt:
+  when:
+    condition:
+      - type: milestoneMatches
+        condition: '^v2'
 ```
 
 ### Pull request only conditions

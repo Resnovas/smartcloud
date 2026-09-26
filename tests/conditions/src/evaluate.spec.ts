@@ -137,6 +137,13 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     issue({ requestedReviewers: ['ann'] }),
     false,
   ],
+  ['hasMilestone', { type: 'hasMilestone', condition: true }, issue({ milestone: 'v2.0' }), true],
+  ['hasMilestone, in none', { type: 'hasMilestone', condition: true }, issue(), false],
+  ['hasMilestone false, in none', { type: 'hasMilestone', condition: false }, pullRequest(), true],
+  ['hasMilestone false, in one', { type: 'hasMilestone', condition: false }, pullRequest({ milestone: 'v2.0' }), false],
+  ['milestoneMatches', { type: 'milestoneMatches', condition: '^v2' }, pullRequest({ milestone: 'v2.0' }), true],
+  ['milestoneMatches, no match', { type: 'milestoneMatches', condition: '^v3' }, issue({ milestone: 'v2.0' }), false],
+  ['milestoneMatches, in no milestone', { type: 'milestoneMatches', condition: '.*' }, issue(), false],
   ['isOpen', { type: 'isOpen', condition: true }, pullRequest(), true],
   ['isOpen false on a closed item', { type: 'isOpen', condition: false }, pullRequest({ open: false }), true],
   ['isLocked', { type: 'isLocked', condition: true }, issue({ locked: true }), true],
@@ -495,6 +502,24 @@ describe('evaluate: assignees and reviewers', () => {
   )
 })
 
+describe('evaluate: milestones', () => {
+  const detail = (condition: Condition, subject: Subject) =>
+    Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.results[0]?.detail)
+
+  it.effect('explains the milestone', () =>
+    Effect.gen(function* () {
+      const planned = issue({ milestone: 'v2.0' })
+      expect(yield* detail({ type: 'hasMilestone', condition: true }, planned)).toBe('in milestone v2.0')
+      expect(yield* detail({ type: 'hasMilestone', condition: true }, issue())).toBe('in no milestone')
+      expect(yield* detail({ type: 'milestoneMatches', condition: '^v2' }, planned)).toBe('milestone v2.0 matches')
+      expect(yield* detail({ type: 'milestoneMatches', condition: '^v3' }, planned)).toBe(
+        'milestone v2.0 does not match',
+      )
+      expect(yield* detail({ type: 'milestoneMatches', condition: '.*' }, issue())).toBe('in no milestone')
+    }),
+  )
+})
+
 describe('evaluate: facets', () => {
   it.effect('a facet that was not loaded fails with MissingFacet', () =>
     Effect.gen(function* () {
@@ -738,5 +763,6 @@ describe('requiredFacets', () => {
 
   it('needs nothing for conditions on the event payload alone', () => {
     expect(requiredFacets([{ condition: [{ type: 'isOpen', condition: true }] }]).size).toBe(0)
+    expect(requiredFacets([{ condition: [{ type: 'milestoneMatches', condition: 'x' }] }]).size).toBe(0)
   })
 })
