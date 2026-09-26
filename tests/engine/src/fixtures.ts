@@ -37,6 +37,7 @@ export const pullRequestPayload = {
     body: 'Adds label sync.',
     user: { login: 'jane', type: 'User' },
     author_association: 'CONTRIBUTOR',
+    assignees: [{ login: 'jane' }, { login: 'ann' }],
     draft: true,
     head: { ref: 'feat/labels', sha: 'abc123' },
     base: { ref: 'main' },

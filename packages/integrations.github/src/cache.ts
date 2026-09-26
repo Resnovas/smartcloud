@@ -60,6 +60,10 @@ interface CountRequestedReviewers extends Request.Request<number, GitHubError> {
   readonly _tag: 'CountRequestedReviewers'
   readonly pullRequest: number
 }
+interface ListRequestedReviewers extends Request.Request<ReadonlyArray<string>, GitHubError> {
+  readonly _tag: 'ListRequestedReviewers'
+  readonly pullRequest: number
+}
 interface GetMergeable extends Request.Request<Mergeable, GitHubError> {
   readonly _tag: 'GetMergeable'
   readonly pullRequest: number
@@ -94,6 +98,7 @@ const ListCommits = Request.tagged<ListCommits>('ListCommits')
 const ListFiles = Request.tagged<ListFiles>('ListFiles')
 const ListReviews = Request.tagged<ListReviews>('ListReviews')
 const CountRequestedReviewers = Request.tagged<CountRequestedReviewers>('CountRequestedReviewers')
+const ListRequestedReviewers = Request.tagged<ListRequestedReviewers>('ListRequestedReviewers')
 const GetMergeable = Request.tagged<GetMergeable>('GetMergeable')
 const ListChecks = Request.tagged<ListChecks>('ListChecks')
 const GetFile = Request.tagged<GetFile>('GetFile')
@@ -240,6 +245,12 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
         inner.countRequestedReviewers(pullRequest),
       ),
     )
+    const listRequestedReviewers = lookup(
+      caches.pulls,
+      RequestResolver.fromEffect(({ pullRequest }: ListRequestedReviewers) =>
+        inner.listRequestedReviewers(pullRequest),
+      ),
+    )
     const readMergeable = lookup(
       caches.pulls,
       RequestResolver.fromEffect(({ pullRequest }: GetMergeable) => inner.getMergeable(pullRequest)),
@@ -298,16 +309,19 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       listFiles: (pullRequest) => listFiles(ListFiles({ pullRequest })),
       listReviews: (pullRequest) => listReviews(ListReviews({ pullRequest })),
       countRequestedReviewers: (pullRequest) => countRequestedReviewers(CountRequestedReviewers({ pullRequest })),
+      listRequestedReviewers: (pullRequest) => listRequestedReviewers(ListRequestedReviewers({ pullRequest })),
       getMergeable: (pullRequest) => getMergeable(GetMergeable({ pullRequest })),
       listChecks: (pullRequest) => listChecks(ListChecks({ pullRequest })),
       createReview: (pullRequest, review) =>
         writing(inner.createReview(pullRequest, review), [
           caches.pulls.invalidate(ListReviews({ pullRequest })),
           caches.pulls.invalidate(CountRequestedReviewers({ pullRequest })),
+          caches.pulls.invalidate(ListRequestedReviewers({ pullRequest })),
         ]),
       requestReviewers: (pullRequest, logins) =>
         writing(inner.requestReviewers(pullRequest, logins), [
           caches.pulls.invalidate(CountRequestedReviewers({ pullRequest })),
+          caches.pulls.invalidate(ListRequestedReviewers({ pullRequest })),
         ]),
 
       createCheckRun: (run) => writing(inner.createCheckRun(run), [caches.checks.invalidateAll]),

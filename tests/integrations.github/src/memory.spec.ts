@@ -112,6 +112,7 @@ describe('in-memory GitHub', () => {
       expect(yield* service.listFiles(7)).toStrictEqual(['a.ts'])
       expect(yield* service.listReviews(7)).toHaveLength(1)
       expect(yield* service.countRequestedReviewers(7)).toBe(1)
+      expect(yield* service.listRequestedReviewers(7)).toStrictEqual(['bo'])
       expect(yield* service.getMergeable(7)).toBe('MERGEABLE')
       state.pulls.set(8, {
         commits: [],

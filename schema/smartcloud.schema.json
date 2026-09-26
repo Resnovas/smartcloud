@@ -222,6 +222,12 @@
               "$ref": "#/$defs/authorAssociation"
             },
             {
+              "$ref": "#/$defs/hasAssignee"
+            },
+            {
+              "$ref": "#/$defs/assigneeMatches"
+            },
+            {
               "$ref": "#/$defs/isOpen"
             },
             {
@@ -235,6 +241,9 @@
             },
             {
               "$ref": "#/$defs/requestedChanges"
+            },
+            {
+              "$ref": "#/$defs/reviewerMatches"
             },
             {
               "$ref": "#/$defs/commitsSignedOff"
@@ -428,6 +437,46 @@
       "additionalProperties": false,
       "description": "The author's association with the repository is one of these, or the author is a bot when bot is listed."
     },
+    "hasAssignee": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "hasAssignee"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Someone is assigned, or nobody is when false."
+    },
+    "assigneeMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "assigneeMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        }
+      },
+      "additionalProperties": false,
+      "description": "An assignee's login matches a pattern."
+    },
     "isOpen": {
       "type": "object",
       "required": [
@@ -527,6 +576,26 @@
       },
       "additionalProperties": false,
       "description": "A reviewer's latest review requests changes."
+    },
+    "reviewerMatches": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "reviewerMatches"
+          ]
+        },
+        "condition": {
+          "$ref": "#/$defs/Pattern"
+        }
+      },
+      "additionalProperties": false,
+      "description": "A requested reviewer's login or team slug, or a reviewer's login, matches a pattern."
     },
     "commitsSignedOff": {
       "type": "object",

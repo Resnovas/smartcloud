@@ -55,4 +55,4 @@ Each item is swept on its own. When GitHub fails on one, the sweep records an er
 
 ## Exemptions
 
-When `exempt.when` needs a pull request's files, reviews, commits, mergeability or checks, the sweep loads them for each pull request it considers. A sweep cannot read a pull request's draft state, branches or size, so if `exempt.when` uses `isDraft`, `branchMatches`, `baseBranchMatches` or `changesSize`, the sweep records a warning and skips every pull request rather than act on one that should be exempt. Issues are swept as usual, since those conditions never hold for an issue.
+When `exempt.when` needs a pull request's files, reviews, requested reviewers, commits, mergeability or checks, the sweep loads them for each pull request it considers. A sweep cannot read a pull request's draft state, branches or size, so if `exempt.when` uses `isDraft`, `branchMatches`, `baseBranchMatches` or `changesSize`, the sweep records a warning and skips every pull request rather than act on one that should be exempt. Issues are swept as usual, since those conditions never hold for an issue.

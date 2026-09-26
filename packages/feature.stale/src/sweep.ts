@@ -154,6 +154,7 @@ export const subjectOf = (item: IssueSummary): Subject => ({
   open: item.open,
   locked: item.locked,
   labels: item.labels,
+  ...(item.assignees === undefined ? {} : { assignees: item.assignees }),
   updatedAt: item.updatedAt,
 })
 
@@ -315,8 +316,8 @@ const conditionTypes = (value: unknown): ReadonlyArray<string> => {
  * @remarks
  * Items of a kind not in `stale.on` (both when omitted) are skipped, as are
  * exempt ones: those carrying an `exempt.labels` label, or passing
- * `exempt.when`. A pull request's files, reviews, commits, mergeability and
- * checks are loaded when `exempt.when` needs them. Its draft state, branches and size are not in a
+ * `exempt.when`. A pull request's files, reviews, requested reviewers, commits,
+ * mergeability and checks are loaded when `exempt.when` needs them. Its draft state, branches and size are not in a
  * sweep's listing, so an `exempt.when` that uses them cannot be answered for
  * a pull request: that is reported once as a warning, and pull requests are
  * skipped rather than risk acting on one that should be exempt. Issues are
