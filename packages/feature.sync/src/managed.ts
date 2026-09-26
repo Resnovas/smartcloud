@@ -136,10 +136,13 @@ const isComment = (line: string) => {
 
 const meaningful = (lines: ReadonlyArray<string>) => lines.filter((line) => line.trim() !== '' && !isComment(line))
 
-const TOP_LEVEL_KEY = /^([A-Za-z_][\w-]*):/
+// A key, bare or in matching single or double quotes, then optional blanks
+// and a colon: `"github":` and `github :` both name the key `github`. The
+// quantifiers stop at characters they exclude, so matching stays linear.
+const TOP_LEVEL_KEY = /^(["']?)([A-Za-z_][\w-]*)\1[ \t]*:/
 
 const topLevelKeys = (lines: ReadonlyArray<string>): ReadonlySet<string> =>
-  new Set(lines.flatMap((line) => TOP_LEVEL_KEY.exec(line)?.[1] ?? []))
+  new Set(lines.flatMap((line) => TOP_LEVEL_KEY.exec(line)?.[2] ?? []))
 
 const isIndented = (line: string) => line !== '' && line.charAt(0).trim() === ''
 
@@ -166,29 +169,61 @@ const ecosystemOf = (line: string): string | undefined => {
 
 interface DependabotEntry {
   readonly ecosystem: string
-  directory: string
+  directories: Array<string>
   branch: string
+  /** Whether the lines that follow are items of a `directories:` block list. */
+  listing: boolean
+}
+
+// `[/a, "/b"]`, a flow list, or a single directory.
+const directoryList = (value: string): Array<string> =>
+  value.startsWith('[') && value.endsWith(']')
+    ? value
+        .slice(1, -1)
+        .split(',')
+        .map((item) => unquote(item.trim()))
+        .filter((item) => item !== '')
+    : [unquote(value)]
+
+// A `- /path` item of a block list, or undefined for any other line.
+const listItem = (line: string): string | undefined => {
+  const text = line.trim()
+  return text.startsWith('- ') ? unquote(text.slice(2).trim()) : undefined
 }
 
 // Dependabot identifies an update by ecosystem, directory and target branch;
-// a duplicate is a configuration error.
+// a duplicate is a configuration error. An update listing several
+// `directories` covers each of them, so it is one entry per directory and
+// overlaps any update covering one of the same.
 const dependabotEntries = (lines: ReadonlyArray<string>): ReadonlyArray<string> => {
   const entries: Array<DependabotEntry> = []
   let current: DependabotEntry | undefined
   for (const line of lines) {
     const ecosystem = ecosystemOf(line)
     if (ecosystem !== undefined) {
-      current = { ecosystem: unquote(ecosystem), directory: '/', branch: '' }
+      current = { ecosystem: unquote(ecosystem), directories: ['/'], branch: '', listing: false }
       entries.push(current)
       continue
     }
     if (current === undefined) continue
+    const item = current.listing ? listItem(line) : undefined
+    if (item !== undefined) {
+      current.directories.push(item)
+      continue
+    }
+    current.listing = false
     const directory = indentedValue(line, ['directory', 'directories'])
-    if (directory !== undefined) current.directory = unquote(directory)
+    if (directory !== undefined) current.directories = directoryList(directory)
+    else if (isIndented(line) && line.trim() === 'directories:') {
+      current.directories = []
+      current.listing = true
+    }
     const branch = indentedValue(line, ['target-branch'])
     if (branch !== undefined) current.branch = unquote(branch)
   }
-  return entries.map((entry) => `${entry.ecosystem} in ${entry.directory}${entry.branch === '' ? '' : ` on ${entry.branch}`}`)
+  return entries.flatMap((entry) =>
+    entry.directories.map((directory) => `${entry.ecosystem} in ${directory}${entry.branch === '' ? '' : ` on ${entry.branch}`}`),
+  )
 }
 
 const firstWord = (value: string) => {
@@ -200,7 +235,7 @@ const firstWord = (value: string) => {
 const ids = (lines: ReadonlyArray<string>) =>
   lines.flatMap((line) => {
     const value = indentedValue(line, ['id'])
-    return value === undefined ? [] : [firstWord(value)]
+    return value === undefined ? [] : [unquote(firstWord(value))]
   })
 
 const JOBS = /^jobs:\s*$/
@@ -214,6 +249,12 @@ const jobIds = (lines: ReadonlyArray<string>) => {
 }
 
 const isYaml = (path: string) => path.endsWith('.yml') || path.endsWith('.yaml')
+
+// Issue and discussion forms give their fields ids; a workflow's step ids
+// are its own business and may repeat the template's.
+const isForm = (path: string) => isYaml(path) && (path.includes('ISSUE_TEMPLATE/') || path.includes('DISCUSSION_TEMPLATE/'))
+
+const isDependabot = (path: string) => path.endsWith('dependabot.yml') || path.endsWith('dependabot.yaml')
 
 /**
  * Local additions that would change or break the synced rules.
@@ -246,9 +287,11 @@ export const managedConflicts = (path: string, rendered: string, current: string
     for (const key of topLevelKeys(localLines)) {
       if (managed.has(key)) problems.push(`redefines the synced key "${key}"`)
     }
-    const managedIds = new Set(ids(template.block))
-    for (const id of ids(localLines)) {
-      if (managedIds.has(id)) problems.push(`reuses the synced field id "${id}"`)
+    if (isForm(path)) {
+      const managedIds = new Set(ids(template.block))
+      for (const id of ids(localLines)) {
+        if (managedIds.has(id)) problems.push(`reuses the synced field id "${id}"`)
+      }
     }
     // A workflow's managed block ends inside `jobs:`, so local jobs follow it.
     const managedJobs = new Set(jobIds(template.block))
@@ -257,7 +300,7 @@ export const managedConflicts = (path: string, rendered: string, current: string
     }
   }
 
-  if (path.endsWith('dependabot.yml')) {
+  if (isDependabot(path)) {
     const managed = new Set(dependabotEntries(template.block))
     for (const entry of dependabotEntries(localLines)) {
       if (managed.has(entry)) problems.push(`duplicates the synced Dependabot update for ${entry}`)
@@ -281,6 +324,8 @@ export interface SyncedFile {
 export interface SyncFinding {
   readonly path: string
   readonly message: string
+  /** Set when a local rule conflicts with synced content: the fix is in this repository, not the source. */
+  readonly local?: true
 }
 
 /**
@@ -317,7 +362,13 @@ export const syncFindings = (files: ReadonlyArray<SyncedFile>): ReadonlyArray<Sy
     if (headBlock !== baseBlock && headBlock !== template.block.join('\n')) {
       findings.push({ path, message: 'edits the managed block; add local rules outside it' })
     }
-    for (const problem of managedConflicts(path, rendered, head)) findings.push({ path, message: problem })
+    // Only conflicts the pull request introduces: one already on the base
+    // branch is reported by the scheduled sync, and would otherwise fail the
+    // sync's own pull request, which keeps local rules as they are.
+    const existing = new Set(base === null ? [] : managedConflicts(path, rendered, base))
+    for (const problem of managedConflicts(path, rendered, head)) {
+      if (!existing.has(problem)) findings.push({ path, message: problem, local: true })
+    }
   }
   return findings
 }

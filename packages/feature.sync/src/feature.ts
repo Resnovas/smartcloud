@@ -33,6 +33,13 @@ export class SyncSourceInvalid extends Data.TaggedError('SyncSourceInvalid')<{ r
   }
 }
 
+/** `sync.branch` names the default branch, which the sync would overwrite. */
+export class SyncBranchIsBase extends Data.TaggedError('SyncBranchIsBase')<{ readonly branch: string }> {
+  override get message() {
+    return `sync.branch is "${this.branch}", the default branch; sync proposes its changes from a branch of its own`
+  }
+}
+
 /** The branch sync pull requests come from when `sync.branch` is not set. */
 export const DEFAULT_SYNC_BRANCH = 'smartcloud/sync'
 
@@ -138,6 +145,9 @@ const runSync = (config: SmartcloudConfig, sync: SyncConfig) =>
     }
     if (plan.files.length === 0) return
     const branch = sync.branch ?? DEFAULT_SYNC_BRANCH
+    // The proposal branch is force-updated, so it must never be the branch
+    // the pull request merges into.
+    if (branch === repository.defaultBranch) return yield* new SyncBranchIsBase({ branch })
     const result = yield* github.proposeChanges({
       branch,
       base: repository.defaultBranch,
@@ -178,12 +188,15 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
         }),
       { concurrency: CONCURRENCY },
     )
-    for (const { path, message } of syncFindings(files)) {
+    for (const { path, message, local } of syncFindings(files)) {
       yield* report.add({
         feature: FEATURE,
         rule: 'SYNC',
         level: 'error',
-        message: `${path} ${message}. Change it in ${source.owner}/${source.repo} instead.`,
+        message:
+          local === true
+            ? `${path} ${message}. Change the local rules in this repository.`
+            : `${path} ${message}. Change it in ${source.owner}/${source.repo} instead.`,
         path,
         link: linkFor(config),
       })

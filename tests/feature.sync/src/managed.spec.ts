@@ -119,6 +119,26 @@ describe('managedConflicts', () => {
     ])
   })
 
+  it('reads Dependabot directories given as a list, one entry per directory', () => {
+    const template = '# house:managed:begin\nupdates:\n  - package-ecosystem: npm\n    directories:\n      - "/web"\n      - /api\n    open-pull-requests-limit: 5\n# house:managed:end\n# house:local\n'
+    const overlapping = `${template}  - package-ecosystem: npm\n    directories: [/docs, '/api']\n`
+    expect(managedConflicts('.github/dependabot.yml', template, overlapping)).toStrictEqual(['duplicates the synced Dependabot update for npm in /api'])
+    const disjoint = `${template}  - package-ecosystem: npm\n    directories:\n      - /docs\n`
+    expect(managedConflicts('.github/dependabot.yml', template, disjoint)).toStrictEqual([])
+  })
+
+  it('checks Dependabot updates in dependabot.yaml too', () => {
+    const clash = withLocal(dependabot, '  - package-ecosystem: npm\n    directory: /')
+    expect(managedConflicts('.github/dependabot.yaml', dependabot, clash)).toStrictEqual(['duplicates the synced Dependabot update for npm in /'])
+  })
+
+  it('reads quoted top-level keys, and keys with blanks before the colon', () => {
+    const funding = '# house:managed:begin\ngithub: [TGTGamer]\n# house:managed:end\n# house:local\n'
+    for (const local of ['"github": [someone]', "'github': [someone]", 'github : [someone]']) {
+      expect(managedConflicts('.github/FUNDING.yml', funding, `${funding}${local}\n`)).toStrictEqual(['redefines the synced key "github"'])
+    }
+  })
+
   it('local YAML may not redefine a synced top-level key', () => {
     const funding = '# house:managed:begin\ngithub: [TGTGamer]\n# house:managed:end\n# house:local\n'
     expect(managedConflicts('.github/FUNDING.yml', funding, `${funding}github: [someone]\n`)).toStrictEqual(['redefines the synced key "github"'])
@@ -132,6 +152,16 @@ describe('managedConflicts', () => {
       'reuses the synced field id "version"',
     ])
     expect(managedConflicts('.github/ISSUE_TEMPLATE/bug.yml', form, `${form}  - type: input\n    id:\n    id: other\n`)).toStrictEqual([])
+    expect(managedConflicts('.github/ISSUE_TEMPLATE/bug.yml', form, `${form}  - type: input\n    id: "version"\n`)).toStrictEqual([
+      'reuses the synced field id "version"',
+    ])
+  })
+
+  it('field ids are only checked in issue and discussion forms, not workflow steps', () => {
+    const workflow = '# house:managed:begin\nsteps:\n  - uses: actions/checkout@v4\n    id: checkout\n# house:managed:end\n# house:local\n'
+    const local = `${workflow}more:\n  - uses: actions/checkout@v4\n    id: checkout\n`
+    expect(managedConflicts('.github/workflows/ci.yml', workflow, local)).toStrictEqual([])
+    expect(managedConflicts('.github/DISCUSSION_TEMPLATE/idea.yml', workflow, local)).toStrictEqual(['reuses the synced field id "checkout"'])
   })
 
   it('local workflow jobs may not redefine a synced job', () => {
@@ -197,8 +227,14 @@ describe('syncFindings', () => {
   it('a local rule that conflicts with a synced one is a finding', () => {
     const clash = withLocal(dependabot, '  - package-ecosystem: npm\n    directory: /')
     expect(syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: dependabot, head: clash }])).toStrictEqual([
-      { path: '.github/dependabot.yml', message: 'duplicates the synced Dependabot update for npm in /' },
+      { path: '.github/dependabot.yml', message: 'duplicates the synced Dependabot update for npm in /', local: true },
     ])
+  })
+
+  it('a conflict already on the base branch is not the pull request\'s doing', () => {
+    const clash = withLocal(dependabot, '  - package-ecosystem: npm\n    directory: /')
+    const stale = clash.replace('version: 2', 'version: 1')
+    expect(syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: stale, head: clash }])).toStrictEqual([])
   })
 })
 

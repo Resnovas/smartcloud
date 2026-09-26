@@ -195,6 +195,15 @@ describe('sync run', () => {
     }),
   )
 
+  it.effect('refuses a sync.branch that is the default branch, and writes nothing', () =>
+    Effect.gen(function* () {
+      const { service, state } = seed()
+      const result = yield* run(service, config({ branch: 'main' }), 'schedule')
+      expect(result.failed[0]?.message).toContain('sync.branch is "main", the default branch')
+      expect(state.proposals).toStrictEqual([])
+    }),
+  )
+
   it.effect('fails on a malformed source or a missing value, and is skipped without a sync section', () =>
     Effect.gen(function* () {
       const { service } = seed()
@@ -251,6 +260,20 @@ describe('synced files check', () => {
           path: 'tools/run',
           link: LINK,
         },
+      ])
+    }),
+  )
+
+  it.effect('asks for a local conflict the pull request adds to be fixed here, not in the source', () =>
+    Effect.gen(function* () {
+      const { service, state } = seed()
+      state.files.set(repo('.github/dependabot.yml'), dependabot('npm'))
+      state.files.set(repo('.github/dependabot.yml', 'head-sha'), `${dependabot('npm')}  - package-ecosystem: npm\n    directory: /\n`)
+      state.files.set(repo('LICENSE', 'head-sha'), 'MIT\n')
+      state.files.set(repo('tools/run', 'head-sha'), '#!/bin/sh\n')
+      const result = yield* run(service, config(), 'pull_request', pullRequest)
+      expect(result.findings.map((finding) => finding.message)).toStrictEqual([
+        '.github/dependabot.yml duplicates the synced Dependabot update for npm in /. Change the local rules in this repository.',
       ])
     }),
   )
