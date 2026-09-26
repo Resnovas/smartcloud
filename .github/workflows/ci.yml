@@ -1,0 +1,43 @@
+# CI for the v2 workspace: lint, typecheck, test with coverage, and build the
+# projects a change affects, plus the licence header check. The v1 tree under
+# legacy/ keeps its own workflows until it is removed (SMC-23).
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: nrwl/nx-set-shas@v5
+
+      - name: Lint, typecheck, test and build affected projects
+        run: pnpm nx affected -t lint typecheck test build
+
+      - name: Licence headers
+        run: pnpm headers

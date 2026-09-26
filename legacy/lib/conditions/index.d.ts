@@ -186,4 +186,4 @@ export type CurContext = {
 /**
  * The schedule condition handler.
  */
-export declare function getConditionHandler(this: UtilThis, condition: IssueCondition | PrCondition | ProjectCondition): (this: UtilThis, condition: Conditions, context: PrProps | IssueProps | ProjectProps) => Promise<boolean>;
+export declare function getConditionHandler(this: UtilThis, condition: IssueCondition | PrCondition | ProjectCondition): (this: UtilThis, condition: Conditions, context: ProjectProps | PrProps | IssueProps) => Promise<boolean>;
