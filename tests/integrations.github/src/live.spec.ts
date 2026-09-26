@@ -17,18 +17,19 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { ConfigProvider, Effect, Exit, Layer, Redacted, Schedule } from 'effect'
-import { GitHub, GitHubLive, makeLiveGitHub } from '@resnovas/integrations.github'
+import { DEFAULT_COMMITTER, GitHub, GitHubLive, makeLiveGitHub, signOff } from '@resnovas/integrations.github'
 import { fakeFetch, type Routes } from './fake-fetch.js'
 
 const REPO = '/repos/Resnovas/example'
 
-const live = (routes: Routes) => {
+const live = (routes: Routes, committer?: { name: string; email: string }) => {
   const fake = fakeFetch(routes)
   const service = makeLiveGitHub({
     token: Redacted.make('test-token'),
     coordinates: { owner: 'Resnovas', repo: 'example' },
     fetch: fake.fetch,
     retry: Schedule.recurs(2),
+    ...(committer === undefined ? {} : { committer }),
   })
   return { service, requests: fake.requests }
 }
@@ -246,6 +247,155 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
       expect(yield* github.graphql('query($id: ID!) { node(id: $id) { id } }', { id: 'R_1' })).toStrictEqual({ repository: { id: 'R_1' } })
       expect(requests[0]?.body).toStrictEqual({ has_wiki: false })
       expect(requests[1]?.body).toMatchObject({ variables: { id: 'R_1' } })
+    }),
+  )
+})
+
+describe('live GitHub: directories', () => {
+  it.effect('lists the files under a directory at a ref, recursively, with their execute bits', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        [`GET /repos/Resnovas/.github/git/trees/v2:templates`]: {
+          body: {
+            truncated: false,
+            tree: [
+              { path: 'LICENSE', mode: '100644', type: 'blob', sha: '1' },
+              { path: '.github', mode: '040000', type: 'tree', sha: '2' },
+              { path: '.github/dependabot.yml', mode: '100644', type: 'blob', sha: '3' },
+              { path: 'tools/run', mode: '100755', type: 'blob', sha: '4' },
+              { path: 'link', mode: '120000', type: 'blob', sha: '5' },
+              { path: 'vendor', mode: '160000', type: 'commit', sha: '6' },
+            ],
+          },
+        },
+      })
+      const entries = yield* (yield* service).listDirectory({ owner: 'Resnovas', repo: '.github', path: '/templates/', ref: 'v2' })
+      expect(entries).toStrictEqual([
+        { path: 'LICENSE', executable: false },
+        { path: '.github/dependabot.yml', executable: false },
+        { path: 'tools/run', executable: true },
+      ])
+      expect(requests[0]?.query).toBe('?recursive=true')
+    }),
+  )
+
+  it.effect('lists the default branch when no ref is given, and refuses a listing GitHub truncated', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        [`GET ${REPO}/git/trees/HEAD:`]: { body: { truncated: true, tree: [] } },
+      })
+      const error = yield* Effect.flip((yield* service).listDirectory({ owner: 'Resnovas', repo: 'example', path: '' }))
+      expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: ' has too many files to list' })
+      expect(requests).toHaveLength(1)
+    }),
+  )
+})
+
+describe('live GitHub: proposing changes', () => {
+  const proposal = {
+    branch: 'smartcloud/sync',
+    base: 'main',
+    title: 'chore(sync): sync files',
+    body: 'Synced.',
+    files: [
+      { path: 'LICENSE', content: 'MIT', executable: false },
+      { path: 'tools/run', content: '#!/bin/sh', executable: true },
+    ],
+  }
+  const baseRoutes: Routes = {
+    [`GET ${REPO}/git/ref/heads/main`]: { body: { object: { sha: 'base' } } },
+    [`GET ${REPO}/git/commits/base`]: { body: { sha: 'base', tree: { sha: 'base-tree' }, parents: [] } },
+    [`POST ${REPO}/git/blobs`]: [{ status: 201, body: { sha: 'blob-1' } }, { status: 201, body: { sha: 'blob-2' } }],
+    [`POST ${REPO}/git/trees`]: { status: 201, body: { sha: 'new-tree' } },
+    [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'new-commit' } },
+  }
+
+  it.effect('builds a signed-off commit on the base, creates the branch and opens a pull request', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        ...baseRoutes,
+        [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { status: 404, body: { message: 'Not Found' } },
+        [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
+        [`GET ${REPO}/pulls`]: { body: [] },
+        [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'https://github.com/Resnovas/example/pull/5' } },
+      })
+      const result = yield* (yield* service).proposeChanges({ ...proposal, deletions: ['OLD.md'] })
+      expect(result).toStrictEqual({ number: 5, url: 'https://github.com/Resnovas/example/pull/5', created: true })
+      const sent = (method: string, path: string) => requests.filter((request) => request.method === method && request.path === path)
+      expect(sent('POST', `${REPO}/git/blobs`).map(({ body }) => body)).toStrictEqual([
+        { content: Buffer.from('MIT').toString('base64'), encoding: 'base64' },
+        { content: Buffer.from('#!/bin/sh').toString('base64'), encoding: 'base64' },
+      ])
+      expect(sent('POST', `${REPO}/git/trees`)[0]?.body).toStrictEqual({
+        base_tree: 'base-tree',
+        tree: [
+          { path: 'LICENSE', mode: '100644', type: 'blob', sha: 'blob-1' },
+          { path: 'tools/run', mode: '100755', type: 'blob', sha: 'blob-2' },
+          { path: 'OLD.md', mode: '100644', type: 'blob', sha: null },
+        ],
+      })
+      expect(sent('POST', `${REPO}/git/commits`)[0]?.body).toStrictEqual({
+        message: `chore(sync): sync files\n\nSigned-off-by: ${DEFAULT_COMMITTER.name} <${DEFAULT_COMMITTER.email}>`,
+        tree: 'new-tree',
+        parents: ['base'],
+        author: DEFAULT_COMMITTER,
+        committer: DEFAULT_COMMITTER,
+      })
+      expect(sent('POST', `${REPO}/git/refs`)[0]?.body).toStrictEqual({ ref: 'refs/heads/smartcloud/sync', sha: 'new-commit' })
+      expect(sent('GET', `${REPO}/pulls`)[0]?.query).toContain('head=Resnovas%3Asmartcloud%2Fsync')
+      expect(sent('POST', `${REPO}/pulls`)[0]?.body).toStrictEqual({ head: 'smartcloud/sync', base: 'main', title: proposal.title, body: 'Synced.' })
+    }),
+  )
+
+  it.effect('resets an existing branch as the configured committer, and updates the open pull request', () =>
+    Effect.gen(function* () {
+      const bot = { name: 'smartcloud[bot]', email: '1+smartcloud[bot]@users.noreply.github.com' }
+      const { service, requests } = live(
+        {
+          ...baseRoutes,
+          [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { body: { object: { sha: 'old-commit' } } },
+          [`GET ${REPO}/git/commits/old-commit`]: { body: { sha: 'old-commit', tree: { sha: 'old-tree' }, parents: [{ sha: 'base' }] } },
+          [`PATCH ${REPO}/git/refs/heads/smartcloud/sync`]: { body: {} },
+          [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'https://github.com/Resnovas/example/pull/9' }] },
+          [`PATCH ${REPO}/pulls/9`]: { body: {} },
+        },
+        bot,
+      )
+      const result = yield* (yield* service).proposeChanges(proposal)
+      expect(result).toStrictEqual({ number: 9, url: 'https://github.com/Resnovas/example/pull/9', created: false })
+      expect(requests.find((request) => request.path === `${REPO}/git/commits` && request.method === 'POST')?.body).toMatchObject({
+        message: signOff(proposal.title, bot),
+        author: bot,
+        committer: bot,
+      })
+      expect(requests.find((request) => request.method === 'PATCH' && request.path.endsWith('smartcloud/sync'))?.body).toStrictEqual({
+        sha: 'new-commit',
+        force: true,
+      })
+      expect(requests.at(-1)?.body).toStrictEqual({ title: proposal.title, body: 'Synced.' })
+    }),
+  )
+
+  it.effect('leaves a branch that already holds the same changes on the same base', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        ...baseRoutes,
+        [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { body: { object: { sha: 'old-commit' } } },
+        [`GET ${REPO}/git/commits/old-commit`]: { body: { sha: 'old-commit', tree: { sha: 'new-tree' }, parents: [{ sha: 'base' }] } },
+        [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'u' }] },
+        [`PATCH ${REPO}/pulls/9`]: { body: {} },
+      })
+      expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
+      expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(false)
+      expect(requests.some((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))).toBe(false)
+    }),
+  )
+
+  it.effect('surfaces a missing base branch as NotFound', () =>
+    Effect.gen(function* () {
+      const { service } = live({ [`GET ${REPO}/git/ref/heads/main`]: { status: 404, body: { message: 'Not Found' } } })
+      const error = yield* Effect.flip((yield* service).proposeChanges(proposal))
+      expect(error.message).toBe('proposeChanges: read base: not found (Not Found)')
     }),
   )
 })

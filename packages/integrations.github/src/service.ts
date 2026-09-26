@@ -109,6 +109,48 @@ export interface NewReview {
   readonly body: string
 }
 
+/** A file found by `listDirectory`, with its path relative to the listed directory. */
+export interface DirectoryEntry {
+  readonly path: string
+  /** Whether git records the file as executable (mode `100755`). */
+  readonly executable: boolean
+}
+
+/** A file to write in a proposed change. */
+export interface FileChange {
+  readonly path: string
+  readonly content: string
+  readonly executable: boolean
+}
+
+/** Changes to propose as a pull request from a branch. */
+export interface ChangeProposal {
+  /** The branch to create or update. It is reset to `base` plus the changes. */
+  readonly branch: string
+  /** The branch the pull request targets and the changes are built on. */
+  readonly base: string
+  /** The pull request title, also the commit subject. */
+  readonly title: string
+  readonly body: string
+  readonly files: ReadonlyArray<FileChange>
+  /** Paths to delete. */
+  readonly deletions?: ReadonlyArray<string>
+}
+
+/** The pull request a proposal opened or updated. */
+export interface ProposalResult {
+  readonly number: number
+  readonly url: string
+  /** True when a new pull request was opened, false when an open one was updated. */
+  readonly created: boolean
+}
+
+/** The name and email commits are made and signed off as. */
+export interface CommitIdentity {
+  readonly name: string
+  readonly email: string
+}
+
 /** A repository-scoped REST call, for the settings feature's many endpoints. */
 export interface RepositoryRequest {
   readonly method: 'GET' | 'PATCH' | 'PUT' | 'POST' | 'DELETE'
@@ -155,6 +197,13 @@ export interface GitHubService {
 
   /** Reads a text file from any repository the token can see. */
   readonly getFile: (location: FileLocation) => Effect.Effect<string, GitHubError>
+  /** Lists every file under a directory, recursively, in any repository the token can see. An empty path lists the root. */
+  readonly listDirectory: (location: FileLocation) => Effect.Effect<ReadonlyArray<DirectoryEntry>, GitHubError>
+  /**
+   * Commits file changes to a branch built on `base`, with a DCO sign-off,
+   * then opens a pull request from it, or updates the one already open.
+   */
+  readonly proposeChanges: (proposal: ChangeProposal) => Effect.Effect<ProposalResult, GitHubError>
 
   readonly repositoryRequest: (request: RepositoryRequest) => Effect.Effect<unknown, GitHubError>
   readonly graphql: (query: string, variables: Readonly<Record<string, unknown>>) => Effect.Effect<unknown, GitHubError>

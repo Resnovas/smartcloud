@@ -19,7 +19,7 @@ import { Octokit } from '@octokit/rest'
 import type { Review } from '@resnovas/conditions'
 import { Config, Effect, Layer, Redacted, Schedule } from 'effect'
 import { fromStatus, type GitHubError, ValidationFailed } from './errors.js'
-import { GitHub, type GitHubService, type RepositoryCoordinates } from './service.js'
+import { type CommitIdentity, GitHub, type GitHubService, type RepositoryCoordinates } from './service.js'
 
 /** Everything the live service needs. */
 export interface LiveOptions {
@@ -29,7 +29,55 @@ export interface LiveOptions {
   readonly fetch?: typeof globalThis.fetch
   /** How rate-limited and failed calls are retried. Defaults to three jittered, exponential retries. */
   readonly retry?: Schedule.Schedule<unknown, GitHubError>
+  /** Who proposed changes are committed and signed off as. Defaults to {@link DEFAULT_COMMITTER}. */
+  readonly committer?: CommitIdentity
 }
+
+/**
+ * The identity `GITHUB_TOKEN` pushes as. Commits name it as author and
+ * committer explicitly, so the sign-off always matches the author and the
+ * DCO check passes.
+ */
+export const DEFAULT_COMMITTER: CommitIdentity = {
+  name: 'github-actions[bot]',
+  email: '41898282+github-actions[bot]@users.noreply.github.com',
+}
+
+/**
+ * Appends a DCO `Signed-off-by` trailer for an identity to a commit message.
+ *
+ * @param message - The commit message.
+ * @param identity - Who signs off.
+ * @returns The message with the trailer.
+ */
+export const signOff = (message: string, identity: CommitIdentity): string =>
+  `${message}\n\nSigned-off-by: ${identity.name} <${identity.email}>`
+
+// Mode 120000 is a symbolic link and type `commit` a submodule: neither is a
+// file whose text can be read, so listings leave them out.
+const EXECUTABLE = '100755'
+const REGULAR = '100644'
+
+interface TreeEntry {
+  readonly path: string
+  readonly mode: typeof EXECUTABLE | typeof REGULAR
+  readonly type: 'blob'
+  readonly sha: string | null
+}
+
+const treeEntry = (path: string, executable: boolean, sha: string | null): TreeEntry => ({
+  path,
+  mode: executable ? EXECUTABLE : REGULAR,
+  type: 'blob',
+  sha,
+})
+
+// `templates/`, `/templates` and `templates` name the same directory.
+const directoryPath = (path: string) =>
+  path
+    .split('/')
+    .filter((part) => part !== '')
+    .join('/')
 
 const DEFAULT_RETRY = Schedule.exponential('1 second').pipe(Schedule.jittered, Schedule.intersect(Schedule.recurs(3)))
 
@@ -119,6 +167,113 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             : Effect.fail(new ValidationFailed({ operation: 'getFile', detail: `${location.path} is not a file` })),
         ),
       )
+
+    const listDirectory: GitHubService['listDirectory'] = (location) =>
+      call('listDirectory', () =>
+        octokit.rest.git.getTree({
+          owner: location.owner,
+          repo: location.repo,
+          // A tree-ish of `ref:path` names the directory's tree directly, so one call lists it.
+          tree_sha: `${location.ref ?? 'HEAD'}:${directoryPath(location.path)}`,
+          recursive: 'true',
+        }),
+      ).pipe(
+        Effect.flatMap(({ data }) =>
+          data.truncated
+            ? Effect.fail(new ValidationFailed({ operation: 'listDirectory', detail: `${location.path} has too many files to list` }))
+            : Effect.succeed(
+                data.tree
+                  .filter((entry) => entry.type === 'blob' && (entry.mode === REGULAR || entry.mode === EXECUTABLE))
+                  .map((entry) => ({ path: entry.path, executable: entry.mode === EXECUTABLE })),
+              ),
+        ),
+      )
+
+    const committer = options.committer ?? DEFAULT_COMMITTER
+
+    const proposeChanges: GitHubService['proposeChanges'] = (proposal) =>
+      Effect.gen(function* () {
+        const baseRef = yield* call('proposeChanges: read base', () =>
+          octokit.rest.git.getRef({ owner, repo, ref: `heads/${proposal.base}` }),
+        )
+        const baseSha = baseRef.data.object.sha
+        const baseCommit = yield* call('proposeChanges: read base commit', () =>
+          octokit.rest.git.getCommit({ owner, repo, commit_sha: baseSha }),
+        )
+        const written = yield* Effect.forEach(
+          proposal.files,
+          (file) =>
+            call('proposeChanges: create blob', () =>
+              octokit.rest.git.createBlob({ owner, repo, content: Buffer.from(file.content, 'utf8').toString('base64'), encoding: 'base64' }),
+            ).pipe(Effect.map(({ data }) => treeEntry(file.path, file.executable, data.sha))),
+          { concurrency: 4 },
+        )
+        const deleted = (proposal.deletions ?? []).map((path) => treeEntry(path, false, null))
+        const tree = yield* call('proposeChanges: create tree', () =>
+          octokit.rest.git.createTree({ owner, repo, base_tree: baseCommit.data.tree.sha, tree: [...written, ...deleted] }),
+        )
+
+        const branchSha = yield* call('proposeChanges: read branch', () =>
+          octokit.rest.git.getRef({ owner, repo, ref: `heads/${proposal.branch}` }),
+        ).pipe(
+          Effect.map(({ data }) => data.object.sha),
+          Effect.catchTag('NotFound', () => Effect.succeed(undefined)),
+        )
+        // A branch already holding exactly these changes on this base is left
+        // alone, so a scheduled run does not push an identical commit each time.
+        const current =
+          branchSha === undefined
+            ? undefined
+            : (yield* call('proposeChanges: read branch commit', () =>
+                octokit.rest.git.getCommit({ owner, repo, commit_sha: branchSha }),
+              )).data
+        const upToDate =
+          current !== undefined &&
+          current.tree.sha === tree.data.sha &&
+          current.parents.map((parent) => parent.sha).join(' ') === baseSha
+        if (!upToDate) {
+          const commit = yield* call('proposeChanges: create commit', () =>
+            octokit.rest.git.createCommit({
+              owner,
+              repo,
+              message: signOff(proposal.title, committer),
+              tree: tree.data.sha,
+              parents: [baseSha],
+              author: committer,
+              committer,
+            }),
+          )
+          yield* branchSha === undefined
+            ? call('proposeChanges: create branch', () =>
+                octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${proposal.branch}`, sha: commit.data.sha }),
+              )
+            : call('proposeChanges: update branch', () =>
+                octokit.rest.git.updateRef({ owner, repo, ref: `heads/${proposal.branch}`, sha: commit.data.sha, force: true }),
+              )
+        }
+
+        const open = yield* call('proposeChanges: find pull request', () =>
+          octokit.rest.pulls.list({ owner, repo, head: `${owner}:${proposal.branch}`, base: proposal.base, state: 'open', per_page: 1 }),
+        )
+        const existing = open.data[0]
+        if (existing !== undefined) {
+          yield* call('proposeChanges: update pull request', () =>
+            octokit.rest.pulls.update({ owner, repo, pull_number: existing.number, title: proposal.title, body: proposal.body }),
+          )
+          return { number: existing.number, url: existing.html_url, created: false }
+        }
+        const created = yield* call('proposeChanges: open pull request', () =>
+          octokit.rest.pulls.create({
+            owner,
+            repo,
+            head: proposal.branch,
+            base: proposal.base,
+            title: proposal.title,
+            body: proposal.body,
+          }),
+        )
+        return { number: created.data.number, url: created.data.html_url, created: true }
+      })
 
     return {
       coordinates: options.coordinates,
@@ -220,6 +375,8 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           ),
         ),
       getFile,
+      listDirectory,
+      proposeChanges,
       repositoryRequest: (request) =>
         call(`${request.method} /repos/${owner}/${repo}${request.path}`, () =>
           octokit.request(`${request.method} /repos/{owner}/{repo}${request.path}`, { owner, repo, ...request.body }),
@@ -244,7 +401,9 @@ type GitHubServiceAnnotations = Parameters<GitHubService['createCheckRun']>[0]['
 /**
  * The live GitHub service for the repository in `GITHUB_REPOSITORY`,
  * authenticated with `GITHUB_TOKEN`. Both are read through Effect Config,
- * and the token stays redacted.
+ * and the token stays redacted. `SMARTCLOUD_COMMITTER_NAME` and
+ * `SMARTCLOUD_COMMITTER_EMAIL` override who proposed changes are committed
+ * and signed off as, for a token that pushes as another identity.
  */
 export const GitHubLive = Layer.effect(
   GitHub,
@@ -253,7 +412,11 @@ export const GitHubLive = Layer.effect(
     const repository = yield* Config.string('GITHUB_REPOSITORY').pipe(
       Config.validate({ message: 'GITHUB_REPOSITORY must be owner/name', validation: (value) => /^[^/\s]+\/[^/\s]+$/.test(value) }),
     )
+    const committer = yield* Config.all({
+      name: Config.string('SMARTCLOUD_COMMITTER_NAME').pipe(Config.withDefault(DEFAULT_COMMITTER.name)),
+      email: Config.string('SMARTCLOUD_COMMITTER_EMAIL').pipe(Config.withDefault(DEFAULT_COMMITTER.email)),
+    })
     const [owner = '', repo = ''] = repository.split('/')
-    return yield* makeLiveGitHub({ token, coordinates: { owner, repo } })
+    return yield* makeLiveGitHub({ token, coordinates: { owner, repo }, committer })
   }),
 )

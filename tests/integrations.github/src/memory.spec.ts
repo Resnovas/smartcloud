@@ -117,6 +117,42 @@ describe('in-memory GitHub', () => {
   )
 })
 
+describe('in-memory GitHub: directories and proposals', () => {
+  it.effect('lists the files under a directory at a ref, with their execute bits', () =>
+    Effect.gen(function* () {
+      const { service } = makeMemoryGitHub({
+        files: new Map([
+          [fileKey('o', 'r', 'templates/b.md', 'v2'), 'b'],
+          [fileKey('o', 'r', 'templates/tools/run', 'v2'), 'run'],
+          [fileKey('o', 'r', 'templates/a.md'), 'default branch'],
+          [fileKey('o', 'r', 'other/c.md', 'v2'), 'c'],
+        ]),
+        executables: new Set([fileKey('o', 'r', 'templates/tools/run', 'v2')]),
+      })
+      expect(yield* service.listDirectory({ owner: 'o', repo: 'r', path: 'templates/', ref: 'v2' })).toStrictEqual([
+        { path: 'b.md', executable: false },
+        { path: 'tools/run', executable: true },
+      ])
+      expect(yield* service.listDirectory({ owner: 'o', repo: 'r', path: '' })).toStrictEqual([{ path: 'templates/a.md', executable: false }])
+    }),
+  )
+
+  it.effect('opens a pull request for a proposal, updates it while open, and opens another once it is closed', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub()
+      const proposal = { branch: 'smartcloud/sync', base: 'main', title: 't', body: 'b', files: [{ path: 'a', content: 'x', executable: false }] }
+      const first = yield* service.proposeChanges(proposal)
+      expect(first).toStrictEqual({ number: 1, url: 'https://github.com/Resnovas/example/pull/1', created: true })
+      expect(yield* service.proposeChanges({ ...proposal, title: 'updated' })).toStrictEqual({ ...first, created: false })
+      expect(state.proposals).toStrictEqual([{ ...proposal, title: 'updated', number: 1, open: true }])
+      const [opened] = state.proposals
+      if (opened !== undefined) opened.open = false
+      expect((yield* service.proposeChanges(proposal)).number).toBe(2)
+      expect(state.proposals).toHaveLength(2)
+    }),
+  )
+})
+
 describe('dry run', () => {
   it.effect('passes reads through and records writes in order, touching nothing', () =>
     Effect.gen(function* () {
@@ -136,6 +172,12 @@ describe('dry run', () => {
       const run = { name: 'n', headSha: 'h', status: 'completed' as const, conclusion: 'success' as const, title: 't', summary: 's' }
       expect(yield* github.createCheckRun(run)).toBe(0)
       yield* github.updateCheckRun(0, run)
+      expect(yield* github.proposeChanges({ branch: 'b', base: 'main', title: 't', body: '', files: [] })).toStrictEqual({
+        number: 0,
+        url: '',
+        created: false,
+      })
+      expect(yield* github.listDirectory({ owner: 'Resnovas', repo: 'example', path: '' })).toStrictEqual([])
       expect(yield* github.repositoryRequest({ method: 'PATCH', path: '', body: { has_wiki: false } })).toBeNull()
       yield* github.repositoryRequest({ method: 'GET', path: '/rulesets' })
       yield* github.graphql('mutation { x }', {})
@@ -154,6 +196,7 @@ describe('dry run', () => {
         'requestReviewers',
         'createCheckRun',
         'updateCheckRun',
+        'proposeChanges',
         'repositoryRequest',
         'graphql',
       ])

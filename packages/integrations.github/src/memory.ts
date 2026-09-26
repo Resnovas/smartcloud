@@ -19,6 +19,7 @@ import type { Commit, Review } from '@resnovas/conditions'
 import { Effect, Layer } from 'effect'
 import { type GitHubError, NotFound, ValidationFailed } from './errors.js'
 import {
+  type ChangeProposal,
   type CheckRun,
   type Comment,
   GitHub,
@@ -39,6 +40,13 @@ export interface MemoryPullRequest {
   submittedReviews: Array<NewReview>
 }
 
+/** A proposal the in-memory GitHub received, with the pull request it opened. */
+export interface MemoryProposal extends ChangeProposal {
+  readonly number: number
+  /** Whether the pull request is still open; tests close it to see a new one opened. */
+  open: boolean
+}
+
 /**
  * Everything the in-memory GitHub holds. Tests seed it, run a feature, and
  * then read it to see what the feature did.
@@ -52,6 +60,10 @@ export interface MemoryState {
   pulls: Map<number, MemoryPullRequest>
   /** File contents keyed by `owner/repo/path@ref`, with an empty ref for the default branch. */
   files: Map<string, string>
+  /** Keys of `files` that are executable. */
+  executables: Set<string>
+  /** Pull requests opened by `proposeChanges`, latest content last. */
+  proposals: Array<MemoryProposal>
   checkRuns: Array<CheckRun & { readonly id: number }>
   requests: Array<RepositoryRequest>
   graphql: Array<{ readonly query: string; readonly variables: Readonly<Record<string, unknown>> }>
@@ -75,6 +87,8 @@ const defaults = (): MemoryState => ({
   openIssues: [],
   pulls: new Map(),
   files: new Map(),
+  executables: new Set(),
+  proposals: [],
   checkRuns: [],
   requests: [],
   graphql: [],
@@ -86,8 +100,9 @@ const defaults = (): MemoryState => ({
  *
  * @remarks
  * It behaves like GitHub where features depend on it: labels are unique by
- * name ignoring case, renames carry a label on existing issues, and missing
- * things fail with `NotFound`.
+ * name ignoring case, renames carry a label on existing issues, missing
+ * things fail with `NotFound`, and a proposal updates the open pull request
+ * from its branch rather than opening another.
  *
  * @example
  * ```ts
@@ -202,6 +217,26 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
         return text === undefined
           ? Effect.fail(new NotFound({ operation: 'getFile', detail: `${location.owner}/${location.repo}/${location.path}` }))
           : Effect.succeed(text)
+      }),
+    listDirectory: (location) =>
+      Effect.sync(() => {
+        const directory = location.path.split('/').filter((part) => part !== '').join('/')
+        const prefix = `${location.owner}/${location.repo}/${directory === '' ? '' : `${directory}/`}`
+        const suffix = `@${location.ref ?? ''}`
+        return [...state.files.keys()]
+          .filter((key) => key.startsWith(prefix) && key.endsWith(suffix))
+          .sort()
+          .map((key) => ({ path: key.slice(prefix.length, key.length - suffix.length), executable: state.executables.has(key) }))
+      }),
+    proposeChanges: (proposal) =>
+      Effect.sync(() => {
+        const index = state.proposals.findIndex((existing) => existing.open && existing.branch === proposal.branch)
+        const existing = state.proposals[index]
+        const number = existing === undefined ? state.nextId++ : existing.number
+        const entry = { ...proposal, number, open: true }
+        if (existing === undefined) state.proposals.push(entry)
+        else state.proposals[index] = entry
+        return { number, url: `https://github.com/${state.repository.fullName}/pull/${number}`, created: existing === undefined }
       }),
     repositoryRequest: (request) => Effect.sync(() => (state.requests.push(request), null)),
     graphql: (query, variables) => Effect.sync(() => (state.graphql.push({ query, variables }), null)),
