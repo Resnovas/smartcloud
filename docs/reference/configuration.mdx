@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -458,6 +458,30 @@ The pull request conflicts with its base branch, or does not when false. Unknown
 | --- | --- | --- | --- |
 | `type` | `hasConflict` | yes |  |
 | `condition` | boolean | yes |  |
+
+Other keys are an error.
+
+### checksPass
+
+Every named check succeeded, or at least one has not when false. A check that has not reported yet has not succeeded.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `checksPass` | yes |  |
+| `checks` | list of string | yes | Check run names or commit status contexts, matched exactly. At least 1 item(s). |
+| `condition` | boolean | yes |  |
+
+Other keys are an error.
+
+### checkStatus
+
+The named check is in this state. A check that has not reported yet is pending.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `checkStatus` | yes |  |
+| `check` | string | yes | A check run name or commit status context, matched exactly. At least 1 character(s). |
+| `condition` | one of `success`, `failure`, `pending` | yes | success, failure or pending; a check that has not reported yet is pending. |
 
 Other keys are an error.
 

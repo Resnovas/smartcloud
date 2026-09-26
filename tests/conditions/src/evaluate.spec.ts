@@ -24,6 +24,9 @@ const passes = (condition: Condition, subject: Subject) =>
 
 const signed = 'Signed-off-by: Jane Doe <jane@example.com>'
 const approved = (author: string) => ({ author, state: 'APPROVED' as const })
+const green = (name: string) => ({ name, state: 'success' as const })
+const red = (name: string) => ({ name, state: 'failure' as const })
+const running = (name: string) => ({ name, state: 'pending' as const })
 
 // [name, condition, subject, expected]
 // Subjects without an optional field, which is how a decoded event leaves it out.
@@ -194,6 +197,84 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     pullRequest({ mergeable: 'UNKNOWN' }),
     true,
   ],
+  [
+    'checksPass, every named check succeeded',
+    { type: 'checksPass', checks: ['build', 'test'], condition: true },
+    pullRequest({ checks: [green('build'), green('test'), red('lint')] }),
+    true,
+  ],
+  [
+    'checksPass, one failed',
+    { type: 'checksPass', checks: ['build', 'test'], condition: true },
+    pullRequest({ checks: [green('build'), red('test')] }),
+    false,
+  ],
+  [
+    'checksPass, one still running',
+    { type: 'checksPass', checks: ['build', 'test'], condition: true },
+    pullRequest({ checks: [green('build'), running('test')] }),
+    false,
+  ],
+  [
+    'checksPass, one not reported',
+    { type: 'checksPass', checks: ['build', 'test'], condition: true },
+    pullRequest({ checks: [green('build')] }),
+    false,
+  ],
+  [
+    'checksPass, names match exactly',
+    { type: 'checksPass', checks: ['Test'], condition: true },
+    pullRequest({ checks: [green('test')] }),
+    false,
+  ],
+  [
+    'checksPass, a failure outranks a success under the same name',
+    { type: 'checksPass', checks: ['test'], condition: true },
+    pullRequest({ checks: [green('test'), red('test')] }),
+    false,
+  ],
+  [
+    'checksPass false, one failed',
+    { type: 'checksPass', checks: ['test'], condition: false },
+    pullRequest({ checks: [red('test')] }),
+    true,
+  ],
+  [
+    'checksPass false, all succeeded',
+    { type: 'checksPass', checks: ['test'], condition: false },
+    pullRequest({ checks: [green('test')] }),
+    false,
+  ],
+  [
+    'checkStatus success',
+    { type: 'checkStatus', check: 'test', condition: 'success' },
+    pullRequest({ checks: [green('test')] }),
+    true,
+  ],
+  [
+    'checkStatus failure outranks pending and success',
+    { type: 'checkStatus', check: 'test', condition: 'failure' },
+    pullRequest({ checks: [green('test'), running('test'), red('test')] }),
+    true,
+  ],
+  [
+    'checkStatus pending outranks success',
+    { type: 'checkStatus', check: 'test', condition: 'pending' },
+    pullRequest({ checks: [green('test'), running('test')] }),
+    true,
+  ],
+  [
+    'checkStatus, not reported is pending',
+    { type: 'checkStatus', check: 'test', condition: 'pending' },
+    pullRequest(),
+    true,
+  ],
+  [
+    'checkStatus, not reported is not success',
+    { type: 'checkStatus', check: 'test', condition: 'success' },
+    pullRequest(),
+    false,
+  ],
   ['commitsSignedOff', { type: 'commitsSignedOff', condition: true }, pullRequest(), true],
   [
     'commitsSignedOff, email must match the author',
@@ -267,6 +348,46 @@ describe('evaluate: facets', () => {
       const { mergeable: _, ...unloaded } = pullRequest()
       const exit = yield* Effect.exit(evaluate({ condition: [{ type: 'hasConflict', condition: true }] }, unloaded))
       expect(exit).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'mergeable', condition: 'hasConflict' })))
+    }),
+  )
+
+  it.effect('checksPass and checkStatus need the checks facet', () =>
+    Effect.gen(function* () {
+      const { checks: _, ...unloaded } = pullRequest()
+      const status = yield* Effect.exit(
+        evaluate({ condition: [{ type: 'checkStatus', check: 'test', condition: 'success' }] }, unloaded),
+      )
+      expect(status).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'checks', condition: 'checkStatus' })))
+      const pass = yield* Effect.exit(
+        evaluate({ condition: [{ type: 'checksPass', checks: ['test'], condition: true }] }, unloaded),
+      )
+      expect(pass).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'checks', condition: 'checksPass' })))
+    }),
+  )
+
+  it.effect('explains the check states', () =>
+    Effect.gen(function* () {
+      const detail = (condition: Condition, subject: Subject) =>
+        Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.results[0]?.detail)
+      const checks = [green('build'), red('test'), running('lint')]
+      expect(yield* detail({ type: 'checksPass', checks: ['build'], condition: true }, pullRequest({ checks }))).toBe(
+        'every named check succeeded',
+      )
+      expect(
+        yield* detail(
+          { type: 'checksPass', checks: ['build', 'test', 'lint', 'e2e'], condition: true },
+          pullRequest({ checks }),
+        ),
+      ).toBe('not succeeded: test, lint, e2e')
+      expect(yield* detail({ type: 'checkStatus', check: 'test', condition: 'failure' }, pullRequest({ checks }))).toBe(
+        'test failure',
+      )
+      expect(yield* detail({ type: 'checkStatus', check: 'e2e', condition: 'pending' }, pullRequest({ checks }))).toBe(
+        'e2e has not reported',
+      )
+      expect(yield* detail({ type: 'checkStatus', check: 'e2e', condition: 'pending' }, issue())).toBe(
+        'only applies to pull requests',
+      )
     }),
   )
 
@@ -413,10 +534,11 @@ describe('requiredFacets', () => {
           { type: '$not', requires: 1, condition: [{ type: 'isApproved', condition: 1 }] },
           { type: 'titleMatches', condition: 'x' },
           { type: 'hasConflict', condition: true },
+          { type: 'checkStatus', check: 'test', condition: 'success' },
         ],
       },
     ])
-    expect([...facets].sort()).toStrictEqual(['commits', 'files', 'mergeable', 'pendingReviewers', 'reviews'])
+    expect([...facets].sort()).toStrictEqual(['checks', 'commits', 'files', 'mergeable', 'pendingReviewers', 'reviews'])
   })
 
   it('looks inside $and and $only too', () => {

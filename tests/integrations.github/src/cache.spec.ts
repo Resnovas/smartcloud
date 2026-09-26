@@ -235,9 +235,10 @@ describe('cached reads: invalidation after writes', () => {
     }),
   )
 
-  it.effect('a proposal invalidates file and directory reads, the open issues and pull request reads', () =>
+  it.effect('a proposal invalidates file and directory reads, the open issues, pull request reads and checks', () =>
     Effect.gen(function* () {
       const file = (text: string) => ({ body: { type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64') } })
+      const pull = (mergeable: boolean) => ({ body: { mergeable, head: { sha: 'head' } } })
       const { service, calls } = live({
         [`GET ${REPO}/contents/LICENSE`]: [file('old'), file('new')],
         [`GET ${REPO}/git/trees/HEAD:`]: { body: { truncated: false, tree: [] } },
@@ -251,7 +252,10 @@ describe('cached reads: invalidation after writes', () => {
         [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
         [`GET ${REPO}/pulls`]: { body: [] },
         [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'u' } },
-        [`GET ${REPO}/pulls/5`]: [{ body: { mergeable: true } }, { body: { mergeable: false } }],
+        // Mergeability and then the checks read the pull request, before and after the proposal.
+        [`GET ${REPO}/pulls/5`]: [pull(true), pull(true), pull(false), pull(false)],
+        [`GET ${REPO}/commits/head/check-runs`]: { body: { total_count: 0, check_runs: [] } },
+        [`GET ${REPO}/commits/head/statuses`]: { body: [] },
       })
       const github = yield* service
       const read = Effect.all([
@@ -259,6 +263,7 @@ describe('cached reads: invalidation after writes', () => {
         github.listDirectory({ owner: 'Resnovas', repo: 'example', path: '' }),
         github.listOpenIssues,
         github.getMergeable(5),
+        github.listChecks(5),
       ])
       expect((yield* read)[0]).toBe('old')
       yield* read
@@ -272,10 +277,33 @@ describe('cached reads: invalidation after writes', () => {
       const after = yield* read
       expect(after[0]).toBe('new')
       expect(after[3]).toBe('CONFLICTING')
-      expect(calls('GET', `${REPO}/pulls/5`)).toBe(2)
+      expect(calls('GET', `${REPO}/pulls/5`)).toBe(4)
+      expect(calls('GET', `${REPO}/commits/head/check-runs`)).toBe(2)
       expect(calls('GET', `${REPO}/contents/LICENSE`)).toBe(2)
       expect(calls('GET', `${REPO}/git/trees/HEAD:`)).toBe(2)
       expect(calls('GET', `${REPO}/issues`)).toBe(2)
+    }),
+  )
+
+  it.effect("a check run write invalidates the checks, since smartcloud's own run is one of them", () =>
+    Effect.gen(function* () {
+      const { service, calls } = live({
+        [`GET ${REPO}/pulls/7`]: { body: { head: { sha: 'head' } } },
+        [`GET ${REPO}/commits/head/check-runs`]: { body: { total_count: 0, check_runs: [] } },
+        [`GET ${REPO}/commits/head/statuses`]: { body: [] },
+        [`POST ${REPO}/check-runs`]: { status: 201, body: { id: 1 } },
+        [`PATCH ${REPO}/check-runs/1`]: { body: {} },
+      })
+      const github = yield* service
+      const run = { name: 'n', headSha: 'head', status: 'in_progress', title: 't', summary: 's' } as const
+      yield* Effect.all([github.listChecks(7), github.listChecks(7)])
+      expect(calls('GET', `${REPO}/commits/head/check-runs`)).toBe(1)
+      yield* github.createCheckRun(run)
+      yield* github.listChecks(7)
+      yield* github.updateCheckRun(1, run)
+      yield* github.listChecks(7)
+      expect(calls('GET', `${REPO}/commits/head/check-runs`)).toBe(3)
+      expect(calls('GET', `${REPO}/commits/head/statuses`)).toBe(3)
     }),
   )
 

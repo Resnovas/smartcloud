@@ -123,6 +123,7 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
         load('pendingReviewers', github.countRequestedReviewers),
         load('commits', github.listCommits),
         load('mergeable', github.getMergeable),
+        load('checks', github.listChecks),
       ],
       { concurrency: 'unbounded' },
     )

@@ -216,7 +216,7 @@ describe('loadFacets', () => {
       const { service } = memory()
       const subject = yield* loadFacets(
         { kind: 'pullRequest', number: 7, title: 't', body: '', author: 'a', open: true, locked: false, labels: [], updatedAt: new Date(0) },
-        new Set(['files', 'reviews', 'pendingReviewers', 'commits', 'mergeable'] as const),
+        new Set(['files', 'reviews', 'pendingReviewers', 'commits', 'mergeable', 'checks'] as const),
       ).pipe(Effect.provideService(GitHub, service))
       expect(subject).toMatchObject({
         files: ['src/a.ts'],
@@ -224,6 +224,7 @@ describe('loadFacets', () => {
         pendingReviewers: 1,
         commits: [{ sha: 'a' }],
         mergeable: 'MERGEABLE',
+        checks: [],
       })
     }),
   )

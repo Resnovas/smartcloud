@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { Check, Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Duration, Effect, Request, RequestResolver } from 'effect'
 import type { GitHubError } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
@@ -56,6 +56,10 @@ interface GetMergeable extends Request.Request<Mergeable, GitHubError> {
   readonly _tag: 'GetMergeable'
   readonly pullRequest: number
 }
+interface ListChecks extends Request.Request<ReadonlyArray<Check>, GitHubError> {
+  readonly _tag: 'ListChecks'
+  readonly pullRequest: number
+}
 // `ref` is always present, so every key for the default branch has the same shape.
 interface Location {
   readonly owner: string
@@ -83,6 +87,7 @@ const ListFiles = Request.tagged<ListFiles>('ListFiles')
 const ListReviews = Request.tagged<ListReviews>('ListReviews')
 const CountRequestedReviewers = Request.tagged<CountRequestedReviewers>('CountRequestedReviewers')
 const GetMergeable = Request.tagged<GetMergeable>('GetMergeable')
+const ListChecks = Request.tagged<ListChecks>('ListChecks')
 const GetFile = Request.tagged<GetFile>('GetFile')
 const ListDirectory = Request.tagged<ListDirectory>('ListDirectory')
 const RepositoryGet = Request.tagged<RepositoryGet>('RepositoryGet')
@@ -109,6 +114,7 @@ interface Caches {
   readonly issues: Request.Cache
   readonly comments: Request.Cache
   readonly pulls: Request.Cache
+  readonly checks: Request.Cache
   readonly contents: Request.Cache
   readonly requests: Request.Cache
 }
@@ -141,6 +147,9 @@ interface Caches {
  *   issues, which gain its pull request, and every pull request read, since
  *   updating its branch changes that pull request's commits, files and
  *   mergeability;
+ * - a check run write invalidates the CI checks, since smartcloud's own run
+ *   is one of them, and a proposal invalidates them too, since it moves a
+ *   pull request's head commit;
  * - a mergeability GitHub has not computed yet (`UNKNOWN`) is not cached,
  *   so the next read asks again;
  * - the checks on a commit are never cached, because a caller polling them
@@ -171,6 +180,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       issues: yield* makeCache,
       comments: yield* makeCache,
       pulls: yield* makeCache,
+      checks: yield* makeCache,
       contents: yield* makeCache,
       requests: yield* makeCache,
     }
@@ -198,6 +208,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
     const readMergeable = lookup(caches.pulls, RequestResolver.fromEffect(({ pullRequest }: GetMergeable) => inner.getMergeable(pullRequest)))
     const getMergeable = (request: GetMergeable) =>
       Effect.tap(readMergeable(request), (mergeable) => (mergeable === 'UNKNOWN' ? caches.pulls.invalidate(request) : Effect.void))
+    const listChecks = lookup(caches.checks, RequestResolver.fromEffect(({ pullRequest }: ListChecks) => inner.listChecks(pullRequest)))
     const getFile = lookup(caches.contents, RequestResolver.fromEffect((request: GetFile) => inner.getFile(locationOf(request))))
     const listDirectory = lookup(caches.contents, RequestResolver.fromEffect((request: ListDirectory) => inner.listDirectory(locationOf(request))))
     const repositoryGet = lookup(
@@ -233,6 +244,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       listReviews: (pullRequest) => listReviews(ListReviews({ pullRequest })),
       countRequestedReviewers: (pullRequest) => countRequestedReviewers(CountRequestedReviewers({ pullRequest })),
       getMergeable: (pullRequest) => getMergeable(GetMergeable({ pullRequest })),
+      listChecks: (pullRequest) => listChecks(ListChecks({ pullRequest })),
       createReview: (pullRequest, review) =>
         writing(inner.createReview(pullRequest, review), [
           caches.pulls.invalidate(ListReviews({ pullRequest })),
@@ -241,14 +253,14 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       requestReviewers: (pullRequest, logins) =>
         writing(inner.requestReviewers(pullRequest, logins), [caches.pulls.invalidate(CountRequestedReviewers({ pullRequest }))]),
 
-      createCheckRun: (run) => writing(inner.createCheckRun(run), []),
-      updateCheckRun: (id, run) => writing(inner.updateCheckRun(id, run), []),
+      createCheckRun: (run) => writing(inner.createCheckRun(run), [caches.checks.invalidateAll]),
+      updateCheckRun: (id, run) => writing(inner.updateCheckRun(id, run), [caches.checks.invalidateAll]),
       listCommitChecks: inner.listCommitChecks,
 
       getFile: (location) => getFile(GetFile(locationKey(location))),
       listDirectory: (location) => listDirectory(ListDirectory(locationKey(location))),
       proposeChanges: (proposal) =>
-        writing(inner.proposeChanges(proposal), [caches.contents.invalidateAll, caches.issues.invalidateAll, caches.pulls.invalidateAll]),
+        writing(inner.proposeChanges(proposal), [caches.contents.invalidateAll, caches.issues.invalidateAll, caches.pulls.invalidateAll, caches.checks.invalidateAll]),
 
       repositoryRequest: (request) =>
         request.method === 'GET' && request.body === undefined

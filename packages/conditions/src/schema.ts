@@ -16,6 +16,7 @@
 
 import { Schema } from 'effect'
 import { Pattern } from './pattern.js'
+import { CheckState } from './subject.js'
 
 // Field names follow v1 exactly (`type`, `condition`, `requires`, `label`,
 // `min`, `max`), so every v1 condition decodes and evaluates unchanged.
@@ -177,6 +178,63 @@ export const HasConflict = flag(
   'hasConflict',
   'The pull request conflicts with its base branch, or does not when false. Unknown mergeability counts as not conflicting.',
 )
+
+const CheckName = Schema.NonEmptyString.annotations({
+  description: 'A check run name or commit status context, matched exactly.',
+})
+
+/**
+ * Every named CI check on the pull request's head commit succeeded (or, when
+ * false, at least one has not).
+ *
+ * @remarks
+ * Names are matched exactly against check run names and commit status
+ * contexts. A named check that has not reported yet does not pass, and when a
+ * name is reported more than once, a failure outranks a pending run, which
+ * outranks a success.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ChecksPass"
+ * import { ChecksPass } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(ChecksPass)({ type: 'checksPass', checks: ['build', 'test'], condition: true }) // => true
+ * ```
+ */
+export const ChecksPass = Schema.Struct({
+  type: Schema.Literal('checksPass'),
+  checks: Schema.NonEmptyArray(CheckName).annotations({ description: 'Check run names or commit status contexts, matched exactly.' }),
+  condition: Schema.Boolean,
+}).annotations({
+  identifier: 'checksPass',
+  description: 'Every named check succeeded, or at least one has not when false. A check that has not reported yet has not succeeded.',
+})
+
+/**
+ * A named CI check on the pull request's head commit is in a state:
+ * `success`, `failure` or `pending`.
+ *
+ * @remarks
+ * A check that has not reported yet counts as `pending`. When the name is
+ * reported more than once, a failure outranks a pending run, which outranks
+ * a success.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CheckStatus"
+ * import { CheckStatus } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CheckStatus)({ type: 'checkStatus', check: 'test', condition: 'failure' }) // => true
+ * ```
+ */
+export const CheckStatus = Schema.Struct({
+  type: Schema.Literal('checkStatus'),
+  check: CheckName,
+  condition: CheckState.annotations({ description: 'success, failure or pending; a check that has not reported yet is pending.' }),
+}).annotations({
+  identifier: 'checkStatus',
+  description: 'The named check is in this state. A check that has not reported yet is pending.',
+})
 
 /**
  * The subject has (or, when false, lacks) a label.
@@ -344,6 +402,8 @@ const Leaf = Schema.Union(
   RequestedChanges,
   CommitsSignedOff,
   HasConflict,
+  ChecksPass,
+  CheckStatus,
   HasLabel,
   IsStale,
   IsAbandoned,

@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { Check, Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Effect, Layer } from 'effect'
 import { type GitHubError, NotFound, ValidationFailed } from './errors.js'
 import {
@@ -40,6 +40,8 @@ export interface MemoryPullRequest {
   submittedReviews: Array<NewReview>
   /** Whether it can merge into its base branch; `MERGEABLE` when omitted. */
   mergeable?: Mergeable
+  /** The CI checks on its head commit; none when omitted. */
+  checks?: Array<Check>
 }
 
 /** A proposal the in-memory GitHub received, with the pull request it opened. */
@@ -221,6 +223,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
     listReviews: (number) => Effect.map(pull('listReviews', number), (entry) => [...entry.reviews]),
     countRequestedReviewers: (number) => Effect.map(pull('countRequestedReviewers', number), (entry) => entry.requestedReviewers.length),
     getMergeable: (number) => Effect.map(pull('getMergeable', number), (entry) => entry.mergeable ?? 'MERGEABLE'),
+    listChecks: (number) => Effect.map(pull('listChecks', number), (entry) => [...(entry.checks ?? [])]),
     createReview: (number, review) => Effect.map(pull('createReview', number), (entry) => void entry.submittedReviews.push(review)),
     requestReviewers: (number, logins) =>
       Effect.map(pull('requestReviewers', number), (entry) => void entry.requestedReviewers.push(...logins)),
