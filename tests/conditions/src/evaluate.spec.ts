@@ -115,6 +115,18 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     pullRequest({ commits: [commit('feat: a'), commit('Merge main', { parents: 2 })] }),
     true,
   ],
+  [
+    'commitMessagesMatch, a global pattern restarts on every commit',
+    { type: 'commitMessagesMatch', condition: '/^feat/g' },
+    pullRequest({ commits: [commit('feat: a'), commit('feat: b')] }),
+    true,
+  ],
+  [
+    'commitMessagesMatch, a sticky pattern restarts on every commit',
+    { type: 'commitMessagesMatch', condition: '/feat/y' },
+    pullRequest({ commits: [commit('feat: a'), commit('feat: b')] }),
+    true,
+  ],
   ['commitsSignedOff', { type: 'commitsSignedOff', condition: true }, pullRequest(), true],
   [
     'commitsSignedOff, email must match the author',
@@ -145,6 +157,17 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     { type: 'hasTrailer', trailer: 'Assisted-by' },
     pullRequest({ commits: [commit('x'), commit('y\n\nAssisted-by: aider:gpt-5')] }),
     false,
+  ],
+  [
+    'hasTrailer, a global value pattern restarts on every commit',
+    { type: 'hasTrailer', trailer: 'co-authored-by', condition: '/anthropic\\.com/g' },
+    pullRequest({
+      commits: [
+        commit('x\n\nCo-authored-by: Claude <noreply@anthropic.com>'),
+        commit('y\n\nCo-authored-by: Claude <noreply@anthropic.com>'),
+      ],
+    }),
+    true,
   ],
 ]
 

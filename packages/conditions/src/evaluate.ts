@@ -92,6 +92,14 @@ const signedOff = (commit: Commit) =>
       hasKey(trailer, 'signed-off-by') && parseIdentity(trailer.value)?.email === commit.authorEmail.toLowerCase(),
   )
 
+// One compiled pattern is tested against many commits or trailer values. A
+// global or sticky pattern moves lastIndex after a hit, so every value must
+// start again from the beginning or later matches would be missed.
+const matches = (pattern: RegExp, value: string) => {
+  pattern.lastIndex = 0
+  return pattern.test(value)
+}
+
 const scoped = (scope: 'all' | 'any' | undefined, commits: ReadonlyArray<Commit>, test: (commit: Commit) => boolean) =>
   scope === 'any' ? commits.some(test) : commits.every(test)
 
@@ -199,7 +207,7 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
     case 'commitMessagesMatch':
       return Effect.map(facet(subject, 'commits', condition.type), (commits) => {
         const pattern = compilePattern(condition.condition)
-        const passed = scoped(condition.scope, nonMerge(commits), (commit) => pattern.test(commit.message))
+        const passed = scoped(condition.scope, nonMerge(commits), (commit) => matches(pattern, commit.message))
         return result(condition.type, passed, `commit messages ${passed ? 'match' : 'do not match'} ${condition.condition}`)
       })
     case 'commitsSignedOff':
@@ -216,7 +224,7 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
         const value = condition.condition === undefined ? undefined : compilePattern(condition.condition)
         const carries = (commit: Commit) =>
           parseTrailers(commit.message).some(
-            (trailer) => hasKey(trailer, condition.trailer) && (value === undefined || value.test(trailer.value)),
+            (trailer) => hasKey(trailer, condition.trailer) && (value === undefined || matches(value, trailer.value)),
           )
         const passed = scoped(condition.scope, nonMerge(commits), carries)
         return result(condition.type, passed, `${condition.trailer} trailer ${passed ? 'present' : 'missing'}`)
