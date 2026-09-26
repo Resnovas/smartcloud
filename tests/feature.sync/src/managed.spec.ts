@@ -16,7 +16,16 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { BEGIN, END, isMarker, LOCAL, managedConflicts, mergeManaged, splitManaged, syncFindings } from '@resnovas/feature.sync'
+import {
+  BEGIN,
+  END,
+  isMarker,
+  LOCAL,
+  managedConflicts,
+  mergeManaged,
+  splitManaged,
+  syncFindings,
+} from '@resnovas/feature.sync'
 
 // Ported case for case from Resnovas/.github test/managed.test.mjs.
 
@@ -32,7 +41,10 @@ const dependabot = [
 ].join('\n')
 
 const withLocal = (template: string, local: string) =>
-  template.replace('# house:local - add further updates below.\n', `# house:local - add further updates below.\n${local}\n`)
+  template.replace(
+    '# house:local - add further updates below.\n',
+    `# house:local - add further updates below.\n${local}\n`,
+  )
 
 describe('mergeManaged', () => {
   it('a file without markers is fully managed', () => {
@@ -45,7 +57,10 @@ describe('mergeManaged', () => {
   })
 
   it('the managed block is replaced and local additions are kept', () => {
-    const current = withLocal(dependabot.replace('npm', 'yarn-was-edited'), '  - package-ecosystem: pip\n    directory: /api')
+    const current = withLocal(
+      dependabot.replace('npm', 'yarn-was-edited'),
+      '  - package-ecosystem: pip\n    directory: /api',
+    )
     const merged = mergeManaged(dependabot, current, '.github/dependabot.yml')
     expect(merged).toMatch(/package-ecosystem: npm/)
     expect(merged).not.toMatch(/yarn-was-edited/)
@@ -87,7 +102,9 @@ describe('mergeManaged', () => {
 describe('managedConflicts', () => {
   it('a local Dependabot update may not duplicate a synced one', () => {
     const clash = withLocal(dependabot, '  - package-ecosystem: npm\n    directory: "/"')
-    expect(managedConflicts('.github/dependabot.yml', dependabot, clash)).toStrictEqual(['duplicates the synced Dependabot update for npm in /'])
+    expect(managedConflicts('.github/dependabot.yml', dependabot, clash)).toStrictEqual([
+      'duplicates the synced Dependabot update for npm in /',
+    ])
     const other = withLocal(dependabot, '  - package-ecosystem: npm\n    directory: /web\n    target-branch: next')
     expect(managedConflicts('.github/dependabot.yml', dependabot, other)).toStrictEqual([])
   })
@@ -120,56 +137,74 @@ describe('managedConflicts', () => {
   })
 
   it('reads Dependabot directories given as a list, one entry per directory', () => {
-    const template = '# house:managed:begin\nupdates:\n  - package-ecosystem: npm\n    directories:\n      - "/web"\n      - /api\n    open-pull-requests-limit: 5\n# house:managed:end\n# house:local\n'
+    const template =
+      '# house:managed:begin\nupdates:\n  - package-ecosystem: npm\n    directories:\n      - "/web"\n      - /api\n    open-pull-requests-limit: 5\n# house:managed:end\n# house:local\n'
     const overlapping = `${template}  - package-ecosystem: npm\n    directories: [/docs, '/api']\n`
-    expect(managedConflicts('.github/dependabot.yml', template, overlapping)).toStrictEqual(['duplicates the synced Dependabot update for npm in /api'])
+    expect(managedConflicts('.github/dependabot.yml', template, overlapping)).toStrictEqual([
+      'duplicates the synced Dependabot update for npm in /api',
+    ])
     const disjoint = `${template}  - package-ecosystem: npm\n    directories:\n      - /docs\n`
     expect(managedConflicts('.github/dependabot.yml', template, disjoint)).toStrictEqual([])
   })
 
   it('checks Dependabot updates in dependabot.yaml too', () => {
     const clash = withLocal(dependabot, '  - package-ecosystem: npm\n    directory: /')
-    expect(managedConflicts('.github/dependabot.yaml', dependabot, clash)).toStrictEqual(['duplicates the synced Dependabot update for npm in /'])
+    expect(managedConflicts('.github/dependabot.yaml', dependabot, clash)).toStrictEqual([
+      'duplicates the synced Dependabot update for npm in /',
+    ])
   })
 
   it('reads quoted top-level keys, and keys with blanks before the colon', () => {
     const funding = '# house:managed:begin\ngithub: [TGTGamer]\n# house:managed:end\n# house:local\n'
     for (const local of ['"github": [someone]', "'github': [someone]", 'github : [someone]']) {
-      expect(managedConflicts('.github/FUNDING.yml', funding, `${funding}${local}\n`)).toStrictEqual(['redefines the synced key "github"'])
+      expect(managedConflicts('.github/FUNDING.yml', funding, `${funding}${local}\n`)).toStrictEqual([
+        'redefines the synced key "github"',
+      ])
     }
   })
 
   it('local YAML may not redefine a synced top-level key', () => {
     const funding = '# house:managed:begin\ngithub: [TGTGamer]\n# house:managed:end\n# house:local\n'
-    expect(managedConflicts('.github/FUNDING.yml', funding, `${funding}github: [someone]\n`)).toStrictEqual(['redefines the synced key "github"'])
+    expect(managedConflicts('.github/FUNDING.yml', funding, `${funding}github: [someone]\n`)).toStrictEqual([
+      'redefines the synced key "github"',
+    ])
     expect(managedConflicts('.github/FUNDING.yml', funding, `${funding}custom: ['https://x.io']\n`)).toStrictEqual([])
-    expect(managedConflicts('.github/FUNDING.yaml', funding, `${funding}github: [someone]\n`)).toStrictEqual(['redefines the synced key "github"'])
+    expect(managedConflicts('.github/FUNDING.yaml', funding, `${funding}github: [someone]\n`)).toStrictEqual([
+      'redefines the synced key "github"',
+    ])
   })
 
   it('local issue form fields may not reuse a synced id', () => {
     const form = '# house:managed:begin\nbody:\n  - type: input\n    id: version\n# house:managed:end\n# house:local\n'
-    expect(managedConflicts('.github/ISSUE_TEMPLATE/bug.yml', form, `${form}  - type: input\n    id: version # the same\n`)).toStrictEqual([
-      'reuses the synced field id "version"',
-    ])
-    expect(managedConflicts('.github/ISSUE_TEMPLATE/bug.yml', form, `${form}  - type: input\n    id:\n    id: other\n`)).toStrictEqual([])
-    expect(managedConflicts('.github/ISSUE_TEMPLATE/bug.yml', form, `${form}  - type: input\n    id: "version"\n`)).toStrictEqual([
-      'reuses the synced field id "version"',
-    ])
+    expect(
+      managedConflicts('.github/ISSUE_TEMPLATE/bug.yml', form, `${form}  - type: input\n    id: version # the same\n`),
+    ).toStrictEqual(['reuses the synced field id "version"'])
+    expect(
+      managedConflicts('.github/ISSUE_TEMPLATE/bug.yml', form, `${form}  - type: input\n    id:\n    id: other\n`),
+    ).toStrictEqual([])
+    expect(
+      managedConflicts('.github/ISSUE_TEMPLATE/bug.yml', form, `${form}  - type: input\n    id: "version"\n`),
+    ).toStrictEqual(['reuses the synced field id "version"'])
   })
 
   it('field ids are only checked in issue and discussion forms, not workflow steps', () => {
-    const workflow = '# house:managed:begin\nsteps:\n  - uses: actions/checkout@v4\n    id: checkout\n# house:managed:end\n# house:local\n'
+    const workflow =
+      '# house:managed:begin\nsteps:\n  - uses: actions/checkout@v4\n    id: checkout\n# house:managed:end\n# house:local\n'
     const local = `${workflow}more:\n  - uses: actions/checkout@v4\n    id: checkout\n`
     expect(managedConflicts('.github/workflows/ci.yml', workflow, local)).toStrictEqual([])
-    expect(managedConflicts('.github/DISCUSSION_TEMPLATE/idea.yml', workflow, local)).toStrictEqual(['reuses the synced field id "checkout"'])
+    expect(managedConflicts('.github/DISCUSSION_TEMPLATE/idea.yml', workflow, local)).toStrictEqual([
+      'reuses the synced field id "checkout"',
+    ])
   })
 
   it('local workflow jobs may not redefine a synced job', () => {
     const workflow = '# house:managed:begin\njobs:\n  house-policy:\n    uses: x\n# house:managed:end\n# house:local\n'
-    expect(managedConflicts('.github/workflows/house-policy.yml', workflow, `${workflow}  house-policy:\n    uses: y\n`)).toStrictEqual([
-      'redefines the synced job "house-policy"',
-    ])
-    expect(managedConflicts('.github/workflows/house-policy.yml', workflow, `${workflow}  lint:\n    runs-on: x\n`)).toStrictEqual([])
+    expect(
+      managedConflicts('.github/workflows/house-policy.yml', workflow, `${workflow}  house-policy:\n    uses: y\n`),
+    ).toStrictEqual(['redefines the synced job "house-policy"'])
+    expect(
+      managedConflicts('.github/workflows/house-policy.yml', workflow, `${workflow}  lint:\n    runs-on: x\n`),
+    ).toStrictEqual([])
   })
 
   it('nothing may follow a managed block that must come last', () => {
@@ -177,7 +212,9 @@ describe('managedConflicts', () => {
     expect(managedConflicts('.github/CODEOWNERS', owners, `${owners}/LICENSE @someone\n`)).toStrictEqual([
       'local rules after the managed block would override it; move them above the block',
     ])
-    expect(managedConflicts('.github/CODEOWNERS', owners, owners.replace('* @me', '* @me\n/api/ @api-team'))).toStrictEqual([])
+    expect(
+      managedConflicts('.github/CODEOWNERS', owners, owners.replace('* @me', '* @me\n/api/ @api-team')),
+    ).toStrictEqual([])
     expect(managedConflicts('.github/CODEOWNERS', owners, `${owners}\n# a comment\n<!-- x\n-->\n`)).toStrictEqual([])
   })
 
@@ -201,14 +238,20 @@ describe('syncFindings', () => {
     const doc = { path: 'SECURITY.md', rendered: 'new', base: 'old' }
     expect(syncFindings([{ ...doc, head: 'old' }])).toStrictEqual([])
     expect(syncFindings([{ ...doc, head: 'new' }])).toStrictEqual([])
-    expect(syncFindings([{ ...doc, head: 'mine' }])).toStrictEqual([{ path: 'SECURITY.md', message: 'edits a synced file' }])
-    expect(syncFindings([{ ...doc, head: null }])).toStrictEqual([{ path: 'SECURITY.md', message: 'deletes a synced file' }])
+    expect(syncFindings([{ ...doc, head: 'mine' }])).toStrictEqual([
+      { path: 'SECURITY.md', message: 'edits a synced file' },
+    ])
+    expect(syncFindings([{ ...doc, head: null }])).toStrictEqual([
+      { path: 'SECURITY.md', message: 'deletes a synced file' },
+    ])
     expect(syncFindings([{ ...doc, base: null, head: null }])).toStrictEqual([])
   })
 
   it('managed blocks may not be edited, local rules may be added', () => {
     const base = { path: '.github/dependabot.yml', rendered: dependabot, base: dependabot }
-    expect(syncFindings([{ ...base, head: withLocal(dependabot, '  - package-ecosystem: pip\n    directory: /api') }])).toStrictEqual([])
+    expect(
+      syncFindings([{ ...base, head: withLocal(dependabot, '  - package-ecosystem: pip\n    directory: /api') }]),
+    ).toStrictEqual([])
     expect(syncFindings([{ ...base, head: dependabot.replace('npm', 'bun') }])).toStrictEqual([
       { path: '.github/dependabot.yml', message: 'edits the managed block; add local rules outside it' },
     ])
@@ -220,21 +263,29 @@ describe('syncFindings', () => {
 
   it('a sync that brings the block up to date is allowed', () => {
     const stale = dependabot.replace('npm', 'yarn')
-    expect(syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: stale, head: dependabot }])).toStrictEqual([])
-    expect(syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: null, head: dependabot }])).toStrictEqual([])
+    expect(
+      syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: stale, head: dependabot }]),
+    ).toStrictEqual([])
+    expect(
+      syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: null, head: dependabot }]),
+    ).toStrictEqual([])
   })
 
   it('a local rule that conflicts with a synced one is a finding', () => {
     const clash = withLocal(dependabot, '  - package-ecosystem: npm\n    directory: /')
-    expect(syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: dependabot, head: clash }])).toStrictEqual([
+    expect(
+      syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: dependabot, head: clash }]),
+    ).toStrictEqual([
       { path: '.github/dependabot.yml', message: 'duplicates the synced Dependabot update for npm in /', local: true },
     ])
   })
 
-  it('a conflict already on the base branch is not the pull request\'s doing', () => {
+  it("a conflict already on the base branch is not the pull request's doing", () => {
     const clash = withLocal(dependabot, '  - package-ecosystem: npm\n    directory: /')
     const stale = clash.replace('version: 2', 'version: 1')
-    expect(syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: stale, head: clash }])).toStrictEqual([])
+    expect(
+      syncFindings([{ path: '.github/dependabot.yml', rendered: dependabot, base: stale, head: clash }]),
+    ).toStrictEqual([])
   })
 })
 
@@ -251,7 +302,7 @@ describe('markers', () => {
     expect(mergeManaged(doc, 'the previous document\n', 'GOVERNANCE.md')).toBe(doc)
   })
 
-  it('isMarker accepts YAML and Markdown comment markers and rejects look-alikes', () => {
+  it('isMarker accepts YAML, JSON and Markdown comment markers and rejects look-alikes', () => {
     expect(isMarker('# house:managed:begin - synced', BEGIN)).toBe(true)
     expect(isMarker('  <!-- house:managed:end -->', END)).toBe(true)
     expect(isMarker('# house:local - add rules below', LOCAL)).toBe(true)
@@ -260,6 +311,54 @@ describe('markers', () => {
     expect(isMarker('#house:managed:beginning', BEGIN)).toBe(false)
     expect(isMarker('# house:managed:begin:x', BEGIN)).toBe(false)
     expect(isMarker('# house:managed:begin-x', BEGIN)).toBe(false)
-    expect(isMarker('// house:managed:begin', BEGIN)).toBe(false)
+    expect(isMarker('  // house:managed:begin - synced', BEGIN)).toBe(true)
+    expect(isMarker('"// house:managed:begin"', BEGIN)).toBe(false)
+  })
+})
+
+const zedTasks = [
+  '[',
+  '  // house:managed:begin - synced',
+  '  { "label": "check", "command": "node --run check" },',
+  '  // house:managed:end',
+  '  // house:local - add tasks below.',
+  ']',
+  '',
+].join('\n')
+
+describe('JSON with comments', () => {
+  it('first adoption comments the previous content out with //', () => {
+    const merged = mergeManaged(zedTasks, '[\n  { "label": "dev" }\n]\n', '.zed/tasks.json')
+    expect(merged).toContain('// house:local - add tasks below.\n// Previous content of this file')
+    expect(merged.endsWith('\n// [\n//   { "label": "dev" }\n// ]\n]\n')).toBe(true)
+  })
+
+  it('first adoption of .jsonc also uses //, and blank lines stay comments', () => {
+    const merged = mergeManaged(zedTasks, '{\n\n}\n', '.agents/surfaces.jsonc')
+    expect(merged).toContain('\n// {\n//\n// }\n')
+  })
+
+  it('a local entry may not reuse a synced label, name or id', () => {
+    const local = zedTasks.replace(
+      '// house:local - add tasks below.\n',
+      [
+        '// house:local - add tasks below.',
+        '  { "label": "check", "command": "x" },',
+        '  {',
+        '    "name" : "check",',
+        '  },',
+        '  { "id": "dev" },',
+        '  { "label": 3 },',
+        '  { "label" "x" },',
+        '  { "label": "unterminated },',
+        '  "command": "y",',
+        '',
+      ].join('\n'),
+    )
+    expect(managedConflicts('.zed/tasks.json', zedTasks, local)).toStrictEqual([
+      'reuses the synced name "check"',
+      'reuses the synced name "check"',
+    ])
+    expect(managedConflicts('.zed/tasks.json', zedTasks, zedTasks)).toStrictEqual([])
   })
 })

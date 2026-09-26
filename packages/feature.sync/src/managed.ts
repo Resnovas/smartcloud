@@ -71,8 +71,9 @@ const MARKER_FOLLOWER = /^[\w:-]$/
  * Whether a line is a marker comment.
  *
  * @remarks
- * A marker only counts on a comment line: `# ...` in YAML and CODEOWNERS, or
- * `<!-- ...` in Markdown. A document that merely mentions a marker in its
+ * A marker only counts on a comment line: `# ...` in YAML, TOML and
+ * CODEOWNERS, `// ...` in JSON with comments (editor settings such as
+ * `.zed/tasks.json`), or `<!-- ...` in Markdown. A document that merely mentions a marker in its
  * prose, as GOVERNANCE does, stays a whole-file document. The marker must
  * not run on into a longer word, so `house:managed:beginning` is not one.
  *
@@ -81,6 +82,7 @@ const MARKER_FOLLOWER = /^[\w:-]$/
  * import { BEGIN, isMarker } from '@resnovas/feature.sync'
  *
  * isMarker('# house:managed:begin', BEGIN) // => true
+ * isMarker('  // house:managed:begin', BEGIN) // => true
  * isMarker('See house:managed:begin in GOVERNANCE.', BEGIN) // => false
  * ```
  *
@@ -90,7 +92,7 @@ const MARKER_FOLLOWER = /^[\w:-]$/
  */
 export const isMarker = (line: string, marker: string): boolean => {
   const text = line.trimStart()
-  const opener = text.startsWith('#') ? 1 : text.startsWith('<!--') ? 4 : 0
+  const opener = text.startsWith('#') ? 1 : text.startsWith('//') ? 2 : text.startsWith('<!--') ? 4 : 0
   if (opener === 0) return false
   const body = text.slice(opener).trimStart()
   return body.startsWith(marker) && !MARKER_FOLLOWER.test(body.charAt(marker.length))
@@ -127,16 +129,21 @@ export const splitManaged = (text: string): ManagedParts | undefined => {
 }
 
 const isMarkdown = (path: string) => path.endsWith('.md')
+const isJson = (path: string) => path.endsWith('.json') || path.endsWith('.jsonc')
 
-const commentOut = (lines: ReadonlyArray<string>, path: string): ReadonlyArray<string> =>
-  isMarkdown(path)
-    ? ['<!--', ...lines.map((line) => line.replaceAll('-->', '-- >')), '-->']
-    : lines.map((line) => (line === '' ? '#' : `# ${line}`))
+// The line comment for a file's format; Markdown has none.
+const lineComment = (path: string) => (isJson(path) ? '//' : '#')
+
+const commentOut = (lines: ReadonlyArray<string>, path: string): ReadonlyArray<string> => {
+  if (isMarkdown(path)) return ['<!--', ...lines.map((line) => line.replaceAll('-->', '-- >')), '-->']
+  const comment = lineComment(path)
+  return lines.map((line) => (line === '' ? comment : `${comment} ${line}`))
+}
 
 const LEGACY =
   'Previous content of this file, kept when it was first synced. Re-add what is still needed as local rules, then delete this.'
 
-const legacyNotice = (path: string) => (isMarkdown(path) ? `<!-- ${LEGACY} -->` : `# ${LEGACY}`)
+const legacyNotice = (path: string) => (isMarkdown(path) ? `<!-- ${LEGACY} -->` : `${lineComment(path)} ${LEGACY}`)
 
 const withoutTrailingNewlines = (text: string) => {
   let end = text.length
@@ -182,7 +189,7 @@ export const mergeManaged = (rendered: string, existing: string | null, path: st
 
 const isComment = (line: string) => {
   const text = line.trimStart()
-  return text.startsWith('#') || text.startsWith('<!--') || text.startsWith('-->')
+  return text.startsWith('#') || text.startsWith('//') || text.startsWith('<!--') || text.startsWith('-->')
 }
 
 const meaningful = (lines: ReadonlyArray<string>) => lines.filter((line) => line.trim() !== '' && !isComment(line))
@@ -299,6 +306,26 @@ const jobIds = (lines: ReadonlyArray<string>) => {
   return lines.slice(start + 1).flatMap((line) => JOB.exec(line)?.[1] ?? [])
 }
 
+const JSON_NAME_KEYS = ['"label"', '"name"', '"id"']
+
+// The value of the first `"label"`, `"name"` or `"id"` on a line of JSON, the
+// names editors identify a task, debug configuration or action by. A local
+// entry reusing one shadows the synced entry.
+const jsonName = (line: string): string | undefined => {
+  let text = line.trimStart()
+  if (text.startsWith('{')) text = text.slice(1).trimStart()
+  const key = JSON_NAME_KEYS.find((candidate) => text.startsWith(candidate))
+  if (key === undefined) return undefined
+  const rest = text.slice(key.length).trimStart()
+  if (!rest.startsWith(':')) return undefined
+  const value = rest.slice(1).trimStart()
+  if (!value.startsWith('"')) return undefined
+  const close = value.indexOf('"', 1)
+  return close === -1 ? undefined : value.slice(1, close)
+}
+
+const jsonNames = (lines: ReadonlyArray<string>) => lines.flatMap((line) => jsonName(line) ?? [])
+
 const isYaml = (path: string) => path.endsWith('.yml') || path.endsWith('.yaml')
 
 // Issue and discussion forms give their fields ids; a workflow's step ids
@@ -313,7 +340,8 @@ const isDependabot = (path: string) => path.endsWith('dependabot.yml') || path.e
  * @remarks
  * Checks that nothing follows a managed block that must come last (as in
  * CODEOWNERS, where the last matching rule wins); that local YAML does not
- * redefine a synced top-level key, issue form field id or workflow job; and
+ * redefine a synced top-level key, issue form field id or workflow job; that
+ * a local JSON entry does not reuse a synced `label`, `name` or `id`; and
  * that a local Dependabot update does not duplicate a synced one.
  *
  * @example
@@ -356,6 +384,13 @@ export const managedConflicts = (path: string, rendered: string, current: string
     const managedJobs = new Set(jobIds(template.block))
     for (const job of jobIds(['jobs:', ...local.after])) {
       if (managedJobs.has(job)) problems.push(`redefines the synced job "${job}"`)
+    }
+  }
+
+  if (isJson(path)) {
+    const managed = new Set(jsonNames(template.block))
+    for (const name of jsonNames(localLines)) {
+      if (managed.has(name)) problems.push(`reuses the synced name "${name}"`)
     }
   }
 
