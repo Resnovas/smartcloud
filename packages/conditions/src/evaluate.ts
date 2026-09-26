@@ -16,6 +16,7 @@
 
 import { Clock, Data, Effect } from 'effect'
 import picomatch from 'picomatch'
+import { codeownersOf, parseCodeowners } from './codeowners.js'
 import { compilePattern } from './pattern.js'
 import type { AuthorAssociation, Condition, ConditionGroup, Not } from './schema.js'
 import type { Association, Check, CheckState, Commit, Facet, Review, Subject } from './subject.js'
@@ -23,7 +24,7 @@ import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 
 /**
  * A condition needed a facet (files, reviews, pending or requested reviewers,
- * commits, mergeability or checks) that was not loaded onto the subject. This is an
+ * commits, mergeability, checks or CODEOWNERS) that was not loaded onto the subject. This is an
  * engine bug, not a user error: the engine loads every facet `requiredFacets`
  * reports.
  *
@@ -216,6 +217,7 @@ const PULL_REQUEST_ONLY = new Set([
   'checkStatus',
   'reviewerMatches',
   'linksIssue',
+  'codeownersTouched',
 ])
 
 const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effect<ConditionResult, MissingFacet> => {
@@ -362,6 +364,20 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
           passed,
           `${passed ? 'a changed file matches' : 'no changed file matches'} ${condition.condition}`,
         )
+      })
+    case 'codeownersTouched':
+      return Effect.gen(function* () {
+        const files = yield* facet(subject, 'files', condition.type)
+        const rules = parseCodeowners(yield* facet(subject, 'codeowners', condition.type))
+        const owner = condition.condition.toLowerCase()
+        const owned = files.filter((file) => codeownersOf(rules, file).some((each) => each.toLowerCase() === owner))
+        const detail =
+          rules.length === 0
+            ? 'no CODEOWNERS rules'
+            : owned.length === 0
+              ? `no changed file owned by ${condition.condition}`
+              : `${owned.length} changed file(s) owned by ${condition.condition}`
+        return result(condition.type, owned.length > 0, detail)
       })
     case 'changesSize': {
       const changes = subject.changes ?? 0
@@ -545,6 +561,7 @@ const FACETS: Partial<Record<Condition['type'], ReadonlyArray<Facet>>> = {
   hasConflict: ['mergeable'],
   checksPass: ['checks'],
   checkStatus: ['checks'],
+  codeownersTouched: ['files', 'codeowners'],
 }
 
 const groupsOf = (condition: Condition): ReadonlyArray<ConditionGroup> => {

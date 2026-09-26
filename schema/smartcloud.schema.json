@@ -279,6 +279,9 @@
               "$ref": "#/$defs/filesMatch"
             },
             {
+              "$ref": "#/$defs/codeownersTouched"
+            },
+            {
               "$ref": "#/$defs/changesSize"
             },
             {
@@ -874,6 +877,28 @@
       },
       "additionalProperties": false,
       "description": "At least one changed file matches a glob."
+    },
+    "codeownersTouched": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "codeownersTouched"
+          ]
+        },
+        "condition": {
+          "type": "string",
+          "description": "A CODEOWNERS owner: @org/team, @user or an email.",
+          "pattern": "^(?:@[A-Za-z0-9][\\w.-]*(?:\\/[\\w.-]+)?|[^\\s@]+@[^\\s@]+)$"
+        }
+      },
+      "additionalProperties": false,
+      "description": "At least one changed file is owned by this owner in CODEOWNERS."
     },
     "changesSize": {
       "type": "object",
