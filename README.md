@@ -61,6 +61,7 @@ permissions:
 jobs:
   smartcloud:
     runs-on: ubuntu-latest
+    timeout-minutes: 75
     steps:
       - uses: resnovas/smartcloud@v2
 ```
