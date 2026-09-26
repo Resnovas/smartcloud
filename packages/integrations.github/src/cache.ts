@@ -138,6 +138,8 @@ interface Caches {
  * - every write invalidates raw repository `GET`s, which can read anything,
  *   and a raw repository write or a GraphQL mutation invalidates everything.
  *
+ * @internal
+ *
  * @example
  * ```ts
  * const github = yield* cacheReads(raw)

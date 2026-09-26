@@ -3,5 +3,9 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/engine/src",
-  "tags": ["type_extension", "layer_backend"]
+  "tags": ["type_extension", "layer_backend"],
+  "targets": {
+    "docgen": {},
+    "contracts": {}
+  }
 }

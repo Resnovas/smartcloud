@@ -33,8 +33,10 @@ type ConfiguredLabel = NonNullable<SmartcloudConfig['labels']>[string]
  * digits without `#` and compares them ignoring case.
  *
  * @example
- * ```ts
- * normaliseColor('#0E8A16') // '0e8a16'
+ * ```ts import.meta.vitest name="normaliseColor"
+ * import { normaliseColor } from '@resnovas/feature.labels'
+ *
+ * normaliseColor('#0E8A16') // => '0e8a16'
  * ```
  *
  * @param color - A colour with or without a leading `#`.
@@ -46,8 +48,10 @@ export const normaliseColor = (color: string): string => color.replace(/^#/, '')
  * Compares two label names the way GitHub does: ignoring case.
  *
  * @example
- * ```ts
- * sameName('Bug', 'bug') // true
+ * ```ts import.meta.vitest name="sameName"
+ * import { sameName } from '@resnovas/feature.labels'
+ *
+ * sameName('Bug', 'bug') // => true
  * ```
  *
  * @param a - One name.
@@ -90,9 +94,12 @@ const differs = (wanted: Label, existing: Label) =>
  * configured name already exists, so pruning never strips it from issues.
  *
  * @example
- * ```ts
- * planSync({ bug: { name: 'bug', color: 'd73a4a' } }, [], false)
- * // [{ action: 'create', label: { name: 'bug', color: 'd73a4a', description: '' } }]
+ * ```ts import.meta.vitest name="planSync"
+ * import { planSync } from '@resnovas/feature.labels'
+ *
+ * const steps = planSync({ bug: { name: 'bug', color: '#D73A4A' } }, [], false)
+ * steps.length // => 1
+ * JSON.stringify(steps[0]) // => '{"action":"create","label":{"name":"bug","color":"d73a4a","description":""}}'
  * ```
  *
  * @param configured - The config's `labels` section.
@@ -201,7 +208,10 @@ const describe = (step: SyncStep): string => {
  *
  * @example
  * ```ts
- * yield* syncLabels(config) // with GitHub and Report provided
+ * import { syncLabels } from '@resnovas/feature.labels'
+ *
+ * // Run with GitHub and Report provided; `labelSync.prune` allows deletions.
+ * const program = syncLabels({ version: 2, labels: { bug: { name: 'bug', color: 'd73a4a' } } })
  * ```
  *
  * @param config - The whole config; only `labels` and `labelSync` are read.

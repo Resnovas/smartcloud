@@ -17,4 +17,4 @@
 
 import { testProject } from '../../vitest.shared.js'
 
-export default testProject('action', ['apps/action/src/inputs.ts', 'apps/action/src/run.ts', 'apps/action/src/program.ts'])
+export default testProject('action', ['apps/action/src/inputs.ts', 'apps/action/src/run.ts', 'apps/action/src/program.ts', 'apps/action/src/version.ts'])

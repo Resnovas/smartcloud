@@ -44,9 +44,12 @@ export interface ClassifiedAttribution extends Attribution {
  * and an identity trailer without an `<email>` is ignored.
  *
  * @example
- * ```ts
- * readAttribution('fix: x\n\nAssisted-by: claude-code:claude-opus-5-5 ripgrep')
- * // { coAuthors: [], signOffs: [], assistedBy: ['claude-code:claude-opus-5-5 ripgrep'] }
+ * ```ts import.meta.vitest name="readAttribution"
+ * import { readAttribution } from '@resnovas/feature.commits'
+ *
+ * const attribution = readAttribution('fix: x\n\nAssisted-by: claude-code:claude-opus-5-5 ripgrep')
+ * attribution.assistedBy[0] // => 'claude-code:claude-opus-5-5 ripgrep'
+ * attribution.coAuthors.length // => 0
  * ```
  *
  * @param message - The full commit message.
@@ -68,6 +71,14 @@ export const readAttribution = (message: string): Attribution => {
 
 /**
  * Reads a commit's attribution and classifies it against the AI identity list.
+ *
+ * @example
+ * ```ts import.meta.vitest name="classifyAttribution"
+ * import { classifyAttribution, makeAiIdentityMatcher } from '@resnovas/feature.commits'
+ *
+ * const message = 'fix: x\n\nCo-authored-by: Claude <noreply@anthropic.com>'
+ * classifyAttribution(message, makeAiIdentityMatcher()).aiAttributed // => true
+ * ```
  *
  * @param message - The full commit message.
  * @param isAi - The AI identity predicate, from `makeAiIdentityMatcher`.

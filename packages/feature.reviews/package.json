@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The reviews feature: the maintainer review gate, requested approvals and automatic approval.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

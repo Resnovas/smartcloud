@@ -70,8 +70,24 @@ export interface MemoryState {
   nextId: number
 }
 
-/** The key the in-memory GitHub stores a file under. */
-export const fileKey = (owner: string, repo: string, path: string, ref = '') => `${owner}/${repo}/${path}@${ref}`
+/**
+ * The key the in-memory GitHub stores a file under.
+ *
+ * @example
+ * ```ts import.meta.vitest name="fileKey"
+ * import { fileKey } from '@resnovas/integrations.github'
+ *
+ * fileKey('Resnovas', '.github', 'labels.yml', 'main') // => 'Resnovas/.github/labels.yml@main'
+ * fileKey('Resnovas', '.github', 'labels.yml') // => 'Resnovas/.github/labels.yml@'
+ * ```
+ *
+ * @param owner - The repository owner.
+ * @param repo - The repository name.
+ * @param path - The file's path in the repository.
+ * @param ref - The branch, tag or commit; empty for the default branch.
+ * @returns The key for `MemoryState.files`.
+ */
+export const fileKey = (owner: string, repo: string, path: string, ref = ''): string => `${owner}/${repo}/${path}@${ref}`
 
 const defaults = (): MemoryState => ({
   repository: {
@@ -105,9 +121,13 @@ const defaults = (): MemoryState => ({
  * from its branch rather than opening another.
  *
  * @example
- * ```ts
+ * ```ts import.meta.vitest name="makeMemoryGitHub"
+ * import { Effect } from 'effect'
+ * import { makeMemoryGitHub } from '@resnovas/integrations.github'
+ *
  * const { service, state } = makeMemoryGitHub({ labels: [{ name: 'bug', color: 'd73a4a', description: '' }] })
- * // run a feature with Effect.provideService(GitHub, service), then inspect state.labels
+ * await Effect.runPromise(service.addLabels(1, ['bug']))
+ * state.issues.get(1)?.labels.length // => 1
  * ```
  *
  * @param seed - Initial state; anything omitted starts empty.
@@ -247,6 +267,16 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
 /**
  * A layer providing an in-memory GitHub, for tests that do not need to
  * inspect the state afterwards.
+ *
+ * @example
+ * ```ts import.meta.vitest name="GitHubMemory"
+ * import { Effect } from 'effect'
+ * import { GitHub, GitHubMemory } from '@resnovas/integrations.github'
+ *
+ * const layer = GitHubMemory({ labels: [{ name: 'bug', color: 'd73a4a', description: '' }] })
+ * const labels = await Effect.runPromise(Effect.flatMap(GitHub, (github) => github.listLabels).pipe(Effect.provide(layer)))
+ * labels.length // => 1
+ * ```
  *
  * @param seed - Initial state.
  * @returns The layer.

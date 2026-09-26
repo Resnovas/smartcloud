@@ -15,7 +15,16 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-/** What every redacted value is replaced with. */
+/**
+ * What every redacted value is replaced with.
+ *
+ * @example
+ * ```ts import.meta.vitest name="REDACTED"
+ * import { REDACTED } from '@resnovas/integrations.posthog'
+ *
+ * REDACTED // => '[redacted]'
+ * ```
+ */
 export const REDACTED = '[redacted]'
 
 // Each pattern starts at a literal prefix or the start of a run of the
@@ -47,9 +56,11 @@ const literal = (secret: string) => new RegExp(secret.replace(/[.*+?^${}()|[\]\\
  * input always gives the same output.
  *
  * @example
- * ```ts
- * redact('token ghp_0123456789abcdefghij0123 for jane@example.com', [])
- * // 'token [redacted] for [redacted]'
+ * ```ts import.meta.vitest name="redact"
+ * import { redact } from '@resnovas/integrations.posthog'
+ *
+ * redact('token ghp_0123456789abcdefghij0123 for jane@example.com') // => 'token [redacted] for [redacted]'
+ * redact('deploying Resnovas/secret-repo', ['resnovas/secret-repo']) // => 'deploying [redacted]'
  * ```
  *
  * @param text - The text to clean.

@@ -25,7 +25,16 @@ import { loadConfig } from './config.js'
 import { parseRepository, type Connect } from './github.js'
 import { configLocationFor } from './run.js'
 
-/** The config has no section for what was asked. */
+/**
+ * The config has no section for what was asked.
+ *
+ * @example
+ * ```ts import.meta.vitest name="NoSection"
+ * import { NoSection } from '@resnovas/runtime'
+ *
+ * new NoSection({ section: 'sync' }).message // => 'the config has no sync section'
+ * ```
+ */
 export class NoSection extends Data.TaggedError('NoSection')<{ readonly section: string }> {
   override get message() {
     return `the config has no ${this.section} section`
@@ -40,6 +49,14 @@ export interface SettingsPlan {
 
 /**
  * Plans the settings for the provided repository without applying them.
+ *
+ * @example
+ * ```ts
+ * import { planRepositorySettings } from '@resnovas/runtime'
+ *
+ * // Needs the GitHub service, to read the repository the plan is for.
+ * const plan = planRepositorySettings({ version: 2, settings: { merging: { squash: true } } })
+ * ```
  *
  * @param config - The resolved config.
  * @returns The plan; no steps when the config has no `settings` section.
@@ -66,6 +83,14 @@ const stepTarget = (step: SettingsStep) => {
 /**
  * A settings plan as text, one step per line.
  *
+ * @example
+ * ```ts
+ * import { settingsPlanText, type SettingsPlan } from '@resnovas/runtime'
+ *
+ * declare const plan: SettingsPlan
+ * const markdown = settingsPlanText(plan)
+ * ```
+ *
  * @param plan - The plan.
  * @returns Markdown.
  */
@@ -79,6 +104,13 @@ export const settingsPlanText = (plan: SettingsPlan): string =>
 
 /**
  * Connects to a repository, loads its config, and plans its settings.
+ *
+ * @example
+ * ```ts
+ * import { liveConnect, planSettingsForRepository } from '@resnovas/runtime'
+ *
+ * const plan = planSettingsForRepository(liveConnect(), { repository: 'Resnovas/smartcloud' })
+ * ```
  *
  * @param connect - Opens the GitHub service.
  * @param request - The repository, and a local config file to use instead of its own.
@@ -116,6 +148,14 @@ const STATUS = { create: 'added', update: 'updated', mode: 'made executable' } a
  * Renders every synced file for the provided repository as it would be
  * after the sync, without proposing anything.
  *
+ * @example
+ * ```ts
+ * import { renderRepositorySync } from '@resnovas/runtime'
+ *
+ * // Needs the GitHub service, to read the templates and the current files.
+ * const render = renderRepositorySync({ version: 2, sync: { source: 'Resnovas/.github/templates@main' } })
+ * ```
+ *
  * @param config - The resolved config.
  * @returns The files, sorted by path, and the conflicts.
  */
@@ -141,6 +181,13 @@ export const renderRepositorySync = (config: SmartcloudConfig) =>
 
 /**
  * Connects to a repository, loads its config, and renders its synced files.
+ *
+ * @example
+ * ```ts
+ * import { liveConnect, renderSyncForRepository } from '@resnovas/runtime'
+ *
+ * const render = renderSyncForRepository(liveConnect(), { repository: 'Resnovas/smartcloud' })
+ * ```
  *
  * @param connect - Opens the GitHub service.
  * @param request - The repository, and a local config file to use instead of its own.

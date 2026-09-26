@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud condition language: schemas and a pure evaluator.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

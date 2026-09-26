@@ -22,7 +22,17 @@ import { Effect } from 'effect'
 import { applySettings, FEATURE } from './apply.js'
 import { planSettings } from './plan.js'
 
-/** The repository events the settings feature applies settings on. */
+/**
+ * The repository events the settings feature applies settings on.
+ *
+ * @example
+ * ```ts import.meta.vitest name="SETTINGS_EVENTS"
+ * import { SETTINGS_EVENTS } from '@resnovas/feature.settings'
+ *
+ * SETTINGS_EVENTS.has('schedule') // => true
+ * SETTINGS_EVENTS.has('issues') // => false
+ * ```
+ */
 export const SETTINGS_EVENTS: ReadonlySet<string> = new Set(['schedule', 'workflow_dispatch', 'push'])
 
 /**
@@ -36,6 +46,14 @@ export const SETTINGS_EVENTS: ReadonlySet<string> = new Set(['schedule', 'workfl
  * (an admin token, not the default `GITHUB_TOKEN`); without one every step
  * fails and is reported. Settings GitHub offers no API for are recorded as
  * notices to set by hand.
+ *
+ * @example
+ * ```ts import.meta.vitest name="settingsFeature"
+ * import { settingsFeature } from '@resnovas/feature.settings'
+ *
+ * settingsFeature.enabled?.({ version: 2, settings: {} }) // => true
+ * settingsFeature.enabled?.({ version: 2 }) // => false
+ * ```
  */
 export const settingsFeature: Feature = {
   name: FEATURE,

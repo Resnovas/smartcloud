@@ -47,9 +47,12 @@ const parseLine = (line: string): Trailer | undefined => {
  * `feat: add x` would be read as a trailer called `feat`.
  *
  * @example
- * ```ts
- * parseTrailers('fix: x\n\nSigned-off-by: Jane <jane@example.com>')
- * // [{ key: 'Signed-off-by', value: 'Jane <jane@example.com>' }]
+ * ```ts import.meta.vitest name="parseTrailers"
+ * import { parseTrailers } from '@resnovas/conditions'
+ *
+ * const trailers = parseTrailers('fix: x\n\nSigned-off-by: Jane <jane@example.com>')
+ * trailers[0]?.key // => 'Signed-off-by'
+ * trailers[0]?.value // => 'Jane <jane@example.com>'
  * ```
  *
  * @param message - The full commit message.
@@ -77,6 +80,14 @@ export const parseTrailers = (message: string): ReadonlyArray<Trailer> => {
  * Splits a trailer value such as `Jane Doe <jane@example.com>` into a name
  * and a lower-cased email.
  *
+ * @example
+ * ```ts import.meta.vitest name="parseIdentity"
+ * import { parseIdentity } from '@resnovas/conditions'
+ *
+ * parseIdentity('Jane Doe <Jane@Example.com>')?.email // => 'jane@example.com'
+ * parseIdentity('no email here') // => undefined
+ * ```
+ *
  * @param value - The trailer value.
  * @returns The identity, or undefined when the value has no `<email>`.
  */
@@ -90,6 +101,13 @@ export const parseIdentity = (value: string): { readonly name: string; readonly 
 
 /**
  * Whether a trailer key matches, ignoring case as git does.
+ *
+ * @example
+ * ```ts import.meta.vitest name="hasKey"
+ * import { hasKey } from '@resnovas/conditions'
+ *
+ * hasKey({ key: 'Signed-off-by', value: 'Jane <jane@example.com>' }, 'SIGNED-OFF-BY') // => true
+ * ```
  *
  * @param trailer - The trailer to test.
  * @param key - The key to look for, for example `signed-off-by`.

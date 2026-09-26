@@ -18,13 +18,24 @@
 import type { Finding, RunResult } from '@resnovas/engine'
 import type { Annotation, CheckRun } from '@resnovas/integrations.github'
 
-/** Marks smartcloud's comment on an issue or pull request, so each run updates it in place. */
+/**
+ * Marks smartcloud's comment on an issue or pull request, so each run updates it in place.
+ *
+ * @example
+ * ```ts import.meta.vitest name="MARKER"
+ * import { commentBody, MARKER } from '@resnovas/reporting'
+ *
+ * commentBody([]).startsWith(MARKER) // => true
+ * ```
+ */
 export const MARKER = '<!-- smartcloud:report -->'
 
 /**
  * How v1 began each of its comments: `<!--${NPM_PACKAGE_NAME}: ${job}-->`.
  * Actions never set `NPM_PACKAGE_NAME`, so released v1 wrote `undefined`
  * there; `smartcloud` covers a run that did set it.
+ *
+ * @internal
  */
 export const LEGACY_MARKERS: ReadonlyArray<string> = ['<!--smartcloud: ', '<!--undefined: ']
 
@@ -32,6 +43,7 @@ export const LEGACY_MARKERS: ReadonlyArray<string> = ['<!--smartcloud: ', '<!--u
  * Whether a comment body is a v1 smartcloud comment, which the next report
  * takes over rather than posting alongside.
  *
+ * @internal
  * @param body - The comment body.
  * @returns True for a v1 comment.
  */
@@ -43,6 +55,14 @@ export type Conclusion = 'success' | 'failure' | 'neutral'
 /**
  * The conclusion for a set of findings: failure on any error, neutral when
  * there are only warnings, success otherwise. Notices never change it.
+ *
+ * @example
+ * ```ts import.meta.vitest name="conclusionOf"
+ * import { conclusionOf } from '@resnovas/reporting'
+ *
+ * conclusionOf([{ feature: 'sync', rule: 'SYNC', level: 'warning', message: 'edits a synced file' }]) // => 'neutral'
+ * conclusionOf([]) // => 'success'
+ * ```
  *
  * @param findings - The findings to judge.
  * @returns The conclusion.
@@ -69,6 +89,14 @@ const where = (finding: Finding) =>
 
 /**
  * Renders findings as a Markdown table.
+ *
+ * @example
+ * ```ts import.meta.vitest name="findingsTable"
+ * import { findingsTable } from '@resnovas/reporting'
+ *
+ * findingsTable([{ feature: 'commits', rule: 'DCO', level: 'error', message: 'No sign-off' }]).split('\n').length // => 3
+ * findingsTable([]) // => ''
+ * ```
  *
  * @param findings - The findings, in order.
  * @returns The table, or an empty string when there are none.
@@ -100,6 +128,13 @@ const tally = (findings: ReadonlyArray<Finding>) => {
  * The hidden {@link MARKER} lets the next run find and update the comment
  * instead of adding another.
  *
+ * @example
+ * ```ts import.meta.vitest name="commentBody"
+ * import { commentBody } from '@resnovas/reporting'
+ *
+ * commentBody([{ feature: 'reviews', rule: 'REVIEW', level: 'notice', message: 'gate open' }]).endsWith('All smartcloud checks pass.') // => true
+ * ```
+ *
  * @param findings - Everything the run found.
  * @returns The comment body.
  */
@@ -126,6 +161,15 @@ const eventLine = (result: RunResult) => {
 /**
  * The job summary for a run: every feature's outcome, what was skipped and
  * why, every finding, and every change.
+ *
+ * @example
+ * ```ts import.meta.vitest name="summaryMarkdown"
+ * import type { RunResult } from '@resnovas/engine'
+ * import { summaryMarkdown } from '@resnovas/reporting'
+ *
+ * const result: RunResult = { envelope: { kind: 'repository', event: 'schedule' }, ran: [], skipped: [], failed: [], findings: [], changes: [] }
+ * summaryMarkdown(result) // => '## smartcloud\n\nEvent: `schedule`\n'
+ * ```
  *
  * @param result - The run.
  * @returns Markdown for `GITHUB_STEP_SUMMARY`.
@@ -155,6 +199,13 @@ const escapeProperty = (text: string) => escapeData(text).replaceAll(':', '%3A')
  * The findings as GitHub workflow commands, which Actions shows as
  * annotations on the run and, with a file, on the diff.
  *
+ * @example
+ * ```ts import.meta.vitest name="annotationLines"
+ * import { annotationLines } from '@resnovas/reporting'
+ *
+ * annotationLines([{ feature: 'sync', rule: 'SYNC', level: 'warning', message: 'edited', path: 'LICENSE', line: 3 }])[0] // => '::warning title=SYNC,file=LICENSE,line=3::edited'
+ * ```
+ *
  * @param findings - The findings.
  * @returns One `::level ...::message` line per finding.
  */
@@ -177,6 +228,15 @@ const LEVEL: Record<Finding['level'], Annotation['level']> = { error: 'failure',
  * A feature that failed to run concludes as failure, so a broken feature can
  * never pass a required check. Findings with a file and line become
  * annotations on the diff.
+ *
+ * @example
+ * ```ts import.meta.vitest name="checkRunsFor"
+ * import type { RunResult } from '@resnovas/engine'
+ * import { checkRunsFor } from '@resnovas/reporting'
+ *
+ * const result: RunResult = { envelope: { kind: 'repository', event: 'push', headSha: 'abc123' }, ran: ['labels'], skipped: [], failed: [], findings: [], changes: [] }
+ * checkRunsFor(result, 'abc123')[0]?.conclusion // => 'success'
+ * ```
  *
  * @param result - The run.
  * @param headSha - The commit the checks belong to.

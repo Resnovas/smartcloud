@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud engine: normalises GitHub events into subjects and runs features against them.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

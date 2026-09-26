@@ -21,7 +21,7 @@ import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
 import { FEATURE, reviewsFeature } from '@resnovas/feature.reviews'
 import { Forbidden, GitHub, makeMemoryGitHub, RateLimited } from '@resnovas/integrations.github'
-import { Effect, Exit } from 'effect'
+import { Effect, Exit, Logger } from 'effect'
 
 // A pull request payload with the fields GitHub sends, as in the engine tests.
 const payload = (author = 'contributor', action = 'submitted') => ({
@@ -64,6 +64,11 @@ const run = (
     (result) => ({ result, state: github.state }),
   )
 
+// The feature logs its gate outcome at INFO; tests run without a logger so
+// Vitest's output shows only results.
+const runQuiet = <A, E>(effect: Effect.Effect<A, E>): Promise<A> =>
+  Effect.runPromise(effect.pipe(Effect.provide(Logger.remove(Logger.defaultLogger))))
+
 const pull = (state: ReturnType<typeof memory>['state']) => state.pulls.get(7)
 
 // GitHub as a fork pull request's read-only token sees it: every review write is forbidden.
@@ -101,7 +106,7 @@ describe('reviewsFeature', () => {
   })
 
   it('does nothing when the reviews section has no rules', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result } = yield* run({ version: 2, reviews: {} })
         expect(result.ran).toStrictEqual([FEATURE])
@@ -111,7 +116,7 @@ describe('reviewsFeature', () => {
     ))
 
   it('skips when the config has no reviews section, even if run directly', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const report = yield* makeReport
         yield* reviewsFeature
@@ -122,7 +127,7 @@ describe('reviewsFeature', () => {
     ))
 
   it('fails with MissingFacet rather than gating on reviews it was not given', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const report = yield* makeReport
         const exit = yield* Effect.exit(
@@ -138,7 +143,7 @@ describe('reviewsFeature', () => {
 
 describe('review gate', () => {
   it('is open with fewer than two maintainers: a notice, linked to the default policy base', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result } = yield* run({ version: 2, roles: { maintainers: ['owner-one'] }, reviews: { gate: {} } })
         expect(result.findings).toStrictEqual([
@@ -155,7 +160,7 @@ describe('review gate', () => {
     ))
 
   it('is open with no roles at all', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result } = yield* run({ version: 2, reviews: { gate: {} } })
         expect(result.findings.map((finding) => finding.level)).toStrictEqual(['notice'])
@@ -163,7 +168,7 @@ describe('review gate', () => {
     ))
 
   it('fails an outside contribution with one approval, linking to the configured policy base', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result } = yield* run(
           { version: 2, roles, links: { policyBase: 'https://example.com/policy' }, reviews: { gate: {} } },
@@ -183,7 +188,7 @@ describe('review gate', () => {
     ))
 
   it('passes silently once enough maintainers approve, re-evaluated on the review event', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result } = yield* run(
           { version: 2, roles, reviews: { gate: {} } },
@@ -198,7 +203,7 @@ describe('review gate', () => {
     ))
 
   it('uses the maintainer threshold for a maintainer author and ignores their own approval', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const own = yield* run(
           { version: 2, roles, reviews: { gate: {} } },
@@ -224,7 +229,7 @@ describe('review gate', () => {
     ))
 
   it('lets a trusted bot skip the gate with a notice', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result } = yield* run({ version: 2, roles, reviews: { gate: {} } }, memory(), {
           author: 'dependabot[bot]',
@@ -242,7 +247,7 @@ describe('review gate', () => {
 
 describe('requestApprovals', () => {
   it('requests each passing rule reviewers except the author, and records a change', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result, state } = yield* run(
           {
@@ -269,7 +274,7 @@ describe('requestApprovals', () => {
     ))
 
   it('does not request a review again from someone who has already reviewed', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const config: SmartcloudConfig = {
           version: 2,
@@ -285,7 +290,7 @@ describe('requestApprovals', () => {
 
 describe('a read-only token, as on a pull request from a fork', () => {
   it('warns for each review request and approval it cannot make, rather than failing the run', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result, state } = yield* run(
           {
@@ -320,7 +325,7 @@ describe('a read-only token, as on a pull request from a fork', () => {
     ))
 
   it('still fails on any other error from a review write', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const github = memory()
         const limited = {
@@ -351,7 +356,7 @@ describe('automaticApprove', () => {
   })
 
   it('approves once, with the first passing rule message, and records a change', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result, state } = yield* run(approve('Dependency bump approved.'), memory(), { event: 'pull_request' })
         expect(pull(state)?.submittedReviews).toStrictEqual([{ event: 'APPROVE', body: 'Dependency bump approved.' }])
@@ -360,7 +365,7 @@ describe('automaticApprove', () => {
     ))
 
   it('uses a default message', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { state } = yield* run(approve(), memory(), { event: 'pull_request' })
         expect(pull(state)?.submittedReviews).toStrictEqual([
@@ -370,7 +375,7 @@ describe('automaticApprove', () => {
     ))
 
   it('does not approve again while an approval stands, so synchronize events do not stack approvals', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result, state } = yield* run(
           approve(),
@@ -396,7 +401,7 @@ describe('automaticApprove', () => {
     ))
 
   it('approves again once the earlier approval is dismissed', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { state } = yield* run(approve(), memory([{ author: 'smartcloud[bot]', state: 'DISMISSED' }]), {
           event: 'pull_request',
@@ -406,7 +411,7 @@ describe('automaticApprove', () => {
     ))
 
   it('falls through to a later passing rule, and does nothing when no rule passes', () =>
-    Effect.runPromise(
+    runQuiet(
       Effect.gen(function* () {
         const { result, state } = yield* run(approve(), memory(), { author: 'someone-else', event: 'pull_request' })
         expect(pull(state)?.submittedReviews).toHaveLength(1)

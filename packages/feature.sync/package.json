@@ -5,6 +5,7 @@
   "type": "module",
   "description": "File sync: renders templates from another repository, merges managed blocks, proposes a sync pull request and checks pull requests that edit synced files.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The disclosure feature: the AI disclosure a pull request description carries.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

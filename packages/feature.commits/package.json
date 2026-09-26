@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The commits feature: DCO sign-off and AI attribution trailers on pull request commits.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

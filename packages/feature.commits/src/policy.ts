@@ -26,7 +26,16 @@ export type Role = 'bot' | 'maintainer' | 'contributor'
 /** The level a maintainer's findings are reported at. */
 export type MaintainerLevel = 'error' | 'warning'
 
-/** Where findings link when `links.policyBase` is not set. */
+/**
+ * Where findings link when `links.policyBase` is not set.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_POLICY_BASE"
+ * import { DEFAULT_POLICY_BASE, policyBase } from '@resnovas/feature.commits'
+ *
+ * policyBase({ version: 2 }) === DEFAULT_POLICY_BASE // => true
+ * ```
+ */
 export const DEFAULT_POLICY_BASE = 'https://github.com/Resnovas/.github/blob/main'
 
 // Only a person can certify the DCO, so this stays an error even on a
@@ -39,6 +48,13 @@ const withoutAt = (login: string): string => (login.startsWith('@') ? login.slic
  * Whether two GitHub logins are the same account: ignoring case, and with a
  * leading `@` optional on either.
  *
+ * @example
+ * ```ts import.meta.vitest name="sameLogin"
+ * import { sameLogin } from '@resnovas/feature.commits'
+ *
+ * sameLogin('@Jane', 'jane') // => true
+ * ```
+ *
  * @param a - A login, for example `@Jane`.
  * @param b - Another login.
  * @returns True when they name the same account.
@@ -47,6 +63,16 @@ export const sameLogin = (a: string, b: string): boolean => withoutAt(a).toLower
 
 /**
  * Works out the author's role from `config.roles`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="authorRole"
+ * import { authorRole } from '@resnovas/feature.commits'
+ *
+ * const roles = { maintainers: ['ann'], trustedBots: ['dependabot[bot]'] }
+ * authorRole('dependabot[bot]', roles) // => 'bot'
+ * authorRole('octo', roles, 'octo') // => 'maintainer'
+ * authorRole('sam', roles) // => 'contributor'
+ * ```
  *
  * @param author - The pull request author's login.
  * @param roles - The config's `roles` section.
@@ -62,6 +88,14 @@ export const authorRole = (author: string, roles: SmartcloudConfig['roles'], own
 /**
  * The level a finding is reported at for an author's role.
  *
+ * @example
+ * ```ts import.meta.vitest name="levelFor"
+ * import { levelFor } from '@resnovas/feature.commits'
+ *
+ * levelFor('maintainer', 'DCO', undefined) // => 'warning'
+ * levelFor('maintainer', 'AI-03', 'warning') // => 'error'
+ * ```
+ *
  * @param role - The author's role.
  * @param rule - The rule id; `AI-03` is never downgraded.
  * @param maintainerLevel - The configured level for maintainers, `warning` by default.
@@ -73,6 +107,13 @@ export const levelFor = (role: Role, rule: string, maintainerLevel: MaintainerLe
 /**
  * The base URL findings link to, without a trailing slash.
  *
+ * @example
+ * ```ts import.meta.vitest name="policyBase"
+ * import { policyBase } from '@resnovas/feature.commits'
+ *
+ * policyBase({ version: 2, links: { policyBase: 'https://example.com/policy/' } }) // => 'https://example.com/policy'
+ * ```
+ *
  * @param config - The config.
  * @returns `links.policyBase`, or the Resnovas governance repository.
  */
@@ -82,7 +123,16 @@ export const policyBase = (config: SmartcloudConfig): string => {
   return base
 }
 
-/** The pull request's commits were not loaded, although the feature asked for them. */
+/**
+ * The pull request's commits were not loaded, although the feature asked for them.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CommitsNotLoaded"
+ * import { CommitsNotLoaded } from '@resnovas/feature.commits'
+ *
+ * new CommitsNotLoaded({ feature: 'commits' })._tag // => 'CommitsNotLoaded'
+ * ```
+ */
 export class CommitsNotLoaded extends Data.TaggedError('CommitsNotLoaded')<{ readonly feature: string }> {
   override get message() {
     return `the ${this.feature} feature needs the pull request's commits, but they were not loaded`
@@ -92,6 +142,15 @@ export class CommitsNotLoaded extends Data.TaggedError('CommitsNotLoaded')<{ rea
 /**
  * The pull request and its commits, which the policy features ask the engine
  * to load.
+ *
+ * @example
+ * ```ts import.meta.vitest name="pullRequestCommits"
+ * import { pullRequestCommits } from '@resnovas/feature.commits'
+ * import { Effect } from 'effect'
+ *
+ * const context = { config: { version: 2 as const }, envelope: { kind: 'repository' as const, event: 'schedule' } }
+ * Effect.runSync(Effect.flip(pullRequestCommits(context, 'commits')))._tag // => 'CommitsNotLoaded'
+ * ```
  *
  * @param context - The feature context.
  * @param feature - The feature's name, for the error.

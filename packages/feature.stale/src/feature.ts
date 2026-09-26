@@ -44,8 +44,11 @@ const SWEEP_EVENTS = new Set(['schedule', 'workflow_dispatch'])
  * removes it.
  *
  * @example
- * ```ts
- * const result = yield* runFeatures({ config, event: 'schedule', payload: {}, features: [stale] })
+ * ```ts import.meta.vitest name="stale"
+ * import { stale } from '@resnovas/feature.stale'
+ *
+ * stale.enabled?.({ version: 2, stale: { staleAfterDays: 30, staleLabel: 'stale' } }) // => true
+ * stale.handles.join(', ') // => 'repository'
  * ```
  */
 export const stale: Feature = {

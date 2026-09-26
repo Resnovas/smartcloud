@@ -17,7 +17,16 @@
 
 import type { SmartcloudConfig } from '@resnovas/config'
 
-/** The autonomy levels AI_POLICY.md defines, from least to most autonomous. */
+/**
+ * The autonomy levels AI_POLICY.md defines, from least to most autonomous.
+ *
+ * @example
+ * ```ts import.meta.vitest name="LEVELS"
+ * import { LEVELS } from '@resnovas/feature.disclosure'
+ *
+ * LEVELS.indexOf('agent') > LEVELS.indexOf('chat') // => true
+ * ```
+ */
 export const LEVELS = ['none', 'autocomplete', 'chat', 'agent', 'autonomous'] as const
 
 /** An autonomy level from AI_POLICY.md. */
@@ -40,7 +49,16 @@ export interface Disclosure {
   readonly review?: string
 }
 
-/** The labels the Resnovas pull request template uses. */
+/**
+ * The labels the Resnovas pull request template uses.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_LABELS"
+ * import { DEFAULT_LABELS } from '@resnovas/feature.disclosure'
+ *
+ * DEFAULT_LABELS.level // => 'AI level'
+ * ```
+ */
 export const DEFAULT_LABELS: DisclosureLabels = {
   level: 'AI level',
   tools: 'AI tools',
@@ -50,6 +68,14 @@ export const DEFAULT_LABELS: DisclosureLabels = {
 
 /**
  * The disclosure labels, with any the config renames.
+ *
+ * @example
+ * ```ts import.meta.vitest name="disclosureLabels"
+ * import { disclosureLabels } from '@resnovas/feature.disclosure'
+ *
+ * disclosureLabels({ level: 'Autonomy' }).level // => 'Autonomy'
+ * disclosureLabels(undefined).tools // => 'AI tools'
+ * ```
  *
  * @param fields - The config's `disclosure.fields`.
  * @returns Every label, defaulted.
@@ -71,8 +97,11 @@ export const disclosureLabels = (fields: NonNullable<SmartcloudConfig['disclosur
  * text, as it does when GitHub renders the description.
  *
  * @example
- * ```ts
- * stripHtmlComments('a<!-- hint -->b') // 'ab'
+ * ```ts import.meta.vitest name="stripHtmlComments"
+ * import { stripHtmlComments } from '@resnovas/feature.disclosure'
+ *
+ * stripHtmlComments('a<!-- hint -->b') // => 'ab'
+ * stripHtmlComments('a<!-- unclosed b') // => 'a'
  * ```
  *
  * @param text - The description.
@@ -120,9 +149,12 @@ const readField = (lines: ReadonlyArray<string>, label: string): string | undefi
  * dropped from the value.
  *
  * @example
- * ```ts
- * parseDisclosure('AI level: Agent\nAI tools: Claude Code (claude-opus-5-5)')
- * // { level: 'agent', tools: 'Claude Code (claude-opus-5-5)' }
+ * ```ts import.meta.vitest name="parseDisclosure"
+ * import { parseDisclosure } from '@resnovas/feature.disclosure'
+ *
+ * const disclosure = parseDisclosure('AI level: Agent\nAI tools: Claude Code')
+ * disclosure.level // => 'agent'
+ * disclosure.tools // => 'Claude Code'
  * ```
  *
  * @param body - The pull request description.
@@ -145,6 +177,14 @@ export const parseDisclosure = (body: string, labels: DisclosureLabels = DEFAULT
 
 /**
  * Whether a disclosed level is one AI_POLICY.md defines.
+ *
+ * @example
+ * ```ts import.meta.vitest name="isLevel"
+ * import { isLevel } from '@resnovas/feature.disclosure'
+ *
+ * isLevel('agent') // => true
+ * isLevel('robot') // => false
+ * ```
  *
  * @param level - The level as read.
  * @returns True for a valid level.

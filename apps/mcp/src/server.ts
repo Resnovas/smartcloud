@@ -61,6 +61,17 @@ const configText = z
  * are recorded and listed, never made. A config file named by an assistant is
  * only read when it is a regular file inside `root`.
  *
+ * @example
+ * ```ts
+ * import { NodeContext } from '@effect/platform-node'
+ * import { gitHubConfigSource, liveConnect } from '@resnovas/runtime'
+ * import { makeServer } from '@resnovas/smartcloud-mcp'
+ * import { Effect, Layer } from 'effect'
+ *
+ * const layer = Layer.provideMerge(gitHubConfigSource(), NodeContext.layer)
+ * const server = makeServer({ connect: liveConnect(), run: (effect) => Effect.runPromise(Effect.provide(effect, layer)) })
+ * ```
+ *
  * @param options - `connect` opens the GitHub service; `run` runs a tool's
  * effect; `root` is the only directory a config file may be read from, the
  * working directory when the server is made, if omitted.

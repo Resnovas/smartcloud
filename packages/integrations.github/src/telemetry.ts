@@ -23,14 +23,38 @@ import type { GitHubError } from './errors.js'
  * `outcome` (`success`, or the typed error's tag, such as `NotFound`).
  *
  * @remarks
- * One call counts once, however many times it was retried.
+ * One call counts once, however many times it was retried. Like every
+ * Effect metric it can also be applied to an effect, which adds the effect's
+ * result to the count.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Metric } from 'effect'
+ * import { githubRequests } from '@resnovas/integrations.github'
+ *
+ * const calls = Metric.value(githubRequests).pipe(Effect.map((state) => state.count))
+ * ```
  */
 export const githubRequests = Metric.counter('smartcloud.github.requests', {
   description: 'GitHub API calls smartcloud made, by operation and outcome',
   incremental: true,
 })
 
-/** How long GitHub API calls take, in milliseconds, retries included, tagged by `operation` and `outcome`. */
+/**
+ * How long GitHub API calls take, in milliseconds, retries included, tagged by `operation` and `outcome`.
+ *
+ * @remarks
+ * Like every Effect metric it can also be applied to an effect, which
+ * records the effect's result as a duration.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Metric } from 'effect'
+ * import { githubDuration } from '@resnovas/integrations.github'
+ *
+ * const timedCalls = Metric.value(githubDuration).pipe(Effect.map((state) => state.count))
+ * ```
+ */
 export const githubDuration = Metric.histogram(
   'smartcloud.github.duration_ms',
   MetricBoundaries.exponential({ start: 25, factor: 2, count: 12 }),
@@ -45,8 +69,11 @@ export const githubDuration = Metric.histogram(
  * named as a child of it in camel case: `smartcloud.github.proposeChanges.createBlob`.
  *
  * @example
- * ```ts
- * githubSpanName('listLabels') // 'smartcloud.github.listLabels'
+ * ```ts import.meta.vitest name="githubSpanName"
+ * import { githubSpanName } from '@resnovas/integrations.github'
+ *
+ * githubSpanName('listLabels') // => 'smartcloud.github.listLabels'
+ * githubSpanName('proposeChanges: create blob') // => 'smartcloud.github.proposeChanges.createBlob'
  * ```
  *
  * @param operation - The operation, which must name nothing about the repository.
@@ -79,6 +106,8 @@ const statusOf = (value: unknown): number | undefined =>
  * timed in {@link githubDuration} and logged at debug level. The error's
  * detail and the request itself are never recorded: they can name the
  * repository, its files and its people.
+ *
+ * @internal
  *
  * @example
  * ```ts
@@ -117,6 +146,8 @@ export const instrumentCall = <A>(
 
 /**
  * Records the HTTP status of each attempt a call makes, for {@link instrumentCall}.
+ *
+ * @internal
  *
  * @returns `track`, which wraps a promise-returning attempt, and `last`, which reads the status of the latest attempt.
  */

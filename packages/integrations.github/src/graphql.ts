@@ -54,6 +54,8 @@ const endOfString = (document: string, start: number): number => {
  * unclosed string or brace, counts as a write, so the dry run records it
  * rather than letting it through.
  *
+ * @internal
+ *
  * @param document - The GraphQL document.
  * @returns True when the document may write.
  */

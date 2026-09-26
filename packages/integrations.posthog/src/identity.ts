@@ -34,7 +34,16 @@ export interface Identity {
   readonly organization: string
 }
 
-/** The PostHog group type the organisation is recorded under. */
+/**
+ * The PostHog group type the organisation is recorded under.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ORGANIZATION_GROUP"
+ * import { ORGANIZATION_GROUP } from '@resnovas/integrations.posthog'
+ *
+ * ORGANIZATION_GROUP // => 'organization'
+ * ```
+ */
 export const ORGANIZATION_GROUP = 'organization'
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
@@ -47,8 +56,11 @@ const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
  * same repository always has the same identity.
  *
  * @example
- * ```ts
- * identify({ owner: 'Resnovas', repo: 'smartcloud' }).distinctId // 64 hex characters
+ * ```ts import.meta.vitest name="identify"
+ * import { identify } from '@resnovas/integrations.posthog'
+ *
+ * identify({ owner: 'Resnovas', repo: 'smartcloud' }).distinctId.length // => 64
+ * identify({ owner: 'resnovas', repo: 'SmartCloud' }).distinctId === identify({ owner: 'Resnovas', repo: 'smartcloud' }).distinctId // => true
  * ```
  *
  * @param repository - The owner and repository name.

@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The PostHog integration: telemetry (logs, traces, metrics and error tracking) and feature flags, with redaction and an opt-out.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

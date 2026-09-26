@@ -3,5 +3,9 @@
   "$schema": "../../node_modules/nx/schemas/project-schema.json",
   "projectType": "library",
   "sourceRoot": "packages/conditions/src",
-  "tags": ["type_core", "layer_shared"]
+  "tags": ["type_core", "layer_shared"],
+  "targets": {
+    "docgen": {},
+    "contracts": {}
+  }
 }

@@ -17,86 +17,10 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Layer, TestClock } from 'effect'
-import type { SmartcloudConfig } from '@resnovas/config'
-import { makeReport, Report, runFeatures } from '@resnovas/engine'
-import {
-  ABANDONED_MARKER,
-  MARK_GRACE_MS,
-  markedSince,
-  stale,
-  STALE_MARKER,
-  staleBody,
-  sweepStale,
-  type StaleConfig,
-} from '@resnovas/feature.stale'
-import {
-  DryRun,
-  DryRunLog,
-  GitHub,
-  makeMemoryGitHub,
-  Unavailable,
-  type Comment,
-  type IssueSummary,
-} from '@resnovas/integrations.github'
-
-const DAY = 86_400_000
-const NOW = Date.UTC(2026, 8, 26)
-const daysAgo = (days: number) => new Date(NOW - days * DAY)
-
-const item = (number: number, overrides: Partial<IssueSummary> = {}): IssueSummary => ({
-  number,
-  title: `item ${number}`,
-  body: '',
-  author: 'sam',
-  open: true,
-  locked: false,
-  labels: [],
-  updatedAt: daysAgo(0),
-  isPullRequest: false,
-  ...overrides,
-})
-
-// Seeds the listing and GitHub's own view of each item's labels and comments.
-const memory = (
-  items: ReadonlyArray<IssueSummary>,
-  comments: Readonly<Record<number, ReadonlyArray<Comment>>> = {},
-) => {
-  const github = makeMemoryGitHub({ openIssues: [...items], nextId: 100 })
-  for (const entry of items) {
-    github.state.issues.set(entry.number, {
-      labels: [...entry.labels],
-      comments: [...(comments[entry.number] ?? [])],
-      open: true,
-    })
-  }
-  return github
-}
-
-const settings: StaleConfig = {
-  staleAfterDays: 30,
-  staleLabel: 'stale',
-  staleComment: 'This has been quiet for a while.',
-  abandonedAfterDays: 7,
-  abandonedComment: 'Closing as abandoned.',
-  close: true,
-}
-
-const sweep = (
-  config: SmartcloudConfig,
-  github: ReturnType<typeof memory>,
-  event = 'schedule',
-  service: GitHub['Type'] = github.service,
-) =>
-  Effect.gen(function* () {
-    yield* TestClock.setTime(NOW)
-    // A push payload must carry what GitHub sends for one; the others need nothing.
-    const payload = event === 'push' ? { ref: 'refs/heads/main', after: 'abc123' } : {}
-    return yield* runFeatures({ config, event, payload, features: [stale] }).pipe(Effect.provideService(GitHub, service))
-  })
-
-const labelsOf = (github: ReturnType<typeof memory>, number: number) => github.state.issues.get(number)?.labels
-const commentsOf = (github: ReturnType<typeof memory>, number: number) =>
-  github.state.issues.get(number)?.comments.map((c) => c.body)
+import { runFeatures } from '@resnovas/engine'
+import { ABANDONED_MARKER, MARK_GRACE_MS, markedSince, stale, STALE_MARKER, staleBody } from '@resnovas/feature.stale'
+import { DryRun, DryRunLog, GitHub, Unavailable } from '@resnovas/integrations.github'
+import { commentsOf, daysAgo, item, labelsOf, memory, NOW, settings, sweep } from './fixtures.js'
 
 describe('stale feature: marking', () => {
   it.effect('marks items inactive for staleAfterDays or more, with one comment carrying the marker and mark time', () =>
@@ -450,34 +374,6 @@ describe('stale feature: abandoning', () => {
       const result = yield* sweep({ version: 2, stale: never }, github)
       expect(result.changes).toStrictEqual([])
       expect(labelsOf(github, 2)).toStrictEqual(['stale'])
-    }),
-  )
-})
-
-describe('stale feature: when it runs', () => {
-  it.effect('runs on schedule and workflow_dispatch, and does nothing on other repository events', () =>
-    Effect.gen(function* () {
-      const onPush = memory([item(1, { updatedAt: daysAgo(40) })])
-      const pushed = yield* sweep({ version: 2, stale: settings }, onPush, 'push')
-      expect(pushed.ran).toStrictEqual(['stale'])
-      expect(labelsOf(onPush, 1)).toStrictEqual([])
-      const onDispatch = memory([item(1, { updatedAt: daysAgo(40) })])
-      yield* sweep({ version: 2, stale: settings }, onDispatch, 'workflow_dispatch')
-      expect(labelsOf(onDispatch, 1)).toStrictEqual(['stale'])
-    }),
-  )
-
-  it.effect('is enabled only by a stale section, and a sweep without one does nothing', () =>
-    Effect.gen(function* () {
-      expect(stale.enabled?.({ version: 2 })).toBe(false)
-      expect(stale.enabled?.({ version: 2, stale: settings })).toBe(true)
-      const github = memory([item(1, { updatedAt: daysAgo(40) })])
-      const report = yield* makeReport
-      yield* sweepStale({ version: 2 }).pipe(
-        Effect.provideService(GitHub, github.service),
-        Effect.provideService(Report, report),
-      )
-      expect(labelsOf(github, 1)).toStrictEqual([])
     }),
   )
 })

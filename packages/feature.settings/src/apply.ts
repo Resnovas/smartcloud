@@ -20,10 +20,29 @@ import { GitHub, type GitHubError } from '@resnovas/integrations.github'
 import { Data, Effect, Either, Schema } from 'effect'
 import type { DeploymentPolicy, RulesetBody, SettingsStep } from './plan.js'
 
-/** The feature name findings and changes are recorded under. */
+/**
+ * The feature name findings and changes are recorded under.
+ *
+ * @example
+ * ```ts import.meta.vitest name="FEATURE"
+ * import { FEATURE } from '@resnovas/feature.settings'
+ *
+ * FEATURE // => 'settings'
+ * ```
+ */
 export const FEATURE = 'settings'
 
-/** GitHub answered with something other than the documented shape. */
+/**
+ * GitHub answered with something other than the documented shape.
+ *
+ * @example
+ * ```ts import.meta.vitest name="UnexpectedResponse"
+ * import { UnexpectedResponse } from '@resnovas/feature.settings'
+ *
+ * const error = new UnexpectedResponse({ operation: 'GET /rulesets', detail: 'expected a list' })
+ * error.message // => 'GET /rulesets: unexpected response (expected a list)'
+ * ```
+ */
 export class UnexpectedResponse extends Data.TaggedError('UnexpectedResponse')<{ readonly operation: string; readonly detail: string }> {
   override get message() {
     return `${this.operation}: unexpected response (${this.detail})`
@@ -40,6 +59,14 @@ const RulesetList = Schema.Array(Schema.Struct({ id: Schema.Number, name: Schema
  * Matching by name means re-running updates the ruleset in place instead of
  * stacking duplicates. Rulesets inherited from the organisation are left out
  * of the listing: they cannot be updated through the repository endpoint.
+ *
+ * @example
+ * ```ts
+ * import { rulesetBody, upsertRuleset } from '@resnovas/feature.settings'
+ *
+ * // Needs the GitHub service, for example from the live or dry-run layer.
+ * const program = upsertRuleset(rulesetBody({ blockForcePush: true }, undefined))
+ * ```
  *
  * @param ruleset - The ruleset body.
  * @returns Nothing; fails when GitHub rejects a call or lists rulesets in an unexpected shape.
@@ -75,6 +102,14 @@ const PolicyList = Schema.Struct({
  * re-running creates nothing new. Policies the environment has that are not
  * asked for are left alone. The environment must already use custom branch
  * policies, which `environmentBody` sets for a protected environment.
+ *
+ * @example
+ * ```ts
+ * import { ensureDeploymentPolicies } from '@resnovas/feature.settings'
+ *
+ * // Needs the GitHub service, for example from the live or dry-run layer.
+ * const program = ensureDeploymentPolicies('Production', [{ name: 'main', type: 'branch' }])
+ * ```
  *
  * @param environment - The environment name.
  * @param policies - The policies it must have.
@@ -120,6 +155,18 @@ const perform = (step: SettingsStep): Effect.Effect<void, GitHubError | Unexpect
  * stop the others: a warning when the step is optional, an error otherwise.
  * Under the dry-run layer writes are only recorded, so the changes read as
  * what would change.
+ *
+ * @example
+ * ```ts
+ * import { applySettings, planSettings } from '@resnovas/feature.settings'
+ * import { GitHub } from '@resnovas/integrations.github'
+ * import { Effect } from 'effect'
+ *
+ * // Needs the GitHub service and a Report, as the engine provides them.
+ * const program = Effect.flatMap(GitHub, (github) => github.getRepository).pipe(
+ *   Effect.flatMap((repository) => applySettings(planSettings({ merging: { squash: true } }, undefined, repository))),
+ * )
+ * ```
  *
  * @param steps - The steps from `planSettings`.
  * @returns Nothing; outcomes go to the {@link Report}.

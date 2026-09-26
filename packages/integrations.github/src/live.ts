@@ -48,6 +48,13 @@ export interface LiveOptions {
  * The identity `GITHUB_TOKEN` pushes as. Commits name it as author and
  * committer explicitly, so the sign-off always matches the author and the
  * DCO check passes.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_COMMITTER"
+ * import { DEFAULT_COMMITTER } from '@resnovas/integrations.github'
+ *
+ * DEFAULT_COMMITTER.name // => 'github-actions[bot]'
+ * ```
  */
 export const DEFAULT_COMMITTER: CommitIdentity = {
   name: 'github-actions[bot]',
@@ -56,6 +63,13 @@ export const DEFAULT_COMMITTER: CommitIdentity = {
 
 /**
  * Appends a DCO `Signed-off-by` trailer for an identity to a commit message.
+ *
+ * @example
+ * ```ts import.meta.vitest name="signOff"
+ * import { signOff } from '@resnovas/integrations.github'
+ *
+ * signOff('fix: typo', { name: 'Ann', email: 'ann@example.com' }) // => 'fix: typo\n\nSigned-off-by: Ann <ann@example.com>'
+ * ```
  *
  * @param message - The commit message.
  * @param identity - Who signs off.
@@ -170,6 +184,17 @@ const labelName = (label: string | { readonly name?: string | undefined }): stri
  * `smartcloud.github.requests` and timed in `smartcloud.github.duration_ms`
  * (see {@link instrumentCall}); only the operation, the outcome and the HTTP
  * status are recorded.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Redacted } from 'effect'
+ * import { makeLiveGitHub } from '@resnovas/integrations.github'
+ *
+ * const labels = Effect.gen(function* () {
+ *   const github = yield* makeLiveGitHub({ token: Redacted.make('ghp_example'), coordinates: { owner: 'Resnovas', repo: 'smartcloud' } })
+ *   return yield* github.listLabels
+ * })
+ * ```
  *
  * @param options - Token, repository and optional test hooks.
  * @returns The service.
@@ -545,6 +570,14 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
  * and the token stays redacted. `SMARTCLOUD_COMMITTER_NAME` and
  * `SMARTCLOUD_COMMITTER_EMAIL` override who proposed changes are committed
  * and signed off as, for a token that pushes as another identity.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from 'effect'
+ * import { GitHub, GitHubLive } from '@resnovas/integrations.github'
+ *
+ * const labels = Effect.flatMap(GitHub, (github) => github.listLabels).pipe(Effect.provide(GitHubLive))
+ * ```
  */
 export const GitHubLive = Layer.effect(
   GitHub,

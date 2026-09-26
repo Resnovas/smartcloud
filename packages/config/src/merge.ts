@@ -20,6 +20,14 @@ import { Data, Either } from 'effect'
 /**
  * A config tried to change something a preset already set. Presets are
  * locked: a repository may add rules, never replace or remove inherited ones.
+ *
+ * @example
+ * ```ts import.meta.vitest name="LockedRule"
+ * import { LockedRule } from '@resnovas/config'
+ *
+ * const error = new LockedRule({ path: 'labels.bug.color', preset: 'house', source: 'repo' })
+ * error.message // => 'repo cannot change "labels.bug.color": it is set by house. Add a new rule instead.'
+ * ```
  */
 export class LockedRule extends Data.TaggedError('LockedRule')<{
   /**
@@ -80,7 +88,17 @@ export interface Merged {
   readonly origins: ReadonlyMap<string, string>
 }
 
-/** An empty merge, the starting point for folding presets and local config. */
+/**
+ * An empty merge, the starting point for folding presets and local config.
+ *
+ * @example
+ * ```ts import.meta.vitest name="empty"
+ * import { empty } from '@resnovas/config'
+ *
+ * Object.keys(empty.value).length // => 0
+ * empty.origins.size // => 0
+ * ```
+ */
 export const empty: Merged = { value: {}, origins: new Map() }
 
 /**
@@ -94,6 +112,16 @@ export const empty: Merged = { value: {}, origins: new Map() }
  * changes nothing and is allowed. Any other value already present, whether a
  * scalar, a list, or an object meeting a non-object, belongs to whichever
  * source set it first, and setting it differently is a {@link LockedRule}.
+ *
+ * @example
+ * ```ts import.meta.vitest name="mergeLocked"
+ * import { empty, mergeLocked } from '@resnovas/config'
+ * import { Either } from 'effect'
+ *
+ * const house = Either.getOrThrow(mergeLocked(empty, { labels: { bug: { color: 'd73a4a' } } }, 'house'))
+ * Either.isRight(mergeLocked(house, { labels: { docs: { color: '0075ca' } } }, 'repo')) // => true
+ * Either.isLeft(mergeLocked(house, { labels: { bug: { color: '000000' } } }, 'repo')) // => true
+ * ```
  *
  * @param merged - Everything merged so far.
  * @param config - The encoded config to add.

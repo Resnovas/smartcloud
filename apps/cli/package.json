@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud command line: validate and migrate configs, dry-run features and plan settings locally.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "bin": {
     "smartcloud": "./dist/main.js"
   },

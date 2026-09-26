@@ -35,6 +35,14 @@ import { Console, Data, Effect, Option } from 'effect'
 /**
  * Finds the config in a repository checkout.
  *
+ * @example
+ * ```ts
+ * import { locateConfig } from '@resnovas/smartcloud'
+ *
+ * // Needs the platform's FileSystem and Path.
+ * const found = locateConfig('.')
+ * ```
+ *
  * @param directory - The repository root.
  * @returns The path of the first config that exists.
  */
@@ -52,6 +60,14 @@ export const locateConfig = (directory: string) =>
 /**
  * Validates a config and its whole `extends` chain, printing where it came
  * from and every migration warning.
+ *
+ * @example
+ * ```ts
+ * import { validate } from '@resnovas/smartcloud'
+ *
+ * // Needs the platform's FileSystem and a config source for `extends`.
+ * const resolved = validate('.github/smartcloud.yml')
+ * ```
  *
  * @param file - The config file.
  * @returns The resolved config.
@@ -74,6 +90,14 @@ export const validate = (file: string) =>
  * Warnings go to stderr, so stdout holds only the YAML and can be
  * redirected straight into a config file.
  *
+ * @example
+ * ```ts
+ * import { migrate } from '@resnovas/smartcloud'
+ *
+ * // Needs the platform's FileSystem.
+ * const migrated = migrate('.github/config.json', '.github/smartcloud.yml')
+ * ```
+ *
  * @param input - The v1 JSON file. A v2 file is rewritten unchanged.
  * @param output - Where to write the YAML; printed to stdout when omitted.
  * @returns The migrated config.
@@ -95,6 +119,14 @@ export const migrate = (input: string, output: string | undefined) =>
  * Dry-runs every feature against a repository and prints the job summary
  * and every write that would have been made. Nothing is written.
  *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ * import { dryRunCommand } from '@resnovas/smartcloud'
+ *
+ * const dryRun = dryRunCommand(liveConnect(), { repository: 'Resnovas/example', pr: 7 })
+ * ```
+ *
  * @param connect - Opens the GitHub service.
  * @param request - The repository, what to simulate, the config and the features.
  * @returns The dry run.
@@ -105,6 +137,14 @@ export const dryRunCommand = (connect: Connect, request: DryRunRequest) =>
 /**
  * Prints the settings a repository's config would apply, without applying them.
  *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ * import { planSettingsCommand } from '@resnovas/smartcloud'
+ *
+ * const plan = planSettingsCommand(liveConnect(), { repository: 'Resnovas/example' })
+ * ```
+ *
  * @param connect - Opens the GitHub service.
  * @param request - The repository, and a local config file to use instead of its own.
  * @returns The plan.
@@ -112,7 +152,16 @@ export const dryRunCommand = (connect: Connect, request: DryRunRequest) =>
 export const planSettingsCommand = (connect: Connect, request: { readonly repository: string; readonly config?: string | undefined }) =>
   Effect.tap(planSettingsForRepository(connect, request), (plan) => Console.log(settingsPlanText(plan)))
 
-/** A synced file would be written outside the output directory, or through a symlink. */
+/**
+ * A synced file would be written outside the output directory, or through a symlink.
+ *
+ * @example
+ * ```ts import.meta.vitest name="UnsafePath"
+ * import { UnsafePath } from '@resnovas/smartcloud'
+ *
+ * new UnsafePath({ path: '../x' }).message // => 'refusing to write ../x: it is outside the output directory'
+ * ```
+ */
 export class UnsafePath extends Data.TaggedError('UnsafePath')<{ readonly path: string; readonly reason?: string | undefined }> {
   override get message() {
     return `refusing to write ${this.path}: ${this.reason ?? 'it is outside the output directory'}`
@@ -125,6 +174,17 @@ export class UnsafePath extends Data.TaggedError('UnsafePath')<{ readonly path: 
  * @remarks
  * Compared through `path.relative`, so a root of `/` contains everything and
  * a sibling such as `/out-other` is not inside `/out`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="isWithin"
+ * import { Path } from '@effect/platform'
+ * import { isWithin } from '@resnovas/smartcloud'
+ * import { Effect } from 'effect'
+ *
+ * const path = await Effect.runPromise(Effect.provide(Path.Path, Path.layer))
+ * isWithin(path, '/out', '/out/a/b') // => true
+ * isWithin(path, '/out', '/out-other/a') // => false
+ * ```
  *
  * @param path - The platform's path service.
  * @param root - The directory, resolved.
@@ -165,6 +225,15 @@ const checkTarget = (root: string, realRoot: string, file: string) =>
  * be after the sync, and lists local rules that conflict with synced ones.
  * Nothing is written to GitHub.
  *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ * import { syncCommand } from '@resnovas/smartcloud'
+ *
+ * // Needs the platform's FileSystem and Path; writes only under `out`.
+ * const rendered = syncCommand(liveConnect(), { repository: 'Resnovas/example', out: 'rendered' })
+ * ```
+ *
  * @param connect - Opens the GitHub service.
  * @param request - The repository, the output directory, and a local config file to use instead of its own.
  * @returns The rendered files.
@@ -193,14 +262,32 @@ export const syncCommand = (
     return render
   })
 
-/** The commit message breaks at least one rule. */
+/**
+ * The commit message breaks at least one rule.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CommitCheckFailed"
+ * import { CommitCheckFailed } from '@resnovas/smartcloud'
+ *
+ * new CommitCheckFailed({ count: 2 }).message // => 'the commit message breaks 2 rule(s); see above'
+ * ```
+ */
 export class CommitCheckFailed extends Data.TaggedError('CommitCheckFailed')<{ readonly count: number }> {
   override get message() {
     return `the commit message breaks ${this.count} rule(s); see above`
   }
 }
 
-/** The author could not be worked out from git. */
+/**
+ * The author could not be worked out from git.
+ *
+ * @example
+ * ```ts import.meta.vitest name="UnknownAuthor"
+ * import { UnknownAuthor } from '@resnovas/smartcloud'
+ *
+ * new UnknownAuthor({ ident: 'nobody' }).message.startsWith('could not read the commit author from git') // => true
+ * ```
+ */
 export class UnknownAuthor extends Data.TaggedError('UnknownAuthor')<{ readonly ident: string }> {
   override get message() {
     return `could not read the commit author from git ("${this.ident}"); pass --author-name and --author-email`
@@ -233,6 +320,14 @@ const withoutComments = (message: string) =>
  * to the repository's in the working directory, or smartcloud's defaults
  * when there is none. Fails when any rule is broken, so the hook stops the
  * commit.
+ *
+ * @example
+ * ```ts
+ * import { checkCommitCommand } from '@resnovas/smartcloud'
+ *
+ * // Needs the platform's FileSystem, CommandExecutor and a config source.
+ * const findings = checkCommitCommand('.git/COMMIT_EDITMSG', { authorName: 'Jane Doe', authorEmail: 'jane@example.com' })
+ * ```
  *
  * @param file - The file holding the message, such as `.git/COMMIT_EDITMSG`.
  * @param options - The author, when not git's, and a config file to use.

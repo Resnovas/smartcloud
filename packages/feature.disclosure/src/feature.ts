@@ -119,6 +119,16 @@ const checkDisclosure = (evidence: Evidence): ReadonlyArray<Draft> => {
  * AI identities are those of `@resnovas/feature.commits`, including
  * `commits.aiIdentities`. Trusted bots are skipped, and maintainers' errors
  * are reported at `disclosure.maintainerLevel` (`warning` by default).
+ *
+ * @example
+ * ```ts import.meta.vitest name="disclosureFeature"
+ * import { runFeatures } from '@resnovas/engine'
+ * import { disclosureFeature } from '@resnovas/feature.disclosure'
+ *
+ * // Needs GitHub provided to run.
+ * const program = runFeatures({ config: { version: 2, disclosure: {} }, event: 'pull_request', payload: {}, features: [disclosureFeature] })
+ * disclosureFeature.enabled?.({ version: 2 }) // => false
+ * ```
  */
 export const disclosureFeature: Feature = {
   name: NAME,

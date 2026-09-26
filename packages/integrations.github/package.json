@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The GitHub integration: one Effect service over the REST and GraphQL APIs, with live, dry-run and in-memory layers.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

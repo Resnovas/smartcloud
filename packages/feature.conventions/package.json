@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud conventions feature: title and description conventions for pull requests and issues.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

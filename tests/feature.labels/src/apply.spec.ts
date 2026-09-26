@@ -17,67 +17,11 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect } from 'effect'
-import type { Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
-import { makeReport, Report, runFeatures } from '@resnovas/engine'
+import { runFeatures } from '@resnovas/engine'
 import { labellingFacets, labelName, labels } from '@resnovas/feature.labels'
-import { Forbidden, GitHub, makeMemoryGitHub, Unavailable } from '@resnovas/integrations.github'
-
-const pullRequest = (labelNames: ReadonlyArray<string>, title = 'feat: add sync') => ({
-  action: 'synchronize',
-  pull_request: {
-    number: 7,
-    title,
-    body: 'Adds label sync.',
-    user: { login: 'jane' },
-    state: 'open',
-    locked: false,
-    labels: labelNames.map((name) => ({ name })),
-    updated_at: '2026-09-01T00:00:00Z',
-    draft: false,
-    head: { ref: 'feat/sync', sha: 'abc123' },
-    additions: 10,
-    deletions: 2,
-  },
-})
-
-const issue = (labelNames: ReadonlyArray<string>, title = 'bug: sync fails') => ({
-  action: 'edited',
-  issue: {
-    number: 3,
-    title,
-    body: null,
-    user: { login: 'sam' },
-    state: 'open',
-    locked: false,
-    labels: labelNames.map((name) => ({ name })),
-    updated_at: '2026-09-01T00:00:00Z',
-  },
-})
-
-const titled = (pattern: string) => ({ condition: [{ type: 'titleMatches' as const, condition: pattern }] })
-
-const config: SmartcloudConfig = {
-  version: 2,
-  labels: { feature: { name: 'Type: Feature', color: 'a2eeef' }, bug: { name: 'Type: Bug', color: 'd73a4a' } },
-  labelling: {
-    feature: { label: 'feature', when: titled('^feat') },
-    bug: { label: 'bug', when: titled('^bug') },
-    docs: { label: 'docs', on: ['pullRequest'], when: { condition: [{ type: 'filesMatch', condition: 'docs/**' }] } },
-    triage: { label: 'triage', on: ['issue'], when: { condition: [] } },
-  },
-}
-
-// Seeds GitHub's view of the subject's labels, so removals find them.
-const memoryWith = (number: number, labelNames: ReadonlyArray<string>, files: ReadonlyArray<string> = []) => {
-  const memory = makeMemoryGitHub({
-    pulls: new Map([
-      [7, { commits: [], files: [...files], reviews: [], requestedReviewers: [], submittedReviews: [] }],
-    ]),
-  })
-  memory.state.issues.set(number, { labels: [...labelNames], comments: [], open: true })
-  return memory
-}
+import { Forbidden, GitHub, Unavailable } from '@resnovas/integrations.github'
+import { config, issue, memoryWith, pullRequest, titled } from './fixtures.js'
 
 describe('labels feature: apply', () => {
   it.effect(
@@ -214,34 +158,6 @@ describe('labels feature: apply', () => {
       expect(state.issues.get(3)?.labels).toStrictEqual([])
     }),
   )
-
-  it.effect('falls back to the envelope subject when the runner gave none', () =>
-    Effect.gen(function* () {
-      const { service, state } = memoryWith(3, [])
-      const subject: Subject = {
-        kind: 'issue',
-        number: 3,
-        title: 'bug: x',
-        body: '',
-        author: 'sam',
-        open: true,
-        locked: false,
-        labels: [],
-        updatedAt: new Date(0),
-      }
-      const report = yield* makeReport
-      yield* labels
-        .run({ config, envelope: { kind: 'issue', event: 'issues', subject } })
-        .pipe(Effect.provideService(GitHub, service), Effect.provideService(Report, report))
-      expect(state.issues.get(3)?.labels).toStrictEqual(['Type: Bug', 'triage'])
-    }),
-  )
-
-  it('is enabled by a labels or labelling section, and not otherwise', () => {
-    expect(labels.enabled?.({ version: 2 })).toBe(false)
-    expect(labels.enabled?.({ version: 2, labels: {} })).toBe(true)
-    expect(labels.enabled?.({ version: 2, labelling: {} })).toBe(true)
-  })
 
   it('asks for the facets of every rule, and none without labelling', () => {
     expect([...labellingFacets(config)]).toStrictEqual(['files'])

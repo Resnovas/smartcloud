@@ -101,7 +101,16 @@ export interface UnsupportedEnvelope {
 /** A GitHub event, normalised. */
 export type Envelope = PullRequestEnvelope | IssueEnvelope | RepositoryEnvelope | UnsupportedEnvelope
 
-/** The event payload did not have the shape GitHub documents for its name. */
+/**
+ * The event payload did not have the shape GitHub documents for its name.
+ *
+ * @example
+ * ```ts import.meta.vitest name="EventDecodeError"
+ * import { EventDecodeError } from '@resnovas/engine'
+ *
+ * new EventDecodeError({ event: 'push', reason: 'ref is missing' }).message // => 'the push payload could not be read: ref is missing'
+ * ```
+ */
 export class EventDecodeError extends Data.TaggedError('EventDecodeError')<{ readonly event: string; readonly reason: string }> {
   override get message() {
     return `the ${this.event} payload could not be read: ${this.reason}`
@@ -142,6 +151,16 @@ const REPOSITORY_EVENTS = new Set(['schedule', 'workflow_dispatch'])
  * events an issue subject; pushes, schedules, dispatches and merge queue
  * entries a repository event. Anything else is unsupported, which is a
  * notice, not a failure: v1 crashed with "There is no context to parse".
+ *
+ * @example
+ * ```ts import.meta.vitest name="decodeEvent"
+ * import { decodeEvent } from '@resnovas/engine'
+ * import { Effect } from 'effect'
+ *
+ * const envelope = Effect.runSync(decodeEvent('push', { ref: 'refs/heads/main', after: 'abc123' }))
+ * envelope.kind // => 'repository'
+ * Effect.runSync(decodeEvent('star', {})).kind // => 'unsupported'
+ * ```
  *
  * @param event - The event name, as in `GITHUB_EVENT_NAME`.
  * @param payload - The event payload, as in the file at `GITHUB_EVENT_PATH`.

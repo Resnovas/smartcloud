@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud MCP server: validate, migrate and explain configs, dry-run features and plan settings from an AI assistant, over stdio.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "bin": {
     "smartcloud-mcp": "./dist/main.js"
   },

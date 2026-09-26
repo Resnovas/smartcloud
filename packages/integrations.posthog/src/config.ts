@@ -25,6 +25,13 @@ import { Config, Redacted } from 'effect'
  * A project key only lets its holder send data to the project, never read
  * it, so it is safe to ship in client code. It is still read as a redacted
  * value, so an override never reaches a log.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_PROJECT_KEY"
+ * import { DEFAULT_PROJECT_KEY } from '@resnovas/integrations.posthog'
+ *
+ * DEFAULT_PROJECT_KEY.startsWith('phc_') // => true
+ * ```
  */
 export const DEFAULT_PROJECT_KEY = 'phc_vSGWgiQzJkTzEJwSRQ2Gd839ZjEwdk5M9pM4oQGRCpJP'
 
@@ -32,6 +39,13 @@ export const DEFAULT_PROJECT_KEY = 'phc_vSGWgiQzJkTzEJwSRQ2Gd839ZjEwdk5M9pM4oQGR
  * The ingestion host of smartcloud's PostHog project, which is hosted in
  * PostHog's EU cloud. The US host accepts events for an EU key and then
  * drops them, and rejects its flag requests.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_HOST"
+ * import { DEFAULT_HOST } from '@resnovas/integrations.posthog'
+ *
+ * DEFAULT_HOST // => 'https://eu.i.posthog.com'
+ * ```
  */
 export const DEFAULT_HOST = 'https://eu.i.posthog.com'
 
@@ -78,9 +92,15 @@ const optionalSecret = (name: string) => Config.option(Config.redacted(name))
  * and `SMARTCLOUD_POSTHOG_HOST` point telemetry at another project.
  *
  * @example
- * ```ts
- * const settings = yield* telemetrySettings
- * if (!settings.enabled) return
+ * ```ts import.meta.vitest name="telemetrySettings"
+ * import { ConfigProvider, Effect } from 'effect'
+ * import { telemetrySettings } from '@resnovas/integrations.posthog'
+ *
+ * const read = Effect.gen(function* () {
+ *   return yield* telemetrySettings
+ * })
+ * const provider = ConfigProvider.fromMap(new Map([['DO_NOT_TRACK', '1']]))
+ * Effect.runSync(Effect.withConfigProvider(read, provider)).enabled // => false
  * ```
  *
  * @returns The settings.

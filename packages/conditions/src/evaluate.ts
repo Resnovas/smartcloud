@@ -26,6 +26,13 @@ import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
  * A condition needed a facet (files, reviews, pending reviewers or commits)
  * that was not loaded onto the subject. This is an engine bug, not a user
  * error: the engine loads every facet `requiredFacets` reports.
+ *
+ * @example
+ * ```ts import.meta.vitest name="MissingFacet"
+ * import { MissingFacet } from '@resnovas/conditions'
+ *
+ * new MissingFacet({ facet: 'files', condition: 'filesMatch' })._tag // => 'MissingFacet'
+ * ```
  */
 export class MissingFacet extends Data.TaggedError('MissingFacet')<{
   readonly facet: Facet
@@ -269,10 +276,13 @@ const combine = (
  * tests control them with `TestClock`.
  *
  * @example
- * ```ts
- * const draftFeature = { condition: [{ type: 'isDraft', condition: true }, { type: 'titleMatches', condition: '^feat' }] }
- * const evaluation = yield* evaluate(draftFeature, subject)
- * evaluation.passed // true when both pass
+ * ```ts import.meta.vitest name="evaluate"
+ * import { evaluate, type Subject } from '@resnovas/conditions'
+ * import { Effect } from 'effect'
+ *
+ * const issue: Subject = { kind: 'issue', number: 3, title: 'feat: x', body: '', author: 'sam', open: true, locked: false, labels: [], updatedAt: new Date(0) }
+ * const group = { condition: [{ type: 'isOpen', condition: true }, { type: 'titleMatches', condition: '^feat' }] } as const
+ * Effect.runSync(evaluate(group, issue)).passed // => true
  * ```
  *
  * @param group - The conditions and how many must pass.
@@ -314,6 +324,13 @@ const groupsOf = (condition: Condition): ReadonlyArray<ConditionGroup> => {
 
 /**
  * The facets a set of condition groups needs loaded on the subject.
+ *
+ * @example
+ * ```ts import.meta.vitest name="requiredFacets"
+ * import { requiredFacets } from '@resnovas/conditions'
+ *
+ * requiredFacets([{ condition: [{ type: 'filesMatch', condition: 'docs/**' }] }]).has('files') // => true
+ * ```
  *
  * @param groups - Every condition group that will be evaluated.
  * @returns The facets to load, each at most once.

@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud GitHub Action: runs every configured feature for the triggering event and reports the result.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

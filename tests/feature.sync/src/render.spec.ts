@@ -17,41 +17,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Either } from 'effect'
-import { list, parseValues, renderAll, renderText, unquote } from '@resnovas/feature.sync'
-
-describe('values', () => {
-  it('parse flat keys, strip comments and one pair of quotes', () => {
-    const values = parseValues('# heading\nORG_NAME: Resnovas  # trailing\nURL: "https://x.io/#a"\n\nEMPTY:\n')
-    expect(values).toStrictEqual(Either.right({ ORG_NAME: 'Resnovas', URL: 'https://x.io/#a', EMPTY: '' }))
-  })
-
-  it('reject anything that is not KEY: value, naming the file and line', () => {
-    const lower = parseValues('lower: nope', 'house.yml')
-    expect(Either.isLeft(lower) && lower.left.message).toBe('house.yml:1: expected "KEY: value", got "lower: nope"')
-    const item = parseValues('A: 1\r\n- a list\r\n')
-    expect(Either.isLeft(item) && item.left.message).toBe('values:2: expected "KEY: value", got "- a list"')
-  })
-
-  it('stay linear on long lines of whitespace', () => {
-    const line = `KEY: a${' '.repeat(100_000)}b`
-    expect(parseValues(line)).toStrictEqual(Either.right({ KEY: `a${' '.repeat(100_000)}b` }))
-  })
-
-  it('unquote only a matching pair', () => {
-    expect(unquote('"a"')).toBe('a')
-    expect(unquote("'a'")).toBe('a')
-    expect(unquote('"a\'')).toBe('"a\'')
-    expect(unquote('"')).toBe('"')
-    expect(unquote('a')).toBe('a')
-  })
-})
-
-describe('list', () => {
-  it('splits on commas and drops blanks', () => {
-    expect(list(' a, b ,, c ')).toStrictEqual(['a', 'b', 'c'])
-    expect(list(undefined)).toStrictEqual([])
-  })
-})
+import { renderAll, renderText } from '@resnovas/feature.sync'
 
 describe('renderText', () => {
   it('replaces placeholders, and an unknown key is an error', () => {

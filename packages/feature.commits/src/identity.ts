@@ -59,6 +59,15 @@ const compile = (pattern: string): Test => {
  * Builds a predicate recognising AI tool identities, compiling the config
  * patterns once rather than on every trailer.
  *
+ * @example
+ * ```ts import.meta.vitest name="makeAiIdentityMatcher"
+ * import { makeAiIdentityMatcher } from '@resnovas/feature.commits'
+ *
+ * const isAi = makeAiIdentityMatcher({ names: ['^Robo$'] })
+ * isAi({ name: 'Robo', email: 'robo@example.com' }) // => true
+ * isAi({ name: 'Jane', email: 'jane@example.com' }) // => false
+ * ```
+ *
  * @param extra - Patterns from `commits.aiIdentities`, added to the built-in list.
  * @returns A predicate that is true for an identity belonging to an AI tool.
  */
@@ -78,9 +87,11 @@ export const makeAiIdentityMatcher = (extra: AiIdentityPatterns = {}): ((identit
  * expressions, bare or as `/source/flags`; emails are compared lower-cased.
  *
  * @example
- * ```ts
- * isAiIdentity({ name: 'Claude', email: 'noreply@anthropic.com' }) // true
- * isAiIdentity({ name: 'Robo', email: 'robo@example.com' }, { names: ['^Robo$'] }) // true
+ * ```ts import.meta.vitest name="isAiIdentity"
+ * import { isAiIdentity } from '@resnovas/feature.commits'
+ *
+ * isAiIdentity({ name: 'Claude', email: 'noreply@anthropic.com' }) // => true
+ * isAiIdentity({ name: 'Robo', email: 'robo@example.com' }, { names: ['^Robo$'] }) // => true
  * ```
  *
  * @param identity - The name and email from a trailer.

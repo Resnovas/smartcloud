@@ -63,10 +63,32 @@ export interface TelemetryService {
   readonly evaluateFlag: (identity: Identity, key: string, fallback: boolean) => Effect.Effect<boolean>
 }
 
-/** The telemetry service. Absent, or disabled, it sends nothing. */
+/**
+ * The telemetry service. Absent, or disabled, it sends nothing.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Telemetry"
+ * import { Effect } from 'effect'
+ * import { disabledTelemetry, Telemetry } from '@resnovas/integrations.posthog'
+ *
+ * const enabled = Effect.flatMap(Telemetry, (telemetry) => telemetry.isEnabled)
+ * Effect.runSync(enabled.pipe(Effect.provideService(Telemetry, disabledTelemetry))) // => false
+ * ```
+ */
 export class Telemetry extends Context.Tag('@resnovas/integrations.posthog/Telemetry')<Telemetry, TelemetryService>() {}
 
-/** Telemetry that sends nothing, as used when it is turned off. */
+/**
+ * Telemetry that sends nothing, as used when it is turned off.
+ *
+ * @example
+ * ```ts import.meta.vitest name="disabledTelemetry"
+ * import { Effect } from 'effect'
+ * import { disabledTelemetry, evaluateFlag, Telemetry } from '@resnovas/integrations.posthog'
+ *
+ * const flag = evaluateFlag({ owner: 'Resnovas', repo: 'smartcloud' }, 'smartcloud-labels', true)
+ * Effect.runSync(flag.pipe(Effect.provideService(Telemetry, disabledTelemetry))) // => true
+ * ```
+ */
 export const disabledTelemetry: TelemetryService = {
   isEnabled: Effect.succeed(false),
   disable: Effect.void,
@@ -263,7 +285,11 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
  *
  * @example
  * ```ts
- * program.pipe(Effect.provide(telemetryLayer({ surface: 'cli', version: VERSION })), NodeRuntime.runMain)
+ * import { Effect } from 'effect'
+ * import { telemetryLayer, track } from '@resnovas/integrations.posthog'
+ *
+ * const run = track(Effect.succeed('done'), { operation: 'run', repository: { owner: 'Resnovas', repo: 'smartcloud' } })
+ * const main = run.pipe(Effect.provide(telemetryLayer({ surface: 'cli', version: '2.0.0' })))
  * ```
  *
  * @param options - The surface, the version, and a `fetch` for tests.
@@ -296,8 +322,11 @@ const withTelemetry = <A>(use: (telemetry: TelemetryService) => Effect.Effect<A>
  * `telemetry: false` asks.
  *
  * @example
- * ```ts
- * if (config.telemetry === false) yield* optOut
+ * ```ts import.meta.vitest name="optOut"
+ * import { Effect } from 'effect'
+ * import { disabledTelemetry, optOut, Telemetry } from '@resnovas/integrations.posthog'
+ *
+ * Effect.runSync(optOut.pipe(Effect.provideService(Telemetry, disabledTelemetry)))
  * ```
  */
 export const optOut: Effect.Effect<void> = withTelemetry((telemetry) => telemetry.disable, undefined)
@@ -306,8 +335,12 @@ export const optOut: Effect.Effect<void> = withTelemetry((telemetry) => telemetr
  * Evaluates a boolean feature flag for a repository.
  *
  * @example
- * ```ts
- * const on = yield* evaluateFlag({ owner, repo }, 'smartcloud-labels', true)
+ * ```ts import.meta.vitest name="evaluateFlag"
+ * import { Effect } from 'effect'
+ * import { evaluateFlag } from '@resnovas/integrations.posthog'
+ *
+ * // Without the Telemetry service the fallback is the answer.
+ * Effect.runSync(evaluateFlag({ owner: 'Resnovas', repo: 'smartcloud' }, 'smartcloud-labels', false)) // => false
  * ```
  *
  * @param repository - The repository the flag is evaluated for.
@@ -323,8 +356,11 @@ export const evaluateFlag = (repository: RepositoryName, key: string, fallback: 
  * failed while the run as a whole succeeded.
  *
  * @example
- * ```ts
- * yield* reportError(github.coordinates, new Error('labels failed'), { feature: 'labels' })
+ * ```ts import.meta.vitest name="reportError"
+ * import { Effect } from 'effect'
+ * import { reportError } from '@resnovas/integrations.posthog'
+ *
+ * Effect.runSync(reportError({ owner: 'Resnovas', repo: 'smartcloud' }, new Error('labels failed'), { feature: 'labels' }))
  * ```
  *
  * @param repository - The repository, hashed before it is sent.
@@ -365,8 +401,12 @@ export interface TrackOptions<A> {
  * interruption is returned as it was.
  *
  * @example
- * ```ts
- * track(runEvent(options), { operation: 'run', repository: github.coordinates, properties: { github_event: 'push' } })
+ * ```ts import.meta.vitest name="track"
+ * import { Effect } from 'effect'
+ * import { track } from '@resnovas/integrations.posthog'
+ *
+ * const run = track(Effect.succeed(3), { operation: 'run', repository: { owner: 'Resnovas', repo: 'smartcloud' } })
+ * await Effect.runPromise(run) // => 3
  * ```
  *
  * @param effect - The operation.

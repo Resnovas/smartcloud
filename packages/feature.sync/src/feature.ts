@@ -29,24 +29,60 @@ import { authorRole, levelFor } from '@resnovas/feature.commits'
 /** The `sync` section of the config. */
 export type SyncConfig = NonNullable<SmartcloudConfig['sync']>
 
-/** `sync.source` is not a directory given as `owner/repo/path@ref`. */
+/**
+ * `sync.source` is not a directory given as `owner/repo/path@ref`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="SyncSourceInvalid"
+ * import { SyncSourceInvalid } from '@resnovas/feature.sync'
+ *
+ * new SyncSourceInvalid({ source: 'nope' })._tag // => 'SyncSourceInvalid'
+ * ```
+ */
 export class SyncSourceInvalid extends Data.TaggedError('SyncSourceInvalid')<{ readonly source: string }> {
   override get message() {
     return `sync.source must be owner/repo/path@ref, got "${this.source}"`
   }
 }
 
-/** `sync.branch` names the default branch, which the sync would overwrite. */
+/**
+ * `sync.branch` names the default branch, which the sync would overwrite.
+ *
+ * @example
+ * ```ts import.meta.vitest name="SyncBranchIsBase"
+ * import { SyncBranchIsBase } from '@resnovas/feature.sync'
+ *
+ * new SyncBranchIsBase({ branch: 'main' }).branch // => 'main'
+ * ```
+ */
 export class SyncBranchIsBase extends Data.TaggedError('SyncBranchIsBase')<{ readonly branch: string }> {
   override get message() {
     return `sync.branch is "${this.branch}", the default branch; sync proposes its changes from a branch of its own`
   }
 }
 
-/** The branch sync pull requests come from when `sync.branch` is not set. */
+/**
+ * The branch sync pull requests come from when `sync.branch` is not set.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_SYNC_BRANCH"
+ * import { DEFAULT_SYNC_BRANCH } from '@resnovas/feature.sync'
+ *
+ * DEFAULT_SYNC_BRANCH // => 'smartcloud/sync'
+ * ```
+ */
 export const DEFAULT_SYNC_BRANCH = 'smartcloud/sync'
 
-/** Where findings link when `links.policyBase` is not set. */
+/**
+ * Where findings link when `links.policyBase` is not set.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_POLICY_BASE"
+ * import { DEFAULT_POLICY_BASE } from '@resnovas/feature.sync'
+ *
+ * DEFAULT_POLICY_BASE // => 'https://github.com/Resnovas/.github/blob/main'
+ * ```
+ */
 export const DEFAULT_POLICY_BASE = 'https://github.com/Resnovas/.github/blob/main'
 
 const FEATURE = 'sync'
@@ -56,6 +92,14 @@ const CONCURRENCY = 8
 
 /**
  * Parses `sync.source`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="parseSource"
+ * import { parseSource } from '@resnovas/feature.sync'
+ * import { Effect } from 'effect'
+ *
+ * Effect.runSync(parseSource('Resnovas/.github/templates@main')).path // => 'templates'
+ * ```
  *
  * @param source - The source as configured.
  * @returns The template directory.
@@ -146,6 +190,14 @@ export interface SyncPreview {
  * @remarks
  * Only reads: the scheduled sync proposes the plan, and the CLI renders it
  * to a local directory instead.
+ *
+ * @example
+ * ```ts
+ * import { previewSync } from '@resnovas/feature.sync'
+ *
+ * // Needs the GitHub service, for example from the live or dry-run layer.
+ * const program = previewSync({ source: 'Resnovas/.github/templates@main', values: { HOLDER: 'Resnovas' } })
+ * ```
  *
  * @param sync - The `sync` section of the config.
  * @returns The preview, or why the templates could not be read or rendered.
@@ -254,6 +306,14 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
  * content: a changed document, a changed managed block, removed markers, a
  * deleted synced file, or a local rule that redefines a synced one. Bringing
  * content in line with the templates is always allowed.
+ *
+ * @example
+ * ```ts import.meta.vitest name="syncFeature"
+ * import { syncFeature } from '@resnovas/feature.sync'
+ *
+ * syncFeature.enabled?.({ version: 2, sync: { source: 'Resnovas/.github/templates@main' } }) // => true
+ * syncFeature.enabled?.({ version: 2 }) // => false
+ * ```
  */
 export const syncFeature: Feature = {
   name: FEATURE,

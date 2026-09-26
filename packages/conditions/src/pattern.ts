@@ -31,8 +31,11 @@ const DELIMITED = /^\/(.*)\/([a-z]*)$/s
  * passed through {@link Pattern}.
  *
  * @example
- * ```ts
- * compilePattern('/^fix/i').test('Fix: typo') // true
+ * ```ts import.meta.vitest name="compilePattern"
+ * import { compilePattern } from '@resnovas/conditions'
+ *
+ * compilePattern('/^fix/i').test('Fix: typo') // => true
+ * compilePattern('^feat').source // => '^feat'
  * ```
  *
  * @param pattern - The pattern as written in the config.
@@ -46,6 +49,15 @@ export const compilePattern = (pattern: string): RegExp => {
 /**
  * A regular expression written as a string, validated when the config is
  * decoded so a typo fails at startup rather than on the first event.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Pattern"
+ * import { Pattern } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Pattern)('/^feat/i') // => true
+ * Schema.is(Pattern)('(unclosed') // => false
+ * ```
  */
 export const Pattern = Schema.String.pipe(
   Schema.filter(

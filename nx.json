@@ -52,6 +52,25 @@
     },
     "bundle": {
       "dependsOn": ["build"]
+    },
+    "docgen": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "docgen",
+        "cwd": "{projectRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default", "{workspaceRoot}/tsconfig.docgen.json"],
+      "outputs": ["{projectRoot}/dist/docs"]
+    },
+    "contracts": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "node tools/docs/check-contracts.ts {projectRoot}"
+      },
+      "dependsOn": ["build"],
+      "cache": true,
+      "inputs": ["production", "{workspaceRoot}/tools/docs/check-contracts.ts"]
     }
   },
   "release": {

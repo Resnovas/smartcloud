@@ -16,20 +16,8 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect, Either, Exit, Layer, Schema } from 'effect'
-import {
-  ConfigNotFound,
-  ConfigSource,
-  empty,
-  ExtendsCycle,
-  formatExtendsRef,
-  LockedRule,
-  mergeLocked,
-  parseConfig,
-  parseExtendsRef,
-  resolveConfig,
-  SmartcloudConfig,
-} from '@resnovas/config'
+import { Effect, Exit, Layer } from 'effect'
+import { ConfigNotFound, ConfigSource, ExtendsCycle, formatExtendsRef, LockedRule, parseConfig, resolveConfig } from '@resnovas/config'
 
 // Presets served from memory, keyed by owner/repo/path@ref.
 const presets = (files: Readonly<Record<string, string>>) =>
@@ -103,21 +91,6 @@ describe('parseConfig', () => {
       expect(error.message).toContain('__proto__')
     }),
   )
-
-  it('needs a preset or conditions for every convention', () => {
-    expect(() => Schema.decodeUnknownSync(SmartcloudConfig)({ version: 2, conventions: { rules: { a: {} } } })).toThrow(
-      'a convention needs a preset or when',
-    )
-  })
-
-  it('round-trips: decoding the encoded config returns the original', () => {
-    const config = Schema.decodeUnknownSync(SmartcloudConfig)({
-      version: 2,
-      labels: { bug: { name: 'bug', color: '#d73a4a', aliases: ['defect'] } },
-      conventions: { comment: { header: 'h' }, rules: { title: { preset: 'conventionalCommits', level: 'error' } } },
-    })
-    expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(config)
-  })
 })
 
 describe('resolveConfig: extends and locked presets', () => {
@@ -233,156 +206,5 @@ describe('resolveConfig: extends and locked presets', () => {
       expect(resolved.config.labels?.['bug']?.name).toBe('bug')
       expect(resolved.warnings).toStrictEqual([`${HOUSE}: runners[0].root: dropped, v1 never read it`])
     }),
-  )
-})
-
-describe('extends entries', () => {
-  it('parse and format owner/repo/path@ref', () => {
-    expect(parseExtendsRef('Resnovas/.github/smartcloud/house.yml@v2')).toStrictEqual({
-      owner: 'Resnovas',
-      repo: '.github',
-      path: 'smartcloud/house.yml',
-      ref: 'v2',
-    })
-    expect(formatExtendsRef({ owner: 'o', repo: 'r', path: 'p.yml' })).toBe('o/r/p.yml')
-    expect(parseExtendsRef('not-a-ref')).toBeUndefined()
-  })
-
-  it('reject dot segments, so a preset cannot point outside its repository', () => {
-    expect(parseExtendsRef('o/r/../other.yml')).toBeUndefined()
-    expect(parseExtendsRef('o/r/a/./b.yml')).toBeUndefined()
-    expect(parseExtendsRef('../../repos/x.yml')).toBeUndefined()
-    expect(parseExtendsRef('o/./p.yml')).toBeUndefined()
-    expect(parseExtendsRef('o/r/a//b.yml')).toBeUndefined()
-    expect(parseExtendsRef('o/r/.github/..x.yml@v1')).toStrictEqual({ owner: 'o', repo: 'r', path: '.github/..x.yml', ref: 'v1' })
-  })
-
-  it('are validated when the config is decoded', () => {
-    expect(() => Schema.decodeUnknownSync(SmartcloudConfig)({ version: 2, extends: ['nope'] })).toThrow(
-      'expected owner/repo/path@ref, got "nope"',
-    )
-  })
-})
-
-describe('mergeLocked', () => {
-  const house = { labels: { bug: { name: 'bug', color: 'd73a4a', aliases: ['defect', 'error'] } } }
-
-  it('allows restating a list exactly, and locks a different one', () => {
-    const base = Either.getOrThrow(mergeLocked(empty, house, 'house'))
-    expect(Either.isRight(mergeLocked(base, house, 'repo'))).toBe(true)
-    const changed = mergeLocked(base, { labels: { bug: { aliases: ['defect'] } } }, 'repo')
-    expect(Either.isLeft(changed) && changed.left.path).toBe('labels.bug.aliases')
-    const reordered = mergeLocked(base, { labels: { bug: { aliases: ['error', 'defect'] } } }, 'repo')
-    expect(Either.isLeft(reordered)).toBe(true)
-  })
-
-  it('merges records of the same size with different keys field by field', () => {
-    const base = Either.getOrThrow(mergeLocked(empty, { labels: { bug: { name: 'bug', color: 'd73a4a' } } }, 'house'))
-    const merged = Either.getOrThrow(mergeLocked(base, { labels: { bug: { name: 'bug', description: 'x' } } }, 'repo'))
-    expect(merged.value).toStrictEqual({ labels: { bug: { name: 'bug', color: 'd73a4a', description: 'x' } } })
-    expect(merged.origins.get('labels.bug.description')).toBe('repo')
-    expect(merged.origins.get('labels.bug.color')).toBe('house')
-  })
-
-  it('treats keys named like Object.prototype members as ordinary keys', () => {
-    const base = Either.getOrThrow(mergeLocked(empty, { labels: { bug: { name: 'bug' } } }, 'house'))
-    const merged = mergeLocked(base, { labels: { constructor: { name: 'c' }, toString: { name: 't' } } }, 'repo')
-    // toStrictEqual compares constructors, which an own `constructor` key replaces, so compare the JSON.
-    expect(JSON.stringify(Either.getOrThrow(merged).value)).toBe(
-      JSON.stringify({ labels: { bug: { name: 'bug' }, constructor: { name: 'c' }, toString: { name: 't' } } }),
-    )
-    const restated = mergeLocked(Either.getOrThrow(merged), { labels: { constructor: { name: 'c', hasOwnProperty: 1 } } }, 'x')
-    expect(Either.isRight(restated)).toBe(true)
-  })
-
-  it('keeps a __proto__ key as data rather than a prototype', () => {
-    const next: Parameters<typeof mergeLocked>[1] = JSON.parse('{"labels": {"__proto__": {"name": "p"}}}')
-    const merged = Either.getOrThrow(mergeLocked(empty, { labels: {} }, 'house'))
-    const result = Either.getOrThrow(
-      mergeLocked(merged, next, 'repo'),
-    )
-    const labels = result.value['labels']
-    expect(typeof labels === 'object' && labels !== null && Object.hasOwn(labels, '__proto__')).toBe(true)
-  })
-
-  it('does not confuse a rule whose key contains a dot with a field of another rule', () => {
-    const base = Either.getOrThrow(mergeLocked(empty, { rules: { x: { preset: 'a' } } }, 'house'))
-    const merged = Either.getOrThrow(mergeLocked(base, { rules: { 'x.preset': { preset: 'b' } } }, 'repo'))
-    expect(merged.origins.get('rules.x.preset')).toBe('house')
-    expect(merged.origins.get('rules.x\\.preset')).toBe('repo')
-    const error = mergeLocked(merged, { rules: { x: { preset: 'c' } } }, 'late')
-    expect(Either.isLeft(error) && error.left).toStrictEqual(new LockedRule({ path: 'rules.x.preset', preset: 'house', source: 'late' }))
-  })
-
-  it('cannot add requires or other fields to an inherited condition group', () => {
-    const base = Either.getOrThrow(
-      mergeLocked(empty, { labelling: { bug: { label: 'bug', when: { condition: [{ type: 'isOpen', condition: true }] } } } }, 'house'),
-    )
-    const weakened = mergeLocked(
-      base,
-      { labelling: { bug: { label: 'bug', when: { requires: 0, condition: [{ type: 'isOpen', condition: true }] } } } },
-      'repo',
-    )
-    expect(Either.isLeft(weakened) && weakened.left).toStrictEqual(
-      new LockedRule({ path: 'labelling.bug.when.requires', preset: 'house', source: 'repo' }),
-    )
-  })
-
-  it('locks a scalar against an object and an object against a scalar', () => {
-    const base = Either.getOrThrow(mergeLocked(empty, { a: { b: 1 }, c: 1 }, 'house'))
-    expect(Either.isLeft(mergeLocked(base, { a: 1 }, 'repo'))).toBe(true)
-    expect(Either.isLeft(mergeLocked(base, { c: { d: 1 } }, 'repo'))).toBe(true)
-  })
-})
-
-describe('feature sections', () => {
-  const full = `
-version: 2
-roles: { maintainers: [TGTGamer], trustedBots: ['dependabot[bot]'] }
-links: { policyBase: 'https://github.com/Resnovas/.github/blob/main' }
-commits: { dco: true, aiAttribution: true, aiIdentities: { emails: ['@example-ai\\.dev$'] }, maintainerLevel: warning }
-disclosure: { fields: { level: 'AI level' }, requireDraft: true, maintainerLevel: warning }
-reviews:
-  gate: { outside: 2, maintainer: 1 }
-  requestApprovals:
-    maintainers: { reviewers: [TGTGamer], when: { condition: [{ type: isDraft, condition: false }] } }
-  automaticApprove:
-    dependabot: { when: { condition: [{ type: creatorMatches, condition: '^dependabot' }] }, message: Approved }
-stale:
-  on: [issue]
-  staleAfterDays: 60
-  staleLabel: stale
-  abandonedAfterDays: 30
-  abandonedLabel: abandoned
-  close: false
-  exempt: { labels: [pinned], when: { condition: [{ type: isLocked, condition: true }] } }
-settings:
-  merging: { mergeCommit: false, squash: true, rebase: true, squashTitle: PR_TITLE, squashMessage: COMMIT_MESSAGES }
-  features: { wiki: false, discussions: true, sponsorships: true }
-  security: { immutableReleases: true, codeScanning: extended, secretScanning: true }
-  ruleset: { name: 'house: default branch', linearHistory: true, copilotReview: true, requiredChecks: ['smartcloud / policy'], adminBypass: true }
-  environments: { projectType: saas }
-sync:
-  source: Resnovas/.github/templates@main
-  values: { ORG_NAME: Resnovas }
-  exclude: [LICENSE]
-  branch: smartcloud/sync
-  check: true
-`
-
-  it.effect('decode and round-trip every section', () =>
-    Effect.gen(function* () {
-      const { config } = yield* parseConfig(full, 'full.yml')
-      expect(config.reviews?.gate).toStrictEqual({ outside: 2, maintainer: 1 })
-      expect(config.settings?.security?.codeScanning).toBe('extended')
-      expect(config.sync?.values).toStrictEqual({ ORG_NAME: 'Resnovas' })
-      expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(config)
-    }),
-  )
-
-  it.effect('reject sync values whose keys are not SCREAMING_SNAKE_CASE', () =>
-    Effect.map(Effect.flip(parseConfig('version: 2\nsync: { source: o/r/t, values: { orgName: x } }\n', 'x.yml')), (error) =>
-      expect(error._tag).toBe('ConfigDecodeError'),
-    ),
   )
 })

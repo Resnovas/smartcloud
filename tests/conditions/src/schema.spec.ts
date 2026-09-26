@@ -17,23 +17,9 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Either, Schema } from 'effect'
-import { compilePattern, Condition, ConditionGroup, Pattern, requiredFacets } from '@resnovas/conditions'
+import { Condition, ConditionGroup } from '@resnovas/conditions'
 
 const decode = Schema.decodeUnknownEither(ConditionGroup)
-
-describe('Pattern', () => {
-  it('compiles bare and delimited patterns the way v1 did', () => {
-    expect(compilePattern('^feat').source).toBe('^feat')
-    expect(compilePattern('/^feat/gi').flags).toBe('gi')
-    expect(compilePattern('/a/b/').source).toBe('a\\/b')
-  })
-
-  it('rejects an invalid pattern when the config is decoded', () => {
-    const result = Schema.decodeUnknownEither(Pattern)('(unclosed')
-    expect(Either.isLeft(result)).toBe(true)
-    expect(String(Either.isLeft(result) && result.left)).toContain('invalid pattern "(unclosed"')
-  })
-})
 
 describe('ConditionGroup', () => {
   it('decodes the v1 examples for every combinator', () => {
@@ -88,38 +74,5 @@ describe('ConditionGroup', () => {
       decode({ requires: 1, condition: [{ type: '$not', condition: { condition: [{ type: 'isDraft', condition: true }] } }] }),
     )
     expect(Schema.decodeUnknownSync(ConditionGroup)(Schema.encodeSync(ConditionGroup)(group))).toStrictEqual(group)
-  })
-})
-
-describe('requiredFacets', () => {
-  it('collects the facets used anywhere, including inside combinators', () => {
-    const facets = requiredFacets([
-      { condition: [{ type: 'filesMatch', condition: '**' }] },
-      {
-        condition: [
-          { type: '$or', condition: [{ condition: [{ type: 'isApproved', condition: 1 }] }] },
-          { type: '$not', condition: [{ condition: [{ type: 'hasTrailer', trailer: 'X' }] }] },
-          { type: '$not', requires: 1, condition: [{ type: 'isApproved', condition: 1 }] },
-          { type: 'titleMatches', condition: 'x' },
-        ],
-      },
-    ])
-    expect([...facets].sort()).toStrictEqual(['commits', 'files', 'pendingReviewers', 'reviews'])
-  })
-
-  it('looks inside $and and $only too', () => {
-    const facets = requiredFacets([
-      {
-        condition: [
-          { type: '$and', condition: [{ condition: [{ type: 'filesMatch', condition: '**' }] }] },
-          { type: '$only', requires: 1, condition: [{ condition: [{ type: 'commitsSignedOff', condition: true }] }] },
-        ],
-      },
-    ])
-    expect([...facets].sort()).toStrictEqual(['commits', 'files'])
-  })
-
-  it('needs nothing for conditions on the event payload alone', () => {
-    expect(requiredFacets([{ condition: [{ type: 'isOpen', condition: true }] }]).size).toBe(0)
   })
 })

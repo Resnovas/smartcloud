@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud configuration: the v2 schema, extends with locked presets, and v1 compatibility.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

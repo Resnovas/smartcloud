@@ -57,6 +57,16 @@ export interface SyncPlan {
  * ({@link mergeManaged}). An executable template makes its file executable,
  * and a file that already is executable stays so.
  *
+ * @example
+ * ```ts import.meta.vitest name="planSync"
+ * import { planSync } from '@resnovas/feature.sync'
+ * import { Either } from 'effect'
+ *
+ * const templates = [{ path: 'LICENSE', content: '(c) {{HOLDER}}\n', executable: false }]
+ * const plan = planSync(templates, new Map(), { HOLDER: 'Resnovas' }, [])
+ * Either.isRight(plan) && plan.right.files[0]?.reason // => 'create'
+ * ```
+ *
  * @param templates - The templates, with paths relative to the template directory.
  * @param current - The repository's files by path; a missing path is a file that does not exist.
  * @param values - The `{{KEY}}` values.

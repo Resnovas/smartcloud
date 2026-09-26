@@ -23,7 +23,16 @@ import { Config, Console, Data, Effect, Layer, Redacted } from 'effect'
 import { readInputs } from './inputs.js'
 import { runAction } from './run.js'
 
-/** The event payload file could not be read as JSON. */
+/**
+ * The event payload file could not be read as JSON.
+ *
+ * @example
+ * ```ts import.meta.vitest name="BadEventPayload"
+ * import { BadEventPayload } from '@resnovas/action'
+ *
+ * new BadEventPayload({ path: 'event.json', reason: 'not JSON' }).message // => 'could not read the event payload at event.json: not JSON'
+ * ```
+ */
 export class BadEventPayload extends Data.TaggedError('BadEventPayload')<{ readonly path: string; readonly reason: string }> {
   override get message() {
     return `could not read the event payload at ${this.path}: ${this.reason}`
@@ -71,6 +80,15 @@ const dryRunSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
  * Every failure, expected or not, ends as one `::error` annotation and exit
  * code 1, never an unhandled rejection. The run also exits 1 when any
  * finding is an error or any feature failed to run.
+ *
+ * @example
+ * ```ts
+ * import { program } from '@resnovas/action'
+ * import { makeLiveGitHub } from '@resnovas/integrations.github'
+ *
+ * // Needs the platform's FileSystem and the Actions environment to run.
+ * const action = program((options) => makeLiveGitHub(options))
+ * ```
  *
  * @param connect - Opens the GitHub service.
  * @returns The run, which never fails.
