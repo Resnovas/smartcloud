@@ -1,5 +1,5 @@
 /**
- * @file apps/action/src/index.ts
+ * @file tests/runtime/vitest.config.mts
  *
  * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
@@ -15,10 +15,6 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-export { CONFIG_CANDIDATES } from '@resnovas/runtime'
-export { readInputs } from './inputs.js'
-export type { Inputs } from './inputs.js'
-export { BadEventPayload, program } from './program.js'
-export type { Connect } from './program.js'
-export { FEATURES, NoConfig, PresetUnreadable, runAction, UnknownFeatures } from './run.js'
-export type { Outcome } from './run.js'
+import { testProject } from '../../vitest.shared.js'
+
+export default testProject('runtime', ['packages/runtime/src/**'])

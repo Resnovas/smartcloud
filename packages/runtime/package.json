@@ -1,0 +1,39 @@
+{
+  "name": "@resnovas/runtime",
+  "version": "1.0.0-beta.8",
+  "private": true,
+  "type": "module",
+  "description": "What the action, the CLI and the MCP server share: the feature list, config loading, dry runs, settings plans and sync previews.",
+  "license": "SEE LICENSE IN LICENSE",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "nx": {
+    "tags": [
+      "type_extension",
+      "layer_backend"
+    ]
+  },
+  "dependencies": {
+    "@effect/platform": "^0.97.2",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/feature.commits": "workspace:*",
+    "@resnovas/feature.conventions": "workspace:*",
+    "@resnovas/feature.disclosure": "workspace:*",
+    "@resnovas/feature.labels": "workspace:*",
+    "@resnovas/feature.reviews": "workspace:*",
+    "@resnovas/feature.settings": "workspace:*",
+    "@resnovas/feature.stale": "workspace:*",
+    "@resnovas/feature.sync": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/reporting": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1",
+    "yaml": "^2.9.1"
+  }
+}

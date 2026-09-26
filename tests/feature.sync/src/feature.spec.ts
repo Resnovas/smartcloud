@@ -19,7 +19,7 @@ import { describe, expect, it } from '@effect/vitest'
 import { Effect } from 'effect'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { decodeEvent, makeReport, Report, runFeatures } from '@resnovas/engine'
-import { DEFAULT_POLICY_BASE, parseSource, syncFeature } from '@resnovas/feature.sync'
+import { DEFAULT_POLICY_BASE, parseSource, previewSync, syncFeature } from '@resnovas/feature.sync'
 import { DryRun, DryRunLog, fileKey, GitHub, type GitHubService, makeMemoryGitHub, NotFound } from '@resnovas/integrations.github'
 
 const SOURCE = 'Resnovas/.github/templates@main'
@@ -344,4 +344,18 @@ describe('syncFeature', () => {
       expect((yield* Effect.flip(parseSource('x'))).message).toBe('sync.source must be owner/repo/path@ref, got "x"')
     }),
   )
+})
+
+describe('previewSync', () => {
+  it.effect('plans the sync from what it reads, without proposing anything', () => {
+    const { service, state } = seed()
+    return Effect.gen(function* () {
+      const preview = yield* previewSync(config().sync ?? { source: SOURCE })
+      expect(preview.source).toStrictEqual({ owner: 'Resnovas', repo: '.github', path: 'templates', ref: 'main' })
+      expect(preview.templates.map((file) => file.path).sort()).toStrictEqual(['.github/dependabot.yml', 'LICENSE', 'tools/run'])
+      expect([...preview.current.keys()].sort()).toStrictEqual(['.github/dependabot.yml', 'LICENSE', 'tools/run'])
+      expect(preview.plan.files.map((file) => file.path)).toContain('LICENSE')
+      expect(state.proposals).toStrictEqual([])
+    }).pipe(Effect.provideService(GitHub, service))
+  })
 })

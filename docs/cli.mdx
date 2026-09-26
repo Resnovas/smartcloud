@@ -47,6 +47,40 @@ Converts a v1 JSON config (default `.github/config.json`) to v2 YAML, and prints
 
 A v2 file given to `migrate` is rewritten unchanged. See [Migrating from v1](/migration) for worked examples.
 
+## dry-run
+
+```sh
+smartcloud dry-run --repo <owner/name> (--pr <n> | --issue <n> | --event <event>) [--config <file>] [--features <a,b>]
+```
+
+Runs every feature against a real pull request, issue or repository event, through the dry-run layer. It reads GitHub as the action would, then prints the job summary and every write the run would make. It never writes.
+
+| Option | Meaning |
+| --- | --- |
+| `--repo` | The repository, as `owner/name`. |
+| `--pr`, `--issue` | Simulate this pull request or issue, built from its current state on GitHub. |
+| `--event` | Simulate `schedule`, `push` or `workflow_dispatch`. |
+| `--config` | Use this local config file instead of the repository's own config on its default branch. |
+| `--features` | Only these features, comma separated. |
+
+Give exactly one of `--pr`, `--issue` or `--event`.
+
+## plan settings
+
+```sh
+smartcloud plan settings --repo <owner/name> [--config <file>]
+```
+
+Prints every repository settings step the config would apply, with its request, without applying any of them.
+
+## sync
+
+```sh
+smartcloud sync --repo <owner/name> --out <dir> [--config <file>]
+```
+
+Renders the files the sync feature would write to the repository into a local directory, with each file's status (added, updated, made executable or unchanged), and lists any conflicts. Nothing is sent to GitHub.
+
 ## Tokens
 
-The CLI needs a GitHub token only to read presets named in `extends`, so validating a config without presets works offline. When it does need one, it uses `GITHUB_TOKEN` if set, and otherwise the token of the signed-in GitHub CLI (`gh auth token`). The token is never printed.
+`dry-run`, `plan settings` and `sync` always read GitHub. `validate` needs a token only to read presets named in `extends`, so validating a config without presets works offline. When it does need one, it uses `GITHUB_TOKEN` if set, and otherwise the token of the signed-in GitHub CLI (`gh auth token`). The token is never printed.

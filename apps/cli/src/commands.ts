@@ -15,22 +15,21 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { CommandExecutor, FileSystem, Path } from '@effect/platform'
-import { ConfigNotFound, ConfigSource, formatExtendsRef, parseConfig, resolveConfig, SmartcloudConfig, type ExtendsRef, type ResolvedConfig } from '@resnovas/config'
-import { GitHub, type GitHubError, makeLiveGitHub, type LiveOptions } from '@resnovas/integrations.github'
-import { Console, Data, Effect, Layer, Schedule, Schema } from 'effect'
-import { stringify } from 'yaml'
-import { type MissingToken, resolveToken } from './token.js'
-
-/** Where the CLI looks for a config when none is given, in order. */
-export const CONFIG_CANDIDATES = ['.github/smartcloud.yml', '.github/smartcloud.yaml', '.github/config.json'] as const
-
-/** No config file was found where smartcloud looks for one. */
-export class NoConfig extends Data.TaggedError('NoConfig')<{ readonly directory: string }> {
-  override get message() {
-    return `no smartcloud config in ${this.directory}: expected one of ${CONFIG_CANDIDATES.join(', ')}`
-  }
-}
+import { FileSystem, Path } from '@effect/platform'
+import { resolveConfig, type ResolvedConfig } from '@resnovas/config'
+import {
+  CONFIG_CANDIDATES,
+  dryRunRepository,
+  dryRunText,
+  migrateConfigText,
+  NoConfig,
+  planSettingsForRepository,
+  renderSyncForRepository,
+  settingsPlanText,
+  type Connect,
+  type DryRunRequest,
+} from '@resnovas/runtime'
+import { Console, Data, Effect } from 'effect'
 
 /**
  * Finds the config in a repository checkout.
@@ -46,7 +45,7 @@ export const locateConfig = (directory: string) =>
       const full = path.join(directory, candidate)
       if (yield* fs.exists(full)) return full
     }
-    return yield* new NoConfig({ directory })
+    return yield* new NoConfig({ where: directory, paths: CONFIG_CANDIDATES })
   })
 
 /**
@@ -66,9 +65,6 @@ export const validate = (file: string) =>
     return resolved
   })
 
-// The schema hint lets editors complete and check the file.
-const SCHEMA_HINT = '# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json'
-
 /**
  * Converts a v1 `.github/config.json` to v2 YAML, printing a warning for
  * everything the migration does not carry over.
@@ -84,9 +80,7 @@ const SCHEMA_HINT = '# yaml-language-server: $schema=https://raw.githubuserconte
 export const migrate = (input: string, output: string | undefined) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
-    // parseConfig migrates anything that is not v2 and proves the result decodes.
-    const { config, warnings } = yield* parseConfig(yield* fs.readFileString(input), input)
-    const yaml = `${SCHEMA_HINT}\n${stringify(Schema.encodeSync(SmartcloudConfig)(config))}`
+    const { config, yaml, warnings } = yield* migrateConfigText(yield* fs.readFileString(input), input)
     if (output === undefined) yield* Console.log(yaml)
     else {
       yield* fs.writeFileString(output, yaml)
@@ -96,63 +90,61 @@ export const migrate = (input: string, output: string | undefined) =>
     return config
   })
 
-const notFound = (ref: ExtendsRef) => new ConfigNotFound({ source: formatExtendsRef(ref) })
+/**
+ * Dry-runs every feature against a repository and prints the job summary
+ * and every write that would have been made. Nothing is written.
+ *
+ * @param connect - Opens the GitHub service.
+ * @param request - The repository, what to simulate, the config and the features.
+ * @returns The dry run.
+ */
+export const dryRunCommand = (connect: Connect, request: DryRunRequest) =>
+  Effect.tap(dryRunRepository(connect, request), (outcome) => Console.log(dryRunText(outcome)))
 
 /**
- * A preset that could not be read for a reason other than not existing, such
- * as a missing token or a GitHub outage. It is still a `ConfigNotFound` to
- * the config loader, but its message keeps the reason, so the user is told
- * to sign in rather than that the preset is missing.
+ * Prints the settings a repository's config would apply, without applying them.
+ *
+ * @param connect - Opens the GitHub service.
+ * @param request - The repository, and a local config file to use instead of its own.
+ * @returns The plan.
  */
-class PresetUnreadable extends ConfigNotFound {
-  readonly reason: string
+export const planSettingsCommand = (connect: Connect, request: { readonly repository: string; readonly config?: string | undefined }) =>
+  Effect.tap(planSettingsForRepository(connect, request), (plan) => Console.log(settingsPlanText(plan)))
 
-  constructor(ref: ExtendsRef, reason: string) {
-    super({ source: formatExtendsRef(ref) })
-    this.reason = reason
-  }
-
+/** A synced file's path would land outside the output directory. */
+export class UnsafePath extends Data.TaggedError('UnsafePath')<{ readonly path: string }> {
   override get message() {
-    return `${this.source} could not be read: ${this.reason}`
+    return `refusing to write ${this.path}: it is outside the output directory`
   }
 }
 
-// Only GitHub saying the file is not there means the preset is missing.
-const unreadable = (ref: ExtendsRef) => (error: MissingToken | GitHubError) =>
-  error._tag === 'NotFound' ? notFound(ref) : new PresetUnreadable(ref, error.message)
-
 /**
- * Reads presets named in `extends` from GitHub. The token is resolved only
- * when a config actually extends something, so validating a config without
- * presets works offline.
+ * Renders a repository's synced files into a local directory, as they would
+ * be after the sync, and lists local rules that conflict with synced ones.
+ * Nothing is written to GitHub.
  *
- * @param options - Set `fetch` to replace the global `fetch`, for tests.
- * @returns The config source.
+ * @param connect - Opens the GitHub service.
+ * @param request - The repository, the output directory, and a local config file to use instead of its own.
+ * @returns The rendered files.
  */
-export const gitHubConfigSource = (options: Pick<LiveOptions, 'fetch'> = {}) =>
-  Layer.effect(
-    ConfigSource,
-    Effect.gen(function* () {
-      const executor = yield* CommandExecutor.CommandExecutor
-      return {
-        read: (ref) =>
-          Effect.gen(function* () {
-            const token = yield* resolveToken
-            const coordinates = { owner: ref.owner, repo: ref.repo }
-            const github = yield* makeLiveGitHub({ ...options, token, coordinates, retry: Schedule.stop })
-            return yield* github.getFile(ref)
-          }).pipe(Effect.provideService(CommandExecutor.CommandExecutor, executor), Effect.mapError(unreadable(ref))),
-      }
-    }),
-  )
-
-/** Reads presets through whichever GitHub service is provided, for tests and the action. */
-export const ConfigSourceFromGitHub = Layer.effect(
-  ConfigSource,
-  Effect.map(GitHub, (github) => ({
-    read: (ref) =>
-      github.getFile(ref).pipe(
-        Effect.mapError(() => notFound(ref)),
-      ),
-  })),
-)
+export const syncCommand = (
+  connect: Connect,
+  request: { readonly repository: string; readonly out: string; readonly config?: string | undefined },
+) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem
+    const path = yield* Path.Path
+    const render = yield* renderSyncForRepository(connect, request)
+    const root = path.resolve(request.out)
+    for (const file of render.files) {
+      const target = path.resolve(root, file.path)
+      if (!target.startsWith(`${root}${path.sep}`)) return yield* new UnsafePath({ path: file.path })
+      yield* fs.makeDirectory(path.dirname(target), { recursive: true })
+      yield* fs.writeFileString(target, file.content)
+      yield* fs.chmod(target, file.executable ? 0o755 : 0o644)
+    }
+    yield* Console.log(`Rendered ${render.files.length} file(s) from ${render.source} into ${root}:`)
+    for (const file of render.files) yield* Console.log(`- ${file.path} (${file.status})`)
+    for (const conflict of render.conflicts) yield* Console.log(`conflict: ${conflict.path} ${conflict.problem}`)
+    return render
+  })

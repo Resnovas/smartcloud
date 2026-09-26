@@ -16,8 +16,9 @@
  */
 
 import { Args, Command, Options, ValidationError } from '@effect/cli'
+import { gitHubConfigSource, liveConnect, parseFeatureList, REPOSITORY_EVENTS, type Connect } from '@resnovas/runtime'
 import { Console, Effect, Option } from 'effect'
-import { gitHubConfigSource, locateConfig, migrate, validate } from './commands.js'
+import { dryRunCommand, locateConfig, migrate, planSettingsCommand, syncCommand, validate } from './commands.js'
 import { VERSION } from './version.js'
 
 const path = Args.text({ name: 'path' }).pipe(
@@ -39,19 +40,76 @@ const migrateCommand = Command.make('migrate', { input, out }, ({ input, out }) 
   Command.withDescription('Convert a v1 config to v2 YAML, warning about anything not carried over.'),
 )
 
-/** The `smartcloud` command and its subcommands. */
-export const smartcloud = Command.make('smartcloud').pipe(
-  Command.withDescription('Repository automation and policy for GitHub.'),
-  Command.withSubcommands([validateCommand, migrateCommand]),
+const repo = Options.text('repo').pipe(Options.withDescription('The repository, as owner/name.'))
+const config = Options.text('config').pipe(
+  Options.withDescription("A local config file to use instead of the repository's own config on its default branch."),
+  Options.optional,
 )
+
+/**
+ * The `smartcloud` command and its subcommands.
+ *
+ * @param connect - Opens the GitHub service for commands that read a repository.
+ * @returns The command.
+ */
+export const makeSmartcloud = (connect: Connect) => {
+  const dryRun = Command.make(
+    'dry-run',
+    {
+      repo,
+      config,
+      pr: Options.integer('pr').pipe(Options.withDescription('Simulate this pull request.'), Options.optional),
+      issue: Options.integer('issue').pipe(Options.withDescription('Simulate this issue.'), Options.optional),
+      event: Options.choice('event', REPOSITORY_EVENTS).pipe(Options.withDescription('Simulate this repository event.'), Options.optional),
+      features: Options.text('features').pipe(Options.withDescription('Only these features, comma-separated.'), Options.optional),
+    },
+    (options) =>
+      dryRunCommand(connect, {
+        repository: options.repo,
+        config: Option.getOrUndefined(options.config),
+        pr: Option.getOrUndefined(options.pr),
+        issue: Option.getOrUndefined(options.issue),
+        event: Option.getOrUndefined(options.event),
+        features: Option.getOrUndefined(Option.map(options.features, parseFeatureList)),
+      }),
+  ).pipe(Command.withDescription('Run every feature against a pull request, an issue or an event, recording writes instead of making them.'))
+
+  const planSettings = Command.make('settings', { repo, config }, (options) =>
+    planSettingsCommand(connect, { repository: options.repo, config: Option.getOrUndefined(options.config) }),
+  ).pipe(Command.withDescription('Print the repository settings the config would apply, without applying them.'))
+
+  const plan = Command.make('plan').pipe(
+    Command.withDescription('Show what smartcloud would change, without changing it.'),
+    Command.withSubcommands([planSettings]),
+  )
+
+  const sync = Command.make(
+    'sync',
+    { repo, config, out: Options.text('out').pipe(Options.withAlias('o'), Options.withDescription('The directory to render the files into.')) },
+    (options) => syncCommand(connect, { repository: options.repo, out: options.out, config: Option.getOrUndefined(options.config) }),
+  ).pipe(Command.withDescription('Render the synced files for a repository into a local directory, and list conflicting local rules.'))
+
+  return Command.make('smartcloud').pipe(
+    Command.withDescription('Repository automation and policy for GitHub.'),
+    Command.withSubcommands([validateCommand, migrateCommand, dryRun, plan, sync]),
+  )
+}
 
 /**
  * Runs the CLI against an argument vector, as `process.argv` gives it.
  *
+ * @param connect - Opens the GitHub service; the real API by default.
+ * @returns A function taking the node binary, the script, then the arguments.
+ */
+export const runWith = (connect: Connect = liveConnect()) => Command.run(makeSmartcloud(connect), { name: 'smartcloud', version: VERSION })
+
+/**
+ * Runs the CLI against the real GitHub API.
+ *
  * @param argv - The node binary, the script, then the arguments.
  * @returns The run.
  */
-export const run = Command.run(smartcloud, { name: 'smartcloud', version: VERSION })
+export const run = runWith()
 
 // Splitting and trimming is linear, unlike a whitespace-collapsing pattern.
 const oneLine = (message: string) =>
@@ -70,10 +128,11 @@ const oneLine = (message: string) =>
  * lines, such as a schema error's tree, is joined onto the one line.
  *
  * @param argv - The node binary, the script, then the arguments.
+ * @param connect - Opens the GitHub service; the real API by default.
  * @returns The run, which never fails.
  */
-export const main = (argv: ReadonlyArray<string>) =>
-  run(argv).pipe(
+export const main = (argv: ReadonlyArray<string>, connect?: Connect) =>
+  runWith(connect)(argv).pipe(
     Effect.catchAll((error) =>
       Effect.zipRight(
         ValidationError.isValidationError(error) ? Effect.void : Console.error(`smartcloud: ${oneLine(error.message)}`),

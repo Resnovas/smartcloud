@@ -10,13 +10,13 @@
   "include": ["src/**/*.ts", "vitest.config.mts"],
   "references": [
     {
-      "path": "../../apps/cli"
-    },
-    {
       "path": "../../packages/runtime"
     },
     {
       "path": "../../packages/integrations.github"
+    },
+    {
+      "path": "../../packages/engine"
     },
     {
       "path": "../../packages/config"

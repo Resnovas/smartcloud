@@ -17,4 +17,4 @@
 
 import { testProject } from '../../vitest.shared.js'
 
-export default testProject('cli', ['apps/cli/src/cli.ts', 'apps/cli/src/commands.ts', 'apps/cli/src/token.ts'])
+export default testProject('cli', ['apps/cli/src/cli.ts', 'apps/cli/src/commands.ts', 'apps/cli/src/version.ts'])

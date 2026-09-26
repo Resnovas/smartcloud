@@ -1,5 +1,5 @@
 {
-  "name": "@resnovas/cli-tests",
+  "name": "@resnovas/runtime-tests",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -13,8 +13,8 @@
     "@effect/platform": "^0.97.2",
     "@effect/platform-node": "^0.108.2",
     "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
     "@resnovas/integrations.github": "workspace:*",
-    "@resnovas/runtime": "workspace:*",
-    "@resnovas/smartcloud": "workspace:*"
+    "@resnovas/runtime": "workspace:*"
   }
 }

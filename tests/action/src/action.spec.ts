@@ -164,7 +164,7 @@ describe('runAction', () => {
       const error = yield* Effect.flip(runAction(inputs(), { name: 'pull_request', payload: pullRequest('nope') }).pipe(Effect.provideService(GitHub, forbidden)))
       expect(error).toBeInstanceOf(PresetUnreadable)
       expect(error.message).toBe(
-        'could not read the extends preset Resnovas/.github/house.yml: getFile: forbidden (Resource not accessible by integration)',
+        'the extends preset Resnovas/.github/house.yml could not be read: getFile: forbidden (Resource not accessible by integration)',
       )
     }),
   )
