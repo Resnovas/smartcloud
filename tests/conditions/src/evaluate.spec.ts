@@ -27,6 +27,12 @@ const signed = 'Signed-off-by: Jane Doe <jane@example.com>'
 const approved = (author: string) => ({ author, state: 'APPROVED' as const })
 
 // [name, condition, subject, expected]
+// Subjects without an optional field, which is how a decoded event leaves it out.
+const { headBranch: _headBranch, ...withoutBranch } = pullRequest()
+const { draft: _draft, ...withoutDraft } = pullRequest()
+const { changes: _changes, ...withoutChanges } = pullRequest()
+const { reviews: _reviews, ...withoutReviews } = pullRequest()
+
 const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['titleMatches, bare pattern', { type: 'titleMatches', condition: '^feat' }, pullRequest(), true],
   ['titleMatches, delimited with flags', { type: 'titleMatches', condition: '/^FEAT/i' }, pullRequest(), true],
@@ -36,13 +42,13 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['creatorMatches', { type: 'creatorMatches', condition: '^jane$' }, pullRequest(), true],
   ['creatorMatches, other author', { type: 'creatorMatches', condition: '^bot' }, pullRequest(), false],
   ['branchMatches', { type: 'branchMatches', condition: '^feat/' }, pullRequest(), true],
-  ['branchMatches, missing branch', { type: 'branchMatches', condition: '^feat/' }, pullRequest({ headBranch: undefined }), false],
+  ['branchMatches, missing branch', { type: 'branchMatches', condition: '^feat/' }, withoutBranch, false],
   ['isOpen', { type: 'isOpen', condition: true }, pullRequest(), true],
   ['isOpen false on a closed item', { type: 'isOpen', condition: false }, pullRequest({ open: false }), true],
   ['isLocked', { type: 'isLocked', condition: true }, issue({ locked: true }), true],
   ['isLocked, unlocked', { type: 'isLocked', condition: true }, issue(), false],
   ['isDraft', { type: 'isDraft', condition: true }, pullRequest({ draft: true }), true],
-  ['isDraft, draft unknown counts as ready', { type: 'isDraft', condition: false }, pullRequest({ draft: undefined }), true],
+  ['isDraft, draft unknown counts as ready', { type: 'isDraft', condition: false }, withoutDraft, true],
   ['hasLabel, case-insensitive', { type: 'hasLabel', label: 'type - feature', condition: true }, pullRequest(), true],
   ['hasLabel false, label absent', { type: 'hasLabel', label: 'bug', condition: false }, pullRequest(), true],
   ['filesMatch', { type: 'filesMatch', condition: 'packages/**/*.ts' }, pullRequest(), true],
@@ -50,7 +56,7 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['changesSize within range', { type: 'changesSize', min: 10, max: 50 }, pullRequest(), true],
   ['changesSize, max is exclusive', { type: 'changesSize', min: 0, max: 40 }, pullRequest(), false],
   ['changesSize, no max', { type: 'changesSize', min: 40 }, pullRequest(), true],
-  ['changesSize, unknown counts as zero', { type: 'changesSize', min: 1 }, pullRequest({ changes: undefined }), false],
+  ['changesSize, unknown counts as zero', { type: 'changesSize', min: 1 }, withoutChanges, false],
   ['pendingReview', { type: 'pendingReview', condition: true }, pullRequest({ pendingReviewers: 1 }), true],
   ['pendingReview, none', { type: 'pendingReview', condition: true }, pullRequest(), false],
   [
@@ -191,7 +197,7 @@ describe('evaluate: facets', () => {
   it.effect('a facet that was not loaded fails with MissingFacet', () =>
     Effect.gen(function* () {
       const exit = yield* Effect.exit(
-        evaluate({ condition: [{ type: 'isApproved', condition: 1 }] }, pullRequest({ reviews: undefined })),
+        evaluate({ condition: [{ type: 'isApproved', condition: 1 }] }, withoutReviews),
       )
       expect(exit).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'reviews', condition: 'isApproved' })))
     }),

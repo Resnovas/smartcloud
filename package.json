@@ -13,7 +13,8 @@
     "headers": "node tools/license/check-headers.ts",
     "headers:fix": "node tools/license/check-headers.ts --fix",
     "docs:reference": "node tools/docs/config-reference.ts",
-    "docs:reference:check": "node tools/docs/config-reference.ts --check"
+    "docs:reference:check": "node tools/docs/config-reference.ts --check",
+    "typecheck:tests": "node tools/typecheck/tests.ts"
   },
   "devDependencies": {
     "@effect/vitest": "^0.30.0",

@@ -296,10 +296,10 @@ describe('mergeLocked', () => {
   })
 
   it('keeps a __proto__ key as data rather than a prototype', () => {
-    const next: unknown = JSON.parse('{"labels": {"__proto__": {"name": "p"}}}')
+    const next: Parameters<typeof mergeLocked>[1] = JSON.parse('{"labels": {"__proto__": {"name": "p"}}}')
     const merged = Either.getOrThrow(mergeLocked(empty, { labels: {} }, 'house'))
     const result = Either.getOrThrow(
-      mergeLocked(merged, typeof next === 'object' && next !== null && !Array.isArray(next) ? next : {}, 'repo'),
+      mergeLocked(merged, next, 'repo'),
     )
     const labels = result.value['labels']
     expect(typeof labels === 'object' && labels !== null && Object.hasOwn(labels, '__proto__')).toBe(true)
