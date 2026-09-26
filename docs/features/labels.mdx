@@ -106,5 +106,5 @@ sizeLabels:
 ```
 
 - The preset's labels and rules are ordinary `labels` and `labelling` entries, so label sync creates the labels, and `labelSync.prune` counts them as defined.
-- A `labels` or `labelling` entry you write with the same key replaces the preset's. For example, define `labels.size-xl` to rename or recolour XL, or `labelling.size-xl` to change when it applies.
+- A `labels` or `labelling` entry you write with the same key replaces the preset's. For example, define `labels.size-xl` to rename or recolour XL, or `labelling.size-xl` to change when it applies. A renamed size keeps its built-in name among its `aliases`, so label sync renames the existing label instead of leaving the old one on pull requests.
 - The rules use the [`changesSize`](/conditions) condition and apply to pull requests only.

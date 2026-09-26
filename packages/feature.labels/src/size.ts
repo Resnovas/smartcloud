@@ -15,6 +15,7 @@
  */
 
 import { type Label, type LabelRule, type SmartcloudConfig, sizeThresholds } from '@resnovas/config'
+import { sameName } from './sync.js'
 
 // Green for the smallest change through to red for the largest.
 const SIZES = [
@@ -86,14 +87,16 @@ export const sizePreset = (
  * @remarks
  * The config's own `labels` and `labelling` entries win over the preset's
  * by key, so a repository can rename or recolour `size-m`, or replace its
- * rule, by defining that key itself.
+ * rule, by defining that key itself. A label renamed this way keeps the
+ * preset's name among its `aliases`, so label sync renames the repository
+ * label rather than leaving the old one on pull requests.
  *
  * @example
  * ```ts import.meta.vitest name="withSizeLabels"
  * import { withSizeLabels } from '@resnovas/feature.labels'
  *
  * const config = withSizeLabels({ version: 2, sizeLabels: {}, labels: { 'size-xl': { name: 'huge', color: 'ff0000' } } })
- * config.labels?.['size-xl']?.name // => 'huge'
+ * config.labels?.['size-xl']?.aliases?.[0] // => 'Size: XL'
  * config.labels?.['size-l']?.name // => 'Size: L'
  * withSizeLabels({ version: 2 }).labels // => undefined
  * ```
@@ -104,9 +107,18 @@ export const sizePreset = (
 export const withSizeLabels = (config: SmartcloudConfig): SmartcloudConfig => {
   if (config.sizeLabels === undefined) return config
   const preset = sizePreset(config.sizeLabels)
-  return {
-    ...config,
-    labels: { ...preset.labels, ...config.labels },
-    labelling: { ...preset.labelling, ...config.labelling },
+  const labels: Record<string, Label> = { ...preset.labels, ...config.labels }
+  for (const [key, label] of Object.entries(preset.labels)) {
+    const own = config.labels?.[key]
+    // A renamed size keeps its preset name as an alias, so label sync renames
+    // the repository label and pull requests carrying it keep one size label.
+    if (
+      own !== undefined &&
+      !sameName(own.name, label.name) &&
+      !(own.aliases ?? []).some((alias) => sameName(alias, label.name))
+    ) {
+      labels[key] = { ...own, aliases: [...(own.aliases ?? []), label.name] }
+    }
   }
+  return { ...config, labels, labelling: { ...preset.labelling, ...config.labelling } }
 }

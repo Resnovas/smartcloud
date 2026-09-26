@@ -87,8 +87,23 @@ describe('withSizeLabels', () => {
       labelling: { 'size-xl': { label: 'size-xl', when: { condition: [] } } },
     })
     expect(Object.keys(config.labels ?? {})).toStrictEqual(['size-xs', 'size-s', 'size-m', 'size-l', 'size-xl', 'bug'])
-    expect(config.labels?.['size-m']).toStrictEqual({ name: 'medium', color: 'ffff00' })
+    expect(config.labels?.['size-m']).toStrictEqual({ name: 'medium', color: 'ffff00', aliases: ['Size: M'] })
     expect(config.labelling?.['size-xl']).toStrictEqual({ label: 'size-xl', when: { condition: [] } })
     expect(config.labelling?.['size-xs']?.label).toBe('size-xs')
+  })
+
+  it('adds the preset name as an alias only when an override renames the label', () => {
+    const config = withSizeLabels({
+      version: 2,
+      sizeLabels: {},
+      labels: {
+        'size-xs': { name: 'size: xs', color: '000000' },
+        'size-s': { name: 'small', color: '000000', aliases: ['SIZE: S'] },
+        'size-m': { name: 'medium', color: '000000', aliases: ['mid'] },
+      },
+    })
+    expect(config.labels?.['size-xs']?.aliases).toBeUndefined()
+    expect(config.labels?.['size-s']?.aliases).toStrictEqual(['SIZE: S'])
+    expect(config.labels?.['size-m']?.aliases).toStrictEqual(['mid', 'Size: M'])
   })
 })
