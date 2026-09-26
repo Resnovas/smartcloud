@@ -73,6 +73,7 @@ export interface RunOutcome {
  * A restricted run (see `accessFor`) leaves out presets from other
  * repositories that its token cannot read, skips the features only a
  * stronger token can run, and reports both as findings rather than failing.
+ * What it left out also reaches the check runs (see `checkRunsFor`).
  *
  * @example
  * ```ts
@@ -108,6 +109,7 @@ export const runEvent = (options: {
       const result: RunResult = {
         ...featureRun,
         findings: [...accessFindings(access, resolved.skipped ?? []), ...featureRun.findings],
+        ...(resolved.skipped === undefined ? {} : { configSkipped: resolved.skipped }),
       }
       for (const failure of result.failed)
         yield* reportError(repository, new FeatureFailed({ feature: failure.feature, reason: failure.message }))

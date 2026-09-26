@@ -220,13 +220,54 @@ export const annotationLines = (findings: ReadonlyArray<Finding>): ReadonlyArray
 
 const LEVEL: Record<Finding['level'], Annotation['level']> = { error: 'failure', warning: 'warning', notice: 'notice' }
 
+type CompletedCheckRun = Extract<CheckRun, { readonly status: 'completed' }>
+
+// A feature's own check: its findings as the conclusion and summary, and the
+// located ones as annotations on the diff.
+const findingsCheckRun = (feature: string, findings: ReadonlyArray<Finding>, headSha: string): CompletedCheckRun => ({
+  name: `smartcloud / ${feature}`,
+  headSha,
+  status: 'completed',
+  conclusion: conclusionOf(findings),
+  title: tally(findings),
+  summary: findings.length === 0 ? 'No findings.' : findingsTable(findings),
+  annotations: findings.flatMap((finding) =>
+    finding.path === undefined || finding.line === undefined
+      ? []
+      : [{ path: finding.path, line: finding.line, level: LEVEL[finding.level], message: finding.message, title: finding.rule }],
+  ),
+})
+
+// A skipped preset may have configured any feature, so a feature that ran
+// without it cannot pass outright: success becomes neutral, and the summary
+// names what was left out.
+const withConfigSkipped = (run: CompletedCheckRun, skipped: ReadonlyArray<string>): CompletedCheckRun => ({
+  ...run,
+  conclusion: run.conclusion === 'success' ? 'neutral' : run.conclusion,
+  title: `${run.title}; config left out`,
+  summary: [
+    run.summary,
+    '',
+    'This restricted run left out config, so some of its rules may not have been checked:',
+    '',
+    ...skipped.map((item) => `- ${cell(item)}`),
+  ].join('\n'),
+})
+
 /**
- * One completed check run per feature that ran or failed.
+ * One completed check run per feature that ran or failed, and one for each
+ * other source of findings, such as `access` in a restricted run.
  *
  * @remarks
  * A feature that failed to run concludes as failure, so a broken feature can
  * never pass a required check. Findings with a file and line become
  * annotations on the diff.
+ *
+ * When a restricted run left config out (`configSkipped`), no feature that
+ * ran can say which of its rules came from what was left out, so each one
+ * that would pass concludes as neutral instead, and every feature's summary
+ * lists what was left out. The `smartcloud / access` check carries the
+ * restriction and a warning for each item.
  *
  * @example
  * ```ts import.meta.vitest name="checkRunsFor"
@@ -235,36 +276,31 @@ const LEVEL: Record<Finding['level'], Annotation['level']> = { error: 'failure',
  *
  * const result: RunResult = { envelope: { kind: 'repository', event: 'push', headSha: 'abc123' }, ran: ['labels'], skipped: [], failed: [], durations: {}, findings: [], changes: [], facts: [] }
  * checkRunsFor(result, 'abc123')[0]?.conclusion // => 'success'
+ * checkRunsFor({ ...result, configSkipped: ['the extends preset o/r/p.yml: not found'] }, 'abc123')[0]?.conclusion // => 'neutral'
  * ```
  *
  * @param result - The run.
  * @param headSha - The commit the checks belong to.
  * @returns The check runs to create.
  */
-export const checkRunsFor = (result: RunResult, headSha: string): ReadonlyArray<CheckRun> => [
-  ...result.ran.map((feature) => {
-    const findings = result.findings.filter((finding) => finding.feature === feature)
-    const annotations = findings.flatMap((finding) =>
-      finding.path === undefined || finding.line === undefined
-        ? []
-        : [{ path: finding.path, line: finding.line, level: LEVEL[finding.level], message: finding.message, title: finding.rule }],
-    )
-    return {
-      name: `smartcloud / ${feature}`,
-      headSha,
-      status: 'completed' as const,
-      conclusion: conclusionOf(findings),
-      title: tally(findings),
-      summary: findings.length === 0 ? 'No findings.' : findingsTable(findings),
-      annotations,
-    }
-  }),
-  ...result.failed.map((failure) => ({
+export const checkRunsFor = (result: RunResult, headSha: string): ReadonlyArray<CheckRun> => {
+  const findingsOf = (feature: string) => result.findings.filter((finding) => finding.feature === feature)
+  const skipped = result.configSkipped ?? []
+  const ran = result.ran.map((feature) => findingsCheckRun(feature, findingsOf(feature), headSha))
+  const failed = result.failed.map((failure): CompletedCheckRun => ({
     name: `smartcloud / ${failure.feature}`,
     headSha,
-    status: 'completed' as const,
-    conclusion: 'failure' as const,
+    status: 'completed',
+    conclusion: 'failure',
     title: 'failed to run',
     summary: ['```', failure.message, '```'].join('\n'),
-  })),
-]
+  }))
+  const covered = new Set([...result.ran, ...result.failed.map((failure) => failure.feature)])
+  const others = [...new Set(result.findings.map((finding) => finding.feature))]
+    .filter((feature) => !covered.has(feature))
+    .map((feature) => findingsCheckRun(feature, findingsOf(feature), headSha))
+  return [
+    ...(skipped.length === 0 ? [...ran, ...failed] : [...ran, ...failed].map((run) => withConfigSkipped(run, skipped))),
+    ...others,
+  ]
+}

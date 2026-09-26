@@ -86,4 +86,28 @@ describe('formatting', () => {
       { path: 'a.ts', line: 1, level: 'notice', message: 'gate open', title: 'REVIEW' },
     ])
   })
+
+  it('gives findings from outside the features, such as access, their own check run', () => {
+    const access = { feature: 'access', rule: 'access.config-skipped', level: 'warning' as const, message: 'left out the sync section' }
+    const runs = checkRunsFor(run({ ran: ['reviews'], findings: [access, { ...access, message: 'again' }] }), 'x')
+    expect(runs.map((entry) => [entry.name, entry.conclusion])).toStrictEqual([
+      ['smartcloud / reviews', 'success'],
+      ['smartcloud / access', 'neutral'],
+    ])
+  })
+
+  it('makes every feature neutral at best, and lists what was left out, when a restricted run left config out', () => {
+    const left = ['the extends preset o/r/p.yml: not found', 'the sync section: incomplete | without\nit']
+    const runs = checkRunsFor(run({ failed: [{ feature: 'broken', message: 'boom' }], configSkipped: left }), 'abc123')
+    expect(runs.map((entry) => [entry.name, entry.conclusion, entry.title])).toStrictEqual([
+      ['smartcloud / commits', 'failure', '1 error(s), 0 warning(s); config left out'],
+      ['smartcloud / sync', 'neutral', '0 error(s), 1 warning(s); config left out'],
+      ['smartcloud / reviews', 'neutral', 'passed; config left out'],
+      ['smartcloud / broken', 'failure', 'failed to run; config left out'],
+    ])
+    expect(runs[2]?.summary).toContain(
+      '| gate open |\n\nThis restricted run left out config, so some of its rules may not have been checked:\n\n- the extends preset o/r/p.yml: not found\n- the sync section: incomplete \\| without it',
+    )
+    expect(checkRunsFor(run({ configSkipped: [] }), 'x').map((entry) => entry.conclusion)).toContain('success')
+  })
 })

@@ -60,6 +60,8 @@ export interface RunResult extends ReportSnapshot {
   readonly failed: ReadonlyArray<{ readonly feature: string; readonly message: string }>
   /** How long each feature that ran or failed took, in milliseconds. */
   readonly durations: Readonly<Record<string, number>>
+  /** What a restricted run left out of the config, as `ResolvedConfig.skipped` lists it; absent when nothing was. */
+  readonly configSkipped?: ReadonlyArray<string>
 }
 
 /**
