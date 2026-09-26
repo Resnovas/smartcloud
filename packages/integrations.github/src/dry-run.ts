@@ -72,7 +72,8 @@ const redactUrls = (value: unknown): unknown => {
  *
  * @remarks
  * Used by the action's `dryRun` input and every CLI dry run. Writes that
- * return a value return a placeholder: comment and check run ids of `0`.
+ * return a value return a placeholder: comment and check run ids, and
+ * proposed and backported pull request numbers, of `0`.
  * GraphQL mutations count as writes wherever they appear in the document,
  * after comments or fragments included; queries pass through.
  *
@@ -120,6 +121,8 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
     updateCheckRun: (id, run) => record('updateCheckRun', { id, run }),
     proposeChanges: (proposal) =>
       Effect.as(record('proposeChanges', { proposal }), { number: 0, url: '', created: false }),
+    backport: (request) =>
+      Effect.as(record('backport', { request }), { status: 'opened' as const, number: 0, url: '' }),
     repositoryRequest: (request) =>
       request.method === 'GET'
         ? inner.repositoryRequest(request)

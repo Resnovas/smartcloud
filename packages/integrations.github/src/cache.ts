@@ -167,7 +167,7 @@ interface Caches {
  *   issue's, since only the comment id is known;
  * - a review invalidates that pull request's reviews and requested
  *   reviewers, and a review request its requested reviewers;
- * - a proposal invalidates every file and directory read, the open
+ * - a proposal or a backport invalidates every file and directory read, the open
  *   issues, which gain its pull request, and every pull request read, since
  *   updating its branch changes that pull request's commits, files and
  *   mergeability;
@@ -176,6 +176,7 @@ interface Caches {
  *   pull request's head commit;
  * - a mergeability GitHub has not computed yet (`UNKNOWN`) is not cached,
  *   so the next read asks again;
+ * - commits are read straight through, since each is read once;
  * - the checks on a commit are never cached, because a caller polling them
  *   needs every change;
  * - every write invalidates raw repository `GET`s, which can read anything,
@@ -355,6 +356,14 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       listDirectory: (location) => listDirectory(ListDirectory(locationKey(location))),
       proposeChanges: (proposal) =>
         writing(inner.proposeChanges(proposal), [
+          caches.contents.invalidateAll,
+          caches.issues.invalidateAll,
+          caches.pulls.invalidateAll,
+          caches.checks.invalidateAll,
+        ]),
+      getCommit: inner.getCommit,
+      backport: (request) =>
+        writing(inner.backport(request), [
           caches.contents.invalidateAll,
           caches.issues.invalidateAll,
           caches.pulls.invalidateAll,
