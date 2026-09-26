@@ -17,7 +17,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Layer } from 'effect'
-import { DryRun, DryRunLog, fileKey, fromStatus, GitHub, GitHubMemory, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { DryRun, DryRunLog, fileKey, fromGraphqlErrors, fromStatus, GitHub, GitHubMemory, makeMemoryGitHub } from '@resnovas/integrations.github'
 
 const bug = { name: 'bug', color: 'd73a4a', description: '' }
 
@@ -211,5 +211,11 @@ describe('fromStatus', () => {
     expect(fromStatus('listLabels', 403, 'nope').message).toBe('listLabels: forbidden (nope)')
     expect(fromStatus('listLabels', 429, 'slow down').message).toBe('listLabels: rate limited (slow down)')
     expect(fromStatus('createLabel', 422, 'exists').message).toBe('createLabel: rejected (exists)')
+    expect(fromStatus('listLabels', 503, 'down').message).toBe('listLabels: GitHub unavailable (down)')
+  })
+
+  it('maps GraphQL errors: rate limits are retried, anything else is the request itself', () => {
+    expect(fromGraphqlErrors('graphql', 'API rate limit exceeded')._tag).toBe('RateLimited')
+    expect(fromGraphqlErrors('graphql', 'Field x does not exist')._tag).toBe('ValidationFailed')
   })
 })
