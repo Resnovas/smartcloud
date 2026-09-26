@@ -184,7 +184,7 @@ describe('live GitHub: pull requests', () => {
 })
 
 describe('live GitHub: checks, files, settings and GraphQL', () => {
-  it.effect('creates and updates check runs, capping annotations at 50', () =>
+  it.effect('creates and updates check runs, sending annotations 50 at a time', () =>
     Effect.gen(function* () {
       const { service, requests } = live({
         [`POST ${REPO}/check-runs`]: { status: 201, body: { id: 42 } },
@@ -204,8 +204,23 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
       yield* github.updateCheckRun(42, { name: 'smartcloud', headSha: 'abc', status: 'completed', conclusion: 'success', title: 't', summary: 's' })
       yield* github.createCheckRun({ name: 'smartcloud', headSha: 'abc', status: 'completed', conclusion: 'neutral', title: 't', summary: 's' })
       yield* github.updateCheckRun(42, { name: 'smartcloud', headSha: 'abc', status: 'in_progress', title: 't', summary: 's' })
-      expect(requests[2]?.body).toMatchObject({ conclusion: 'neutral' })
-      expect(requests[3]?.body).not.toHaveProperty('conclusion')
+      yield* github.updateCheckRun(42, {
+        name: 'smartcloud',
+        headSha: 'abc',
+        status: 'completed',
+        conclusion: 'failure',
+        title: 't',
+        summary: 's',
+        annotations: Array.from({ length: 120 }, () => annotation),
+      })
+      expect(requests.map(({ method }) => method)).toStrictEqual(['POST', 'PATCH', 'PATCH', 'POST', 'PATCH', 'PATCH', 'PATCH', 'PATCH'])
+      const count = (index: number) => JSON.stringify(requests[index]?.body).match(/"path":"a\.ts"/g)?.length ?? 0
+      expect([0, 1, 5, 6, 7].map(count)).toStrictEqual([50, 11, 50, 50, 20])
+      expect(requests[1]?.body).toStrictEqual({ output: expect.objectContaining({ title: 't', summary: 's' }) })
+      expect(requests[5]?.body).toMatchObject({ status: 'completed', conclusion: 'failure' })
+      expect(requests[6]?.body).not.toHaveProperty('conclusion')
+      expect(requests[3]?.body).toMatchObject({ conclusion: 'neutral' })
+      expect(requests[4]?.body).not.toHaveProperty('conclusion')
       expect(requests[0]?.body).toMatchObject({ head_sha: 'abc', status: 'in_progress', output: { title: 't', summary: 's' } })
       expect(requests[0]?.body).toHaveProperty(['output', 'annotations', '0'], {
         path: 'a.ts',
@@ -215,8 +230,7 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         message: 'm',
         title: 'x',
       })
-      expect(JSON.stringify(requests[0]?.body).match(/"path":"a\.ts"/g)).toHaveLength(50)
-      expect(requests[1]?.body).toMatchObject({ conclusion: 'success', output: { annotations: [] } })
+      expect(requests[2]?.body).toMatchObject({ conclusion: 'success', output: { annotations: [] } })
     }),
   )
 
@@ -224,15 +238,19 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
     Effect.gen(function* () {
       const { service, requests } = live({
         [`GET /repos/Resnovas/.github/contents/smartcloud/house.yml`]: {
-          body: { type: 'file', content: Buffer.from('version: 2\n').toString('base64') },
+          body: { type: 'file', encoding: 'base64', content: Buffer.from('version: 2\n').toString('base64') },
         },
         [`GET /repos/Resnovas/.github/contents/templates`]: { body: [{ type: 'file' }] },
+        [`GET /repos/Resnovas/.github/contents/large.yml`]: { body: { type: 'file', encoding: 'none', content: '' } },
       })
       const github = yield* service
       expect(yield* github.getFile({ owner: 'Resnovas', repo: '.github', path: 'smartcloud/house.yml', ref: 'main' })).toBe('version: 2\n')
       expect(requests[0]?.query).toBe('?ref=main')
       const error = yield* Effect.flip(github.getFile({ owner: 'Resnovas', repo: '.github', path: 'templates' }))
       expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: 'templates is not a file' })
+      // Over 1 MB, GitHub sends no inline content: that is not an empty file.
+      const large = yield* Effect.flip(github.getFile({ owner: 'Resnovas', repo: '.github', path: 'large.yml' }))
+      expect(large).toMatchObject({ _tag: 'ValidationFailed', detail: 'large.yml is too large to read (over 1 MB)' })
     }),
   )
 
@@ -247,6 +265,31 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
       expect(yield* github.graphql('query($id: ID!) { node(id: $id) { id } }', { id: 'R_1' })).toStrictEqual({ repository: { id: 'R_1' } })
       expect(requests[0]?.body).toStrictEqual({ has_wiki: false })
       expect(requests[1]?.body).toMatchObject({ variables: { id: 'R_1' } })
+    }),
+  )
+
+  it.effect('keeps a request body and GraphQL variables out of the request options and the repository path', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        [`POST ${REPO}/rulesets`]: { status: 201, body: { id: 1 } },
+        [`GET ${REPO}/rulesets`]: { body: [] },
+      })
+      const github = yield* service
+      const body = { owner: 'someone-else', repo: 'other', baseUrl: 'https://attacker.example', headers: { authorization: 'x' }, name: 'r' }
+      yield* github.repositoryRequest({ method: 'POST', path: '/rulesets', body })
+      yield* github.repositoryRequest({ method: 'GET', path: '/rulesets?per_page=100' })
+      expect(requests.map(({ method, path, query }) => `${method} ${path}${query}`)).toStrictEqual([
+        `POST ${REPO}/rulesets`,
+        `GET ${REPO}/rulesets?per_page=100`,
+      ])
+      expect(requests[0]?.body).toStrictEqual(body)
+      for (const path of ['/../../orgs/x', '/%2E%2E/other', '/./x', 'rulesets', '/a\\b', '/a#b', '/{owner}']) {
+        const error = yield* Effect.flip(github.repositoryRequest({ method: 'GET', path }))
+        expect(error._tag).toBe('ValidationFailed')
+      }
+      const error = yield* Effect.flip(github.graphql('query { x }', { baseUrl: 'https://attacker.example', headers: {} }))
+      expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: 'variables cannot be named baseUrl, headers' })
+      expect(requests).toHaveLength(2)
     }),
   )
 })
@@ -391,6 +434,15 @@ describe('live GitHub: proposing changes', () => {
     }),
   )
 
+  it.effect('refuses to propose from the base branch itself, before any request', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live(baseRoutes)
+      const error = yield* Effect.flip((yield* service).proposeChanges({ ...proposal, branch: 'main' }))
+      expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: 'the proposal branch cannot be its base, main' })
+      expect(requests).toStrictEqual([])
+    }),
+  )
+
   it.effect('surfaces a missing base branch as NotFound', () =>
     Effect.gen(function* () {
       const { service } = live({ [`GET ${REPO}/git/ref/heads/main`]: { status: 404, body: { message: 'Not Found' } } })
@@ -426,6 +478,61 @@ describe('live GitHub: failures', () => {
       })
       expect(yield* (yield* service).listLabels).toStrictEqual([])
       expect(requests).toHaveLength(3)
+    }),
+  )
+
+  it.effect('does not repeat a write that creates something after an outage, since GitHub may have applied it', () =>
+    Effect.gen(function* () {
+      const outage = { status: 502, body: { message: 'Bad Gateway' } }
+      const { service, requests } = live({
+        [`POST ${REPO}/issues/3/comments`]: [outage, { status: 201, body: { id: 1 } }],
+        [`POST ${REPO}/pulls/7/reviews`]: outage,
+        [`POST ${REPO}/labels`]: outage,
+        [`POST ${REPO}/check-runs`]: outage,
+        [`POST ${REPO}/rulesets`]: outage,
+        [`POST /graphql`]: outage,
+      })
+      const github = yield* service
+      const failures = yield* Effect.all(
+        [
+          github.createComment(3, 'hi'),
+          github.createReview(7, { event: 'COMMENT', body: 'b' }),
+          github.createLabel({ name: 'a', color: 'ffffff', description: '' }),
+          github.createCheckRun({ name: 'n', headSha: 'h', status: 'in_progress', title: 't', summary: 's' }),
+          github.repositoryRequest({ method: 'POST', path: '/rulesets', body: {} }),
+          github.graphql('# note\nmutation { x }', {}),
+        ].map(Effect.flip),
+      )
+      expect(failures.map((error) => error._tag)).toStrictEqual(Array.from({ length: 6 }, () => 'Unavailable'))
+      expect(requests).toHaveLength(6)
+    }),
+  )
+
+  it.effect('retries a write that creates something after a rate limit, which GitHub rejected before acting', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        [`POST ${REPO}/issues/3/comments`]: [{ status: 429, body: { message: 'slow down' } }, { status: 201, body: { id: 1, body: 'hi' } }],
+      })
+      expect(yield* (yield* service).createComment(3, 'hi')).toMatchObject({ id: 1 })
+      expect(requests).toHaveLength(2)
+    }),
+  )
+
+  it.effect('fails a bad request or a GraphQL error at once instead of retrying it as an outage', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        [`GET ${REPO}/labels`]: { status: 400, body: { message: 'Problems parsing JSON' } },
+        [`POST /graphql`]: [
+          { body: { data: null, errors: [{ type: 'NOT_FOUND', message: 'Could not resolve to a Repository' }] } },
+          { body: { data: null, errors: [{ type: 'RATE_LIMITED', message: 'API rate limit exceeded' }] } },
+          { body: { data: { x: 1 } } },
+        ],
+      })
+      const github = yield* service
+      expect((yield* Effect.flip(github.listLabels))._tag).toBe('ValidationFailed')
+      expect(yield* Effect.flip(github.graphql('query { x }', {}))).toMatchObject({ _tag: 'ValidationFailed', operation: 'graphql' })
+      expect(yield* github.graphql('query { x }', {})).toStrictEqual({ x: 1 })
+      expect(requests.map(({ path }) => path)).toStrictEqual([`${REPO}/labels`, '/graphql', '/graphql', '/graphql'])
     }),
   )
 
