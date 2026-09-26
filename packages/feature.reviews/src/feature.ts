@@ -29,6 +29,18 @@ type Reviews = NonNullable<SmartcloudConfig['reviews']>
 
 const DEFAULT_APPROVAL_MESSAGE = 'Approved automatically by smartcloud.'
 
+// A pull request from a fork runs with a read-only token, so GitHub forbids
+// every write. That is a warning, not a failure of the whole run.
+const readOnly = (rule: string, verb: string) => () =>
+  Effect.flatMap(Report, (report) =>
+    report.add({
+      feature: FEATURE,
+      rule,
+      level: 'warning',
+      message: `Could not ${verb} on a read-only token, for example a pull request from a fork.`,
+    }),
+  )
+
 const conditionGroups = (reviews: Reviews) => [
   ...Object.values(reviews.requestApprovals ?? {}).map((rule) => rule.when),
   ...Object.values(reviews.automaticApprove ?? {}).map((rule) => rule.when),
@@ -91,11 +103,11 @@ const runRequestApprovals = (rules: NonNullable<Reviews['requestApprovals']>, su
         .filter((login) => !sameLogin(login, subject.author) && !reviewed.some((author) => sameLogin(login, author)))
         .map(normaliseLogin)
       if (reviewers.length === 0) continue
-      yield* github.requestReviewers(subject.number, reviewers)
-      yield* report.change({
-        feature: FEATURE,
-        description: `Requested review from ${reviewers.map((login) => `@${login}`).join(', ')} on #${subject.number} (${key}).`,
-      })
+      const who = reviewers.map((login) => `@${login}`).join(', ')
+      yield* github.requestReviewers(subject.number, reviewers).pipe(
+        Effect.zipRight(report.change({ feature: FEATURE, description: `Requested review from ${who} on #${subject.number} (${key}).` })),
+        Effect.catchTag('Forbidden', readOnly('reviews.requestApprovals', `request review from ${who} on #${subject.number} (${key})`)),
+      )
     }
   })
 
@@ -124,8 +136,10 @@ const runAutomaticApprove = (
         })
         return
       }
-      yield* github.createReview(subject.number, { event: 'APPROVE', body: rule.message ?? DEFAULT_APPROVAL_MESSAGE })
-      yield* report.change({ feature: FEATURE, description: `Approved #${subject.number} automatically (${key}).` })
+      yield* github.createReview(subject.number, { event: 'APPROVE', body: rule.message ?? DEFAULT_APPROVAL_MESSAGE }).pipe(
+        Effect.zipRight(report.change({ feature: FEATURE, description: `Approved #${subject.number} automatically (${key}).` })),
+        Effect.catchTag('Forbidden', readOnly('reviews.automaticApprove', `approve #${subject.number} (${key})`)),
+      )
       // One approval per run is enough: further rules would only duplicate it.
       return
     }
@@ -147,7 +161,9 @@ const run = (context: FeatureContext): Effect.Effect<void, MissingFacet | GitHub
  *
  * @remarks
  * It runs on pull request events, including `pull_request_review`, so the
- * gate is re-evaluated whenever a review is submitted or dismissed. It is
+ * gate is re-evaluated whenever a review is submitted or dismissed. A review
+ * request or approval GitHub forbids, as it does on the read-only token of a
+ * pull request from a fork, is reported as a warning rather than failing. It is
  * enabled by a `reviews` section, and loads the reviews and pending reviewer
  * facets plus whatever its rules' conditions need.
  */

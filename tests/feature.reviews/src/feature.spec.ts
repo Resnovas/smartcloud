@@ -20,7 +20,7 @@ import type { Review } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
 import { FEATURE, reviewsFeature } from '@resnovas/feature.reviews'
-import { GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { Forbidden, GitHub, makeMemoryGitHub, RateLimited } from '@resnovas/integrations.github'
 import { Effect, Exit } from 'effect'
 
 // A pull request payload with the fields GitHub sends, as in the engine tests.
@@ -65,6 +65,13 @@ const run = (
   )
 
 const pull = (state: ReturnType<typeof memory>['state']) => state.pulls.get(7)
+
+// GitHub as a fork pull request's read-only token sees it: every review write is forbidden.
+const readOnly = (reviews: Array<Review> = []) => {
+  const github = memory(reviews)
+  const forbidden = (operation: string) => () => Effect.fail(new Forbidden({ operation, detail: 'Resource not accessible by integration' }))
+  return { ...github, service: { ...github.service, requestReviewers: forbidden('requestReviewers'), createReview: forbidden('createReview') } }
+}
 
 describe('reviewsFeature', () => {
   it('handles pull requests, and is enabled only by a reviews section', () => {
@@ -272,6 +279,58 @@ describe('requestApprovals', () => {
         expect(pull(state)?.requestedReviewers).toStrictEqual(['Owner-Two'])
         const { result } = yield* run(config, memory([{ author: 'owner-one', state: 'APPROVED' }, { author: 'owner-two', state: 'CHANGES_REQUESTED' }]))
         expect(result.changes).toStrictEqual([])
+      }),
+    ))
+})
+
+describe('a read-only token, as on a pull request from a fork', () => {
+  it('warns for each review request and approval it cannot make, rather than failing the run', () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const { result, state } = yield* run(
+          {
+            version: 2,
+            reviews: {
+              requestApprovals: { deps: { reviewers: ['owner-one'], when: { condition: [] } } },
+              automaticApprove: { deps: { when: { condition: [] } } },
+            },
+          },
+          readOnly(),
+          { event: 'pull_request' },
+        )
+        expect(result.failed).toStrictEqual([])
+        expect(result.changes).toStrictEqual([])
+        expect(pull(state)?.requestedReviewers).toStrictEqual([])
+        expect(pull(state)?.submittedReviews).toStrictEqual([])
+        expect(result.findings).toStrictEqual([
+          {
+            feature: FEATURE,
+            rule: 'reviews.requestApprovals',
+            level: 'warning',
+            message: 'Could not request review from @owner-one on #7 (deps) on a read-only token, for example a pull request from a fork.',
+          },
+          {
+            feature: FEATURE,
+            rule: 'reviews.automaticApprove',
+            level: 'warning',
+            message: 'Could not approve #7 (deps) on a read-only token, for example a pull request from a fork.',
+          },
+        ])
+      }),
+    ))
+
+  it('still fails on any other error from a review write', () =>
+    Effect.runPromise(
+      Effect.gen(function* () {
+        const github = memory()
+        const limited = {
+          ...github,
+          service: { ...github.service, createReview: () => Effect.fail(new RateLimited({ operation: 'createReview', detail: 'secondary limit' })) },
+        }
+        const { result } = yield* run({ version: 2, reviews: { automaticApprove: { deps: { when: { condition: [] } } } } }, limited, {
+          event: 'pull_request',
+        })
+        expect(result.failed).toStrictEqual([{ feature: FEATURE, message: expect.stringContaining('createReview: rate limited (secondary limit)') }])
       }),
     ))
 })
