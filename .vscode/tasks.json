@@ -1,0 +1,98 @@
+{
+  // Every task calls a package script from package.json or the setup script,
+  // which stay the one source of truth for commands (house standard
+  // project-dev-surfaces). Zed imports this file too.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "setup",
+      "detail": "Install Node deps, sync Nx and build: scripts/agent-setup",
+      "type": "shell",
+      "command": "./scripts/agent-setup",
+      "windows": { "command": ".\\scripts\\agent-setup.cmd" },
+      "problemMatcher": []
+    },
+    {
+      "label": "dev",
+      "detail": "Rebuild every library and app on change: pnpm run dev",
+      "type": "shell",
+      "command": "pnpm run dev",
+      "isBackground": true,
+      "problemMatcher": "$tsc-watch"
+    },
+    {
+      "label": "build",
+      "detail": "Build every project: pnpm run build",
+      "type": "shell",
+      "command": "pnpm run build",
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "test",
+      "detail": "Test every project with coverage: pnpm run test",
+      "type": "shell",
+      "command": "pnpm run test",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": []
+    },
+    {
+      "label": "test: current file",
+      "detail": "Test the open file or its mirrored spec: pnpm run test:file",
+      "type": "shell",
+      "command": "pnpm run test:file \"${relativeFile}\"",
+      "group": "test",
+      "problemMatcher": []
+    },
+    {
+      "label": "lint",
+      "detail": "Lint every project: pnpm run lint",
+      "type": "shell",
+      "command": "pnpm run lint",
+      "problemMatcher": "$eslint-stylish"
+    },
+    {
+      "label": "typecheck",
+      "detail": "Type-check every project, then the test projects",
+      "type": "shell",
+      "command": "pnpm run typecheck && pnpm run typecheck:tests",
+      "windows": { "command": "pnpm run typecheck; if ($?) { pnpm run typecheck:tests }" },
+      "problemMatcher": "$tsc"
+    },
+    {
+      "label": "format",
+      "detail": "Format the workspace with Prettier: pnpm run format",
+      "type": "shell",
+      "command": "pnpm run format",
+      "problemMatcher": []
+    },
+    {
+      "label": "headers",
+      "detail": "Add or correct licence headers: pnpm run headers:fix",
+      "type": "shell",
+      "command": "pnpm run headers:fix",
+      "problemMatcher": []
+    },
+    {
+      "label": "bundle",
+      "detail": "Bundle the action, CLI and MCP server with esbuild: pnpm run bundle",
+      "type": "shell",
+      "command": "pnpm run bundle",
+      "problemMatcher": []
+    },
+    {
+      "label": "docs",
+      "detail": "Regenerate docs/reference/configuration.mdx from the JSON Schema",
+      "type": "shell",
+      "command": "pnpm run docs:reference",
+      "problemMatcher": []
+    },
+    {
+      "label": "check",
+      "detail": "Everything CI runs: lint, typecheck, test, build and headers",
+      "type": "shell",
+      "command": "pnpm run check",
+      "problemMatcher": []
+    }
+  ]
+}

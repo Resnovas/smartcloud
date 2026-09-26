@@ -1,1 +1,3 @@
 *.json linguist-language=JSON-with-Comments
+*.cmd text eol=crlf
+scripts/agent-setup text eol=lf

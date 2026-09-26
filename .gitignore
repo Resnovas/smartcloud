@@ -23,6 +23,8 @@ vitest.config.*.timestamp*
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
 .idea
 .DS_Store
 Thumbs.db

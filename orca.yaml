@@ -1,0 +1,17 @@
+# Orca worktree settings (house standard project-dev-surfaces). Every command
+# here is the setup script or a package script from package.json.
+
+scripts:
+  # Runs after each worktree is created. node, not the shell launcher, so the
+  # same line works on Windows.
+  setup: node scripts/agent-setup.ts
+setupAgentStartupPolicy: wait-for-setup
+defaultTabs:
+  - title: dev
+    command: pnpm run dev
+  - title: claude
+    command: claude
+worktree:
+  # The Nx task cache is content-addressed, so worktrees can share it.
+  sharedDirectories:
+    - .nx/cache

@@ -1,0 +1,29 @@
+# Prepares the GitHub Copilot coding agent's environment. Copilot reads only
+# the job named copilot-setup-steps on the default branch; the setup script
+# does the work, as on every other runner (see AGENT-SETUP.md). Runs on its own
+# change so a broken setup shows up in the pull request that caused it.
+name: Copilot setup steps
+
+on:
+  workflow_dispatch:
+  push:
+    paths: [.github/workflows/copilot-setup-steps.yml, scripts/agent-setup*]
+  pull_request:
+    paths: [.github/workflows/copilot-setup-steps.yml, scripts/agent-setup*]
+
+jobs:
+  copilot-setup-steps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+
+      - run: scripts/agent-setup

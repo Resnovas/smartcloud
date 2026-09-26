@@ -15,8 +15,11 @@ House standards apply: the PostHog skill `coding-preferences` (Effect v3, strict
 
 ## Commands
 
+Agents and cloud runners set up with `scripts/agent-setup` (Windows: `scripts\agent-setup.cmd`); `AGENT-SETUP.md` lists the environment, network and runner settings. Editor tasks, debug configurations and agent surfaces only call the package scripts below.
+
 ```sh
 pnpm install
+pnpm run setup                                   # install, nx sync, build (idempotent)
 pnpm nx run-many -t lint typecheck test build   # everything
 pnpm nx affected -t lint typecheck test build   # what a change affects
 pnpm headers                                     # licence header check (pnpm headers:fix to add them)
