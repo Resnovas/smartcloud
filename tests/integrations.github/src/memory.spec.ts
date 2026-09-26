@@ -145,7 +145,15 @@ describe('in-memory GitHub', () => {
       })
       expect(yield* service.getCommit('abc')).toStrictEqual({ sha: 'abc', message: 'fix: x', parents: ['p'] })
       expect((yield* Effect.flip(service.getCommit('nope')))._tag).toBe('NotFound')
-      const request = { branch: 'backport/1-to-v1', base: 'v1', from: 'p', to: 'abc', message: 'm', title: 't', body: 'b' }
+      const request = {
+        branch: 'backport/1-to-v1',
+        base: 'v1',
+        from: 'p',
+        to: 'abc',
+        message: 'm',
+        title: 't',
+        body: 'b',
+      }
       const url = 'https://github.com/Resnovas/example/pull/1'
       expect(yield* service.backport(request)).toStrictEqual({ status: 'opened', number: 1, url })
       expect(yield* service.backport(request)).toStrictEqual({ status: 'existing', number: 1, url })

@@ -1259,66 +1259,85 @@ describe('live GitHub: backports', () => {
     [`GET ${REPO}/pulls`]: { body: [] },
     [`GET ${REPO}/git/ref/heads/v1`]: { body: { object: { sha: 'v1-head' } } },
     [`GET ${REPO}/git/commits/v1-head`]: { body: { sha: 'v1-head', tree: { sha: 'v1-tree' }, parents: [] } },
-    [`POST ${REPO}/git/commits`]: [{ status: 201, body: { sha: 'scratch' } }, { status: 201, body: { sha: 'picked' } }],
+    [`POST ${REPO}/git/commits`]: [
+      { status: 201, body: { sha: 'scratch' } },
+      { status: 201, body: { sha: 'picked', author: DEFAULT_COMMITTER, verification: { verified: true } } },
+    ],
     [`DELETE ${REPO}/git/refs/heads/backport/7-to-v1`]: { status: 204 },
   }
-  const sent = (requests: ReadonlyArray<{ method: string; path: string; body: unknown }>, method: string, path: string) =>
-    requests.filter((entry) => entry.method === method && entry.path === path).map(({ body }) => body)
+  const sent = (
+    requests: ReadonlyArray<{ method: string; path: string; body: unknown }>,
+    method: string,
+    path: string,
+  ) => requests.filter((entry) => entry.method === method && entry.path === path).map(({ body }) => body)
 
   it.effect('reads a commit with its parents', () =>
     Effect.gen(function* () {
       const { service } = live({
-        [`GET ${REPO}/git/commits/abc`]: { body: { sha: 'abc', message: 'fix: x', tree: { sha: 't' }, parents: [{ sha: 'p1' }, { sha: 'p2' }] } },
+        [`GET ${REPO}/git/commits/abc`]: {
+          body: { sha: 'abc', message: 'fix: x', tree: { sha: 't' }, parents: [{ sha: 'p1' }, { sha: 'p2' }] },
+        },
       })
-      expect(yield* (yield* service).getCommit('abc')).toStrictEqual({ sha: 'abc', message: 'fix: x', parents: ['p1', 'p2'] })
+      expect(yield* (yield* service).getCommit('abc')).toStrictEqual({
+        sha: 'abc',
+        message: 'fix: x',
+        parents: ['p1', 'p2'],
+      })
     }),
   )
 
-  it.effect('cherry-picks through a scratch commit and a merge, then opens a pull request from one signed-off commit', () =>
-    Effect.gen(function* () {
-      const { service, requests } = live({
-        ...pickRoutes,
-        [`GET ${BRANCH}`]: { status: 404, body: { message: 'Not Found' } },
-        [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
-        [`POST ${REPO}/merges`]: { status: 201, body: { sha: 'merge', commit: { tree: { sha: 'picked-tree' } } } },
-        [`PATCH ${REPO}/git/refs/heads/backport/7-to-v1`]: { body: {} },
-        [`POST ${REPO}/pulls`]: { status: 201, body: { number: 12, html_url: 'https://github.com/Resnovas/example/pull/12' } },
-      })
-      expect(yield* (yield* service).backport(request)).toStrictEqual({
-        status: 'opened',
-        number: 12,
-        url: 'https://github.com/Resnovas/example/pull/12',
-      })
-      expect(sent(requests, 'POST', `${REPO}/git/commits`)).toStrictEqual([
-        {
-          message: 'smartcloud backport scratch for merged',
-          tree: 'v1-tree',
-          parents: ['parent'],
-          author: DEFAULT_COMMITTER,
-          committer: DEFAULT_COMMITTER,
-        },
-        {
-          message: signOff(request.message, DEFAULT_COMMITTER),
-          tree: 'picked-tree',
-          parents: ['v1-head'],
-          author: DEFAULT_COMMITTER,
-          committer: DEFAULT_COMMITTER,
-        },
-      ])
-      expect(sent(requests, 'POST', `${REPO}/git/refs`)).toStrictEqual([{ ref: 'refs/heads/backport/7-to-v1', sha: 'scratch' }])
-      expect(sent(requests, 'POST', `${REPO}/merges`)).toStrictEqual([
-        { base: 'backport/7-to-v1', head: 'merged', commit_message: 'smartcloud backport of merged' },
-      ])
-      expect(sent(requests, 'PATCH', `${REPO}/git/refs/heads/backport/7-to-v1`)).toStrictEqual([{ sha: 'picked', force: true }])
-      expect(sent(requests, 'POST', `${REPO}/pulls`)).toStrictEqual([
-        { head: 'backport/7-to-v1', base: 'v1', title: request.title, body: request.body },
-      ])
-    }),
+  it.effect(
+    'cherry-picks through a scratch commit and a merge, then opens a pull request from one signed-off commit',
+    () =>
+      Effect.gen(function* () {
+        const { service, requests } = live({
+          ...pickRoutes,
+          [`GET ${BRANCH}`]: { status: 404, body: { message: 'Not Found' } },
+          [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
+          [`POST ${REPO}/merges`]: { status: 201, body: { sha: 'merge', commit: { tree: { sha: 'picked-tree' } } } },
+          [`PATCH ${REPO}/git/refs/heads/backport/7-to-v1`]: { body: {} },
+          [`POST ${REPO}/pulls`]: {
+            status: 201,
+            body: { number: 12, html_url: 'https://github.com/Resnovas/example/pull/12' },
+          },
+        })
+        expect(yield* (yield* service).backport(request)).toStrictEqual({
+          status: 'opened',
+          number: 12,
+          url: 'https://github.com/Resnovas/example/pull/12',
+        })
+        expect(sent(requests, 'POST', `${REPO}/git/commits`)).toStrictEqual([
+          {
+            message: 'smartcloud backport scratch for merged',
+            tree: 'v1-tree',
+            parents: ['parent'],
+          },
+          {
+            message: signOff(request.message, DEFAULT_COMMITTER),
+            tree: 'picked-tree',
+            parents: ['v1-head'],
+          },
+        ])
+        expect(sent(requests, 'POST', `${REPO}/git/refs`)).toStrictEqual([
+          { ref: 'refs/heads/backport/7-to-v1', sha: 'scratch' },
+        ])
+        expect(sent(requests, 'POST', `${REPO}/merges`)).toStrictEqual([
+          { base: 'backport/7-to-v1', head: 'merged', commit_message: 'smartcloud backport of merged' },
+        ])
+        expect(sent(requests, 'PATCH', `${REPO}/git/refs/heads/backport/7-to-v1`)).toStrictEqual([
+          { sha: 'picked', force: true },
+        ])
+        expect(sent(requests, 'POST', `${REPO}/pulls`)).toStrictEqual([
+          { head: 'backport/7-to-v1', base: 'v1', title: request.title, body: request.body },
+        ])
+      }),
   )
 
   it.effect('leaves an open pull request from the branch as it is', () =>
     Effect.gen(function* () {
-      const { service, requests } = live({ [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'https://github.com/Resnovas/example/pull/9' }] } })
+      const { service, requests } = live({
+        [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'https://github.com/Resnovas/example/pull/9' }] },
+      })
       expect(yield* (yield* service).backport(request)).toStrictEqual({
         status: 'existing',
         number: 9,
@@ -1339,7 +1358,9 @@ describe('live GitHub: backports', () => {
         [`POST ${REPO}/merges`]: { status: 409, body: { message: 'Merge conflict' } },
       })
       expect(yield* (yield* service).backport(request)).toStrictEqual({ status: 'conflict' })
-      expect(sent(requests, 'PATCH', `${REPO}/git/refs/heads/backport/7-to-v1`)).toStrictEqual([{ sha: 'scratch', force: true }])
+      expect(sent(requests, 'PATCH', `${REPO}/git/refs/heads/backport/7-to-v1`)).toStrictEqual([
+        { sha: 'scratch', force: true },
+      ])
       expect(sent(requests, 'DELETE', `${REPO}/git/refs/heads/backport/7-to-v1`)).toHaveLength(1)
       expect(sent(requests, 'POST', `${REPO}/pulls`)).toStrictEqual([])
     }),
@@ -1347,7 +1368,10 @@ describe('live GitHub: backports', () => {
 
   it.effect('stops with empty when nothing is left to merge, or the base already has the changes', () =>
     Effect.gen(function* () {
-      for (const merge of [{ status: 204 }, { status: 201, body: { sha: 'merge', commit: { tree: { sha: 'v1-tree' } } } }]) {
+      for (const merge of [
+        { status: 204 },
+        { status: 201, body: { sha: 'merge', commit: { tree: { sha: 'v1-tree' } } } },
+      ]) {
         const { service, requests } = live({
           ...pickRoutes,
           [`GET ${BRANCH}`]: { status: 404, body: { message: 'Not Found' } },

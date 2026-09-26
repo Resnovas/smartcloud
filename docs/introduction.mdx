@@ -3,7 +3,7 @@ title: 'Introduction'
 description: 'What smartcloud does, and how to run it in a repository.'
 ---
 
-smartcloud is a GitHub Action that automates repository housekeeping and enforces contribution policy from one declarative file, `.github/smartcloud.yml`. It labels pull requests and issues, checks titles and commits, gates reviews, marks inactive work stale, locks long-closed threads, keeps repository settings in line, and syncs shared files from a template repository.
+smartcloud is a GitHub Action that automates repository housekeeping and enforces contribution policy from one declarative file, `.github/smartcloud.yml`. It labels pull requests and issues, checks titles and commits, gates reviews, marks inactive work stale, locks long-closed threads, backports merged pull requests by label, keeps repository settings in line, and syncs shared files from a template repository.
 
 Each capability is a feature with its own section in the config. A feature whose section is absent does not run, so you opt in to exactly what you need.
 
@@ -107,8 +107,8 @@ Each capability is a feature with its own section in the config. A feature whose
 
 | Permission             | Why smartcloud needs it                                                                                                                                                              |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `contents: write`      | The sync and codeowners features push a branch with synced or generated files. Reading presets and templates needs at least `read`.                                                  |
-| `pull-requests: write` | Labels, review requests, automatic approvals and the report comment on pull requests.                                                                                                |
+| `contents: write`      | The sync, codeowners and backport features push a branch with synced, generated or backported files. Reading presets and templates needs at least `read`.                            |
+| `pull-requests: write` | Labels, review requests, automatic approvals, backport pull requests and the report comment on pull requests.                                                                        |
 | `checks: write`        | One check run per feature on the commit.                                                                                                                                             |
 | `issues: write`        | Labels, stale and lock comments, locking conversations, and the report comment on issues. Repository labels are managed through this permission too.                                 |
 | `statuses: read`       | For the [required](/features/required) and [freeze](/features/freeze) features, and when a rule uses `checksPass` or `checkStatus`: they read commit statuses as well as check runs. |
@@ -145,12 +145,12 @@ The v1 inputs `fillEmpty` and `skipDelete` are still accepted and ignored with a
 
 ## Which events run which features
 
-| Event                                                                                       | Features                                                                                                                     |
-| ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `pull_request`, `pull_request_target`, `pull_request_review`, `pull_request_review_comment` | conventions, commits, disclosure, reviews, branches, codeowners (the check), labels (labelling rules), sync (the edit check) |
-| `issues`, `issue_comment` on an issue                                                       | conventions, labels (labelling rules)                                                                                        |
-| `push`                                                                                      | labels (label sync), settings, sync, codeowners                                                                              |
-| `schedule`, `workflow_dispatch`                                                             | labels (label sync), stale, lock, settings, sync, codeowners                                                                 |
-| `repository_dispatch`, `merge_group`                                                        | labels (label sync)                                                                                                          |
+| Event                                                                                       | Features                                                                                                                                                                               |
+| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pull_request`, `pull_request_target`, `pull_request_review`, `pull_request_review_comment` | conventions, commits, disclosure, reviews, branches, codeowners (the check), labels (labelling rules), sync (the edit check), backport (`pull_request` and `pull_request_target` only) |
+| `issues`, `issue_comment` on an issue                                                       | conventions, labels (labelling rules)                                                                                                                                                  |
+| `push`                                                                                      | labels (label sync), settings, sync, codeowners                                                                                                                                        |
+| `schedule`, `workflow_dispatch`                                                             | labels (label sync), stale, lock, settings, sync, codeowners                                                                                                                           |
+| `repository_dispatch`, `merge_group`                                                        | labels (label sync)                                                                                                                                                                    |
 
 Any other event is a clean no-op that records a notice. A comment on a pull request carries no pull request data, so smartcloud acts on the pull request events instead.

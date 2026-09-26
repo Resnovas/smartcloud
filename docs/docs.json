@@ -36,6 +36,7 @@
               "features/labels",
               "features/stale",
               "features/lock",
+              "features/backport",
               "features/settings",
               "features/sync"
             ]

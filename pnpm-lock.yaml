@@ -375,6 +375,24 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
 
+  packages/feature.backport:
+    dependencies:
+      '@resnovas/config':
+        specifier: workspace:*
+        version: link:../config
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../integrations.github
+      effect:
+        specifier: 'catalog:'
+        version: 3.22.2
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+
   packages/feature.branches:
     dependencies:
       '@resnovas/conditions':
@@ -720,6 +738,9 @@ importers:
       '@resnovas/engine':
         specifier: workspace:*
         version: link:../engine
+      '@resnovas/feature.backport':
+        specifier: workspace:*
+        version: link:../feature.backport
       '@resnovas/feature.branches':
         specifier: workspace:*
         version: link:../feature.branches
@@ -846,6 +867,21 @@ importers:
       '@resnovas/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../../packages/integrations.github
+
+  tests/feature.backport:
+    devDependencies:
+      '@resnovas/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@resnovas/feature.backport':
+        specifier: workspace:*
+        version: link:../../packages/feature.backport
       '@resnovas/integrations.github':
         specifier: workspace:*
         version: link:../../packages/integrations.github

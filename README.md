@@ -2,7 +2,7 @@
 
 smartcloud is a GitHub Action for repository automation and contribution policy, configured in one file: `.github/smartcloud.yml`.
 
-It keeps labels in sync and applies them by condition, checks pull request and issue titles, enforces DCO sign-off and AI attribution on commits, reads the AI disclosure in pull request descriptions, gates merges on maintainer review, marks inactive work stale, locks long-closed threads, applies repository settings, and syncs shared files from a template repository. Each feature has its own config section and runs only when that section is present.
+It keeps labels in sync and applies them by condition, checks pull request and issue titles, enforces DCO sign-off and AI attribution on commits, reads the AI disclosure in pull request descriptions, gates merges on maintainer review, marks inactive work stale, locks long-closed threads, backports merged pull requests by label, applies repository settings, and syncs shared files from a template repository. Each feature has its own config section and runs only when that section is present.
 
 Version 2 is a rewrite. It still reads a v1 `.github/config.json`, migrating it on every run with a warning for anything it drops; `smartcloud migrate` converts it once. The v1 action remains available at the `1.0.0-beta.8` tag.
 

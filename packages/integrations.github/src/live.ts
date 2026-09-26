@@ -753,16 +753,28 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       Effect.gen(function* () {
         // The branch is reset below, so it must never be the branch the pull request merges into.
         if (request.branch === request.base) {
-          return yield* new ValidationFailed({ operation: 'backport', detail: `the backport branch cannot be its base, ${request.base}` })
+          return yield* new ValidationFailed({
+            operation: 'backport',
+            detail: `the backport branch cannot be its base, ${request.base}`,
+          })
         }
         const open = yield* call('backport: find pull request', () =>
-          octokit.rest.pulls.list({ owner, repo, head: `${owner}:${request.branch}`, base: request.base, state: 'open', per_page: 1 }),
+          octokit.rest.pulls.list({
+            owner,
+            repo,
+            head: `${owner}:${request.branch}`,
+            base: request.base,
+            state: 'open',
+            per_page: 1,
+          }),
         )
         const existing = open.data[0]
-        if (existing !== undefined) return { status: 'existing' as const, number: existing.number, url: existing.html_url }
+        if (existing !== undefined)
+          return { status: 'existing' as const, number: existing.number, url: existing.html_url }
 
-        const baseSha = (yield* call('backport: read base', () => octokit.rest.git.getRef({ owner, repo, ref: `heads/${request.base}` })))
-          .data.object.sha
+        const baseSha = (yield* call('backport: read base', () =>
+          octokit.rest.git.getRef({ owner, repo, ref: `heads/${request.base}` }),
+        )).data.object.sha
         const baseTree = (yield* call('backport: read base commit', () =>
           octokit.rest.git.getCommit({ owner, repo, commit_sha: baseSha }),
         )).data.tree.sha
@@ -777,21 +789,28 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             message: `smartcloud backport scratch for ${request.to}`,
             tree: baseTree,
             parents: [request.from],
-            author: committer,
-            committer,
           }),
         )
-        const exists = yield* call('backport: read branch', () => octokit.rest.git.getRef({ owner, repo, ref: `heads/${request.branch}` })).pipe(
+        const exists = yield* call('backport: read branch', () =>
+          octokit.rest.git.getRef({ owner, repo, ref: `heads/${request.branch}` }),
+        ).pipe(
           Effect.as(true),
           Effect.catchTag('NotFound', () => Effect.succeed(false)),
         )
         yield* exists
           ? call('backport: reset branch', () =>
-              octokit.rest.git.updateRef({ owner, repo, ref: `heads/${request.branch}`, sha: scratch.data.sha, force: true }),
+              octokit.rest.git.updateRef({
+                owner,
+                repo,
+                ref: `heads/${request.branch}`,
+                sha: scratch.data.sha,
+                force: true,
+              }),
             )
           : call(
               'backport: create branch',
-              () => octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${request.branch}`, sha: scratch.data.sha }),
+              () =>
+                octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${request.branch}`, sha: scratch.data.sha }),
               rateLimited,
             )
         // A merge repeated after an outage would find nothing left to merge,
@@ -800,9 +819,18 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           'backport: merge',
           () =>
             octokit.rest.repos
-              .merge({ owner, repo, base: request.branch, head: request.to, commit_message: `smartcloud backport of ${request.to}` })
+              .merge({
+                owner,
+                repo,
+                base: request.branch,
+                head: request.to,
+                commit_message: `smartcloud backport of ${request.to}`,
+              })
               .then(
-                (response) => ({ status: response.status, tree: response.status === 201 ? response.data.commit.tree.sha : undefined }),
+                (response) => ({
+                  status: response.status,
+                  tree: response.status === 201 ? response.data.commit.tree.sha : undefined,
+                }),
                 (error: unknown) => {
                   if (statusOf(error) === 409) return { status: 409, tree: undefined }
                   throw error
@@ -815,23 +843,28 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           return merged.status === 409 ? { status: 'conflict' as const } : { status: 'empty' as const }
         }
         const { tree } = merged
-        const commit = yield* call('backport: create commit', () =>
-          octokit.rest.git.createCommit({
+        // Committed as the proposals are, so GitHub signs it and the sign-off matches its author.
+        const commit = yield* commitChanges(request.message, tree, baseSha)
+        yield* call('backport: update branch', () =>
+          octokit.rest.git.updateRef({
             owner,
             repo,
-            message: signOff(request.message, committer),
-            tree,
-            parents: [baseSha],
-            author: committer,
-            committer,
+            ref: `heads/${request.branch}`,
+            sha: commit.sha,
+            force: true,
           }),
-        )
-        yield* call('backport: update branch', () =>
-          octokit.rest.git.updateRef({ owner, repo, ref: `heads/${request.branch}`, sha: commit.data.sha, force: true }),
         )
         const created = yield* call(
           'backport: open pull request',
-          () => octokit.rest.pulls.create({ owner, repo, head: request.branch, base: request.base, title: request.title, body: request.body }),
+          () =>
+            octokit.rest.pulls.create({
+              owner,
+              repo,
+              head: request.branch,
+              base: request.base,
+              title: request.title,
+              body: request.body,
+            }),
           rateLimited,
         )
         return { status: 'opened' as const, number: created.data.number, url: created.data.html_url }
@@ -1084,7 +1117,11 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       proposeChanges,
       getCommit: (commit_sha) =>
         call('getCommit', () => octokit.rest.git.getCommit({ owner, repo, commit_sha })).pipe(
-          Effect.map(({ data }) => ({ sha: data.sha, message: data.message, parents: data.parents.map((parent) => parent.sha) })),
+          Effect.map(({ data }) => ({
+            sha: data.sha,
+            message: data.message,
+            parents: data.parents.map((parent) => parent.sha),
+          })),
         ),
       backport,
       repositoryRequest,

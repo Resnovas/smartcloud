@@ -102,6 +102,7 @@ const NOTICE_FEATURES: ReadonlyArray<string> = [
   'freeze',
   'codeowners',
   'lock',
+  'backport',
   'engine',
 ]
 

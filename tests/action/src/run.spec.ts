@@ -175,6 +175,7 @@ describe('runAction', () => {
         'branches',
         'codeowners',
         'lock',
+        'backport',
       ])
     }),
   )
