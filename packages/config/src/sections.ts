@@ -199,6 +199,13 @@ export const Stale = Schema.Struct({
   exempt: opt(Schema.Struct({ labels: opt(Schema.Array(Schema.String)), when: opt(ConditionGroup) })),
 }).annotations({ identifier: 'Stale' })
 
+// A GitHub login, an organisation team slug, and an Actions variable name
+// (GitHub reserves the GITHUB_ prefix).
+const Login = /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/
+const Slug = /^[a-z0-9][a-z0-9_-]*$/
+const VariableName = /^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$/
+const REPOSITORY_ROLES = ['read', 'triage', 'write', 'maintain', 'admin'] as const
+
 /**
  * The repository settings baseline. Anything omitted is left as it is.
  *
@@ -209,6 +216,8 @@ export const Stale = Schema.Struct({
  *
  * Schema.is(Settings)({ merging: { squash: true }, security: { codeScanning: 'extended' } }) // => true
  * Schema.is(Settings)({ security: { codeScanning: 'maximum' } }) // => false
+ * Schema.is(Settings)({ actions: { workflowPermissions: 'read' }, collaborators: { octocat: 'write' } }) // => true
+ * Schema.is(Settings)({ collaborators: { octocat: 'owner' } }) // => false
  * ```
  */
 export const Settings = Schema.Struct({
@@ -262,6 +271,67 @@ export const Settings = Schema.Struct({
       names: opt(Schema.Array(Schema.String)),
     }),
   ),
+  actions: opt(
+    Schema.Struct({
+      /** GitHub Actions runs in the repository. */
+      enabled: opt(Schema.Boolean),
+      /** Which actions and reusable workflows may run. */
+      allowedActions: opt(Schema.Literal('all', 'local_only', 'selected')),
+      /** Actions must be pinned to a full commit SHA. */
+      shaPinningRequired: opt(Schema.Boolean),
+      /** The actions allowed when `allowedActions` is `selected`. */
+      selectedActions: opt(
+        Schema.Struct({
+          githubOwned: opt(Schema.Boolean),
+          verifiedCreators: opt(Schema.Boolean),
+          patterns: opt(Schema.Array(Schema.String)),
+        }),
+      ),
+      /** The default permissions of the workflow token. */
+      workflowPermissions: opt(Schema.Literal('read', 'write')),
+      /** The workflow token may create and approve pull requests. */
+      createPullRequests: opt(Schema.Boolean),
+      /** Who outside the repository may use its actions and reusable workflows. Private and internal repositories only. */
+      accessLevel: opt(Schema.Literal('none', 'user', 'organization', 'enterprise')),
+    }),
+  ),
+  /** Collaborators by login, with their role; `none` removes one. */
+  collaborators: opt(Schema.Record({ key: Schema.String.pipe(Schema.pattern(Login)), value: Schema.Literal(...REPOSITORY_ROLES, 'none') })),
+  /** Organisation teams by slug, with their role on the repository. */
+  teams: opt(Schema.Record({ key: Schema.String.pipe(Schema.pattern(Slug)), value: Schema.Literal(...REPOSITORY_ROLES) })),
+  /** Webhooks, keyed by a name of your choosing and matched on GitHub by URL. */
+  webhooks: opt(
+    Schema.Record({
+      key: Schema.String,
+      value: Schema.Struct({
+        url: Schema.String.pipe(Schema.pattern(/^https?:\/\/\S+$/)),
+        /** The events that trigger it; `push` when a new webhook leaves it out. */
+        events: opt(Schema.Array(Schema.String)),
+        contentType: opt(Schema.Literal('json', 'form')),
+        active: opt(Schema.Boolean),
+        insecureSsl: opt(Schema.Boolean),
+      }),
+    }),
+  ),
+  /** The GitHub Pages site. */
+  pages: opt(
+    Schema.Struct({
+      /** Publish a site. On by default; `false` unpublishes it. */
+      enabled: opt(Schema.Boolean),
+      /** Build with a workflow, or from a branch (`legacy`). */
+      buildType: opt(Schema.Literal('workflow', 'legacy')),
+      /** The branch a `legacy` site builds from; the default branch when left out. */
+      branch: opt(Schema.String),
+      path: opt(Schema.Literal('/', '/docs')),
+      cname: opt(Schema.String),
+      httpsEnforced: opt(Schema.Boolean),
+    }),
+  ),
+  /**
+   * Actions variables the repository must have, by name, each with what it is
+   * for. Values stay on GitHub: they are never read or written.
+   */
+  variables: opt(Schema.Record({ key: Schema.String.pipe(Schema.pattern(VariableName)), value: Schema.String })),
 }).annotations({ identifier: 'Settings' })
 
 /**

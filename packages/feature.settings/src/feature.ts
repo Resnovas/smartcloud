@@ -36,7 +36,8 @@ export const SETTINGS_EVENTS: ReadonlySet<string> = new Set(['schedule', 'workfl
 
 /**
  * Repository settings as code: merging, features, security, the default
- * branch ruleset and deployment environments.
+ * branch ruleset, deployment environments, Actions permissions,
+ * collaborators and teams, webhooks, Pages and required Actions variables.
  *
  * @remarks
  * Runs on scheduled, manually dispatched and push events when the config has
@@ -66,9 +67,9 @@ export const settingsFeature: Feature = {
       const repository = yield* Effect.flatMap(GitHub, (github) => github.getRepository)
       const { applied, failed } = yield* applySettings(planSettings(settings, config.roles, repository))
       // Settings GitHub does not offer on a private repository are left alone, and counted as skipped.
-      const skipped = [settings.security?.secretScanning, settings.security?.privateVulnerabilityReporting].filter(
-        (value) => value !== undefined && repository.private,
-      ).length
+      const skipped =
+        [settings.security?.secretScanning, settings.security?.privateVulnerabilityReporting].filter((value) => value !== undefined && repository.private).length +
+        (settings.actions?.accessLevel !== undefined && !repository.private ? 1 : 0)
       yield* report.measure({
         feature: FEATURE,
         name: 'settings applied',
@@ -88,6 +89,14 @@ export const settingsFeature: Feature = {
           rule: 'settings.private-vulnerability-reporting',
           level: 'notice',
           message: 'Private vulnerability reporting was not changed: GitHub only offers it on public repositories.',
+        })
+      }
+      if (settings.actions?.accessLevel !== undefined && !repository.private) {
+        yield* report.add({
+          feature: FEATURE,
+          rule: 'settings.actions-access',
+          level: 'notice',
+          message: 'The Actions access level was not changed: GitHub only has one for private and internal repositories, and every repository can use the actions and reusable workflows of a public one.',
         })
       }
       yield* report.add({

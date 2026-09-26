@@ -266,6 +266,28 @@ Type: number.
 | `environments` | object | no |  |
 | `environments.projectType` | one of `saas`, `desktop`, `library`, `none` | no |  |
 | `environments.names` | list of string | no |  |
+| `actions` | object | no |  |
+| `actions.enabled` | boolean | no |  |
+| `actions.allowedActions` | one of `all`, `local_only`, `selected` | no |  |
+| `actions.shaPinningRequired` | boolean | no |  |
+| `actions.selectedActions` | object | no |  |
+| `actions.selectedActions.githubOwned` | boolean | no |  |
+| `actions.selectedActions.verifiedCreators` | boolean | no |  |
+| `actions.selectedActions.patterns` | list of string | no |  |
+| `actions.workflowPermissions` | one of `read`, `write` | no |  |
+| `actions.createPullRequests` | boolean | no |  |
+| `actions.accessLevel` | one of `none`, `user`, `organization`, `enterprise` | no |  |
+| `collaborators` | map of string to one of `read`, `triage`, `write`, `maintain`, `admin`, `none` | no | Keys match `^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$`. |
+| `teams` | map of string to one of `read`, `triage`, `write`, `maintain`, `admin` | no | Keys match `^[a-z0-9][a-z0-9_-]*$`. |
+| `webhooks` | map of string to object | no |  |
+| `pages` | object | no |  |
+| `pages.enabled` | boolean | no |  |
+| `pages.buildType` | one of `workflow`, `legacy` | no |  |
+| `pages.branch` | string | no |  |
+| `pages.path` | one of `/`, `/docs` | no |  |
+| `pages.cname` | string | no |  |
+| `pages.httpsEnforced` | boolean | no |  |
+| `variables` | map of string to string | no | Keys match `^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$`. |
 
 Other keys are an error.
 

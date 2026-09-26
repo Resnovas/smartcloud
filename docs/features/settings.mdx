@@ -1,6 +1,6 @@
 ---
 title: "Settings"
-description: "Repository settings as code: merging, features, security, the default branch ruleset and environments."
+description: "Repository settings as code: merging, features, security, the default branch ruleset, environments, Actions, access, webhooks, Pages and variables."
 ---
 
 The settings feature brings the repository's settings in line with the `settings` section. It runs on `schedule`, `workflow_dispatch` and `push` events, and is enabled by a `settings` section.
@@ -44,9 +44,26 @@ settings:
     requiredChecks: ["smartcloud / reviews", "check"]
   environments:
     projectType: saas
+  actions:
+    workflowPermissions: read
+    createPullRequests: true
+    accessLevel: organization
+  collaborators:
+    hubot: write
+  teams:
+    docs: triage
+  webhooks:
+    chat:
+      url: https://hooks.example.com/smartcloud
+      events: [release]
+      contentType: json
+  pages:
+    buildType: workflow
+  variables:
+    DEPLOY_URL: where the site deploys
 ```
 
-Only what you configure is changed. A section or key left out produces no call, so whatever GitHub has for it stays. Steps run in a fixed order (merging, features, security, the ruleset, then environments, each protected one followed by its deployment policies), and a failed step is reported without stopping the others.
+Only what you configure is changed. A section or key left out produces no call, so whatever GitHub has for it stays. Steps run in a fixed order (merging, features, security, the ruleset, environments with each protected one followed by its deployment policies, Actions, collaborators, teams, webhooks, Pages, then the variables check), and a failed step is reported without stopping the others.
 
 ## Merging
 
@@ -63,6 +80,8 @@ Only what you configure is changed. A section or key left out produces no call, 
 | `immutableReleases`, `privateVulnerabilityReporting`, `dependabotAlerts`, `dependabotSecurityUpdates` | `true` or `false` |
 | `codeScanning` | `default` or `extended` turn on CodeQL default setup with that query suite; `off` turns it off. |
 | `secretScanning` | `true` or `false`, for secret scanning, push protection, Copilot secret detection and non-provider patterns together. |
+
+`dependabotAlerts` turns on the dependency graph with Dependabot alerts, and `dependabotSecurityUpdates` lets Dependabot open pull requests that fix them. Security updates need alerts, so turn both on together.
 
 Secret scanning is only changed on public repositories; on a private one it needs a paid Advanced Security licence, so smartcloud leaves it to the organisation and records a notice. Private vulnerability reporting is likewise only changed on public repositories, as GitHub does not offer it on private ones; a notice says so. Code scanning fails when the repository has no language CodeQL supports, and secret scanning can fail too; both are reported as warnings rather than errors.
 
@@ -97,6 +116,62 @@ On a private repository, rulesets need a paid plan, so a failure there is a warn
 
 Environments that ship to users deploy only from the default branch and from release tags matching `v*`. smartcloud sets them to use custom deployment branch policies and creates a branch policy for the default branch and a tag policy for `v*` when they are missing; policies you added yourself are kept. It does not rely on GitHub's "protected branches" option, because that counts only classic branch protection, and with none (this feature writes a ruleset instead) every branch could deploy. Staging, development, dev, preview and any name ending in "Beta" accept any branch.
 
+## Actions
+
+| Key | Values |
+| --- | --- |
+| `enabled` | `true` or `false`: whether GitHub Actions runs in the repository. |
+| `allowedActions` | `all`, `local_only` (actions and reusable workflows in the organisation or account) or `selected`. |
+| `shaPinningRequired` | `true` requires every action to be pinned to a full commit SHA. |
+| `selectedActions` | With `allowedActions: selected`: `githubOwned` and `verifiedCreators` (`true` or `false`) and `patterns`, such as `Resnovas/*`. Ignored otherwise, as GitHub rejects it. |
+| `workflowPermissions` | `read` or `write`: the default permissions of the workflow `GITHUB_TOKEN`. |
+| `createPullRequests` | `true` lets the workflow token create and approve pull requests. |
+| `accessLevel` | `none`, `user`, `organization` or `enterprise`: which other repositories may use this repository's actions and reusable workflows. |
+
+GitHub needs `enabled` whenever the others in the first group are sent, so setting `allowedActions` or `shaPinningRequired` alone keeps Actions on.
+
+The access level only exists for private and internal repositories: any repository can already use the actions and reusable workflows of a public one. On a public repository it is left alone and a notice says so. Keep it at `organization` on a private repository whose reusable workflows the others call, such as a private `.github` repository; at `none`, every workflow that calls them fails before it starts.
+
+Set `workflowPermissions: read` only when every workflow declares the `permissions` it needs. A workflow that relies on the default write access breaks.
+
+## Collaborators and teams
+
+`collaborators` maps a GitHub login to a role: `read`, `triage`, `write`, `maintain` or `admin`. Someone who is not yet a collaborator is invited. `none` removes the collaborator.
+
+`teams` maps a team slug in the repository's organisation to a role from the same list. A team that has no access yet is added. Teams can only be given access, not removed; remove one by hand.
+
+Only the logins and teams you list are changed. Everyone else keeps their access.
+
+## Webhooks
+
+`webhooks` maps a name of your choosing to a webhook, matched on GitHub by `url`:
+
+| Key | Values |
+| --- | --- |
+| `url` | The payload URL, starting `https://` or `http://`. |
+| `events` | The events that trigger it. A new webhook gets `push` when this is left out. |
+| `contentType` | `json` or `form`. |
+| `active` | `false` stops deliveries without deleting the webhook. |
+| `insecureSsl` | `true` skips TLS certificate verification. Leave it off. |
+
+smartcloud never sets or changes a webhook secret: add one by hand in the repository's webhook settings, and later runs keep it. Plans and reports name only the URL's host, but the config itself is readable by everyone who can read the repository, so keep tokens out of the URL on a public repository.
+
+## Pages
+
+| Key | Values |
+| --- | --- |
+| `enabled` | `false` unpublishes the site. On by default. |
+| `buildType` | `workflow` (a GitHub Actions workflow deploys it) or `legacy` (GitHub builds it from a branch). |
+| `branch`, `path` | The branch and folder (`/` or `/docs`) a `legacy` site builds from. `branch` defaults to the default branch and `path` to `/`. |
+| `cname` | The custom domain. |
+| `httpsEnforced` | `true` redirects HTTP to HTTPS. GitHub rejects it until the custom domain's certificate is issued. |
+
+A missing site is created (built from a workflow unless a branch, path or `legacy` build type is set), then updated with the custom domain and HTTPS setting. An existing site is updated with what the config sets.
+
+## Variables
+
+`variables` maps each Actions variable the repository must have to what it is for. smartcloud only checks the names exist; values are never read, written or kept in the config. A missing variable is a warning that names it and its purpose, so a maintainer can set it by hand in Settings, Secrets and variables, Actions, Variables. Names compare ignoring case, as GitHub stores them in upper case, and names starting with `GITHUB_` are reserved by GitHub and rejected.
+
 ## By hand
 
-The push limit (Settings, General, Pushes) has no API, so every run records a notice to set it by hand.
+The push limit (Settings, General, Pushes) has no API, so every run records a notice to set it by hand. Webhook secrets and Actions variable values are also set by hand, as above.

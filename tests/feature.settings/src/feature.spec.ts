@@ -130,6 +130,44 @@ describe('settingsFeature', () => {
     }),
   )
 
+  it.effect('says why the Actions access level is left alone on a public repository, and counts it as skipped', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({ repository: publicRepository })
+      const result = yield* runFeatures({
+        config: { version: 2, settings: { actions: { accessLevel: 'organization', workflowPermissions: 'read' } } },
+        event: 'schedule',
+        payload: {},
+        features: [settingsFeature],
+      }).pipe(Effect.provideService(GitHub, service))
+      expect(result.findings).toStrictEqual([
+        {
+          feature: 'settings',
+          rule: 'settings.actions-access',
+          level: 'notice',
+          message:
+            'The Actions access level was not changed: GitHub only has one for private and internal repositories, and every repository can use the actions and reusable workflows of a public one.',
+        },
+        pushLimit,
+      ])
+      expect(result.facts[0]?.values).toMatchObject({ applied: 1, failed: 0, skipped: 1 })
+      expect(state.requests.map(({ path }) => path)).toStrictEqual(['/actions/permissions/workflow'])
+    }),
+  )
+
+  it.effect('sets the Actions access level on a private repository', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({ repository: privateRepository })
+      const result = yield* runFeatures({
+        config: { version: 2, settings: { actions: { accessLevel: 'organization' } } },
+        event: 'schedule',
+        payload: {},
+        features: [settingsFeature],
+      }).pipe(Effect.provideService(GitHub, service))
+      expect(result.findings).toStrictEqual([pushLimit])
+      expect(state.requests).toStrictEqual([{ method: 'PUT', path: '/actions/permissions/access', body: { access_level: 'organization' } }])
+    }),
+  )
+
   it.effect('under a dry run, reads pass through and writes are only recorded', () =>
     Effect.gen(function* () {
       const memory = makeMemoryGitHub({ repository: publicRepository })

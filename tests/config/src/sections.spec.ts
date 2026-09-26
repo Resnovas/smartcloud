@@ -68,4 +68,43 @@ sync:
       expect(error._tag).toBe('ConfigDecodeError'),
     ),
   )
+
+  it.effect('read the Actions, access, webhook, Pages and variables settings', () =>
+    Effect.map(
+      parseConfig(
+        `version: 2
+settings:
+  actions: { allowedActions: selected, selectedActions: { githubOwned: true, patterns: ['Resnovas/*'] }, workflowPermissions: read, createPullRequests: true, accessLevel: organization }
+  collaborators: { octocat: write, former: none }
+  teams: { docs-team: triage }
+  webhooks: { chat: { url: 'https://hooks.example.com/x', events: [release], contentType: json } }
+  pages: { buildType: legacy, path: /docs, httpsEnforced: true }
+  variables: { DEPLOY_URL: where the site deploys }
+`,
+        'x.yml',
+      ),
+      ({ config }) => {
+        expect(config.settings?.actions?.accessLevel).toBe('organization')
+        expect(config.settings?.collaborators).toStrictEqual({ octocat: 'write', former: 'none' })
+        expect(config.settings?.teams).toStrictEqual({ 'docs-team': 'triage' })
+        expect(config.settings?.webhooks?.chat?.events).toStrictEqual(['release'])
+        expect(config.settings?.pages?.path).toBe('/docs')
+        expect(config.settings?.variables).toStrictEqual({ DEPLOY_URL: 'where the site deploys' })
+      },
+    ),
+  )
+
+  const rejected = [
+    ['a variable name GitHub reserves', 'variables: { github_sha: x }'],
+    ['a variable name that is not an identifier', "variables: { 'DEPLOY-URL': x }"],
+    ['a login that is not a GitHub login', "collaborators: { '-octocat': read }"],
+    ['a team slug with capitals', 'teams: { Docs: read }'],
+    ['a role GitHub does not have', 'collaborators: { octocat: owner }'],
+    ['a webhook URL that is not http', "webhooks: { x: { url: 'ftp://example.com' } }"],
+  ] as const
+  for (const [what, yaml] of rejected) {
+    it.effect(`reject ${what}`, () =>
+      Effect.map(Effect.flip(parseConfig(`version: 2\nsettings:\n  ${yaml}\n`, 'x.yml')), (error) => expect(error._tag).toBe('ConfigDecodeError')),
+    )
+  }
 })

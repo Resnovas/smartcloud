@@ -18,12 +18,18 @@ import { describe, expect, it } from '@effect/vitest'
 import { makeReport, Report } from '@resnovas/engine'
 import {
   applySettings,
+  checkVariables,
   deploymentPoliciesFor,
   ensureDeploymentPolicies,
+  ensurePages,
+  grantTeam,
+  pagesStep,
   planSettings,
   rulesetBody,
   type SettingsStep,
+  type TeamStep,
   upsertRuleset,
+  upsertWebhook,
 } from '@resnovas/feature.settings'
 import {
   Forbidden,
@@ -44,6 +50,13 @@ const github = (
   options: {
     readonly rulesets?: unknown
     readonly policies?: unknown
+    readonly hooks?: unknown
+    /** The Pages site, or undefined for none. */
+    readonly pages?: unknown
+    /** Each page of the variables listing, in order. */
+    readonly variables?: ReadonlyArray<unknown>
+    /** What a GraphQL query (not a mutation) answers. */
+    readonly query?: unknown
     readonly fail?: (request: RepositoryRequest) => boolean
     readonly failGraphql?: boolean
   } = {},
@@ -61,6 +74,17 @@ const github = (
       if (request.method === 'GET' && request.path.startsWith('/rulesets')) {
         return Effect.as(memory.service.repositoryRequest(request), options.rulesets === undefined ? [] : options.rulesets)
       }
+      if (request.method === 'GET' && request.path.startsWith('/hooks')) {
+        return Effect.as(memory.service.repositoryRequest(request), options.hooks === undefined ? [] : options.hooks)
+      }
+      if (request.path === '/pages' && (request.method === 'GET' || request.method === 'DELETE') && options.pages === undefined) {
+        return Effect.zipRight(memory.service.repositoryRequest(request), Effect.fail(new NotFound({ operation: `${request.method} /pages`, detail: 'Not Found' })))
+      }
+      if (request.method === 'GET' && request.path === '/pages') return Effect.as(memory.service.repositoryRequest(request), options.pages)
+      if (request.method === 'GET' && request.path.startsWith('/actions/variables')) {
+        const page = Number(new URL(request.path, 'https://api.github.com').searchParams.get('page'))
+        return Effect.as(memory.service.repositoryRequest(request), options.variables?.[page - 1] ?? { total_count: 0, variables: [] })
+      }
       if (request.method === 'GET' && request.path.includes('/deployment-branch-policies')) {
         const none = { total_count: 0, branch_policies: [] }
         return Effect.as(memory.service.repositoryRequest(request), options.policies === undefined ? none : options.policies)
@@ -70,7 +94,9 @@ const github = (
     graphql: (query, variables) =>
       options.failGraphql === true
         ? Effect.fail(new ValidationFailed({ operation: 'graphql', detail: 'bad input' }))
-        : memory.service.graphql(query, variables),
+        : query.startsWith('query')
+          ? Effect.as(memory.service.graphql(query, variables), options.query)
+          : memory.service.graphql(query, variables),
   }
   return { service, state: memory.state }
 }
@@ -310,6 +336,228 @@ describe('upsertRuleset', () => {
       }
       const error = yield* Effect.flip(upsertRuleset(body).pipe(Effect.provideService(GitHub, service)))
       expect(error._tag).toBe('NotFound')
+    }),
+  )
+})
+
+describe('grantTeam', () => {
+  const step: TeamStep = {
+    kind: 'team',
+    id: 'team:docs',
+    description: 'Team @Resnovas/docs as write',
+    optional: false,
+    organization: 'Resnovas',
+    slug: 'docs',
+    repositoryId: 'R_1',
+    permission: 'WRITE',
+  }
+
+  it.effect('looks the team up by slug, then grants it the role on the repository', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ query: { organization: { team: { id: 'T_9' } } } })
+      yield* grantTeam(step).pipe(Effect.provideService(GitHub, service))
+      expect(state.graphql).toHaveLength(2)
+      expect(state.graphql[0]?.variables).toStrictEqual({ org: 'Resnovas', slug: 'docs' })
+      expect(state.graphql[1]?.query).toContain('updateTeamsRepository')
+      expect(state.graphql[1]?.variables).toStrictEqual({ repository: 'R_1', team: 'T_9', permission: 'WRITE' })
+    }),
+  )
+
+  it.effect('a missing team or organisation fails with a typed error and grants nothing', () =>
+    Effect.gen(function* () {
+      for (const query of [{ organization: { team: null } }, { organization: null }]) {
+        const { service, state } = github({ query })
+        const error = yield* Effect.flip(grantTeam(step).pipe(Effect.provideService(GitHub, service)))
+        expect(error.message).toBe('team Resnovas/docs: unexpected response (no team docs in Resnovas)')
+        expect(state.graphql).toHaveLength(1)
+      }
+    }),
+  )
+
+  it.effect('an unexpected lookup fails with a typed error', () =>
+    Effect.gen(function* () {
+      const { service } = github({ query: { nope: true } })
+      const error = yield* Effect.flip(grantTeam(step).pipe(Effect.provideService(GitHub, service)))
+      expect(error.message).toBe('team Resnovas/docs: unexpected response (expected an organisation lookup)')
+    }),
+  )
+})
+
+describe('upsertWebhook', () => {
+  const url = 'https://hooks.example.com/x'
+
+  it.effect('creates a missing webhook, listening to push and active by default', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ hooks: [{ id: 3, config: { url: 'https://other.example.com' } }, { id: 4, config: {} }] })
+      yield* upsertWebhook({ url }).pipe(Effect.provideService(GitHub, service))
+      expect(state.requests).toStrictEqual([
+        { method: 'GET', path: '/hooks?per_page=100' },
+        { method: 'POST', path: '/hooks', body: { name: 'web', active: true, events: ['push'], config: { url } } },
+      ])
+    }),
+  )
+
+  it.effect('creates a webhook with its configured events, content type and TLS check', () =>
+    Effect.gen(function* () {
+      const { service, state } = github()
+      yield* upsertWebhook({ url, events: ['release'], active: false, contentType: 'json', insecureSsl: false }).pipe(Effect.provideService(GitHub, service))
+      expect(state.requests[1]?.body).toStrictEqual({ name: 'web', active: false, events: ['release'], config: { url, content_type: 'json', insecure_ssl: '0' } })
+    }),
+  )
+
+  it.effect('updates a webhook with the same URL, patching its config separately so a secret is kept', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ hooks: [{ id: 7, config: { url } }] })
+      yield* upsertWebhook({ url, events: ['push', 'release'], active: true, insecureSsl: true }).pipe(Effect.provideService(GitHub, service))
+      expect(state.requests.slice(1)).toStrictEqual([
+        { method: 'PATCH', path: '/hooks/7', body: { active: true, events: ['push', 'release'] } },
+        { method: 'PATCH', path: '/hooks/7/config', body: { insecure_ssl: '1' } },
+      ])
+    }),
+  )
+
+  it.effect('a webhook that already exists with nothing else configured is left alone', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ hooks: [{ id: 7, config: { url } }] })
+      yield* upsertWebhook({ url }).pipe(Effect.provideService(GitHub, service))
+      expect(state.requests).toHaveLength(1)
+    }),
+  )
+
+  it.effect('an unexpected listing fails with a typed error and writes nothing', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ hooks: { message: 'nope' } })
+      const error = yield* Effect.flip(upsertWebhook({ url }).pipe(Effect.provideService(GitHub, service)))
+      expect(error.message).toBe('GET /hooks: unexpected response (expected a list of webhooks)')
+      expect(state.requests).toHaveLength(1)
+    }),
+  )
+})
+
+describe('ensurePages', () => {
+  const paths = (requests: ReadonlyArray<RepositoryRequest>) => requests.map(({ method, path }) => `${method} ${path}`)
+
+  it.effect('creates a missing site, then sets what only an update takes', () =>
+    Effect.gen(function* () {
+      const { service, state } = github()
+      yield* ensurePages(pagesStep({ buildType: 'legacy', cname: 'example.com' }, publicRepository)).pipe(Effect.provideService(GitHub, service))
+      expect(state.requests).toStrictEqual([
+        { method: 'GET', path: '/pages' },
+        { method: 'POST', path: '/pages', body: { build_type: 'legacy', source: { branch: 'main', path: '/' } } },
+        { method: 'PUT', path: '/pages', body: { cname: 'example.com' } },
+      ])
+    }),
+  )
+
+  it.effect('a created site with nothing else to set gets no update', () =>
+    Effect.gen(function* () {
+      const { service, state } = github()
+      yield* ensurePages(pagesStep({ buildType: 'workflow' }, publicRepository)).pipe(Effect.provideService(GitHub, service))
+      expect(paths(state.requests)).toStrictEqual(['GET /pages', 'POST /pages'])
+    }),
+  )
+
+  it.effect('updates an existing site with what the config sets, and leaves it alone when that is nothing', () =>
+    Effect.gen(function* () {
+      const site = { build_type: 'legacy' }
+      const updated = github({ pages: site })
+      yield* ensurePages(pagesStep({ buildType: 'workflow', httpsEnforced: true }, publicRepository)).pipe(Effect.provideService(GitHub, updated.service))
+      expect(updated.state.requests).toStrictEqual([
+        { method: 'GET', path: '/pages' },
+        { method: 'PUT', path: '/pages', body: { build_type: 'workflow', https_enforced: true } },
+      ])
+      const untouched = github({ pages: site })
+      yield* ensurePages(pagesStep({}, publicRepository)).pipe(Effect.provideService(GitHub, untouched.service))
+      expect(paths(untouched.state.requests)).toStrictEqual(['GET /pages'])
+    }),
+  )
+
+  it.effect('unpublishes a site, and a site that does not exist is already unpublished', () =>
+    Effect.gen(function* () {
+      const existing = github({ pages: {} })
+      yield* ensurePages(pagesStep({ enabled: false }, publicRepository)).pipe(Effect.provideService(GitHub, existing.service))
+      expect(paths(existing.state.requests)).toStrictEqual(['DELETE /pages'])
+      const missing = github()
+      yield* ensurePages(pagesStep({ enabled: false }, publicRepository)).pipe(Effect.provideService(GitHub, missing.service))
+      expect(paths(missing.state.requests)).toStrictEqual(['DELETE /pages'])
+    }),
+  )
+
+  it.effect('any other failure reading the site is surfaced', () =>
+    Effect.gen(function* () {
+      const { service } = github({ fail: (request) => request.path === '/pages' })
+      const error = yield* Effect.flip(ensurePages(pagesStep({}, publicRepository)).pipe(Effect.provideService(GitHub, service)))
+      expect(error._tag).toBe('Forbidden')
+    }),
+  )
+})
+
+describe('checkVariables', () => {
+  const page = (total: number, ...names: ReadonlyArray<string>) => ({ total_count: total, variables: names.map((name) => ({ name })) })
+
+  it.effect('passes when every variable is present, comparing names ignoring case, across pages', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ variables: [page(2, 'DEPLOY_URL'), page(2, 'REGION')] })
+      yield* checkVariables({ deploy_url: 'where it deploys', REGION: '' }).pipe(Effect.provideService(GitHub, service))
+      expect(state.requests.map(({ path }) => path)).toStrictEqual(['/actions/variables?per_page=30&page=1', '/actions/variables?per_page=30&page=2'])
+    }),
+  )
+
+  it.effect('fails with the missing variables, and stops at an empty page', () =>
+    Effect.gen(function* () {
+      const { service, state } = github({ variables: [page(5, 'REGION')] })
+      const error = yield* Effect.flip(checkVariables({ DEPLOY_URL: 'where it deploys', REGION: '', TEAM: '' }).pipe(Effect.provideService(GitHub, service)))
+      expect(error._tag).toBe('MissingVariables')
+      expect(error.message).toBe('missing DEPLOY_URL (where it deploys), TEAM; set them in Settings > Secrets and variables > Actions > Variables')
+      expect(state.requests).toHaveLength(2)
+    }),
+  )
+
+  it.effect('an unexpected listing fails with a typed error', () =>
+    Effect.gen(function* () {
+      const { service } = github({ variables: [{ message: 'nope' }] })
+      const error = yield* Effect.flip(checkVariables({ REGION: '' }).pipe(Effect.provideService(GitHub, service)))
+      expect(error.message).toBe('GET /actions/variables: unexpected response (expected a list of variables)')
+    }),
+  )
+})
+
+describe('applySettings with the new sections', () => {
+  it.effect('writes are changes, a passing variables check is neither applied nor failed, and a missing variable is a warning', () =>
+    Effect.gen(function* () {
+      const settings = {
+        collaborators: { octocat: 'read' as const },
+        teams: { docs: 'write' as const },
+        webhooks: { chat: { url: 'https://hooks.example.com/x' } },
+        pages: { buildType: 'workflow' as const },
+        variables: { REGION: '' },
+      }
+      const passing = github({ query: { organization: { team: { id: 'T_1' } } }, variables: [{ total_count: 1, variables: [{ name: 'REGION' }] }] })
+      const report = yield* makeReport
+      const counts = yield* applySettings(planSettings(settings, undefined, publicRepository)).pipe(
+        Effect.provideService(Report, report),
+        Effect.provideService(GitHub, passing.service),
+      )
+      expect(counts).toStrictEqual({ applied: 4, failed: 0 })
+      const snapshot = yield* report.snapshot
+      expect(snapshot.findings).toStrictEqual([])
+      expect(snapshot.changes.map(({ description }) => description)).toStrictEqual([
+        'Collaborator @octocat as read (invited if not yet a collaborator)',
+        'Team @Resnovas/docs as write',
+        'Webhook "chat" to hooks.example.com',
+        'GitHub Pages built by a workflow',
+      ])
+
+      const missing = github({ query: { organization: { team: { id: 'T_1' } } } })
+      const failed = yield* run(missing.service, planSettings(settings, undefined, publicRepository))
+      expect(failed.findings).toStrictEqual([
+        {
+          feature: 'settings',
+          rule: 'settings.variables',
+          level: 'warning',
+          message: 'Required Actions variables REGION: missing REGION; set it in Settings > Secrets and variables > Actions > Variables',
+        },
+      ])
     }),
   )
 })
