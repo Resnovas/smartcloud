@@ -3,7 +3,7 @@
 # Keeps the committed Graphify graph (graphify-out/graph.json) in step with the
 # code. On pull requests it reports a stale graph without failing; on the
 # default branch it opens a pull request with the rebuilt graph. Uses the same
-# HOUSE_SYNC_APP_ID and HOUSE_SYNC_APP_PRIVATE_KEY secrets as the house sync.
+# ACCESS_TOKEN organisation secret as the house sync.
 name: House graphify
 
 on:
@@ -20,7 +20,6 @@ jobs:
     permissions:
       contents: read
     secrets:
-      app-id: ${{ secrets.HOUSE_SYNC_APP_ID }}
-      app-private-key: ${{ secrets.HOUSE_SYNC_APP_PRIVATE_KEY }}
+      token: ${{ secrets.ACCESS_TOKEN }}
 # house:managed:end
 # house:local - add further jobs below, indented under jobs.
