@@ -24,7 +24,19 @@ export interface Trailer {
   readonly value: string
 }
 
-const TRAILER = /^([A-Za-z][A-Za-z0-9-]*):[ \t]*(\S.*?)\s*$/gm
+// Commit messages come from contributors, so trailers are parsed with plain
+// string operations, never a backtracking regular expression over the text:
+// a crafted message must not be able to stall the check (CodeQL
+// js/polynomial-redos). The key test below only ever sees one short key.
+const KEY = /^[A-Za-z][A-Za-z0-9-]*$/
+
+const parseLine = (line: string): Trailer | undefined => {
+  const colon = line.indexOf(':')
+  if (colon < 1) return undefined
+  const key = line.slice(0, colon)
+  const value = line.slice(colon + 1).trim()
+  return KEY.test(key) && value !== '' ? { key, value } : undefined
+}
 
 /**
  * Parses the `Key: value` trailers of a commit message.
@@ -44,13 +56,22 @@ const TRAILER = /^([A-Za-z][A-Za-z0-9-]*):[ \t]*(\S.*?)\s*$/gm
  * @returns The trailers in the order they appear.
  */
 export const parseTrailers = (message: string): ReadonlyArray<Trailer> => {
-  const paragraphs = message.trim().split(/\n[ \t]*\n/)
-  if (paragraphs.length < 2) return []
-  const last = paragraphs[paragraphs.length - 1] ?? ''
-  return [...last.matchAll(TRAILER)].map(([, key = '', value = '']) => ({ key, value }))
+  const lines = message.trim().split('\n')
+  // The final paragraph starts after the last blank line; a message with no
+  // blank line is a subject alone and has no trailers.
+  let start = -1
+  for (let index = lines.length - 1; index >= 0; index--) {
+    if ((lines[index] ?? '').trim() === '') {
+      start = index + 1
+      break
+    }
+  }
+  if (start === -1) return []
+  return lines.slice(start).flatMap((line) => {
+    const trailer = parseLine(line)
+    return trailer === undefined ? [] : [trailer]
+  })
 }
-
-const IDENTITY = /^(.*?)\s*<([^>]+)>$/
 
 /**
  * Splits a trailer value such as `Jane Doe <jane@example.com>` into a name
@@ -60,8 +81,11 @@ const IDENTITY = /^(.*?)\s*<([^>]+)>$/
  * @returns The identity, or undefined when the value has no `<email>`.
  */
 export const parseIdentity = (value: string): { readonly name: string; readonly email: string } | undefined => {
-  const match = IDENTITY.exec(value)
-  return match ? { name: match[1] ?? '', email: (match[2] ?? '').toLowerCase() } : undefined
+  const trimmed = value.trim()
+  const open = trimmed.lastIndexOf('<')
+  if (open === -1 || !trimmed.endsWith('>')) return undefined
+  const email = trimmed.slice(open + 1, -1)
+  return email === '' || email.includes('>') ? undefined : { name: trimmed.slice(0, open).trim(), email: email.toLowerCase() }
 }
 
 /**

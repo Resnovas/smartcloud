@@ -41,6 +41,27 @@ describe('trailers', () => {
     expect(parseIdentity('no email here')).toBeUndefined()
   })
 
+  it('rejects identities without a well-formed <email>', () => {
+    expect(parseIdentity('Jane <>')).toBeUndefined()
+    expect(parseIdentity('Jane <a>b>')).toBeUndefined()
+    expect(parseIdentity('Jane <jane@example.com')).toBeUndefined()
+    expect(parseIdentity('<jane@example.com>')).toStrictEqual({ name: '', email: 'jane@example.com' })
+  })
+
+  it('keeps only well-formed trailer lines in the final paragraph', () => {
+    expect(parseTrailers('x\n\nFixes: #1\nnot a trailer\nBad Key: x\nEmpty:\n:nokey')).toStrictEqual([{ key: 'Fixes', value: '#1' }])
+  })
+
+  it('parses adversarial messages in linear time (CodeQL js/polynomial-redos)', () => {
+    const spaces = ' '.repeat(50_000)
+    const started = performance.now()
+    parseTrailers(`x\n\nA:!${spaces}`)
+    parseTrailers(`x\n\n${'a'.repeat(50_000)}:${spaces}x`)
+    parseIdentity(`<${'<='.repeat(25_000)}`)
+    parseIdentity(`${spaces}<`)
+    expect(performance.now() - started).toBeLessThan(200)
+  })
+
   it('matches keys without regard to case', () => {
     expect(hasKey({ key: 'SIGNED-OFF-BY', value: '' }, 'signed-off-by')).toBe(true)
     expect(hasKey({ key: 'Signed-off-by', value: '' }, 'co-authored-by')).toBe(false)
