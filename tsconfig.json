@@ -32,6 +32,9 @@
     },
     {
       "path": "./packages/feature.reviews"
+    },
+    {
+      "path": "./packages/feature.labels"
     }
   ]
 }
