@@ -20,6 +20,7 @@ pnpm install
 pnpm nx run-many -t lint typecheck test build   # everything
 pnpm nx affected -t lint typecheck test build   # what a change affects
 pnpm headers                                     # licence header check (pnpm headers:fix to add them)
+pnpm typecheck:tests                             # type-check every test project (Nx skips them)
 ```
 
 ## Adding a package

@@ -182,8 +182,8 @@ describe('migrateV1: edge cases', () => {
   })
 
   it('keeps a label keyed __proto__ as data, so decoding reports it', () => {
-    const input: unknown = JSON.parse('{"labels": {"__proto__": {"name": "x", "color": "111111"}}}')
-    const { config } = migrateV1(typeof input === 'object' && input !== null && !Array.isArray(input) ? input : {})
+    const input: Parameters<typeof migrateV1>[0] = JSON.parse('{"labels": {"__proto__": {"name": "x", "color": "111111"}}}')
+    const { config } = migrateV1(input)
     const labels = config['labels']
     expect(typeof labels === 'object' && labels !== null && Object.hasOwn(labels, '__proto__')).toBe(true)
   })

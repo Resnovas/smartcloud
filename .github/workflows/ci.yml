@@ -41,6 +41,9 @@ jobs:
       - name: Lint, typecheck, test and build affected projects
         run: pnpm nx affected -t lint typecheck test build
 
+      - name: Type-check the tests
+        run: pnpm typecheck:tests
+
       - name: Licence headers
         run: pnpm headers
 

@@ -23,7 +23,7 @@ import type { ConditionGroup } from '@resnovas/conditions'
 import { parseConfig, type ConventionRule, type SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
 import { conventions, describeEvaluation, presetDescription } from '@resnovas/feature.conventions'
-import { GitHubMemory } from '@resnovas/integrations.github'
+import { GitHub, GitHubMemory, makeMemoryGitHub } from '@resnovas/integrations.github'
 
 const pullRequest = (title: string, body: string | null = null) => ({
   action: 'opened',
@@ -126,7 +126,7 @@ describe('conventions feature', () => {
       const report = yield* makeReport
       yield* conventions
         .run({ config: configWith({ title: { preset: 'conventionalCommits' } }), envelope: { kind: 'repository', event: 'push', headSha: 'a' } })
-        .pipe(Effect.provideService(Report, report))
+        .pipe(Effect.provideService(Report, report), Effect.provideService(GitHub, makeMemoryGitHub().service))
       expect((yield* report.snapshot).findings).toStrictEqual([])
     }),
   )
