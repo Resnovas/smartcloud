@@ -66,5 +66,26 @@
     "socials": {
       "github": "https://github.com/Resnovas/smartcloud"
     }
+  },
+  "metadata": {
+    "timestamp": true
+  },
+  "contextual": {
+    "options": [
+      "copy",
+      "view",
+      "download-pdf",
+      "chatgpt",
+      "claude",
+      "perplexity",
+      "grok",
+      "aistudio",
+      "devin",
+      "add-mcp",
+      "cursor",
+      "vscode",
+      "devin-mcp"
+    ],
+    "display": "header"
   }
 }
