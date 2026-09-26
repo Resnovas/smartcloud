@@ -64,15 +64,23 @@ describe('dry run', () => {
         body: { events: ['push'], config: { url } },
       })
       yield* github.repositoryRequest(hook('https://hooks.example.com/services/T0/B0/secret?token=x'))
+      yield* github.repositoryRequest(hook('https://:token@hooks.example.com/'))
+      yield* github.repositoryRequest(hook('https://hooks.example.com/#token'))
       yield* github.repositoryRequest(hook('https://hooks.example.com/'))
       yield* github.repositoryRequest(hook('not a url'))
       const writes = yield* log.writes
-      expect(writes.slice(-3).map((write) => write.details)).toStrictEqual(
-        ['https://hooks.example.com/...', 'https://hooks.example.com/', '[redacted]'].map((url) => ({
+      expect(writes.slice(-5).map((write) => write.details)).toStrictEqual(
+        [
+          'https://hooks.example.com/...',
+          'https://hooks.example.com/...',
+          'https://hooks.example.com/...',
+          'https://hooks.example.com/',
+          '[redacted]',
+        ].map((url) => ({
           request: { method: 'POST', path: '/hooks', body: { events: ['push'], config: { url } } },
         })),
       )
-      expect(writes.slice(0, -3).map((write) => write.operation)).toStrictEqual([
+      expect(writes.slice(0, -5).map((write) => write.operation)).toStrictEqual([
         'createLabel',
         'updateLabel',
         'deleteLabel',

@@ -45,12 +45,12 @@ export class DryRunLog extends Context.Tag('@resnovas/integrations.github/DryRun
   { readonly writes: Effect.Effect<ReadonlyArray<RecordedWrite>> }
 >() {}
 
-// A URL in a request body, such as a webhook's, can carry a token in its path
-// or query, so the recorded copy keeps only its origin.
+// A URL in a request body, such as a webhook's, can carry a token in its
+// userinfo, path, query or fragment, so the recorded copy keeps only its origin.
 const originOnly = (value: string): string => {
   try {
     const url = new URL(value)
-    return url.pathname === '/' && url.search === '' && url.username === '' ? value : `${url.origin}/...`
+    return url.href === `${url.origin}/` ? value : `${url.origin}/...`
   } catch {
     return '[redacted]'
   }
