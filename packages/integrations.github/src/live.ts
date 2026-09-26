@@ -45,6 +45,13 @@ export interface LiveOptions {
    * records the token's own identity and signs the commit.
    */
   readonly committer?: CommitIdentity
+  /**
+   * The token the checks on a commit are read with; defaults to `token`. The
+   * action passes the workflow token, whose `checks: read` and
+   * `statuses: read` the workflow grants, because `token` can be a personal
+   * access token without those scopes.
+   */
+  readonly checksToken?: Redacted.Redacted<string>
 }
 
 // The REST repository fields the settings feature compares against, so it
@@ -82,6 +89,23 @@ const currentSettings = (data: object): Record<string, boolean | string> => {
  * bot) and signs the commit. When the identity GitHub recorded differs from
  * this guess, the commit is made again signed off as that identity, so the
  * sign-off always matches the author and the DCO check passes.
+ * The `external_id` on every check run smartcloud creates, so a reader of a
+ * commit's checks can tell smartcloud's runs from another publisher's run
+ * of the same name.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CHECK_RUN_EXTERNAL_ID"
+ * import { CHECK_RUN_EXTERNAL_ID } from '@resnovas/integrations.github'
+ *
+ * CHECK_RUN_EXTERNAL_ID // => 'smartcloud'
+ * ```
+ */
+export const CHECK_RUN_EXTERNAL_ID = 'smartcloud'
+
+/**
+ * The identity `GITHUB_TOKEN` pushes as. Commits name it as author and
+ * committer explicitly, so the sign-off always matches the author and the
+ * DCO check passes.
  *
  * @example
  * ```ts import.meta.vitest name="DEFAULT_COMMITTER"
@@ -208,15 +232,21 @@ const checkRunCheck = (run: {
   readonly conclusion: string | null
   readonly html_url: string | null
   readonly details_url: string | null
+  readonly external_id: string | null
+  readonly app: { readonly slug?: string | undefined } | null
 }): CommitCheck => {
   const url = run.html_url ?? run.details_url
   const state = run.status !== 'completed' ? 'pending' : PASSING_CONCLUSIONS.has(run.conclusion ?? '') ? 'success' : 'failure'
+  const app = run.app?.slug
   return {
     name: run.name,
     source: 'checkRun',
     id: run.id,
     state,
     detail: run.status === 'completed' ? (run.conclusion ?? 'completed') : run.status,
+    ...(app === undefined ? {} : { app }),
+    // GitHub stores an empty string when a publisher gives none.
+    ...(run.external_id === null || run.external_id === '' ? {} : { externalId: run.external_id }),
     ...(url === null ? {} : { url }),
   }
 }
@@ -266,13 +296,16 @@ const labelName = (label: string | { readonly name?: string | undefined }): stri
  */
 export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubService> =>
   Effect.gen(function* () {
-    const octokit = new Octokit({
-      auth: Redacted.value(options.token),
-      userAgent: 'smartcloud',
-      // Every failure already surfaces as a typed error, so Octokit's own request log would only repeat it.
-      log: { debug: () => undefined, info: () => undefined, warn: console.warn, error: () => undefined },
-      ...(options.fetch === undefined ? {} : { request: { fetch: options.fetch } }),
-    })
+    const client = (token: Redacted.Redacted<string>) =>
+      new Octokit({
+        auth: Redacted.value(token),
+        userAgent: 'smartcloud',
+        // Every failure already surfaces as a typed error, so Octokit's own request log would only repeat it.
+        log: { debug: () => undefined, info: () => undefined, warn: console.warn, error: () => undefined },
+        ...(options.fetch === undefined ? {} : { request: { fetch: options.fetch } }),
+      })
+    const octokit = client(options.token)
+    const checksClient = options.checksToken === undefined ? octokit : client(options.checksToken)
     const { owner, repo } = options.coordinates
     const retry = options.retry ?? DEFAULT_RETRY
 
@@ -626,6 +659,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
               repo,
               name: run.name,
               head_sha: run.headSha,
+              external_id: CHECK_RUN_EXTERNAL_ID,
               status: run.status,
               ...(run.conclusion === undefined ? {} : { conclusion: run.conclusion }),
               output: { title: run.title, summary: run.summary, annotations: annotationsOf(first) },
@@ -657,10 +691,10 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         Effect.all(
           [
             call('listCommitChecks: check runs', () =>
-              octokit.paginate(octokit.rest.checks.listForRef, { owner, repo, ref, filter: 'latest', per_page: 100 }),
+              checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, filter: 'latest', per_page: 100 }),
             ),
             call('listCommitChecks: statuses', () =>
-              octokit.paginate(octokit.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),
+              checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),
             ),
           ],
           { concurrency: 2 },

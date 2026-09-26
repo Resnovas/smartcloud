@@ -213,18 +213,20 @@ describe('live GitHub: pull requests', () => {
 })
 
 describe('live GitHub: checks, files, settings and GraphQL', () => {
-  it.effect('lists the checks on a commit: the latest run of each name and the latest status of each context', () =>
+  it.effect('lists the checks on a commit: the latest run of each name per suite and the latest status of each context', () =>
     Effect.gen(function* () {
       const { service, requests } = live({
         [`GET ${REPO}/commits/abc/check-runs`]: {
           body: {
-            total_count: 5,
+            total_count: 7,
             check_runs: [
-              { id: 1, name: 'ci / test', status: 'completed', conclusion: 'success', html_url: 'https://github.com/r/1', details_url: null },
-              { id: 2, name: 'ci / lint', status: 'completed', conclusion: 'skipped', html_url: null, details_url: 'https://ci/2' },
-              { id: 3, name: 'ci / build', status: 'in_progress', conclusion: null, html_url: null, details_url: null },
-              { id: 4, name: 'ci / docs', status: 'completed', conclusion: 'timed_out', html_url: null, details_url: null },
-              { id: 5, name: 'ci / odd', status: 'completed', conclusion: null, html_url: null, details_url: null },
+              { id: 1, name: 'ci / test', status: 'completed', conclusion: 'success', html_url: 'https://github.com/r/1', details_url: null, external_id: '', app: { slug: 'github-actions' } },
+              { id: 2, name: 'ci / lint', status: 'completed', conclusion: 'skipped', html_url: null, details_url: 'https://ci/2', external_id: null, app: null },
+              { id: 3, name: 'ci / build', status: 'in_progress', conclusion: null, html_url: null, details_url: null, external_id: null, app: {} },
+              { id: 4, name: 'ci / docs', status: 'completed', conclusion: 'timed_out', html_url: null, details_url: null, external_id: null, app: null },
+              { id: 5, name: 'ci / odd', status: 'completed', conclusion: null, html_url: null, details_url: null, external_id: null, app: null },
+              { id: 6, name: 'smartcloud / reviews', status: 'completed', conclusion: 'failure', html_url: null, details_url: null, external_id: 'smartcloud', app: { slug: 'github-actions' } },
+              { id: 7, name: 'ci / test', status: 'completed', conclusion: 'cancelled', html_url: null, details_url: null, external_id: null, app: { slug: 'github-actions' } },
             ],
           },
         },
@@ -240,11 +242,14 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
       })
       const github = yield* service
       expect(yield* github.listCommitChecks('abc')).toStrictEqual([
-        { name: 'ci / test', source: 'checkRun', id: 1, state: 'success', detail: 'success', url: 'https://github.com/r/1' },
+        { name: 'ci / test', source: 'checkRun', id: 1, app: 'github-actions', state: 'success', detail: 'success', url: 'https://github.com/r/1' },
         { name: 'ci / lint', source: 'checkRun', id: 2, state: 'success', detail: 'skipped', url: 'https://ci/2' },
         { name: 'ci / build', source: 'checkRun', id: 3, state: 'pending', detail: 'in_progress' },
         { name: 'ci / docs', source: 'checkRun', id: 4, state: 'failure', detail: 'timed_out' },
         { name: 'ci / odd', source: 'checkRun', id: 5, state: 'failure', detail: 'completed' },
+        { name: 'smartcloud / reviews', source: 'checkRun', id: 6, app: 'github-actions', externalId: 'smartcloud', state: 'failure', detail: 'failure' },
+        // Another suite's run of the same check is listed too; the reader picks the latest.
+        { name: 'ci / test', source: 'checkRun', id: 7, app: 'github-actions', state: 'failure', detail: 'cancelled' },
         { name: 'deploy', source: 'status', state: 'success', detail: 'success', url: 'https://deploy' },
         { name: 'coverage', source: 'status', state: 'failure', detail: 'error' },
         { name: 'preview', source: 'status', state: 'pending', detail: 'pending' },
@@ -254,6 +259,37 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
       // Polled, so never served from the cache.
       yield* github.listCommitChecks('abc')
       expect(requests).toHaveLength(4)
+    }),
+  )
+
+  it.effect('reads the checks on a commit with the checks token, and writes with the main token', () =>
+    Effect.gen(function* () {
+      const fake = fakeFetch({
+        [`GET ${REPO}/commits/abc/check-runs`]: { body: { total_count: 0, check_runs: [] } },
+        [`GET ${REPO}/commits/abc/statuses`]: { body: [] },
+        [`POST ${REPO}/check-runs`]: { status: 201, body: { id: 42 } },
+      })
+      const github = yield* makeLiveGitHub({
+        token: Redacted.make('access-token'),
+        checksToken: Redacted.make('workflow-token'),
+        coordinates: { owner: 'Resnovas', repo: 'example' },
+        fetch: fake.fetch,
+      })
+      expect(yield* github.listCommitChecks('abc')).toStrictEqual([])
+      yield* github.createCheckRun({ name: 'smartcloud / labels', headSha: 'abc', status: 'completed', conclusion: 'success', title: 't', summary: 's' })
+      expect(fake.tokens).toStrictEqual(['workflow-token', 'workflow-token', 'access-token'])
+    }),
+  )
+
+  it.effect('reads the checks on a commit with the main token when no checks token is given', () =>
+    Effect.gen(function* () {
+      const fake = fakeFetch({
+        [`GET ${REPO}/commits/abc/check-runs`]: { body: { total_count: 0, check_runs: [] } },
+        [`GET ${REPO}/commits/abc/statuses`]: { body: [] },
+      })
+      const github = yield* makeLiveGitHub({ token: Redacted.make('test-token'), coordinates: { owner: 'Resnovas', repo: 'example' }, fetch: fake.fetch })
+      yield* github.listCommitChecks('abc')
+      expect(fake.tokens).toStrictEqual(['test-token', 'test-token'])
     }),
   )
 
@@ -294,7 +330,7 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
       expect(requests[6]?.body).not.toHaveProperty('conclusion')
       expect(requests[3]?.body).toMatchObject({ conclusion: 'neutral' })
       expect(requests[4]?.body).not.toHaveProperty('conclusion')
-      expect(requests[0]?.body).toMatchObject({ head_sha: 'abc', status: 'in_progress', output: { title: 't', summary: 's' } })
+      expect(requests[0]?.body).toMatchObject({ head_sha: 'abc', external_id: 'smartcloud', status: 'in_progress', output: { title: 't', summary: 's' } })
       expect(requests[0]?.body).toHaveProperty(['output', 'annotations', '0'], {
         path: 'a.ts',
         start_line: 1,
