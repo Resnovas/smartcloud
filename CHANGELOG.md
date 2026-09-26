@@ -1,9 +1,7 @@
-<!-- @format -->
+# v1 history
 
-# Change Log
-
-All notable changes to this project will be documented in this file.
-See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
+The entries below are smartcloud's v1 history, kept as they were. Nx release adds each v2 release above this heading,
+with the same notes as its GitHub release; see docs/releasing.mdx.
 
 # 0.0.0-alpha.10 (2021-08-06)
 

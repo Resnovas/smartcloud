@@ -12,7 +12,7 @@ The Effect Language Service (`@effect/language-service`) is a TypeScript plugin 
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `packages/<name>` | Libraries. Tag every project with a type (`type_core`, `type_shared`, `type_database`, `type_extension`, `type_platform`) and a layer (`layer_shared`, `layer_backend`, `layer_frontend`) under `tags` in its `project.json`. GitHub API code only in `packages/integrations.github`. |
 | `apps/<name>`     | Platforms: the GitHub Action, the CLI and the MCP server. Their `project.json` sets `projectType: library`, because the test projects import them and Nx forbids importing an application.                                                                                            |
-| `tests/<name>`    | One test project per package, mirroring `packages/<name>/src`. Tagged `type_test`.                                                                                                                                                                                                    |
+| `tests/<name>`    | One test project per package, mirroring `packages/<name>/src`, and `tests/tools` for the release tooling under `tools/release`. Tagged `type_test`.                                                                                                                                   |
 | `tools/`          | Workspace scripts, run with Node's built-in TypeScript support.                                                                                                                                                                                                                       |
 
 ## Commands
@@ -54,11 +54,13 @@ Every exported const, function and class carries a description, a typed `@exampl
 
 ## Releasing
 
-Releases are cut by Nx release from the `release` workflow (Actions, run on `main`); see `docs/releasing.mdx`. Conventional commits since the last `v*` tag decide the version, and the tag is the only record of it: nothing is committed to `main`, whose app versions stay `0.0.0`. The workflow pushes a `v<version>` tag on a release commit that holds `dist/index.js` and the bumped versions, writes the notes to the GitHub release, moves `v<major>`, and publishes `@resnovas/smartcloud` to npm. `CHANGELOG.md` is the v1 history and is no longer written.
+Releases are cut by Nx release from the `release` workflow (Actions, run on `main`); see `docs/releasing.mdx`. Conventional commits since the last `v*` tag decide the version, and the tag is the only record of it: the release commit is never on `main`, whose app versions stay `0.0.0`. The workflow pushes a `v<version>` tag on a release commit that holds `dist/index.js` and the bumped versions, writes the notes to the GitHub release, moves `v<major>`, and publishes `@resnovas/smartcloud` to npm.
+
+The GitHub release holds the main notes. Nx writes the same notes, through `tools/release/changelog-renderer.ts`, to the root `CHANGELOG.md` (v2 releases above the v1 history) and to `CHANGELOG.md` in `apps/action`, `apps/cli` and `apps/mcp`. The workflow's `changelogs` job commits them through the GitHub API as the Resnovas Bot app (a GitHub-signed commit) and opens a `chore(release): changelogs for v<version>` pull request to `main`; merge it before the next release.
 
 - Never run `nx release` without `--dry-run`: the workflow is the only release path, and a local run pushes and creates a GitHub release.
 - The first v2 release has no `v*` tag to count from (v1's tags have no `v`): run the workflow once with `specifier` `2.0.0` and `first-release` ticked. Every later release leaves both empty.
-- Preview a release with `pnpm release:dry-run` (add `--first-release --specifier 2.0.0` before the first release), or run the workflow with `dry-run` ticked (the default).
+- Preview a release, with its notes and the change to each changelog file, with `pnpm release:dry-run` (add `--first-release --specifier 2.0.0` before the first release), or run the workflow with `dry-run` ticked (the default).
 
 ## Commits and pull requests
 

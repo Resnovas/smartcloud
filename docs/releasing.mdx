@@ -1,6 +1,6 @@
 ---
-title: "Releasing"
-description: "How a smartcloud release is cut with Nx release, and how the first v2 release differs."
+title: 'Releasing'
+description: 'How a smartcloud release is cut with Nx release, and how the first v2 release differs.'
 ---
 
 smartcloud is released by [Nx release](https://nx.dev/docs/features/manage-releases), from the `release` workflow in `.github/workflows/release.yml`. A maintainer starts it by hand from the Actions tab, on `main`.
@@ -13,27 +13,44 @@ The GitHub Action, the CLI and the MCP server (`@resnovas/action`, `@resnovas/sm
 2. Nx writes the new version to the three apps' `package.json` files, and the action is bundled into `dist/index.js` from that source.
 3. The workflow commits both, removes the vendored `externals/` directory (every run of the action downloads the whole tagged tree), and signs the commit off as `github-actions[bot]`. The commit is on no branch: its parent is the head of `main`.
 4. Only the `v<version>` tag is pushed. `main` never receives a release commit or the bundle, so no branch protection is bypassed.
-5. Nx writes the release notes to a GitHub release on the tag, and the `v<major>` tag moves to it, which is what workflows pin.
-6. A second job checks out the tag, rebuilds the action and stops unless the bundle matches the tagged one. It then bundles the CLI and MCP server, with the released version stamped in, and publishes `@resnovas/smartcloud` to npm with provenance, through trusted publishing.
+5. Nx writes the release notes to a GitHub release on the tag, and the `v<major>` tag moves to it, which is what workflows pin. It writes the same notes to the changelog files, below.
+6. The `changelogs` job opens a pull request that brings the changelog files to `main`.
+7. A last job checks out the tag, rebuilds the action and stops unless the bundle matches the tagged one. It then bundles the CLI and MCP server, with the released version stamped in, and publishes `@resnovas/smartcloud` to npm with provenance, through trusted publishing.
 
 Every bundle is built with a source map. Before the action's bundle is committed, and before the CLI and MCP server are published, `tools/release/sourcemaps.ts` has [PostHog's CLI](https://posthog.com/docs/error-tracking/upload-source-maps/cli) inject a chunk id into the bundle and upload its map to [error tracking](telemetry#what-is-collected) as the release `smartcloud@<version>`, then deletes the map. Neither the tag nor the npm package ships a map: the tagged tree is downloaded by every run of the action, and PostHog resolves stack traces from its own copy. The maps name sources relative to the bundle, never a path on the machine that built it.
 
-The tag is the only record of the current version: the apps' versions on `main` stay `0.0.0`, and a local build reports `0.0.0`. The notes live on the GitHub release; `CHANGELOG.md` holds the v1 history and is no longer written.
+The tag is the only record of the current version: the apps' versions on `main` stay `0.0.0`, and a local build reports `0.0.0`.
+
+## Release notes and changelogs
+
+The GitHub release on each tag holds the main release notes. Nx writes the same notes, rendered by `tools/release/changelog-renderer.ts` (Nx's default renderer with its emoji replaced by words), to:
+
+| File                                                                         | What it holds                                                                                                              |
+| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `CHANGELOG.md`                                                               | Every change in the release. v2 releases go above the `v1 history` heading, and the v1 entries below it stay as they were. |
+| `apps/action/CHANGELOG.md`, `apps/cli/CHANGELOG.md`, `apps/mcp/CHANGELOG.md` | The changes that touch that app. The three share a version, so an app with no changes gets a line saying so.               |
+
+The libraries under `packages/` get no changelog of their own: they are never published, and their changes appear under the apps that bundle them.
+
+The release commit is never on `main`, and `main` takes changes only through pull requests, with signed commits, through the merge queue. So the `changelogs` job, after the release job has tagged and released, commits the files to a `release/changelogs-v<version>` branch through the GitHub API as the Resnovas Bot app, which makes GitHub sign the commit, and opens a pull request titled `chore(release): changelogs for v<version>`. The commit is signed off by the app's bot account for the DCO check, and the house preset trusts that account. Review and merge it like any other pull request, before the next release: each release adds its entry to the files as `main` holds them.
+
+The job mints the app's token itself and runs none of the repository's code or dependencies; the release job, which installs and runs them, hands it the files as an artifact and never sees the app's key. If the pull request cannot be opened, the files stay in the run's `changelogs` artifact for a week.
 
 ## Running a release
 
 Open **Actions**, choose **release**, then **Run workflow** on `main`.
 
-| Input | Use |
-| --- | --- |
-| `dry-run` | Ticked by default. Prints the version and the release notes, and builds the bundle, without tagging, releasing or publishing. |
-| `specifier` | Leave empty to follow the commits. Otherwise an exact version (`2.1.0`) or a bump (`major`, `minor`, `patch`). |
-| `first-release` | Only for the first v2 release, below. |
+| Input           | Use                                                                                                                                                              |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dry-run`       | Ticked by default. Prints the version, the release notes and the change to each changelog file, and builds the bundle, without tagging, releasing or publishing. |
+| `specifier`     | Leave empty to follow the commits. Otherwise an exact version (`2.1.0`) or a bump (`major`, `minor`, `patch`).                                                   |
+| `first-release` | Only for the first v2 release, below.                                                                                                                            |
 
 Run it once as a dry run, check the notes, then run it again with `dry-run` cleared. When no commit since the last tag calls for a release, the workflow says so and stops.
 
 <Warning>
-Do not run `nx release` locally except with `--dry-run`. Nx is configured to create the GitHub release, so a real local run pushes and publishes notes against whatever is checked out.
+  Do not run `nx release` locally except with `--dry-run`. Nx is configured to create the GitHub release, so a real
+  local run pushes and publishes notes against whatever is checked out.
 </Warning>
 
 ## The first v2 release
@@ -54,5 +71,6 @@ pnpm release:dry-run --first-release --specifier 2.0.0
 ## Before the first release
 
 - Add a repository secret named `POSTHOG_CLI_TOKEN`: a PostHog [personal API key](https://eu.posthog.com/settings/user-api-keys) with the `error tracking write` and `organization read` scopes, for the Smartcloud project (285077) in PostHog's EU cloud. The workflow passes it to PostHog's CLI as `POSTHOG_CLI_API_KEY`. Without it the maps are still deleted, but none is uploaded, so errors from that release show bundle lines rather than source lines. A dry run never uploads.
+- The `changelogs` job authenticates as the Resnovas Bot GitHub app (`resnovas-smartcloud`), from the organisation variable `RESNOVAS_BOT_APP_ID` and secret `RESNOVAS_BOT_PRIVATE_KEY`. The app must be installed on this repository with contents and pull requests write access. A real release stops before tagging when either is missing.
 - The workflow pushes tags with its own token. If a tag ruleset protects `v*`, let GitHub Actions bypass it for tag creation and updates.
 - Trusted publishing needs `@resnovas/smartcloud` on npm to trust this repository's `release.yml` workflow.

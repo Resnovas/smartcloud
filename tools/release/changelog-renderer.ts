@@ -14,15 +14,23 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-// Renders the release notes Nx release writes to each GitHub release.
+// Renders the release notes Nx release writes to each GitHub release, to the
+// workspace CHANGELOG.md and to each app's CHANGELOG.md.
 //
 // Nx's default renderer, with its emoji headings and markers replaced by
-// words, for the house style. nx.json points release.changelog at this file.
+// words, for the house style. nx.json points release.changelog's workspace and
+// project changelogs at this file.
 
-import renderer, { type ChangelogChange } from 'nx/release/changelog-renderer'
+import { createRequire } from 'node:module'
+import type renderer from 'nx/release/changelog-renderer'
+import type { ChangelogChange } from 'nx/release/changelog-renderer'
 
-// The module is CommonJS, so from ESM its default export sits on the namespace's default.
-const DefaultChangelogRenderer = renderer.default
+// The module is CommonJS. Node's ESM loader and Vitest disagree on where its
+// default export lands on a default import, so it is required, which both load
+// the same way.
+const { default: DefaultChangelogRenderer } = createRequire(import.meta.url)(
+  'nx/release/changelog-renderer',
+) as typeof renderer
 
 // The warning sign Nx puts before a breaking change, written as escapes.
 const BREAKING_MARKER = '\u26a0\ufe0f  '

@@ -1,0 +1,7 @@
+{
+  "name": "@resnovas/tools-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tests/tools/src",
+  "tags": ["type_test", "layer_shared"]
+}
