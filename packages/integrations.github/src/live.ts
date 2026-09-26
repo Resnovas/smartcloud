@@ -416,6 +416,9 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         )
         // A branch already holding exactly these changes on this base is left
         // alone, so a scheduled run does not push an identical commit each time.
+        // Without a named committer the commit must also be signed: an unsigned
+        // tip (pushed by someone else, or before the token could sign) is made
+        // again, so the pull request passes a signed-commits rule.
         const current =
           branchSha === undefined
             ? undefined
@@ -425,7 +428,8 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         const upToDate =
           current !== undefined &&
           current.tree.sha === tree.data.sha &&
-          current.parents.map((parent) => parent.sha).join(' ') === baseSha
+          current.parents.map((parent) => parent.sha).join(' ') === baseSha &&
+          (options.committer !== undefined || current.verification.verified)
         if (!upToDate) {
           const commit = yield* commitChanges(proposal.title, tree.data.sha, baseSha)
           yield* branchSha === undefined

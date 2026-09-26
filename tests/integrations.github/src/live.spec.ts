@@ -453,18 +453,44 @@ describe('live GitHub: proposing changes', () => {
     }),
   )
 
-  it.effect('leaves a branch that already holds the same changes on the same base', () =>
+  const sameChanges = (verified: boolean): Routes => ({
+    ...baseRoutes,
+    [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { body: { object: { sha: 'old-commit' } } },
+    [`GET ${REPO}/git/commits/old-commit`]: {
+      body: { sha: 'old-commit', tree: { sha: 'new-tree' }, parents: [{ sha: 'base' }], verification: { verified } },
+    },
+    [`PATCH ${REPO}/git/refs/heads/smartcloud/sync`]: { body: {} },
+    [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'u' }] },
+    [`PATCH ${REPO}/pulls/9`]: { body: {} },
+  })
+
+  it.effect('leaves a signed branch that already holds the same changes on the same base', () =>
     Effect.gen(function* () {
-      const { service, requests } = live({
-        ...baseRoutes,
-        [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { body: { object: { sha: 'old-commit' } } },
-        [`GET ${REPO}/git/commits/old-commit`]: { body: { sha: 'old-commit', tree: { sha: 'new-tree' }, parents: [{ sha: 'base' }] } },
-        [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'u' }] },
-        [`PATCH ${REPO}/pulls/9`]: { body: {} },
-      })
+      const { service, requests } = live(sameChanges(true))
       expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
       expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(false)
       expect(requests.some((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))).toBe(false)
+    }),
+  )
+
+  it.effect('makes an unsigned branch again as the token, even when it holds the same changes', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live(sameChanges(false))
+      expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
+      expect(requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toHaveLength(1)
+      expect(requests.find((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))?.body).toStrictEqual({
+        sha: 'new-commit',
+        force: true,
+      })
+    }),
+  )
+
+  it.effect('leaves an unsigned branch with the same changes when a committer is named, whose commits are never signed', () =>
+    Effect.gen(function* () {
+      const bot = { name: 'smartcloud[bot]', email: '1+smartcloud[bot]@users.noreply.github.com' }
+      const { service, requests } = live(sameChanges(false), bot)
+      expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
+      expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(false)
     }),
   )
 
