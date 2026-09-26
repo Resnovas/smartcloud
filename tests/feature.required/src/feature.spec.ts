@@ -18,7 +18,7 @@ import { describe, expect, it } from '@effect/vitest'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
 import { FEATURE, POLL_INTERVAL, requiredFeature } from '@resnovas/feature.required'
-import { type CommitCheck, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { CHECK_RUN_EXTERNAL_ID, type CommitCheck, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
 import { Duration, Effect, Fiber, TestClock } from 'effect'
 
 const SHA = 'abc123'
@@ -39,7 +39,7 @@ const payload = {
   },
 }
 
-const self: CommitCheck = { name: 'smartcloud', source: 'checkRun', id: SELF, state: 'pending', detail: 'in_progress' }
+const self: CommitCheck = { name: 'smartcloud', source: 'checkRun', id: SELF, app: 'github-actions', state: 'pending', detail: 'in_progress' }
 const check = (
   name: string,
   state: CommitCheck['state'],
@@ -213,7 +213,7 @@ describe('requiredFeature', () => {
     Effect.gen(function* () {
       const github = scripted([
         [
-          check('smartcloud / reviews', 'failure'),
+          { ...check('smartcloud / reviews', 'failure'), externalId: CHECK_RUN_EXTERNAL_ID },
           check('codecov/patch', 'failure'),
           { name: 'smartcloud / legacy', source: 'status', state: 'success', detail: 'success' },
         ],
@@ -222,6 +222,18 @@ describe('requiredFeature', () => {
       expect(findings(result).map((finding) => finding.message)).toStrictEqual([
         'All 1 other check(s) on this commit passed.',
       ])
+    }),
+  )
+
+  it.effect('passes beside another run of the aggregate and a stale run of a check, and fails on a foreign smartcloud-named run', () =>
+    Effect.gen(function* () {
+      const other = { ...self, id: SELF + 1 }
+      const stale = { ...check('ci / test', 'failure', 'cancelled'), id: 1, app: 'github-actions' }
+      const latest = { ...check('ci / test', 'success'), id: 2, app: 'github-actions' }
+      const passing = yield* runPolling(scripted([[other, stale, latest]]))
+      expect(findings(passing).map((finding) => finding.message)).toStrictEqual(['All 1 other check(s) on this commit passed.'])
+      const foreign = yield* runPolling(scripted([[other, check('smartcloud / reviews', 'failure')]]))
+      expect(findings(foreign).map((finding) => finding.message)).toStrictEqual(['The smartcloud / reviews check concluded failure.'])
     }),
   )
 

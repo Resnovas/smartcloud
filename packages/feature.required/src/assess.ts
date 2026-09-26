@@ -15,12 +15,12 @@
  */
 
 import { compilePattern } from '@resnovas/conditions'
-import type { CommitCheck } from '@resnovas/integrations.github'
+import { CHECK_RUN_EXTERNAL_ID, type CommitCheck } from '@resnovas/integrations.github'
 
 /**
  * How the check runs smartcloud publishes for its features are named. They
  * report the run the aggregate belongs to, whose own job check already
- * carries their outcome, so they never count.
+ * carries their outcome, so the ones smartcloud published never count.
  *
  * @example
  * ```ts import.meta.vitest name="OWN_CHECK_PREFIX"
@@ -39,10 +39,59 @@ export interface Assessment {
   readonly failed: ReadonlyArray<CommitCheck>
 }
 
+// A check run is identified as a ruleset identifies a required check: by the
+// app that published it and its name.
+const identity = (check: CommitCheck) => `${check.app ?? ''}\u0000${check.name}`
+
 /**
- * Sorts a commit's checks into pending and failed, leaving out the job
- * running the aggregate, smartcloud's own feature checks, and every check an
- * `ignore` pattern matches.
+ * Keeps the latest check run of each app and name, and every status.
+ *
+ * @remarks
+ * A commit lists a check run per check suite, so a re-run or a workflow
+ * retriggered by an edit or a review leaves older runs of the same check
+ * beside the new one, often cancelled or failed. Only the latest, the one
+ * with the highest id, stands for the check, as it does for a ruleset's
+ * required check of that name. Statuses are already one per context.
+ *
+ * @example
+ * ```ts import.meta.vitest name="latestChecks"
+ * import { latestChecks } from '@resnovas/feature.required'
+ *
+ * const latest = latestChecks([
+ *   { name: 'test', source: 'checkRun', id: 1, app: 'github-actions', state: 'failure', detail: 'cancelled' },
+ *   { name: 'test', source: 'checkRun', id: 2, app: 'github-actions', state: 'success', detail: 'success' },
+ * ])
+ * latest.length // => 1
+ * latest[0]?.detail // => 'success'
+ * ```
+ *
+ * @param checks - The commit's checks, as `listCommitChecks` returns them.
+ * @returns The latest run of each check, in the order GitHub listed them.
+ */
+export const latestChecks = (checks: ReadonlyArray<CommitCheck>): ReadonlyArray<CommitCheck> => {
+  const latest = new Map<string, CommitCheck>()
+  for (const check of checks) {
+    if (check.source !== 'checkRun') continue
+    const seen = latest.get(identity(check))
+    if (seen === undefined || (check.id ?? 0) > (seen.id ?? 0)) latest.set(identity(check), check)
+  }
+  return checks.filter((check) => check.source !== 'checkRun' || latest.get(identity(check)) === check)
+}
+
+/**
+ * Sorts a commit's checks into pending and failed, counting only the latest
+ * run of each check and leaving out every run of the job running the
+ * aggregate, smartcloud's own feature checks, and every check an `ignore`
+ * pattern matches.
+ *
+ * @remarks
+ * The job's own check run is found by `checkRunId`; every run with its app
+ * and name is another run of the aggregate, such as one started by a
+ * review while this one waits, and is left out too, so two aggregates on
+ * one commit never wait for each other. A `smartcloud / <feature>` run is
+ * left out only when smartcloud published it, as its
+ * {@link CHECK_RUN_EXTERNAL_ID} shows; another publisher's run of that name
+ * counts.
  *
  * @example
  * ```ts import.meta.vitest name="assessChecks"
@@ -50,8 +99,9 @@ export interface Assessment {
  *
  * const assessment = assessChecks(
  *   [
- *     { name: 'smartcloud', source: 'checkRun', id: 7, state: 'pending', detail: 'in_progress' },
- *     { name: 'ci / test', source: 'checkRun', id: 8, state: 'failure', detail: 'failure' },
+ *     { name: 'smartcloud', source: 'checkRun', id: 7, app: 'github-actions', state: 'pending', detail: 'in_progress' },
+ *     { name: 'smartcloud', source: 'checkRun', id: 5, app: 'github-actions', state: 'pending', detail: 'in_progress' },
+ *     { name: 'ci / test', source: 'checkRun', id: 8, app: 'github-actions', state: 'failure', detail: 'failure' },
  *     { name: 'codecov/patch', source: 'status', state: 'pending', detail: 'pending' },
  *   ],
  *   { checkRunId: 7, ignore: ['^codecov/'] },
@@ -69,10 +119,14 @@ export const assessChecks = (
   options: { readonly checkRunId: number; readonly ignore: ReadonlyArray<string> },
 ): Assessment => {
   const ignored = options.ignore.map(compilePattern)
-  const counted = checks.filter(
+  const own = checks.find((check) => check.source === 'checkRun' && check.id === options.checkRunId)
+  const aggregate = (check: CommitCheck) =>
+    check.id === options.checkRunId || (own !== undefined && check.source === 'checkRun' && identity(check) === identity(own))
+  const smartcloudFeature = (check: CommitCheck) =>
+    check.source === 'checkRun' && check.name.startsWith(OWN_CHECK_PREFIX) && check.externalId === CHECK_RUN_EXTERNAL_ID
+  // Smartcloud's runs go first, so one never stands in for a same-named run another workflow published.
+  const counted = latestChecks(checks.filter((check) => !aggregate(check) && !smartcloudFeature(check))).filter(
     (check) =>
-      check.id !== options.checkRunId &&
-      !(check.source === 'checkRun' && check.name.startsWith(OWN_CHECK_PREFIX)) &&
       !ignored.some((pattern) => {
         // A global or sticky pattern moves lastIndex after a hit, so every name starts from 0.
         pattern.lastIndex = 0

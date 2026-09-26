@@ -105,9 +105,10 @@ const linked = (check: CommitCheck) => (check.url === undefined ? {} : { link: c
  * Runs on pull request events when the config has a `required` section and
  * the workflow passes the job's `checkRunId`; without it the job would wait
  * for itself, so the feature is skipped. It looks at the head commit's
- * latest check runs and statuses every {@link POLL_INTERVAL}, leaving out
- * its own job, smartcloud's per-feature checks and `required.ignore`
- * matches. Success, neutral and skipped pass. It fails as soon as any check
+ * latest run of each check and latest status of each context every
+ * {@link POLL_INTERVAL}, leaving out every run of its own job,
+ * smartcloud's per-feature checks and `required.ignore` matches (see
+ * `assessChecks`). Success, neutral and skipped pass. It fails as soon as any check
  * fails, passes once every check has passed on two looks in a row, and
  * fails the checks still pending after `required.timeout` minutes. Each
  * failed or unfinished check is an error finding, which fails the job.
