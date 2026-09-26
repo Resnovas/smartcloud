@@ -1,0 +1,20 @@
+{
+  "name": "@resnovas/feature.conventions-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "nx": {
+    "tags": [
+      "type_test",
+      "layer_backend"
+    ]
+  },
+  "devDependencies": {
+    "@resnovas/feature.conventions": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/conditions": "workspace:*",
+    "@resnovas/config": "workspace:*",
+    "gitmojis": "^3.15.0"
+  }
+}
