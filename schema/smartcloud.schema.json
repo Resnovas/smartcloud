@@ -1508,6 +1508,7 @@
                 },
                 "mergeMethods": {
                   "type": "array",
+                  "minItems": 1,
                   "items": {
                     "type": "string",
                     "enum": [
@@ -1847,11 +1848,6 @@
         }
       },
       "additionalProperties": false
-    },
-    "Int": {
-      "type": "integer",
-      "description": "an integer",
-      "title": "int"
     },
     "Sync": {
       "type": "object",

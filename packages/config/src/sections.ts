@@ -354,7 +354,7 @@ export const Settings = Schema.Struct({
           conversationResolution: opt(Schema.Boolean),
           /** One more approval when Copilot opens a pull request on no one's behalf. */
           extraApprovalForUnattributedCopilot: opt(Schema.Boolean),
-          mergeMethods: opt(Schema.Array(Schema.Literal('squash', 'rebase', 'merge'))),
+          mergeMethods: opt(Schema.NonEmptyArray(Schema.Literal('squash', 'rebase', 'merge'))),
         }),
       ),
       /** Required status checks, keyed by check context so presets and repositories merge them. */

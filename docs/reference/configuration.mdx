@@ -308,7 +308,7 @@ Type: number.
 | `ruleset.pullRequest.lastPushApproval` | boolean | no |  |
 | `ruleset.pullRequest.conversationResolution` | boolean | no |  |
 | `ruleset.pullRequest.extraApprovalForUnattributedCopilot` | boolean | no |  |
-| `ruleset.pullRequest.mergeMethods` | list of one of `squash`, `rebase`, `merge` | no |  |
+| `ruleset.pullRequest.mergeMethods` | list of one of `squash`, `rebase`, `merge` | no | At least 1 item(s). |
 | `ruleset.statusChecks` | object | no |  |
 | `ruleset.statusChecks.checks` | map of string to boolean | no |  |
 | `ruleset.statusChecks.strict` | boolean | no |  |
@@ -351,10 +351,6 @@ Type: number.
 | `variables` | map of string to string | no | Keys match `^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$`. |
 
 Other keys are an error.
-
-### Int
-
-Type: integer.
 
 ### Sync
 
