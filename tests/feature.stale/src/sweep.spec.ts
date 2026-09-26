@@ -269,6 +269,49 @@ describe('stale feature: marking', () => {
     }),
   )
 
+  it.effect('exempts by the assignees in the listing, and loads requested reviewers for pull requests', () =>
+    Effect.gen(function* () {
+      const github = memory([
+        item(1, { updatedAt: daysAgo(40), assignees: ['ann'] }),
+        item(2, { updatedAt: daysAgo(40), assignees: [] }),
+        item(3, { updatedAt: daysAgo(40), isPullRequest: true }),
+        item(4, { updatedAt: daysAgo(40), isPullRequest: true }),
+      ])
+      for (const [number, requestedReviewers] of [
+        [3, ['security']],
+        [4, []],
+      ] as const) {
+        github.state.pulls.set(number, {
+          commits: [],
+          files: [],
+          reviews: [],
+          requestedReviewers: [...requestedReviewers],
+          submittedReviews: [],
+        })
+      }
+      const result = yield* sweep(
+        {
+          version: 2,
+          stale: {
+            ...settings,
+            exempt: {
+              when: {
+                requires: 1,
+                condition: [
+                  { type: 'hasAssignee', condition: true },
+                  { type: 'reviewerMatches', condition: '^security$' },
+                ],
+              },
+            },
+          },
+        },
+        github,
+      )
+      expect([1, 2, 3, 4].map((number) => labelsOf(github, number))).toStrictEqual([[], ['stale'], [], ['stale']])
+      expect(result.findings).toStrictEqual([])
+    }),
+  )
+
   it.effect('warns once when exempt.when needs pull request details a sweep cannot read, and skips pull requests', () =>
     Effect.gen(function* () {
       const github = memory([

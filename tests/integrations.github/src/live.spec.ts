@@ -178,6 +178,7 @@ describe('live GitHub: issues and comments', () => {
               state: 'open',
               locked: true,
               labels: [],
+              assignees: [{ login: 'ann' }, { login: 'bo' }],
               updated_at: '2026-01-02T00:00:00Z',
               pull_request: {},
             },
@@ -190,6 +191,7 @@ describe('live GitHub: issues and comments', () => {
               state: 'open',
               locked: false,
               labels: [],
+              assignees: null,
               updated_at: '2026-01-03T00:00:00Z',
             },
           ],
@@ -205,6 +207,7 @@ describe('live GitHub: issues and comments', () => {
           open: true,
           locked: false,
           labels: ['bug', 'stale', ''],
+          assignees: [],
           updatedAt: new Date('2026-01-01T00:00:00Z'),
           isPullRequest: false,
         },
@@ -218,6 +221,7 @@ describe('live GitHub: issues and comments', () => {
           open: true,
           locked: true,
           labels: [],
+          assignees: ['ann', 'bo'],
           updatedAt: new Date('2026-01-02T00:00:00Z'),
           isPullRequest: true,
         },
@@ -230,6 +234,7 @@ describe('live GitHub: issues and comments', () => {
           open: true,
           locked: false,
           labels: [],
+          assignees: [],
           updatedAt: new Date('2026-01-03T00:00:00Z'),
           isPullRequest: false,
         },
@@ -258,7 +263,9 @@ describe('live GitHub: pull requests', () => {
         { user: null, state: 'SOMETHING_NEW' },
       ],
     },
-    [`GET ${REPO}/pulls/7/requested_reviewers`]: { body: { users: [{}], teams: [{}, {}] } },
+    [`GET ${REPO}/pulls/7/requested_reviewers`]: {
+      body: { users: [{ login: 'ann' }], teams: [{ slug: 'security' }, { slug: 'docs' }] },
+    },
     [`POST ${REPO}/pulls/7/reviews`]: { body: {} },
     [`POST ${REPO}/pulls/7/requested_reviewers`]: { status: 201, body: {} },
   }
@@ -278,11 +285,13 @@ describe('live GitHub: pull requests', () => {
         { author: '', state: 'COMMENTED' },
       ])
       expect(yield* github.countRequestedReviewers(7)).toBe(3)
+      expect(yield* github.listRequestedReviewers(7)).toStrictEqual(['ann', 'security', 'docs'])
       yield* github.listCommits(7)
       yield* github.listFiles(7)
       yield* github.listReviews(7)
       yield* github.countRequestedReviewers(7)
-      expect(requests).toHaveLength(4)
+      yield* github.listRequestedReviewers(7)
+      expect(requests).toHaveLength(5)
     }),
   )
 

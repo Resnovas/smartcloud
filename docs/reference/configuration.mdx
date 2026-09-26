@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -435,6 +435,28 @@ The author's association with the repository is one of these, or the author is a
 
 Other keys are an error.
 
+### hasAssignee
+
+Someone is assigned, or nobody is when false.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `hasAssignee` | yes |  |
+| `condition` | boolean | yes |  |
+
+Other keys are an error.
+
+### assigneeMatches
+
+An assignee's login matches a pattern.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `assigneeMatches` | yes |  |
+| `condition` | [Pattern](#pattern) | yes |  |
+
+Other keys are an error.
+
 ### isOpen
 
 The subject is open, or closed when false.
@@ -487,6 +509,17 @@ A reviewer's latest review requests changes.
 | --- | --- | --- | --- |
 | `type` | `requestedChanges` | yes |  |
 | `condition` | boolean | yes |  |
+
+Other keys are an error.
+
+### reviewerMatches
+
+A requested reviewer's login or team slug, or a reviewer's login, matches a pattern.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `reviewerMatches` | yes |  |
+| `condition` | [Pattern](#pattern) | yes |  |
 
 Other keys are an error.
 

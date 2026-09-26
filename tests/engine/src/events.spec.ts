@@ -45,6 +45,7 @@ describe('decodeEvent', () => {
             open: true,
             locked: false,
             labels: ['bug'],
+            assignees: ['jane', 'ann'],
             updatedAt: new Date('2026-09-01T00:00:00Z'),
             draft: true,
             headBranch: 'feat/labels',
@@ -93,6 +94,15 @@ describe('decodeEvent', () => {
         expect(envelope).not.toHaveProperty('subject.association')
       },
     ),
+  )
+
+  it.effect('reads no assignees when the payload has none or leaves them out', () =>
+    Effect.gen(function* () {
+      expect(yield* decodeEvent('issues', issuePayload)).toMatchObject({ subject: { assignees: [] } })
+      expect(yield* decodeEvent('issues', { issue: { ...issuePayload.issue, assignees: null } })).toMatchObject({
+        subject: { assignees: [] },
+      })
+    }),
   )
 
   it.effect('issues and issue comments become an issue subject', () =>

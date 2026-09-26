@@ -16,6 +16,7 @@
 
 export { compilePattern, Pattern } from './pattern.js'
 export {
+  AssigneeMatches,
   AuthorAssociation,
   BaseBranchMatches,
   BranchMatches,
@@ -29,6 +30,7 @@ export {
   CreatorMatches,
   DescriptionMatches,
   FilesMatch,
+  HasAssignee,
   HasConflict,
   HasLabel,
   HasTrailer,
@@ -40,6 +42,7 @@ export {
   IsStale,
   PendingReview,
   RequestedChanges,
+  ReviewerMatches,
   TitleMatches,
 } from './schema.js'
 export type { And, LeafCondition, Not, Only, Or } from './schema.js'

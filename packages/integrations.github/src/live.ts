@@ -457,6 +457,13 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         octokit.rest.pulls.listRequestedReviewers({ owner, repo, pull_number }),
       ).pipe(Effect.map(({ data }) => data.users.length + data.teams.length))
 
+    const listRequestedReviewers: GitHubService['listRequestedReviewers'] = (pull_number) =>
+      call('listRequestedReviewers', () =>
+        octokit.rest.pulls.listRequestedReviewers({ owner, repo, pull_number }),
+      ).pipe(
+        Effect.map(({ data }) => [...data.users.map((user) => user.login), ...data.teams.map((team) => team.slug)]),
+      )
+
     // Reading the pull request starts GitHub's mergeability job, so a read that finds it unknown is repeated for a while.
     const getMergeable: GitHubService['getMergeable'] = (pull_number) =>
       call('getMergeable', () => octokit.rest.pulls.get({ owner, repo, pull_number })).pipe(
@@ -799,6 +806,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             open: issue.state === 'open',
             locked: issue.locked,
             labels: issue.labels.map(labelName),
+            assignees: (issue.assignees ?? []).map((user) => user.login),
             updatedAt: new Date(issue.updated_at),
             isPullRequest: issue.pull_request !== undefined,
           })),
@@ -812,6 +820,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       listFiles,
       listReviews,
       countRequestedReviewers,
+      listRequestedReviewers,
       getMergeable,
       listChecks,
       createReview: (pull_number, review) =>
