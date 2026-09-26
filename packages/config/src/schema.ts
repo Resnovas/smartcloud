@@ -121,6 +121,109 @@ export const LabelRule = Schema.Struct({
 export type LabelRule = typeof LabelRule.Type
 
 /**
+ * The line counts at which a pull request stops being one size and becomes
+ * the next, used when `sizeLabels.thresholds` leaves a size out.
+ *
+ * @remarks
+ * A pull request of fewer than `s` changed lines is XS, fewer than `m` is S,
+ * and so on; `xl` lines or more is XL. Changed lines are additions plus
+ * deletions.
+ *
+ * @example
+ * ```ts import.meta.vitest name="SIZE_THRESHOLDS"
+ * import { SIZE_THRESHOLDS } from '@resnovas/config'
+ *
+ * SIZE_THRESHOLDS.m // => 100
+ * ```
+ */
+export const SIZE_THRESHOLDS = { s: 10, m: 100, l: 500, xl: 1000 } as const
+
+/** The size thresholds, every one filled in. */
+export interface SizeThresholds {
+  readonly s: number
+  readonly m: number
+  readonly l: number
+  readonly xl: number
+}
+
+/**
+ * The thresholds a `sizeLabels` section asks for, with the defaults filled in.
+ *
+ * @example
+ * ```ts import.meta.vitest name="sizeThresholds"
+ * import { sizeThresholds } from '@resnovas/config'
+ *
+ * sizeThresholds({ thresholds: { xl: 2000 } }).xl // => 2000
+ * sizeThresholds({}).s // => 10
+ * ```
+ *
+ * @param section - The `sizeLabels` section.
+ * @returns Every threshold.
+ */
+export const sizeThresholds = (section: { readonly thresholds?: Partial<SizeThresholds> }): SizeThresholds => ({
+  ...SIZE_THRESHOLDS,
+  ...section.thresholds,
+})
+
+const threshold = (size: keyof SizeThresholds) =>
+  Schema.optionalWith(
+    Schema.Int.pipe(
+      Schema.positive(),
+      Schema.annotations({
+        description: `The fewest lines added plus deleted that make a pull request Size: ${size.toUpperCase()}. Defaults to ${SIZE_THRESHOLDS[size]}.`,
+      }),
+    ),
+    { exact: true },
+  )
+
+/**
+ * The built-in XS to XL size labels, applied to pull requests by how many
+ * lines they change.
+ *
+ * @remarks
+ * Each threshold is the first changed-line count of that size, so XS runs
+ * from 0 to `s - 1` lines and XL from `xl` up. Sizes left out keep
+ * {@link SIZE_THRESHOLDS}, and the thresholds must rise from `s` to `xl`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="SizeLabels"
+ * import { SizeLabels } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(SizeLabels)({ thresholds: { s: 20 } }) // => true
+ * Schema.is(SizeLabels)({ thresholds: { m: 5 } }) // => false
+ * ```
+ */
+export const SizeLabels = Schema.Struct({
+  /** The first changed-line count of each size above XS. */
+  thresholds: Schema.optionalWith(
+    Schema.Struct({ s: threshold('s'), m: threshold('m'), l: threshold('l'), xl: threshold('xl') }).annotations({
+      description:
+        'The first line count of each size above XS. Sizes left out keep their defaults; the thresholds must rise from s to xl.',
+    }),
+    { exact: true },
+  ),
+}).pipe(
+  Schema.filter(
+    (section) => {
+      const { s, m, l, xl } = sizeThresholds(section)
+      return (
+        (s < m && m < l && l < xl) || `size thresholds must rise from s to xl, got s ${s}, m ${m}, l ${l}, xl ${xl}`
+      )
+    },
+    // JSON Schema cannot compare values, so editors only check the shape.
+    { jsonSchema: {} },
+  ),
+  Schema.annotations({
+    identifier: 'SizeLabels',
+    description:
+      'Built-in Size: XS to Size: XL labels, applied to pull requests by lines added plus deleted. Thresholds are the first line count of each size.',
+  }),
+)
+/** A decoded {@link SizeLabels}. */
+export type SizeLabels = typeof SizeLabels.Type
+
+/**
  * A named convention preset, expanded into conditions by the conventions feature.
  *
  * @example
@@ -241,6 +344,7 @@ export const SmartcloudConfig = Schema.Struct({
     { exact: true },
   ),
   labelling: Schema.optionalWith(Schema.Record({ key: RuleId, value: LabelRule }), { exact: true }),
+  sizeLabels: Schema.optionalWith(SizeLabels, { exact: true }),
   conventions: Schema.optionalWith(Conventions, { exact: true }),
   roles: Schema.optionalWith(Roles, { exact: true }),
   links: Schema.optionalWith(Links, { exact: true }),

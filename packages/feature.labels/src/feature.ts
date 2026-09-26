@@ -16,6 +16,7 @@
 
 import type { Feature } from '@resnovas/engine'
 import { applyLabels, labellingFacets } from './apply.js'
+import { withSizeLabels } from './size.js'
 import { syncLabels } from './sync.js'
 
 /**
@@ -27,8 +28,10 @@ import { syncLabels } from './sync.js'
  * `labels` section to the repository: see {@link syncLabels}. On pull request
  * and issue events it applies the `labelling` rules to the subject: see
  * {@link applyLabels}. Sync never runs on pull request events, because those
- * from forks carry a read-only token. The feature is enabled when the config
- * has a `labels` or a `labelling` section.
+ * from forks carry a read-only token. A `sizeLabels` section adds the
+ * built-in size labels and rules first: see {@link withSizeLabels}. The
+ * feature is enabled when the config has a `labels`, `labelling` or
+ * `sizeLabels` section.
  *
  * @example
  * ```ts import.meta.vitest name="labels"
@@ -43,8 +46,10 @@ import { syncLabels } from './sync.js'
 export const labels: Feature = {
   name: 'labels',
   handles: ['repository', 'pullRequest', 'issue'],
-  enabled: (config) => config.labels !== undefined || config.labelling !== undefined,
-  facets: labellingFacets,
-  run: ({ config, envelope, subject }) =>
-    envelope.kind === 'repository' ? syncLabels(config) : applyLabels(config, subject ?? envelope.subject),
+  enabled: (config) => config.labels !== undefined || config.labelling !== undefined || config.sizeLabels !== undefined,
+  facets: (config) => labellingFacets(withSizeLabels(config)),
+  run: ({ config, envelope, subject }) => {
+    const expanded = withSizeLabels(config)
+    return envelope.kind === 'repository' ? syncLabels(expanded) : applyLabels(expanded, subject ?? envelope.subject)
+  },
 }

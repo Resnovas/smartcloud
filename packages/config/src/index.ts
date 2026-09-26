@@ -26,9 +26,13 @@ export {
   Label,
   LabelRule,
   RuleId,
+  SIZE_THRESHOLDS,
+  SizeLabels,
+  sizeThresholds,
   SmartcloudConfig,
   Subjects,
 } from './schema.js'
+export type { SizeThresholds } from './schema.js'
 export {
   ConfigDecodeError,
   ConfigNotFound,

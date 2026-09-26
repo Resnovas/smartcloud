@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Schema } from 'effect'
-import { Color, Label, RuleId, SmartcloudConfig } from '@resnovas/config'
+import { Color, Label, RuleId, SIZE_THRESHOLDS, SizeLabels, sizeThresholds, SmartcloudConfig } from '@resnovas/config'
 
 describe('SmartcloudConfig', () => {
   it('needs a preset or conditions for every convention', () => {
@@ -56,5 +56,33 @@ describe('SmartcloudConfig building blocks', () => {
   it('accepts only version 2', () => {
     expect(Schema.is(SmartcloudConfig)({ version: 2 })).toBe(true)
     expect(Schema.is(SmartcloudConfig)({ version: 1 })).toBe(false)
+  })
+})
+
+describe('SizeLabels', () => {
+  it('fills in the thresholds a section leaves out', () => {
+    expect(sizeThresholds({})).toStrictEqual(SIZE_THRESHOLDS)
+    expect(sizeThresholds({ thresholds: { s: 20, xl: 2000 } })).toStrictEqual({ s: 20, m: 100, l: 500, xl: 2000 })
+  })
+
+  it('accepts an empty section and thresholds that rise from s to xl', () => {
+    expect(Schema.is(SizeLabels)({})).toBe(true)
+    expect(Schema.is(SizeLabels)({ thresholds: { s: 5, m: 50, l: 200, xl: 400 } })).toBe(true)
+  })
+
+  it('rejects thresholds that do not rise, counting the defaults, and ones that are not positive whole numbers', () => {
+    expect(() => Schema.decodeUnknownSync(SizeLabels)({ thresholds: { l: 100 } })).toThrow(
+      'size thresholds must rise from s to xl, got s 10, m 100, l 100, xl 1000',
+    )
+    expect(Schema.is(SizeLabels)({ thresholds: { s: 0 } })).toBe(false)
+    expect(Schema.is(SizeLabels)({ thresholds: { s: 1.5 } })).toBe(false)
+    expect(Schema.is(SizeLabels)({ thresholds: { xxl: 5000 } })).toBe(true)
+    expect(() =>
+      Schema.decodeUnknownSync(SizeLabels)({ thresholds: { xxl: 5000 } }, { onExcessProperty: 'error' }),
+    ).toThrow()
+  })
+
+  it('is a section of the config', () => {
+    expect(Schema.is(SmartcloudConfig)({ version: 2, sizeLabels: { thresholds: { s: 20 } } })).toBe(true)
   })
 })

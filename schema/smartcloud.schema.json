@@ -62,6 +62,9 @@
             "$ref": "#/$defs/RuleId"
           }
         },
+        "sizeLabels": {
+          "$ref": "#/$defs/SizeLabels"
+        },
         "conventions": {
           "$ref": "#/$defs/Conventions"
         },
@@ -781,6 +784,51 @@
       },
       "additionalProperties": false,
       "description": "Exactly this many of the groups pass."
+    },
+    "SizeLabels": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "thresholds": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "s": {
+              "$ref": "#/$defs/Int",
+              "description": "The fewest lines added plus deleted that make a pull request Size: S. Defaults to 10.",
+              "title": "positive",
+              "exclusiveMinimum": 0
+            },
+            "m": {
+              "$ref": "#/$defs/Int",
+              "description": "The fewest lines added plus deleted that make a pull request Size: M. Defaults to 100.",
+              "title": "positive",
+              "exclusiveMinimum": 0
+            },
+            "l": {
+              "$ref": "#/$defs/Int",
+              "description": "The fewest lines added plus deleted that make a pull request Size: L. Defaults to 500.",
+              "title": "positive",
+              "exclusiveMinimum": 0
+            },
+            "xl": {
+              "$ref": "#/$defs/Int",
+              "description": "The fewest lines added plus deleted that make a pull request Size: XL. Defaults to 1000.",
+              "title": "positive",
+              "exclusiveMinimum": 0
+            }
+          },
+          "additionalProperties": false,
+          "description": "The first line count of each size above XS. Sizes left out keep their defaults; the thresholds must rise from s to xl."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Built-in Size: XS to Size: XL labels, applied to pull requests by lines added plus deleted. Thresholds are the first line count of each size."
+    },
+    "Int": {
+      "type": "integer",
+      "description": "an integer",
+      "title": "int"
     },
     "Conventions": {
       "type": "object",
