@@ -211,6 +211,7 @@ const PULL_REQUEST_ONLY = new Set([
   'isApproved',
   'commitMessagesMatch',
   'commitsSignedOff',
+  'commitsVerified',
   'hasTrailer',
   'hasConflict',
   'checksPass',
@@ -442,6 +443,20 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
           unsigned.length === 0 ? 'every commit signed off' : `${unsigned.length} commit(s) not signed off`,
         )
       })
+    case 'commitsVerified':
+      return Effect.map(facet(subject, 'commits', condition.type), (commits) => {
+        const unverified = commits.filter((commit) => !commit.verified)
+        // GitHub lists at most 250 commits of a pull request, so a full list cannot vouch for the rest.
+        if (unverified.length === 0 && commits.length >= 250)
+          return result(condition.type, false, 'GitHub lists only the first 250 commits, so the rest cannot be checked')
+        return result(
+          condition.type,
+          (unverified.length === 0) === condition.condition,
+          unverified.length === 0
+            ? 'every commit has a verified signature'
+            : `${unverified.length} commit(s) without a verified signature`,
+        )
+      })
     case 'hasTrailer':
       return Effect.map(facet(subject, 'commits', condition.type), (commits) => {
         const value = condition.condition === undefined ? undefined : compilePattern(condition.condition)
@@ -557,6 +572,7 @@ const FACETS: Partial<Record<Condition['type'], ReadonlyArray<Facet>>> = {
   reviewerMatches: ['requestedReviewers', 'reviews'],
   commitMessagesMatch: ['commits'],
   commitsSignedOff: ['commits'],
+  commitsVerified: ['commits'],
   hasTrailer: ['commits'],
   hasConflict: ['mergeable'],
   checksPass: ['checks'],

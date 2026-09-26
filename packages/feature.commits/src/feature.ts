@@ -133,7 +133,7 @@ export const checkCommitMessage = (
 ): ReadonlyArray<Finding> => {
   const section = config.commits ?? {}
   const drafts = checkCommit(
-    { sha: '', parents: 1, ...commit },
+    { sha: '', parents: 1, verified: false, ...commit },
     section,
     policyBase(config),
     makeAiIdentityMatcher(section.aiIdentities),

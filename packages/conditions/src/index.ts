@@ -28,6 +28,7 @@ export {
   CodeownersTouched,
   CommitMessagesMatch,
   CommitsSignedOff,
+  CommitsVerified,
   Condition,
   ConditionGroup,
   CreatorMatches,
