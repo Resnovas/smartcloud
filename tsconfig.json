@@ -26,6 +26,9 @@
     },
     {
       "path": "./packages/feature.commits"
+    },
+    {
+      "path": "./packages/feature.disclosure"
     }
   ]
 }

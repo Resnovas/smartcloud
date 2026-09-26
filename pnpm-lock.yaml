@@ -351,6 +351,30 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
 
+  packages/feature.disclosure:
+    dependencies:
+      '@resnovas/conditions':
+        specifier: workspace:*
+        version: link:../conditions
+      '@resnovas/config':
+        specifier: workspace:*
+        version: link:../config
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@resnovas/feature.commits':
+        specifier: workspace:*
+        version: link:../feature.commits
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../integrations.github
+      effect:
+        specifier: 'catalog:'
+        version: 3.22.2
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+
   packages/integrations.github:
     dependencies:
       '@octokit/rest':
@@ -467,6 +491,24 @@ importers:
       gitmojis:
         specifier: ^3.15.0
         version: 3.15.0
+
+  tests/feature.disclosure:
+    devDependencies:
+      '@resnovas/conditions':
+        specifier: workspace:*
+        version: link:../../packages/conditions
+      '@resnovas/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@resnovas/feature.disclosure':
+        specifier: workspace:*
+        version: link:../../packages/feature.disclosure
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../../packages/integrations.github
 
   tests/integrations.github:
     devDependencies:
