@@ -41,6 +41,7 @@ export {
   IsLocked,
   IsOpen,
   IsStale,
+  LinksIssue,
   MilestoneMatches,
   PendingReview,
   RequestedChanges,
