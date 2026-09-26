@@ -294,6 +294,21 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
 
+  packages/reporting:
+    dependencies:
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../integrations.github
+      effect:
+        specifier: 'catalog:'
+        version: 3.22.2
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+
   tests/conditions:
     devDependencies:
       '@resnovas/conditions':
@@ -329,6 +344,18 @@ importers:
       '@resnovas/integrations.github':
         specifier: workspace:*
         version: link:../../packages/integrations.github
+
+  tests/reporting:
+    devDependencies:
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../../packages/integrations.github
+      '@resnovas/reporting':
+        specifier: workspace:*
+        version: link:../../packages/reporting
 
 packages:
 
