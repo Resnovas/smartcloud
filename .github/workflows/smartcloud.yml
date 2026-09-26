@@ -2,10 +2,12 @@
 # pull request is checked by the code it changes. The config is read from the
 # default branch, so a pull request cannot loosen its own rules.
 #
-# The job runs the pull request's code with a token that can write checks,
-# issues and pull requests. Only people who can already push a branch here,
-# and so could change this workflow, reach that token: pull requests from
-# forks get a read-only one.
+# The job runs the pull request's code with the ACCESS_TOKEN organisation
+# secret, because the config extends the house preset in the private
+# Resnovas/.github repository, which the workflow token cannot read. Only
+# people who can already push a branch here, and so could change this
+# workflow, reach that token: pull requests from forks get no secrets and fall
+# back to the read-only workflow token.
 name: smartcloud
 
 on:
@@ -55,3 +57,5 @@ jobs:
 
       - name: Run smartcloud
         uses: ./
+        with:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN || github.token }}
