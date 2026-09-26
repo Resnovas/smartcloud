@@ -50,6 +50,8 @@ describe('ConditionGroup', () => {
       { type: 'authorAssociation', condition: ['member', 'bot'] },
       { type: 'hasAssignee', condition: false },
       { type: 'assigneeMatches', condition: 'x' },
+      { type: 'hasMilestone', condition: true },
+      { type: 'milestoneMatches', condition: 'x' },
       { type: 'isOpen', condition: true },
       { type: 'isLocked', condition: true },
       { type: 'isDraft', condition: true },

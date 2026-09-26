@@ -170,6 +170,8 @@ export const Subject = Schema.Struct({
   labels: Schema.Array(Schema.String),
   /** The logins of the people assigned; none when omitted. */
   assignees: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
+  /** The title of the milestone the subject is in; omitted when it is in none. */
+  milestone: Schema.optionalWith(Schema.String, { exact: true }),
   updatedAt: Schema.DateFromSelf,
   draft: Schema.optionalWith(Schema.Boolean, { exact: true }),
   headBranch: Schema.optionalWith(Schema.String, { exact: true }),
