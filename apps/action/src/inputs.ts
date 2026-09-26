@@ -74,11 +74,16 @@ export const readInputs = Effect.gen(function* () {
     configJson: yield* input('configJson'),
     configRef: yield* input('configRef'),
     dryRun: Option.exists(yield* input('dryRun'), (value) => value.toLowerCase() === 'true'),
-    features: Option.map(features, (list) =>
-      list
-        .split(',')
-        .map((name) => name.trim())
-        .filter((name) => name !== ''),
+    // A list with no names, such as `,`, selects nothing, so it means the
+    // same as leaving the input out: every feature runs.
+    features: Option.filter(
+      Option.map(features, (list) =>
+        list
+          .split(',')
+          .map((name) => name.trim())
+          .filter((name) => name !== ''),
+      ),
+      (names) => names.length > 0,
     ),
     deprecations,
   }

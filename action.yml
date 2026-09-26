@@ -22,7 +22,7 @@ inputs:
     description: Set to true to record every write in the job summary instead of making it.
     required: false
   features:
-    description: A comma-separated list of the features to run. Defaults to every configured feature.
+    description: A comma-separated list of the features to run. Defaults to every configured feature, as does a list with no names in it.
     required: false
   fillEmpty:
     description: Deprecated and ignored; shared settings now come from `extends`.

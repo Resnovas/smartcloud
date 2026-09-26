@@ -17,8 +17,8 @@
 
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
-import { FEATURES, NoConfig, program, readInputs, runAction, UnknownFeatures, type Inputs } from '@resnovas/action'
-import { fileKey, GitHub, makeMemoryGitHub, type MemoryState } from '@resnovas/integrations.github'
+import { FEATURES, NoConfig, PresetUnreadable, program, readInputs, runAction, UnknownFeatures, type Inputs } from '@resnovas/action'
+import { fileKey, Forbidden, GitHub, makeMemoryGitHub, type MemoryState } from '@resnovas/integrations.github'
 import { ConfigProvider, Effect, Option, Redacted } from 'effect'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -78,6 +78,10 @@ describe('readInputs', () => {
       expect(dry.dryRun).toBe(true)
       expect(dry.features).toStrictEqual(Option.some(['labels', 'stale']))
       expect(dry.configRef).toStrictEqual(Option.some('v2'))
+      for (const empty of [',', ' , ,']) {
+        const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_FEATURES: empty }))
+        expect(read.features).toStrictEqual(Option.none())
+      }
     }),
   )
 
@@ -144,6 +148,24 @@ describe('runAction', () => {
       state.files.delete(fileKey('Resnovas', '.github', 'house.yml'))
       const error = yield* Effect.flip(runAction(inputs(), { name: 'pull_request', payload: pullRequest('nope') }).pipe(Effect.provideService(GitHub, service)))
       expect(error).toMatchObject({ _tag: 'ConfigNotFound', source: 'Resnovas/.github/house.yml' })
+    }),
+  )
+
+  it.effect('says why a preset GitHub would not return could not be read', () =>
+    Effect.gen(function* () {
+      const { service } = memory({ '.github/smartcloud.yml': 'version: 2\nextends: [Resnovas/.github/house.yml]\n' })
+      const forbidden: GitHub['Type'] = {
+        ...service,
+        getFile: (location) =>
+          location.repo === '.github'
+            ? Effect.fail(new Forbidden({ operation: 'getFile', detail: 'Resource not accessible by integration' }))
+            : service.getFile(location),
+      }
+      const error = yield* Effect.flip(runAction(inputs(), { name: 'pull_request', payload: pullRequest('nope') }).pipe(Effect.provideService(GitHub, forbidden)))
+      expect(error).toBeInstanceOf(PresetUnreadable)
+      expect(error.message).toBe(
+        'could not read the extends preset Resnovas/.github/house.yml: getFile: forbidden (Resource not accessible by integration)',
+      )
     }),
   )
 

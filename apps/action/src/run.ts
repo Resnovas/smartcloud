@@ -27,7 +27,7 @@ import { stale } from '@resnovas/feature.stale'
 import { syncFeature } from '@resnovas/feature.sync'
 import { GitHub } from '@resnovas/integrations.github'
 import { publishReport, type Published } from '@resnovas/reporting'
-import { Data, Effect, Layer, Option } from 'effect'
+import { Data, Effect, Layer, Option, Ref } from 'effect'
 import { CONFIG_CANDIDATES, type Inputs } from './inputs.js'
 
 /** Every feature the action can run, in the order their results are reported. */
@@ -64,13 +64,30 @@ export interface Outcome {
   readonly warnings: ReadonlyArray<string>
 }
 
+/** An `extends` preset exists, or may, but GitHub would not return it. */
+export class PresetUnreadable extends Data.TaggedError('PresetUnreadable')<{ readonly source: string; readonly reason: string }> {
+  override get message() {
+    return `could not read the extends preset ${this.source}: ${this.reason}`
+  }
+}
+
 // Presets named in `extends` are read with the same token as everything else.
-const GitHubConfigSource = Layer.effect(
-  ConfigSource,
-  Effect.map(GitHub, (github) => ({
-    read: (ref) => github.getFile(ref).pipe(Effect.mapError(() => new ConfigNotFound({ source: formatExtendsRef(ref) }))),
-  })),
-)
+// A config source can only answer "not found", so any other GitHub failure is
+// noted against its preset for runAction to report with its cause.
+const gitHubConfigSource = (unreadable: Ref.Ref<ReadonlyMap<string, string>>) =>
+  Layer.effect(
+    ConfigSource,
+    Effect.map(GitHub, (github) => ({
+      read: (ref) =>
+        github.getFile(ref).pipe(
+          Effect.catchAll((error) => {
+            const source = formatExtendsRef(ref)
+            const note = error._tag === 'NotFound' ? Effect.void : Ref.update(unreadable, (notes) => new Map([...notes, [source, error.message]]))
+            return Effect.zipRight(note, Effect.fail(new ConfigNotFound({ source })))
+          }),
+        ),
+    })),
+  )
 
 const loadConfigText = (inputs: Inputs) =>
   Effect.gen(function* () {
@@ -117,7 +134,16 @@ const selectFeatures = (inputs: Inputs) =>
 export const runAction = (inputs: Inputs, event: { readonly name: string; readonly payload: unknown }) =>
   Effect.gen(function* () {
     const { text, source } = yield* loadConfigText(inputs)
-    const resolved = yield* resolveConfig(text, source).pipe(Effect.provide(GitHubConfigSource))
+    const unreadable = yield* Ref.make<ReadonlyMap<string, string>>(new Map())
+    const resolved = yield* resolveConfig(text, source).pipe(
+      Effect.provide(gitHubConfigSource(unreadable)),
+      Effect.catchTag('ConfigNotFound', (error) =>
+        Effect.flatMap(Ref.get(unreadable), (notes): Effect.Effect<never, ConfigNotFound | PresetUnreadable> => {
+          const reason = notes.get(error.source)
+          return reason === undefined ? Effect.fail(error) : Effect.fail(new PresetUnreadable({ source: error.source, reason }))
+        }),
+      ),
+    )
     const features = yield* selectFeatures(inputs)
     const result = yield* runFeatures({ config: resolved.config, event: event.name, payload: event.payload, features })
     const published = yield* publishReport(result)
