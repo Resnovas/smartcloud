@@ -41,7 +41,7 @@ reviews:
 
 Each maintainer's latest decisive review counts: comments and pending reviews are ignored, and a later change request or dismissal withdraws an approval. The author's own review never counts.
 
-- While fewer than two maintainers are listed in `roles.maintainers`, the gate is open and records a notice: the owner merges at their discretion.
+- While fewer than two distinct maintainers are listed in `roles.maintainers` (logins compare ignoring case and a leading `@`), the gate is open and records a notice: the owner merges at their discretion.
 - Pull requests from trusted bots skip the gate, with a notice.
 - Too few approvals is an error with the rule id `REVIEW`, linking to `GOVERNANCE.md#review` under [`links.policyBase`](/configuration#links).
 
@@ -49,7 +49,7 @@ Make the `smartcloud / reviews` check required in the branch ruleset to enforce 
 
 ## Requested reviewers
 
-Each entry in `requestApprovals` requests reviews from its `reviewers` when its `when` passes. The pull request's author is left out, as GitHub rejects a request for your own review. A leading `@` on a login is optional.
+Each entry in `requestApprovals` requests reviews from its `reviewers` when its `when` passes. The pull request's author is left out, as GitHub rejects a request for your own review, and so is anyone who has already reviewed, since a new request would put them back on the pending list. A leading `@` on a login is optional.
 
 ## Automatic approval
 

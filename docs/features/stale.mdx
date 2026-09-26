@@ -36,7 +36,7 @@ stale:
 | `exempt.labels` | none | Items with any of these labels are skipped. |
 | `exempt.when` | none | Items passing this [condition group](/conditions) are skipped. |
 
-`staleLabel` and `abandonedLabel` are label names as GitHub shows them, not keys of the `labels` section.
+`staleLabel` and `abandonedLabel` are label names as GitHub shows them, not keys of the `labels` section. They must differ, ignoring case: if they do not, the sweep records an error and changes nothing.
 
 ## Lifecycle
 
@@ -49,8 +49,10 @@ Activity is GitHub's `updated_at` time. smartcloud's own label and comment also 
 
 The stale comment records when the item was marked, which is how later activity is detected. Without a `staleComment` there is no record, and the stale label stays until someone removes it.
 
-smartcloud keeps at most one stale and one abandoned comment per item, and edits an existing one rather than posting again.
+smartcloud keeps at most one stale and one abandoned comment per item, and edits an existing one rather than posting again. The stale comment is written before the stale label, so if GitHub fails part way the next sweep marks the item again.
+
+Each item is swept on its own. When GitHub fails on one, the sweep records an error naming it and carries on with the rest.
 
 ## Exemptions
 
-A sweep lists items without their files, reviews or commits, so `exempt.when` can only use conditions that do not need them. If it uses one that does, the sweep records a warning and `exempt.when` exempts nothing.
+When `exempt.when` needs a pull request's files, reviews or commits, the sweep loads them for each pull request it considers. A sweep cannot read a pull request's draft state, branch or size, so if `exempt.when` uses `isDraft`, `branchMatches` or `changesSize`, the sweep records a warning and skips every pull request rather than act on one that should be exempt. Issues are swept as usual, since those conditions never hold for an issue.

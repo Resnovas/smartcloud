@@ -22,7 +22,7 @@ sync:
 | `source` | required | The template directory, as `owner/repo/path@ref`. The ref is optional. |
 | `values` | none | Values for `{{KEY}}` placeholders. Keys are upper snake case. |
 | `exclude` | none | Template paths this repository keeps its own copy of. |
-| `branch` | `smartcloud/sync` | The branch sync pull requests are opened from. |
+| `branch` | `smartcloud/sync` | The branch sync pull requests are opened from. It is force-updated, so it cannot be the default branch. |
 | `check` | `true` | Fail pull requests that edit synced content. |
 
 ## Syncing
@@ -61,11 +61,11 @@ updates:
 
 Markers count only on comment lines: `#` in YAML and CODEOWNERS, `<!--` in Markdown. The first time a file the repository already had is adopted, its previous content is kept, commented out, at the `house:local` line (or at the end), so nothing is lost silently.
 
-Local additions that conflict with the synced rules are reported as warnings when syncing: a rule after a block that must come last (as in CODEOWNERS, where the last matching rule wins), a local YAML key, issue form field id or workflow job that redefines a synced one, or a Dependabot update that duplicates a synced one.
+Local additions that conflict with the synced rules are reported as warnings when syncing: a rule after a block that must come last (as in CODEOWNERS, where the last matching rule wins), a local YAML key, issue form field id or workflow job that redefines a synced one, or a Dependabot update that duplicates a synced one (in `dependabot.yml` or `dependabot.yaml`, one entry per directory in `directories`). Field ids are checked in issue and discussion forms only.
 
 ## The edit check
 
-On pull request events, unless `check` is `false`, smartcloud fails edits to synced content with the rule id `SYNC`: a changed synced document, a changed managed block, removed markers, a deleted synced file, or a local rule that redefines a synced one. Change synced content in the source repository instead. Bringing a file in line with the latest templates is always allowed.
+On pull request events, unless `check` is `false`, smartcloud fails edits to synced content with the rule id `SYNC`: a changed synced document, a changed managed block, removed markers, a deleted synced file, or a local rule that redefines a synced one. Change synced content in the source repository instead; a conflicting local rule is fixed in the repository itself. A conflict already on the default branch is left to the sync's warning, so it does not fail unrelated pull requests or the sync's own. Bringing a file in line with the latest templates is always allowed.
 
 Pull requests in the source repository itself are not checked, since they legitimately change the templates.
 

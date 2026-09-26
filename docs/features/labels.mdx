@@ -59,7 +59,9 @@ Each entry in `labels` is keyed by an id you choose, and has a `name`, a `color`
 - Failing that, a repository label named in `aliases` is renamed, so issues carrying the old name keep the label. Exact names are matched before aliases, so an alias never takes a label another entry names directly.
 - Anything else is created.
 - A `description` left out of the config is left as it is on GitHub.
-- With `labelSync.prune: true`, repository labels the config does not define are deleted. Pruning is off by default.
+- GitHub accepts descriptions of up to 100 characters. A label with a longer one is reported as an error and left as it is, and the rest still sync.
+- When two entries name the same label, ignoring case, only the first is synced, with a warning.
+- With `labelSync.prune: true`, repository labels the config does not define are deleted. A label named in an entry's `aliases` counts as defined, even when the entry's own name already exists. Pruning is off by default.
 
 Label sync never runs on pull request events: those from forks carry a read-only token.
 
