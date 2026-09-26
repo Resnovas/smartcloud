@@ -36,3 +36,6 @@ Thumbs.db
 *.log
 .env
 .env.*
+
+# The action bundle, committed only on release branches
+/dist
