@@ -15,8 +15,8 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-export { DEFAULT_POLICY_BASE, DEFAULT_SYNC_BRANCH, parseSource, syncFeature, SyncBranchIsBase, SyncSourceInvalid } from './feature.js'
-export type { SyncConfig } from './feature.js'
+export { DEFAULT_POLICY_BASE, DEFAULT_SYNC_BRANCH, parseSource, previewSync, syncFeature, SyncBranchIsBase, SyncSourceInvalid } from './feature.js'
+export type { SyncConfig, SyncPreview } from './feature.js'
 export { BEGIN, END, isMarker, LOCAL, managedConflicts, mergeManaged, splitManaged, syncFindings } from './managed.js'
 export type { ManagedParts, SyncedFile, SyncFinding } from './managed.js'
 export { planSync } from './plan.js'

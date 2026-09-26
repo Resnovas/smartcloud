@@ -17,11 +17,11 @@
 
 import { type ExtendsRef, formatExtendsRef, parseExtendsRef, type SmartcloudConfig } from '@resnovas/config'
 import { type Feature, type PullRequestEnvelope, Report } from '@resnovas/engine'
-import { type DirectoryEntry, type FileLocation, GitHub, type GitHubService, type Repository } from '@resnovas/integrations.github'
+import { type DirectoryEntry, type FileLocation, GitHub, type GitHubError, type GitHubService, type Repository } from '@resnovas/integrations.github'
 import { Data, Effect } from 'effect'
 import { syncFindings } from './managed.js'
-import { type CurrentFile, planSync, type PlannedFile } from './plan.js'
-import { renderAll, type Template, type Values } from './render.js'
+import { type CurrentFile, planSync, type PlannedFile, type SyncPlan } from './plan.js'
+import { type MissingValue, renderAll, type Template, type Values } from './render.js'
 
 // Maintainers are told, not failed, using the same role rules as the commits feature.
 import { authorRole, levelFor } from '@resnovas/feature.commits'
@@ -129,20 +129,45 @@ const proposalBody = (source: ExtendsRef, files: ReadonlyArray<PlannedFile>) =>
     'Files with a managed block keep everything outside the block. Change synced content in the source repository, not here.',
   ].join('\n')
 
+/** What a sync of one repository would do, read without writing anything. */
+export interface SyncPreview {
+  readonly source: ExtendsRef
+  readonly repository: Repository
+  /** The templates that are synced, excluded ones left out. */
+  readonly templates: ReadonlyArray<Template>
+  /** The repository's current copies of the synced files, by path. */
+  readonly current: ReadonlyMap<string, CurrentFile>
+  readonly plan: SyncPlan
+}
+
+/**
+ * Reads the templates and the repository's current files, and plans the sync.
+ *
+ * @remarks
+ * Only reads: the scheduled sync proposes the plan, and the CLI renders it
+ * to a local directory instead.
+ *
+ * @param sync - The `sync` section of the config.
+ * @returns The preview, or why the templates could not be read or rendered.
+ */
+export const previewSync = (sync: SyncConfig): Effect.Effect<SyncPreview, SyncSourceInvalid | MissingValue | GitHubError, GitHub> =>
+  Effect.gen(function* () {
+    const github = yield* GitHub
+    const source = yield* parseSource(sync.source)
+    const repository = yield* github.getRepository
+    const exclude = sync.exclude ?? []
+    const all = yield* readTemplates(github, source)
+    const templates = all.filter((template) => !exclude.includes(template.path))
+    const current = yield* readCurrent(github, repository, templates)
+    const plan = yield* planSync(all, current, valuesFor(sync, repository), exclude)
+    return { source, repository, templates, current, plan }
+  })
+
 const runSync = (config: SmartcloudConfig, sync: SyncConfig) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const report = yield* Report
-    const source = yield* parseSource(sync.source)
-    const repository = yield* github.getRepository
-    const exclude = sync.exclude ?? []
-    const templates = yield* readTemplates(github, source)
-    const current = yield* readCurrent(
-      github,
-      repository,
-      templates.filter((template) => !exclude.includes(template.path)),
-    )
-    const plan = yield* planSync(templates, current, valuesFor(sync, repository), exclude)
+    const { source, repository, plan } = yield* previewSync(sync)
     for (const { path, problem } of plan.conflicts) {
       yield* report.add({ feature: FEATURE, rule: 'SYNC', level: 'warning', message: `${path} ${problem}`, path, link: linkFor(config) })
     }
