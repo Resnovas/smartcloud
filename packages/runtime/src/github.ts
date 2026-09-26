@@ -83,7 +83,10 @@ export const resolveToken = Config.redacted('GITHUB_TOKEN').pipe(
   Effect.orElse(() =>
     Command.string(Command.make('gh', 'auth', 'token')).pipe(
       Effect.map((output) => output.trim()),
-      Effect.filterOrFail((token) => token !== '', () => new MissingToken()),
+      Effect.filterOrFail(
+        (token) => token !== '',
+        () => new MissingToken(),
+      ),
       Effect.map(Redacted.make),
     ),
   ),
@@ -110,7 +113,9 @@ const REPOSITORY = /^[^/\s]+\/[^/\s]+$/
  */
 export const parseRepository = (repository: string): Effect.Effect<RepositoryCoordinates, InvalidRepository> => {
   const [owner = '', repo = ''] = repository.split('/')
-  return REPOSITORY.test(repository) ? Effect.succeed({ owner, repo }) : Effect.fail(new InvalidRepository({ repository }))
+  return REPOSITORY.test(repository)
+    ? Effect.succeed({ owner, repo })
+    : Effect.fail(new InvalidRepository({ repository }))
 }
 
 /**
@@ -163,22 +168,28 @@ export const liveConnect =
  * @remarks
  * It is still a `ConfigNotFound` to the config loader, but its message keeps
  * the reason, so the user is told to sign in or retry rather than that the
- * preset is missing.
+ * preset is missing. `transient` marks a failure that may pass on a retry,
+ * such as a rate limit or an outage, which a restricted run must not treat as
+ * a preset it cannot see.
  *
  * @example
  * ```ts import.meta.vitest name="PresetUnreadable"
  * import { PresetUnreadable } from '@resnovas/runtime'
  *
  * new PresetUnreadable({ owner: 'Resnovas', repo: '.github', path: 'a.yml' }, 'down').message // => 'the extends preset Resnovas/.github/a.yml could not be read: down'
+ * new PresetUnreadable({ owner: 'Resnovas', repo: '.github', path: 'a.yml' }, 'down', true).transient // => true
  * ```
  */
 export class PresetUnreadable extends ConfigNotFound {
   /** Why the preset could not be read. */
   readonly reason: string
+  /** Whether the read may succeed on a retry: a rate limit or an outage. */
+  readonly transient: boolean
 
-  constructor(ref: ExtendsRef, reason: string) {
+  constructor(ref: ExtendsRef, reason: string, transient = false) {
     super({ source: formatExtendsRef(ref) })
     this.reason = reason
+    this.transient = transient
   }
 
   override get message() {
@@ -197,7 +208,8 @@ export class PresetUnreadable extends ConfigNotFound {
  *
  * const toError = presetError({ owner: 'Resnovas', repo: '.github', path: 'a.yml' })
  * toError(new NotFound({ operation: 'getFile', detail: 'x' })) instanceof PresetUnreadable // => false
- * toError(new Unavailable({ operation: 'getFile', detail: 'down' })) instanceof PresetUnreadable // => true
+ * const down = toError(new Unavailable({ operation: 'getFile', detail: 'down' }))
+ * down instanceof PresetUnreadable && down.transient // => true
  * ```
  *
  * @param ref - The preset.
@@ -206,7 +218,9 @@ export class PresetUnreadable extends ConfigNotFound {
 export const presetError =
   (ref: ExtendsRef) =>
   (error: MissingToken | GitHubError): ConfigNotFound =>
-    error._tag === 'NotFound' ? new ConfigNotFound({ source: formatExtendsRef(ref) }) : new PresetUnreadable(ref, error.message)
+    error._tag === 'NotFound'
+      ? new ConfigNotFound({ source: formatExtendsRef(ref) })
+      : new PresetUnreadable(ref, error.message, error._tag === 'RateLimited' || error._tag === 'Unavailable')
 
 /**
  * Reads presets named in `extends` from GitHub. The token is resolved only
@@ -234,12 +248,14 @@ export const gitHubConfigSource = (options: Pick<LiveOptions, 'fetch'> = {}) =>
         read: (ref) =>
           Effect.gen(function* () {
             const token = yield* resolveToken
-            const github = yield* makeLiveGitHub({ ...options, token, coordinates: { owner: ref.owner, repo: ref.repo }, retry: Schedule.stop })
+            const github = yield* makeLiveGitHub({
+              ...options,
+              token,
+              coordinates: { owner: ref.owner, repo: ref.repo },
+              retry: Schedule.stop,
+            })
             return yield* github.getFile(ref)
-          }).pipe(
-            Effect.provideService(CommandExecutor.CommandExecutor, executor),
-            Effect.mapError(presetError(ref)),
-          ),
+          }).pipe(Effect.provideService(CommandExecutor.CommandExecutor, executor), Effect.mapError(presetError(ref))),
       }
     }),
   )

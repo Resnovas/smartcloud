@@ -14,10 +14,11 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { ExtendsRef } from '@resnovas/config'
+import type { ConfigNotFound, ExtendsRef } from '@resnovas/config'
 import type { Finding } from '@resnovas/engine'
 import type { GitHubService, RepositoryCoordinates } from '@resnovas/integrations.github'
 import { Effect, Either, Option, Redacted, Schema } from 'effect'
+import { PresetUnreadable } from './github.js'
 
 /**
  * How much a run may do: everything its token allows, or the lowest viable
@@ -169,7 +170,8 @@ export const restrictedFeatures = (access: Access): ReadonlyMap<string, string> 
  * Whether a preset that could not be read may be left out: only in a
  * restricted run, and only from another repository, which the workflow
  * token cannot see when it is private. A missing preset in the repository
- * itself still fails.
+ * itself still fails, and so does a read that failed on a rate limit or an
+ * outage, which says nothing about access.
  *
  * @example
  * ```ts import.meta.vitest name="skippablePreset"
@@ -184,12 +186,13 @@ export const restrictedFeatures = (access: Access): ReadonlyMap<string, string> 
  *
  * @param access - The run's access.
  * @param repository - The repository the run is in.
- * @returns The check for one preset.
+ * @returns The check for one preset and the error its read failed with.
  */
 export const skippablePreset =
   (access: Access, repository: RepositoryCoordinates) =>
-  (ref: ExtendsRef): boolean =>
+  (ref: ExtendsRef, error?: ConfigNotFound): boolean =>
     access.restricted &&
+    !(error instanceof PresetUnreadable && error.transient) &&
     (ref.owner.toLowerCase() !== repository.owner.toLowerCase() ||
       ref.repo.toLowerCase() !== repository.repo.toLowerCase())
 

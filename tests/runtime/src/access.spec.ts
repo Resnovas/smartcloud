@@ -15,6 +15,7 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
+import { ConfigNotFound } from '@resnovas/config'
 import {
   Forbidden,
   makeMemoryGitHub,
@@ -29,6 +30,7 @@ import {
   connectWithFallback,
   externalRun,
   FULL_ACCESS,
+  PresetUnreadable,
   restrictedFeatures,
   skippablePreset,
 } from '@resnovas/runtime'
@@ -100,6 +102,14 @@ describe('what a restricted run leaves out', () => {
     expect(skippablePreset(fork, here)({ owner: 'Other', repo: 'example', path: 'a.yml' })).toBe(true)
     expect(skippablePreset(fork, here)({ owner: 'Resnovas', repo: 'other', path: 'a.yml' })).toBe(true)
     expect(skippablePreset(fork, here)({ owner: 'Resnovas', repo: 'example', path: 'a.yml' })).toBe(false)
+  })
+
+  it('never skips a preset whose read failed on a rate limit or an outage', () => {
+    const here = { owner: 'Resnovas', repo: 'example' }
+    const ref = { owner: 'Resnovas', repo: '.github', path: 'a.yml' }
+    expect(skippablePreset(fork, here)(ref, new ConfigNotFound({ source: 'Resnovas/.github/a.yml' }))).toBe(true)
+    expect(skippablePreset(fork, here)(ref, new PresetUnreadable(ref, 'forbidden'))).toBe(true)
+    expect(skippablePreset(fork, here)(ref, new PresetUnreadable(ref, 'rate limited', true))).toBe(false)
   })
 
   it('reports the restriction as a notice and each left-out part as a warning', () => {
