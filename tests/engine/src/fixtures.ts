@@ -38,6 +38,7 @@ export const pullRequestPayload = {
     user: { login: 'jane', type: 'User' },
     author_association: 'CONTRIBUTOR',
     assignees: [{ login: 'jane' }, { login: 'ann' }],
+    milestone: { title: 'v2.0' },
     draft: true,
     head: { ref: 'feat/labels', sha: 'abc123' },
     base: { ref: 'main' },

@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -453,6 +453,28 @@ An assignee's login matches a pattern.
 | Key | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `type` | `assigneeMatches` | yes |  |
+| `condition` | [Pattern](#pattern) | yes |  |
+
+Other keys are an error.
+
+### hasMilestone
+
+The subject is in a milestone, or in none when false.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `hasMilestone` | yes |  |
+| `condition` | boolean | yes |  |
+
+Other keys are an error.
+
+### milestoneMatches
+
+The title of the subject's milestone matches a pattern.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `milestoneMatches` | yes |  |
 | `condition` | [Pattern](#pattern) | yes |  |
 
 Other keys are an error.

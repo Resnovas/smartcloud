@@ -269,6 +269,24 @@ describe('stale feature: marking', () => {
     }),
   )
 
+  it.effect('exempts by the milestone in the listing', () =>
+    Effect.gen(function* () {
+      const github = memory([
+        item(1, { updatedAt: daysAgo(40), milestone: 'v2.0' }),
+        item(2, { updatedAt: daysAgo(40), milestone: 'backlog' }),
+        item(3, { updatedAt: daysAgo(40), isPullRequest: true, milestone: 'v2.1' }),
+      ])
+      yield* sweep(
+        {
+          version: 2,
+          stale: { ...settings, exempt: { when: { condition: [{ type: 'milestoneMatches', condition: '^v2' }] } } },
+        },
+        github,
+      )
+      expect([1, 2, 3].map((number) => labelsOf(github, number))).toStrictEqual([[], ['stale'], []])
+    }),
+  )
+
   it.effect('exempts by the assignees in the listing, and loads requested reviewers for pull requests', () =>
     Effect.gen(function* () {
       const github = memory([
