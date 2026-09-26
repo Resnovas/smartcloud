@@ -548,6 +548,127 @@ export const Branches = Schema.Struct({
 export type Branches = typeof Branches.Type
 
 /**
+ * A CODEOWNERS owner: a user as `@login`, a team as `@org/team`, or an email address.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CodeOwner"
+ * import { CodeOwner } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CodeOwner)('@Resnovas/docs') // => true
+ * Schema.is(CodeOwner)('docs-team') // => false
+ * ```
+ */
+export const CodeOwner = Schema.String.pipe(
+  Schema.pattern(
+    /^(@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\/[A-Za-z0-9][A-Za-z0-9._-]*)?|[^@\s]+@[^@\s]+\.[^@\s]+)$/,
+  ),
+  Schema.annotations({
+    identifier: 'CodeOwner',
+    description: 'A user as @login, a team as @org/team, or an email address.',
+  }),
+)
+
+/**
+ * A CODEOWNERS path pattern, in the gitignore-like syntax GitHub accepts.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CodeOwnersPath"
+ * import { CodeOwnersPath } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CodeOwnersPath)('/docs/') // => true
+ * Schema.is(CodeOwnersPath)('!docs/') // => false
+ * ```
+ */
+export const CodeOwnersPath = Schema.String.pipe(
+  // GitHub ignores negation, character ranges and a leading escaped #; a
+  // space would split the pattern from its owners.
+  Schema.pattern(/^[^!#\s[\]][^\s[\]]*$/),
+  Schema.annotations({
+    identifier: 'CodeOwnersPath',
+    description:
+      'A path pattern such as *.md, /docs/ or apps/**/*.ts. GitHub does not support !, [ ] or spaces in CODEOWNERS patterns.',
+  }),
+)
+
+/**
+ * One generated block of CODEOWNERS rules: the paths and who owns them.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CodeOwnersRule"
+ * import { CodeOwnersRule } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CodeOwnersRule)({ paths: ['/docs/', '*.md'], owners: ['@Resnovas/docs'], comment: 'Documentation.' }) // => true
+ * Schema.is(CodeOwnersRule)({ paths: [], owners: ['@Resnovas/docs'] }) // => false
+ * ```
+ */
+export const CodeOwnersRule = Schema.Struct({
+  /** The path patterns, each written as a line. */
+  paths: Schema.NonEmptyArray(CodeOwnersPath).annotations({
+    description: 'The path patterns these owners own, each written as its own CODEOWNERS line.',
+  }),
+  /** Who owns them; empty leaves the paths without an owner. */
+  owners: Schema.Array(CodeOwner).annotations({
+    description: 'The owners of the paths. An empty list leaves them without an owner, overriding an earlier rule.',
+  }),
+  /** A comment written above the lines. */
+  comment: opt(Schema.String.annotations({ description: 'A comment written above the lines, such as Documentation.' })),
+}).annotations({
+  identifier: 'CodeOwnersRule',
+  description: 'Paths and their owners, written to the generated block of CODEOWNERS.',
+})
+/** A decoded {@link CodeOwnersRule}. */
+export type CodeOwnersRule = typeof CodeOwnersRule.Type
+
+/**
+ * CODEOWNERS: validate the file on pull requests, and generate a block of it
+ * from the config.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CodeOwners"
+ * import { CodeOwners } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CodeOwners)({ rules: { docs: { paths: ['/docs/'], owners: ['@Resnovas/docs'] } } }) // => true
+ * Schema.is(CodeOwners)({ path: 'OWNERS' }) // => false
+ * ```
+ */
+export const CodeOwners = Schema.Struct({
+  /** Where the file lives. */
+  path: opt(
+    Schema.Literal('.github/CODEOWNERS', 'CODEOWNERS', 'docs/CODEOWNERS').annotations({
+      description:
+        'Where the file lives, one of the locations GitHub reads. By default, the first that exists, or .github/CODEOWNERS.',
+    }),
+  ),
+  /** The generated rules, by key, in the order they are written. */
+  rules: opt(
+    Schema.Record({ key: Schema.String, value: CodeOwnersRule }).annotations({
+      description:
+        'Rules to generate, by key, so presets and repositories merge them. They are written in order, and the last matching rule wins.',
+    }),
+  ),
+  /** Fail pull requests that break CODEOWNERS. On by default. */
+  check: opt(Schema.Boolean.annotations({ description: 'Check pull requests that change CODEOWNERS. On by default.' })),
+  /** The finding's level on pull requests. */
+  level: opt(Level.annotations({ description: 'error fails the check; warning only reports. Defaults to error.' })),
+  /** The branch generated changes are proposed from. */
+  branch: opt(
+    Schema.NonEmptyTrimmedString.annotations({
+      description: 'The branch generated changes are proposed from. Defaults to smartcloud/codeowners.',
+    }),
+  ),
+}).annotations({
+  identifier: 'CodeOwners',
+  description:
+    'CODEOWNERS: check the file on pull requests that change it, and generate a block of it from rules in the config.',
+})
+/** A decoded {@link CodeOwners}. */
+export type CodeOwners = typeof CodeOwners.Type
+
+/**
  * The repository settings baseline. Anything omitted is left as it is.
  *
  * @example

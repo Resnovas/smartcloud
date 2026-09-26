@@ -19,6 +19,7 @@ import { Schema } from 'effect'
 import { ExtendsEntry } from './extends.js'
 import {
   Branches,
+  CodeOwners,
   Commits,
   Disclosure,
   Freeze,
@@ -366,6 +367,7 @@ export const SmartcloudConfig = Schema.Struct({
   required: Schema.optionalWith(Required, { exact: true }),
   freeze: Schema.optionalWith(Freeze, { exact: true }),
   branches: Schema.optionalWith(Branches, { exact: true }),
+  codeowners: Schema.optionalWith(CodeOwners, { exact: true }),
   stale: Schema.optionalWith(Stale, { exact: true }),
   settings: Schema.optionalWith(Settings, { exact: true }),
   sync: Schema.optionalWith(Sync, { exact: true }),

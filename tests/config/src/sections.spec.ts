@@ -19,6 +19,10 @@ import { Effect, Either, Schema } from 'effect'
 import {
   BranchName,
   Branches,
+  CodeOwner,
+  CodeOwners,
+  CodeOwnersPath,
+  CodeOwnersRule,
   Freeze,
   FreezeWindow,
   parseConfig,
@@ -266,5 +270,53 @@ describe('Branches', () => {
     }
     expect(Schema.is(SmartcloudConfig)(config)).toBe(true)
     expect(Schema.is(SmartcloudConfig)({ version: 2, branches: { level: 'fatal' } })).toBe(false)
+  })
+})
+
+describe('CodeOwners', () => {
+  it('accepts users, teams and email addresses as owners', () => {
+    const is = Schema.is(CodeOwner)
+    expect(is('@TGTGamer')).toBe(true)
+    expect(is('@Resnovas/docs-team')).toBe(true)
+    expect(is('octo.cat@example.com')).toBe(true)
+    expect(is('TGTGamer')).toBe(false)
+    expect(is('@-bad')).toBe(false)
+    expect(is('@Resnovas/')).toBe(false)
+    expect(is('octo@example')).toBe(false)
+  })
+
+  it('accepts the path patterns GitHub supports', () => {
+    const is = Schema.is(CodeOwnersPath)
+    expect(is('*')).toBe(true)
+    expect(is('apps/**/*.ts')).toBe(true)
+    expect(is('/docs/')).toBe(true)
+    expect(is('')).toBe(false)
+    expect(is('!docs/')).toBe(false)
+    expect(is('#comment')).toBe(false)
+    expect(is('*.[ch]')).toBe(false)
+    expect(is('docs guide.md')).toBe(false)
+  })
+
+  it('needs at least one path per rule, and allows a rule without owners', () => {
+    const is = Schema.is(CodeOwnersRule)
+    expect(is({ paths: ['/vendor/'], owners: [] })).toBe(true)
+    expect(is({ paths: [], owners: ['@TGTGamer'] })).toBe(false)
+  })
+
+  it('is a section of the config, with rules by key', () => {
+    expect(Schema.is(CodeOwners)({})).toBe(true)
+    const config = {
+      version: 2,
+      codeowners: {
+        path: 'CODEOWNERS',
+        rules: { docs: { paths: ['/docs/'], owners: ['@Resnovas/docs'], comment: 'Documentation.' } },
+        check: true,
+        level: 'warning',
+        branch: 'smartcloud/owners',
+      },
+    }
+    expect(Schema.is(SmartcloudConfig)(config)).toBe(true)
+    expect(Schema.is(SmartcloudConfig)({ version: 2, codeowners: { path: 'OWNERS' } })).toBe(false)
+    expect(Schema.is(SmartcloudConfig)({ version: 2, codeowners: { branch: ' ' } })).toBe(false)
   })
 })
