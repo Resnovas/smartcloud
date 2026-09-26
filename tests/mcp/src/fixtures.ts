@@ -74,8 +74,7 @@ export const liveTelemetry = () => {
   // NodeRuntime.runMain adds the pretty logger around everything, so the tests do too.
   const run = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
     effect.pipe(
-      Effect.provide(telemetry('mcp', '9.9.9', { fetch })),
-      Effect.provide(Logger.add(Logger.prettyLoggerDefault)),
+      Effect.provide(Layer.provideMerge(telemetry('mcp', '9.9.9', { fetch }), Logger.add(Logger.prettyLoggerDefault))),
       Effect.withConfigProvider(ConfigProvider.fromMap(new Map())),
     )
   const batch = () => sent.filter((request) => request.path === '/batch/').map((request) => request.body).join('\n')

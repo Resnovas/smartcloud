@@ -4,6 +4,7 @@
     "esbenp.prettier-vscode",
     "editorconfig.editorconfig",
     "nrwl.angular-console",
-    "vitest.explorer"
+    "vitest.explorer",
+    "effectful-tech.effect-vscode"
   ]
 }

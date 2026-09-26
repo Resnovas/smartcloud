@@ -4,6 +4,8 @@ smartcloud v2 is tracked in Linear (team SMC). v1 is no longer in the tree; its 
 
 House standards apply: the PostHog skill `coding-preferences` (Effect v3, strict TypeScript, pnpm, Nx module boundaries, FCL-1.0-MIT) and the rules in `Resnovas/.github`.
 
+The Effect Language Service (`@effect/language-service`) is a TypeScript plugin in `tsconfig.base.json`, and `pnpm install` patches the workspace TypeScript (`prepare`) so its diagnostics also fail `typecheck`. Use the workspace TypeScript in your editor (`.vscode/settings.json` and `.zed/settings.json` set it). Set `EFFECT_DEVTOOLS=true` to stream the CLI's or MCP server's spans to the Effect Dev Tools extension (`effectful-tech.effect-vscode`).
+
 ## Layout
 
 | Path              | What lives there                                                                                                                                                                                                                                                                      |

@@ -178,6 +178,9 @@ importers:
       '@effect/doctest':
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117(effect@3.22.2)(vite@8.3.1(@types/node@24.13.6)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))(vitest@5.0.1)
+      '@effect/language-service':
+        specifier: ^0.87.2
+        version: 0.87.2
       '@effect/vitest':
         specifier: ^0.30.0
         version: 0.30.0(effect@3.22.2)(vitest@5.0.1)
@@ -602,6 +605,9 @@ importers:
 
   packages/runtime:
     dependencies:
+      '@effect/experimental':
+        specifier: ^0.61.1
+        version: 0.61.1(@effect/platform@0.97.2(effect@3.22.2))(effect@3.22.2)
       '@effect/platform':
         specifier: ^0.97.2
         version: 0.97.2(effect@3.22.2)
@@ -1554,6 +1560,10 @@ packages:
         optional: true
       lmdb:
         optional: true
+
+  '@effect/language-service@0.87.2':
+    resolution: {integrity: sha512-CfiSoaVQO8pZgaMZGw5VvMvRGybsJ2LaSDoLYaqiVGvo/YYPYVR2GzUKY0h1NtIweq/+SQ5XLrvtzPIttWQ0GQ==}
+    hasBin: true
 
   '@effect/markdown-toc@0.1.0':
     resolution: {integrity: sha512-IRfvvwqQLabVTIw9hhIj4scOGIYPfa13QuEFv+dBWE6p47R+RR0J8jQvfDINFf0Vn80XXVjNRtZxkZpkKXLx2A==}
@@ -5519,6 +5529,8 @@ snapshots:
       '@effect/platform': 0.97.2(effect@3.22.2)
       effect: 3.22.2
       uuid: 11.1.1
+
+  '@effect/language-service@0.87.2': {}
 
   '@effect/markdown-toc@0.1.0':
     dependencies:

@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect, Metric, Redacted, Schedule } from 'effect'
+import { Effect, Layer, Metric, Redacted, Schedule } from 'effect'
 import { DryRun, GitHub, GitHubMemory, githubDuration, githubRequests, githubSpanName, makeLiveGitHub } from '@resnovas/integrations.github'
 import { fakeFetch, type Routes } from './fake-fetch.js'
 import { carried, observe, spanNamed } from './observe.js'
@@ -123,6 +123,6 @@ describe('GitHub telemetry', () => {
       expect(observed.logs).toStrictEqual([
         { message: 'dry run: recorded createLabel', level: 'DEBUG', annotations: { 'github.operation': 'createLabel', dry_run: true } },
       ])
-    }).pipe(Effect.provide(DryRun), Effect.provide(GitHubMemory())),
+    }).pipe(Effect.provide(Layer.provideMerge(DryRun, GitHubMemory()))),
   )
 })

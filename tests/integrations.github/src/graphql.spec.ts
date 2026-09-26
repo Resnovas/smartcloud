@@ -47,6 +47,6 @@ describe('dry run', () => {
       for (const query of [...writes, ...reads]) yield* github.graphql(query, {})
       expect((yield* log.writes).map((write) => write.details['query'])).toStrictEqual(writes)
       expect(state.graphql.map((call) => call.query)).toStrictEqual(reads)
-    }).pipe(Effect.provide(DryRun), Effect.provide(Layer.succeed(GitHub, service)))
+    }).pipe(Effect.provide(Layer.provideMerge(DryRun, Layer.succeed(GitHub, service))))
   })
 })

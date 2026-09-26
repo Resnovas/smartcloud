@@ -72,6 +72,7 @@ describe('telemetryLayer, when turned off', () => {
           Effect.gen(function* () {
             const value = yield* track(work, { operation: 'run', repository })
             const flag = yield* evaluateFlag(repository, 'smartcloud-labels', true)
+            // @effect-diagnostics-next-line globalErrorInEffectFailure:off - a plain Error on purpose: any failure must be handled
             yield* track(Effect.fail(new Error('boom')), { operation: 'run', repository }).pipe(Effect.ignore)
             return { value, flag }
           }),
@@ -169,6 +170,7 @@ describe('telemetryLayer, when on', () => {
   it.live('records a failure for error tracking and returns it unchanged', () =>
     Effect.gen(function* () {
       const { exit, fake } = yield* run(
+        // @effect-diagnostics-next-line globalErrorInEffectFailure:off - a plain Error on purpose: any failure must be handled
         invoked(track(Effect.fail(new Error(`cannot read Acme-Corp/secret-project with ${TOKEN}`)), { operation: 'run', repository })),
       )
       expect(Exit.isFailure(exit)).toBe(true)
@@ -224,6 +226,7 @@ describe('telemetryLayer, when on', () => {
           yield* optOut
           const enabled = yield* Effect.flatMap(Telemetry, (telemetry) => telemetry.isEnabled)
           const value = yield* invoked(track(work, { operation: 'run', repository }))
+          // @effect-diagnostics-next-line globalErrorInEffectFailure:off - a plain Error on purpose: any failure must be handled
           yield* invoked(track(Effect.fail(new Error('boom')), { operation: 'run', repository })).pipe(Effect.ignore)
           const flag = yield* evaluateFlag(repository, 'smartcloud-labels', true)
           return { enabled, value, flag }

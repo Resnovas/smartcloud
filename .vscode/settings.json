@@ -1,0 +1,7 @@
+{
+  // The Effect Language Service is a TypeScript plugin, so the editor must run
+  // the workspace TypeScript (which `pnpm install` also patches for build-time
+  // Effect diagnostics) rather than its bundled copy.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.enablePromptUseWorkspaceTsdk": true
+}

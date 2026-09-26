@@ -359,7 +359,7 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
                       ? {}
                       : { groups: { [ORGANIZATION_GROUP]: identity.organization } }),
                   }),
-                ).pipe(Effect.timeoutFail({ duration: REQUEST_TIMEOUT_MS, onTimeout: () => new Error('timed out') })),
+                ).pipe(Effect.timeout(REQUEST_TIMEOUT_MS)),
                 fallback,
               )
             : Effect.succeed(fallback),

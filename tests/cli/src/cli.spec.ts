@@ -18,7 +18,7 @@ import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { fileKey } from '@resnovas/integrations.github'
 import { main, run, runWith } from '@resnovas/smartcloud'
-import { Effect } from 'effect'
+import { Effect, Layer } from 'effect'
 import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -146,7 +146,7 @@ describe('check-commit', () => {
       const file = yield* Effect.promise(() => message('fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>\n'))
       yield* run(['node', 'smartcloud', 'check-commit', file, '--author-name', 'Jane Doe', '--author-email', 'jane@example.com'])
       expect(logs).toContain('The commit message passes.')
-    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+    }).pipe(Effect.provide(Layer.merge(memorySource({}), NodeContext.layer))),
   )
 })
 

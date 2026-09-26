@@ -57,6 +57,7 @@ export { FEATURES, parseFeatureList, selectFeatures, UnknownFeatures } from './f
 export { FEATURE_FLAGS, featureEnabled, flagFor, turnedOffFeatures } from './flags.js'
 export type { FeatureFlag } from './flags.js'
 export { telemetry } from './telemetry.js'
+export { devTools, devToolsFor } from './devtools.js'
 // The surfaces opt out and read telemetry through the runtime, never the integration directly.
 export { noteOptions, optOut, Telemetry } from '@resnovas/integrations.posthog'
 export type { Surface } from '@resnovas/integrations.posthog'
