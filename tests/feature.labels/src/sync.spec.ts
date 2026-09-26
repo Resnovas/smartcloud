@@ -97,6 +97,20 @@ const plans: ReadonlyArray<
     ],
   ],
   [
+    'plans only the first of two entries naming one label, ignoring case',
+    { first: { name: 'Bug', color: 'd73a4a' }, second: { name: 'bug', color: '00ff00' } },
+    [],
+    false,
+    [{ action: 'create', label: { name: 'Bug', color: 'd73a4a', description: '' } }],
+  ],
+  [
+    'does not prune an alias whose configured name already exists',
+    { bug: { name: 'bug', color: 'd73a4a', description: 'Something is broken', aliases: ['defect'] } },
+    [bug, { name: 'Defect', color: 'ffffff', description: '' }, { name: 'wontfix', color: 'ffffff', description: '' }],
+    true,
+    [{ action: 'delete', name: 'wontfix' }],
+  ],
+  [
     'does not prune a label claimed by alias',
     { defect: { name: 'defect', color: 'd73a4a', aliases: ['bug'] } },
     [bug],
@@ -156,6 +170,58 @@ describe('labels feature: sync', () => {
     }),
   )
 
+  it.effect('warns about a repeated name and syncs its first entry only', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({ labels: [] })
+      const config: SmartcloudConfig = {
+        version: 2,
+        labels: { bug: { name: 'bug', color: 'd73a4a' }, Bug: { name: 'Bug', color: '00ff00' } },
+      }
+      const result = yield* runFeatures({ config, event: 'workflow_dispatch', payload: {}, features: [labels] }).pipe(
+        Effect.provideService(GitHub, service),
+      )
+      expect(result.failed).toStrictEqual([])
+      expect(state.labels).toStrictEqual([{ name: 'bug', color: 'd73a4a', description: '' }])
+      expect(result.findings).toStrictEqual([
+        {
+          feature: 'labels',
+          rule: 'labels.sync',
+          level: 'warning',
+          message: 'labels.Bug names "Bug", which labels.bug already names; only the first is synced',
+        },
+      ])
+    }),
+  )
+
+  it.effect('leaves a label whose description is longer than GitHub accepts, and syncs the rest', () =>
+    Effect.gen(function* () {
+      const long = { name: 'long', color: 'ffffff', description: 'short' }
+      const { service, state } = makeMemoryGitHub({ labels: [bug, long] })
+      const config: SmartcloudConfig = {
+        version: 2,
+        labels: {
+          docs: { name: 'docs', color: '0075ca', description: 'd'.repeat(100) },
+          long: { name: 'long', color: '0075ca', description: 'd'.repeat(101) },
+        },
+        labelSync: { prune: true },
+      }
+      const result = yield* runFeatures({ config, event: 'workflow_dispatch', payload: {}, features: [labels] }).pipe(
+        Effect.provideService(GitHub, service),
+      )
+      expect(result.failed).toStrictEqual([])
+      expect(state.labels).toStrictEqual([long, { name: 'docs', color: '0075ca', description: 'd'.repeat(100) }])
+      expect(result.changes.map((change) => change.description)).toStrictEqual(['created label "docs"', 'deleted label "bug"'])
+      expect(result.findings).toStrictEqual([
+        {
+          feature: 'labels',
+          rule: 'labels.sync',
+          level: 'error',
+          message: `label "long" was not synced: its description is longer than GitHub's 100 characters`,
+        },
+      ])
+    }),
+  )
+
   it.effect('does not sync on a repository event when only labelling is configured', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub({ labels: [bug] })
@@ -188,7 +254,11 @@ describe('labels feature: sync', () => {
 
         expect(result.ran).toStrictEqual(['labels'])
         expect(result.failed).toStrictEqual([])
-        expect(writes.map((write) => write.operation)).toStrictEqual(Array.from({ length: 10 }, () => 'createLabel'))
+        // One of Eventiva's descriptions is 106 characters, which GitHub rejects.
+        expect(result.findings.map((finding) => finding.message)).toStrictEqual([
+          `label "type:extension" was not synced: its description is longer than GitHub's 100 characters`,
+        ])
+        expect(writes.map((write) => write.operation)).toStrictEqual(Array.from({ length: 9 }, () => 'createLabel'))
         expect(writes[0]?.details).toStrictEqual({
           label: {
             name: 'type:core',
@@ -196,7 +266,7 @@ describe('labels feature: sync', () => {
             description: 'Core module - can be depended on by any other module',
           },
         })
-        expect(result.changes).toHaveLength(10)
+        expect(result.changes).toHaveLength(9)
         expect(result.changes[0]).toStrictEqual({ feature: 'labels', description: 'created label "type:core"' })
         // Pruning is off by default, so the unrelated label is not even proposed for deletion.
         expect(state.labels).toStrictEqual([bug])

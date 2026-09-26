@@ -198,6 +198,14 @@ describe('labels feature: apply', () => {
   it('asks for the facets of every rule, and none without labelling', () => {
     expect([...labellingFacets(config)]).toStrictEqual(['files'])
     expect(labellingFacets({ version: 2 }).size).toBe(0)
+    const issueOnly: SmartcloudConfig = {
+      version: 2,
+      labelling: {
+        big: { label: 'big', on: ['issue'], when: { condition: [{ type: 'filesMatch', condition: '**' }] } },
+        both: { label: 'both', on: ['issue', 'pullRequest'], when: { condition: [{ type: 'commitsSignedOff', condition: true }] } },
+      },
+    }
+    expect([...labellingFacets(issueOnly)]).toStrictEqual(['commits'])
     expect(labels.facets?.(config)).toStrictEqual(new Set(['files']))
   })
 

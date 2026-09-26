@@ -53,7 +53,8 @@ type Rules = NonNullable<SmartcloudConfig['labelling']>
 export const labelName = (config: SmartcloudConfig, label: string): string => config.labels?.[label]?.name ?? label
 
 /**
- * The facets every labelling rule's conditions need loaded.
+ * The facets the conditions of every labelling rule that can run on a pull
+ * request need loaded.
  *
  * @example
  * ```ts
@@ -65,7 +66,12 @@ export const labelName = (config: SmartcloudConfig, label: string): string => co
  * @returns The facets, empty when there is no `labelling` section.
  */
 export const labellingFacets = (config: SmartcloudConfig): ReadonlySet<Facet> =>
-  requiredFacets(Object.values(config.labelling ?? {}).map((rule): ConditionGroup => rule.when))
+  requiredFacets(
+    Object.values(config.labelling ?? {})
+      // Facets are only loaded for pull requests, so issue-only rules need none.
+      .filter((rule) => rule.on === undefined || rule.on.includes('pullRequest'))
+      .map((rule): ConditionGroup => rule.when),
+  )
 
 // A label is wanted when any rule for it passes, so two rules naming the same
 // label (for example one per subject kind) never fight each other.

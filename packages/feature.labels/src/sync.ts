@@ -83,8 +83,11 @@ const differs = (wanted: Label, existing: Label) =>
  * Each configured label is matched to a repository label by name, ignoring
  * case. Failing that, a repository label whose name is one of its `aliases`
  * is renamed, so issues carrying the old name keep the label. Anything else
- * is created. With `prune`, repository labels that no configured label
- * claimed are deleted; without it they are left alone.
+ * is created. When two entries name the same label, ignoring case, only the
+ * first is planned: GitHub would reject the second. With `prune`,
+ * repository labels that no configured label claimed are deleted; without
+ * it they are left alone. A label named by an alias is claimed even when the
+ * configured name already exists, so pruning never strips it from issues.
  *
  * @example
  * ```ts
@@ -109,7 +112,9 @@ export const planSync = (
 
   // Exact names are claimed before aliases, so an alias can never steal a
   // label that another configured label names directly.
-  const entries = Object.values(configured)
+  const entries = Object.values(configured).filter(
+    (label, index, all) => all.findIndex((other) => sameName(other.name, label.name)) === index,
+  )
   const direct = new Map<ConfiguredLabel, Label | undefined>()
   for (const label of entries) {
     const found = unclaimed((candidate) => sameName(candidate.name, label.name))
@@ -119,12 +124,15 @@ export const planSync = (
 
   for (const label of entries) {
     const byName = direct.get(label)
+    const aliases = label.aliases ?? []
     if (byName !== undefined) {
       const wanted = target(label, byName)
       if (differs(wanted, byName)) steps.push({ action: 'update', current: byName.name, label: wanted })
+      for (const alias of existing.filter((found) => !claimed.has(found) && aliases.some((name) => sameName(name, found.name)))) {
+        claimed.add(alias)
+      }
       continue
     }
-    const aliases = label.aliases ?? []
     const byAlias = unclaimed((found) => aliases.some((alias) => sameName(alias, found.name)))
     if (byAlias !== undefined) {
       claimed.add(byAlias)
@@ -137,6 +145,33 @@ export const planSync = (
   if (prune) for (const label of existing) if (!claimed.has(label)) steps.push({ action: 'delete', name: label.name })
   return steps
 }
+
+/** The longest label description GitHub accepts. */
+const MAX_DESCRIPTION = 100
+
+// A repeated name only loses its later entries, so it is a warning.
+const reportRepeatedNames = (configured: Readonly<Record<string, ConfiguredLabel>>) =>
+  Effect.gen(function* () {
+    const report = yield* Report
+    const firstKey = new Map<string, string>()
+    for (const [key, label] of Object.entries(configured)) {
+      const first = firstKey.get(label.name.toLowerCase())
+      if (first === undefined) firstKey.set(label.name.toLowerCase(), key)
+      else {
+        yield* report.add({
+          feature: FEATURE,
+          rule: 'labels.sync',
+          level: 'warning',
+          message: `labels.${key} names "${label.name}", which labels.${first} already names; only the first is synced`,
+        })
+      }
+    }
+  })
+
+// GitHub rejects a description over its limit, which would stop the sync part
+// way through; such a label is left as it is, still claimed so pruning keeps it.
+const overlong = (step: SyncStep): Label | undefined =>
+  step.action === 'delete' || step.label.description.length <= MAX_DESCRIPTION ? undefined : step.label
 
 const describe = (step: SyncStep): string => {
   switch (step.action) {
@@ -156,7 +191,10 @@ const describe = (step: SyncStep): string => {
  *
  * @remarks
  * Runs on repository events only: pull request events from forks carry a
- * read-only token, so label writes would fail there. Every step is recorded
+ * read-only token, so label writes would fail there. A label whose
+ * description is over GitHub's 100 characters is reported and left alone
+ * rather than stopping the sync part way; a name repeated across entries is
+ * a warning, and only its first entry is synced. Every step is recorded
  * as a change; in a dry run the DryRun layer records the writes instead of
  * making them. Deletion needs `labelSync.prune: true`, which fixes v1's
  * misread `skipDelete` input that deleted labels by default.
@@ -174,8 +212,19 @@ export const syncLabels = (config: SmartcloudConfig): Effect.Effect<void, GitHub
     if (config.labels === undefined) return
     const github = yield* GitHub
     const report = yield* Report
+    yield* reportRepeatedNames(config.labels)
     const steps = planSync(config.labels, yield* github.listLabels, config.labelSync?.prune ?? false)
     for (const step of steps) {
+      const skipped = overlong(step)
+      if (skipped !== undefined) {
+        yield* report.add({
+          feature: FEATURE,
+          rule: 'labels.sync',
+          level: 'error',
+          message: `label "${skipped.name}" was not synced: its description is longer than GitHub's ${MAX_DESCRIPTION} characters`,
+        })
+        continue
+      }
       switch (step.action) {
         case 'create':
           yield* github.createLabel(step.label)
