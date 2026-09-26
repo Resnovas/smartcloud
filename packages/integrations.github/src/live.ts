@@ -848,6 +848,18 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         call('getReactions', () => octokit.rest.issues.get({ owner, repo, issue_number })).pipe(
           Effect.map(({ data }) => reactionsOf(data.reactions ?? NO_REACTIONS)),
         ),
+      listOpenPullRequests: call('listOpenPullRequests', () =>
+        octokit.paginate(octokit.rest.pulls.list, { owner, repo, state: 'open', per_page: 100 }),
+      ).pipe(
+        Effect.map((pulls) =>
+          pulls.map((pull) => ({
+            number: pull.number,
+            headSha: pull.head.sha,
+            labels: pull.labels.map(labelName),
+            draft: pull.draft === true,
+          })),
+        ),
+      ),
       closeIssue: (issue_number) =>
         Effect.asVoid(
           call('closeIssue', () => octokit.rest.issues.update({ owner, repo, issue_number, state: 'closed' })),

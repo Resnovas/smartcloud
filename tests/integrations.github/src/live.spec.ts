@@ -310,6 +310,26 @@ describe('live GitHub: issues and comments', () => {
       })
     }),
   )
+
+  it.effect('lists open pull requests with their head commits', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        [`GET ${REPO}/pulls`]: {
+          body: [
+            { number: 4, head: { sha: 'abc' }, labels: [{ name: 'hotfix' }], draft: false },
+            { number: 5, head: { sha: 'def' }, labels: [], draft: true },
+            { number: 6, head: { sha: 'ghi' }, labels: [] },
+          ],
+        },
+      })
+      expect(yield* (yield* service).listOpenPullRequests).toStrictEqual([
+        { number: 4, headSha: 'abc', labels: ['hotfix'], draft: false },
+        { number: 5, headSha: 'def', labels: [], draft: true },
+        { number: 6, headSha: 'ghi', labels: [], draft: false },
+      ])
+      expect(requests[0]?.query).toContain('state=open')
+    }),
+  )
 })
 
 describe('live GitHub: pull requests', () => {
