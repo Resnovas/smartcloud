@@ -1,0 +1,10 @@
+packages:
+  - 'packages/*'
+  - 'apps/*'
+  - 'tests/*'
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  nx: true
+catalog:
+  effect: 3.22.2

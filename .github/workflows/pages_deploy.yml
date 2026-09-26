@@ -14,6 +14,10 @@ jobs:
       contents: write
     concurrency:
       group: ${{ github.workflow }}-${{ github.ref }}
+    # v1 lives under legacy/ until the v2 docs replace it (SMC-18).
+    defaults:
+      run:
+        working-directory: legacy
     steps:
       - uses: actions/checkout@v3
 
@@ -25,6 +29,7 @@ jobs:
           scope: "@resnovas"
           always-auth: true
           cache: "yarn"
+          cache-dependency-path: legacy/yarn.lock
 
       - name: login to github packages
         run: npm set "npm.pkg.github.com/:_authToken" {{ secrets.GITHUB_TOKEN }}
@@ -41,4 +46,4 @@ jobs:
         if: ${{ github.ref == 'refs/heads/main' }}
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./docs/build
+          publish_dir: ./legacy/docs/build
