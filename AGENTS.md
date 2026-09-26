@@ -29,9 +29,9 @@ pnpm docs:api                                    # docgen (type-checks @example 
 
 ## Editor and agent surfaces
 
-Every editor task, debug configuration and app action calls a package script. VS Code and Cursor read `.vscode/`, Zed reads `.zed/`, JetBrains reads `.run/`, Codex desktop reads `.codex/environments/environment.toml` and Orca reads `orca.yaml`. Orca quick commands and OpenChamber project actions live in per-user settings, so `.agents/surfaces.json` lists them and `pnpm run surfaces:install` (run by the setup script) registers them for the checkout.
+The editor tasks, debug configurations and app actions are synced from `Resnovas/.github` with managed blocks: `.zed/`, `.vscode/tasks.json` and `launch.json`, `.run/house-*.run.xml`, `.codex/environments/environment.toml`, `orca.yaml`, `.agents/surfaces.json` and the `verify`, `review` and `address-review` prompts. Never edit inside a `house:managed` block; add smartcloud's own entries after the `house:local` line (or, for JetBrains and prompts, as other files). Every entry calls a package script or a synced tool.
 
-Agent prompts live once in `.agents/prompts/<name>.md`; `pnpm run surfaces:sync` writes them to `.claude/commands`, `.cursor/commands` and `.opencode/commands`, and `pnpm run check` fails when those drift. Edit the prompt, never the generated copies.
+Orca quick commands and OpenChamber project actions live in per-user settings, so `node tools/dev/surfaces.mjs install` (run by the setup script) registers everything in `.agents/surfaces.json` for the checkout. Agent prompts live once in `.agents/prompts/<name>.md`; `node tools/dev/surfaces.mjs sync` writes them to `.claude/commands`, `.cursor/commands` and `.opencode/commands`, and `pnpm run check` fails when those drift. Edit the prompt, never the generated copies.
 
 ## Adding a package
 

@@ -1,14 +1,16 @@
-# Orca worktree settings (house standard project-dev-surfaces). Every command
-# here is the setup script or a package script from package.json. Quick
-# commands and agent prompts are Orca app settings, so they come from
-# .agents/surfaces.json through `pnpm run surfaces:install`, which the setup
-# script runs.
-
+# house:managed:begin - synced from Resnovas/.github templates/orca.yaml. Edits inside this block are overwritten.
+#
+# Orca worktree settings (house standard project-dev-surfaces). Quick commands
+# and agent prompts are Orca app settings, so they come from
+# .agents/surfaces.json through tools/dev/surfaces.mjs, which setup runs.
 scripts:
-  # Runs after each worktree is created. node, not the shell launcher, so the
+  # Runs after each worktree is created. node, not a shell launcher, so the
   # same line works on Windows.
-  setup: node scripts/agent-setup.ts
+  setup: node --run setup
 setupAgentStartupPolicy: wait-for-setup
+# house:managed:end
+# house:local - add this repository's own settings below this line, such as
+# defaultTabs (an agent tab, a dev server) and worktree.sharedDirectories.
 defaultTabs:
   - title: dev
     command: pnpm run dev

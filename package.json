@@ -23,19 +23,17 @@
     "cli": "node apps/cli/dist/main.js",
     "mcp": "node apps/mcp/dist/main.js",
     "action": "node apps/action/dist/main.js",
-    "check": "nx run-many -t lint typecheck test build && node tools/license/check-headers.ts && node tools/dev/surfaces.ts check",
+    "check": "nx run-many -t lint typecheck test build && node tools/license/check-headers.ts && node tools/dev/surfaces.mjs check",
     "headers": "node tools/license/check-headers.ts",
     "headers:fix": "node tools/license/check-headers.ts --fix",
     "docs:reference": "node tools/docs/config-reference.ts",
     "docs:reference:check": "node tools/docs/config-reference.ts --check",
     "docs:dev": "node tools/dev/docs.ts",
-    "graph:open": "node tools/dev/open.ts graphify-out/graph.html",
+    "graph:open": "node tools/dev/open.mjs graphify-out/graph.html",
     "graph:update": "sh tools/graphify/graphify update",
     "docs:api": "nx run-many -t docgen contracts",
     "release:dry-run": "node tools/release/release.ts --dry-run",
-    "typecheck:tests": "node tools/typecheck/tests.ts",
-    "surfaces:sync": "node tools/dev/surfaces.ts sync",
-    "surfaces:install": "node tools/dev/surfaces.ts install"
+    "typecheck:tests": "node tools/typecheck/tests.ts"
   },
   "devDependencies": {
     "@effect/docgen": "4.0.0-rc.117",

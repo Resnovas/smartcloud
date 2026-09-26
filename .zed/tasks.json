@@ -1,8 +1,19 @@
-// Zed tasks (house standard project-dev-surfaces). Each one runs a package
-// script from package.json, which stays the one source of truth for commands.
-// Open them with `task: spawn` (alt-shift-t) or the command palette.
+// Zed tasks (house standard project-dev-surfaces). Open them with
+// `task: spawn` (alt-shift-t) or the command palette. Every task runs a
+// package script with `node --run`, or a house tool, so package.json stays the
+// one source of truth for commands.
 [
-  { "label": "setup", "command": "pnpm run setup", "use_new_terminal": false },
+  // house:managed:begin - synced from Resnovas/.github templates/.zed/tasks.json. Edits inside this block are overwritten.
+  { "label": "setup", "command": "node --run setup" },
+  { "label": "check: everything CI runs", "command": "node --run check" },
+  { "label": "test", "command": "node --run test", "tags": ["test"] },
+  { "label": "graph: open viewer", "command": "node tools/dev/open.mjs graphify-out/graph.html", "hide": "on_success" },
+  { "label": "graph: update", "command": "sh tools/graphify/graphify update" },
+  { "label": "graph: check", "command": "sh tools/graphify/graphify check" },
+  { "label": "agents: sync prompt commands", "command": "node tools/dev/surfaces.mjs sync" },
+  { "label": "agents: install Orca and OpenChamber actions", "command": "node tools/dev/surfaces.mjs install" },
+  // house:managed:end
+  // house:local - add this repository's own tasks below this line.
   {
     "label": "dev: watch build",
     "command": "pnpm run dev",
@@ -16,26 +27,63 @@
     "use_new_terminal": true,
     "reveal": "no_focus"
   },
-  { "label": "docs: regenerate configuration reference", "command": "pnpm run docs:reference" },
-  { "label": "docs: API docs and contracts", "command": "pnpm run docs:api" },
-  { "label": "graph: open viewer", "command": "pnpm run graph:open", "hide": "on_success" },
-  { "label": "graph: update", "command": "pnpm run graph:update" },
-  { "label": "build", "command": "pnpm run build", "tags": ["build"] },
-  { "label": "test", "command": "pnpm run test", "tags": ["test"] },
-  { "label": "test: current file", "command": "pnpm run test:file \"$ZED_RELATIVE_FILE\"", "tags": ["test"] },
-  { "label": "lint", "command": "pnpm run lint" },
-  { "label": "typecheck", "command": "pnpm run typecheck && pnpm run typecheck:tests" },
-  { "label": "format", "command": "pnpm run format" },
-  { "label": "fix: format and licence headers", "command": "pnpm run fix" },
-  { "label": "bundle", "command": "pnpm run bundle" },
-  { "label": "check: everything CI runs", "command": "pnpm run check" },
-  { "label": "release: dry run", "command": "pnpm run release:dry-run" },
-  { "label": "cli: validate config", "command": "pnpm run cli validate .github/smartcloud.yml" },
+  {
+    "label": "docs: regenerate configuration reference",
+    "command": "pnpm run docs:reference"
+  },
+  {
+    "label": "docs: API docs and contracts",
+    "command": "pnpm run docs:api"
+  },
+  {
+    "label": "build",
+    "command": "pnpm run build",
+    "tags": [
+      "build"
+    ]
+  },
+  {
+    "label": "test: current file",
+    "command": "pnpm run test:file \"$ZED_RELATIVE_FILE\"",
+    "tags": [
+      "test"
+    ]
+  },
+  {
+    "label": "lint",
+    "command": "pnpm run lint"
+  },
+  {
+    "label": "typecheck",
+    "command": "pnpm run typecheck && pnpm run typecheck:tests"
+  },
+  {
+    "label": "format",
+    "command": "pnpm run format"
+  },
+  {
+    "label": "fix: format and licence headers",
+    "command": "pnpm run fix"
+  },
+  {
+    "label": "bundle",
+    "command": "pnpm run bundle"
+  },
+  {
+    "label": "release: dry run",
+    "command": "pnpm run release:dry-run"
+  },
+  {
+    "label": "cli: validate config",
+    "command": "pnpm run cli validate .github/smartcloud.yml"
+  },
   {
     "label": "cli: dry-run against this repo",
     "command": "pnpm run cli dry-run --repo Resnovas/smartcloud --event schedule"
   },
-  { "label": "mcp: start server (stdio)", "command": "pnpm run mcp", "use_new_terminal": true },
-  { "label": "agents: sync prompt commands", "command": "pnpm run surfaces:sync" },
-  { "label": "agents: install Orca and OpenChamber actions", "command": "pnpm run surfaces:install" }
+  {
+    "label": "mcp: start server (stdio)",
+    "command": "pnpm run mcp",
+    "use_new_terminal": true
+  },
 ]

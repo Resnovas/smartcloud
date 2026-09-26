@@ -1,37 +1,26 @@
-/**
- * @file tools/dev/surfaces.ts
- *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
- * Licensed under the Fair Core License, Version 1.0, MIT Future License
- * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
- * the licence key functionality, or modify any part of the software that the
- * licence key protects.
- *
- * Contributions are made under the Developer Certificate of Origin (DCO.md) and
- * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
- * (CODE_OF_CONDUCT.md) and the Eventiva Cooperation Commitment
- * (COOPERATION_COMMITMENT.md).
- *
- * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
- */
-
+#!/usr/bin/env node
+// Synced from Resnovas/.github templates/tools/dev/surfaces.mjs. Edit it there,
+// not here: the next house sync overwrites local edits.
+//
 // Keeps the one-click surfaces that editors and agent apps cannot read from
 // the repository in step with it (house standard project-dev-surfaces).
 //
-//   node tools/dev/surfaces.ts sync      write the agent commands from .agents/prompts
-//   node tools/dev/surfaces.ts check     exit 1 if the agent commands are out of date
-//   node tools/dev/surfaces.ts install   register actions and prompts in Orca and OpenChamber
-//   node tools/dev/surfaces.ts install --dry-run
+//   node tools/dev/surfaces.mjs sync      write the agent commands from .agents/prompts
+//   node tools/dev/surfaces.mjs check     exit 1 if the agent commands are out of date
+//   node tools/dev/surfaces.mjs install   register actions and prompts in Orca and OpenChamber
+//   node tools/dev/surfaces.mjs install --dry-run
 //
-// `.agents/surfaces.json` lists the actions (each one a package script) and the
-// agents that get a button per prompt. `.agents/prompts/<id>.md` holds each
-// prompt once; `sync` writes it to `.claude/commands`, `.cursor/commands` and
+// `.agents/surfaces.json` (JSON with comments) lists the actions: the synced
+// `house` list and the repository's own `actions`. Each runs a package script
+// through `node --run`, or a `command`. `agents` get a button per prompt.
+// `.agents/prompts/<id>.md` holds each prompt once, the house ones synced and
+// the repository's own beside them; `sync` writes it to `.claude/commands`, `.cursor/commands` and
 // `.opencode/commands`, which this tool owns outright.
 //
 // Orca keeps quick commands, and OpenChamber keeps project actions, in
 // per-user settings rather than in the repository, so `install` writes them
 // there for this checkout. It only touches entries whose id starts with the
-// manifest's name, so it never removes anything added by hand. It reads Orca's
+// repository's name, so it never removes anything added by hand. It reads Orca's
 // runtime token from Orca's own metadata file at run time and never stores it.
 
 import { execFileSync } from 'node:child_process'
@@ -42,34 +31,39 @@ import { dirname, join } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 
-interface Action {
-  readonly id: string
-  readonly label: string
-  readonly script: string
-  readonly url?: string
-  readonly primary?: boolean
-}
 
-interface Manifest {
-  readonly name: string
-  readonly agents: ReadonlyArray<string>
-  readonly actions: ReadonlyArray<Action>
-}
 
-interface Prompt {
-  readonly id: string
-  readonly label: string
-  readonly description: string
-  readonly argumentHint: string | undefined
-  readonly body: string
-}
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
-const manifest = JSON.parse(readFileSync(join(root, '.agents/surfaces.json'), 'utf8')) as Manifest
+// JSON with comments and trailing commas, as editors write it. Strings are
+// copied whole, so a `//` inside one is kept.
+const parseJsonc = (text) => {
+  let out = ''
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i]
+    if (char === '"') {
+      let end = i + 1
+      while (end < text.length && text[end] !== '"') end += text[end] === '\\' ? 2 : 1
+      out += text.slice(i, end + 1)
+      i = end
+    } else if (char === '/' && text[i + 1] === '/') {
+      while (i < text.length && text[i] !== '\n') i++
+      out += '\n'
+    } else out += char
+  }
+  return JSON.parse(out.replace(/,(\s*[\]}])/g, '$1'))
+}
+
+const manifest = parseJsonc(readFileSync(join(root, '.agents/surfaces.json'), 'utf8'))
+const actions = [...(manifest.house ?? []), ...(manifest.actions ?? [])]
+// Every entry this tool writes starts with the repository's name, so it only
+// ever replaces or removes its own.
+const prefix = `${manifest.repository.split('/').pop()}:`
+const commandOf = (action) => action.command ?? `node --run ${action.script}`
 const [command, ...flags] = process.argv.slice(2)
 const dryRun = flags.includes('--dry-run')
 
-const agentNames: Record<string, string> = {
+const agentNames = {
   claude: 'Claude',
   codex: 'Codex',
   opencode: 'OpenCode',
@@ -79,7 +73,7 @@ const agentNames: Record<string, string> = {
 
 // --- Prompts -----------------------------------------------------------------
 
-const readPrompts = (): Array<Prompt> => {
+const readPrompts = () => {
   const directory = join(root, '.agents/prompts')
   return readdirSync(directory)
     .filter((file) => file.endsWith('.md'))
@@ -91,7 +85,7 @@ const readPrompts = (): Array<Prompt> => {
       const fields = new Map(
         (match[1] ?? '').split('\n').flatMap((line) => {
           const colon = line.indexOf(':')
-          return colon === -1 ? [] : [[line.slice(0, colon).trim(), line.slice(colon + 1).trim()] as const]
+          return colon === -1 ? [] : [[line.slice(0, colon).trim(), line.slice(colon + 1).trim()]]
         }),
       )
       const id = file.slice(0, -'.md'.length)
@@ -105,13 +99,13 @@ const readPrompts = (): Array<Prompt> => {
     })
 }
 
-const frontmatter = (fields: ReadonlyArray<readonly [string, string | undefined]>): string => {
+const frontmatter = (fields) => {
   const lines = fields.flatMap(([key, value]) => (value === undefined || value === '' ? [] : [`${key}: ${value}`]))
   return lines.length === 0 ? '' : `---\n${lines.join('\n')}\n---\n\n`
 }
 
 // Each agent command directory maps a prompt to that tool's file format.
-const targets: ReadonlyArray<{ readonly directory: string; readonly render: (prompt: Prompt) => string }> = [
+const targets = [
   {
     directory: '.claude/commands',
     render: (prompt) =>
@@ -128,9 +122,9 @@ const targets: ReadonlyArray<{ readonly directory: string; readonly render: (pro
 ]
 
 // Returns the files that differ from what the prompts produce.
-const syncPrompts = (write: boolean): Array<string> => {
+const syncPrompts = (write) => {
   const prompts = readPrompts()
-  const stale: Array<string> = []
+  const stale = []
   for (const target of targets) {
     const directory = join(root, target.directory)
     const wanted = new Map(prompts.map((prompt) => [`${prompt.id}.md`, target.render(prompt)]))
@@ -155,26 +149,16 @@ const syncPrompts = (write: boolean): Array<string> => {
 
 // --- Orca ----------------------------------------------------------------------
 
-interface OrcaMetadata {
-  readonly authToken: string
-  readonly transports: ReadonlyArray<{ readonly kind: string; readonly endpoint: string }>
-}
 
-interface QuickCommand {
-  readonly id: string
-  readonly label: string
-  readonly scope?: { readonly type: string; readonly repoId?: string }
-  readonly [key: string]: unknown
-}
 
-const orcaUserData = (): string => {
-  if (process.env['ORCA_USER_DATA_PATH']) return process.env['ORCA_USER_DATA_PATH']
+const orcaUserData = () => {
+  if (process.env.ORCA_USER_DATA_PATH) return process.env.ORCA_USER_DATA_PATH
   if (process.platform === 'darwin') return join(homedir(), 'Library', 'Application Support', 'orca')
-  if (process.platform === 'win32') return join(process.env['APPDATA'] ?? join(homedir(), 'AppData', 'Roaming'), 'orca')
-  return join(process.env['XDG_CONFIG_HOME'] ?? join(homedir(), '.config'), 'orca')
+  if (process.platform === 'win32') return join(process.env.APPDATA ?? join(homedir(), 'AppData', 'Roaming'), 'orca')
+  return join(process.env.XDG_CONFIG_HOME ?? join(homedir(), '.config'), 'orca')
 }
 
-const orcaCall = (metadata: OrcaMetadata, method: string, params: unknown): Promise<unknown> =>
+const orcaCall = (metadata, method, params) =>
   new Promise((resolve, reject) => {
     const transport = metadata.transports.find((entry) => entry.kind === 'unix' || entry.kind === 'named-pipe')
     if (transport === undefined) {
@@ -193,7 +177,7 @@ const orcaCall = (metadata: OrcaMetadata, method: string, params: unknown): Prom
       clearTimeout(timer)
       reject(error)
     })
-    socket.on('data', (chunk: string) => {
+    socket.on('data', (chunk) => {
       buffer += chunk
       let newline = buffer.indexOf('\n')
       while (newline !== -1) {
@@ -201,7 +185,7 @@ const orcaCall = (metadata: OrcaMetadata, method: string, params: unknown): Prom
         buffer = buffer.slice(newline + 1)
         newline = buffer.indexOf('\n')
         if (line === '') continue
-        const frame = JSON.parse(line) as { id?: string; ok?: boolean; result?: unknown; error?: unknown }
+        const frame = JSON.parse(line)
         if (frame.id !== id) continue
         clearTimeout(timer)
         socket.end()
@@ -215,7 +199,7 @@ const orcaCall = (metadata: OrcaMetadata, method: string, params: unknown): Prom
     })
   })
 
-const mainCheckout = (): string => {
+const mainCheckout = () => {
   const common = execFileSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], {
     cwd: root,
     encoding: 'utf8',
@@ -223,20 +207,20 @@ const mainCheckout = (): string => {
   return dirname(common)
 }
 
-const samePath = (left: string, right: string): boolean => {
-  const normalise = (path: string) => path.replace(/\\/g, '/').replace(/\/+$/, '')
+const samePath = (left, right) => {
+  const normalise = (path) => path.replace(/\\/g, '/').replace(/\/+$/, '')
   return process.platform === 'win32'
     ? normalise(left).toLowerCase() === normalise(right).toLowerCase()
     : normalise(left) === normalise(right)
 }
 
-const installOrca = async (prompts: ReadonlyArray<Prompt>): Promise<string> => {
+const installOrca = async (prompts) => {
   const metadataPath = join(orcaUserData(), 'orca-runtime.json')
   if (!existsSync(metadataPath)) return 'Orca: not installed or never started, skipped.'
-  const metadata = JSON.parse(readFileSync(metadataPath, 'utf8')) as OrcaMetadata
-  let repos: ReadonlyArray<{ id: string; path: string }>
+  const metadata = JSON.parse(readFileSync(metadataPath, 'utf8'))
+  let repos
   try {
-    repos = ((await orcaCall(metadata, 'repo.list', null)) as { repos: Array<{ id: string; path: string }> }).repos
+    repos = (await orcaCall(metadata, 'repo.list', null)).repos
   } catch {
     return 'Orca: not running, skipped. Start Orca and run this again.'
   }
@@ -245,13 +229,12 @@ const installOrca = async (prompts: ReadonlyArray<Prompt>): Promise<string> => {
   if (repo === undefined) return `Orca: ${checkout} is not added to Orca, skipped. Add it, then run this again.`
 
   const scope = { type: 'repo', repoId: repo.id }
-  const prefix = `${manifest.name}:`
-  const wanted: Array<Record<string, unknown>> = [
-    ...manifest.actions.map((action) => ({
+  const wanted = [
+    ...actions.map((action) => ({
       id: `${prefix}${action.id}`,
       label: action.label,
       action: 'terminal-command',
-      command: `pnpm run ${action.script}`,
+      command: commandOf(action),
       appendEnter: true,
       scope,
     })),
@@ -269,13 +252,9 @@ const installOrca = async (prompts: ReadonlyArray<Prompt>): Promise<string> => {
         })),
       ),
   ]
-  const existing = (
-    (await orcaCall(metadata, 'settings.getTerminalQuickCommands', null)) as {
-      terminalQuickCommands: Array<QuickCommand>
-    }
-  ).terminalQuickCommands
-  const ours = (entry: QuickCommand) => entry.id.startsWith(prefix) && entry.scope?.repoId === repo.id
-  const removed = existing.filter((entry) => ours(entry) && !wanted.some((want) => want['id'] === entry.id))
+  const existing = (await orcaCall(metadata, 'settings.getTerminalQuickCommands', null)).terminalQuickCommands
+  const ours = (entry) => entry.id.startsWith(prefix) && entry.scope?.repoId === repo.id
+  const removed = existing.filter((entry) => ours(entry) && !wanted.some((want) => want.id === entry.id))
   const others = existing.filter((entry) => !ours(entry)).length
   if (others + wanted.length > 40) {
     return `Orca: holds at most 40 quick commands and ${others} belong to other repos or were added by hand, so ${wanted.length} more do not fit. Nothing changed.`
@@ -293,30 +272,27 @@ const installOrca = async (prompts: ReadonlyArray<Prompt>): Promise<string> => {
 
 // --- OpenChamber -------------------------------------------------------------
 
-const installOpenChamber = (): string => {
+const installOpenChamber = () => {
   const directory = join(homedir(), '.config', 'openchamber')
   if (!existsSync(directory)) return 'OpenChamber: not installed, skipped.'
-  const prefix = `${manifest.name}:`
   const checkouts = [...new Set([root, mainCheckout()].map((path) => path.replace(/\\/g, '/').replace(/\/+$/, '')))]
   for (const checkout of checkouts) {
     // OpenChamber names a project's settings file after its path.
     const file = join(directory, 'projects', `path_${Buffer.from(checkout, 'utf8').toString('base64url')}.json`)
-    const current = existsSync(file) ? (JSON.parse(readFileSync(file, 'utf8')) as Record<string, unknown>) : {}
-    const kept = (
-      Array.isArray(current['projectActions']) ? (current['projectActions'] as Array<{ id: string }>) : []
-    ).filter((entry) => !entry.id.startsWith(prefix))
-    const actions = manifest.actions.map((action) => ({
+    const current = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {}
+    const kept = (Array.isArray(current.projectActions) ? current.projectActions : []).filter((entry) => !entry.id.startsWith(prefix))
+    const projectActions = actions.map((action) => ({
       id: `${prefix}${action.id}`,
       name: action.label,
-      command: `pnpm run ${action.script}`,
+      command: commandOf(action),
       ...(action.url === undefined ? {} : { autoOpenUrl: true, openUrl: action.url }),
     }))
-    const primary = manifest.actions.find((action) => action.primary === true)
+    const primary = actions.find((action) => action.primary === true)
     const next = {
       ...current,
-      ...(current['version'] === undefined ? { version: 1 } : {}),
-      projectActions: [...kept, ...actions],
-      ...(primary !== undefined && current['projectActionsPrimaryId'] === undefined
+      ...(current.version === undefined ? { version: 1 } : {}),
+      projectActions: [...kept, ...projectActions],
+      ...(primary !== undefined && current.projectActionsPrimaryId === undefined
         ? { projectActionsPrimaryId: `${prefix}${primary.id}` }
         : {}),
       projectPath: checkout,
@@ -326,7 +302,7 @@ const installOpenChamber = (): string => {
       writeFileSync(file, `${JSON.stringify(next, null, 2)}\n`)
     }
   }
-  return `OpenChamber: ${manifest.actions.length} project actions for ${checkouts.join(' and ')}.`
+  return `OpenChamber: ${actions.length} project actions for ${checkouts.join(' and ')}.`
 }
 
 // --- Commands ----------------------------------------------------------------
@@ -335,18 +311,18 @@ if (command === 'sync' || command === 'check') {
   const stale = syncPrompts(command === 'sync')
   if (command === 'check' && stale.length > 0) {
     console.error(
-      `Agent commands are out of date with .agents/prompts (run pnpm run surfaces:sync):\n  ${stale.join('\n  ')}`,
+      `Agent commands are out of date with .agents/prompts (run node tools/dev/surfaces.mjs sync):\n  ${stale.join('\n  ')}`,
     )
     process.exit(1)
   }
   console.log(stale.length === 0 ? 'Agent commands are up to date.' : `Wrote ${stale.length} agent command files.`)
 } else if (command === 'install') {
-  if (syncPrompts(false).length > 0) console.warn('Agent commands are out of date; run pnpm run surfaces:sync.')
+  if (syncPrompts(false).length > 0) console.warn('Agent commands are out of date; run node tools/dev/surfaces.mjs sync.')
   const prompts = readPrompts()
   console.log(await installOrca(prompts))
   console.log(installOpenChamber())
   if (dryRun) console.log('Dry run: nothing was written.')
 } else {
-  console.error('usage: node tools/dev/surfaces.ts sync | check | install [--dry-run]')
+  console.error('usage: node tools/dev/surfaces.mjs sync | check | install [--dry-run]')
   process.exit(2)
 }

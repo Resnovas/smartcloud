@@ -1,0 +1,6 @@
+<!-- Synced from Resnovas/.github templates/.run. Add this repository's own run configurations as other files in .run/. -->
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="agents: install Orca and OpenChamber actions" type="NodeJSConfigurationType" application-parameters="install" path-to-js-file="tools/dev/surfaces.mjs" working-dir="$PROJECT_DIR$">
+    <method v="2" />
+  </configuration>
+</component>

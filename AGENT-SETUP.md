@@ -37,25 +37,25 @@ Never write values into repo files.
 
 ## Run
 
-| Job               | Cmd                                                                |
-| ----------------- | ------------------------------------------------------------------ |
-| dev (watch build) | `pnpm run dev`                                                     |
-| build             | `pnpm run build`                                                   |
-| test              | `pnpm run test` (100% line coverage gate)                          |
-| one file          | `pnpm run test:file <path>` (coverage off)                         |
-| lint              | `pnpm run lint`                                                    |
-| types             | `pnpm run typecheck`, then `pnpm run typecheck:tests`              |
-| format            | `pnpm run format` (check: `pnpm run format:check`)                 |
-| headers           | `pnpm run headers` (fix: `pnpm run headers:fix`)                   |
-| bundle            | `pnpm run bundle` (`dist/index.js`, `apps/cli/release/`)           |
-| docs              | `pnpm run docs:reference` (check: `pnpm run docs:reference:check`) |
-| docs server       | `pnpm run docs:dev` (`http://localhost:3000`)                      |
-| code graph        | `pnpm run graph:open`                                              |
-| agent prompts     | `pnpm run surfaces:sync` after editing `.agents/prompts/`          |
-| all CI            | `pnpm run check`                                                   |
-| CLI               | `pnpm run cli <command>` after build                               |
-| MCP               | `pnpm run mcp` (stdio; stdout is protocol)                         |
-| action            | `pnpm run action` with env above                                   |
+| Job               | Cmd                                                                 |
+| ----------------- | ------------------------------------------------------------------- |
+| dev (watch build) | `pnpm run dev`                                                      |
+| build             | `pnpm run build`                                                    |
+| test              | `pnpm run test` (100% line coverage gate)                           |
+| one file          | `pnpm run test:file <path>` (coverage off)                          |
+| lint              | `pnpm run lint`                                                     |
+| types             | `pnpm run typecheck`, then `pnpm run typecheck:tests`               |
+| format            | `pnpm run format` (check: `pnpm run format:check`)                  |
+| headers           | `pnpm run headers` (fix: `pnpm run headers:fix`)                    |
+| bundle            | `pnpm run bundle` (`dist/index.js`, `apps/cli/release/`)            |
+| docs              | `pnpm run docs:reference` (check: `pnpm run docs:reference:check`)  |
+| docs server       | `pnpm run docs:dev` (`http://localhost:3000`)                       |
+| code graph        | `pnpm run graph:open`                                               |
+| agent prompts     | `node tools/dev/surfaces.mjs sync` after editing `.agents/prompts/` |
+| all CI            | `pnpm run check`                                                    |
+| CLI               | `pnpm run cli <command>` after build                                |
+| MCP               | `pnpm run mcp` (stdio; stdout is protocol)                          |
+| action            | `pnpm run action` with env above                                    |
 
 Port 3000 only for `docs:dev`. Affected only: `pnpm nx affected -t lint typecheck test build`.
 
@@ -73,8 +73,8 @@ Port 3000 only for `docs:dev`. Affected only: `pnpm nx affected -t lint typechec
 | Codex cloud     | `AGENTS.md`                                                         | setup and maintenance scripts both `scripts/agent-setup`; secret `GITHUB_TOKEN` optional; agent internet only for GitHub-facing work |
 | Copilot         | `.github/workflows/copilot-setup-steps.yml`                         | repo secret or variable `GITHUB_TOKEN` optional                                                                                      |
 | Codex desktop   | `.codex/environments/environment.toml`                              | none                                                                                                                                 |
-| Orca            | `orca.yaml`                                                         | none; `pnpm run surfaces:install` (run by setup) adds quick commands and agent prompts                                               |
-| OpenChamber     | `.opencode/commands/`                                               | none; `pnpm run surfaces:install` (run by setup) adds project actions                                                                |
+| Orca            | `orca.yaml`                                                         | none; `node tools/dev/surfaces.mjs install` (run by setup) adds quick commands and agent prompts                                     |
+| OpenChamber     | `.opencode/commands/`                                               | none; `node tools/dev/surfaces.mjs install` (run by setup) adds project actions                                                      |
 | Zed             | `.zed/tasks.json`, `.zed/debug.json`                                | none                                                                                                                                 |
 
 ## Breaks

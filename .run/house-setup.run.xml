@@ -1,9 +1,10 @@
+<!-- Synced from Resnovas/.github templates/.run. Add this repository's own run configurations as other files in .run/. -->
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="check" type="js.build_tools.npm">
+  <configuration default="false" name="setup" type="js.build_tools.npm">
     <package-json value="$PROJECT_DIR$/package.json" />
     <command value="run" />
     <scripts>
-      <script value="check" />
+      <script value="setup" />
     </scripts>
     <node-interpreter value="project" />
     <envs />

@@ -105,9 +105,9 @@ if (build) {
 // 6. Register the repo's actions and agent prompts with Orca and OpenChamber,
 // which keep them in per-user settings. Skipped on CI; never fails the setup.
 if (!process.env['CI']) {
-  const result = run(process.execPath, [join(root, 'tools/dev/surfaces.ts'), 'install'])
+  const result = run(process.execPath, [join(root, 'tools/dev/surfaces.mjs'), 'install'])
   if (result.status !== 0)
-    log('note: registering Orca and OpenChamber actions failed; run `pnpm run surfaces:install`.')
+    log('note: registering Orca and OpenChamber actions failed; run `node tools/dev/surfaces.mjs install`.')
 }
 
 // Secrets are never needed to set up; say where the optional one comes from.

@@ -1,17 +1,28 @@
 {
-  // Every task calls a package script from package.json or the setup script,
-  // which stay the one source of truth for commands (house standard
-  // project-dev-surfaces). Zed reads .zed/tasks.json instead.
+  // VS Code and Cursor tasks (house standard project-dev-surfaces). Every
+  // task runs a package script with `node --run`, or a house tool, so
+  // package.json stays the one source of truth for commands. Zed reads
+  // .zed/tasks.json instead.
   "version": "2.0.0",
   "tasks": [
+    // house:managed:begin - synced from Resnovas/.github templates/.vscode/tasks.json. Edits inside this block are overwritten.
+    { "label": "setup", "detail": "node --run setup", "type": "shell", "command": "node --run setup", "problemMatcher": [] },
+    { "label": "check", "detail": "Everything CI runs: node --run check", "type": "shell", "command": "node --run check", "problemMatcher": [] },
     {
-      "label": "setup",
-      "detail": "Install Node deps, sync Nx and build: scripts/agent-setup",
+      "label": "test",
+      "detail": "node --run test",
       "type": "shell",
-      "command": "./scripts/agent-setup",
-      "windows": { "command": ".\\scripts\\agent-setup.cmd" },
-      "problemMatcher": []
+      "command": "node --run test",
+      "group": { "kind": "test", "isDefault": true },
+      "problemMatcher": [],
     },
+    { "label": "graph: open viewer", "detail": "Open graphify-out/graph.html", "type": "shell", "command": "node tools/dev/open.mjs graphify-out/graph.html", "problemMatcher": [] },
+    { "label": "graph: update", "detail": "Refresh the code graph", "type": "shell", "command": "sh tools/graphify/graphify update", "problemMatcher": [] },
+    { "label": "graph: check", "detail": "Fail if the committed graph is stale", "type": "shell", "command": "sh tools/graphify/graphify check", "problemMatcher": [] },
+    { "label": "agents: sync prompt commands", "detail": "Write .agents/prompts to the agent command folders", "type": "shell", "command": "node tools/dev/surfaces.mjs sync", "problemMatcher": [] },
+    { "label": "agents: install Orca and OpenChamber actions", "detail": "Register quick commands, agent prompts and project actions", "type": "shell", "command": "node tools/dev/surfaces.mjs install", "problemMatcher": [] },
+    // house:managed:end
+    // house:local - add this repository's own tasks below this line.
     {
       "label": "dev",
       "detail": "Rebuild every library and app on change: pnpm run dev",
@@ -25,16 +36,11 @@
       "detail": "Build every project: pnpm run build",
       "type": "shell",
       "command": "pnpm run build",
-      "group": { "kind": "build", "isDefault": true },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
       "problemMatcher": "$tsc"
-    },
-    {
-      "label": "test",
-      "detail": "Test every project with coverage: pnpm run test",
-      "type": "shell",
-      "command": "pnpm run test",
-      "group": { "kind": "test", "isDefault": true },
-      "problemMatcher": []
     },
     {
       "label": "test: current file",
@@ -56,7 +62,9 @@
       "detail": "Type-check every project, then the test projects",
       "type": "shell",
       "command": "pnpm run typecheck && pnpm run typecheck:tests",
-      "windows": { "command": "pnpm run typecheck; if ($?) { pnpm run typecheck:tests }" },
+      "windows": {
+        "command": "pnpm run typecheck; if ($?) { pnpm run typecheck:tests }"
+      },
       "problemMatcher": "$tsc"
     },
     {
@@ -96,13 +104,6 @@
       "problemMatcher": []
     },
     {
-      "label": "graph: open viewer",
-      "detail": "Open the committed Graphify code graph: pnpm run graph:open",
-      "type": "shell",
-      "command": "pnpm run graph:open",
-      "problemMatcher": []
-    },
-    {
       "label": "fix",
       "detail": "Format and add licence headers: pnpm run fix",
       "type": "shell",
@@ -116,19 +117,5 @@
       "command": "pnpm run release:dry-run",
       "problemMatcher": []
     },
-    {
-      "label": "agents: install Orca and OpenChamber actions",
-      "detail": "Register this repo's actions and prompts in Orca and OpenChamber: pnpm run surfaces:install",
-      "type": "shell",
-      "command": "pnpm run surfaces:install",
-      "problemMatcher": []
-    },
-    {
-      "label": "check",
-      "detail": "Everything CI runs: lint, typecheck, test, build and headers",
-      "type": "shell",
-      "command": "pnpm run check",
-      "problemMatcher": []
-    }
-  ]
+  ],
 }
