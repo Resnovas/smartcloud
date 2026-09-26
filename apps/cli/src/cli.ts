@@ -18,6 +18,7 @@
 import { Args, Command, Options, ValidationError } from '@effect/cli'
 import { Console, Effect, Option } from 'effect'
 import { gitHubConfigSource, locateConfig, migrate, validate } from './commands.js'
+import { VERSION } from './version.js'
 
 const path = Args.text({ name: 'path' }).pipe(
   Args.withDescription('The config file. Defaults to the first of .github/smartcloud.yml, .github/smartcloud.yaml or .github/config.json.'),
@@ -50,7 +51,7 @@ export const smartcloud = Command.make('smartcloud').pipe(
  * @param argv - The node binary, the script, then the arguments.
  * @returns The run.
  */
-export const run = Command.run(smartcloud, { name: 'smartcloud', version: '2.0.0' })
+export const run = Command.run(smartcloud, { name: 'smartcloud', version: VERSION })
 
 // Splitting and trimming is linear, unlike a whitespace-collapsing pattern.
 const oneLine = (message: string) =>

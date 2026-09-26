@@ -1,6 +1,6 @@
 {
   "name": "@resnovas/action",
-  "version": "0.0.0",
+  "version": "1.0.0-beta.8",
   "private": true,
   "type": "module",
   "description": "The smartcloud GitHub Action: runs every configured feature for the triggering event and reports the result.",
