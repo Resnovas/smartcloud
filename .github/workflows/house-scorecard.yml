@@ -1,0 +1,28 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-scorecard.yml. Edits inside this block are overwritten.
+#
+# OpenSSF Scorecard. Scores the repository's supply-chain practices on the
+# default branch, weekly and when branch protection changes, uploads the
+# results to code scanning and, for a public repository, publishes them for
+# the README badge. Uses only the workflow token.
+name: House Scorecard
+
+on:
+  push:
+    branches: [main]
+  branch_protection_rule:
+  schedule:
+    - cron: '41 5 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  house-scorecard:
+    uses: Resnovas/.github/.github/workflows/scorecard.yml@main
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      security-events: write
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.

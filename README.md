@@ -1,5 +1,7 @@
 # smartcloud
 
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/Resnovas/smartcloud/badge)](https://scorecard.dev/viewer/?uri=github.com/Resnovas/smartcloud)
+
 smartcloud is a GitHub Action for repository automation and contribution policy, configured in one file: `.github/smartcloud.yml`.
 
 It keeps labels in sync and applies them by condition, checks pull request and issue titles, enforces DCO sign-off and AI attribution on commits, reads the AI disclosure in pull request descriptions, gates merges on maintainer review, marks inactive work stale, applies repository settings, and syncs shared files from a template repository. Each feature has its own config section and runs only when that section is present.

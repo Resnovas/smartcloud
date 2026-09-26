@@ -43,6 +43,8 @@ The synced House workflow lint runs actionlint and zizmor on every pull request 
 
 The synced House dependency review fails a pull request that adds a runtime or development dependency with a high or critical advisory, and lists the changed dependencies in its job summary. Allow an advisory that does not apply, with the reason, in `.github/dependency-review-config.yml` (`allow-ghsas`).
 
+The synced House Scorecard runs OpenSSF Scorecard on `main` weekly and on every push, uploads its findings to code scanning (category `scorecard`) and publishes the score behind the README badge. It uses only the workflow token; fix a finding in the repository rather than suppressing it.
+
 ## Adding a package
 
 1. `packages/<name>/package.json`: `"name": "@resnovas/<name>"`, `"type": "module"`, and an export map whose `.` entry lists `"@resnovas/source": "./src/index.ts"` first, then `types` and `import` pointing at `dist/`. Nx configuration stays out of `package.json`.
