@@ -17,7 +17,7 @@
 
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
-import { ConfigSource } from '@resnovas/config'
+import { ConfigSource, parseConfig } from '@resnovas/config'
 import { fileKey, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
 import {
   ConfigSourceFromGitHub,
@@ -69,6 +69,12 @@ describe('resolveToken', () => {
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
+  it('falls back to the GitHub CLI when GITHUB_TOKEN is set but blank', async () => {
+    await withFakeGh('from-gh')
+    const token = await Effect.runPromise(resolveToken.pipe(withEnv({ GITHUB_TOKEN: ' ' }), Effect.provide(NodeContext.layer)))
+    expect(Redacted.value(token)).toBe('from-gh')
+  })
+
   it('falls back to the GitHub CLI, and fails when neither has a token', async () => {
     await withFakeGh('from-gh')
     const token = await Effect.runPromise(resolveToken.pipe(withEnv({}), Effect.provide(NodeContext.layer)))
@@ -78,6 +84,8 @@ describe('resolveToken', () => {
     await withFakeGh('')
     const missing = await Effect.runPromise(Effect.either(resolveToken.pipe(withEnv({}), Effect.provide(NodeContext.layer))))
     expect(missing).toStrictEqual(Either.left(new MissingToken()))
+    const blank = await Effect.runPromise(Effect.either(resolveToken.pipe(withEnv({ GITHUB_TOKEN: '  ' }), Effect.provide(NodeContext.layer))))
+    expect(blank).toStrictEqual(Either.left(new MissingToken()))
     expect(new MissingToken().message).toContain('GITHUB_TOKEN')
   })
 })
@@ -155,6 +163,27 @@ describe('gitHubConfigSource', () => {
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
+  it.effect('keeps why a preset could not be read when it is not simply missing', () =>
+    Effect.gen(function* () {
+      const read = (fetch: typeof globalThis.fetch, env: Record<string, string>) =>
+        Effect.flip(
+          Effect.flatMap(ConfigSource, (source) => source.read({ owner: 'Resnovas', repo: '.github', path: 'a.yml' })).pipe(
+            Effect.provide(gitHubConfigSource({ fetch })),
+            withEnv(env),
+          ),
+        )
+      const unauthorised: typeof globalThis.fetch = () => Promise.resolve(new Response('{"message":"Bad credentials"}', { status: 401, headers: { 'content-type': 'application/json' } }))
+      const denied = yield* read(unauthorised, { GITHUB_TOKEN: 'secret' })
+      expect(denied).toMatchObject({ _tag: 'ConfigNotFound', source: 'Resnovas/.github/a.yml' })
+      expect(denied.message).toBe('Resnovas/.github/a.yml could not be read: getFile: forbidden (Bad credentials)')
+      expect(denied.message).not.toContain('secret')
+      yield* Effect.promise(() => withFakeGh(''))
+      const unused: typeof globalThis.fetch = () => Promise.reject(new Error('GitHub must not be called without a token'))
+      const signedOut = yield* read(unused, {})
+      expect(signedOut.message).toBe(`Resnovas/.github/a.yml could not be read: ${new MissingToken().message}`)
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
   it.effect('turns any failure into ConfigNotFound naming the preset', () =>
     Effect.gen(function* () {
       const fetch: typeof globalThis.fetch = () => Promise.resolve(new Response('{"message":"Not Found"}', { status: 404 }))
@@ -170,12 +199,18 @@ describe('gitHubConfigSource', () => {
 })
 
 describe('migrate', () => {
-  it.effect('prints v2 YAML with a schema hint and every warning', () =>
+  it.effect('prints only v2 YAML with a schema hint on stdout, and every warning on stderr', () =>
     Effect.gen(function* () {
+      const errors: Array<string> = []
+      vi.spyOn(console, 'error').mockImplementation((...args: Array<unknown>) => void errors.push(args.join(' ')))
       const config = yield* migrate(fixture('v1-smartcloud.json'), undefined)
       expect(config.version).toBe(2)
+      expect(logs).toHaveLength(1)
       expect(logs[0]).toMatch(/^# yaml-language-server: \$schema=.*smartcloud\.schema\.json\nversion: 2\n/)
-      expect(logs.some((line) => line.startsWith('warning: '))).toBe(true)
+      expect(errors.length).toBeGreaterThan(0)
+      expect(errors.every((line) => line.startsWith('warning: '))).toBe(true)
+      // Redirected stdout is a config that parses as it is.
+      yield* parseConfig(logs.join('\n'), 'stdout')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
@@ -242,6 +277,14 @@ describe('the smartcloud command', () => {
       process.exitCode = before
       yield* main(['node', 'smartcloud', 'validate', fixture('v1-eventiva.json')])
       expect(process.exitCode).toBe(before)
+      // A schema error spans lines; the failure is still one line.
+      const invalid = join(dir, 'invalid.yml')
+      yield* Effect.promise(() => writeFile(invalid, 'version: 2\nlabels: nope\n'))
+      yield* main(['node', 'smartcloud', 'validate', invalid])
+      const last = errors.at(-1) ?? ''
+      expect(last).toMatch(/^smartcloud: .*invalid\.yml is not a valid smartcloud config: /)
+      expect(last).not.toContain('\n')
+      process.exitCode = before
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })

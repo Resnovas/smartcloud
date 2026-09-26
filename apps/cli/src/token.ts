@@ -26,8 +26,8 @@ export class MissingToken extends Data.TaggedError('MissingToken')<Record<never,
 }
 
 /**
- * The GitHub token for local runs: `GITHUB_TOKEN` if set, otherwise the
- * token of the signed-in GitHub CLI.
+ * The GitHub token for local runs: `GITHUB_TOKEN` if set and not blank,
+ * otherwise the token of the signed-in GitHub CLI.
  *
  * @remarks
  * The token stays redacted from the moment it is read, so it can never be
@@ -37,6 +37,8 @@ export class MissingToken extends Data.TaggedError('MissingToken')<Record<never,
  * @returns The redacted token.
  */
 export const resolveToken = Config.redacted('GITHUB_TOKEN').pipe(
+  // A GITHUB_TOKEN that is set but blank is no token: fall back to the GitHub CLI.
+  Config.validate({ message: 'GITHUB_TOKEN is empty', validation: (token) => Redacted.value(token).trim() !== '' }),
   Effect.orElse(() =>
     Command.string(Command.make('gh', 'auth', 'token')).pipe(
       Effect.map((output) => output.trim()),

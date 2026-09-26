@@ -52,12 +52,21 @@ export const smartcloud = Command.make('smartcloud').pipe(
  */
 export const run = Command.run(smartcloud, { name: 'smartcloud', version: '2.0.0' })
 
+// Splitting and trimming is linear, unlike a whitespace-collapsing pattern.
+const oneLine = (message: string) =>
+  message
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line !== '')
+    .join(' ')
+
 /**
  * Runs the CLI and turns a failure into one line on stderr and exit code 1.
  *
  * @remarks
  * Usage errors are already printed with the help text by the time they
- * arrive here, so only the exit code is set for them.
+ * arrive here, so only the exit code is set for them. A message that spans
+ * lines, such as a schema error's tree, is joined onto the one line.
  *
  * @param argv - The node binary, the script, then the arguments.
  * @returns The run, which never fails.
@@ -66,7 +75,7 @@ export const main = (argv: ReadonlyArray<string>) =>
   run(argv).pipe(
     Effect.catchAll((error) =>
       Effect.zipRight(
-        ValidationError.isValidationError(error) ? Effect.void : Console.error(`smartcloud: ${error.message}`),
+        ValidationError.isValidationError(error) ? Effect.void : Console.error(`smartcloud: ${oneLine(error.message)}`),
         Effect.sync(() => {
           process.exitCode = 1
         }),

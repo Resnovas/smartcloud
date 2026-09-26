@@ -17,10 +17,10 @@
 
 import { CommandExecutor, FileSystem, Path } from '@effect/platform'
 import { ConfigNotFound, ConfigSource, formatExtendsRef, parseConfig, resolveConfig, SmartcloudConfig, type ExtendsRef, type ResolvedConfig } from '@resnovas/config'
-import { GitHub, makeLiveGitHub, type LiveOptions } from '@resnovas/integrations.github'
+import { GitHub, type GitHubError, makeLiveGitHub, type LiveOptions } from '@resnovas/integrations.github'
 import { Console, Data, Effect, Layer, Schedule, Schema } from 'effect'
 import { stringify } from 'yaml'
-import { resolveToken } from './token.js'
+import { type MissingToken, resolveToken } from './token.js'
 
 /** Where the CLI looks for a config when none is given, in order. */
 export const CONFIG_CANDIDATES = ['.github/smartcloud.yml', '.github/smartcloud.yaml', '.github/config.json'] as const
@@ -73,6 +73,10 @@ const SCHEMA_HINT = '# yaml-language-server: $schema=https://raw.githubuserconte
  * Converts a v1 `.github/config.json` to v2 YAML, printing a warning for
  * everything the migration does not carry over.
  *
+ * @remarks
+ * Warnings go to stderr, so stdout holds only the YAML and can be
+ * redirected straight into a config file.
+ *
  * @param input - The v1 JSON file. A v2 file is rewritten unchanged.
  * @param output - Where to write the YAML; printed to stdout when omitted.
  * @returns The migrated config.
@@ -88,11 +92,34 @@ export const migrate = (input: string, output: string | undefined) =>
       yield* fs.writeFileString(output, yaml)
       yield* Console.log(`Wrote ${output}.`)
     }
-    for (const warning of warnings) yield* Console.log(`warning: ${warning}`)
+    for (const warning of warnings) yield* Console.error(`warning: ${warning}`)
     return config
   })
 
 const notFound = (ref: ExtendsRef) => new ConfigNotFound({ source: formatExtendsRef(ref) })
+
+/**
+ * A preset that could not be read for a reason other than not existing, such
+ * as a missing token or a GitHub outage. It is still a `ConfigNotFound` to
+ * the config loader, but its message keeps the reason, so the user is told
+ * to sign in rather than that the preset is missing.
+ */
+class PresetUnreadable extends ConfigNotFound {
+  readonly reason: string
+
+  constructor(ref: ExtendsRef, reason: string) {
+    super({ source: formatExtendsRef(ref) })
+    this.reason = reason
+  }
+
+  override get message() {
+    return `${this.source} could not be read: ${this.reason}`
+  }
+}
+
+// Only GitHub saying the file is not there means the preset is missing.
+const unreadable = (ref: ExtendsRef) => (error: MissingToken | GitHubError) =>
+  error._tag === 'NotFound' ? notFound(ref) : new PresetUnreadable(ref, error.message)
 
 /**
  * Reads presets named in `extends` from GitHub. The token is resolved only
@@ -114,7 +141,7 @@ export const gitHubConfigSource = (options: Pick<LiveOptions, 'fetch'> = {}) =>
             const coordinates = { owner: ref.owner, repo: ref.repo }
             const github = yield* makeLiveGitHub({ ...options, token, coordinates, retry: Schedule.stop })
             return yield* github.getFile(ref)
-          }).pipe(Effect.provideService(CommandExecutor.CommandExecutor, executor), Effect.mapError(() => notFound(ref))),
+          }).pipe(Effect.provideService(CommandExecutor.CommandExecutor, executor), Effect.mapError(unreadable(ref))),
       }
     }),
   )
