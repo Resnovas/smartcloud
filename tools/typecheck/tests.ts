@@ -35,6 +35,17 @@ const projects = readdirSync(join(root, 'tests'), { withFileTypes: true })
   .filter((entry) => entry.isDirectory() && existsSync(join(root, 'tests', entry.name, 'tsconfig.json')))
   .map((entry) => `tests/${entry.name}`)
 
+// The test projects reference the packages' declaration output, so build
+// everything first; Nx serves unchanged projects from its cache.
+const build = spawnSync(join(root, 'node_modules', '.bin', 'nx'), ['run-many', '-t', 'build', '--output-style=static'], {
+  cwd: root,
+  stdio: ['ignore', 'ignore', 'inherit'],
+})
+if (build.status !== 0) {
+  console.error('The build failed, so the tests cannot be type-checked.')
+  process.exit(1)
+}
+
 const failed: string[] = []
 for (const project of projects) {
   // The base config's declaration output does not apply to a project that emits nothing.
