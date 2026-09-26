@@ -176,7 +176,16 @@ jobs:
             '{message: $message, tree: $tree, parents: [$parent]}' |
             gh api "repos/$REPO/git/commits" --input - --jq .sha)
 
-          gh api "repos/$REPO/git/refs" --field ref="refs/heads/$branch" --field sha="$commit" --silent
+          # A rerun finds the branch and pull request from the first attempt:
+          # point the branch at the new commit and keep the open pull request.
+          if gh api "repos/$REPO/git/ref/heads/$branch" --silent 2>/dev/null; then
+            gh api --method PATCH "repos/$REPO/git/refs/heads/$branch" --field sha="$commit" --field force=true --silent
+          else
+            gh api "repos/$REPO/git/refs" --field ref="refs/heads/$branch" --field sha="$commit" --silent
+          fi
+          if [ -n "$(gh pr list --repo "$REPO" --head "$branch" --state open --json number --jq '.[0].number')" ]; then
+            exit 0
+          fi
           gh pr create --repo "$REPO" --base main --head "$branch" --title "$title" --body "$(cat <<EOF
           The workspace and app changelogs for [v$VERSION](https://github.com/$REPO/releases/tag/v$VERSION), written by the release workflow. The GitHub release holds the same notes.
 
