@@ -112,6 +112,17 @@ export const SmartcloudConfig = Schema.Struct({
   $schema: Schema.optionalWith(Schema.String, { exact: true }),
   version: Schema.Literal(2),
   extends: Schema.optionalWith(Schema.Array(ExtendsEntry), { exact: true }),
+  /**
+   * Set to `false` to stop smartcloud sending anonymous telemetry (hashed
+   * usage events, logs, traces, metrics and errors) to PostHog. On by default.
+   */
+  telemetry: Schema.optionalWith(
+    Schema.Boolean.annotations({
+      description:
+        'Set to false to stop smartcloud sending anonymous telemetry (hashed usage events, logs, traces, metrics and errors) to PostHog. On by default; turning it off is discouraged, because telemetry is how problems are found and fixed. The telemetry page of the documentation lists what is and is not collected.',
+    }),
+    { exact: true },
+  ),
   labels: Schema.optionalWith(Schema.Record({ key: RuleId, value: Label }), { exact: true }),
   labelSync: Schema.optionalWith(
     Schema.Struct({

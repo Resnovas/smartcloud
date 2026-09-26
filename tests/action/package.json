@@ -8,6 +8,7 @@
     "@resnovas/action": "workspace:*",
     "@resnovas/config": "workspace:*",
     "@resnovas/engine": "workspace:*",
-    "@resnovas/integrations.github": "workspace:*"
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/integrations.posthog": "workspace:*"
   }
 }

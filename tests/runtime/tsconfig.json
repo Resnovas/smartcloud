@@ -27,6 +27,9 @@
     },
     {
       "path": "../../packages/config"
+    },
+    {
+      "path": "../../packages/integrations.posthog"
     }
   ]
 }

@@ -25,6 +25,7 @@ import {
 } from '@resnovas/config'
 import type { EnvelopeKind, Feature } from '@resnovas/engine'
 import { GitHub } from '@resnovas/integrations.github'
+import { optOut } from '@resnovas/integrations.posthog'
 import { Data, Effect, Layer, Option, Schema } from 'effect'
 import { stringify } from 'yaml'
 import { FEATURES } from './features.js'
@@ -98,7 +99,9 @@ export const loadConfigText = (location: ConfigLocation) =>
  *
  * @remarks
  * Presets are read with the same GitHub service, so a dry run reads them
- * through the dry-run layer like every other read.
+ * through the dry-run layer like every other read. A config that says
+ * `telemetry: false` turns telemetry off for the rest of the process as soon
+ * as it is read.
  *
  * @param location - Where the config is.
  * @returns The resolved config.
@@ -107,6 +110,7 @@ export const loadConfig = (location: ConfigLocation) =>
   Effect.gen(function* () {
     const { text, source } = yield* loadConfigText(location)
     const resolved: ResolvedConfig = yield* resolveConfig(text, source).pipe(Effect.provide(ConfigSourceFromGitHub))
+    if (resolved.config.telemetry === false) yield* optOut
     return resolved
   })
 

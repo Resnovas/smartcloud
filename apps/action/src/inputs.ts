@@ -30,6 +30,8 @@ export interface Inputs {
   readonly dryRun: boolean
   /** Only these features run; all of them when omitted. */
   readonly features: Option.Option<ReadonlyArray<string>>
+  /** False when the workflow opts out of telemetry with `telemetry: false`. */
+  readonly telemetry: boolean
   /** Notices about v1 inputs that no longer do anything. */
   readonly deprecations: ReadonlyArray<string>
 }
@@ -54,7 +56,8 @@ const DEPRECATED: ReadonlyArray<readonly [string, string]> = [
  *
  * @remarks
  * Booleans are true only for `true`, ignoring case, so `"false"` means false.
- * v1 treated any non-empty string as true. The token falls back to the
+ * v1 treated any non-empty string as true. `telemetry` is the exception: it
+ * is on unless set to `false`. The token falls back to the
  * `GITHUB_TOKEN` environment variable.
  *
  * @returns The inputs, or a `ConfigError` when there is no token.
@@ -73,6 +76,8 @@ export const readInputs = Effect.gen(function* () {
     configJson: yield* input('configJson'),
     configRef: yield* input('configRef'),
     dryRun: Option.exists(yield* input('dryRun'), (value) => value.toLowerCase() === 'true'),
+    // Only an explicit false opts out; telemetry is on by default.
+    telemetry: !Option.exists(yield* input('telemetry'), (value) => value.toLowerCase() === 'false'),
     // A list with no names, such as `,`, selects nothing, so it means the
     // same as leaving the input out: every feature runs.
     features: Option.filter(Option.map(features, parseFeatureList), (names) => names.length > 0),

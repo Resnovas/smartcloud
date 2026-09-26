@@ -140,6 +140,20 @@ describe('runFeatures', () => {
     }).pipe(Effect.provide(GitHubMemory())),
   )
 
+  it.effect('skips a feature turned off from outside the config, whatever it handles, saying why', () =>
+    Effect.gen(function* () {
+      const result = yield* runFeatures({
+        config,
+        event: 'schedule',
+        payload: {},
+        features: [feature('flagged', { handles: ['pullRequest'] }), feature('on')],
+        turnedOff: new Map([['flagged', 'turned off by feature flag smartcloud-flagged']]),
+      })
+      expect(result.ran).toStrictEqual(['on'])
+      expect(result.skipped).toStrictEqual([{ feature: 'flagged', reason: 'turned off by feature flag smartcloud-flagged' }])
+    }).pipe(Effect.provide(GitHubMemory())),
+  )
+
   it.effect('loads only the facets the features ask for, and hands features the loaded subject', () =>
     Effect.gen(function* () {
       const seen: Array<unknown> = []

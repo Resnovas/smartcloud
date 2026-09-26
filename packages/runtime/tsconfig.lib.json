@@ -5,21 +5,52 @@
     "outDir": "dist",
     "tsBuildInfoFile": "dist/tsconfig.lib.tsbuildinfo",
     "emitDeclarationOnly": false,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts"],
+  "include": [
+    "src/**/*.ts"
+  ],
   "references": [
-    { "path": "../config/tsconfig.lib.json" },
-    { "path": "../engine/tsconfig.lib.json" },
-    { "path": "../feature.commits/tsconfig.lib.json" },
-    { "path": "../feature.conventions/tsconfig.lib.json" },
-    { "path": "../feature.disclosure/tsconfig.lib.json" },
-    { "path": "../feature.labels/tsconfig.lib.json" },
-    { "path": "../feature.reviews/tsconfig.lib.json" },
-    { "path": "../feature.settings/tsconfig.lib.json" },
-    { "path": "../feature.stale/tsconfig.lib.json" },
-    { "path": "../feature.sync/tsconfig.lib.json" },
-    { "path": "../integrations.github/tsconfig.lib.json" },
-    { "path": "../reporting/tsconfig.lib.json" }
+    {
+      "path": "../config/tsconfig.lib.json"
+    },
+    {
+      "path": "../engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.commits/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.conventions/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.disclosure/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.labels/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.reviews/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.settings/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.stale/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.sync/tsconfig.lib.json"
+    },
+    {
+      "path": "../integrations.posthog/tsconfig.lib.json"
+    },
+    {
+      "path": "../integrations.github/tsconfig.lib.json"
+    },
+    {
+      "path": "../reporting/tsconfig.lib.json"
+    }
   ]
 }

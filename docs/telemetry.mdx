@@ -1,0 +1,66 @@
+---
+title: "Telemetry"
+description: "What smartcloud sends to PostHog, what it never sends, how to turn it off, and how feature flags work."
+---
+
+smartcloud sends anonymous telemetry to [PostHog](https://posthog.com): usage events, logs, traces, metrics and errors. It is how problems are noticed and fixed, how we learn which features are used, and how a broken feature can be switched off quickly with a [feature flag](#feature-flags). The action, the CLI and the MCP server all send it the same way.
+
+## What is collected
+
+Every run of the action, and every dry run, settings plan or sync render from the CLI or the MCP server, sends:
+
+- **An event**, such as `smartcloud run`, with the surface (`action`, `cli` or `mcp`), the smartcloud version, the GitHub event name (such as `push` or `pull_request`), the outcome, how long it took, the names of the features that ran, were skipped or failed, and the number of findings. Evaluating a [feature flag](#feature-flags) also records PostHog's standard `$feature_flag_called` event.
+- **Errors** for error tracking: a failure or defect of the run, or a feature that failed, with its message and stack trace.
+- **Logs**: a line for each run with its outcome, and any logs smartcloud writes while it runs. The run's own line goes to PostHog only, never to your terminal.
+- **Traces**: a span for the run, with its duration and outcome.
+- **Metrics**: a count of runs by operation and outcome, and their durations.
+
+The repository is identified only by a hash: the SHA-256 of its lower-cased `owner/repo` is the PostHog person, and the SHA-256 of its lower-cased owner is an `organization` group. Logs carry the same hash as `posthogDistinctId`, so they link to the repository's person in PostHog. GeoIP lookups are turned off.
+
+## What is never collected
+
+- Repository, organisation or user names, and logins.
+- Pull request and issue titles, descriptions, comments and code.
+- Tokens and credentials.
+
+Before anything leaves the process it passes through one redaction step, which removes GitHub tokens (`ghp_`, `gho_`, `ghu_`, `ghs_`, `ghr_` and `github_pat_`), bearer credentials, email addresses, the value of `GITHUB_TOKEN` (the environment variable and the action input), the repository's `owner/repo`, and your home and working directories, wherever they appear, including inside error messages and stack traces. Anything it cannot inspect is not sent.
+
+Telemetry never slows down or fails a run. Requests time out after five seconds, a failure to send is logged only at debug level, and what is queued is flushed when the run ends, within three seconds.
+
+## Turning it off
+
+We ask you not to: telemetry holds no repository data, and without it we cannot see when smartcloud breaks for you. If you must, any one of these turns it off.
+
+| Where | Setting |
+| --- | --- |
+| The config | `telemetry: false` at the top level of `.github/smartcloud.yml` |
+| The action | the `telemetry` input set to `false` |
+| The environment | `SMARTCLOUD_TELEMETRY=false`, or `DO_NOT_TRACK=1` |
+
+```yaml
+version: 2
+telemetry: false
+```
+
+The action input and the environment variables stop telemetry before anything is set up, so nothing at all is sent. The config's setting takes effect as soon as the config is read, and stops everything queued from being sent. In the MCP server, one config that turns telemetry off turns it off for the rest of the session.
+
+`SMARTCLOUD_POSTHOG_KEY` and `SMARTCLOUD_POSTHOG_HOST` send telemetry to a different PostHog project instead.
+
+## Feature flags
+
+Each feature has a flag in PostHog, named `smartcloud-<feature>`, that can turn it off for every repository, or for some, without a release:
+
+| Flag | Feature | Default |
+| --- | --- | --- |
+| `smartcloud-conventions` | [Conventions](features/conventions) | on |
+| `smartcloud-commits` | [Commits](features/commits) | on |
+| `smartcloud-disclosure` | [Disclosure](features/disclosure) | on |
+| `smartcloud-reviews` | [Reviews](features/reviews) | on |
+| `smartcloud-labels` | [Labels](features/labels) | on |
+| `smartcloud-stale` | [Stale](features/stale) | on |
+| `smartcloud-settings` | [Settings](features/settings) | on |
+| `smartcloud-sync` | [Sync](features/sync) | on |
+
+Flags are evaluated through [OpenFeature](https://openfeature.dev), with PostHog as the provider, for the repository's hashed identity and its organisation group. A feature whose flag is off is listed as skipped, with the reason `turned off by feature flag smartcloud-<feature>`.
+
+When telemetry is off, PostHog cannot be reached, or a flag does not exist, every flag keeps its default, which is the behaviour smartcloud has without flags. Turning telemetry off therefore never changes what smartcloud does. The flags are temporary: each is removed once its v2 feature has been stable for 30 days.

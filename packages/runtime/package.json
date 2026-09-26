@@ -3,7 +3,7 @@
   "version": "1.0.0-beta.8",
   "private": true,
   "type": "module",
-  "description": "What the action, the CLI and the MCP server share: the feature list, config loading, dry runs, settings plans and sync previews.",
+  "description": "What the action, the CLI and the MCP server share: the feature list, feature flags, telemetry, config loading, dry runs, settings plans and sync previews.",
   "license": "SEE LICENSE IN LICENSE",
   "exports": {
     ".": {
@@ -25,6 +25,7 @@
     "@resnovas/feature.stale": "workspace:*",
     "@resnovas/feature.sync": "workspace:*",
     "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/integrations.posthog": "workspace:*",
     "@resnovas/reporting": "workspace:*",
     "effect": "catalog:",
     "tslib": "^2.8.1",

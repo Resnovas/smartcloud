@@ -37,7 +37,7 @@
           },
           {
             "group": "Running smartcloud",
-            "pages": ["reporting", "cli", "migration", "mcp"]
+            "pages": ["reporting", "cli", "migration", "mcp", "telemetry"]
           },
           {
             "group": "Maintaining smartcloud",

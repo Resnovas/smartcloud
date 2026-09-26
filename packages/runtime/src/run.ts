@@ -17,16 +17,25 @@
 
 import { runFeatures, type RunResult } from '@resnovas/engine'
 import { DryRun, DryRunLog, GitHub, type RecordedWrite } from '@resnovas/integrations.github'
+import { reportError, track } from '@resnovas/integrations.posthog'
 import { publishReport, type Published } from '@resnovas/reporting'
 import { Data, Effect, Either, Schema } from 'effect'
 import { loadConfig, readLocalConfig, type ConfigLocation } from './config.js'
 import { selectFeatures } from './features.js'
+import { turnedOffFeatures } from './flags.js'
 import { parseRepository, type Connect } from './github.js'
 
 /** A GitHub event, as the engine takes it. */
 export interface GitHubEvent {
   readonly name: string
   readonly payload: unknown
+}
+
+/** A feature failed during a run that otherwise completed; reported to error tracking. */
+export class FeatureFailed extends Data.TaggedError('FeatureFailed')<{ readonly feature: string; readonly reason: string }> {
+  override get message() {
+    return `the ${this.feature} feature failed: ${this.reason}`
+  }
 }
 
 /** What a run did. */
@@ -39,11 +48,16 @@ export interface RunOutcome {
 
 /**
  * Runs smartcloud for one event: loads and resolves the config, runs the
- * selected features, and publishes the report.
+ * selected features that their feature flags leave on, and publishes the
+ * report.
  *
  * @remarks
  * Everything goes through the provided GitHub service, so the same run is a
- * dry run under the dry-run layer.
+ * dry run under the dry-run layer. The run is recorded in telemetry when the
+ * `Telemetry` service is provided: a span, an event with the features that
+ * ran, were skipped or failed, and every failure for error tracking. A
+ * feature whose flag is off is skipped with the flag named as the reason;
+ * with telemetry off or PostHog unreachable, every flag keeps its default.
  *
  * @param options - Where the config is, which features to run (all when omitted), and the event.
  * @returns What the run did.
@@ -53,13 +67,29 @@ export const runEvent = (options: {
   readonly features?: ReadonlyArray<string> | undefined
   readonly event: GitHubEvent
 }) =>
-  Effect.gen(function* () {
-    const resolved = yield* loadConfig(options.config)
-    const features = yield* selectFeatures(options.features)
-    const result = yield* runFeatures({ config: resolved.config, event: options.event.name, payload: options.event.payload, features })
-    const published = yield* publishReport(result, { trustedAuthors: resolved.config.roles?.trustedBots ?? [] })
-    const outcome: RunOutcome = { result, published, warnings: [...resolved.warnings, ...published.warnings] }
-    return outcome
+  Effect.flatMap(GitHub, (github) => {
+    const repository = github.coordinates
+    const run = Effect.gen(function* () {
+      const resolved = yield* loadConfig(options.config)
+      const features = yield* selectFeatures(options.features)
+      const turnedOff = yield* turnedOffFeatures(repository, features)
+      const result = yield* runFeatures({ config: resolved.config, event: options.event.name, payload: options.event.payload, features, turnedOff })
+      for (const failure of result.failed) yield* reportError(repository, new FeatureFailed({ feature: failure.feature, reason: failure.message }))
+      const published = yield* publishReport(result, { trustedAuthors: resolved.config.roles?.trustedBots ?? [] })
+      const outcome: RunOutcome = { result, published, warnings: [...resolved.warnings, ...published.warnings] }
+      return outcome
+    })
+    return track(run, {
+      operation: 'run',
+      repository,
+      properties: { github_event: options.event.name },
+      describe: ({ result }) => ({
+        ran: result.ran,
+        skipped: result.skipped.map((skip) => skip.feature),
+        failed: result.failed.map((failure) => failure.feature),
+        findings: result.findings.length,
+      }),
+    })
   })
 
 /** The repository events a dry run can simulate. */
