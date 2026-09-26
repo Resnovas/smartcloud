@@ -96,6 +96,30 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     false,
   ],
   [
+    'isApproved, allowPending counts approvals while reviews are pending',
+    { type: 'isApproved', condition: 2, allowPending: true },
+    pullRequest({ reviews: [approved('ann'), approved('bo')], pendingReviewers: 1 }),
+    true,
+  ],
+  [
+    'isApproved, allowPending still needs enough approvals',
+    { type: 'isApproved', condition: 2, allowPending: true },
+    pullRequest({ reviews: [approved('ann')], pendingReviewers: 2 }),
+    false,
+  ],
+  [
+    'isApproved, allowPending: false keeps pending reviewers blocking',
+    { type: 'isApproved', condition: 1, allowPending: false },
+    pullRequest({ reviews: [approved('ann')], pendingReviewers: 1 }),
+    false,
+  ],
+  [
+    'isApproved, allowPending does not ignore a change request',
+    { type: 'isApproved', condition: 1, allowPending: true },
+    pullRequest({ reviews: [approved('ann'), { author: 'bo', state: 'CHANGES_REQUESTED' }], pendingReviewers: 1 }),
+    false,
+  ],
+  [
     'isApproved, a change request blocks',
     { type: 'isApproved', condition: 1 },
     pullRequest({ reviews: [approved('ann'), { author: 'bo', state: 'CHANGES_REQUESTED' }] }),

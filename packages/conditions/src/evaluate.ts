@@ -208,7 +208,10 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
         const pending = yield* facet(subject, 'pendingReviewers', condition.type)
         const states = [...latestReviews(reviews).values()]
         const approvals = states.filter((state) => state === 'APPROVED').length
-        const passed = pending === 0 && !states.includes('CHANGES_REQUESTED') && approvals >= condition.condition
+        const passed =
+          (condition.allowPending === true || pending === 0) &&
+          !states.includes('CHANGES_REQUESTED') &&
+          approvals >= condition.condition
         return result(condition.type, passed, `${approvals} approval(s), ${pending} pending`)
       })
     case 'commitMessagesMatch':

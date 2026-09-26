@@ -521,12 +521,13 @@ Other keys are an error.
 
 ### isApproved
 
-No reviewer is pending or requesting changes, and at least this many approved.
+No reviewer is requesting changes, at least this many approved, and none are pending unless allowPending is set.
 
 | Key | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `type` | `isApproved` | yes |  |
 | `condition` | [NonNegativeInt](#nonnegativeint) | yes |  |
+| `allowPending` | boolean | no | Count approvals while other requested reviewers are still pending (default false). |
 
 Other keys are an error.
 
