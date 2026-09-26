@@ -215,6 +215,20 @@ describe('resolveConfig: extends and locked presets', () => {
     }),
   )
 
+  it.effect('still fails on unknown keys and malformed sections when a preset is skipped', () =>
+    Effect.gen(function* () {
+      const skipAll = { skipUnreadable: () => true }
+      const typo = yield* Effect.flip(
+        resolveConfig(local('lables: {}\n'), 'repo', skipAll).pipe(Effect.provide(presets({}))),
+      )
+      expect(typo._tag).toBe('ConfigDecodeError')
+      const malformed = yield* Effect.flip(
+        resolveConfig(local('labels:\n  docs: { name: 7 }\n'), 'repo', skipAll).pipe(Effect.provide(presets({}))),
+      )
+      expect(malformed._tag).toBe('ConfigDecodeError')
+    }),
+  )
+
   it.effect('still fails on an unreadable preset the caller does not allow to be skipped', () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(

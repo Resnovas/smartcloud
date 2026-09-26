@@ -228,14 +228,20 @@ const parseLayer = (text: string, source: string) =>
     return { json, extends: entries.right, warnings }
   })
 
-// Keeps each top-level section that decodes on its own, for a config whose
-// presets were partly left out, and names the sections it drops.
+// For a config whose presets were partly left out, drops each top-level
+// section that fails only for keys it is missing, which a skipped preset may
+// have set, and names them. Any other failure, such as an unknown key or a
+// malformed value, is kept, so it still fails the config.
 const decodeSections = (value: Readonly<Record<string, Json>>) => {
   const kept: Record<string, Json> = {}
   const dropped: Array<string> = []
   for (const [key, section] of Object.entries(value)) {
-    if (Either.isRight(decodeV2({ version: 2, [key]: section }))) kept[key] = section
-    else dropped.push(key)
+    const decoded = decodeV2({ version: 2, [key]: section })
+    const incomplete =
+      Either.isLeft(decoded) &&
+      ParseResult.ArrayFormatter.formatErrorSync(decoded.left).every((issue) => issue._tag === 'Missing')
+    if (incomplete) dropped.push(key)
+    else kept[key] = section
   }
   return { kept, dropped }
 }
@@ -254,6 +260,7 @@ const decodeSections = (value: Readonly<Record<string, Json>>) => {
  * token does for a private preset. The rest of the config is then merged
  * without it, and any top-level section that is incomplete without the
  * preset is dropped rather than failing; both are listed in `skipped`.
+ * Unknown keys and malformed values still fail the config.
  *
  * @example
  * ```ts import.meta.vitest name="resolveConfig"
