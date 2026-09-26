@@ -237,6 +237,21 @@ describe('requiredFeature', () => {
     }),
   )
 
+  it.effect('concludes nothing until its own run is listed, so another aggregate run cannot fail it', () =>
+    Effect.gen(function* () {
+      const memory = makeMemoryGitHub()
+      const other = { ...self, id: SELF + 1, state: 'failure' as const, detail: 'cancelled' }
+      let looks = 0
+      const service = {
+        ...memory.service,
+        listCommitChecks: () => Effect.sync(() => (looks++ === 0 ? [other] : [self, other])),
+      }
+      const result = yield* runPolling({ service, looks: () => looks })
+      expect(findings(result).map((finding) => finding.message)).toStrictEqual(['No other checks ran on this commit.'])
+      expect(looks).toBe(3)
+    }),
+  )
+
   it.effect('says so when no other check ran', () =>
     Effect.gen(function* () {
       const result = yield* runPolling(scripted([[]]))

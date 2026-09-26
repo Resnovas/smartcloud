@@ -37,6 +37,8 @@ export interface Assessment {
   readonly counted: ReadonlyArray<CommitCheck>
   readonly pending: ReadonlyArray<CommitCheck>
   readonly failed: ReadonlyArray<CommitCheck>
+  /** Whether the job's own check run was listed; until it is, other runs of the aggregate cannot be told apart. */
+  readonly selfListed: boolean
 }
 
 // A check run is identified as a ruleset identifies a required check: by the
@@ -89,8 +91,10 @@ export const latestChecks = (checks: ReadonlyArray<CommitCheck>): ReadonlyArray<
  * and name is another run of the aggregate, such as one started by a
  * review while this one waits, and is left out too, so two aggregates on
  * one commit never wait for each other. A `smartcloud / <feature>` run is
- * left out only when smartcloud published it, as its
- * {@link CHECK_RUN_EXTERNAL_ID} shows; another publisher's run of that name
+ * left out only when smartcloud published it: when it carries
+ * {@link CHECK_RUN_EXTERNAL_ID}, or, for runs from smartcloud versions
+ * before that mark, when the job's own app (GitHub Actions) published it
+ * unmarked. Another app's run of that name, or one marked otherwise,
  * counts.
  *
  * @example
@@ -123,7 +127,9 @@ export const assessChecks = (
   const aggregate = (check: CommitCheck) =>
     check.id === options.checkRunId || (own !== undefined && check.source === 'checkRun' && identity(check) === identity(own))
   const smartcloudFeature = (check: CommitCheck) =>
-    check.source === 'checkRun' && check.name.startsWith(OWN_CHECK_PREFIX) && check.externalId === CHECK_RUN_EXTERNAL_ID
+    check.source === 'checkRun' &&
+    check.name.startsWith(OWN_CHECK_PREFIX) &&
+    (check.externalId === CHECK_RUN_EXTERNAL_ID || (check.externalId === undefined && own !== undefined && check.app === own.app))
   // Smartcloud's runs go first, so one never stands in for a same-named run another workflow published.
   const counted = latestChecks(checks.filter((check) => !aggregate(check) && !smartcloudFeature(check))).filter(
     (check) =>
@@ -137,5 +143,6 @@ export const assessChecks = (
     counted,
     pending: counted.filter((check) => check.state === 'pending'),
     failed: counted.filter((check) => check.state === 'failure'),
+    selfListed: own !== undefined,
   }
 }

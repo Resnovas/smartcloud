@@ -83,8 +83,11 @@ export const waitForChecks = (
       yield* Effect.logDebug(
         `required: ${counts.counted} check(s), ${counts.pending} pending, ${counts.failed} failed`,
       ).pipe(Effect.annotateLogs({ feature: FEATURE, ...counts }))
-      if (assessment.failed.length > 0 || (assessment.pending.length === 0 && names === settled)) return assessment
-      settled = assessment.pending.length === 0 ? names : undefined
+      // Until the job's own run is listed, another run of the aggregate would count, so nothing is concluded from the look.
+      if (assessment.selfListed) {
+        if (assessment.failed.length > 0 || (assessment.pending.length === 0 && names === settled)) return assessment
+        settled = assessment.pending.length === 0 ? names : undefined
+      }
       // A settled commit at the deadline has passed on the one look it had.
       if ((yield* Clock.currentTimeMillis) >= deadline) return assessment
       yield* Effect.sleep(POLL_INTERVAL)

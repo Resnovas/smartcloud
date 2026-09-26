@@ -121,16 +121,38 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
     expect(assessment.counted.map((check) => check.id)).toStrictEqual([25])
   })
 
-  it('counts a smartcloud-named run that smartcloud did not publish, even beside a newer one it did', () => {
+  it('counts a smartcloud-named run that another app published, or that is marked otherwise', () => {
+    const own: CommitCheck = { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' }
     const assessment = assessChecks(
       [
-        { name: 'smartcloud / reviews', source: 'checkRun', id: 3, app: actions, state: 'failure', detail: 'failure' },
-        { name: 'smartcloud / reviews', source: 'checkRun', id: 4, app: actions, externalId: 'someone-else', state: 'pending', detail: 'queued' },
-        { name: 'smartcloud / reviews', source: 'checkRun', id: 9, app: actions, externalId: CHECK_RUN_EXTERNAL_ID, state: 'success', detail: 'success' },
+        own,
+        { name: 'smartcloud / reviews', source: 'checkRun', id: 3, app: 'other-app', state: 'failure', detail: 'failure' },
+        { name: 'smartcloud / labels', source: 'checkRun', id: 4, app: actions, externalId: 'someone-else', state: 'pending', detail: 'queued' },
+        { name: 'smartcloud / labels', source: 'checkRun', id: 9, app: actions, externalId: CHECK_RUN_EXTERNAL_ID, state: 'success', detail: 'success' },
       ],
       { checkRunId: 1, ignore: [] },
     )
-    expect(assessment.counted.map((check) => check.id)).toStrictEqual([4])
-    expect(assessment.pending.map((check) => check.id)).toStrictEqual([4])
+    expect(assessment.counted.map((check) => check.id)).toStrictEqual([3, 4])
+    expect(assessment.selfListed).toBe(true)
+  })
+
+  it('leaves out an unmarked smartcloud run from the job app, as older smartcloud versions published them', () => {
+    const assessment = assessChecks(
+      [
+        { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' },
+        { name: 'smartcloud / reviews', source: 'checkRun', id: 3, app: actions, state: 'failure', detail: 'failure' },
+      ],
+      { checkRunId: 1, ignore: [] },
+    )
+    expect(assessment.counted).toStrictEqual([])
+  })
+
+  it('says when the job run is not listed yet, and then counts unmarked smartcloud runs', () => {
+    const assessment = assessChecks(
+      [{ name: 'smartcloud / reviews', source: 'checkRun', id: 3, app: actions, state: 'failure', detail: 'failure' }],
+      { checkRunId: 1, ignore: [] },
+    )
+    expect(assessment.selfListed).toBe(false)
+    expect(assessment.failed.map((check) => check.id)).toStrictEqual([3])
   })
 })
