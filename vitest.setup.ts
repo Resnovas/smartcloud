@@ -18,7 +18,7 @@ import { expect, inject } from 'vitest'
 
 declare module 'vitest' {
   export interface ProvidedContext {
-    /** The absolute path of the entry (`src/index.ts`) of the package under test. */
+    /** The absolute path of the entry (`src/index.ts`) of the package under test, or the first file of the tooling under test. */
     readonly packageEntry: string
   }
 }

@@ -89,6 +89,7 @@ if (!dryRun && git('status', '--porcelain', '--untracked-files=no') !== '') {
   console.error('The working tree has uncommitted changes; release from a clean checkout of main.')
   process.exit(1)
 }
+const base = git('rev-parse', 'HEAD')
 
 const { workspaceVersion, projectsVersionData, releaseGraph } = await releaseVersion({
   ...(specifier === undefined ? {} : { specifier }),
@@ -170,15 +171,6 @@ await releaseChangelog({
 })
 
 if (!dryRun) {
-  // The changelog files go to main through a pull request, which the format check runs on.
-  const changelogs = changedChangelogs(git('ls-files', '--modified', '--others', '--exclude-standard'))
-  if (changelogs.length > 0) {
-    execFileSync(join(root, 'node_modules', '.bin', 'prettier'), ['--write', ...changelogs], {
-      cwd: root,
-      stdio: 'inherit',
-    })
-  }
-
   // Workflows pin the action by its major tag.
   git('tag', '--force', major, `${tag}^{commit}`)
   git('push', '--quiet', '--force', 'origin', `refs/tags/${major}`)
@@ -187,4 +179,23 @@ if (!dryRun) {
 output('released', dryRun ? 'false' : 'true')
 output('version', workspaceVersion)
 output('tag', tag)
+// The main commit the release was cut from, which the changelog pull request branches from.
+output('base', base)
+
+// The changelog files go to main through a pull request, which the format
+// check runs on. The release is already out, so a failure here only warns: the
+// pull request's own checks then show what to fix.
+if (!dryRun) {
+  const changelogs = changedChangelogs(git('ls-files', '--modified', '--others', '--exclude-standard'))
+  try {
+    if (changelogs.length > 0) {
+      execFileSync(join(root, 'node_modules', '.bin', 'prettier'), ['--write', ...changelogs], {
+        cwd: root,
+        stdio: 'inherit',
+      })
+    }
+  } catch {
+    console.warn(`::warning::Prettier could not format ${changelogs.join(', ')}.`)
+  }
+}
 console.log(dryRun ? `Dry run of ${tag} complete.` : `Released ${tag}.`)

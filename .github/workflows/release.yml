@@ -59,6 +59,7 @@ jobs:
     permissions:
       contents: write
     outputs:
+      base: ${{ steps.release.outputs.base }}
       released: ${{ steps.release.outputs.released }}
       tag: ${{ steps.release.outputs.tag }}
       version: ${{ steps.release.outputs.version }}
@@ -141,7 +142,9 @@ jobs:
 
       # A commit made through the API with an app token is signed by GitHub, so
       # it passes a signed-commits rule. Its author is the app's bot account,
-      # which signs it off for the DCO check.
+      # which signs it off for the DCO check. It branches from the main commit
+      # the release was cut from, so if main has changed the changelogs since,
+      # the pull request shows a conflict rather than dropping those changes.
       - name: Open the changelog pull request
         working-directory: changelogs
         env:
@@ -149,12 +152,12 @@ jobs:
           APP_SLUG: ${{ steps.app.outputs.app-slug }}
           REPO: ${{ github.repository }}
           VERSION: ${{ needs.release.outputs.version }}
+          BASE: ${{ needs.release.outputs.base }}
         run: |
           set -euo pipefail
           branch="release/changelogs-v$VERSION"
           title="chore(release): changelogs for v$VERSION"
-          base=$(gh api "repos/$REPO/git/ref/heads/main" --jq .object.sha)
-          base_tree=$(gh api "repos/$REPO/git/commits/$base" --jq .tree.sha)
+          base_tree=$(gh api "repos/$REPO/git/commits/$BASE" --jq .tree.sha)
 
           # Only the known changelog paths, whatever else the artifact holds.
           tree='[]'
@@ -169,7 +172,7 @@ jobs:
 
           user_id=$(gh api "users/$APP_SLUG[bot]" --jq .id)
           message=$(printf '%s\n\nSigned-off-by: %s[bot] <%s+%s[bot]@users.noreply.github.com>' "$title" "$APP_SLUG" "$user_id" "$APP_SLUG")
-          commit=$(jq --null-input --arg message "$message" --arg tree "$tree" --arg parent "$base" \
+          commit=$(jq --null-input --arg message "$message" --arg tree "$tree" --arg parent "$BASE" \
             '{message: $message, tree: $tree, parents: [$parent]}' |
             gh api "repos/$REPO/git/commits" --input - --jq .sha)
 

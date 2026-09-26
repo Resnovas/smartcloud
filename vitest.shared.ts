@@ -22,6 +22,13 @@ import { defineConfig } from 'vitest/config'
 // Coverage records sources by absolute path, so globs are anchored here.
 const workspaceRoot = dirname(fileURLToPath(import.meta.url))
 
+// A package's entry is the `index.ts` in the `src` its covers lie in. Workspace
+// tooling has no package, so its first covered file stands in.
+const packageEntry = (cover: string): string =>
+  cover.includes('/src/')
+    ? join(workspaceRoot, cover.replace(/\/src\/.*$/, ''), 'src/index.ts')
+    : join(workspaceRoot, cover)
+
 /**
  * The shared Vitest settings every test project extends.
  *
@@ -39,7 +46,8 @@ const workspaceRoot = dirname(fileURLToPath(import.meta.url))
  *
  * @param name - The test project's name, shown in the reporter.
  * @param covers - Source globs of the package under test, relative to the
- *   workspace root, for example `['packages/config/src/**']`.
+ *   workspace root, for example `['packages/config/src/**']`, or the files of
+ *   the workspace tooling under test, such as `['tools/release/changelogs.ts']`.
  * @returns A Vitest config for the test project.
  */
 export const testProject = (name: string, covers: ReadonlyArray<string>) =>
@@ -55,8 +63,7 @@ export const testProject = (name: string, covers: ReadonlyArray<string>) =>
       environment: 'node',
       include: ['src/**/*.spec.ts'],
       setupFiles: [join(workspaceRoot, 'vitest.setup.ts')],
-      // Every cover lies in the package's `src`, whose `index.ts` is its entry.
-      provide: { packageEntry: join(workspaceRoot, covers[0]?.replace(/\/src\/.*$/, '') ?? '', 'src/index.ts') },
+      provide: { packageEntry: packageEntry(covers[0] ?? '') },
       // Doctests are collected from the covered sources: a directory glob or a single file.
       includeSource: covers.map((glob) => join(workspaceRoot, glob.endsWith('.ts') ? glob : join(glob, '*.ts'))),
       reporters: ['default'],
