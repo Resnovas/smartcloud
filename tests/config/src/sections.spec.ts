@@ -25,6 +25,8 @@ import {
   CodeOwnersRule,
   Freeze,
   FreezeWindow,
+  Lock,
+  LockReason,
   parseConfig,
   parseFreezeTime,
   RequestApproval,
@@ -54,6 +56,13 @@ stale:
   abandonedLabel: abandoned
   close: false
   exempt: { labels: [pinned], when: { condition: [{ type: isLocked, condition: true }] } }
+lock:
+  on: [issue, pullRequest]
+  afterDays: 30
+  reason: resolved
+  comment: Locking this closed thread; open a new issue for follow-ups.
+  label: locked
+  exempt: { labels: [pinned] }
 settings:
   merging: { mergeCommit: false, squash: true, rebase: true, squashTitle: PR_TITLE, squashMessage: COMMIT_MESSAGES }
   features: { wiki: false, discussions: true, sponsorships: true }
@@ -74,6 +83,7 @@ sync:
       expect(config.reviews?.gate).toStrictEqual({ outside: 2, maintainer: 1 })
       expect(config.settings?.security?.codeScanning).toBe('extended')
       expect(config.sync?.values).toStrictEqual({ ORG_NAME: 'Resnovas' })
+      expect(config.lock?.reason).toBe('resolved')
       expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(
         config,
       )
@@ -160,6 +170,16 @@ describe('Required', () => {
 
   it('is a section of the config', () => {
     expect(Schema.is(SmartcloudConfig)({ version: 2, required: { timeout: 30 } })).toBe(true)
+  })
+})
+
+describe('Lock', () => {
+  it("needs afterDays, and takes one of GitHub's lock reasons", () => {
+    expect(Schema.is(Lock)({ afterDays: 0 })).toBe(true)
+    expect(Schema.is(Lock)({ afterDays: -1 })).toBe(false)
+    for (const reason of ['resolved', 'off-topic', 'too heated', 'spam'])
+      expect(Schema.is(LockReason)(reason)).toBe(true)
+    expect(Schema.is(Lock)({ afterDays: 30, reason: 'stale' })).toBe(false)
   })
 })
 

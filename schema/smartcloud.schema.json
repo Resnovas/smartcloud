@@ -98,6 +98,9 @@
         "stale": {
           "$ref": "#/$defs/Stale"
         },
+        "lock": {
+          "$ref": "#/$defs/Lock"
+        },
         "settings": {
           "$ref": "#/$defs/Settings"
         },
@@ -2145,6 +2148,59 @@
       "description": "a non-negative number",
       "title": "nonNegative",
       "minimum": 0
+    },
+    "Lock": {
+      "type": "object",
+      "required": [
+        "afterDays"
+      ],
+      "properties": {
+        "on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "pullRequest",
+              "issue"
+            ]
+          }
+        },
+        "afterDays": {
+          "$ref": "#/$defs/NonNegative"
+        },
+        "reason": {
+          "$ref": "#/$defs/LockReason"
+        },
+        "comment": {
+          "type": "string"
+        },
+        "label": {
+          "type": "string"
+        },
+        "exempt": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "LockReason": {
+      "type": "string",
+      "enum": [
+        "resolved",
+        "off-topic",
+        "too heated",
+        "spam"
+      ]
     },
     "Settings": {
       "type": "object",

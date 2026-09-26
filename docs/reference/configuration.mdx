@@ -33,6 +33,7 @@ Declarative repository automation: labels, conventions and policy.
 | `branches` | [Branches](#branches) | no |  |
 | `codeowners` | [CodeOwners](#codeowners) | no |  |
 | `stale` | [Stale](#stale) | no |  |
+| `lock` | [Lock](#lock) | no |  |
 | `settings` | [Settings](#settings) | no |  |
 | `sync` | [Sync](#sync) | no |  |
 
@@ -408,6 +409,24 @@ Other keys are an error.
 Minimum: 0.
 
 Type: number.
+
+### Lock
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `on` | list of one of `pullRequest`, `issue` | no |  |
+| `afterDays` | [NonNegative](#nonnegative) | yes |  |
+| `reason` | [LockReason](#lockreason) | no |  |
+| `comment` | string | no |  |
+| `label` | string | no |  |
+| `exempt` | object | no |  |
+| `exempt.labels` | list of string | no |  |
+
+Other keys are an error.
+
+### LockReason
+
+Type: one of `resolved`, `off-topic`, `too heated`, `spam`.
 
 ### Settings
 

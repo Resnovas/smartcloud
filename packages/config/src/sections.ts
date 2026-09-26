@@ -17,7 +17,7 @@
 import { ConditionGroup, Pattern } from '@resnovas/conditions'
 import { DateTime, Option, Schema } from 'effect'
 
-// The configuration sections of the policy, review, stale, settings and sync
+// The configuration sections of the policy, review, stale, lock, settings and sync
 // features. Each is optional: a feature whose section is absent does not run.
 // Every rule is a keyed record, so presets and repositories merge by key.
 
@@ -220,6 +220,46 @@ const WebhookUrl = Schema.String.pipe(
 )
 const VariableName = /^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$/
 const REPOSITORY_ROLES = ['read', 'triage', 'write', 'maintain', 'admin'] as const
+
+/**
+ * Why a locked conversation is locked, as GitHub shows it on the item.
+ *
+ * @example
+ * ```ts import.meta.vitest name="LockReason"
+ * import { LockReason } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(LockReason)('resolved') // => true
+ * Schema.is(LockReason)('done') // => false
+ * ```
+ */
+export const LockReason = Schema.Literal('resolved', 'off-topic', 'too heated', 'spam').annotations({
+  identifier: 'LockReason',
+})
+
+/**
+ * Scheduled locking of issues and pull requests that have been closed for a while.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Lock"
+ * import { Lock } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Lock)({ afterDays: 30, reason: 'resolved' }) // => true
+ * Schema.is(Lock)({ reason: 'resolved' }) // => false
+ * ```
+ */
+export const Lock = Schema.Struct({
+  on: opt(Subjects),
+  /** Days an item has been closed before its conversation is locked. */
+  afterDays: Schema.NonNegative,
+  reason: opt(LockReason),
+  /** Posted on the item just before it is locked. */
+  comment: opt(Schema.String),
+  /** Added to the item just before it is locked. */
+  label: opt(Schema.String),
+  exempt: opt(Schema.Struct({ labels: opt(Schema.Array(Schema.String)) })),
+}).annotations({ identifier: 'Lock' })
 
 /**
  * How long the aggregate check waits for the others, in minutes, when
