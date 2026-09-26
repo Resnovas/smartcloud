@@ -33,7 +33,9 @@ const workspaceRoot = dirname(fileURLToPath(import.meta.url))
  *
  * The `@effect/doctest` plugin also collects every `@example` fence marked
  * `ts import.meta.vitest` in the covered sources and runs it as a test, so
- * documented examples, and their `// =>` assertions, stay true.
+ * documented examples, and their `// =>` assertions, stay true. `vitest.setup.ts`
+ * loads the package's entry before those examples run, so the first one does
+ * not spend its timeout importing the package.
  *
  * @param name - The test project's name, shown in the reporter.
  * @param covers - Source globs of the package under test, relative to the
@@ -52,6 +54,9 @@ export const testProject = (name: string, covers: ReadonlyArray<string>) =>
       watch: false,
       environment: 'node',
       include: ['src/**/*.spec.ts'],
+      setupFiles: [join(workspaceRoot, 'vitest.setup.ts')],
+      // Every cover lies in the package's `src`, whose `index.ts` is its entry.
+      provide: { packageEntry: join(workspaceRoot, covers[0]?.replace(/\/src\/.*$/, '') ?? '', 'src/index.ts') },
       // Doctests are collected from the covered sources: a directory glob or a single file.
       includeSource: covers.map((glob) => join(workspaceRoot, glob.endsWith('.ts') ? glob : join(glob, '*.ts'))),
       reporters: ['default'],

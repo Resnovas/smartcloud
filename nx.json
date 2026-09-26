@@ -13,7 +13,8 @@
       "{workspaceRoot}/eslint.config.mjs",
       "{workspaceRoot}/.prettierrc",
       "{workspaceRoot}/.editorconfig",
-      "{workspaceRoot}/vitest.shared.ts"
+      "{workspaceRoot}/vitest.shared.ts",
+      "{workspaceRoot}/vitest.setup.ts"
     ]
   },
   "plugins": [
