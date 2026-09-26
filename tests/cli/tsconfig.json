@@ -1,0 +1,22 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc",
+    "types": ["node", "vitest"],
+    "noEmit": true,
+    "composite": false,
+    "emitDeclarationOnly": false
+  },
+  "include": ["src/**/*.ts", "vitest.config.mts"],
+  "references": [
+    {
+      "path": "../../apps/cli"
+    },
+    {
+      "path": "../../packages/integrations.github"
+    },
+    {
+      "path": "../../packages/config"
+    }
+  ]
+}
