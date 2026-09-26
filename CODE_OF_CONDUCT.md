@@ -95,7 +95,7 @@ Deleting or weakening tests to make a change pass, or fabricating evidence, logs
 - [AI Contribution Policy](AI_POLICY.md)
 - [Developer Certificate of Origin](DCO.md)
 - [Licence](LICENSE)
-- [Eventiva Cooperation Commitment](COOPERATION_COMMITMENT.md)
+- [Cooperation Commitment](COOPERATION_COMMITMENT.md)
 
 ## <a id="attribution"></a>Attribution
 

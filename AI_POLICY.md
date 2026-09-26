@@ -9,7 +9,7 @@ It is here so that maintainers are not buried under submissions nobody has read.
 The rule behind every rule below: **a human is accountable for everything submitted, and "the AI did that" is never an excuse.**
 
 This policy is part of the [Contributing Guidelines](CONTRIBUTING.md) and is enforced through the [Code of Conduct](CODE_OF_CONDUCT.md).
-Contributions are made under the [Developer Certificate of Origin](DCO.md) and licensed under the [FCL-1.0-MIT licence](LICENSE), and licence breaches are cured through the [Eventiva Cooperation Commitment](COOPERATION_COMMITMENT.md).
+Contributions are made under the [Developer Certificate of Origin](DCO.md) and licensed under the [FCL-1.0-MIT licence](LICENSE), and licence breaches are cured through the [Cooperation Commitment](COOPERATION_COMMITMENT.md).
 
 ## <a id="keywords"></a>How to read this policy
 
@@ -326,7 +326,7 @@ Enforcement is judged on accountable ownership, agreed scope, evidence, and whet
 Every contribution is made under the DCO and licensed to this project under the terms in [LICENSE](LICENSE).
 
 If AI use that was not disclosed is found in a contribution **after it has been merged**, the contribution was submitted in breach of these terms.
-It is handled as a licence violation, and cured through the process in the [Eventiva Cooperation Commitment](COOPERATION_COMMITMENT.md):
+It is handled as a licence violation, and cured through the process in the [Cooperation Commitment](COOPERATION_COMMITMENT.md):
 
 1. we notify the contributor;
 1. the contributor has 30 days from that notice to cure it, by fully disclosing the AI use and adding the missing co-author trailers, or by providing a replacement written without it;

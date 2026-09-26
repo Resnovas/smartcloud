@@ -10,8 +10,7 @@
  *
  * Contributions are made under the Developer Certificate of Origin (DCO.md) and
  * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
- * (CODE_OF_CONDUCT.md) and the Eventiva Cooperation Commitment
- * (COOPERATION_COMMITMENT.md).
+ * (CODE_OF_CONDUCT.md) and the Cooperation Commitment (COOPERATION_COMMITMENT.md).
  *
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */

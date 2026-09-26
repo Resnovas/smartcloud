@@ -55,7 +55,7 @@ An AI tool **never** signs off; see [AI-03](AI_POLICY.md#ai-03).
 - Commits made in the GitHub web interface are signed off automatically; the repository requires it.
 
 Contributions are licensed under the project's [licence](LICENSE) (FCL-1.0-MIT unless the repository says otherwise).
-Licence breaches, including those that come from AI-produced material, are cured through the [Eventiva Cooperation Commitment](COOPERATION_COMMITMENT.md).
+Licence breaches, including those that come from AI-produced material, are cured through the [Cooperation Commitment](COOPERATION_COMMITMENT.md).
 
 ## <a id="AiAssisted"></a>AI-assisted contributions
 
