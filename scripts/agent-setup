@@ -1,0 +1,31 @@
+#!/bin/sh
+# Launcher for scripts/agent-setup.ts on Linux and macOS. Makes sure a Node
+# that runs TypeScript natively (the major in .nvmrc) is on PATH, using nvm or
+# fnm when one is installed, then hands over. Safe to run repeatedly.
+# Windows: scripts\agent-setup.cmd.
+set -eu
+cd "$(dirname "$0")/.."
+wanted=$(tr -d '[:space:]v' < .nvmrc)
+
+node_major() {
+  command -v node >/dev/null 2>&1 && node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0
+}
+
+if [ "$(node_major)" -lt "$wanted" ]; then
+  if [ -s "${NVM_DIR:-$HOME/.nvm}/nvm.sh" ]; then
+    # shellcheck disable=SC1091
+    . "${NVM_DIR:-$HOME/.nvm}/nvm.sh"
+    nvm install >/dev/null
+    nvm use >/dev/null
+  elif command -v fnm >/dev/null 2>&1; then
+    eval "$(fnm env --shell bash)"
+    fnm use --install-if-missing >/dev/null
+  fi
+fi
+
+if [ "$(node_major)" -lt "$wanted" ]; then
+  echo "agent-setup: Node $wanted or newer is required. Install it (nvm, fnm or nodejs.org) and run again." >&2
+  exit 1
+fi
+
+exec node scripts/agent-setup.ts "$@"

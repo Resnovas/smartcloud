@@ -1,16 +1,86 @@
 {
-  // Use IntelliSense to learn about possible attributes.
-  // Hover to view descriptions of existing attributes.
-  // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+  // Debug configurations. Each runs a package script from package.json under
+  // the debugger (it attaches to the node process the script starts), after
+  // the build task. GitHub-facing configs read GITHUB_TOKEN from the
+  // environment the editor was started in; set it from `gh auth token` or the
+  // Proton Pass item, never in this file.
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "CLI: validate",
       "type": "node",
       "request": "launch",
-      "name": "Launch Program",
-      "skipFiles": ["<node_internals>/**"],
-      "program": "${workspaceFolder}\\lib\\index.js",
-      "outFiles": ["${workspaceFolder}/**/*.js"]
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--silent", "run", "cli", "validate", ".github/config.json"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "preLaunchTask": "build",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "CLI: migrate",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--silent", "run", "cli", "migrate", ".github/config.json"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "preLaunchTask": "build",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "CLI: dry-run",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--silent", "run", "cli", "dry-run", "--repo", "Resnovas/smartcloud", "--event", "schedule"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": { "GITHUB_TOKEN": "${env:GITHUB_TOKEN}" },
+      "preLaunchTask": "build",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Action: schedule (dry run)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--silent", "run", "action"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": {
+        "GITHUB_TOKEN": "${env:GITHUB_TOKEN}",
+        "GITHUB_REPOSITORY": "Resnovas/smartcloud",
+        "GITHUB_EVENT_NAME": "schedule",
+        "GITHUB_EVENT_PATH": "${workspaceFolder}/tools/dev/event.schedule.json",
+        "INPUT_DRYRUN": "true"
+      },
+      "preLaunchTask": "build",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "MCP server (stdio)",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--silent", "run", "mcp"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "env": { "GITHUB_TOKEN": "${env:GITHUB_TOKEN}" },
+      "preLaunchTask": "build",
+      "skipFiles": ["<node_internals>/**"]
+    },
+    {
+      "name": "Vitest: current file",
+      "type": "node",
+      "request": "launch",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--silent", "run", "test:file", "${relativeFile}"],
+      "cwd": "${workspaceFolder}",
+      "console": "integratedTerminal",
+      "autoAttachChildProcesses": true,
+      "smartStep": true,
+      "skipFiles": ["<node_internals>/**", "**/node_modules/**"]
     }
   ]
 }

@@ -1,0 +1,38 @@
+# Codex desktop local environment (house standard project-dev-surfaces).
+# Codex cloud does not read this file; see AGENT-SETUP.md.
+
+version = 1
+name = "smartcloud"
+
+[setup]
+script = "node scripts/agent-setup.ts"
+
+[[actions]]
+name = "Dev"
+icon = "run"
+command = "pnpm run dev"
+
+[[actions]]
+name = "Build"
+icon = "run"
+command = "pnpm run build"
+
+[[actions]]
+name = "Test"
+icon = "test"
+command = "pnpm run test"
+
+[[actions]]
+name = "Lint"
+icon = "test"
+command = "pnpm run lint"
+
+[[actions]]
+name = "Typecheck"
+icon = "test"
+command = "pnpm run typecheck"
+
+[[actions]]
+name = "Check"
+icon = "test"
+command = "pnpm run check"
