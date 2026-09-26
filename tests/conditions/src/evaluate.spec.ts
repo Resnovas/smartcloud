@@ -224,6 +224,43 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['changesSize, max is exclusive', { type: 'changesSize', min: 0, max: 40 }, pullRequest(), false],
   ['changesSize, no max', { type: 'changesSize', min: 40 }, pullRequest(), true],
   ['changesSize, unknown counts as zero', { type: 'changesSize', min: 1 }, withoutChanges, false],
+  ['lockfileChanged, none changed', { type: 'lockfileChanged', condition: true }, pullRequest(), false],
+  ['lockfileChanged false, none changed', { type: 'lockfileChanged', condition: false }, pullRequest(), true],
+  [
+    'lockfileChanged finds a lockfile in any directory',
+    { type: 'lockfileChanged', condition: true },
+    pullRequest({ files: ['apps/web/pnpm-lock.yaml'] }),
+    true,
+  ],
+  [
+    'lockfileChanged matches the whole file name',
+    { type: 'lockfileChanged', condition: true },
+    pullRequest({ files: ['docs/yarn.lock.md', 'my-Cargo.lock'] }),
+    false,
+  ],
+  ['fileCount within range', { type: 'fileCount', min: 1, max: 3 }, pullRequest(), true],
+  ['fileCount, max is exclusive', { type: 'fileCount', min: 0, max: 2 }, pullRequest(), false],
+  ['fileCount, below min', { type: 'fileCount', min: 3 }, pullRequest(), false],
+  ['fileCount, no max', { type: 'fileCount', min: 2 }, pullRequest(), true],
+  ['binaryFilesAdded, none added', { type: 'binaryFilesAdded', condition: true }, pullRequest(), false],
+  [
+    'binaryFilesAdded',
+    { type: 'binaryFilesAdded', condition: true },
+    pullRequest({ changedFiles: [{ path: 'logo.png', status: 'added', binary: true }] }),
+    true,
+  ],
+  [
+    'binaryFilesAdded ignores changed and added text files',
+    { type: 'binaryFilesAdded', condition: false },
+    pullRequest({
+      changedFiles: [
+        { path: 'logo.png', status: 'modified', binary: true },
+        { path: 'old.png', status: 'removed', binary: true },
+        { path: 'new.ts', status: 'added', binary: false },
+      ],
+    }),
+    true,
+  ],
   ['pendingReview', { type: 'pendingReview', condition: true }, pullRequest({ pendingReviewers: 1 }), true],
   ['pendingReview, none', { type: 'pendingReview', condition: true }, pullRequest(), false],
   [
@@ -711,6 +748,60 @@ describe('evaluate: facets', () => {
       expect([...requiredFacets([{ condition: [{ type: 'commitsVerified', condition: true }] }])]).toStrictEqual([
         'commits',
       ])
+    }),
+  )
+
+  it.effect('lockfileChanged, fileCount and binaryFilesAdded explain what they found', () =>
+    Effect.gen(function* () {
+      const detail = (condition: Condition, subject: Subject) =>
+        Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.results[0]?.detail)
+      const lockfile = { type: 'lockfileChanged', condition: true } as const
+      const count = { type: 'fileCount', min: 0 } as const
+      const binary = { type: 'binaryFilesAdded', condition: true } as const
+      expect(yield* detail(lockfile, pullRequest())).toBe('no lockfile changed')
+      expect(yield* detail(lockfile, pullRequest({ files: ['package-lock.json', 'go/go.sum', 'a.ts'] }))).toBe(
+        'lockfile(s) changed: package-lock.json, go/go.sum',
+      )
+      expect(yield* detail(count, pullRequest())).toBe('2 changed file(s)')
+      expect(yield* detail(binary, pullRequest())).toBe('no binary file added')
+      expect(
+        yield* detail(
+          binary,
+          pullRequest({
+            changedFiles: [
+              { path: 'a.png', status: 'added', binary: true },
+              { path: 'b.woff2', status: 'added', binary: true },
+            ],
+          }),
+        ),
+      ).toBe('binary file(s) added: a.png, b.woff2')
+      for (const condition of [lockfile, count, binary]) {
+        expect(yield* detail(condition, issue())).toBe('only applies to pull requests')
+      }
+    }),
+  )
+
+  it.effect('lockfileChanged and fileCount need files, binaryFilesAdded needs changedFiles', () =>
+    Effect.gen(function* () {
+      const { files: _files, changedFiles: _changed, ...unread } = pullRequest()
+      const fails = (condition: Condition, facet: 'files' | 'changedFiles') =>
+        Effect.map(Effect.exit(evaluate({ condition: [condition] }, unread)), (exit) =>
+          expect(exit).toStrictEqual(Exit.fail(new MissingFacet({ facet, condition: condition.type }))),
+        )
+      yield* fails({ type: 'lockfileChanged', condition: true }, 'files')
+      yield* fails({ type: 'fileCount', min: 1 }, 'files')
+      yield* fails({ type: 'binaryFilesAdded', condition: true }, 'changedFiles')
+      expect([
+        ...requiredFacets([
+          {
+            condition: [
+              { type: 'lockfileChanged', condition: true },
+              { type: 'fileCount', min: 1 },
+              { type: 'binaryFilesAdded', condition: false },
+            ],
+          },
+        ]),
+      ]).toStrictEqual(['files', 'changedFiles'])
     }),
   )
 

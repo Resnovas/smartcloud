@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Check, Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { ChangedFile, Check, Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Effect, Layer } from 'effect'
 import { type GitHubError, NotFound, ValidationFailed } from './errors.js'
 import {
@@ -35,6 +35,8 @@ import {
 export interface MemoryPullRequest {
   commits: Array<Commit>
   files: Array<string>
+  /** The changed files with their status; `files` as modified text files when omitted. */
+  changedFiles?: Array<ChangedFile>
   reviews: Array<Review>
   requestedReviewers: Array<string>
   submittedReviews: Array<NewReview>
@@ -228,6 +230,10 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
     closeIssue: (number) => Effect.sync(() => void (issue(number).open = false)),
     listCommits: (number) => Effect.map(pull('listCommits', number), (entry) => [...entry.commits]),
     listFiles: (number) => Effect.map(pull('listFiles', number), (entry) => [...entry.files]),
+    listChangedFiles: (number) =>
+      Effect.map(pull('listChangedFiles', number), (entry) => [
+        ...(entry.changedFiles ?? entry.files.map((path) => ({ path, status: 'modified' as const, binary: false }))),
+      ]),
     listReviews: (number) => Effect.map(pull('listReviews', number), (entry) => [...entry.reviews]),
     countRequestedReviewers: (number) =>
       Effect.map(pull('countRequestedReviewers', number), (entry) => entry.requestedReviewers.length),

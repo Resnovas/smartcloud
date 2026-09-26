@@ -140,6 +140,7 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
     const parts = yield* Effect.all(
       [
         load('files', github.listFiles),
+        load('changedFiles', github.listChangedFiles),
         load('reviews', github.listReviews),
         load('pendingReviewers', github.countRequestedReviewers),
         load('requestedReviewers', github.listRequestedReviewers),

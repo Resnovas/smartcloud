@@ -50,6 +50,9 @@ Conditions that match text take a pattern: a regular expression written either b
 | `filesMatch`          | `condition`: glob                                                   | At least one changed file matches.                                                                                                                     |
 | `codeownersTouched`   | `condition`: owner                                                  | At least one changed file is owned, in CODEOWNERS, by the owner: `@org/team`, `@user` or an email.                                                     |
 | `changesSize`         | `min`, optional `max`: lines                                        | Lines added plus deleted are at least `min` and below `max`.                                                                                           |
+| `lockfileChanged`     | `condition`: boolean                                                | A dependency lockfile changed (`true`), or none did (`false`).                                                                                         |
+| `fileCount`           | `min`, optional `max`: files                                        | The number of changed files is at least `min` and below `max`.                                                                                         |
+| `binaryFilesAdded`    | `condition`: boolean                                                | The pull request adds a binary file (`true`), or adds none (`false`).                                                                                  |
 | `pendingReview`       | `condition`: boolean                                                | Some requested reviewers have not reviewed yet (`true`), or none are pending (`false`).                                                                |
 | `requestedChanges`    | `condition`: boolean                                                | A reviewer's latest review requests changes (`true`), or none does (`false`).                                                                          |
 | `isApproved`          | `condition`: count, optional `allowPending`: boolean                | No reviewer is requesting changes, at least this many approved, and no reviewer is pending. With `allowPending: true`, pending reviewers do not block. |
@@ -144,7 +147,7 @@ A Linear key is a team key, a dash and a number. List your teams in `keys` to co
 
 ### Pull request only conditions
 
-`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `commitsVerified`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus`, `linksIssue` and `codeownersTouched` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `lockfileChanged`, `fileCount`, `binaryFilesAdded`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `commitsVerified`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus`, `linksIssue` and `codeownersTouched` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 
@@ -252,6 +255,41 @@ labelling:
 ```
 
 It needs the changed files and CODEOWNERS, two API calls, both covered by `contents: read`. In a stale sweep's `exempt.when`, the listing has no base branch, so CODEOWNERS is read from the default branch.
+
+### Lockfiles, file count and binary files
+
+`lockfileChanged` passes when the pull request changes a dependency lockfile, in any directory. It recognises these file names: `package-lock.json`, `npm-shrinkwrap.json`, `pnpm-lock.yaml`, `yarn.lock`, `bun.lock`, `bun.lockb`, `deno.lock`, `Cargo.lock`, `go.sum`, `Gemfile.lock`, `composer.lock`, `poetry.lock`, `Pipfile.lock`, `uv.lock`, `pdm.lock`, `gradle.lockfile`, `packages.lock.json`, `Podfile.lock`, `Package.resolved`, `pubspec.lock`, `mix.lock`, `flake.lock` and `.terraform.lock.hcl`. For any other file, use `filesMatch`.
+
+`fileCount` counts the changed files, the way `changesSize` counts lines: it passes when the count is at least `min` and, when `max` is set, below it. GitHub lists at most 3,000 files for a pull request, so a larger one counts as 3,000.
+
+`binaryFilesAdded` passes when the pull request adds a binary file. GitHub shows no text diff for binary content and counts no changed lines, and that is what the condition reads, so an empty file added counts as binary too. Changing or deleting an existing binary file does not count.
+
+```yaml
+labelling:
+  dependencies:
+    label: 'Type - Dependencies'
+    on: [pullRequest]
+    when:
+      condition:
+        - type: lockfileChanged
+          condition: true
+  large:
+    label: 'Size - Many files'
+    on: [pullRequest]
+    when:
+      condition:
+        - type: fileCount
+          min: 50
+  binaries:
+    label: 'Status - Binary files'
+    on: [pullRequest]
+    when:
+      condition:
+        - type: binaryFilesAdded
+          condition: true
+```
+
+All three read the pull request's changed files, one API call covered by `contents: read`. `lockfileChanged` and `fileCount` share it with `filesMatch` and `codeownersTouched`; `binaryFilesAdded` reads the listing's status and line counts too, which is a separate call.
 
 Conditions that need a pull request's files, reviews, commits, mergeability, checks or CODEOWNERS cost an API call each. smartcloud loads only the ones the configured rules use.
 

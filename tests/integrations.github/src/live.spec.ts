@@ -309,6 +309,26 @@ describe('live GitHub: pull requests', () => {
     }),
   )
 
+  it.effect('reads changed files with their status, marking those without a diff or lines as binary', () =>
+    Effect.gen(function* () {
+      const { service } = live({
+        [`GET ${REPO}/pulls/7/files`]: {
+          body: [
+            { filename: 'src/a.ts', status: 'modified', changes: 3, patch: '@@ -1 +1 @@' },
+            { filename: 'logo.png', status: 'added', changes: 0 },
+            { filename: 'huge.json', status: 'added', changes: 90000 },
+          ],
+        },
+      })
+      const github = yield* service
+      expect(yield* github.listChangedFiles(7)).toStrictEqual([
+        { path: 'src/a.ts', status: 'modified', binary: false },
+        { path: 'logo.png', status: 'added', binary: true },
+        { path: 'huge.json', status: 'added', binary: false },
+      ])
+    }),
+  )
+
   it.effect('reads whether a pull request conflicts with its base branch', () =>
     Effect.gen(function* () {
       const { service, requests } = live({

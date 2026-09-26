@@ -278,6 +278,7 @@ describe('loadFacets', () => {
         },
         new Set([
           'files',
+          'changedFiles',
           'reviews',
           'pendingReviewers',
           'requestedReviewers',
@@ -289,6 +290,7 @@ describe('loadFacets', () => {
       ).pipe(Effect.provideService(GitHub, service))
       expect(subject).toMatchObject({
         files: ['src/a.ts'],
+        changedFiles: [{ path: 'src/a.ts', status: 'modified', binary: false }],
         reviews: [{ author: 'ann' }],
         pendingReviewers: 1,
         requestedReviewers: ['bo'],

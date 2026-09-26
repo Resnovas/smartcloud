@@ -23,7 +23,7 @@ import type { Association, Check, CheckState, Commit, Facet, Review, Subject } f
 import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 
 /**
- * A condition needed a facet (files, reviews, pending or requested reviewers,
+ * A condition needed a facet (files, changed files with their status, reviews, pending or requested reviewers,
  * commits, mergeability, checks or CODEOWNERS) that was not loaded onto the subject. This is an
  * engine bug, not a user error: the engine loads every facet `requiredFacets`
  * reports.
@@ -58,6 +58,35 @@ export interface Evaluation {
 }
 
 const DAY = 86_400_000
+
+// Dependency lockfiles, matched by file name in any directory.
+const LOCKFILES = new Set([
+  'package-lock.json',
+  'npm-shrinkwrap.json',
+  'pnpm-lock.yaml',
+  'yarn.lock',
+  'bun.lock',
+  'bun.lockb',
+  'deno.lock',
+  'Cargo.lock',
+  'go.sum',
+  'Gemfile.lock',
+  'composer.lock',
+  'poetry.lock',
+  'Pipfile.lock',
+  'uv.lock',
+  'pdm.lock',
+  'gradle.lockfile',
+  'packages.lock.json',
+  'Podfile.lock',
+  'Package.resolved',
+  'pubspec.lock',
+  'mix.lock',
+  'flake.lock',
+  '.terraform.lock.hcl',
+])
+
+const isLockfile = (path: string) => LOCKFILES.has(path.slice(path.lastIndexOf('/') + 1))
 
 const result = (type: string, passed: boolean, detail: string): ConditionResult => ({ type, passed, detail })
 
@@ -193,6 +222,9 @@ const PULL_REQUEST_ONLY = new Set([
   'isDraft',
   'filesMatch',
   'changesSize',
+  'lockfileChanged',
+  'fileCount',
+  'binaryFilesAdded',
   'pendingReview',
   'requestedChanges',
   'isApproved',
@@ -372,6 +404,30 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
       const passed = changes >= condition.min && (condition.max === undefined || changes < condition.max)
       return Effect.succeed(result(condition.type, passed, `${changes} changed line(s)`))
     }
+    case 'lockfileChanged':
+      return Effect.map(facet(subject, 'files', condition.type), (files) => {
+        const lockfiles = files.filter(isLockfile)
+        return result(
+          condition.type,
+          lockfiles.length > 0 === condition.condition,
+          lockfiles.length === 0 ? 'no lockfile changed' : `lockfile(s) changed: ${lockfiles.join(', ')}`,
+        )
+      })
+    case 'fileCount':
+      return Effect.map(facet(subject, 'files', condition.type), (files) => {
+        const count = files.length
+        const passed = count >= condition.min && (condition.max === undefined || count < condition.max)
+        return result(condition.type, passed, `${count} changed file(s)`)
+      })
+    case 'binaryFilesAdded':
+      return Effect.map(facet(subject, 'changedFiles', condition.type), (files) => {
+        const added = files.filter((file) => file.status === 'added' && file.binary).map((file) => file.path)
+        return result(
+          condition.type,
+          added.length > 0 === condition.condition,
+          added.length === 0 ? 'no binary file added' : `binary file(s) added: ${added.join(', ')}`,
+        )
+      })
     case 'pendingReview':
       return Effect.map(facet(subject, 'pendingReviewers', condition.type), (pending) =>
         result(condition.type, pending > 0 === condition.condition, `${pending} review(s) pending`),
@@ -550,6 +606,9 @@ export const evaluate = (group: ConditionGroup, subject: Subject): Effect.Effect
 
 const FACETS: Partial<Record<Condition['type'], ReadonlyArray<Facet>>> = {
   filesMatch: ['files'],
+  lockfileChanged: ['files'],
+  fileCount: ['files'],
+  binaryFilesAdded: ['changedFiles'],
   pendingReview: ['pendingReviewers'],
   requestedChanges: ['reviews'],
   isApproved: ['reviews', 'pendingReviewers'],

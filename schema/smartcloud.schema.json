@@ -288,6 +288,15 @@
               "$ref": "#/$defs/changesSize"
             },
             {
+              "$ref": "#/$defs/lockfileChanged"
+            },
+            {
+              "$ref": "#/$defs/fileCount"
+            },
+            {
+              "$ref": "#/$defs/binaryFilesAdded"
+            },
+            {
               "$ref": "#/$defs/isApproved"
             },
             {
@@ -945,6 +954,69 @@
       },
       "additionalProperties": false,
       "description": "Lines added plus deleted are at least min and below max."
+    },
+    "lockfileChanged": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "lockfileChanged"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "A dependency lockfile changed, or none did when false."
+    },
+    "fileCount": {
+      "type": "object",
+      "required": [
+        "type",
+        "min"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "fileCount"
+          ]
+        },
+        "min": {
+          "$ref": "#/$defs/NonNegativeInt"
+        },
+        "max": {
+          "$ref": "#/$defs/NonNegativeInt"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The number of changed files is at least min and below max."
+    },
+    "binaryFilesAdded": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "binaryFilesAdded"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The pull request adds a binary file, or none when false."
     },
     "isApproved": {
       "type": "object",
