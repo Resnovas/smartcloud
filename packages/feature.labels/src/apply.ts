@@ -124,6 +124,10 @@ export const applyLabels = (
     const decided = [...decisions.values()]
 
     const toAdd = decided.filter((entry) => entry.wanted && !present(entry.name)).map((entry) => entry.name)
+    const toRemove = decided.filter((candidate) => !candidate.wanted && present(candidate.name))
+    yield* Effect.logInfo(`labels: ${toAdd.length} to add, ${toRemove.length} to remove`).pipe(
+      Effect.annotateLogs({ feature: FEATURE, rule: 'labels.apply', rules: decided.length, add: toAdd.length, remove: toRemove.length }),
+    )
     if (toAdd.length > 0) {
       yield* github.addLabels(subject.number, toAdd).pipe(
         Effect.zipRight(
@@ -142,7 +146,7 @@ export const applyLabels = (
       )
     }
 
-    for (const entry of decided.filter((candidate) => !candidate.wanted && present(candidate.name))) {
+    for (const entry of toRemove) {
       yield* github.removeLabel(subject.number, entry.name).pipe(
         Effect.zipRight(
           report.change({ feature: FEATURE, description: `removed label "${entry.name}" from #${subject.number}` }),

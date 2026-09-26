@@ -107,10 +107,12 @@ const run: Feature['run'] = ({ config, subject }) =>
   Effect.gen(function* () {
     if (subject === undefined) return
     const report = yield* Report
-    for (const [id, rule] of rulesOf(config)) {
-      if (rule.on !== undefined && !rule.on.includes(subject.kind)) continue
+    const failed: Array<string> = []
+    const applicable = rulesOf(config).filter(([, rule]) => rule.on === undefined || rule.on.includes(subject.kind))
+    for (const [id, rule] of applicable) {
       const failures = yield* checkRule(rule, subject)
       if (failures.length === 0) continue
+      failed.push(`${FEATURE}.${id}`)
       yield* report.add({
         feature: FEATURE,
         rule: `${FEATURE}.${id}`,
@@ -118,6 +120,9 @@ const run: Feature['run'] = ({ config, subject }) =>
         message: rule.message ?? failures.join('\n\n'),
       })
     }
+    yield* Effect.logInfo(`conventions: ${failed.length} of ${applicable.length} rule(s) failed`).pipe(
+      Effect.annotateLogs({ feature: FEATURE, 'subject.kind': subject.kind, checked: applicable.length, failed: failed.length, rules: failed }),
+    )
   })
 
 /**

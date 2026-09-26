@@ -214,6 +214,15 @@ export const syncLabels = (config: SmartcloudConfig): Effect.Effect<void, GitHub
     const report = yield* Report
     yield* reportRepeatedNames(config.labels)
     const steps = planSync(config.labels, yield* github.listLabels, config.labelSync?.prune ?? false)
+    const planned = {
+      create: steps.filter((step) => step.action === 'create').length,
+      update: steps.filter((step) => step.action === 'update').length,
+      rename: steps.filter((step) => step.action === 'rename').length,
+      delete: steps.filter((step) => step.action === 'delete').length,
+    }
+    yield* Effect.logInfo(
+      `labels: ${planned.create} to create, ${planned.update} to update, ${planned.rename} to rename, ${planned.delete} to delete`,
+    ).pipe(Effect.annotateLogs({ feature: FEATURE, rule: 'labels.sync', ...planned }))
     for (const step of steps) {
       const skipped = overlong(step)
       if (skipped !== undefined) {

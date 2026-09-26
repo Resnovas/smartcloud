@@ -74,6 +74,15 @@ const runGate = (
       maintainer: gate.maintainer ?? 1,
     })
     const link = `${config.links?.policyBase ?? DEFAULT_POLICY_BASE}/GOVERNANCE.md#review`
+    // Only the status and counts: the approvers are logins.
+    yield* Effect.logInfo(`reviews: gate ${result.status}`).pipe(
+      Effect.annotateLogs({
+        feature: FEATURE,
+        rule: 'REVIEW',
+        status: result.status,
+        ...(result.status === 'open' ? { reason: result.reason } : { required: result.required, approvals: result.approvedBy.length }),
+      }),
+    )
     if (result.status === 'open') {
       const message =
         result.reason === 'trustedBot'
@@ -97,6 +106,9 @@ const runRequestApprovals = (rules: NonNullable<Reviews['requestApprovals']>, su
     const reviewed = reviews.filter((review) => review.state !== 'PENDING').map((review) => review.author)
     for (const [key, rule] of Object.entries(rules)) {
       const evaluation = yield* evaluate(rule.when, subject)
+      yield* Effect.logDebug(`reviews: requestApprovals.${key} ${evaluation.passed ? 'passed' : 'did not pass'}`).pipe(
+        Effect.annotateLogs({ feature: FEATURE, rule: `reviews.requestApprovals.${key}`, passed: evaluation.passed }),
+      )
       if (!evaluation.passed) continue
       // GitHub rejects a request for the author's own review, so drop them.
       const reviewers = rule.reviewers
@@ -126,6 +138,9 @@ const runAutomaticApprove = (
     const approved = [...latestDecisive(reviews).values()].includes('APPROVED')
     for (const [key, rule] of Object.entries(rules)) {
       const evaluation = yield* evaluate(rule.when, subject)
+      yield* Effect.logDebug(`reviews: automaticApprove.${key} ${evaluation.passed ? 'passed' : 'did not pass'}`).pipe(
+        Effect.annotateLogs({ feature: FEATURE, rule: `reviews.automaticApprove.${key}`, passed: evaluation.passed, approved }),
+      )
       if (!evaluation.passed) continue
       if (approved) {
         yield* report.add({

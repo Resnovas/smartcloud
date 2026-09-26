@@ -21,6 +21,7 @@ import { Config, Effect, Layer, Redacted, Schedule } from 'effect'
 import { cacheReads } from './cache.js'
 import { fromGraphqlErrors, fromStatus, type GitHubError, ValidationFailed } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
+import { type CallDetails, instrumentCall, statusTracker } from './telemetry.js'
 import {
   type Annotation,
   type CheckRun,
@@ -165,6 +166,11 @@ const labelName = (label: string | { readonly name?: string | undefined }): stri
  * service's own writes (see {@link cacheReads}), so a run makes each read
  * once and never reads stale data after its own write.
  *
+ * Each call is traced as `smartcloud.github.<operation>`, counted in
+ * `smartcloud.github.requests` and timed in `smartcloud.github.duration_ms`
+ * (see {@link instrumentCall}); only the operation, the outcome and the HTTP
+ * status are recorded.
+ *
  * @param options - Token, repository and optional test hooks.
  * @returns The service.
  */
@@ -180,12 +186,22 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     const { owner, repo } = options.coordinates
     const retry = options.retry ?? DEFAULT_RETRY
 
+    // One span, count and duration per call, however many attempts it takes.
     const call = <A>(
       operation: string,
       run: () => Promise<A>,
       retryWhile: (error: GitHubError) => boolean = transient,
-    ): Effect.Effect<A, GitHubError> =>
-      Effect.tryPromise({ try: run, catch: (error) => toGitHubError(operation, error) }).pipe(Effect.retry({ schedule: retry, while: retryWhile }))
+      details: CallDetails = { operation },
+    ): Effect.Effect<A, GitHubError> => {
+      const status = statusTracker()
+      return instrumentCall(
+        Effect.tryPromise({ try: status.track(run), catch: (error) => toGitHubError(operation, error) }).pipe(
+          Effect.retry({ schedule: retry, while: retryWhile }),
+        ),
+        status.last,
+        details,
+      )
+    }
 
     // Appends every annotation batch after the first to a run, one request each.
     const appendAnnotations = (check_run_id: number, run: CheckRun, batches: ReadonlyArray<ReadonlyArray<Annotation>>) =>
@@ -215,6 +231,8 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         // The body goes in `data`, so none of its keys can set the owner, the repository or a request option.
         () => octokit.request(`${request.method} /repos/{owner}/{repo}${request.path}`, { owner, repo, ...(request.body === undefined ? {} : { data: request.body }) }),
         request.method === 'POST' ? rateLimited : transient,
+        // The operation names the repository and the path, so telemetry sees only the method.
+        { operation: 'repositoryRequest', attributes: { 'http.method': request.method } },
       ).pipe(Effect.map((response) => response.data))
     }
 
@@ -223,7 +241,11 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       if (reserved.length > 0) {
         return Effect.fail(new ValidationFailed({ operation: 'graphql', detail: `variables cannot be named ${reserved.join(', ')}` }))
       }
-      return call('graphql', () => octokit.graphql(query, { ...variables }), isGraphqlWrite(query) ? rateLimited : transient)
+      const write = isGraphqlWrite(query)
+      return call('graphql', () => octokit.graphql(query, { ...variables }), write ? rateLimited : transient, {
+        operation: 'graphql',
+        attributes: { 'graphql.operation': write ? 'mutation' : 'query' },
+      })
     }
 
     const listCommits: GitHubService['listCommits'] = (pull_number) =>

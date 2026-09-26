@@ -73,6 +73,9 @@ export const featureEnabled = (repository: RepositoryName, flag: FeatureFlag): E
  *
  * @param repository - The repository.
  * @param features - The features about to run.
+ * @remarks
+ * Traced as `smartcloud.flags.evaluate`, naming the features turned off.
+ *
  * @returns Each turned-off feature's name and reason; features without a flag are never turned off.
  */
 export const turnedOffFeatures = (repository: RepositoryName, features: ReadonlyArray<Feature>): Effect.Effect<ReadonlyMap<string, string>> =>
@@ -88,4 +91,12 @@ export const turnedOffFeatures = (repository: RepositoryName, features: Readonly
       { concurrency: 'unbounded' },
     ),
     (entries) => new Map(entries.flat()),
+  ).pipe(
+    Effect.tap((off) =>
+      Effect.zipRight(
+        Effect.annotateCurrentSpan({ features: features.length, turned_off: [...off.keys()] }),
+        Effect.logDebug(`flags: ${off.size} of ${features.length} feature(s) turned off`).pipe(Effect.annotateLogs({ turned_off: [...off.keys()] })),
+      ),
+    ),
+    Effect.withSpan('smartcloud.flags.evaluate', { captureStackTrace: false }),
   )

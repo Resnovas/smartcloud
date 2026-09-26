@@ -59,6 +59,7 @@ import {
   PresetUnreadable,
 } from '@resnovas/runtime'
 import { ConfigProvider, Effect, Either, Redacted } from 'effect'
+import { carried, observe, spanNamed } from './observe.js'
 import { chmod, mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -366,6 +367,36 @@ describe('runEvent and dryRun', () => {
       )
       expect(outcome.result.findings.map((finding) => finding.rule)).toStrictEqual(['conventions.title'])
       expect(state.checkRuns).not.toHaveLength(0)
+    }),
+  )
+
+  it.effect('traces config, flags, features and reporting, naming no repository, title or login', () =>
+    Effect.gen(function* () {
+      const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
+      const observed = yield* observe(
+        Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) => runEvent({ config: {}, event, features: ['conventions', 'labels'] })),
+      ).pipe(Effect.provideService(GitHub, service))
+      expect(observed.value.result.findings.map((finding) => finding.rule)).toStrictEqual(['conventions.title'])
+      expect(Object.fromEntries(spanNamed(observed, 'smartcloud.config.resolve').attributes)).toStrictEqual({
+        'config.from': 'repository',
+        sources: 1,
+        warnings: 0,
+        locked: 0,
+      })
+      expect(Object.fromEntries(spanNamed(observed, 'smartcloud.flags.evaluate').attributes)).toStrictEqual({ features: 2, turned_off: [] })
+      expect(spanNamed(observed, 'smartcloud.feature.conventions').attributes.get('findings')).toBe(1)
+      expect(Object.fromEntries(spanNamed(observed, 'smartcloud.reporting.publish').attributes)).toMatchObject({
+        'event.kind': 'pullRequest',
+        findings: 1,
+        check_runs: 1,
+        comment: 'created',
+        warnings: 0,
+      })
+      const messages = observed.logs.map((log) => log.message)
+      expect(messages).toContain('conventions: 1 of 1 rule(s) failed')
+      expect(messages).toContain('labels: skipped, not configured')
+      expect(messages).toContain('reporting: 1 check run(s), comment created, 0 warning(s)')
+      for (const value of carried(observed)) for (const secret of ['Resnovas', 'example', 'jane', 'Add things', 'smartcloud.yml']) expect(value).not.toContain(secret)
     }),
   )
 

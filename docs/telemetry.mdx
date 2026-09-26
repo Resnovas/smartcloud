@@ -11,9 +11,11 @@ Every run of the action, and every dry run, settings plan or sync render from th
 
 - **An event**, such as `smartcloud run`, with the surface (`action`, `cli` or `mcp`), the smartcloud version, the GitHub event name (such as `push` or `pull_request`), the outcome, how long it took, the names of the features that ran, were skipped or failed, and the number of findings. Evaluating a [feature flag](#feature-flags) also records PostHog's standard `$feature_flag_called` event.
 - **Errors** for error tracking: a failure or defect of the run, or a feature that failed, with its message and stack trace.
-- **Logs**: a line for each run with its outcome, and any logs smartcloud writes while it runs. The run's own line goes to PostHog only, never to your terminal.
-- **Traces**: a span for the run, with its duration and outcome.
-- **Metrics**: a count of runs by operation and outcome, and their durations.
+- **Logs**: a line for each run with its outcome, and the diagnostic logs smartcloud writes while it runs, from debug level up: what each feature decided, as counts (such as `labels: 3 to create, 1 to rename`), the rule id of each finding, and the outcome of each GitHub API call. Logs go to PostHog only, never to your terminal.
+- **Traces**: a span for the run, with child spans for resolving the config (`smartcloud.config.resolve`), evaluating feature flags, running the features (`smartcloud.engine.runFeatures`), each feature (`smartcloud.feature.<name>`), loading pull request details, publishing the report (`smartcloud.reporting.publish`) and each GitHub API call (`smartcloud.github.<operation>`), with their durations, outcomes, counts and, for GitHub calls, the HTTP status.
+- **Metrics**: a count of runs by operation and outcome, and their durations; findings by level and feature (`smartcloud.findings`); feature durations by feature and outcome (`smartcloud.feature.duration_ms`); and GitHub API calls by operation and outcome (`smartcloud.github.requests`), with their durations (`smartcloud.github.duration_ms`).
+
+Spans, logs and metrics carry only feature names, rule ids, event names, counts, outcomes and HTTP statuses. They never carry what a finding says, and a GitHub call is named by its operation, never by its path.
 
 The repository is identified only by a hash: the SHA-256 of its lower-cased `owner/repo` is the PostHog person, and the SHA-256 of its lower-cased owner is an `organization` group. Logs carry the same hash as `posthogDistinctId`, so they link to the repository's person in PostHog. GeoIP lookups are turned off.
 

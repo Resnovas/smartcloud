@@ -131,7 +131,7 @@ export const disclosureFeature: Feature = {
       const { subject, commits } = yield* pullRequestCommits(context, NAME)
       const github = yield* GitHub
       const role = authorRole(subject.author, context.config.roles, github.coordinates.owner)
-      if (role === 'bot') return
+      if (role === 'bot') return yield* Effect.logInfo('disclosure: skipped, the author is a trusted bot').pipe(Effect.annotateLogs({ feature: NAME, role }))
 
       const isAi = makeAiIdentityMatcher(context.config.commits?.aiIdentities)
       const attributions = commits.map((commit) => ({ sha: commit.sha, ...classifyAttribution(commit.message, isAi) }))
@@ -150,5 +150,8 @@ export const disclosureFeature: Feature = {
       for (const draft of found) {
         yield* report.add({ feature: NAME, level: levelFor(role, draft.rule, section.maintainerLevel), ...draft })
       }
+      yield* Effect.logInfo(`disclosure: ${found.length} problem(s) across ${commits.length} commit(s)`).pipe(
+        Effect.annotateLogs({ feature: NAME, role, commits: commits.length, problems: found.length, rules: [...new Set(found.map((draft) => draft.rule))] }),
+      )
     }),
 }

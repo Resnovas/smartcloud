@@ -168,6 +168,9 @@ const runSync = (config: SmartcloudConfig, sync: SyncConfig) =>
     const github = yield* GitHub
     const report = yield* Report
     const { source, repository, plan } = yield* previewSync(sync)
+    yield* Effect.logInfo(`sync: ${plan.files.length} file(s) to propose, ${plan.conflicts.length} conflict(s)`).pipe(
+      Effect.annotateLogs({ feature: FEATURE, rule: 'SYNC', files: plan.files.length, conflicts: plan.conflicts.length }),
+    )
     for (const { path, problem } of plan.conflicts) {
       yield* report.add({ feature: FEATURE, rule: 'SYNC', level: 'warning', message: `${path} ${problem}`, path, link: linkFor(config) })
     }
@@ -218,7 +221,11 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
     )
     // Contributors fail; a maintainer's own edit is a warning unless sync.maintainerLevel says otherwise.
     const level = levelFor(authorRole(envelope.subject.author, config.roles, repository.owner), 'SYNC', sync.maintainerLevel)
-    for (const { path, message, local } of syncFindings(files)) {
+    const findings = syncFindings(files)
+    yield* Effect.logInfo(`sync: ${files.length} synced file(s) checked, ${findings.length} edit(s) to synced content`).pipe(
+      Effect.annotateLogs({ feature: FEATURE, rule: 'SYNC', files: files.length, edits: findings.length, level }),
+    )
+    for (const { path, message, local } of findings) {
       yield* report.add({
         feature: FEATURE,
         rule: 'SYNC',

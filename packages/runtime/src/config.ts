@@ -101,7 +101,7 @@ export const loadConfigText = (location: ConfigLocation) =>
  * Presets are read with the same GitHub service, so a dry run reads them
  * through the dry-run layer like every other read. A config that says
  * `telemetry: false` turns telemetry off for the rest of the process as soon
- * as it is read.
+ * as it is read. Traced as `smartcloud.config.resolve`, with counts only.
  *
  * @param location - Where the config is.
  * @returns The resolved config.
@@ -110,9 +110,13 @@ export const loadConfig = (location: ConfigLocation) =>
   Effect.gen(function* () {
     const { text, source } = yield* loadConfigText(location)
     const resolved: ResolvedConfig = yield* resolveConfig(text, source).pipe(Effect.provide(ConfigSourceFromGitHub))
+    // Only counts: sources name presets, their repositories and paths.
+    const counts = { sources: resolved.sources.length, warnings: resolved.warnings.length, locked: resolved.locked.size }
+    yield* Effect.annotateCurrentSpan(counts)
+    yield* Effect.logDebug(`config: resolved from ${counts.sources} source(s) with ${counts.warnings} warning(s)`).pipe(Effect.annotateLogs(counts))
     if (resolved.config.telemetry === false) yield* optOut
     return resolved
-  })
+  }).pipe(Effect.withSpan('smartcloud.config.resolve', { captureStackTrace: false, attributes: { 'config.from': location.text === undefined ? 'repository' : 'text' } }))
 
 /**
  * Reads a config from the local disk.

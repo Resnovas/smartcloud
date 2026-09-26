@@ -45,8 +45,11 @@ export class DryRunLog extends Context.Tag('@resnovas/integrations.github/DryRun
  * @returns The wrapped service.
  */
 export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<RecordedWrite>>): GitHubService => {
+  // The details can name labels, people and files, so only the operation is logged.
   const record = (operation: string, details: Readonly<Record<string, unknown>>) =>
-    Ref.update(log, (writes) => [...writes, { operation, details }])
+    Ref.update(log, (writes) => [...writes, { operation, details }]).pipe(
+      Effect.zipRight(Effect.logDebug(`dry run: recorded ${operation}`).pipe(Effect.annotateLogs({ 'github.operation': operation, dry_run: true }))),
+    )
   return {
     ...inner,
     createLabel: (label) => record('createLabel', { label }),

@@ -289,11 +289,14 @@ export const sweepStale = (config: SmartcloudConfig): Effect.Effect<void, GitHub
       })
     }
     const now = yield* Clock.currentTimeMillis
-    for (const item of yield* github.listOpenIssues) {
-      const listed = subjectOf(item)
-      if (!kinds.includes(listed.kind)) continue
-      if (exemptLabels.some((label) => has(listed, label))) continue
-      if (unanswerable && listed.kind === 'pullRequest') continue
+    const items = yield* github.listOpenIssues
+    const swept = items.map(subjectOf).filter(
+      (listed) => kinds.includes(listed.kind) && !exemptLabels.some((label) => has(listed, label)) && !(unanswerable && listed.kind === 'pullRequest'),
+    )
+    yield* Effect.logInfo(`stale: sweeping ${swept.length} of ${items.length} open item(s)`).pipe(
+      Effect.annotateLogs({ feature: FEATURE, rule: 'stale.sweep', open: items.length, swept: swept.length }),
+    )
+    for (const listed of swept) {
       yield* Effect.gen(function* () {
         const subject = yield* loadFacets(listed, facets)
         // With the facets loaded evaluation cannot fail, so a failure here
@@ -302,7 +305,7 @@ export const sweepStale = (config: SmartcloudConfig): Effect.Effect<void, GitHub
         yield* sweepItem(stale, subject, now, config.roles?.trustedBots ?? [])
       }).pipe(
         Effect.catchAll((error) =>
-          report.add({ feature: FEATURE, rule: 'stale.sweep', level: 'error', message: `#${item.number} was not swept: ${error.message}` }),
+          report.add({ feature: FEATURE, rule: 'stale.sweep', level: 'error', message: `#${listed.number} was not swept: ${error.message}` }),
         ),
       )
     }

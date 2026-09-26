@@ -54,6 +54,9 @@ const subjectOf = (result: RunResult) =>
  * by one of `trustedAuthors` is taken over; one anyone else wrote is left
  * alone and a new comment is created.
  *
+ * Traced as `smartcloud.reporting.publish`, with counts and the comment's
+ * outcome only.
+ *
  * @param result - The run.
  * @param options - Set `comment` to false to leave issues and pull requests
  *   alone; `trustedAuthors` lists logins, besides bot accounts, whose marker
@@ -99,5 +102,13 @@ export const publishReport = (
       }).pipe(Effect.catchAll(noteFailure('comment')))
     }
 
+    const counts = { check_runs: checkRuns, comment, warnings: warnings.length }
+    yield* Effect.annotateCurrentSpan(counts)
+    yield* Effect.logInfo(`reporting: ${checkRuns} check run(s), comment ${comment}, ${warnings.length} warning(s)`).pipe(Effect.annotateLogs(counts))
     return { checkRuns, comment, summary: summaryMarkdown(result), annotations: annotationLines(result.findings), warnings }
-  })
+  }).pipe(
+    Effect.withSpan('smartcloud.reporting.publish', {
+      captureStackTrace: false,
+      attributes: { 'event.kind': result.envelope.kind, findings: result.findings.length, changes: result.changes.length },
+    }),
+  )
