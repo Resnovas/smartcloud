@@ -31,6 +31,9 @@ import { sameName } from './sync.js'
 
 const FEATURE = 'labels'
 
+/** Why a write was refused, for the warning a forbidden write leaves. */
+export const READ_ONLY_TOKEN = 'on a read-only token, for example a pull request from a fork'
+
 type Rules = NonNullable<SmartcloudConfig['labelling']>
 
 /**
@@ -95,7 +98,9 @@ const decide = (config: SmartcloudConfig, rules: Rules, subject: Subject) =>
  * label whose rule passes is added when missing; one whose rules all fail is
  * removed when present. Names compare ignoring case, as GitHub does. When a
  * label disappears between reading the subject and removing it, GitHub
- * answers NotFound; that race is a warning, not a failure.
+ * answers NotFound; that race is a warning, not a failure. So is a Forbidden
+ * write: a pull request from a fork runs with a read-only token, and one
+ * label the token cannot set should not fail the whole run.
  *
  * @example
  * ```ts
@@ -120,9 +125,21 @@ export const applyLabels = (
 
     const toAdd = decided.filter((entry) => entry.wanted && !present(entry.name)).map((entry) => entry.name)
     if (toAdd.length > 0) {
-      yield* github.addLabels(subject.number, toAdd)
-      for (const name of toAdd)
-        yield* report.change({ feature: FEATURE, description: `added label "${name}" to #${subject.number}` })
+      yield* github.addLabels(subject.number, toAdd).pipe(
+        Effect.zipRight(
+          Effect.forEach(toAdd, (name) => report.change({ feature: FEATURE, description: `added label "${name}" to #${subject.number}` }), {
+            discard: true,
+          }),
+        ),
+        Effect.catchTag('Forbidden', () =>
+          report.add({
+            feature: FEATURE,
+            rule: 'labels.add',
+            level: 'warning',
+            message: `could not add ${toAdd.map((name) => `"${name}"`).join(', ')} to #${subject.number} ${READ_ONLY_TOKEN}`,
+          }),
+        ),
+      )
     }
 
     for (const entry of decided.filter((candidate) => !candidate.wanted && present(candidate.name))) {
@@ -136,6 +153,14 @@ export const applyLabels = (
             rule: 'labels.remove',
             level: 'warning',
             message: `label "${entry.name}" was already gone from #${subject.number} when smartcloud removed it`,
+          }),
+        ),
+        Effect.catchTag('Forbidden', () =>
+          report.add({
+            feature: FEATURE,
+            rule: 'labels.remove',
+            level: 'warning',
+            message: `could not remove "${entry.name}" from #${subject.number} ${READ_ONLY_TOKEN}`,
           }),
         ),
       )

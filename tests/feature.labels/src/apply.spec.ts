@@ -21,7 +21,7 @@ import type { Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
 import { labellingFacets, labelName, labels } from '@resnovas/feature.labels'
-import { GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { Forbidden, GitHub, makeMemoryGitHub, Unavailable } from '@resnovas/integrations.github'
 
 const pullRequest = (labelNames: ReadonlyArray<string>, title = 'feat: add sync') => ({
   action: 'synchronize',
@@ -150,6 +150,54 @@ describe('labels feature: apply', () => {
           message: 'label "Type: Feature" was already gone from #3 when smartcloud removed it',
         },
       ])
+    }),
+  )
+
+  it.effect('warns rather than fails when a read-only token, as on a fork pull request, forbids the writes', () =>
+    Effect.gen(function* () {
+      const { service, state } = memoryWith(7, ['type: bug'], ['docs/readme.md'])
+      const forbidden = (operation: string) => () => Effect.fail(new Forbidden({ operation, detail: 'Resource not accessible by integration' }))
+      const result = yield* runFeatures({
+        config,
+        event: 'pull_request',
+        payload: pullRequest(['type: bug']),
+        features: [labels],
+      }).pipe(Effect.provideService(GitHub, { ...service, addLabels: forbidden('addLabels'), removeLabel: forbidden('removeLabel') }))
+      expect(result.failed).toStrictEqual([])
+      expect(result.changes).toStrictEqual([])
+      expect(state.issues.get(7)?.labels).toStrictEqual(['type: bug'])
+      expect(result.findings).toStrictEqual([
+        {
+          feature: 'labels',
+          rule: 'labels.add',
+          level: 'warning',
+          message: 'could not add "Type: Feature", "docs" to #7 on a read-only token, for example a pull request from a fork',
+        },
+        {
+          feature: 'labels',
+          rule: 'labels.remove',
+          level: 'warning',
+          message: 'could not remove "Type: Bug" from #7 on a read-only token, for example a pull request from a fork',
+        },
+      ])
+    }),
+  )
+
+  it.effect('still fails on any other error from a label write', () =>
+    Effect.gen(function* () {
+      const { service } = memoryWith(7, [], ['docs/readme.md'])
+      const result = yield* runFeatures({
+        config,
+        event: 'pull_request',
+        payload: pullRequest([]),
+        features: [labels],
+      }).pipe(
+        Effect.provideService(GitHub, {
+          ...service,
+          addLabels: () => Effect.fail(new Unavailable({ operation: 'addLabels', detail: 'HTTP 502' })),
+        }),
+      )
+      expect(result.failed).toStrictEqual([{ feature: 'labels', message: expect.stringContaining('addLabels: GitHub unavailable (HTTP 502)') }])
     }),
   )
 
