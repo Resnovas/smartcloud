@@ -37,6 +37,7 @@ Conditions that match text take a pattern: a regular expression written either b
 | `assigneeMatches`     | `condition`: pattern                                                | An assignee's login matches.                                                                                                                           |
 | `hasMilestone`        | `condition`: boolean                                                | The subject is in a milestone (`true`), or in none (`false`).                                                                                          |
 | `milestoneMatches`    | `condition`: pattern                                                | The title of the subject's milestone matches. A subject in no milestone never matches.                                                                 |
+| `linksIssue`          | `condition`: boolean, optional `keys`: list of Linear team keys     | The pull request closes an issue in its description, or carries a Linear key in its branch or title (`true`), or links none (`false`).                 |
 | `reviewerMatches`     | `condition`: pattern                                                | A reviewer of the pull request matches: someone asked to review (a login, or a team's slug), or someone who has reviewed.                              |
 | `branchMatches`       | `condition`: pattern                                                | The pull request's head branch matches.                                                                                                                |
 | `baseBranchMatches`   | `condition`: pattern                                                | The pull request's base branch, the one it merges into, matches.                                                                                       |
@@ -125,9 +126,23 @@ exempt:
         condition: '^v2'
 ```
 
+`linksIssue` passes when a pull request is tied to an issue, so a convention can ask every pull request to link its issue. A link is any of:
+
+- A closing reference in the description: GitHub's closing keywords (`close`, `closes`, `closed`, `fix`, `fixes`, `fixed`, `resolve`, `resolves`, `resolved`, optionally followed by a colon) and then `#12`, `owner/repo#12`, an issue URL or a Linear key, such as `Closes SMC-55`. A bare mention such as `See #12`, or a keyword inside code, does not count. The reference counts whatever branch the pull request targets: it records the author's link, although GitHub closes the issue only on a merge into the default branch.
+- A Linear key in the head branch, in any case, since Linear names branches in lower case: `claude/smc-55-links-issue`.
+- A Linear key in the title, such as `feat(conditions): linksIssue (SMC-55)`.
+
+A Linear key is a team key, a dash and a number. List your teams in `keys` to count only their keys, matched in any case. Without `keys`, any key counts, in upper case only in the title, so text shaped like a key, such as `utf-8` in a branch, also passes. The description is read from the event, so the condition costs no API call; issues linked only from the pull request's sidebar are not seen. In a stale sweep's `exempt.when`, the listing has no branch, so only the description and title are read.
+
+```yaml
+- type: linksIssue
+  condition: true
+  keys: [SMC]
+```
+
 ### Pull request only conditions
 
-`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass` and `checkStatus` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus` and `linksIssue` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 

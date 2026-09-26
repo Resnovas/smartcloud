@@ -221,6 +221,47 @@ export const HasMilestone = flag('hasMilestone', 'The subject is in a milestone,
 export const MilestoneMatches = matches('milestoneMatches', "The title of the subject's milestone matches a pattern.")
 
 /**
+ * The pull request links an issue (true), or links none (false): its
+ * description closes an issue, or its head branch or title carries a Linear
+ * issue key.
+ *
+ * @remarks
+ * A description closes an issue with one of GitHub's closing keywords
+ * (`close`, `fix` or `resolve`, in any tense) followed by `#12`,
+ * `owner/repo#12`, an issue URL or a Linear key such as `SMC-55`. A Linear key
+ * is a team key, a dash and a number, matched in any case in the branch and
+ * description, since Linear writes branch names in lower case. `keys` limits
+ * Linear keys to the listed teams. Without it any key counts, in upper case
+ * only in the title, so text such as `utf-8` in a branch also passes: list the
+ * keys to rule that out.
+ *
+ * @example
+ * ```ts import.meta.vitest name="LinksIssue"
+ * import { LinksIssue } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(LinksIssue)({ type: 'linksIssue', condition: true, keys: ['SMC'] }) // => true
+ * Schema.is(LinksIssue)({ type: 'linksIssue', condition: true, keys: ['SMC-1'] }) // => false
+ * ```
+ */
+export const LinksIssue = Schema.Struct({
+  type: Schema.Literal('linksIssue'),
+  condition: Schema.Boolean,
+  keys: Schema.optionalWith(
+    Schema.NonEmptyArray(
+      Schema.String.pipe(Schema.pattern(/^[A-Za-z][A-Za-z0-9]*$/)).annotations({
+        description: 'A Linear team key, such as SMC.',
+      }),
+    ).annotations({ description: 'The Linear team keys that count; any key when omitted.' }),
+    { exact: true },
+  ),
+}).annotations({
+  identifier: 'linksIssue',
+  description:
+    'The pull request closes an issue in its description, or carries a Linear key in its branch or title; links none when false.',
+})
+
+/**
  * The subject is open (true) or closed (false).
  *
  * @example
@@ -545,6 +586,7 @@ const Leaf = Schema.Union(
   AssigneeMatches,
   HasMilestone,
   MilestoneMatches,
+  LinksIssue,
   IsOpen,
   IsLocked,
   IsDraft,

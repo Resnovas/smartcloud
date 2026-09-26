@@ -159,6 +159,46 @@ const reviewersOf = (requested: ReadonlyArray<string>, reviews: ReadonlyArray<Re
 
 const logins = (names: ReadonlyArray<string>) => names.map((name) => `@${name}`).join(', ')
 
+// GitHub's closing keywords, followed by an issue reference or a Linear key:
+// `#12`, `owner/repo#12`, an issue URL or `SMC-55`.
+const CLOSING =
+  /\b(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?):?\s+(#\d+|[\w.-]+\/[\w.-]+#\d+|https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/issues\/\d+|[A-Za-z][A-Za-z0-9]*-\d+)(?![\w-])/gi
+
+// A Linear key: one of the listed team keys in any case, or without a list,
+// any key (in upper case only when `upper` is set), then a dash and a number.
+const linearKey = (keys: ReadonlyArray<string> | undefined, upper: boolean) =>
+  new RegExp(
+    `(?<![A-Za-z0-9])(?:${keys === undefined ? '[A-Z][A-Z0-9]*' : keys.join('|')})-\\d+(?![A-Za-z0-9])`,
+    keys === undefined && upper ? '' : 'i',
+  )
+
+// The first issue a pull request links, described for the report: a closing
+// reference in the description, then a Linear key in the branch or title.
+const issueLink = (subject: Subject, keys: ReadonlyArray<string> | undefined): string | undefined => {
+  const key = linearKey(keys, false)
+  // GitHub reads no closing keyword inside code: fenced blocks, followed line
+  // by line, and inline spans. An unclosed fence runs to the end.
+  let fence: string | undefined
+  const prose = subject.body
+    .split('\n')
+    .map((line) => {
+      const marker = /^\s*(`{3,}|~{3,})/.exec(line)?.[1]
+      if (fence === undefined && marker === undefined) return line.replace(/`[^`\n]*`/g, ' ')
+      if (fence === undefined) fence = marker
+      else if (marker !== undefined && marker[0] === fence[0] && marker.length >= fence.length) fence = undefined
+      return ''
+    })
+    .join('\n')
+  const closes = [...prose.matchAll(CLOSING)]
+    .map((match) => match[1] ?? '')
+    .find((ref) => ref.includes('#') || ref.includes('/') || key.test(ref))
+  if (closes !== undefined) return `closes ${closes}`
+  const branch = key.exec(subject.headBranch ?? '')?.[0]
+  if (branch !== undefined) return `Linear key ${branch} in the branch`
+  const title = linearKey(keys, true).exec(subject.title)?.[0]
+  return title === undefined ? undefined : `Linear key ${title} in the title`
+}
+
 const PULL_REQUEST_ONLY = new Set([
   'branchMatches',
   'baseBranchMatches',
@@ -175,6 +215,7 @@ const PULL_REQUEST_ONLY = new Set([
   'checksPass',
   'checkStatus',
   'reviewerMatches',
+  'linksIssue',
 ])
 
 const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effect<ConditionResult, MissingFacet> => {
@@ -269,6 +310,12 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
             ? 'in no milestone'
             : `milestone ${milestone} ${passed ? 'matches' : 'does not match'}`,
         ),
+      )
+    }
+    case 'linksIssue': {
+      const link = issueLink(subject, condition.keys)
+      return Effect.succeed(
+        result(condition.type, (link !== undefined) === condition.condition, link ?? 'links no issue'),
       )
     }
     case 'isOpen':
