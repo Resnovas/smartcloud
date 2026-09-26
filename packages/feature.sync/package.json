@@ -1,0 +1,28 @@
+{
+  "name": "@resnovas/feature.sync",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "File sync: renders templates from another repository, merges managed blocks, proposes a sync pull request and checks pull requests that edit synced files.",
+  "license": "SEE LICENSE IN LICENSE",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "nx": {
+    "tags": [
+      "type_extension",
+      "layer_backend"
+    ]
+  },
+  "dependencies": {
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1"
+  }
+}
