@@ -16,14 +16,23 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import {
+  Forbidden,
+  makeMemoryGitHub,
+  NotFound,
+  Unavailable,
+  type GitHubError,
+  type GitHubService,
+} from '@resnovas/integrations.github'
+import {
   accessFindings,
   accessFor,
+  connectWithFallback,
   externalRun,
   FULL_ACCESS,
   restrictedFeatures,
   skippablePreset,
 } from '@resnovas/runtime'
-import { Option, Redacted } from 'effect'
+import { Effect, Option, Redacted } from 'effect'
 
 const pullRequestFrom = (repo: { readonly full_name: string } | null) => ({
   name: 'pull_request',
@@ -111,4 +120,68 @@ describe('what a restricted run leaves out', () => {
       },
     ])
   })
+})
+
+describe('connectWithFallback', () => {
+  // Connects each token to a service whose repository read answers as given.
+  const connector = (answers: Readonly<Record<string, GitHubError | undefined>>) => {
+    const used: Array<string> = []
+    const connect = (token: Redacted.Redacted<string>) =>
+      Effect.sync((): GitHubService => {
+        const value = Redacted.value(token)
+        used.push(value)
+        const service = makeMemoryGitHub().service
+        const answer = answers[value]
+        return answer === undefined ? service : { ...service, getRepository: Effect.fail(answer) }
+      })
+    return { connect, used }
+  }
+  const run = (answer: GitHubError | undefined, access = FULL_ACCESS, workflowToken = Option.some(workflow)) => {
+    const { connect, used } = connector({ github_pat_secret: answer })
+    return Effect.map(connectWithFallback({ token: pat, workflowToken, access, connect }), (connected) => ({
+      connected,
+      used,
+    }))
+  }
+
+  it.effect('falls back to the workflow token when GitHub rejects the token as forbidden or not found', () =>
+    Effect.gen(function* () {
+      for (const error of [
+        new Forbidden({ operation: 'getRepository', detail: 'Bad credentials' }),
+        new NotFound({ operation: 'getRepository', detail: 'Not Found' }),
+      ]) {
+        const { connected, used } = yield* run(error)
+        expect(used).toStrictEqual(['github_pat_secret', 'ghs_workflow'])
+        expect(connected.access).toStrictEqual({
+          restricted: true,
+          reason: 'GitHub rejected the given token, so the run fell back to the workflow token',
+        })
+        expect(connected.rejected).toBe(error.message)
+      }
+    }),
+  )
+
+  it.effect('keeps the token when it works or GitHub is merely unavailable', () =>
+    Effect.gen(function* () {
+      const working = yield* run(undefined)
+      expect(working.used).toStrictEqual(['github_pat_secret'])
+      expect(working.connected.access).toBe(FULL_ACCESS)
+      expect(working.connected.rejected).toBeUndefined()
+      const outage = yield* run(new Unavailable({ operation: 'getRepository', detail: 'Bad Gateway' }))
+      expect(outage.used).toStrictEqual(['github_pat_secret'])
+      expect(outage.connected.access).toBe(FULL_ACCESS)
+    }),
+  )
+
+  it.effect('does not probe a restricted run or one without a workflow token', () =>
+    Effect.gen(function* () {
+      const rejected = new Forbidden({ operation: 'getRepository', detail: 'Bad credentials' })
+      const restricted = yield* run(rejected, fork)
+      expect(restricted.used).toStrictEqual(['github_pat_secret'])
+      expect(restricted.connected.access).toBe(fork)
+      const alone = yield* run(rejected, FULL_ACCESS, Option.none())
+      expect(alone.used).toStrictEqual(['github_pat_secret'])
+      expect(alone.connected.access).toBe(FULL_ACCESS)
+    }),
+  )
 })

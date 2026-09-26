@@ -17,7 +17,7 @@
 import { FileSystem } from '@effect/platform'
 import { DryRun, DryRunLog, GitHub, Restricted, SkippedWrites, type GitHubService, type RepositoryCoordinates } from '@resnovas/integrations.github'
 import { conclusionOf } from '@resnovas/reporting'
-import { accessFor, command, externalRun, noteOptions, optOut, targetRepository } from '@resnovas/runtime'
+import { accessFor, command, connectWithFallback, externalRun, noteOptions, optOut, targetRepository } from '@resnovas/runtime'
 import { Config, Console, Data, Effect, Layer, Option, Redacted } from 'effect'
 import { readInputs } from './inputs.js'
 import { runAction } from './run.js'
@@ -88,9 +88,11 @@ const skippedSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =
  *
  * A run from a fork or started by Dependabot acts with the workflow token
  * whatever token it was given, and a run acting with the workflow token is
- * restricted: see `accessFor`. A restricted run skips what its token cannot
- * do, including writes GitHub refuses, and lists them in the job summary
- * rather than failing.
+ * restricted: see `accessFor`. A token GitHub rejects, such as an expired
+ * or forbidden personal access token, is replaced with the workflow token
+ * and warned about: see `connectWithFallback`. A restricted run skips what
+ * its token cannot do, including writes GitHub refuses, and lists them in
+ * the job summary rather than failing.
  *
  * The whole run is one telemetry invocation (`command run` with the command `run`), so any
  * failure, from reading the inputs on, is also sent to error tracking.
@@ -117,12 +119,19 @@ export const program = (connect: Connect) =>
     const coordinates = yield* targetRepository(env.repository)
     const payload = yield* readPayload(env.eventPath)
     const event = { name: env.eventName, payload }
-    const { token, access } = accessFor({
+    const chosen = accessFor({
       token: inputs.token,
       workflowToken: inputs.workflowToken,
       external: externalRun(event, env.repository, Option.getOrUndefined(env.actor)),
     })
-    const service = yield* connect({ token, coordinates })
+    const { service, access, rejected } = yield* connectWithFallback({
+      ...chosen,
+      workflowToken: inputs.workflowToken,
+      connect: (token) => connect({ token, coordinates }),
+    })
+    if (rejected !== undefined) {
+      yield* Console.log(`::warning title=smartcloud::${escape(`GitHub rejected GITHUB_TOKEN (${rejected}); this run acted with the workflow token and skipped what needs a stronger token. Replace the token.`)}`)
+    }
     // A restricted run skips the writes GitHub refuses; others are made or fail as usual.
     const base = access.restricted
       ? Restricted.pipe(Layer.provide(Layer.succeed(GitHub, service)))

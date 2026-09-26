@@ -16,8 +16,8 @@
 
 import type { ExtendsRef } from '@resnovas/config'
 import type { Finding } from '@resnovas/engine'
-import type { RepositoryCoordinates } from '@resnovas/integrations.github'
-import { Option, Redacted, Schema } from 'effect'
+import type { GitHubService, RepositoryCoordinates } from '@resnovas/integrations.github'
+import { Effect, Either, Option, Redacted, Schema } from 'effect'
 
 /**
  * How much a run may do: everything its token allows, or the lowest viable
@@ -227,3 +227,65 @@ export const accessFindings = (access: Access, skipped: ReadonlyArray<string>): 
         })),
       ]
     : []
+
+/** The service a run acts through, its access, and why its token was dropped, if it was. */
+export interface Connected {
+  readonly service: GitHubService
+  readonly access: Access
+  /** GitHub's answer when it rejected the given token and the run fell back to the workflow token. */
+  readonly rejected?: string
+}
+
+/**
+ * Connects with the run's token, and falls back to the workflow token when
+ * GitHub rejects it.
+ *
+ * @remarks
+ * A token that is invalid, expired or refused by an organisation policy
+ * fails every call. Before a run with full access starts, the token reads
+ * the repository once; if GitHub answers forbidden or not found, the run
+ * reconnects with the workflow token and is restricted, and `rejected`
+ * carries GitHub's answer so the run can warn about it. Any other failure,
+ * such as an outage, is left for the run to report as before. A run that
+ * is already restricted, or has no workflow token to fall back to, is not
+ * probed.
+ *
+ * @example
+ * ```ts
+ * import { makeMemoryGitHub } from '@resnovas/integrations.github'
+ * import { connectWithFallback, FULL_ACCESS } from '@resnovas/runtime'
+ * import { Effect, Option, Redacted } from 'effect'
+ *
+ * const connected = connectWithFallback({
+ *   token: Redacted.make('github_pat_x'),
+ *   workflowToken: Option.some(Redacted.make('ghs_workflow')),
+ *   access: FULL_ACCESS,
+ *   connect: () => Effect.succeed(makeMemoryGitHub().service),
+ * })
+ * ```
+ *
+ * @param options - The token and access from {@link accessFor}, the workflow token, and how to connect with a token.
+ * @returns The service to act through and the run's access.
+ */
+export const connectWithFallback = <E, R>(options: {
+  readonly token: Redacted.Redacted<string>
+  readonly workflowToken: Option.Option<Redacted.Redacted<string>>
+  readonly access: Access
+  readonly connect: (token: Redacted.Redacted<string>) => Effect.Effect<GitHubService, E, R>
+}): Effect.Effect<Connected, E, R> =>
+  Effect.gen(function* () {
+    const service = yield* options.connect(options.token)
+    if (options.access.restricted || Option.isNone(options.workflowToken)) return { service, access: options.access }
+    const probe = yield* Effect.either(service.getRepository)
+    if (Either.isRight(probe) || (probe.left._tag !== 'Forbidden' && probe.left._tag !== 'NotFound'))
+      return { service, access: options.access }
+    const fallback = yield* options.connect(options.workflowToken.value)
+    return {
+      service: fallback,
+      access: {
+        restricted: true,
+        reason: 'GitHub rejected the given token, so the run fell back to the workflow token',
+      },
+      rejected: probe.left.message,
+    }
+  })

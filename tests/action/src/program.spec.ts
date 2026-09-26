@@ -170,6 +170,27 @@ describe('program', () => {
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
+  it.effect('warns and falls back to the workflow token when GitHub rejects the given token', () =>
+    Effect.gen(function* () {
+      const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
+      const rejected = { ...service, getRepository: Effect.fail(new Forbidden({ operation: 'getRepository', detail: 'Bad credentials' })) }
+      const vars = yield* Effect.promise(() => env(pullRequest('feat: x'), { INPUT_GITHUB_TOKEN: 'expired', INPUT_WORKFLOWTOKEN: 'workflow' }))
+      const tokens: Array<string> = []
+      const connect = ({ token }: { readonly token: Redacted.Redacted<string> }) =>
+        Effect.sync(() => {
+          tokens.push(Redacted.value(token))
+          return Redacted.value(token) === 'expired' ? rejected : service
+        })
+      yield* program(connect).pipe(withEnv(vars))
+      expect(tokens).toStrictEqual(['expired', 'workflow'])
+      expect(out[0]).toBe(
+        '::warning title=smartcloud::GitHub rejected GITHUB_TOKEN (getRepository: forbidden (Bad credentials)); this run acted with the workflow token and skipped what needs a stronger token. Replace the token.',
+      )
+      expect(process.exitCode).toBe(exitCode)
+      expect(yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))).toContain('GitHub rejected the given token')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
   it.effect('turns every failure into one error annotation and exit code 1', () =>
     Effect.gen(function* () {
       const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
