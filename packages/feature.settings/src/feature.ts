@@ -56,6 +56,14 @@ export const settingsFeature: Feature = {
           message: 'Secret scanning was not changed: on a private repository it needs a paid Advanced Security licence, so it is left to the organisation.',
         })
       }
+      if (settings.security?.privateVulnerabilityReporting !== undefined && repository.private) {
+        yield* report.add({
+          feature: FEATURE,
+          rule: 'settings.private-vulnerability-reporting',
+          level: 'notice',
+          message: 'Private vulnerability reporting was not changed: GitHub only offers it on public repositories.',
+        })
+      }
       yield* report.add({
         feature: FEATURE,
         rule: 'settings.push-limit',

@@ -124,6 +124,8 @@ describe('planSettings', () => {
   it('a private repository skips paid secret scanning and treats the ruleset as optional', () => {
     const steps = planSettings(houseSettings, soleMaintainer, privateRepository)
     expect(ids(steps)).not.toContain('secret-scanning')
+    expect(ids(steps)).not.toContain('private-vulnerability-reporting')
+    expect(ids(planSettings(houseSettings, soleMaintainer, publicRepository))).toContain('private-vulnerability-reporting')
     expect(find(steps, 'ruleset')?.optional).toBe(true)
     expect(find(planSettings(houseSettings, soleMaintainer, publicRepository), 'ruleset')?.optional).toBe(false)
   })
@@ -259,6 +261,11 @@ describe('rulesetBody', () => {
       strict_required_status_checks_policy: false,
       required_status_checks: [{ context: 'house-policy / policy' }, { context: 'house-policy / reviews' }],
     })
+  })
+
+  it('one maintainer listed twice, in another case or with an @, is still a sole maintainer', () => {
+    const aliases = { maintainers: ['TGTGamer', 'tgtgamer', '@TGTGAMER'] }
+    expect(rulesetBody(houseRuleset, aliases).rules.some((rule) => rule.type === 'required_status_checks')).toBe(false)
   })
 
   it('two maintainers with no checks configured require none', () => {

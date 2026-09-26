@@ -103,7 +103,7 @@ describe('settingsFeature', () => {
     }),
   )
 
-  it.effect('says why secret scanning is left alone on a private repository', () =>
+  it.effect('says why secret scanning and private vulnerability reporting are left alone on a private repository', () =>
     Effect.gen(function* () {
       const { service } = makeMemoryGitHub({ repository: privateRepository })
       const result = yield* runFeatures({ config, event: 'schedule', payload: {}, features: [settingsFeature] }).pipe(
@@ -112,6 +112,7 @@ describe('settingsFeature', () => {
       expect(result.findings.map(({ rule, level }) => `${level} ${rule}`)).toStrictEqual([
         'warning settings.ruleset',
         'notice settings.secret-scanning',
+        'notice settings.private-vulnerability-reporting',
         'notice settings.push-limit',
       ])
     }),

@@ -172,7 +172,9 @@ export const rulesetBody = (ruleset: NonNullable<SettingsConfig['ruleset']>, rol
     })
   }
   const checks = ruleset.requiredChecks ?? []
-  if (checks.length > 0 && (roles?.maintainers ?? []).length >= 2) {
+  // One account listed twice, in another case or with an `@`, is one maintainer.
+  const maintainers = new Set((roles?.maintainers ?? []).map((login) => login.replace(/^@/, '').toLowerCase()))
+  if (checks.length > 0 && maintainers.size >= 2) {
     rules.push({
       type: 'required_status_checks',
       parameters: {
@@ -257,6 +259,8 @@ const securitySteps = (security: SettingsConfig['security'], repository: Reposit
   for (const [key, id, description, path] of toggles) {
     const enabled = security[key]
     if (typeof enabled !== 'boolean') continue
+    // GitHub only offers private vulnerability reporting on public repositories.
+    if (key === 'privateVulnerabilityReporting' && repository.private) continue
     steps.push({ kind: 'rest', id, description: `${description} ${onOff(enabled)}`, optional: false, request: { method: enabled ? 'PUT' : 'DELETE', path } })
   }
   const codeScanning = security.codeScanning

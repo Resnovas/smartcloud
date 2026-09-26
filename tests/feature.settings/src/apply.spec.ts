@@ -180,7 +180,7 @@ describe('applySettings', () => {
         'Dependency graph and Dependabot alerts on: PUT /vulnerability-alerts: forbidden (Resource not accessible by integration)',
       )
       expect(snapshot.findings.every((finding) => finding.feature === 'settings')).toBe(true)
-      expect(snapshot.changes).toHaveLength(7)
+      expect(snapshot.changes).toHaveLength(6)
       expect(state.requests.at(-1)).toMatchObject({ method: 'PUT', path: '/environments/Development' })
     }),
   )
