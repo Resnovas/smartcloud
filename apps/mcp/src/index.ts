@@ -17,6 +17,6 @@
 
 export { makeServer } from './server.js'
 export type { RunTool } from './server.js'
-export { dryRunTool, explainConfigTool, migrateConfigTool, planSettingsTool, validateConfigTool } from './tools.js'
-export type { ConfigInput, DryRunInput, ToolContext, ToolResult } from './tools.js'
+export { checkCommitMessageTool, dryRunTool, explainConfigTool, explainRuleTool, migrateConfigTool, planSettingsTool, validateConfigTool } from './tools.js'
+export type { CommitMessageInput, ConfigInput, DryRunInput, ToolContext, ToolResult } from './tools.js'
 export { VERSION } from './version.js'

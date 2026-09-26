@@ -16,9 +16,11 @@
  */
 
 import type { CommandExecutor, FileSystem } from '@effect/platform'
-import { resolveConfig, type ConfigSource } from '@resnovas/config'
+import { resolveConfig, type ConfigSource, type SmartcloudConfig } from '@resnovas/config'
 import {
+  checkCommitMessage,
   dryRunRepository,
+  explainRule,
   dryRunText,
   explainConfig,
   migrateConfigText,
@@ -119,3 +121,41 @@ export const dryRunTool = (connect: Connect, input: DryRunInput) =>
  */
 export const planSettingsTool = (connect: Connect, input: { readonly repository: string; readonly config?: string | undefined }) =>
   handle(Effect.map(planSettingsForRepository(connect, input), (plan) => [settingsPlanText(plan)]))
+
+// A tool given no config checks against smartcloud's defaults.
+const configOrDefault = (config: string | undefined, source: string) =>
+  config === undefined
+    ? Effect.succeed<SmartcloudConfig>({ version: 2 })
+    : Effect.map(resolveConfig(config, source), (resolved) => resolved.config)
+
+/** The inputs of `check_commit_message`. */
+export interface CommitMessageInput {
+  readonly message: string
+  readonly authorName: string
+  readonly authorEmail: string
+  /** The repository's config, whose `commits` section applies; the defaults when omitted. */
+  readonly config?: string | undefined
+}
+
+/**
+ * Checks a commit message for DCO and AI attribution before committing.
+ *
+ * @param input - The message, its author, and optionally the config.
+ * @returns Whether it passes and every finding, as JSON.
+ */
+export const checkCommitMessageTool = (input: CommitMessageInput) =>
+  handle(
+    Effect.map(configOrDefault(input.config, 'smartcloud.yml'), (config) => {
+      const findings = checkCommitMessage(input, config)
+      return [json({ passes: findings.length === 0, findings })]
+    }),
+  )
+
+/**
+ * Explains a rule from the id a finding reports, and how to satisfy it.
+ *
+ * @param input - The rule id, and the config for conventions and links.
+ * @returns The explanation as JSON.
+ */
+export const explainRuleTool = (input: { readonly rule: string; readonly config?: string | undefined }) =>
+  handle(Effect.map(Effect.flatMap(configOrDefault(input.config, 'smartcloud.yml'), (config) => explainRule(input.rule, config)), (explained) => [json(explained)]))

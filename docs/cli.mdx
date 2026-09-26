@@ -47,6 +47,21 @@ Converts a v1 JSON config (default `.github/config.json`) to v2 YAML, and prints
 
 A v2 file given to `migrate` is rewritten unchanged. See [Migrating from v1](/migration) for worked examples.
 
+## check-commit
+
+```sh
+smartcloud check-commit <file> [--author-name <name> --author-email <email>] [--config <file>]
+```
+
+Checks a commit message against the DCO sign-off and AI attribution rules before the commit exists, and exits with code 1 when any rule is broken. The author defaults to git's own, and the config to the repository's in the working directory, or smartcloud's defaults when there is none. Comment lines are ignored, as git ignores them.
+
+Use it as a git `commit-msg` hook, so a commit that would fail the pull request check is stopped locally:
+
+```sh .git/hooks/commit-msg
+#!/bin/sh
+exec npx --yes @resnovas/smartcloud check-commit "$1"
+```
+
 ## dry-run
 
 ```sh

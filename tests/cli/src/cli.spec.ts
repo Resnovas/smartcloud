@@ -20,9 +20,9 @@ import { describe, expect, it } from '@effect/vitest'
 import { parseConfig } from '@resnovas/config'
 import { fileKey, GitHub, type GitHubService, makeMemoryGitHub } from '@resnovas/integrations.github'
 import type { Connect } from '@resnovas/runtime'
-import { ConfigSourceFromGitHub, locateConfig, main, migrate, NoConfig, run, runWith, UnsafePath, validate, VERSION } from '@resnovas/smartcloud'
+import { checkCommitCommand, CommitCheckFailed, ConfigSourceFromGitHub, locateConfig, main, migrate, NoConfig, run, runWith, UnknownAuthor, UnsafePath, validate, VERSION } from '@resnovas/smartcloud'
 import { Effect, Layer } from 'effect'
-import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
+import { chmod, mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, vi } from 'vitest'
@@ -290,4 +290,79 @@ describe('version', () => {
   it('is kept by release-please', () => {
     expect(VERSION).toMatch(/^\d+\.\d+\.\d+$/)
   })
+})
+
+describe('check-commit', () => {
+  // A fake git on PATH, so the author is read without the real repository.
+  const withFakeGit = async (ident: string) => {
+    const bin = join(dir, 'bin')
+    await mkdir(bin)
+    await writeFile(join(bin, 'git'), `#!/bin/sh\nprintf '%s\\n' '${ident}'\n`)
+    await chmod(join(bin, 'git'), 0o755)
+    vi.stubEnv('PATH', `${bin}:${process.env['PATH'] ?? ''}`)
+  }
+  afterEach(() => vi.unstubAllEnvs())
+
+  const message = async (text: string) => {
+    const file = join(dir, 'COMMIT_EDITMSG')
+    await writeFile(file, text)
+    return file
+  }
+  const jane = { authorName: 'Jane Doe', authorEmail: 'jane@example.com' }
+
+  it.effect('passes a signed-off message, ignoring comment lines, with the author given', () =>
+    Effect.gen(function* () {
+      const file = yield* Effect.promise(() => message('fix: x\n\n# Please enter the commit message\nSigned-off-by: Jane Doe <jane@example.com>\n'))
+      expect(yield* checkCommitCommand(file, jane)).toStrictEqual([])
+      expect(logs).toContain('The commit message passes.')
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect("reads git's author, prints each broken rule to stderr and fails", () =>
+    Effect.gen(function* () {
+      const errors: Array<string> = []
+      vi.spyOn(console, 'error').mockImplementation((...args: Array<unknown>) => void errors.push(args.join(' ')))
+      yield* Effect.promise(() => withFakeGit('Jane Doe <jane@example.com> 1790000000 +0100'))
+      const file = yield* Effect.promise(() => message('fix: x\n'))
+      const failed = yield* Effect.flip(checkCommitCommand(file, {}))
+      expect(failed).toBeInstanceOf(CommitCheckFailed)
+      expect(failed.message).toBe('the commit message breaks 1 rule(s); see above')
+      expect(errors[0]).toMatch(/^DCO: No Signed-off-by matching the author <jane@example\.com>\..* See https:\/\/.*CONTRIBUTING\.md#dco$/)
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('uses a config file, or the repository config in the working directory', () =>
+    Effect.gen(function* () {
+      const file = yield* Effect.promise(() => message('fix: x\n'))
+      const config = join(dir, 'off.yml')
+      yield* Effect.promise(() => writeFile(config, 'version: 2\ncommits: { dco: false }\n'))
+      expect(yield* checkCommitCommand(file, { ...jane, config })).toStrictEqual([])
+      yield* Effect.promise(async () => {
+        await mkdir(join(dir, '.github'))
+        await writeFile(join(dir, '.github/smartcloud.yml'), 'version: 2\ncommits: { dco: false }\n')
+      })
+      const cwd = process.cwd()
+      process.chdir(dir)
+      const found = yield* checkCommitCommand(file, jane).pipe(Effect.ensuring(Effect.sync(() => process.chdir(cwd))))
+      expect(found).toStrictEqual([])
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('says so when git gives no usable author', () =>
+    Effect.gen(function* () {
+      yield* Effect.promise(() => withFakeGit('nobody'))
+      const file = yield* Effect.promise(() => message('fix: x\n'))
+      const error = yield* Effect.flip(checkCommitCommand(file, {}))
+      expect(error).toBeInstanceOf(UnknownAuthor)
+      expect(error.message).toContain('pass --author-name and --author-email')
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('runs from the command line', () =>
+    Effect.gen(function* () {
+      const file = yield* Effect.promise(() => message('fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>\n'))
+      yield* run(['node', 'smartcloud', 'check-commit', file, '--author-name', 'Jane Doe', '--author-email', 'jane@example.com'])
+      expect(logs).toContain('The commit message passes.')
+    }).pipe(Effect.provide(memorySource({})), Effect.provide(NodeContext.layer)),
+  )
 })

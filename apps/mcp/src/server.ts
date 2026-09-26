@@ -19,7 +19,17 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { REPOSITORY_EVENTS, type Connect } from '@resnovas/runtime'
 import type { Effect } from 'effect'
 import { z } from 'zod'
-import { dryRunTool, explainConfigTool, migrateConfigTool, planSettingsTool, validateConfigTool, type ToolContext, type ToolResult } from './tools.js'
+import {
+  checkCommitMessageTool,
+  dryRunTool,
+  explainConfigTool,
+  explainRuleTool,
+  migrateConfigTool,
+  planSettingsTool,
+  validateConfigTool,
+  type ToolContext,
+  type ToolResult,
+} from './tools.js'
 import { VERSION } from './version.js'
 
 /** Runs a tool's effect with everything the host provides. */
@@ -104,6 +114,35 @@ export const makeServer = (options: { readonly connect: Connect; readonly run: R
       annotations: readOnly,
     },
     (input) => options.run(planSettingsTool(options.connect, input)),
+  )
+  server.registerTool(
+    'check_commit_message',
+    {
+      title: 'Check a commit message',
+      description:
+        'Check a commit message and its author for the DCO sign-off and AI attribution rules before committing. Use it before every commit an agent makes.',
+      inputSchema: {
+        message: z.string().describe('The full commit message, including trailers.'),
+        authorName: z.string().describe('The commit author name.'),
+        authorEmail: z.string().describe('The commit author email, which the Signed-off-by must match.'),
+        config: z.string().optional().describe("The repository's smartcloud config, YAML or JSON; smartcloud's defaults when omitted."),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    (input) => options.run(checkCommitMessageTool(input)),
+  )
+  server.registerTool(
+    'explain_rule',
+    {
+      title: 'Explain a rule',
+      description: 'Explain a smartcloud rule from the id a finding reports, such as AI-02, DCO or conventions.title, and how to satisfy it.',
+      inputSchema: {
+        rule: z.string().describe('The rule id from the finding.'),
+        config: z.string().optional().describe('The smartcloud config, for convention rules and policy links.'),
+      },
+      annotations: { readOnlyHint: true, openWorldHint: false },
+    },
+    (input) => options.run(explainRuleTool(input)),
   )
   return server
 }

@@ -22,8 +22,10 @@ import { describe, expect, it } from '@effect/vitest'
 import { fileKey, GitHub, type GitHubService, makeMemoryGitHub } from '@resnovas/integrations.github'
 import { ConfigSourceFromGitHub, type Connect } from '@resnovas/runtime'
 import {
+  checkCommitMessageTool,
   dryRunTool,
   explainConfigTool,
+  explainRuleTool,
   makeServer,
   migrateConfigTool,
   planSettingsTool,
@@ -115,6 +117,33 @@ describe('tool handlers', () => {
   )
 })
 
+describe('agent self-checks', () => {
+  const author = { authorName: 'Jane Doe', authorEmail: 'jane@example.com' }
+
+  it.effect('checks a commit message against the defaults or the given config', () =>
+    Effect.gen(function* () {
+      const unsigned = JSON.parse(textOf(yield* checkCommitMessageTool({ ...author, message: 'fix: x' })))
+      expect(unsigned.passes).toBe(false)
+      expect(unsigned.findings[0]).toMatchObject({ rule: 'DCO', level: 'error' })
+      const signed = yield* checkCommitMessageTool({ ...author, message: 'fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>' })
+      expect(JSON.parse(textOf(signed))).toStrictEqual({ passes: true, findings: [] })
+      const off = yield* checkCommitMessageTool({ ...author, message: 'fix: x', config: 'version: 2\ncommits: { dco: false }\n' })
+      expect(JSON.parse(textOf(off)).passes).toBe(true)
+      const broken = yield* checkCommitMessageTool({ ...author, message: 'x', config: 'version: [2' })
+      expect(broken.isError).toBe(true)
+    }).pipe(Effect.provide(memory().layer)),
+  )
+
+  it.effect('explains a rule, and reports an unknown one as an error result', () =>
+    Effect.gen(function* () {
+      expect(JSON.parse(textOf(yield* explainRuleTool({ rule: 'AI-02' }))).link).toMatch(/AI_POLICY\.md#ai-02$/)
+      expect(JSON.parse(textOf(yield* explainRuleTool({ rule: 'conventions.title', config: CONVENTIONS }))).rule).toBe('conventions.title')
+      const unknown = yield* explainRuleTool({ rule: 'nope' })
+      expect(unknown.isError).toBe(true)
+    }).pipe(Effect.provide(memory().layer)),
+  )
+})
+
 describe('the MCP server', () => {
   it('lists its tools and answers calls over a transport', async () => {
     const { connect, layer, state } = memory()
@@ -126,7 +155,15 @@ describe('the MCP server', () => {
 
     expect(client.getServerVersion()).toMatchObject({ name: 'smartcloud', version: VERSION })
     const tools = await client.listTools()
-    expect(tools.tools.map((tool) => tool.name)).toStrictEqual(['validate_config', 'migrate_config', 'explain_config', 'dry_run', 'plan_settings'])
+    expect(tools.tools.map((tool) => tool.name)).toStrictEqual([
+      'validate_config',
+      'migrate_config',
+      'explain_config',
+      'dry_run',
+      'plan_settings',
+      'check_commit_message',
+      'explain_rule',
+    ])
 
     const call = async (name: string, args: Record<string, unknown>) => {
       const result = await client.callTool({ name, arguments: args })
@@ -140,6 +177,8 @@ describe('the MCP server', () => {
     expect(dry.isError).toBeFalsy()
     expect(dry.text).toContain('Event: `pull_request` (synchronize) on #7')
     expect((await call('plan_settings', { repository: 'Resnovas/example' })).text).toContain('Settings for Resnovas/example')
+    expect((await call('check_commit_message', { message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com' })).text).toContain('"passes": false')
+    expect((await call('explain_rule', { rule: 'DCO' })).text).toContain('git commit -s')
     expect(state.checkRuns).toStrictEqual([])
     await client.close()
   })

@@ -18,7 +18,7 @@
 import { Args, Command, Options, ValidationError } from '@effect/cli'
 import { gitHubConfigSource, liveConnect, parseFeatureList, REPOSITORY_EVENTS, type Connect } from '@resnovas/runtime'
 import { Console, Effect, Option } from 'effect'
-import { dryRunCommand, locateConfig, migrate, planSettingsCommand, syncCommand, validate } from './commands.js'
+import { checkCommitCommand, dryRunCommand, locateConfig, migrate, planSettingsCommand, syncCommand, validate } from './commands.js'
 import { VERSION } from './version.js'
 
 const path = Args.text({ name: 'path' }).pipe(
@@ -39,6 +39,22 @@ const out = Options.text('out').pipe(Options.withAlias('o'), Options.withDescrip
 const migrateCommand = Command.make('migrate', { input, out }, ({ input, out }) => migrate(input, Option.getOrUndefined(out))).pipe(
   Command.withDescription('Convert a v1 config to v2 YAML, warning about anything not carried over.'),
 )
+
+const checkCommit = Command.make(
+  'check-commit',
+  {
+    file: Args.text({ name: 'file' }).pipe(Args.withDescription('The file holding the message, such as .git/COMMIT_EDITMSG.')),
+    authorName: Options.text('author-name').pipe(Options.withDescription("The author's name; git's own by default."), Options.optional),
+    authorEmail: Options.text('author-email').pipe(Options.withDescription("The author's email; git's own by default."), Options.optional),
+    config: Options.text('config').pipe(Options.withDescription("A config file; the repository's own, or the defaults, when omitted."), Options.optional),
+  },
+  (options) =>
+    checkCommitCommand(options.file, {
+      authorName: Option.getOrUndefined(options.authorName),
+      authorEmail: Option.getOrUndefined(options.authorEmail),
+      config: Option.getOrUndefined(options.config),
+    }).pipe(Effect.provide(gitHubConfigSource())),
+).pipe(Command.withDescription('Check a commit message for DCO sign-off and AI attribution before committing; usable as a commit-msg hook.'))
 
 const repo = Options.text('repo').pipe(Options.withDescription('The repository, as owner/name.'))
 const config = Options.text('config').pipe(
@@ -91,7 +107,7 @@ export const makeSmartcloud = (connect: Connect) => {
 
   return Command.make('smartcloud').pipe(
     Command.withDescription('Repository automation and policy for GitHub.'),
-    Command.withSubcommands([validateCommand, migrateCommand, dryRun, plan, sync]),
+    Command.withSubcommands([validateCommand, migrateCommand, checkCommit, dryRun, plan, sync]),
   )
 }
 

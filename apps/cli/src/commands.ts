@@ -15,9 +15,10 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { FileSystem, Path } from '@effect/platform'
-import { resolveConfig, type ResolvedConfig } from '@resnovas/config'
+import { Command as Process, FileSystem, Path } from '@effect/platform'
+import { resolveConfig, type ResolvedConfig, type SmartcloudConfig } from '@resnovas/config'
 import {
+  checkCommitMessage,
   CONFIG_CANDIDATES,
   dryRunRepository,
   dryRunText,
@@ -29,7 +30,7 @@ import {
   type Connect,
   type DryRunRequest,
 } from '@resnovas/runtime'
-import { Console, Data, Effect } from 'effect'
+import { Console, Data, Effect, Option } from 'effect'
 
 /**
  * Finds the config in a repository checkout.
@@ -147,4 +148,70 @@ export const syncCommand = (
     for (const file of render.files) yield* Console.log(`- ${file.path} (${file.status})`)
     for (const conflict of render.conflicts) yield* Console.log(`conflict: ${conflict.path} ${conflict.problem}`)
     return render
+  })
+
+/** The commit message breaks at least one rule. */
+export class CommitCheckFailed extends Data.TaggedError('CommitCheckFailed')<{ readonly count: number }> {
+  override get message() {
+    return `the commit message breaks ${this.count} rule(s); see above`
+  }
+}
+
+/** The author could not be worked out from git. */
+export class UnknownAuthor extends Data.TaggedError('UnknownAuthor')<{ readonly ident: string }> {
+  override get message() {
+    return `could not read the commit author from git ("${this.ident}"); pass --author-name and --author-email`
+  }
+}
+
+// `git var GIT_AUTHOR_IDENT` prints "Name <email> timestamp zone". Split on the
+// angle brackets with indexOf, which is linear on any input.
+const parseIdent = (ident: string) => {
+  const open = ident.indexOf('<')
+  const close = ident.indexOf('>', open)
+  return open < 1 || close < 0
+    ? Effect.fail(new UnknownAuthor({ ident: ident.trim() }))
+    : Effect.succeed({ authorName: ident.slice(0, open).trim(), authorEmail: ident.slice(open + 1, close).trim() })
+}
+
+// git drops comment lines from the message it commits, so they are not checked.
+const withoutComments = (message: string) =>
+  message
+    .split('\n')
+    .filter((line) => !line.startsWith('#'))
+    .join('\n')
+
+/**
+ * Checks a commit message for DCO and AI attribution, before committing.
+ *
+ * @remarks
+ * Usable as a git `commit-msg` hook: `smartcloud check-commit "$1"`. The
+ * author defaults to git's own (`git var GIT_AUTHOR_IDENT`), and the config
+ * to the repository's in the working directory, or smartcloud's defaults
+ * when there is none. Fails when any rule is broken, so the hook stops the
+ * commit.
+ *
+ * @param file - The file holding the message, such as `.git/COMMIT_EDITMSG`.
+ * @param options - The author, when not git's, and a config file to use.
+ * @returns The findings, or `CommitCheckFailed`.
+ */
+export const checkCommitCommand = (
+  file: string,
+  options: { readonly authorName?: string | undefined; readonly authorEmail?: string | undefined; readonly config?: string | undefined },
+) =>
+  Effect.gen(function* () {
+    const fs = yield* FileSystem.FileSystem
+    const message = withoutComments(yield* fs.readFileString(file))
+    const author =
+      options.authorName !== undefined && options.authorEmail !== undefined
+        ? { authorName: options.authorName, authorEmail: options.authorEmail }
+        : yield* Effect.flatMap(Process.string(Process.make('git', 'var', 'GIT_AUTHOR_IDENT')), parseIdent)
+    const configFile = options.config ?? Option.getOrUndefined(yield* Effect.option(locateConfig('.')))
+    const config: SmartcloudConfig =
+      configFile === undefined ? { version: 2 } : (yield* resolveConfig(yield* fs.readFileString(configFile), configFile)).config
+    const findings = checkCommitMessage({ message, ...author }, config)
+    for (const finding of findings) yield* Console.error(`${finding.rule}: ${finding.message}${finding.link === undefined ? '' : ` See ${finding.link}`}`)
+    if (findings.length > 0) return yield* new CommitCheckFailed({ count: findings.length })
+    yield* Console.log('The commit message passes.')
+    return findings
   })

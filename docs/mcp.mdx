@@ -33,6 +33,8 @@ Tools that read GitHub use `GITHUB_TOKEN`, or the token of the signed-in GitHub 
 | `explain_config` | `config`, optional `source` | Which features the resolved config enables and the rules each one applies. |
 | `dry_run` | `repository` (`owner/name`), one of `pr`, `issue` or `event`, optional `config` and `features` | The run's summary and the writes it would make. |
 | `plan_settings` | `repository`, optional `config` | Every repository settings step the config would apply. |
+| `check_commit_message` | `message`, `authorName`, `authorEmail`, optional `config` | Whether a commit message passes the DCO and AI attribution rules, and every finding. An agent should call it before each commit. |
+| `explain_rule` | `rule` (the id a finding reports, such as `AI-02`, `DCO` or `conventions.title`), optional `config` | What the rule asks for, how to satisfy it, and a link to the policy text. |
 
 `event` is one of `schedule`, `push` or `workflow_dispatch`. Without `config`, `dry_run` and `plan_settings` read the repository's config from its default branch, as the action does.
 
