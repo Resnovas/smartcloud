@@ -89,6 +89,25 @@ describe('decodeEvent', () => {
     }),
   )
 
+  it.effect('a repository dispatch keeps its event type as the action', () =>
+    Effect.gen(function* () {
+      expect(yield* decodeEvent('repository_dispatch', { action: 'sync-templates', client_payload: {} })).toStrictEqual({
+        kind: 'repository',
+        event: 'repository_dispatch',
+        action: 'sync-templates',
+      })
+      expect(yield* decodeEvent('repository_dispatch', {})).toStrictEqual({ kind: 'repository', event: 'repository_dispatch' })
+      expect((yield* Effect.flip(decodeEvent('repository_dispatch', { action: 7 })))._tag).toBe('EventDecodeError')
+    }),
+  )
+
+  it.effect('a malformed timestamp is a typed error, not an invalid date', () =>
+    Effect.gen(function* () {
+      const error = yield* Effect.flip(decodeEvent('issues', { ...issuePayload, issue: { ...issuePayload.issue, updated_at: 'yesterday' } }))
+      expect(error).toMatchObject({ _tag: 'EventDecodeError', event: 'issues' })
+    }),
+  )
+
   it.effect('any other event is unsupported rather than a crash (v1 threw here)', () =>
     Effect.map(decodeEvent('release', {}), (envelope) =>
       expect(envelope).toStrictEqual({ kind: 'unsupported', event: 'release', reason: 'smartcloud does not act on release events' }),

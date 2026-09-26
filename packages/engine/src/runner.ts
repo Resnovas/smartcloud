@@ -30,7 +30,7 @@ export type EnvelopeKind = SupportedEnvelope['kind']
 export interface FeatureContext {
   readonly config: SmartcloudConfig
   readonly envelope: SupportedEnvelope
-  /** The pull request or issue, with every facet the run's features asked for loaded. */
+  /** The pull request or issue, with every facet the run's features asked for that could be loaded. */
   readonly subject?: Subject
 }
 
@@ -91,7 +91,10 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
  * @remarks
  * Features that handle the event's kind and are enabled by the config run
  * with bounded concurrency, each isolated: one feature failing is recorded
- * and does not stop the others. Results are listed in the order the
+ * and does not stop the others. Each facet is loaded on its own, so a facet
+ * GitHub cannot serve fails only the features that need it, which are
+ * recorded as failed without running. Interrupting the run interrupts the
+ * features rather than recording them as failed. Results are listed in the order the
  * features were given, whatever order they finished in. An unsupported
  * event is a clean no-op with a notice.
  *
@@ -110,7 +113,7 @@ export const runFeatures = (options: {
   readonly payload: unknown
   readonly features: ReadonlyArray<Feature>
   readonly concurrency?: number
-}): Effect.Effect<RunResult, EventDecodeError | GitHubError, GitHub> =>
+}): Effect.Effect<RunResult, EventDecodeError, GitHub> =>
   Effect.gen(function* () {
     const envelope = yield* decodeEvent(options.event, options.payload)
     const report = yield* makeReport
@@ -132,21 +135,49 @@ export const runFeatures = (options: {
       return true
     })
 
-    const facets = new Set(applicable.flatMap((feature) => [...(feature.facets?.(options.config) ?? [])]))
-    const subject = envelope.kind === 'repository' ? undefined : yield* loadFacets(envelope.subject, facets)
+    const needs = (feature: Feature) => feature.facets?.(options.config) ?? new Set<Facet>()
+    const facets = [...new Set(applicable.flatMap((feature) => [...needs(feature)]))]
+    const base = envelope.kind === 'repository' ? undefined : envelope.subject
+    // One exit per facet, so a failed read costs only the features that need it.
+    const loads =
+      base === undefined
+        ? []
+        : yield* Effect.forEach(facets, (facet) => Effect.exit(loadFacets(base, new Set([facet]))), { concurrency: 'unbounded' })
+    const unavailable = new Map<Facet, string>()
+    const loaded: Array<Subject> = []
+    loads.forEach((exit, index) => {
+      const facet = facets[index]
+      if (Exit.isSuccess(exit)) loaded.push(exit.value)
+      else if (facet !== undefined) unavailable.set(facet, Cause.pretty(exit.cause))
+    })
+    const subject = base === undefined ? undefined : Object.assign({}, base, ...loaded)
     const context: FeatureContext = subject === undefined ? { config: options.config, envelope } : { config: options.config, envelope, subject }
 
-    const exits = yield* Effect.forEach(
+    const outcomes = yield* Effect.forEach(
       applicable,
-      (feature) => Effect.exit(feature.run(context).pipe(Effect.provideService(Report, report))),
+      (feature) => {
+        const missing = [...needs(feature)].flatMap((facet) => {
+          const reason = unavailable.get(facet)
+          return reason === undefined ? [] : [`could not load ${facet}: ${reason}`]
+        })
+        if (missing.length > 0) return Effect.succeed({ feature: feature.name, failure: missing.join('\n') })
+        // Effect.exit would turn an interruption into an ordinary failure, so
+        // only failures and defects are caught; interrupting the run stops it.
+        return feature.run(context).pipe(
+          Effect.provideService(Report, report),
+          Effect.as({ feature: feature.name, failure: undefined }),
+          Effect.catchAllCause((cause) =>
+            Cause.isInterruptedOnly(cause) ? Effect.interrupt : Effect.succeed({ feature: feature.name, failure: Cause.pretty(cause) }),
+          ),
+        )
+      },
       { concurrency: options.concurrency ?? 4 },
     )
     const ran: Array<string> = []
     const failed: Array<{ feature: string; message: string }> = []
-    exits.forEach((exit, index) => {
-      const name = applicable[index]?.name ?? ''
-      if (Exit.isSuccess(exit)) ran.push(name)
-      else failed.push({ feature: name, message: Cause.pretty(exit.cause) })
-    })
+    for (const outcome of outcomes) {
+      if (outcome.failure === undefined) ran.push(outcome.feature)
+      else failed.push({ feature: outcome.feature, message: outcome.failure })
+    }
     return { envelope, ran, skipped, failed, ...(yield* report.snapshot) }
   })

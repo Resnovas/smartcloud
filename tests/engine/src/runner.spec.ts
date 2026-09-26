@@ -16,11 +16,11 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect, Fiber, TestClock } from 'effect'
+import { Effect, Exit, Fiber, TestClock } from 'effect'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { type Feature, loadFacets, Report, runFeatures } from '@resnovas/engine'
 import { GitHubMemory, makeMemoryGitHub } from '@resnovas/integrations.github'
-import { GitHub } from '@resnovas/integrations.github'
+import { Forbidden, GitHub } from '@resnovas/integrations.github'
 import { issuePayload, pullRequestPayload } from './fixtures.js'
 
 const config: SmartcloudConfig = { version: 2 }
@@ -70,6 +70,53 @@ describe('runFeatures', () => {
       expect(result.ran).toStrictEqual(['ok'])
       expect(result.failed).toHaveLength(1)
       expect(result.failed[0]).toMatchObject({ feature: 'broken', message: expect.stringContaining('boom') })
+    }).pipe(Effect.provide(GitHubMemory())),
+  )
+
+  it.effect('a facet GitHub cannot serve fails only the features that need it', () =>
+    Effect.gen(function* () {
+      const { service } = memory()
+      const github = { ...service, listReviews: () => Effect.fail(new Forbidden({ operation: 'listReviews', detail: 'no access' })) }
+      const seen: Array<unknown> = []
+      const needsReviews = feature('reviews', { facets: () => new Set(['reviews', 'files'] as const) })
+      const needsFiles = feature('files', {
+        facets: () => new Set(['files'] as const),
+        run: (context) => Effect.sync(() => void seen.push(context.subject)),
+      })
+      const result = yield* runFeatures({
+        config,
+        event: 'pull_request',
+        payload: pullRequestPayload,
+        features: [needsReviews, needsFiles, feature('plain')],
+      }).pipe(Effect.provideService(GitHub, github))
+      expect(result.ran).toStrictEqual(['files', 'plain'])
+      expect(result.failed).toStrictEqual([
+        { feature: 'reviews', message: expect.stringContaining('could not load reviews: Forbidden: listReviews: forbidden (no access)') },
+      ])
+      expect(seen[0]).toMatchObject({ files: ['src/a.ts'] })
+      expect(seen[0]).not.toHaveProperty('reviews')
+    }),
+  )
+
+  it.effect('interrupting the run interrupts the features instead of recording them as failed', () =>
+    Effect.gen(function* () {
+      let cleanedUp = false
+      const endless = feature('endless', {
+        run: () => Effect.never.pipe(Effect.ensuring(Effect.sync(() => void (cleanedUp = true)))),
+      })
+      const fiber = yield* Effect.fork(runFeatures({ config, event: 'issues', payload: issuePayload, features: [endless] }))
+      yield* TestClock.adjust('1 second')
+      const exit = yield* Fiber.interrupt(fiber)
+      expect(Exit.isInterrupted(exit)).toBe(true)
+      expect(cleanedUp).toBe(true)
+    }).pipe(Effect.provide(GitHubMemory())),
+  )
+
+  it.effect('a feature that interrupts itself stops the run rather than passing as a failure', () =>
+    Effect.gen(function* () {
+      const quits = feature('quits', { run: () => Effect.interrupt })
+      const exit = yield* Effect.exit(runFeatures({ config, event: 'issues', payload: issuePayload, features: [quits, feature('ok')] }))
+      expect(Exit.isInterrupted(exit)).toBe(true)
     }).pipe(Effect.provide(GitHubMemory())),
   )
 

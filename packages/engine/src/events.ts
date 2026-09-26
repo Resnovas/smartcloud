@@ -32,7 +32,8 @@ const IssueFields = {
   state: Schema.Literal('open', 'closed'),
   locked: Schema.Boolean,
   labels: Schema.Array(LabelRef),
-  updated_at: Schema.String,
+  // An ISO 8601 timestamp, decoded to a valid Date: a malformed one is a decode error, not NaN ages later.
+  updated_at: Schema.Date,
 }
 
 const PullRequestPayload = Schema.Struct({
@@ -57,6 +58,9 @@ const MergeGroupPayload = Schema.Struct({
 })
 
 const PushPayload = Schema.Struct({ ref: Schema.String, after: Schema.String })
+
+// `action` is the caller's `event_type`, which says what the dispatch is for.
+const RepositoryDispatchPayload = Schema.Struct({ action: Schema.optional(Schema.String) })
 
 /** A pull request event, with the pull request as a subject. */
 export interface PullRequestEnvelope {
@@ -115,7 +119,7 @@ const subjectOf = (kind: Subject['kind'], item: IssueLike): Subject => ({
   open: item.state === 'open',
   locked: item.locked,
   labels: item.labels.map((label) => label.name),
-  updatedAt: new Date(item.updated_at),
+  updatedAt: item.updated_at,
 })
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, event: string, payload: unknown) =>
@@ -128,7 +132,7 @@ const withAction = <T extends object>(envelope: T, action: string | undefined): 
   action === undefined ? envelope : { ...envelope, action }
 
 const PULL_REQUEST_EVENTS = new Set(['pull_request', 'pull_request_target', 'pull_request_review', 'pull_request_review_comment'])
-const REPOSITORY_EVENTS = new Set(['schedule', 'workflow_dispatch', 'repository_dispatch'])
+const REPOSITORY_EVENTS = new Set(['schedule', 'workflow_dispatch'])
 
 /**
  * Normalises a GitHub event into an {@link Envelope}.
@@ -180,6 +184,11 @@ export const decodeEvent = (event: string, payload: unknown): Effect.Effect<Enve
   }
   if (event === 'push') {
     return Effect.map(decode(PushPayload, event, payload), ({ after }) => ({ kind: 'repository' as const, event, headSha: after }))
+  }
+  if (event === 'repository_dispatch') {
+    return Effect.map(decode(RepositoryDispatchPayload, event, payload), ({ action }) =>
+      withAction({ kind: 'repository' as const, event }, action),
+    )
   }
   if (REPOSITORY_EVENTS.has(event)) return Effect.succeed({ kind: 'repository', event })
   return Effect.succeed({ kind: 'unsupported', event, reason: `smartcloud does not act on ${event} events` })
