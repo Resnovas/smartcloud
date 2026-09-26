@@ -20,7 +20,9 @@
     {
       "plugin": "@nx/js/typescript",
       "options": {
-        "typecheck": { "targetName": "typecheck" },
+        "typecheck": {
+          "targetName": "typecheck"
+        },
         "build": {
           "targetName": "build",
           "configName": "tsconfig.lib.json",
@@ -31,15 +33,148 @@
     },
     {
       "plugin": "@nx/eslint/plugin",
-      "options": { "targetName": "lint" }
+      "options": {
+        "targetName": "lint"
+      }
     },
     {
       "plugin": "@nx/vitest",
-      "options": { "testTargetName": "test", "ciTargetName": "test-ci", "testMode": "run" }
+      "options": {
+        "testTargetName": "test",
+        "ciTargetName": "test-ci",
+        "testMode": "run"
+      }
     }
   ],
   "targetDefaults": {
-    "test": { "dependsOn": ["^build"] }
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "bundle": {
+      "dependsOn": ["build"]
+    }
+  },
+  "release": {
+    "groups": {
+      "smartcloud": {
+        "projects": ["@resnovas/action", "@resnovas/smartcloud", "@resnovas/smartcloud-mcp"],
+        "projectsRelationship": "fixed"
+      }
+    },
+    "releaseTag": {
+      "pattern": "v{version}",
+      "checkAllBranchesWhen": true
+    },
+    "git": {
+      "commit": false,
+      "tag": false,
+      "stageChanges": false
+    },
+    "version": {
+      "specifierSource": "conventional-commits",
+      "currentVersionResolver": "git-tag",
+      "versionActionsOptions": {
+        "skipLockFileUpdate": true
+      }
+    },
+    "changelog": {
+      "workspaceChangelog": {
+        "file": false,
+        "createRelease": "github",
+        "renderer": "{workspaceRoot}/tools/release/changelog-renderer.ts"
+      },
+      "projectChangelogs": false
+    },
+    "conventionalCommits": {
+      "useCommitScope": false,
+      "types": {
+        "feat": {
+          "semverBump": "minor",
+          "changelog": {
+            "title": "Features"
+          }
+        },
+        "fix": {
+          "semverBump": "patch",
+          "changelog": {
+            "title": "Bug fixes"
+          }
+        },
+        "perf": {
+          "semverBump": "patch",
+          "changelog": {
+            "title": "Performance"
+          }
+        },
+        "refactor": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Refactoring"
+          }
+        },
+        "docs": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Documentation"
+          }
+        },
+        "revert": {
+          "semverBump": "patch",
+          "changelog": {
+            "title": "Reverts"
+          }
+        },
+        "chore": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Miscellaneous",
+            "hidden": true
+          }
+        },
+        "ci": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Continuous integration",
+            "hidden": true
+          }
+        },
+        "test": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Tests",
+            "hidden": true
+          }
+        },
+        "build": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Build",
+            "hidden": true
+          }
+        },
+        "style": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Style",
+            "hidden": true
+          }
+        },
+        "types": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Types",
+            "hidden": true
+          }
+        },
+        "examples": {
+          "semverBump": "none",
+          "changelog": {
+            "title": "Examples",
+            "hidden": true
+          }
+        }
+      }
+    }
   },
   "analytics": false
 }

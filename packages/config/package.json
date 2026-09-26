@@ -12,7 +12,6 @@
       "import": "./dist/index.js"
     }
   },
-  "nx": { "tags": ["type_core", "layer_shared"] },
   "dependencies": {
     "@resnovas/conditions": "workspace:*",
     "effect": "catalog:",

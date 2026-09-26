@@ -34,7 +34,8 @@ const fix = process.argv.includes('--fix')
 
 const SOURCE = /\.(ts|mts|cts|js|mjs|cjs)$/
 // dist/ at the root is the action bundle, generated and committed only by a release.
-const EXCLUDED = /^(graphify-out|node_modules|dist)\/|\/dist\/|\.d\.ts$/
+// externals/ is vendored upstream source under its own licence.
+const EXCLUDED = /^(graphify-out|node_modules|dist|externals)\/|\/dist\/|\.d\.ts$/
 
 const header = (file: string) => template.replace('{{FILE}}', file)
 
@@ -43,7 +44,18 @@ const EXISTING = /^\/\*\*\n \* @file [^\n]*\n[\s\S]*?DELETING THIS NOTICE AUTOMA
 
 // Walks the tree when there is no git checkout, for example in a copy of the
 // workspace, skipping the directories git would ignore.
-const IGNORED_DIRECTORIES = new Set(['.git', '.nx', 'node_modules', 'dist', 'release', 'coverage', 'out-tsc', 'test-output', 'tmp'])
+const IGNORED_DIRECTORIES = new Set([
+  '.git',
+  '.nx',
+  'node_modules',
+  'dist',
+  'release',
+  'coverage',
+  'out-tsc',
+  'test-output',
+  'tmp',
+  'externals',
+])
 const walk = (directory: string): string[] =>
   readdirSync(join(root, directory), { withFileTypes: true }).flatMap((entry) => {
     const path = directory === '' ? entry.name : `${directory}/${entry.name}`
@@ -53,7 +65,11 @@ const walk = (directory: string): string[] =>
 
 const listFiles = (): string[] => {
   try {
-    return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n')
+    return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
+      cwd: root,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    }).split('\n')
   } catch {
     return walk('')
   }
@@ -79,4 +95,6 @@ if (wrong.length > 0 && !fix) {
   console.error(`Missing or outdated licence header (run: pnpm headers:fix):\n  ${wrong.join('\n  ')}`)
   process.exit(1)
 }
-console.log(fix ? `Headers written to ${wrong.length} file(s).` : `All ${tracked.length} source files carry the licence header.`)
+console.log(
+  fix ? `Headers written to ${wrong.length} file(s).` : `All ${tracked.length} source files carry the licence header.`,
+)

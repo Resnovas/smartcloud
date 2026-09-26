@@ -12,12 +12,6 @@
       "import": "./dist/index.js"
     }
   },
-  "nx": {
-    "tags": [
-      "type_core",
-      "layer_shared"
-    ]
-  },
   "dependencies": {
     "effect": "catalog:",
     "picomatch": "^4.0.7",

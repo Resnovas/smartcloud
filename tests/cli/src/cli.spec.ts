@@ -31,6 +31,7 @@ import {
   NoConfig,
   run,
   runWith,
+  stampedVersion,
   UnknownAuthor,
   UnsafePath,
   validate,
@@ -361,8 +362,10 @@ describe('sync', () => {
 })
 
 describe('version', () => {
-  it('is kept by release-please', () => {
-    expect(VERSION).toMatch(/^\d+\.\d+\.\d+$/)
+  it('is 0.0.0 until a release bundle stamps it', () => {
+    expect(VERSION).toBe('0.0.0')
+    expect(stampedVersion(undefined)).toBe('0.0.0')
+    expect(stampedVersion('2.0.0')).toBe('2.0.0')
   })
 })
 

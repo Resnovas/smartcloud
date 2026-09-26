@@ -1,0 +1,7 @@
+{
+  "name": "@resnovas/runtime-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tests/runtime/src",
+  "tags": ["type_test", "layer_backend"]
+}

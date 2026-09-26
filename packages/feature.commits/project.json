@@ -1,0 +1,7 @@
+{
+  "name": "@resnovas/feature.commits",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "packages/feature.commits/src",
+  "tags": ["type_extension", "layer_backend"]
+}

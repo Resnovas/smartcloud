@@ -17,5 +17,5 @@
 
 export { main, makeSmartcloud, run, runWith } from './cli.js'
 export { checkCommitCommand, CommitCheckFailed, dryRunCommand, isWithin, locateConfig, migrate, planSettingsCommand, syncCommand, UnknownAuthor, UnsafePath, validate } from './commands.js'
-export { VERSION } from './version.js'
+export { stampedVersion, VERSION } from './version.js'
 export { CONFIG_CANDIDATES, ConfigSourceFromGitHub, gitHubConfigSource, MissingToken, NoConfig, resolveToken } from '@resnovas/runtime'

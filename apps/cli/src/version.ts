@@ -15,5 +15,15 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-/** The smartcloud version, kept in step by release-please. */
-export const VERSION = '2.0.0' // x-release-please-version
+declare global {
+  // Replaced by esbuild with the version in the app's package.json when
+  // tools/release/bundle.ts bundles it; the release workflow sets that version
+  // with Nx release before bundling. Unset in an unbundled build.
+  var __SMARTCLOUD_VERSION__: string | undefined
+}
+
+/** The version a bundle was stamped with, or 0.0.0 for an unreleased build. */
+export const stampedVersion = (stamped: string | undefined): string => stamped ?? '0.0.0'
+
+/** The smartcloud version. */
+export const VERSION: string = stampedVersion(globalThis.__SMARTCLOUD_VERSION__)
