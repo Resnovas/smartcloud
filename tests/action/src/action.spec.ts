@@ -19,7 +19,8 @@ import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { FEATURES, NoConfig, PresetUnreadable, program, readInputs, runAction, UnknownFeatures, type Inputs } from '@resnovas/action'
 import { fileKey, Forbidden, GitHub, makeMemoryGitHub, type MemoryState } from '@resnovas/integrations.github'
-import { ConfigProvider, Effect, Option, Redacted } from 'effect'
+import { disabledTelemetry, Telemetry } from '@resnovas/integrations.posthog'
+import { ConfigProvider, Effect, Layer, Option, Redacted } from 'effect'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -60,6 +61,7 @@ const inputs = (overrides: Partial<Inputs> = {}): Inputs => ({
   configRef: Option.none(),
   dryRun: false,
   features: Option.none(),
+  telemetry: true,
   deprecations: [],
   ...overrides,
 })
@@ -71,7 +73,12 @@ describe('readInputs', () => {
       expect(Redacted.value(read.token)).toBe('abc')
       expect(read.config).toStrictEqual(Option.none())
       expect(read.dryRun).toBe(false)
+      expect(read.telemetry).toBe(true)
       expect(read.deprecations).toStrictEqual([])
+      const off = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_TELEMETRY: 'FALSE' }))
+      expect(off.telemetry).toBe(false)
+      const on = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_TELEMETRY: 'true' }))
+      expect(on.telemetry).toBe(true)
       const dry = yield* readInputs.pipe(
         withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_DRYRUN: 'TRUE', INPUT_FEATURES: 'labels, stale,', INPUT_CONFIGREF: 'v2' }),
       )
@@ -238,6 +245,24 @@ describe('program', () => {
       const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
       const { GITHUB_STEP_SUMMARY: _summary, ...vars } = yield* Effect.promise(() => env(pullRequest('feat: x')))
       yield* program(() => Effect.succeed(service)).pipe(withEnv(vars))
+      expect(out).toStrictEqual([])
+      expect(process.exitCode).toBe(exitCode)
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('turns telemetry off when the telemetry input is false, and runs as before', () =>
+    Effect.gen(function* () {
+      const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
+      let enabled = true
+      const telemetry = Layer.succeed(Telemetry, {
+        ...disabledTelemetry,
+        disable: Effect.sync(() => {
+          enabled = false
+        }),
+      })
+      const { GITHUB_STEP_SUMMARY: _summary, ...vars } = yield* Effect.promise(() => env(pullRequest('feat: x'), { INPUT_TELEMETRY: 'false' }))
+      yield* program(() => Effect.succeed(service)).pipe(withEnv(vars), Effect.provide(telemetry))
+      expect(enabled).toBe(false)
       expect(out).toStrictEqual([])
       expect(process.exitCode).toBe(exitCode)
     }).pipe(Effect.provide(NodeContext.layer)),

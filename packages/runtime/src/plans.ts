@@ -19,6 +19,7 @@ import { formatExtendsRef, type SmartcloudConfig } from '@resnovas/config'
 import { planSettings, type SettingsStep } from '@resnovas/feature.settings'
 import { previewSync } from '@resnovas/feature.sync'
 import { GitHub, type Repository } from '@resnovas/integrations.github'
+import { track } from '@resnovas/integrations.posthog'
 import { Data, Effect } from 'effect'
 import { loadConfig } from './config.js'
 import { parseRepository, type Connect } from './github.js'
@@ -88,7 +89,8 @@ export const planSettingsForRepository = (connect: Connect, request: { readonly 
     const coordinates = yield* parseRepository(request.repository)
     const location = yield* configLocationFor(request.config)
     const service = yield* connect(coordinates)
-    return yield* Effect.flatMap(loadConfig(location), (resolved) => planRepositorySettings(resolved.config)).pipe(
+    const plan = Effect.flatMap(loadConfig(location), (resolved) => planRepositorySettings(resolved.config))
+    return yield* track(plan, { operation: 'settings plan', repository: coordinates, describe: (planned) => ({ steps: planned.steps.length }) }).pipe(
       Effect.provideService(GitHub, service),
     )
   })
@@ -149,7 +151,8 @@ export const renderSyncForRepository = (connect: Connect, request: { readonly re
     const coordinates = yield* parseRepository(request.repository)
     const location = yield* configLocationFor(request.config)
     const service = yield* connect(coordinates)
-    return yield* Effect.flatMap(loadConfig(location), (resolved) => renderRepositorySync(resolved.config)).pipe(
+    const render = Effect.flatMap(loadConfig(location), (resolved) => renderRepositorySync(resolved.config))
+    return yield* track(render, { operation: 'sync render', repository: coordinates, describe: (rendered) => ({ files: rendered.files.length }) }).pipe(
       Effect.provideService(GitHub, service),
     )
   })

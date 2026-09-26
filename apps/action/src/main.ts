@@ -17,7 +17,10 @@
 
 import { NodeContext, NodeRuntime } from '@effect/platform-node'
 import { makeLiveGitHub } from '@resnovas/integrations.github'
-import { Effect } from 'effect'
+import { telemetry } from '@resnovas/runtime'
+import { Effect, Layer } from 'effect'
 import { program } from './program.js'
+import { VERSION } from './version.js'
 
-program((options) => makeLiveGitHub(options)).pipe(Effect.provide(NodeContext.layer), NodeRuntime.runMain)
+// Closing the telemetry layer flushes it, so the run's data is delivered before the step ends.
+program((options) => makeLiveGitHub(options)).pipe(Effect.provide(Layer.merge(NodeContext.layer, telemetry('action', VERSION))), NodeRuntime.runMain)

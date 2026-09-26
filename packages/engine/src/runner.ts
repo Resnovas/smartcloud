@@ -89,7 +89,7 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
  * Runs every applicable feature against one GitHub event.
  *
  * @remarks
- * Features that handle the event's kind and are enabled by the config run
+ * Features that are not turned off, handle the event's kind and are enabled by the config run
  * with bounded concurrency, each isolated: one feature failing is recorded
  * and does not stop the others. Each facet is loaded on its own, so a facet
  * GitHub cannot serve fails only the features that need it, which are
@@ -113,6 +113,8 @@ export const runFeatures = (options: {
   readonly payload: unknown
   readonly features: ReadonlyArray<Feature>
   readonly concurrency?: number
+  /** Features switched off from outside the config, such as by a feature flag, and why. */
+  readonly turnedOff?: ReadonlyMap<string, string>
 }): Effect.Effect<RunResult, EventDecodeError, GitHub> =>
   Effect.gen(function* () {
     const envelope = yield* decodeEvent(options.event, options.payload)
@@ -124,6 +126,11 @@ export const runFeatures = (options: {
 
     const skipped: Array<{ feature: string; reason: string }> = []
     const applicable = options.features.filter((feature) => {
+      const turnedOff = options.turnedOff?.get(feature.name)
+      if (turnedOff !== undefined) {
+        skipped.push({ feature: feature.name, reason: turnedOff })
+        return false
+      }
       if (!feature.handles.includes(envelope.kind)) {
         skipped.push({ feature: feature.name, reason: `does not handle ${envelope.kind} events` })
         return false

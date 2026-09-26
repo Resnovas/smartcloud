@@ -18,6 +18,7 @@
 import { FileSystem } from '@effect/platform'
 import { DryRun, DryRunLog, GitHub, type GitHubService, type RepositoryCoordinates } from '@resnovas/integrations.github'
 import { conclusionOf } from '@resnovas/reporting'
+import { optOut } from '@resnovas/runtime'
 import { Config, Console, Data, Effect, Layer, Redacted } from 'effect'
 import { readInputs } from './inputs.js'
 import { runAction } from './run.js'
@@ -78,6 +79,7 @@ export const program = (connect: Connect) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
     const inputs = yield* readInputs
+    if (!inputs.telemetry) yield* optOut
     const env = yield* environment
     const payload = yield* readPayload(env.eventPath)
     const [owner = '', repo = ''] = env.repository.split('/')

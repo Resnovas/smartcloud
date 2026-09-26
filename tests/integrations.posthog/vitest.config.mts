@@ -1,6 +1,5 @@
-#!/usr/bin/env node
 /**
- * @file apps/cli/src/main.ts
+ * @file tests/integrations.posthog/vitest.config.mts
  *
  * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
@@ -16,11 +15,6 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { NodeContext, NodeRuntime } from '@effect/platform-node'
-import { telemetry } from '@resnovas/runtime'
-import { Effect, Layer } from 'effect'
-import { main } from './cli.js'
-import { VERSION } from './version.js'
+import { testProject } from '../../vitest.shared.js'
 
-// Closing the telemetry layer flushes it, so a short command still delivers its data.
-main(process.argv).pipe(Effect.provide(Layer.merge(NodeContext.layer, telemetry('cli', VERSION))), NodeRuntime.runMain)
+export default testProject('integrations.posthog', ['packages/integrations.posthog/src/**'])

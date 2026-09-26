@@ -16,6 +16,7 @@ Declarative repository automation: labels, conventions and policy.
 | `$schema` | string | no |  |
 | `version` | `2` | yes |  |
 | `extends` | list of [ExtendsEntry](#extendsentry) | no |  |
+| `telemetry` | boolean | no | Set to false to stop smartcloud sending anonymous telemetry (hashed usage events, logs, traces, metrics and errors) to PostHog. On by default; turning it off is discouraged, because telemetry is how problems are found and fixed. The telemetry page of the documentation lists what is and is not collected. |
 | `labels` | map of [RuleId](#ruleid) to [Label](#label) | no |  |
 | `labelSync` | object | no |  |
 | `labelSync.prune` | boolean | no |  |

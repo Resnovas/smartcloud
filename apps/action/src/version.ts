@@ -1,6 +1,5 @@
-#!/usr/bin/env node
 /**
- * @file apps/cli/src/main.ts
+ * @file apps/action/src/version.ts
  *
  * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
@@ -16,11 +15,15 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { NodeContext, NodeRuntime } from '@effect/platform-node'
-import { telemetry } from '@resnovas/runtime'
-import { Effect, Layer } from 'effect'
-import { main } from './cli.js'
-import { VERSION } from './version.js'
+declare global {
+  // Replaced by esbuild with the version in the app's package.json when
+  // tools/release/bundle.ts bundles it; the release workflow sets that version
+  // with Nx release before bundling. Unset in an unbundled build.
+  var __SMARTCLOUD_VERSION__: string | undefined
+}
 
-// Closing the telemetry layer flushes it, so a short command still delivers its data.
-main(process.argv).pipe(Effect.provide(Layer.merge(NodeContext.layer, telemetry('cli', VERSION))), NodeRuntime.runMain)
+/** The version a bundle was stamped with, or 0.0.0 for an unreleased build. */
+export const stampedVersion = (stamped: string | undefined): string => stamped ?? '0.0.0'
+
+/** The smartcloud version. */
+export const VERSION: string = stampedVersion(globalThis.__SMARTCLOUD_VERSION__)

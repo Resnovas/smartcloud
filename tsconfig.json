@@ -13,6 +13,9 @@
       "path": "./packages/integrations.github"
     },
     {
+      "path": "./packages/integrations.posthog"
+    },
+    {
       "path": "./packages/engine"
     },
     {

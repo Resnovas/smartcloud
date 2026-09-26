@@ -65,9 +65,13 @@ jobs:
 
 Coming from v1? `smartcloud migrate` converts `.github/config.json`; see the [migration guide](docs/migration.mdx).
 
+## Telemetry
+
+smartcloud sends anonymous telemetry to PostHog: usage events, logs, traces, metrics and errors, identified only by a hash of the repository name, with tokens, emails and names redacted. It also reads per-feature flags from PostHog. Turning it off is discouraged, but `telemetry: false` in the config, the action's `telemetry: false` input, `SMARTCLOUD_TELEMETRY=false` or `DO_NOT_TRACK=1` does so; flags then keep their defaults. See [telemetry](docs/telemetry.mdx) for exactly what is and is not collected.
+
 ## Documentation
 
-The documentation lives in [`docs/`](docs/introduction.mdx) and is built with Mintlify. Start with the [introduction](docs/introduction.mdx), then [configuration](docs/configuration.mdx), the [conditions](docs/conditions.mdx) and the [migration guide](docs/migration.mdx).
+The documentation lives in [`docs/`](docs/introduction.mdx) and is built with Mintlify. Start with the [introduction](docs/introduction.mdx), then [configuration](docs/configuration.mdx), the [conditions](docs/conditions.mdx), the [migration guide](docs/migration.mdx) and [telemetry](docs/telemetry.mdx).
 
 ## Development
 

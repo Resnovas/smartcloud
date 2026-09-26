@@ -18,11 +18,25 @@
 
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { NodeContext } from '@effect/platform-node'
-import { gitHubConfigSource, liveConnect } from '@resnovas/runtime'
+import { gitHubConfigSource, liveConnect, telemetry } from '@resnovas/runtime'
 import { Layer, ManagedRuntime } from 'effect'
 import { makeServer } from './server.js'
+import { VERSION } from './version.js'
 
-// stdout carries the protocol, so nothing here may print to it.
-const runtime = ManagedRuntime.make(Layer.provideMerge(gitHubConfigSource(), NodeContext.layer))
+// stdout carries the protocol, so nothing here may print to it. Telemetry
+// only logs at debug level, below what is printed, and PostHog's own client
+// writes to stderr.
+const runtime = ManagedRuntime.make(Layer.mergeAll(Layer.provideMerge(gitHubConfigSource(), NodeContext.layer), telemetry('mcp', VERSION)))
 const server = makeServer({ connect: liveConnect(), run: (effect) => runtime.runPromise(effect) })
-await server.connect(new StdioServerTransport())
+const transport = new StdioServerTransport()
+// Disposing the runtime closes the telemetry layer, which flushes what is
+// queued and stops its timers, so the process can exit once the client has gone.
+let closing: Promise<void> | undefined
+const shutdown = () => {
+  closing ??= runtime.dispose()
+  return closing
+}
+transport.onclose = () => void shutdown()
+process.stdin.once('end', () => void shutdown())
+for (const signal of ['SIGINT', 'SIGTERM'] as const) process.once(signal, () => void shutdown().finally(() => process.exit(0)))
+await server.connect(transport)

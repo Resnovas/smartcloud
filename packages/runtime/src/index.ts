@@ -17,7 +17,8 @@
 
 /**
  * What the action, the CLI and the MCP server share: the feature list,
- * config loading, dry runs, settings plans and sync previews.
+ * feature flags, telemetry, config loading, dry runs, settings plans and
+ * sync previews.
  *
  * @packageDocumentation
  */
@@ -34,6 +35,12 @@ export {
 } from './config.js'
 export type { ConfigExplanation, ConfigLocation, ConfigText, FeatureExplanation, Migrated } from './config.js'
 export { FEATURES, parseFeatureList, selectFeatures, UnknownFeatures } from './features.js'
+export { FEATURE_FLAGS, featureEnabled, flagFor, turnedOffFeatures } from './flags.js'
+export type { FeatureFlag } from './flags.js'
+export { telemetry } from './telemetry.js'
+// The surfaces opt out and read telemetry through the runtime, never the integration directly.
+export { optOut, Telemetry } from '@resnovas/integrations.posthog'
+export type { Surface } from '@resnovas/integrations.posthog'
 export { gitHubConfigSource, InvalidRepository, liveConnect, MissingToken, parseRepository, presetError, PresetUnreadable, resolveToken } from './github.js'
 export type { Connect } from './github.js'
 export {
@@ -51,6 +58,7 @@ export {
   dryRun,
   dryRunRepository,
   dryRunText,
+  FeatureFailed,
   InvalidTrigger,
   REPOSITORY_EVENTS,
   runEvent,

@@ -17,18 +17,6 @@
   ],
   "references": [
     {
-      "path": "../../packages/integrations.github"
-    },
-    {
-      "path": "../../packages/engine"
-    },
-    {
-      "path": "../../packages/config"
-    },
-    {
-      "path": "../../apps/action"
-    },
-    {
       "path": "../../packages/integrations.posthog"
     }
   ]
