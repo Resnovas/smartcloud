@@ -264,6 +264,8 @@ export const Subject = Schema.Struct({
   /** The title of the milestone the subject is in; omitted when it is in none. */
   milestone: Schema.optionalWith(Schema.String, { exact: true }),
   updatedAt: Schema.DateFromSelf,
+  /** When the issue or pull request was opened; omitted when the event did not say. */
+  createdAt: Schema.optionalWith(Schema.DateFromSelf, { exact: true }),
   draft: Schema.optionalWith(Schema.Boolean, { exact: true }),
   headBranch: Schema.optionalWith(Schema.String, { exact: true }),
   /** The branch the pull request merges into. */

@@ -320,6 +320,27 @@ describe('stale feature: marking', () => {
     }),
   )
 
+  it.effect('exempts by when the listing says an item was opened', () =>
+    Effect.gen(function* () {
+      const github = memory([
+        item(1, { updatedAt: daysAgo(40), createdAt: new Date('2020-01-01T00:00:00Z') }),
+        item(2, { updatedAt: daysAgo(40), createdAt: daysAgo(40) }),
+        item(3, { updatedAt: daysAgo(40) }),
+      ])
+      yield* sweep(
+        {
+          version: 2,
+          stale: {
+            ...settings,
+            exempt: { when: { condition: [{ type: 'createdBefore', condition: '2021-01-01' }] } },
+          },
+        },
+        github,
+      )
+      expect([1, 2, 3].map((number) => labelsOf(github, number))).toStrictEqual([[], ['stale'], ['stale']])
+    }),
+  )
+
   it.effect('exempts by the assignees in the listing, and loads requested reviewers for pull requests', () =>
     Effect.gen(function* () {
       const github = memory([

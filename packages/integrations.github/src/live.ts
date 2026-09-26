@@ -838,6 +838,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             assignees: (issue.assignees ?? []).map((user) => user.login),
             ...(issue.milestone?.title === undefined ? {} : { milestone: issue.milestone.title }),
             updatedAt: new Date(issue.updated_at),
+            createdAt: new Date(issue.created_at),
             isPullRequest: issue.pull_request !== undefined,
             ...(issue.reactions === undefined ? {} : { reactions: reactionsOf(issue.reactions) }),
           })),

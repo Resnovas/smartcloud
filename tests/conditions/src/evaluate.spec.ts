@@ -995,6 +995,89 @@ describe('evaluate: stale and abandoned (v1 had these inverted)', () => {
   )
 })
 
+describe('evaluate: creation time and time windows', () => {
+  const detail = (condition: Condition, subject: Subject) =>
+    Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.results[0]?.detail)
+
+  it.effect('createdBefore with a number of days measures the age from now', () =>
+    Effect.gen(function* () {
+      const old = { type: 'createdBefore', condition: 30 } as const
+      const opened = pullRequest({ createdAt: new Date(0) })
+      yield* TestClock.adjust('29 days')
+      expect(yield* passes(old, opened)).toBe(false)
+      yield* TestClock.adjust('1 day')
+      expect(yield* passes(old, opened)).toBe(true)
+      expect(yield* detail(old, opened)).toBe('created 30 day(s) ago')
+    }),
+  )
+
+  it.effect('createdBefore with a date compares against it, a bare date meaning midnight UTC', () =>
+    Effect.gen(function* () {
+      const opened = pullRequest({ createdAt: new Date('2025-12-31T23:59:59Z') })
+      expect(yield* passes({ type: 'createdBefore', condition: '2026-01-01' }, opened)).toBe(true)
+      expect(yield* passes({ type: 'createdBefore', condition: '2025-12-31T23:59:59Z' }, opened)).toBe(false)
+      expect(yield* passes({ type: 'createdBefore', condition: '2026-01-01T00:59:59+01:00' }, opened)).toBe(false)
+      expect(yield* detail({ type: 'createdBefore', condition: '2026-01-01' }, opened)).toBe(
+        'created 2025-12-31, before 2026-01-01',
+      )
+      expect(yield* detail({ type: 'createdBefore', condition: '2025-06-01' }, opened)).toBe(
+        'created 2025-12-31, not before 2025-06-01',
+      )
+    }),
+  )
+
+  it.effect('createdBefore fails, with a reason, when the creation time is unknown', () =>
+    Effect.gen(function* () {
+      yield* TestClock.adjust('365 days')
+      expect(yield* passes({ type: 'createdBefore', condition: 1 }, pullRequest())).toBe(false)
+      expect(yield* detail({ type: 'createdBefore', condition: 1 }, issue())).toBe('creation time unknown')
+    }),
+  )
+
+  // 2026-09-28 is a Monday.
+  const at = (iso: string) => TestClock.setTime(Date.parse(iso))
+  const workingHours = {
+    type: 'timeWindow',
+    condition: true,
+    days: ['mon', 'tue', 'wed', 'thu', 'fri'],
+    from: '09:00',
+    to: '17:30',
+    timeZone: 'Europe/London',
+  } as const
+
+  it.effect('timeWindow passes inside the days and hours, in the time zone', () =>
+    Effect.gen(function* () {
+      yield* at('2026-09-28T08:00:00Z')
+      expect(yield* passes(workingHours, issue())).toBe(true)
+      expect(yield* detail(workingHours, issue())).toBe('mon 09:00 Europe/London is inside the window')
+      yield* at('2026-09-28T07:59:00Z')
+      expect(yield* passes(workingHours, issue())).toBe(false)
+      yield* at('2026-09-28T16:30:00Z')
+      expect(yield* passes(workingHours, issue())).toBe(false)
+      yield* at('2026-10-03T12:00:00Z')
+      expect(yield* passes(workingHours, issue())).toBe(false)
+      expect(yield* detail(workingHours, issue())).toBe('sat 13:00 Europe/London is outside the window')
+    }),
+  )
+
+  it.effect('timeWindow with condition false passes outside the window', () =>
+    Effect.gen(function* () {
+      yield* at('2026-10-03T12:00:00Z')
+      expect(yield* passes({ ...workingHours, condition: false }, issue())).toBe(true)
+    }),
+  )
+
+  it.effect('timeWindow defaults to UTC, every day and the whole day', () =>
+    Effect.gen(function* () {
+      yield* at('2026-10-04T23:59:00Z')
+      expect(yield* passes({ type: 'timeWindow', condition: true, days: ['sun'] }, issue())).toBe(true)
+      expect(yield* passes({ type: 'timeWindow', condition: true, from: '12:00' }, issue())).toBe(true)
+      expect(yield* passes({ type: 'timeWindow', condition: true, to: '12:00' }, issue())).toBe(false)
+      expect(yield* detail({ type: 'timeWindow', condition: true }, issue())).toBe('sun 23:59 UTC is inside the window')
+    }),
+  )
+})
+
 describe('evaluate: groups and combinators', () => {
   const draft = { condition: [{ type: 'isDraft', condition: true }] } as const
   const open = { condition: [{ type: 'isOpen', condition: true }] } as const

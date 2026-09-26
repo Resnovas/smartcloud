@@ -157,6 +157,7 @@ export const subjectOf = (item: IssueSummary): Subject => ({
   ...(item.assignees === undefined ? {} : { assignees: item.assignees }),
   ...(item.milestone === undefined ? {} : { milestone: item.milestone }),
   updatedAt: item.updatedAt,
+  ...(item.createdAt === undefined ? {} : { createdAt: item.createdAt }),
   ...(item.reactions === undefined ? {} : { reactions: item.reactions }),
 })
 

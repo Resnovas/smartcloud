@@ -17,6 +17,7 @@
 import { Schema } from 'effect'
 import { Pattern } from './pattern.js'
 import { CheckState, Reaction } from './subject.js'
+import { TimeOfDay, TimeZone, Weekday } from './time.js'
 
 // Field names follow v1 exactly (`type`, `condition`, `requires`, `label`,
 // `min`, `max`), so every v1 condition decodes and evaluates unchanged.
@@ -741,6 +742,87 @@ export const ReactionCount = Schema.Struct({
   description: 'The number of reactions (of one kind, when reaction is set) is at least min and below max.',
 })
 
+const Instant = Schema.String.pipe(
+  Schema.pattern(/^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2}))?$/),
+  Schema.filter((value) => !Number.isNaN(Date.parse(value)) || `invalid date ${JSON.stringify(value)}`, {
+    identifier: 'Instant',
+    description: 'An ISO 8601 date (2026-01-31, midnight UTC) or date and time with an offset (2026-01-31T09:00:00Z).',
+    jsonSchema: {},
+  }),
+)
+
+/**
+ * The subject was created before a moment: at least this many days ago, or
+ * before an ISO 8601 date.
+ *
+ * @remarks
+ * A number is an age in days, measured from now, so `30` passes for anything
+ * opened more than 30 days ago. A date passes for anything opened before it;
+ * a date without a time means midnight UTC. Wrap the condition in `$not` for
+ * "created after". When the event that delivered the subject carries no
+ * creation time, the condition fails.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CreatedBefore"
+ * import { CreatedBefore } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CreatedBefore)({ type: 'createdBefore', condition: 30 }) // => true
+ * Schema.is(CreatedBefore)({ type: 'createdBefore', condition: '2026-01-01' }) // => true
+ * Schema.is(CreatedBefore)({ type: 'createdBefore', condition: 'last week' }) // => false
+ * ```
+ */
+export const CreatedBefore = Schema.Struct({
+  type: Schema.Literal('createdBefore'),
+  condition: Schema.Union(Days, Instant),
+}).annotations({
+  identifier: 'createdBefore',
+  description: 'The subject was created at least this many days ago, or before this ISO 8601 date.',
+})
+
+/**
+ * The current time falls inside a weekly window of days and hours, in a
+ * time zone; or outside it when `condition` is false.
+ *
+ * @remarks
+ * `from` is inclusive and `to` exclusive. Without `from` the window opens at
+ * midnight; without `to` it closes at midnight; without `days` it applies
+ * every day. A `to` at or before `from` runs past midnight, and those early
+ * hours belong to the day the window opened. `timeZone` is an IANA name and
+ * defaults to `UTC`, so daylight saving time follows the zone.
+ *
+ * @example
+ * ```ts import.meta.vitest name="TimeWindow"
+ * import { TimeWindow } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * const hours = { type: 'timeWindow', condition: true, days: ['mon', 'tue', 'wed', 'thu', 'fri'], from: '09:00', to: '17:30', timeZone: 'Europe/London' }
+ * Schema.is(TimeWindow)(hours) // => true
+ * Schema.is(TimeWindow)({ ...hours, from: '9am' }) // => false
+ * ```
+ */
+export const TimeWindow = Schema.Struct({
+  type: Schema.Literal('timeWindow'),
+  condition: Schema.Boolean,
+  days: Schema.optionalWith(
+    Schema.NonEmptyArray(Weekday).annotations({ description: 'The days the window opens on; every day when omitted.' }),
+    { exact: true },
+  ),
+  from: Schema.optionalWith(
+    TimeOfDay.annotations({ description: 'When the window opens, as HH:MM (inclusive); midnight when omitted.' }),
+    { exact: true },
+  ),
+  to: Schema.optionalWith(
+    TimeOfDay.annotations({ description: 'When the window closes, as HH:MM (exclusive); midnight when omitted.' }),
+    { exact: true },
+  ),
+  /** The IANA time zone the days and hours are in; UTC when omitted. */
+  timeZone: Schema.optionalWith(TimeZone, { exact: true }),
+}).annotations({
+  identifier: 'timeWindow',
+  description: 'Now is inside the weekly window of days and hours, or outside it when false.',
+})
+
 const Leaf = Schema.Union(
   TitleMatches,
   DescriptionMatches,
@@ -778,6 +860,8 @@ const Leaf = Schema.Union(
   HasTrailer,
   CommentMatches,
   ReactionCount,
+  CreatedBefore,
+  TimeWindow,
 )
 /** Any condition that does not contain other conditions. */
 export type LeafCondition = typeof Leaf.Type

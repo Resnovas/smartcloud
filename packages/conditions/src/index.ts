@@ -31,6 +31,7 @@ export {
   CommitMessagesMatch,
   CommitsSignedOff,
   CommitsVerified,
+  CreatedBefore,
   Condition,
   ConditionGroup,
   CreatorMatches,
@@ -55,6 +56,7 @@ export {
   ReactionCount,
   RequestedChanges,
   ReviewerMatches,
+  TimeWindow,
   TitleMatches,
 } from './schema.js'
 export type { And, LeafCondition, Not, Only, Or } from './schema.js'
@@ -72,6 +74,8 @@ export {
   Subject,
 } from './subject.js'
 export type { Facet } from './subject.js'
+export { inWindow, localTime, minutesOf, TimeOfDay, TimeZone, Weekday } from './time.js'
+export type { LocalTime, Window } from './time.js'
 export { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 export type { Trailer } from './trailers.js'
 export { evaluate, MissingFacet, requiredFacets } from './evaluate.js'

@@ -310,6 +310,12 @@
             },
             {
               "$ref": "#/$defs/reactionCount"
+            },
+            {
+              "$ref": "#/$defs/createdBefore"
+            },
+            {
+              "$ref": "#/$defs/timeWindow"
             }
           ]
         },
@@ -1167,6 +1173,99 @@
       },
       "additionalProperties": false,
       "description": "The number of reactions (of one kind, when reaction is set) is at least min and below max."
+    },
+    "createdBefore": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "createdBefore"
+          ]
+        },
+        "condition": {
+          "anyOf": [
+            {
+              "type": "number",
+              "description": "A number of days.",
+              "title": "nonNegative",
+              "minimum": 0
+            },
+            {
+              "$ref": "#/$defs/Instant"
+            }
+          ]
+        }
+      },
+      "additionalProperties": false,
+      "description": "The subject was created at least this many days ago, or before this ISO 8601 date."
+    },
+    "Instant": {
+      "type": "string",
+      "description": "An ISO 8601 date (2026-01-31, midnight UTC) or date and time with an offset (2026-01-31T09:00:00Z).",
+      "pattern": "^\\d{4}-\\d{2}-\\d{2}(?:T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2}))?$"
+    },
+    "timeWindow": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "timeWindow"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        },
+        "days": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Weekday"
+          },
+          "description": "The days the window opens on; every day when omitted."
+        },
+        "from": {
+          "type": "string",
+          "description": "When the window opens, as HH:MM (inclusive); midnight when omitted.",
+          "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+        },
+        "to": {
+          "type": "string",
+          "description": "When the window closes, as HH:MM (exclusive); midnight when omitted.",
+          "pattern": "^(?:[01]\\d|2[0-3]):[0-5]\\d$"
+        },
+        "timeZone": {
+          "$ref": "#/$defs/TimeZone"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Now is inside the weekly window of days and hours, or outside it when false."
+    },
+    "Weekday": {
+      "type": "string",
+      "enum": [
+        "mon",
+        "tue",
+        "wed",
+        "thu",
+        "fri",
+        "sat",
+        "sun"
+      ],
+      "description": "A day of the week: mon, tue, wed, thu, fri, sat or sun."
+    },
+    "TimeZone": {
+      "type": "string",
+      "description": "An IANA time zone name, such as Europe/London, or UTC."
     },
     "$and": {
       "type": "object",

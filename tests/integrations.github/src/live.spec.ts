@@ -167,6 +167,7 @@ describe('live GitHub: issues and comments', () => {
               state: 'open',
               locked: false,
               labels: ['bug', { name: 'stale' }, {}],
+              created_at: '2025-12-01T00:00:00Z',
               updated_at: '2026-01-01T00:00:00Z',
             },
             {
@@ -180,6 +181,7 @@ describe('live GitHub: issues and comments', () => {
               labels: [],
               assignees: [{ login: 'ann' }, { login: 'bo' }],
               milestone: { title: 'v2.0' },
+              created_at: '2025-12-02T00:00:00Z',
               updated_at: '2026-01-02T00:00:00Z',
               pull_request: {},
               reactions: {
@@ -206,6 +208,7 @@ describe('live GitHub: issues and comments', () => {
               labels: [],
               assignees: null,
               milestone: null,
+              created_at: '2025-12-03T00:00:00Z',
               updated_at: '2026-01-03T00:00:00Z',
             },
           ],
@@ -223,6 +226,7 @@ describe('live GitHub: issues and comments', () => {
           labels: ['bug', 'stale', ''],
           assignees: [],
           updatedAt: new Date('2026-01-01T00:00:00Z'),
+          createdAt: new Date('2025-12-01T00:00:00Z'),
           isPullRequest: false,
         },
         {
@@ -238,6 +242,7 @@ describe('live GitHub: issues and comments', () => {
           assignees: ['ann', 'bo'],
           milestone: 'v2.0',
           updatedAt: new Date('2026-01-02T00:00:00Z'),
+          createdAt: new Date('2025-12-02T00:00:00Z'),
           isPullRequest: true,
           reactions: { '+1': 2, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 1, rocket: 0, eyes: 0 },
         },
@@ -252,6 +257,7 @@ describe('live GitHub: issues and comments', () => {
           labels: [],
           assignees: [],
           updatedAt: new Date('2026-01-03T00:00:00Z'),
+          createdAt: new Date('2025-12-03T00:00:00Z'),
           isPullRequest: false,
         },
       ])
