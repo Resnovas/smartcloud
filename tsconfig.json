@@ -38,6 +38,9 @@
     },
     {
       "path": "./packages/feature.stale"
+    },
+    {
+      "path": "./packages/feature.settings"
     }
   ]
 }
