@@ -21,6 +21,7 @@
   "dependencies": {
     "@resnovas/config": "workspace:*",
     "@resnovas/engine": "workspace:*",
+    "@resnovas/feature.commits": "workspace:*",
     "@resnovas/integrations.github": "workspace:*",
     "effect": "catalog:",
     "tslib": "^2.8.1"

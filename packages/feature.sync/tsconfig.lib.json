@@ -9,8 +9,17 @@
   },
   "include": ["src/**/*.ts"],
   "references": [
-    { "path": "../config/tsconfig.lib.json" },
-    { "path": "../engine/tsconfig.lib.json" },
-    { "path": "../integrations.github/tsconfig.lib.json" }
+    {
+      "path": "../integrations.github/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.commits/tsconfig.lib.json"
+    },
+    {
+      "path": "../engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../config/tsconfig.lib.json"
+    }
   ]
 }

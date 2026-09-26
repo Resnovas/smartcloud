@@ -464,6 +464,9 @@ importers:
       '@resnovas/engine':
         specifier: workspace:*
         version: link:../engine
+      '@resnovas/feature.commits':
+        specifier: workspace:*
+        version: link:../feature.commits
       '@resnovas/integrations.github':
         specifier: workspace:*
         version: link:../integrations.github

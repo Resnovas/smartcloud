@@ -23,6 +23,9 @@ import { syncFindings } from './managed.js'
 import { type CurrentFile, planSync, type PlannedFile } from './plan.js'
 import { renderAll, type Template, type Values } from './render.js'
 
+// Maintainers are told, not failed, using the same role rules as the commits feature.
+import { authorRole, levelFor } from '@resnovas/feature.commits'
+
 /** The `sync` section of the config. */
 export type SyncConfig = NonNullable<SmartcloudConfig['sync']>
 
@@ -188,11 +191,13 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
         }),
       { concurrency: CONCURRENCY },
     )
+    // Contributors fail; a maintainer's own edit is a warning unless sync.maintainerLevel says otherwise.
+    const level = levelFor(authorRole(envelope.subject.author, config.roles, repository.owner), 'SYNC', sync.maintainerLevel)
     for (const { path, message, local } of syncFindings(files)) {
       yield* report.add({
         feature: FEATURE,
         rule: 'SYNC',
-        level: 'error',
+        level,
         message:
           local === true
             ? `${path} ${message}. Change the local rules in this repository.`

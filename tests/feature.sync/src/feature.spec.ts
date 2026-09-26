@@ -264,6 +264,19 @@ describe('synced files check', () => {
     }),
   )
 
+  it.effect('warns a maintainer or the owner instead of failing them, unless sync.maintainerLevel says error', () =>
+    Effect.gen(function* () {
+      const levels = (result: { readonly findings: ReadonlyArray<{ readonly level: string }> }) => [...new Set(result.findings.map((finding) => finding.level))]
+      const { service } = withHead()
+      const maintainer = yield* run(service, config({}, { roles: { maintainers: ['@Jane'] } }), 'pull_request', pullRequest)
+      expect(levels(maintainer)).toStrictEqual(['warning'])
+      const strict = yield* run(service, config({ maintainerLevel: 'error' }, { roles: { maintainers: ['jane'] } }), 'pull_request', pullRequest)
+      expect(levels(strict)).toStrictEqual(['error'])
+      const owner = { ...pullRequest, pull_request: { ...pullRequest.pull_request, user: { login: 'Resnovas' } } }
+      expect(levels(yield* run(service, config(), 'pull_request', owner))).toStrictEqual(['warning'])
+    }),
+  )
+
   it.effect('asks for a local conflict the pull request adds to be fixed here, not in the source', () =>
     Effect.gen(function* () {
       const { service, state } = seed()
