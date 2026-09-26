@@ -1976,13 +1976,6 @@
         }
       ]
     },
-    "NonEmptyTrimmedString": {
-      "type": "string",
-      "description": "a non empty string",
-      "title": "nonEmptyString",
-      "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
-      "minLength": 1
-    },
     "Stale": {
       "type": "object",
       "required": [

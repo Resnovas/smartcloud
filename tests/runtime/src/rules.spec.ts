@@ -55,6 +55,21 @@ describe('explainRule', () => {
     }),
   )
 
+  it.effect('explains the branch naming policy from its accepted names or its message', () =>
+    Effect.gen(function* () {
+      const listed = yield* explainRule('branches.name', {
+        version: 2,
+        branches: { names: { person: { preset: 'prefixed' } } },
+      })
+      expect(listed.summary).toContain('branch naming policy')
+      expect(listed.fix).toBe('Name the branch one of these ways:\n- person: `<prefix>/<description>`')
+      expect(
+        (yield* explainRule('branches.name', { version: 2, branches: { message: 'Use <you>/<what>.' } })).fix,
+      ).toBe('Use <you>/<what>.')
+      expect(yield* Effect.flip(explainRule('branches.name', { version: 2 }))).toBeInstanceOf(UnknownRule)
+    }),
+  )
+
   it.effect('calls feature notices notices, and rejects anything else by name', () =>
     Effect.gen(function* () {
       const notice = yield* explainRule('stale.sweep', config)
