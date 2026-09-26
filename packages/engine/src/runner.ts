@@ -139,10 +139,26 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
       facets.has(facet) ? Effect.map(read(subject.number), (value) => ({ [facet]: value })) : Effect.succeed({})
     const parts = yield* Effect.all(
       [
-        load('files', github.listFiles),
-        load('reviews', github.listReviews),
-        load('pendingReviewers', github.countRequestedReviewers),
-        load('requestedReviewers', github.listRequestedReviewers),
+        // The paths are the changed files' paths, so a load that needs both lists the files once.
+        Effect.gen(function* () {
+          const listed = yield* Effect.cached(github.listChangedFiles(subject.number))
+          const changed = yield* load('changedFiles', () => listed)
+          const paths = yield* load('files', (number) =>
+            'changedFiles' in changed
+              ? Effect.map(listed, (files) => files.map((file) => file.path))
+              : github.listFiles(number),
+          )
+          return { ...paths, ...changed }
+        }),
+        // Requested reviewers are read once, before reviews rather than beside them: GitHub drops a request
+        // when its review lands, so a reviewer is always in one of the two reads.
+        Effect.gen(function* () {
+          const requested = yield* Effect.cached(github.listRequestedReviewers(subject.number))
+          const pending = yield* load('pendingReviewers', () => Effect.map(requested, (logins) => logins.length))
+          const listed = yield* load('requestedReviewers', () => requested)
+          const reviews = yield* load('reviews', github.listReviews)
+          return { ...pending, ...listed, ...reviews }
+        }),
         load('commits', github.listCommits),
         load('mergeable', github.getMergeable),
         load('checks', github.listChecks),

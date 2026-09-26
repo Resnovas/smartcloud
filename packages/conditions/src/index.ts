@@ -21,6 +21,7 @@ export {
   AssigneeMatches,
   AuthorAssociation,
   BaseBranchMatches,
+  BinaryFilesAdded,
   BranchMatches,
   ChangesSize,
   CheckStatus,
@@ -33,6 +34,7 @@ export {
   ConditionGroup,
   CreatorMatches,
   DescriptionMatches,
+  FileCount,
   FilesMatch,
   HasAssignee,
   HasConflict,
@@ -46,6 +48,7 @@ export {
   IsOpen,
   IsStale,
   LinksIssue,
+  LockfileChanged,
   MilestoneMatches,
   PendingReview,
   RequestedChanges,
@@ -53,7 +56,7 @@ export {
   TitleMatches,
 } from './schema.js'
 export type { And, LeafCondition, Not, Only, Or } from './schema.js'
-export { Association, Check, CheckState, Commit, Mergeable, Review, Subject } from './subject.js'
+export { Association, ChangedFile, Check, CheckState, Commit, Mergeable, Review, Subject } from './subject.js'
 export type { Facet } from './subject.js'
 export { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 export type { Trailer } from './trailers.js'

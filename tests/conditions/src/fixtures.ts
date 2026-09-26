@@ -46,6 +46,10 @@ export const pullRequest = (overrides: Partial<Subject> = {}): Subject => ({
   baseBranch: 'main',
   changes: 40,
   files: ['packages/labels/src/sync.ts', 'README.md'],
+  changedFiles: [
+    { path: 'packages/labels/src/sync.ts', status: 'modified', binary: false },
+    { path: 'README.md', status: 'modified', binary: false },
+  ],
   reviews: [],
   pendingReviewers: 0,
   requestedReviewers: [],

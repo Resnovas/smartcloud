@@ -110,6 +110,7 @@ describe('in-memory GitHub', () => {
       })
       expect(yield* service.listCommits(7)).toStrictEqual([])
       expect(yield* service.listFiles(7)).toStrictEqual(['a.ts'])
+      expect(yield* service.listChangedFiles(7)).toStrictEqual([{ path: 'a.ts', status: 'modified', binary: false }])
       expect(yield* service.listReviews(7)).toHaveLength(1)
       expect(yield* service.countRequestedReviewers(7)).toBe(1)
       expect(yield* service.listRequestedReviewers(7)).toStrictEqual(['bo'])
@@ -139,6 +140,16 @@ describe('in-memory GitHub', () => {
         requestedReviewers: ['bo', 'cy'],
         submittedReviews: [{ event: 'APPROVE', body: 'ok' }],
       })
+      const logo = { path: 'logo.png', status: 'added' as const, binary: true }
+      state.pulls.set(11, {
+        commits: [],
+        files: ['logo.png'],
+        changedFiles: [logo],
+        reviews: [],
+        requestedReviewers: [],
+        submittedReviews: [],
+      })
+      expect(yield* service.listChangedFiles(11)).toStrictEqual([logo])
       const missing = yield* Effect.flip(service.listFiles(9))
       expect(missing.message).toBe('listFiles: not found (pull request #9)')
     }),

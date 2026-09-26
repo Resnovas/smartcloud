@@ -558,6 +558,59 @@ export const ChangesSize = Schema.Struct({
 }).annotations({ identifier: 'changesSize', description: 'Lines added plus deleted are at least min and below max.' })
 
 /**
+ * A dependency lockfile changed (or, when false, none did).
+ *
+ * @remarks
+ * A lockfile is recognised by its file name in any directory: npm, pnpm, Yarn,
+ * Bun, Deno, Cargo, Go, Bundler, Composer, Poetry, Pipenv, uv, PDM, Gradle,
+ * NuGet, CocoaPods, Swift Package Manager, Pub, Mix, Nix flakes and Terraform.
+ *
+ * @example
+ * ```ts import.meta.vitest name="LockfileChanged"
+ * import { LockfileChanged } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(LockfileChanged)({ type: 'lockfileChanged', condition: true }) // => true
+ * ```
+ */
+export const LockfileChanged = flag('lockfileChanged', 'A dependency lockfile changed, or none did when false.')
+
+/**
+ * The number of changed files falls in `[min, max)`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="FileCount"
+ * import { FileCount } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(FileCount)({ type: 'fileCount', min: 1, max: 50 }) // => true
+ * ```
+ */
+export const FileCount = Schema.Struct({
+  type: Schema.Literal('fileCount'),
+  min: Count,
+  max: Schema.optionalWith(Count, { exact: true }),
+}).annotations({ identifier: 'fileCount', description: 'The number of changed files is at least min and below max.' })
+
+/**
+ * The pull request adds a binary file (or, when false, adds none).
+ *
+ * @remarks
+ * A file counts as binary when GitHub shows no text diff for it and counts no
+ * changed lines. Only added files count: changing or deleting an existing
+ * binary file does not.
+ *
+ * @example
+ * ```ts import.meta.vitest name="BinaryFilesAdded"
+ * import { BinaryFilesAdded } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(BinaryFilesAdded)({ type: 'binaryFilesAdded', condition: false }) // => true
+ * ```
+ */
+export const BinaryFilesAdded = flag('binaryFilesAdded', 'The pull request adds a binary file, or none when false.')
+
+/**
  * No reviewer is requesting changes, at least `condition` approved, and none
  * are pending unless `allowPending` is set.
  *
@@ -655,6 +708,9 @@ const Leaf = Schema.Union(
   FilesMatch,
   CodeownersTouched,
   ChangesSize,
+  LockfileChanged,
+  FileCount,
+  BinaryFilesAdded,
   IsApproved,
   CommitMessagesMatch,
   HasTrailer,

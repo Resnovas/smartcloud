@@ -66,6 +66,31 @@ export const Commit = Schema.Struct({
 export type Commit = typeof Commit.Type
 
 /**
+ * A file a pull request changes, with what happened to it.
+ *
+ * @remarks
+ * `binary` is true when GitHub has no text diff for the file and counts no
+ * added or deleted lines, which is how it reports binary content. An empty
+ * text file looks the same, so it counts as binary too.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ChangedFile"
+ * import { ChangedFile } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(ChangedFile)({ path: 'logo.png', status: 'added', binary: true }) // => true
+ * ```
+ */
+export const ChangedFile = Schema.Struct({
+  path: Schema.String,
+  status: Schema.Literal('added', 'removed', 'modified', 'renamed', 'copied', 'changed', 'unchanged'),
+  /** GitHub reports the file as binary: no text diff and no changed lines. */
+  binary: Schema.Boolean,
+})
+/** A decoded {@link ChangedFile}. */
+export type ChangedFile = typeof ChangedFile.Type
+
+/**
  * Whether a pull request can merge into its base branch, as GitHub reports
  * it: `UNKNOWN` while GitHub is still computing it.
  *
@@ -148,8 +173,8 @@ export type Association = typeof Association.Type
  * normalised from whichever GitHub event delivered it.
  *
  * @remarks
- * `files`, `reviews`, `pendingReviewers`, `requestedReviewers`, `commits`,
- * `mergeable`, `checks` and `codeowners` are facets that cost an API call each, so the engine loads only the ones a
+ * `files`, `changedFiles`, `reviews`, `pendingReviewers`, `requestedReviewers`,
+ * `commits`, `mergeable`, `checks` and `codeowners` are facets that cost an API call each, so the engine loads only the ones a
  * config needs (see `requiredFacets`). Evaluating a condition whose facet was not loaded fails
  * with `MissingFacet` rather than guessing.
  *
@@ -188,6 +213,8 @@ export const Subject = Schema.Struct({
   /** Lines added plus lines deleted. */
   changes: Schema.optionalWith(Schema.Number, { exact: true }),
   files: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
+  /** The changed files with their status and whether they are binary. */
+  changedFiles: Schema.optionalWith(Schema.Array(ChangedFile), { exact: true }),
   reviews: Schema.optionalWith(Schema.Array(Review), { exact: true }),
   pendingReviewers: Schema.optionalWith(Schema.Number, { exact: true }),
   /** The logins and team slugs asked to review that have not reviewed yet. */
@@ -204,4 +231,12 @@ export type Subject = typeof Subject.Type
 
 /** A subject property that is loaded on demand. */
 export type Facet =
-  'files' | 'reviews' | 'pendingReviewers' | 'requestedReviewers' | 'commits' | 'mergeable' | 'checks' | 'codeowners'
+  | 'files'
+  | 'changedFiles'
+  | 'reviews'
+  | 'pendingReviewers'
+  | 'requestedReviewers'
+  | 'commits'
+  | 'mergeable'
+  | 'checks'
+  | 'codeowners'

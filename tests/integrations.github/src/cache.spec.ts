@@ -248,6 +248,7 @@ describe('cached reads: invalidation after writes', () => {
         const read = Effect.all([
           github.listCommits(7),
           github.listFiles(7),
+          github.listChangedFiles(7),
           github.listReviews(7),
           github.countRequestedReviewers(7),
           github.listRequestedReviewers(7),
@@ -264,7 +265,8 @@ describe('cached reads: invalidation after writes', () => {
         expect(yield* github.listRequestedReviewers(7)).toStrictEqual([])
         yield* read
         expect(calls('GET', `${REPO}/pulls/7/commits`)).toBe(1)
-        expect(calls('GET', `${REPO}/pulls/7/files`)).toBe(1)
+        // The paths and the changed files are separate reads of the same listing.
+        expect(calls('GET', `${REPO}/pulls/7/files`)).toBe(2)
         expect(calls('GET', `${REPO}/pulls/7`)).toBe(1)
         expect(calls('GET', `${REPO}/pulls/7/reviews`)).toBe(2)
         expect(calls('GET', `${REPO}/pulls/7/requested_reviewers`)).toBe(6)
