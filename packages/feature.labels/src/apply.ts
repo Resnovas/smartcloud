@@ -1,0 +1,137 @@
+/**
+ * @file packages/feature.labels/src/apply.ts
+ *
+ * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Licensed under the Fair Core License, Version 1.0, MIT Future License
+ * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
+ * the licence key functionality, or modify any part of the software that the
+ * licence key protects.
+ *
+ * Contributions are made under the Developer Certificate of Origin (DCO.md) and
+ * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
+ * (CODE_OF_CONDUCT.md) and the Eventiva Cooperation Commitment
+ * (COOPERATION_COMMITMENT.md).
+ *
+ * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
+ */
+
+import {
+  type ConditionGroup,
+  evaluate,
+  type MissingFacet,
+  requiredFacets,
+  type Facet,
+  type Subject,
+} from '@resnovas/conditions'
+import type { SmartcloudConfig } from '@resnovas/config'
+import { Report } from '@resnovas/engine'
+import { GitHub, type GitHubError } from '@resnovas/integrations.github'
+import { Effect } from 'effect'
+import { sameName } from './sync.js'
+
+const FEATURE = 'labels'
+
+type Rules = NonNullable<SmartcloudConfig['labelling']>
+
+/**
+ * The name a labelling rule applies.
+ *
+ * @remarks
+ * `rule.label` is usually a key of the config's `labels` section, and the
+ * label's `name` is what GitHub knows it by. A key that is not defined there
+ * is taken as the label's name itself.
+ *
+ * @example
+ * ```ts
+ * labelName({ version: 2, labels: { bug: { name: 'Type: Bug', color: 'd73a4a' } } }, 'bug') // 'Type: Bug'
+ * ```
+ *
+ * @param config - The whole config.
+ * @param label - The rule's `label`.
+ * @returns The label's name on GitHub.
+ */
+export const labelName = (config: SmartcloudConfig, label: string): string => config.labels?.[label]?.name ?? label
+
+/**
+ * The facets every labelling rule's conditions need loaded.
+ *
+ * @example
+ * ```ts
+ * labellingFacets({ version: 2, labelling: { big: { label: 'big', when: { condition: [{ type: 'filesMatch', condition: '**' }] } } } })
+ * // Set { 'files' }
+ * ```
+ *
+ * @param config - The whole config.
+ * @returns The facets, empty when there is no `labelling` section.
+ */
+export const labellingFacets = (config: SmartcloudConfig): ReadonlySet<Facet> =>
+  requiredFacets(Object.values(config.labelling ?? {}).map((rule): ConditionGroup => rule.when))
+
+// A label is wanted when any rule for it passes, so two rules naming the same
+// label (for example one per subject kind) never fight each other.
+const decide = (config: SmartcloudConfig, rules: Rules, subject: Subject) =>
+  Effect.reduce(Object.values(rules), new Map<string, { name: string; wanted: boolean }>(), (decisions, rule) => {
+    if (!(rule.on ?? ['pullRequest', 'issue']).includes(subject.kind)) return Effect.succeed(decisions)
+    const name = labelName(config, rule.label)
+    return Effect.map(evaluate(rule.when, subject), (evaluation) => {
+      const key = name.toLowerCase()
+      decisions.set(key, { name, wanted: (decisions.get(key)?.wanted ?? false) || evaluation.passed })
+      return decisions
+    })
+  })
+
+/**
+ * Adds and removes labels on a pull request or issue as its `labelling`
+ * rules pass and fail.
+ *
+ * @remarks
+ * A rule applies to the subject kinds in its `on`, or both when omitted. A
+ * label whose rule passes is added when missing; one whose rules all fail is
+ * removed when present. Names compare ignoring case, as GitHub does. When a
+ * label disappears between reading the subject and removing it, GitHub
+ * answers NotFound; that race is a warning, not a failure.
+ *
+ * @example
+ * ```ts
+ * yield* applyLabels(config, subject) // with GitHub and Report provided
+ * ```
+ *
+ * @param config - The whole config; `labelling` and `labels` are read.
+ * @param subject - The pull request or issue, with the facets its rules need.
+ * @returns Nothing; the changes and warnings are in the report.
+ */
+export const applyLabels = (
+  config: SmartcloudConfig,
+  subject: Subject,
+): Effect.Effect<void, GitHubError | MissingFacet, GitHub | Report> =>
+  Effect.gen(function* () {
+    if (config.labelling === undefined) return
+    const github = yield* GitHub
+    const report = yield* Report
+    const decisions = yield* decide(config, config.labelling, subject)
+    const present = (name: string) => subject.labels.some((label) => sameName(label, name))
+    const decided = [...decisions.values()]
+
+    const toAdd = decided.filter((entry) => entry.wanted && !present(entry.name)).map((entry) => entry.name)
+    if (toAdd.length > 0) {
+      yield* github.addLabels(subject.number, toAdd)
+      for (const name of toAdd)
+        yield* report.change({ feature: FEATURE, description: `added label "${name}" to #${subject.number}` })
+    }
+
+    for (const entry of decided.filter((candidate) => !candidate.wanted && present(candidate.name))) {
+      yield* github.removeLabel(subject.number, entry.name).pipe(
+        Effect.zipRight(
+          report.change({ feature: FEATURE, description: `removed label "${entry.name}" from #${subject.number}` }),
+        ),
+        Effect.catchTag('NotFound', () =>
+          report.add({
+            feature: FEATURE,
+            rule: 'labels.remove',
+            level: 'warning',
+            message: `label "${entry.name}" was already gone from #${subject.number} when smartcloud removed it`,
+          }),
+        ),
+      )
+    }
+  })
