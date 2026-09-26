@@ -1,19 +1,31 @@
-# @format
-
+# house:managed:begin - synced from Resnovas/.github templates/.github/ISSUE_TEMPLATE/config.yml. Edits inside this block are overwritten.
 blank_issues_enabled: false
 contact_links:
-  - name: Discussion
-    url: https://github.com/resnovas/smartcloud/discussions/new
-    about: Start a converstation about our project
-  - name: Question & Answers
-    url: https://github.com/resnovas/smartcloud/discussions/new
-    about: Start a converstation about our project
-  - name: Feature Requests
-    url: https://github.com/resnovas/smartcloud/discussions/new
-    about: Open a feature request discussion
-  - name: Project Showcase
-    url: https://github.com/resnovas/smartcloud/discussions/new
-    about: Showcase your project using our project
-  - name: Join the discord community
-    url: https://videndum.studio/discord
-    about: Looking for help with our projects, this is an amazing place to start
+  - name: Security vulnerability
+    url: https://github.com/Resnovas/smartcloud/security/advisories/new
+    about: Report it privately. Never in a public issue.
+  - name: Question or support
+    url: https://github.com/Resnovas/smartcloud/discussions
+    about: The issue tracker is for bugs and feature requests only.
+# house:managed:end
+# house:local - add further contact links below, as list items under contact_links.
+# Previous content of this file, kept when it was first synced. Re-add what is still needed as local rules, then delete this.
+# # @format
+#
+# blank_issues_enabled: false
+# contact_links:
+#   - name: Discussion
+#     url: https://github.com/resnovas/smartcloud/discussions/new
+#     about: Start a converstation about our project
+#   - name: Question & Answers
+#     url: https://github.com/resnovas/smartcloud/discussions/new
+#     about: Start a converstation about our project
+#   - name: Feature Requests
+#     url: https://github.com/resnovas/smartcloud/discussions/new
+#     about: Open a feature request discussion
+#   - name: Project Showcase
+#     url: https://github.com/resnovas/smartcloud/discussions/new
+#     about: Showcase your project using our project
+#   - name: Join the discord community
+#     url: https://videndum.studio/discord
+#     about: Looking for help with our projects, this is an amazing place to start

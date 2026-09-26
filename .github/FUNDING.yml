@@ -1,10 +1,15 @@
-# @format
-
-# These are supported funding model platforms
-
-github: TGTGamer # Replace with up to 4 GitHub Sponsors-enabled usernames e.g., [user1, user2]
-patreon: # Replace with a single Patreon username
-open_collective: smartcloudgg # Replace with a single Open Collective username
-liberapay: TGTGamer # Replace with a single Liberapay username
-issuehunt: videndum # Replace with a single IssueHunt username
-custom: # Replace with up to 4 custom sponsorship URLs e.g., ['link1', 'link2']
+# house:managed:begin - synced from Resnovas/.github templates/.github/FUNDING.yml. Edits inside this block are overwritten.
+github: [TGTGamer]
+# house:managed:end
+# house:local - add further funding platforms below.
+# Previous content of this file, kept when it was first synced. Re-add what is still needed as local rules, then delete this.
+# # @format
+#
+# # These are supported funding model platforms
+#
+# github: TGTGamer # Replace with up to 4 GitHub Sponsors-enabled usernames e.g., [user1, user2]
+# patreon: # Replace with a single Patreon username
+# open_collective: smartcloudgg # Replace with a single Open Collective username
+# liberapay: TGTGamer # Replace with a single Liberapay username
+# issuehunt: videndum # Replace with a single IssueHunt username
+# custom: # Replace with up to 4 custom sponsorship URLs e.g., ['link1', 'link2']

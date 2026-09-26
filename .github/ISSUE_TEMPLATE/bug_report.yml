@@ -1,0 +1,89 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/ISSUE_TEMPLATE/bug_report.yml. Edits inside this block are overwritten.
+name: Bug report
+description: Something is broken on the production branch, and you can reproduce it.
+title: 'fix: '
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A bug report needs a reproduction on the production branch, logs, and a recording or screenshots.
+        Reports without them are slowed down or closed for lack of evidence.
+        Security issue? Do not use this form: follow the [Security Policy](https://github.com/Resnovas/smartcloud/blob/HEAD/SECURITY.md).
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The released version exactly as published (for example v1.4.2), or the full commit SHA of the production branch you reproduced on.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Exact steps, starting from a clean state, that anyone can follow.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: behaviour
+    attributes:
+      label: Expected and actual behaviour
+      description: What you expected to happen, and what happened instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: The relevant log output, copied from what you ran. Stack traces must be real, not reconstructed.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Recording or screenshots
+      description: Drag and drop a recording or screenshots showing the problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: duplicates
+    attributes:
+      label: Duplicate search
+      description: What you searched for in open and closed issues, and any related issues you found.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-level
+    attributes:
+      label: AI level
+      description: The highest level of AI involvement in this report. See the [AI Contribution Policy](https://github.com/Resnovas/smartcloud/blob/HEAD/AI_POLICY.md#levels).
+      options:
+        - none
+        - autocomplete
+        - chat
+        - agent
+        - autonomous
+    validations:
+      required: true
+
+  - type: input
+    id: ai-tools
+    attributes:
+      label: AI tools
+      description: Every AI tool and model used, or none.
+    validations:
+      required: true
+# house:managed:end
+# house:local - add further fields below, as list items under body.
