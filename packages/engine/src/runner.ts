@@ -16,7 +16,7 @@
 
 import type { Facet, Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
-import { GitHub, type GitHubError } from '@resnovas/integrations.github'
+import { GitHub, type GitHubError, type GitHubService } from '@resnovas/integrations.github'
 import { Cause, type Context, Duration, Effect, Exit, LogLevel, Metric, MetricBoundaries } from 'effect'
 import {
   decodeEvent,
@@ -97,6 +97,20 @@ export const featureDuration = Metric.histogram(
   'How long each smartcloud feature takes, in milliseconds, by feature and outcome',
 )
 
+// GitHub reads the first CODEOWNERS file it finds in these places.
+const CODEOWNERS = ['.github/CODEOWNERS', 'CODEOWNERS', 'docs/CODEOWNERS']
+
+// The CODEOWNERS file on the pull request's base branch (the default branch
+// when a sweep's listing does not say), or an empty string when there is none.
+const readCodeowners = (github: GitHubService, ref: string | undefined): Effect.Effect<string, GitHubError> =>
+  Effect.reduce(CODEOWNERS, undefined as string | undefined, (found, path) =>
+    found === undefined
+      ? github
+          .getFile({ ...github.coordinates, path, ...(ref === undefined ? {} : { ref }) })
+          .pipe(Effect.catchTag('NotFound', () => Effect.succeed(undefined)))
+      : Effect.succeed(found),
+  ).pipe(Effect.map((text) => text ?? ''))
+
 /**
  * Loads the facets a run needs onto a pull request subject, concurrently.
  *
@@ -132,6 +146,7 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
         load('commits', github.listCommits),
         load('mergeable', github.getMergeable),
         load('checks', github.listChecks),
+        load('codeowners', () => readCodeowners(github, subject.baseBranch)),
       ],
       { concurrency: 'unbounded' },
     )

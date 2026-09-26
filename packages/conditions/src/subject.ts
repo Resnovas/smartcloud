@@ -141,7 +141,7 @@ export type Association = typeof Association.Type
  *
  * @remarks
  * `files`, `reviews`, `pendingReviewers`, `requestedReviewers`, `commits`,
- * `mergeable` and `checks` are facets that cost an API call each, so the engine loads only the ones a
+ * `mergeable`, `checks` and `codeowners` are facets that cost an API call each, so the engine loads only the ones a
  * config needs (see `requiredFacets`). Evaluating a condition whose facet was not loaded fails
  * with `MissingFacet` rather than guessing.
  *
@@ -188,9 +188,12 @@ export const Subject = Schema.Struct({
   mergeable: Schema.optionalWith(Mergeable, { exact: true }),
   /** The CI checks on the head commit. */
   checks: Schema.optionalWith(Schema.Array(Check), { exact: true }),
+  /** The CODEOWNERS file on the base branch; an empty string when there is none. */
+  codeowners: Schema.optionalWith(Schema.String, { exact: true }),
 })
 /** A decoded {@link Subject}. */
 export type Subject = typeof Subject.Type
 
 /** A subject property that is loaded on demand. */
-export type Facet = 'files' | 'reviews' | 'pendingReviewers' | 'requestedReviewers' | 'commits' | 'mergeable' | 'checks'
+export type Facet =
+  'files' | 'reviews' | 'pendingReviewers' | 'requestedReviewers' | 'commits' | 'mergeable' | 'checks' | 'codeowners'

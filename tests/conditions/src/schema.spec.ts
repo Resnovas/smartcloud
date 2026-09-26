@@ -68,6 +68,9 @@ describe('ConditionGroup', () => {
       { type: 'isStale', condition: 30 },
       { type: 'isAbandoned', condition: 14, label: 'stale' },
       { type: 'filesMatch', condition: 'src/**' },
+      { type: 'codeownersTouched', condition: '@resnovas/core' },
+      { type: 'codeownersTouched', condition: '@jane' },
+      { type: 'codeownersTouched', condition: 'jane@example.com' },
       { type: 'changesSize', min: 0, max: 10 },
       { type: 'isApproved', condition: 1 },
       { type: 'isApproved', condition: 2, allowPending: true },
@@ -85,6 +88,10 @@ describe('ConditionGroup', () => {
     expect(Either.isLeft(decode({ condition: [{ type: 'titleMatches', condition: '[' }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'linksIssue', condition: true, keys: [] }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'linksIssue', condition: true, keys: ['SMC-'] }] }))).toBe(true)
+    expect(Either.isLeft(decode({ condition: [{ type: 'codeownersTouched', condition: 'core' }] }))).toBe(true)
+    expect(Either.isLeft(decode({ condition: [{ type: 'codeownersTouched', condition: '@org/core team' }] }))).toBe(
+      true,
+    )
   })
 
   it('round-trips: encoding then decoding returns the original', () => {

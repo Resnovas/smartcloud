@@ -275,6 +275,7 @@ describe('loadFacets', () => {
           'commits',
           'mergeable',
           'checks',
+          'codeowners',
         ] as const),
       ).pipe(Effect.provideService(GitHub, service))
       expect(subject).toMatchObject({
@@ -285,7 +286,60 @@ describe('loadFacets', () => {
         commits: [{ sha: 'a' }],
         mergeable: 'MERGEABLE',
         checks: [],
+        codeowners: '',
       })
+    }),
+  )
+
+  it.effect("reads the first CODEOWNERS file GitHub would, on the pull request's base branch", () =>
+    Effect.gen(function* () {
+      const { service, state } = memory()
+      state.files.set('Resnovas/example/CODEOWNERS@main', '* @org/core')
+      state.files.set('Resnovas/example/docs/CODEOWNERS@main', '* @org/docs')
+      state.files.set('Resnovas/example/.github/CODEOWNERS@', '* @org/default')
+      const pr = {
+        kind: 'pullRequest' as const,
+        number: 7,
+        title: 't',
+        body: '',
+        author: 'a',
+        open: true,
+        locked: false,
+        labels: [],
+        updatedAt: new Date(0),
+      }
+      const load = (subject: Subject) =>
+        Effect.map(loadFacets(subject, new Set(['codeowners'] as const)), (loaded) => loaded.codeowners).pipe(
+          Effect.provideService(GitHub, service),
+        )
+      expect(yield* load({ ...pr, baseBranch: 'main' })).toBe('* @org/core')
+      // A sweep's listing has no base branch, so the default branch is read.
+      expect(yield* load(pr)).toBe('* @org/default')
+    }),
+  )
+
+  it.effect('fails the CODEOWNERS facet on an error other than a missing file', () =>
+    Effect.gen(function* () {
+      const { service } = memory()
+      const github = {
+        ...service,
+        getFile: () => Effect.fail(new Forbidden({ operation: 'getFile', detail: 'no access' })),
+      }
+      const pr = {
+        kind: 'pullRequest' as const,
+        number: 7,
+        title: 't',
+        body: '',
+        author: 'a',
+        open: true,
+        locked: false,
+        labels: [],
+        updatedAt: new Date(0),
+      }
+      const exit = yield* Effect.exit(
+        loadFacets(pr, new Set(['codeowners'] as const)).pipe(Effect.provideService(GitHub, github)),
+      )
+      expect(exit._tag).toBe('Failure')
     }),
   )
 
