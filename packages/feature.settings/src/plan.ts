@@ -34,7 +34,16 @@ export type RolesConfig = typeof Roles.Type
 /** What a repository ships, which decides its deployment environments. */
 export type ProjectType = 'saas' | 'desktop' | 'library' | 'none'
 
-/** The deployment environments each project type gets. */
+/**
+ * The deployment environments each project type gets.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ENVIRONMENT_SETS"
+ * import { ENVIRONMENT_SETS } from '@resnovas/feature.settings'
+ *
+ * ENVIRONMENT_SETS.library.join(', ') // => 'Release'
+ * ```
+ */
 export const ENVIRONMENT_SETS: Readonly<Record<ProjectType, ReadonlyArray<string>>> = {
   saas: ['Production', 'Staging', 'Development'],
   desktop: ['Windows', 'Linux', 'macOS', 'Windows Beta', 'Linux Beta', 'macOS Beta'],
@@ -42,7 +51,16 @@ export const ENVIRONMENT_SETS: Readonly<Record<ProjectType, ReadonlyArray<string
   none: [],
 }
 
-/** The ruleset name used when the config does not name one. */
+/**
+ * The ruleset name used when the config does not name one.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_RULESET_NAME"
+ * import { DEFAULT_RULESET_NAME } from '@resnovas/feature.settings'
+ *
+ * DEFAULT_RULESET_NAME // => 'house: default branch'
+ * ```
+ */
 export const DEFAULT_RULESET_NAME = 'house: default branch'
 
 /** Fields every planned step carries. */
@@ -114,12 +132,29 @@ export interface DeploymentPoliciesStep extends StepBase {
 /** One planned change to a repository. */
 export type SettingsStep = RestStep | GraphqlStep | RulesetStep | DeploymentPoliciesStep
 
-/** The tag pattern a protected environment may deploy release tags from. */
+/**
+ * The tag pattern a protected environment may deploy release tags from.
+ *
+ * @example
+ * ```ts import.meta.vitest name="RELEASE_TAG_PATTERN"
+ * import { RELEASE_TAG_PATTERN } from '@resnovas/feature.settings'
+ *
+ * RELEASE_TAG_PATTERN // => 'v*'
+ * ```
+ */
 export const RELEASE_TAG_PATTERN = 'v*'
 
 /**
  * The environments to create: explicit `names` win, otherwise `projectType`
  * picks a set.
+ *
+ * @example
+ * ```ts import.meta.vitest name="environmentsFor"
+ * import { environmentsFor } from '@resnovas/feature.settings'
+ *
+ * environmentsFor({ projectType: 'saas' }).join(', ') // => 'Production, Staging, Development'
+ * environmentsFor({ names: ['Live'], projectType: 'saas' }).join(', ') // => 'Live'
+ * ```
  *
  * @param environments - The `settings.environments` section.
  * @returns The environment names, in order; empty when nothing is configured.
@@ -139,6 +174,14 @@ export const environmentsFor = (environments: SettingsConfig['environments']): R
  * development, preview and beta channels accept any branch so they stay
  * useful for testing.
  *
+ * @example
+ * ```ts import.meta.vitest name="isProtectedEnvironment"
+ * import { isProtectedEnvironment } from '@resnovas/feature.settings'
+ *
+ * isProtectedEnvironment('Production') // => true
+ * isProtectedEnvironment('macOS Beta') // => false
+ * ```
+ *
  * @param name - The environment name.
  * @returns True for shipping environments.
  */
@@ -155,6 +198,13 @@ export const isProtectedEnvironment = (name: string): boolean =>
  * not classic protection) every branch could deploy. The policies themselves
  * come from {@link deploymentPoliciesFor}.
  *
+ * @example
+ * ```ts import.meta.vitest name="environmentBody"
+ * import { environmentBody } from '@resnovas/feature.settings'
+ *
+ * JSON.stringify(environmentBody('Staging')) // => '{"deployment_branch_policy":null}'
+ * ```
+ *
  * @param name - The environment name.
  * @returns The deployment branch policy for that environment.
  */
@@ -165,6 +215,14 @@ export const environmentBody = (name: string): Readonly<Record<string, unknown>>
 /**
  * The deployment policies a protected environment gets: the default branch
  * and release tags.
+ *
+ * @example
+ * ```ts import.meta.vitest name="deploymentPoliciesFor"
+ * import { deploymentPoliciesFor } from '@resnovas/feature.settings'
+ *
+ * const repository = { owner: 'o', name: 'r', fullName: 'o/r', nodeId: 'R_1', private: false, defaultBranch: 'main' }
+ * deploymentPoliciesFor(repository).map((policy) => `${policy.type} ${policy.name}`).join(', ') // => 'branch main, tag v*'
+ * ```
  *
  * @param repository - The repository, for its default branch.
  * @returns The policies, branch first.
@@ -187,6 +245,15 @@ const ADMIN_BYPASS: BypassActor = { actor_id: 5, actor_type: 'RepositoryRole', b
  * status checks bind only once two or more maintainers are configured, so a
  * sole maintainer is never blocked by the review gate. Admins may bypass
  * unless `adminBypass` is false.
+ *
+ * @example
+ * ```ts import.meta.vitest name="rulesetBody"
+ * import { rulesetBody } from '@resnovas/feature.settings'
+ *
+ * const body = rulesetBody({ blockForcePush: true, adminBypass: false }, undefined)
+ * body.rules.map((rule) => rule.type).join(', ') // => 'non_fast_forward'
+ * body.bypass_actors.length // => 0
+ * ```
  *
  * @param ruleset - The `settings.ruleset` section.
  * @param roles - The `roles` section, for the maintainer count.
@@ -357,9 +424,12 @@ const securitySteps = (security: SettingsConfig['security'], repository: Reposit
  * planned for public repositories.
  *
  * @example
- * ```ts
+ * ```ts import.meta.vitest name="planSettings"
+ * import { planSettings } from '@resnovas/feature.settings'
+ *
+ * const repository = { owner: 'o', name: 'r', fullName: 'o/r', nodeId: 'R_1', private: false, defaultBranch: 'main' }
  * const steps = planSettings({ merging: { squash: true } }, undefined, repository)
- * // [{ kind: 'rest', id: 'merging', request: { method: 'PATCH', path: '', body: { allow_squash_merge: true } }, ... }]
+ * steps.map((step) => step.id).join(', ') // => 'merging'
  * ```
  *
  * @param settings - The `settings` section.

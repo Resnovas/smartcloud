@@ -20,14 +20,32 @@ import { ConfigNotFound, ConfigSource, formatExtendsRef, type ExtendsRef } from 
 import { makeLiveGitHub, type GitHubError, type GitHubService, type LiveOptions, type RepositoryCoordinates } from '@resnovas/integrations.github'
 import { Config, Data, Effect, Layer, Redacted, Schedule } from 'effect'
 
-/** No GitHub token could be found. */
+/**
+ * No GitHub token could be found.
+ *
+ * @example
+ * ```ts import.meta.vitest name="MissingToken"
+ * import { MissingToken } from '@resnovas/runtime'
+ *
+ * new MissingToken().message.includes('GITHUB_TOKEN') // => true
+ * ```
+ */
 export class MissingToken extends Data.TaggedError('MissingToken')<Record<never, never>> {
   override get message() {
     return 'no GitHub token: set GITHUB_TOKEN, or sign in with `gh auth login`'
   }
 }
 
-/** A repository was not given as `owner/name`. */
+/**
+ * A repository was not given as `owner/name`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="InvalidRepository"
+ * import { InvalidRepository } from '@resnovas/runtime'
+ *
+ * new InvalidRepository({ repository: 'x' }).message // => 'the repository must be owner/name, got "x"'
+ * ```
+ */
 export class InvalidRepository extends Data.TaggedError('InvalidRepository')<{ readonly repository: string }> {
   override get message() {
     return `the repository must be owner/name, got "${this.repository}"`
@@ -41,6 +59,15 @@ export class InvalidRepository extends Data.TaggedError('InvalidRepository')<{ r
  * @remarks
  * The token stays redacted from the moment it is read, so it can never be
  * logged. It is only resolved when something needs GitHub.
+ *
+ * @example
+ * ```ts
+ * import { resolveToken } from '@resnovas/runtime'
+ * import { Effect, Redacted } from 'effect'
+ *
+ * // Needs a CommandExecutor for the `gh auth token` fallback.
+ * const header = resolveToken.pipe(Effect.map((token) => `Bearer ${Redacted.value(token)}`))
+ * ```
  *
  * @returns The redacted token.
  */
@@ -63,6 +90,15 @@ const REPOSITORY = /^[^/\s]+\/[^/\s]+$/
 /**
  * Parses `owner/name`.
  *
+ * @example
+ * ```ts import.meta.vitest name="parseRepository"
+ * import { parseRepository } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * Effect.runSync(parseRepository('Resnovas/smartcloud')).repo // => 'smartcloud'
+ * Effect.runSync(Effect.flip(parseRepository('a/b/c')))._tag // => 'InvalidRepository'
+ * ```
+ *
  * @param repository - The repository as given.
  * @returns Its coordinates.
  */
@@ -78,6 +114,13 @@ export type Connect = (
 
 /**
  * Connects to the real GitHub API with the token from {@link resolveToken}.
+ *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ *
+ * const github = liveConnect()({ owner: 'Resnovas', repo: 'smartcloud' })
+ * ```
  *
  * @param options - Set `fetch` to replace the global `fetch`, for tests.
  * @returns The connector.
@@ -95,8 +138,16 @@ export const liveConnect =
  * It is still a `ConfigNotFound` to the config loader, but its message keeps
  * the reason, so the user is told to sign in or retry rather than that the
  * preset is missing.
+ *
+ * @example
+ * ```ts import.meta.vitest name="PresetUnreadable"
+ * import { PresetUnreadable } from '@resnovas/runtime'
+ *
+ * new PresetUnreadable({ owner: 'Resnovas', repo: '.github', path: 'a.yml' }, 'down').message // => 'the extends preset Resnovas/.github/a.yml could not be read: down'
+ * ```
  */
 export class PresetUnreadable extends ConfigNotFound {
+  /** Why the preset could not be read. */
   readonly reason: string
 
   constructor(ref: ExtendsRef, reason: string) {
@@ -113,6 +164,16 @@ export class PresetUnreadable extends ConfigNotFound {
  * The error for a preset read that failed: only GitHub saying the file is
  * not there means the preset is missing.
  *
+ * @example
+ * ```ts import.meta.vitest name="presetError"
+ * import { NotFound, Unavailable } from '@resnovas/integrations.github'
+ * import { presetError, PresetUnreadable } from '@resnovas/runtime'
+ *
+ * const toError = presetError({ owner: 'Resnovas', repo: '.github', path: 'a.yml' })
+ * toError(new NotFound({ operation: 'getFile', detail: 'x' })) instanceof PresetUnreadable // => false
+ * toError(new Unavailable({ operation: 'getFile', detail: 'down' })) instanceof PresetUnreadable // => true
+ * ```
+ *
  * @param ref - The preset.
  * @returns A mapper from the read's failure to the loader's error.
  */
@@ -125,6 +186,15 @@ export const presetError =
  * Reads presets named in `extends` from GitHub. The token is resolved only
  * when a config actually extends something, so checking a config without
  * presets works offline.
+ *
+ * @example
+ * ```ts
+ * import { resolveConfig } from '@resnovas/config'
+ * import { gitHubConfigSource } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * const resolved = resolveConfig('version: 2\n', 'smartcloud.yml').pipe(Effect.provide(gitHubConfigSource()))
+ * ```
  *
  * @param options - Set `fetch` to replace the global `fetch`, for tests.
  * @returns The config source.

@@ -17,12 +17,28 @@
 
 import type { Review } from '@resnovas/conditions'
 
-/** The default base URL findings link to when the config sets no `links.policyBase`. */
+/**
+ * The default base URL findings link to when the config sets no `links.policyBase`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DEFAULT_POLICY_BASE"
+ * import { DEFAULT_POLICY_BASE } from '@resnovas/feature.reviews'
+ *
+ * `${DEFAULT_POLICY_BASE}/GOVERNANCE.md#review`.endsWith('/GOVERNANCE.md#review') // => true
+ * ```
+ */
 export const DEFAULT_POLICY_BASE = 'https://github.com/Resnovas/.github/blob/main'
 
 /**
  * Compares two GitHub logins the way GitHub does: case-insensitively, and
  * ignoring a leading `@` that configs often carry.
+ *
+ * @example
+ * ```ts import.meta.vitest name="sameLogin"
+ * import { sameLogin } from '@resnovas/feature.reviews'
+ *
+ * sameLogin('@Octocat', 'octocat') // => true
+ * ```
  *
  * @param a - One login.
  * @param b - The other login.
@@ -33,6 +49,13 @@ export const sameLogin = (a: string, b: string): boolean =>
 
 /**
  * Strips the leading `@` a config may write before a login.
+ *
+ * @example
+ * ```ts import.meta.vitest name="normaliseLogin"
+ * import { normaliseLogin } from '@resnovas/feature.reviews'
+ *
+ * normaliseLogin('@octocat') // => 'octocat'
+ * ```
  *
  * @param login - A login, with or without `@`.
  * @returns The bare login.
@@ -85,6 +108,17 @@ const uniqueLogins = (logins: ReadonlyArray<string>): ReadonlyArray<string> => {
  * are skipped; a later CHANGES_REQUESTED or DISMISSED replaces an earlier
  * approval, which is how an approval is withdrawn.
  *
+ * @example
+ * ```ts import.meta.vitest name="latestDecisive"
+ * import { latestDecisive } from '@resnovas/feature.reviews'
+ *
+ * const latest = latestDecisive([
+ *   { author: 'Ann', state: 'APPROVED' },
+ *   { author: 'ann', state: 'COMMENTED' },
+ * ])
+ * latest.get('ann') // => 'APPROVED'
+ * ```
+ *
  * @param reviews - Every review, oldest first.
  * @returns Each reviewer's standing review state.
  */
@@ -106,6 +140,21 @@ export const latestDecisive = (reviews: ReadonlyArray<Review>): ReadonlyMap<stri
  * maintainer's latest decisive review counts, and the author's own review
  * never does: the author's review is part of their accountability.
  *
+ * @example
+ * ```ts import.meta.vitest name="evaluateGate"
+ * import { evaluateGate } from '@resnovas/feature.reviews'
+ *
+ * const result = evaluateGate({
+ *   author: 'contributor',
+ *   reviews: [{ author: 'ann', state: 'APPROVED' }],
+ *   maintainers: ['ann', 'bob'],
+ *   trustedBots: [],
+ *   outside: 1,
+ *   maintainer: 1,
+ * })
+ * result.status // => 'passed'
+ * ```
+ *
  * @param input - The author, the reviews, the roles and the thresholds.
  * @returns Whether the gate is open, passed or failed, with the approvers.
  */
@@ -126,6 +175,14 @@ export const evaluateGate = (input: GateInput): GateResult => {
 
 /**
  * The message for a failed gate: how many approvals are needed, and who approved.
+ *
+ * @example
+ * ```ts import.meta.vitest name="gateMessage"
+ * import { gateMessage } from '@resnovas/feature.reviews'
+ *
+ * const message = gateMessage({ status: 'failed', required: 2, approvedBy: ['ann'], authorIsMaintainer: false })
+ * message.endsWith('has 1 (approved by @ann).') // => true
+ * ```
  *
  * @param result - A failed gate.
  * @returns A sentence for the finding.

@@ -142,6 +142,15 @@ const migrateStale = (
  * `conventions`. With several runners, rule keys are prefixed with the runner
  * index so none collide.
  *
+ * @example
+ * ```ts import.meta.vitest name="migrateV1"
+ * import { migrateV1 } from '@resnovas/config'
+ *
+ * const { config, warnings } = migrateV1({ labels: [{ name: 'bug', color: 'd73a4a' }] })
+ * JSON.stringify(config) // => '{"version":2,"labels":{"bug":{"name":"bug","color":"d73a4a"}}}'
+ * warnings.length // => 0
+ * ```
+ *
  * @param input - The parsed v1 JSON.
  * @returns The v2 config and a warning for everything not carried over.
  */

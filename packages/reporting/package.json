@@ -5,6 +5,7 @@
   "type": "module",
   "description": "Turns a smartcloud run into check runs, a job summary, workflow annotations and one updatable comment.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

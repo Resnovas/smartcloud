@@ -28,6 +28,13 @@ import { Effect } from 'effect'
  * telemetry is off, PostHog is unreachable or the flag does not exist, so
  * opting out of telemetry never changes what smartcloud does. Each flag is
  * named `smartcloud-<feature>` and turns that whole feature on or off.
+ *
+ * @example
+ * ```ts import.meta.vitest name="FEATURE_FLAGS"
+ * import { FEATURE_FLAGS } from '@resnovas/runtime'
+ *
+ * FEATURE_FLAGS['smartcloud-labels'] // => true
+ * ```
  */
 export const FEATURE_FLAGS = {
   'smartcloud-conventions': true,
@@ -48,6 +55,13 @@ const isFeatureFlag = (key: string): key is FeatureFlag => Object.hasOwn(FEATURE
 /**
  * The flag that turns a feature on or off.
  *
+ * @example
+ * ```ts import.meta.vitest name="flagFor"
+ * import { flagFor } from '@resnovas/runtime'
+ *
+ * flagFor('labels') // => 'smartcloud-labels'
+ * ```
+ *
  * @param feature - The feature's name, such as `labels`.
  * @returns Its flag key, such as `smartcloud-labels`.
  */
@@ -57,8 +71,12 @@ export const flagFor = (feature: string): string => `smartcloud-${feature}`
  * Evaluates a feature flag for a repository.
  *
  * @example
- * ```ts
- * if (yield* featureEnabled(github.coordinates, 'smartcloud-labels')) yield* syncLabels
+ * ```ts import.meta.vitest name="featureEnabled"
+ * import { featureEnabled } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * // Without the Telemetry service every flag keeps its default.
+ * Effect.runSync(featureEnabled({ owner: 'Resnovas', repo: 'smartcloud' }, 'smartcloud-labels')) // => true
  * ```
  *
  * @param repository - The repository the flag is evaluated for, hashed before it is sent.
@@ -71,11 +89,19 @@ export const featureEnabled = (repository: RepositoryName, flag: FeatureFlag): E
 /**
  * The features a repository's flags turn off, and why, for the engine to skip.
  *
- * @param repository - The repository.
- * @param features - The features about to run.
  * @remarks
  * Traced as `smartcloud.flags.evaluate`, naming the features turned off.
  *
+ * @example
+ * ```ts import.meta.vitest name="turnedOffFeatures"
+ * import { FEATURES, turnedOffFeatures } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * Effect.runSync(turnedOffFeatures({ owner: 'Resnovas', repo: 'smartcloud' }, FEATURES)).size // => 0
+ * ```
+ *
+ * @param repository - The repository.
+ * @param features - The features about to run.
  * @returns Each turned-off feature's name and reason; features without a flag are never turned off.
  */
 export const turnedOffFeatures = (repository: RepositoryName, features: ReadonlyArray<Feature>): Effect.Effect<ReadonlyMap<string, string>> =>

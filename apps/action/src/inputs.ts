@@ -60,6 +60,17 @@ const DEPRECATED: ReadonlyArray<readonly [string, string]> = [
  * is on unless set to `false`. The token falls back to the
  * `GITHUB_TOKEN` environment variable.
  *
+ * @example
+ * ```ts import.meta.vitest name="readInputs"
+ * import { readInputs } from '@resnovas/action'
+ * import { ConfigProvider, Effect } from 'effect'
+ *
+ * const env = ConfigProvider.fromMap(new Map([['INPUT_GITHUB_TOKEN', 't'], ['INPUT_DRYRUN', 'TRUE']]))
+ * const inputs = await Effect.runPromise(Effect.withConfigProvider(readInputs, env))
+ * inputs.dryRun // => true
+ * inputs.telemetry // => true
+ * ```
+ *
  * @returns The inputs, or a `ConfigError` when there is no token.
  */
 export const readInputs = Effect.gen(function* () {

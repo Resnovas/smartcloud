@@ -18,7 +18,16 @@
 import { Data, Either } from 'effect'
 import type { Values } from './render.js'
 
-/** A values file line that is not `KEY: value`. */
+/**
+ * A values file line that is not `KEY: value`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="InvalidValues"
+ * import { InvalidValues } from '@resnovas/feature.sync'
+ *
+ * new InvalidValues({ source: 'house.yml', line: 1, text: 'nope' }).message // => 'house.yml:1: expected "KEY: value", got "nope"'
+ * ```
+ */
 export class InvalidValues extends Data.TaggedError('InvalidValues')<{
   readonly source: string
   readonly line: number
@@ -45,6 +54,14 @@ const withoutComment = (line: string): string => {
 /**
  * Removes one pair of matching single or double quotes around a value.
  *
+ * @example
+ * ```ts import.meta.vitest name="unquote"
+ * import { unquote } from '@resnovas/feature.sync'
+ *
+ * unquote('"a # b"') // => 'a # b'
+ * unquote('"a\'') // => '"a\''
+ * ```
+ *
  * @param value - The value.
  * @returns The value without its quotes.
  */
@@ -60,6 +77,15 @@ export const unquote = (value: string): string => {
  * Deliberately not a YAML parser: one key per line, so the renderer cannot
  * be surprised by YAML features. Blank lines and `#` comments are ignored,
  * and one pair of quotes is stripped so a value may contain `#`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="parseValues"
+ * import { parseValues } from '@resnovas/feature.sync'
+ * import { Either } from 'effect'
+ *
+ * Either.getOrThrow(parseValues('ORG_NAME: Resnovas  # the owner\n')).ORG_NAME // => 'Resnovas'
+ * Either.isLeft(parseValues('lower: nope')) // => true
+ * ```
  *
  * @param text - The file.
  * @param source - Names the file in errors.
@@ -80,6 +106,13 @@ export const parseValues = (text: string, source = 'values'): Either.Either<Valu
 
 /**
  * Splits a comma-separated value into trimmed, non-empty items.
+ *
+ * @example
+ * ```ts import.meta.vitest name="list"
+ * import { list } from '@resnovas/feature.sync'
+ *
+ * list(' a, b ,, c ').join('|') // => 'a|b|c'
+ * ```
  *
  * @param value - The value, or undefined.
  * @returns The items.

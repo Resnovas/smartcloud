@@ -1,5 +1,5 @@
-# CI for the v2 workspace: lint, typecheck, test with coverage, and build the
-# projects a change affects, plus the licence header check and the check that
+# CI for the v2 workspace: lint, typecheck, test with coverage, build, and
+# check the API docs and contracts of the projects a change affects, plus the licence header check and the check that
 # docs/reference/configuration.mdx matches the JSON Schema.
 name: CI
 
@@ -39,6 +39,12 @@ jobs:
 
       - name: Lint, typecheck, test and build affected projects
         run: pnpm nx affected -t lint typecheck test build
+
+      # docgen type-checks every @example and fails on an export without a
+      # description; contracts checks the built declarations for @example,
+      # @param and @returns. The examples themselves run as doctests in `test`.
+      - name: API docs and contracts of affected projects
+        run: pnpm nx affected -t docgen contracts
 
       - name: Type-check the tests
         run: pnpm typecheck:tests

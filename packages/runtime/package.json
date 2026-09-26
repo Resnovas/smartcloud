@@ -5,6 +5,7 @@
   "type": "module",
   "description": "What the action, the CLI and the MCP server share: the feature list, feature flags, telemetry, config loading, dry runs, settings plans and sync previews.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

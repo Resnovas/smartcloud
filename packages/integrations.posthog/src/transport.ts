@@ -61,9 +61,14 @@ const unsent = () => new Response('{}', { status: 200, headers: { 'content-type'
  * run open.
  *
  * @example
- * ```ts
- * const send = makeTransport({ fetch, isEnabled: () => true, secrets: () => [], timeoutMs: 5000 })
- * await send('https://eu.i.posthog.com/i/v1/logs', { method: 'POST', body })
+ * ```ts import.meta.vitest name="makeTransport"
+ * import { makeTransport } from '@resnovas/integrations.posthog'
+ *
+ * // A fetch that echoes the body back shows what would have been sent.
+ * const echo = async (_url: string | URL | Request, init?: RequestInit) => new Response(init?.body)
+ * const send = makeTransport({ fetch: echo, isEnabled: () => true, secrets: () => ['Resnovas/smartcloud'], timeoutMs: 5000 })
+ * const response = await send('https://eu.i.posthog.com/i/v0/e/', { method: 'POST', body: 'ran on Resnovas/smartcloud' })
+ * await response.text() // => 'ran on [redacted]'
  * ```
  *
  * @param options - The underlying `fetch`, the switch, the secrets and the timeout.

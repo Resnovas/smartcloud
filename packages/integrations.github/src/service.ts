@@ -211,5 +211,15 @@ export interface GitHubService {
   readonly graphql: (query: string, variables: Readonly<Record<string, unknown>>) => Effect.Effect<unknown, GitHubError>
 }
 
-/** The GitHub service. */
+/**
+ * The GitHub service.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from 'effect'
+ * import { GitHub } from '@resnovas/integrations.github'
+ *
+ * const labelCount = Effect.flatMap(GitHub, (github) => github.listLabels).pipe(Effect.map((labels) => labels.length))
+ * ```
+ */
 export class GitHub extends Context.Tag('@resnovas/integrations.github/GitHub')<GitHub, GitHubService>() {}

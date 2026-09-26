@@ -22,7 +22,16 @@ import { GitHub, type GitHubError } from '@resnovas/integrations.github'
 import { Effect } from 'effect'
 import { DEFAULT_POLICY_BASE, evaluateGate, gateMessage, latestDecisive, normaliseLogin, sameLogin } from './gate.js'
 
-/** The feature's name, as it appears in findings, changes and run results. */
+/**
+ * The feature's name, as it appears in findings, changes and run results.
+ *
+ * @example
+ * ```ts import.meta.vitest name="FEATURE"
+ * import { FEATURE } from '@resnovas/feature.reviews'
+ *
+ * FEATURE // => 'reviews'
+ * ```
+ */
 export const FEATURE = 'reviews'
 
 type Reviews = NonNullable<SmartcloudConfig['reviews']>
@@ -181,6 +190,14 @@ const run = (context: FeatureContext): Effect.Effect<void, MissingFacet | GitHub
  * pull request from a fork, is reported as a warning rather than failing. It is
  * enabled by a `reviews` section, and loads the reviews and pending reviewer
  * facets plus whatever its rules' conditions need.
+ *
+ * @example
+ * ```ts import.meta.vitest name="reviewsFeature"
+ * import { reviewsFeature } from '@resnovas/feature.reviews'
+ *
+ * reviewsFeature.enabled?.({ version: 2, reviews: { gate: {} } }) // => true
+ * reviewsFeature.enabled?.({ version: 2 }) // => false
+ * ```
  */
 export const reviewsFeature: Feature = {
   name: FEATURE,

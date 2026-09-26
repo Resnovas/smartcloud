@@ -29,8 +29,11 @@ const withoutAt = (login: string) => (login.startsWith('@') ? login.slice(1) : l
  * Logins compare ignoring case, with a leading `@` optional.
  *
  * @example
- * ```ts
- * isTrustedComment({ id: 1, body: '', author: 'jane', bot: false }, ['@Jane']) // true
+ * ```ts import.meta.vitest name="isTrustedComment"
+ * import { isTrustedComment } from '@resnovas/integrations.github'
+ *
+ * isTrustedComment({ id: 1, body: '', author: 'jane', bot: false }, ['@Jane']) // => true
+ * isTrustedComment({ id: 2, body: '', author: 'mallory', bot: false }) // => false
  * ```
  *
  * @param comment - The comment.

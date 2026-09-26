@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud labels feature: repository label sync and condition-driven labelling.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

@@ -1,5 +1,5 @@
 /**
- * @file tests/mcp/src/mcp.spec.ts
+ * @file tests/mcp/src/tools.spec.ts
  *
  * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
@@ -15,69 +15,26 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { Client } from '@modelcontextprotocol/sdk/client/index.js'
-import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js'
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
-import { fileKey, GitHub, type GitHubService, makeMemoryGitHub } from '@resnovas/integrations.github'
-import { ConfigSourceFromGitHub, type Connect } from '@resnovas/runtime'
 import {
   checkCommitMessageTool,
   ConfigRefused,
   dryRunTool,
   explainConfigTool,
   explainRuleTool,
-  makeServer,
   migrateConfigTool,
   planSettingsTool,
   readConfinedConfig,
-  stampedVersion,
   validateConfigTool,
-  VERSION,
   type ToolContext,
   type ToolResult,
 } from '@resnovas/smartcloud-mcp'
-import { Effect, Layer } from 'effect'
+import { Effect } from 'effect'
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-
-const fixture = (name: string) => join(import.meta.dirname, '../../config/src/fixtures', name)
-
-const CONVENTIONS = 'version: 2\nconventions:\n  rules:\n    title:\n      preset: conventionalCommits\n'
-
-const pull = {
-  number: 7,
-  title: 'Add things',
-  body: '',
-  user: { login: 'jane' },
-  state: 'open',
-  locked: false,
-  labels: [],
-  updated_at: '2026-09-01T00:00:00Z',
-  head: { ref: 'feat/x', sha: 'abc123' },
-}
-
-// The in-memory GitHub: a repository with a config, a preset, and the pull request read a dry run makes.
-const memory = () => {
-  const github = makeMemoryGitHub()
-  github.state.files.set(fileKey('Resnovas', 'example', '.github/smartcloud.yml'), `${CONVENTIONS}settings:\n  merging: { squash: true }\n`)
-  github.state.files.set(fileKey('Resnovas', '.github', 'house.yml'), 'version: 2\nroles: { maintainers: [a] }\n')
-  github.state.pulls.set(7, { commits: [], files: [], reviews: [], requestedReviewers: [], submittedReviews: [] })
-  const service: GitHubService = {
-    ...github.service,
-    repositoryRequest: (request) =>
-      request.method === 'GET' && request.path === '/pulls/7' ? Effect.succeed(pull) : github.service.repositoryRequest(request),
-  }
-  const connect: Connect = () => Effect.succeed(service)
-  const layer = Layer.mergeAll(NodeContext.layer, ConfigSourceFromGitHub.pipe(Layer.provide(Layer.succeed(GitHub, service))))
-  return { connect, layer, state: github.state }
-}
-
-// The directory the server may read config files from, in tests that read none.
-const ROOT = import.meta.dirname
-
-const textOf = (result: ToolResult) => result.content.map((part) => part.text).join('\n')
+import { CONVENTIONS, fixture, memory, ROOT, textOf } from './fixtures.js'
 
 describe('tool handlers', () => {
   const { connect, layer, state } = memory()
@@ -216,52 +173,4 @@ describe('agent self-checks', () => {
       expect(unknown.isError).toBe(true)
     }).pipe(Effect.provide(memory().layer)),
   )
-})
-
-describe('the MCP server', () => {
-  it('lists its tools and answers calls over a transport', async () => {
-    const { connect, layer, state } = memory()
-    const server = makeServer({ connect, run: (effect) => Effect.runPromise(Effect.provide(effect, layer)) })
-    const client = new Client({ name: 'test', version: '1.0.0' })
-    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair()
-    await server.connect(serverTransport)
-    await client.connect(clientTransport)
-
-    expect(client.getServerVersion()).toMatchObject({ name: 'smartcloud', version: VERSION })
-    expect(VERSION).toBe('0.0.0')
-    expect(stampedVersion('2.0.0')).toBe('2.0.0')
-    const tools = await client.listTools()
-    expect(tools.tools.map((tool) => tool.name)).toStrictEqual([
-      'validate_config',
-      'migrate_config',
-      'explain_config',
-      'dry_run',
-      'plan_settings',
-      'check_commit_message',
-      'explain_rule',
-    ])
-
-    const call = async (name: string, args: Record<string, unknown>) => {
-      const result = await client.callTool({ name, arguments: args })
-      const content = Array.isArray(result.content) ? result.content : []
-      return { isError: result.isError, text: content.map((part) => (typeof part.text === 'string' ? part.text : '')).join('\n') }
-    }
-    expect((await call('validate_config', { config: 'version: 2\n' })).text).toContain('"valid": true')
-    expect((await call('migrate_config', { config: '{}', source: 'config.json' })).text).toContain('version: 2')
-    expect((await call('explain_config', { config: CONVENTIONS })).text).toContain('"name": "conventions"')
-    const dry = await call('dry_run', { repository: 'Resnovas/example', pr: 7 })
-    expect(dry.isError).toBeFalsy()
-    expect(dry.text).toContain('Event: `pull_request` (synchronize) on #7')
-    expect((await call('plan_settings', { repository: 'Resnovas/example' })).text).toContain('Settings for Resnovas/example')
-    // A host file outside the working directory is never read, however the path is given.
-    const outside = await call('dry_run', { repository: 'Resnovas/example', pr: 7, config: '/etc/passwd' })
-    expect(outside).toMatchObject({ isError: true, text: expect.stringContaining('refusing to read "/etc/passwd": it is an absolute path') })
-    const escaped = await call('plan_settings', { repository: 'Resnovas/example', config: '../../../../../../../../../../etc/passwd' })
-    expect(escaped).toMatchObject({ isError: true, text: expect.stringContaining('it resolves outside the working directory') })
-    expect((await call('plan_settings', { repository: 'Resnovas/example', configText: 'version: 2\n' })).text).toContain('Nothing to apply')
-    expect((await call('check_commit_message', { message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com' })).text).toContain('"passes": false')
-    expect((await call('explain_rule', { rule: 'DCO' })).text).toContain('git commit -s')
-    expect(state.checkRuns).toStrictEqual([])
-    await client.close()
-  })
 })

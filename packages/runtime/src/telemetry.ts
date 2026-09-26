@@ -30,7 +30,10 @@ import type { Layer } from 'effect'
  *
  * @example
  * ```ts
- * main(process.argv).pipe(Effect.provide(Layer.merge(NodeContext.layer, telemetry('cli', VERSION))), NodeRuntime.runMain)
+ * import { telemetry, Telemetry } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * const enabled = Effect.flatMap(Telemetry, (service) => service.isEnabled).pipe(Effect.provide(telemetry('cli', '2.0.0')))
  * ```
  *
  * @param surface - Which smartcloud is running.

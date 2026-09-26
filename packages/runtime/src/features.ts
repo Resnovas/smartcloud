@@ -26,7 +26,16 @@ import { stale } from '@resnovas/feature.stale'
 import { syncFeature } from '@resnovas/feature.sync'
 import { Data, Effect } from 'effect'
 
-/** Every feature smartcloud can run, in the order their results are reported. */
+/**
+ * Every feature smartcloud can run, in the order their results are reported.
+ *
+ * @example
+ * ```ts import.meta.vitest name="FEATURES"
+ * import { FEATURES } from '@resnovas/runtime'
+ *
+ * FEATURES[0]?.name // => 'conventions'
+ * ```
+ */
 export const FEATURES: ReadonlyArray<Feature> = [
   conventions,
   commitsFeature,
@@ -38,7 +47,16 @@ export const FEATURES: ReadonlyArray<Feature> = [
   syncFeature,
 ]
 
-/** A feature was asked for by a name that does not exist. */
+/**
+ * A feature was asked for by a name that does not exist.
+ *
+ * @example
+ * ```ts import.meta.vitest name="UnknownFeatures"
+ * import { UnknownFeatures } from '@resnovas/runtime'
+ *
+ * new UnknownFeatures({ names: ['nope'] }).message.startsWith('unknown feature(s): nope;') // => true
+ * ```
+ */
 export class UnknownFeatures extends Data.TaggedError('UnknownFeatures')<{ readonly names: ReadonlyArray<string> }> {
   override get message() {
     return `unknown feature(s): ${this.names.join(', ')}; expected some of ${FEATURES.map((feature) => feature.name).join(', ')}`
@@ -48,6 +66,13 @@ export class UnknownFeatures extends Data.TaggedError('UnknownFeatures')<{ reado
 /**
  * Splits a comma-separated feature list, as the action input and the CLI
  * flag give it.
+ *
+ * @example
+ * ```ts import.meta.vitest name="parseFeatureList"
+ * import { parseFeatureList } from '@resnovas/runtime'
+ *
+ * parseFeatureList(' labels, stale,,').join('|') // => 'labels|stale'
+ * ```
  *
  * @param list - For example `labels, stale`.
  * @returns The names, trimmed, with empty entries dropped.
@@ -60,6 +85,15 @@ export const parseFeatureList = (list: string): ReadonlyArray<string> =>
 
 /**
  * Picks the features to run.
+ *
+ * @example
+ * ```ts import.meta.vitest name="selectFeatures"
+ * import { selectFeatures } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * Effect.runSync(selectFeatures(['stale', 'labels'])).map((feature) => feature.name).join(',') // => 'labels,stale'
+ * Effect.runSync(Effect.flip(selectFeatures(['nope'])))._tag // => 'UnknownFeatures'
+ * ```
  *
  * @param names - The features asked for; every feature when omitted.
  * @returns The features in reporting order, or the names that do not exist.

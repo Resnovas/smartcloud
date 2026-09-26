@@ -22,7 +22,16 @@ import { empty, type Merged, mergeLocked } from './merge.js'
 import { SmartcloudConfig } from './schema.js'
 import { migrateV1 } from './v1.js'
 
-/** The config text could not be parsed as YAML or JSON. */
+/**
+ * The config text could not be parsed as YAML or JSON.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ConfigParseError"
+ * import { ConfigParseError } from '@resnovas/config'
+ *
+ * new ConfigParseError({ source: 'x.yml', reason: 'bad indent' }).message // => 'x.yml is not valid YAML or JSON: bad indent'
+ * ```
+ */
 export class ConfigParseError extends Data.TaggedError('ConfigParseError')<{
   readonly source: string
   readonly reason: string
@@ -32,7 +41,16 @@ export class ConfigParseError extends Data.TaggedError('ConfigParseError')<{
   }
 }
 
-/** The config parsed but does not match the schema. */
+/**
+ * The config parsed but does not match the schema.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ConfigDecodeError"
+ * import { ConfigDecodeError } from '@resnovas/config'
+ *
+ * new ConfigDecodeError({ source: 'x.yml', reason: 'version is missing' })._tag // => 'ConfigDecodeError'
+ * ```
+ */
 export class ConfigDecodeError extends Data.TaggedError('ConfigDecodeError')<{
   readonly source: string
   readonly reason: string
@@ -42,14 +60,32 @@ export class ConfigDecodeError extends Data.TaggedError('ConfigDecodeError')<{
   }
 }
 
-/** A preset could not be read. */
+/**
+ * A preset could not be read.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ConfigNotFound"
+ * import { ConfigNotFound } from '@resnovas/config'
+ *
+ * new ConfigNotFound({ source: 'o/r/p.yml' }).message // => 'o/r/p.yml could not be read'
+ * ```
+ */
 export class ConfigNotFound extends Data.TaggedError('ConfigNotFound')<{ readonly source: string }> {
   override get message() {
     return `${this.source} could not be read`
   }
 }
 
-/** Presets extend each other in a loop. */
+/**
+ * Presets extend each other in a loop.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ExtendsCycle"
+ * import { ExtendsCycle } from '@resnovas/config'
+ *
+ * new ExtendsCycle({ chain: ['a', 'b', 'a'] }).message // => 'presets extend each other in a loop: a -> b -> a'
+ * ```
+ */
 export class ExtendsCycle extends Data.TaggedError('ExtendsCycle')<{ readonly chain: ReadonlyArray<string> }> {
   override get message() {
     return `presets extend each other in a loop: ${this.chain.join(' -> ')}`
@@ -59,6 +95,21 @@ export class ExtendsCycle extends Data.TaggedError('ExtendsCycle')<{ readonly ch
 /**
  * Reads preset files named in `extends`. The GitHub integration provides the
  * real implementation; tests provide files from memory.
+ *
+ * @example
+ * ```ts
+ * import { ConfigNotFound, ConfigSource, formatExtendsRef } from '@resnovas/config'
+ * import { Effect, Layer } from 'effect'
+ *
+ * // Presets served from memory, keyed by owner/repo/path@ref.
+ * const files: Record<string, string> = { 'o/r/house.yml': 'version: 2\n' }
+ * const presets = Layer.succeed(ConfigSource, {
+ *   read: (ref) =>
+ *     Effect.fromNullable(files[formatExtendsRef(ref)]).pipe(
+ *       Effect.mapError(() => new ConfigNotFound({ source: formatExtendsRef(ref) })),
+ *     ),
+ * })
+ * ```
  */
 export class ConfigSource extends Context.Tag('@resnovas/config/ConfigSource')<
   ConfigSource,
@@ -99,6 +150,15 @@ const toJson = (config: SmartcloudConfig): Readonly<Record<string, Json>> => {
  * @remarks
  * A config with `version: 2` is v2; anything else is treated as v1 and
  * migrated, with a warning for every v1 key that is not carried over.
+ *
+ * @example
+ * ```ts import.meta.vitest name="parseConfig"
+ * import { parseConfig } from '@resnovas/config'
+ * import { Effect } from 'effect'
+ *
+ * const { config } = Effect.runSync(parseConfig('version: 2\nlabelSync: { prune: true }\n', 'smartcloud.yml'))
+ * config.labelSync?.prune // => true
+ * ```
  *
  * @param text - The file's contents, YAML or JSON.
  * @param source - The file's name, for errors.
@@ -163,9 +223,16 @@ const parseLayer = (text: string, source: string) =>
  * {@link ConfigSource}, so this function makes no network calls of its own.
  *
  * @example
- * ```ts
- * const resolved = yield* resolveConfig(text, '.github/smartcloud.yml')
- * resolved.config.labels
+ * ```ts import.meta.vitest name="resolveConfig"
+ * import { ConfigSource, resolveConfig } from '@resnovas/config'
+ * import { Effect, Layer } from 'effect'
+ *
+ * const house = 'version: 2\nlabels: { bug: { name: bug, color: d73a4a } }\n'
+ * const presets = Layer.succeed(ConfigSource, { read: () => Effect.succeed(house) })
+ * const text = "version: 2\nextends: ['Resnovas/.github/house.yml@main']\n"
+ * const resolved = Effect.runSync(resolveConfig(text, 'smartcloud.yml').pipe(Effect.provide(presets)))
+ * resolved.config.labels?.['bug']?.color // => 'd73a4a'
+ * resolved.locked.has('labels.bug.color') // => true
  * ```
  *
  * @param text - The repository's config file.

@@ -31,7 +31,11 @@ import { sameName } from './sync.js'
 
 const FEATURE = 'labels'
 
-/** Why a write was refused, for the warning a forbidden write leaves. */
+/**
+ * Why a write was refused, for the warning a forbidden write leaves.
+ *
+ * @internal
+ */
 export const READ_ONLY_TOKEN = 'on a read-only token, for example a pull request from a fork'
 
 type Rules = NonNullable<SmartcloudConfig['labelling']>
@@ -45,8 +49,11 @@ type Rules = NonNullable<SmartcloudConfig['labelling']>
  * is taken as the label's name itself.
  *
  * @example
- * ```ts
- * labelName({ version: 2, labels: { bug: { name: 'Type: Bug', color: 'd73a4a' } } }, 'bug') // 'Type: Bug'
+ * ```ts import.meta.vitest name="labelName"
+ * import { labelName } from '@resnovas/feature.labels'
+ *
+ * labelName({ version: 2, labels: { bug: { name: 'Type: Bug', color: 'd73a4a' } } }, 'bug') // => 'Type: Bug'
+ * labelName({ version: 2 }, 'docs') // => 'docs'
  * ```
  *
  * @param config - The whole config.
@@ -60,9 +67,11 @@ export const labelName = (config: SmartcloudConfig, label: string): string => co
  * request need loaded.
  *
  * @example
- * ```ts
- * labellingFacets({ version: 2, labelling: { big: { label: 'big', when: { condition: [{ type: 'filesMatch', condition: '**' }] } } } })
- * // Set { 'files' }
+ * ```ts import.meta.vitest name="labellingFacets"
+ * import { labellingFacets } from '@resnovas/feature.labels'
+ *
+ * const when = { condition: [{ type: 'filesMatch' as const, condition: '**' }] }
+ * labellingFacets({ version: 2, labelling: { big: { label: 'big', when } } }).has('files') // => true
  * ```
  *
  * @param config - The whole config.
@@ -104,7 +113,13 @@ const decide = (config: SmartcloudConfig, rules: Rules, subject: Subject) =>
  *
  * @example
  * ```ts
- * yield* applyLabels(config, subject) // with GitHub and Report provided
+ * import type { Subject } from '@resnovas/conditions'
+ * import type { SmartcloudConfig } from '@resnovas/config'
+ * import { applyLabels } from '@resnovas/feature.labels'
+ *
+ * declare const config: SmartcloudConfig
+ * declare const subject: Subject
+ * const program = applyLabels(config, subject) // run with GitHub and Report provided
  * ```
  *
  * @param config - The whole config; `labelling` and `labels` are read.

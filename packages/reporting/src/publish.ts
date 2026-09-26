@@ -57,6 +57,16 @@ const subjectOf = (result: RunResult) =>
  * Traced as `smartcloud.reporting.publish`, with counts and the comment's
  * outcome only.
  *
+ * @example
+ * ```ts
+ * import type { RunResult } from '@resnovas/engine'
+ * import { publishReport } from '@resnovas/reporting'
+ * import { Effect } from 'effect'
+ *
+ * declare const result: RunResult
+ * const warnings = publishReport(result, { trustedAuthors: ['release-robot'] }).pipe(Effect.map((published) => published.warnings))
+ * ```
+ *
  * @param result - The run.
  * @param options - Set `comment` to false to leave issues and pull requests
  *   alone; `trustedAuthors` lists logins, besides bot accounts, whose marker

@@ -22,8 +22,33 @@ declare global {
   var __SMARTCLOUD_VERSION__: string | undefined
 }
 
-/** The version a bundle was stamped with, or 0.0.0 for an unreleased build. */
+/**
+ * The version a bundle was stamped with, or 0.0.0 for an unreleased build.
+ *
+ * @example
+ * ```ts import.meta.vitest name="stampedVersion"
+ * import { stampedVersion } from '@resnovas/smartcloud-mcp'
+ *
+ * stampedVersion(undefined) // => '0.0.0'
+ * stampedVersion('2.0.0') // => '2.0.0'
+ * ```
+ *
+ * @param stamped - The version esbuild wrote into the bundle, if any.
+ * @returns The stamped version, or `0.0.0`.
+ */
 export const stampedVersion = (stamped: string | undefined): string => stamped ?? '0.0.0'
 
-/** The smartcloud version. */
+/**
+ * The smartcloud version.
+ *
+ * @remarks
+ * `0.0.0` in an unbundled build; a release bundle carries the released version.
+ *
+ * @example
+ * ```ts import.meta.vitest name="VERSION"
+ * import { VERSION } from '@resnovas/smartcloud-mcp'
+ *
+ * typeof VERSION // => 'string'
+ * ```
+ */
 export const VERSION: string = stampedVersion(globalThis.__SMARTCLOUD_VERSION__)

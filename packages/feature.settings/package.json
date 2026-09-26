@@ -5,6 +5,7 @@
   "type": "module",
   "description": "The smartcloud settings feature: repository settings, security, rulesets and environments as code.",
   "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
   "exports": {
     ".": {
       "@resnovas/source": "./src/index.ts",

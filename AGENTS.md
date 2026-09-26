@@ -24,6 +24,7 @@ pnpm nx run-many -t lint typecheck test build   # everything
 pnpm nx affected -t lint typecheck test build   # what a change affects
 pnpm headers                                     # licence header check (pnpm headers:fix to add them)
 pnpm typecheck:tests                             # type-check every test project (Nx skips them)
+pnpm docs:api                                    # docgen (type-checks @example blocks) and the contracts check
 ```
 
 ## Adding a package
@@ -36,6 +37,12 @@ pnpm typecheck:tests                             # type-check every test project
 6. `pnpm install`, then `pnpm headers:fix`.
 
 Coverage runs on every test and fails below 100% of lines, functions and statements. Never delete a test to make a build pass.
+
+Tests mirror sources file for file: `packages/<name>/src/<path>.ts` is tested by `tests/<name>/src/<path>.spec.ts` (apps map the same way). Barrels and type-only files need no spec; shared fixtures stay as non-spec helper files.
+
+## API contracts
+
+Every exported const, function and class carries a description, a typed `@example` importing from the package's public path, `@param` per parameter and `@returns` unless it returns void; add `@remarks` where behaviour needs explaining. Exports left out of the package's `index.ts` are marked `@internal`. Each package and app has a `docgen.json` for `@effect/docgen`, whose `docgen` target type-checks every example and writes the API docs to `dist/docs`; the `contracts` target (`tools/docs/check-contracts.ts`) checks the built declarations for the tags. Mark an example fence `ts import.meta.vitest` to run it as a test through `@effect/doctest`, and assert with a trailing `// => value` comment (primitives only: Effect 3's `Equal` compares plain objects and arrays by reference). Vitest counts a run example's coverage against the source file it sits in, so a runnable example must call every function it defines; leave the marker off an example that cannot.
 
 ## Releasing
 

@@ -106,9 +106,12 @@ const checkCommit = (commit: Commit, section: CommitsSection, base: string, isAi
  * because the author's role on a future pull request is not known.
  *
  * @example
- * ```ts
- * checkCommitMessage({ message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com' }, { version: 2 })
- * // [{ rule: 'DCO', level: 'error', ... }]
+ * ```ts import.meta.vitest name="checkCommitMessage"
+ * import { checkCommitMessage } from '@resnovas/feature.commits'
+ *
+ * const findings = checkCommitMessage({ message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com' }, { version: 2 })
+ * findings.length // => 1
+ * findings[0]?.level // => 'error'
  * ```
  *
  * @param commit - The message and author.
@@ -138,6 +141,16 @@ export const checkCommitMessage = (
  * Trusted bots are skipped. On a maintainer's own pull request, or the
  * repository owner's, errors are reported at `commits.maintainerLevel`
  * (`warning` by default), except AI-03.
+ *
+ * @example
+ * ```ts import.meta.vitest name="commitsFeature"
+ * import { runFeatures } from '@resnovas/engine'
+ * import { commitsFeature } from '@resnovas/feature.commits'
+ *
+ * // Needs GitHub provided to run.
+ * const program = runFeatures({ config: { version: 2, commits: {} }, event: 'pull_request', payload: {}, features: [commitsFeature] })
+ * commitsFeature.enabled?.({ version: 2 }) // => false
+ * ```
  */
 export const commitsFeature: Feature = {
   name: NAME,

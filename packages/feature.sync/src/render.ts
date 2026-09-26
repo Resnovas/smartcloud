@@ -32,7 +32,16 @@ export interface Template {
 /** A template after its placeholders are replaced. */
 export type RenderedFile = Template
 
-/** A template names a `{{KEY}}` that has no value. */
+/**
+ * A template names a `{{KEY}}` that has no value.
+ *
+ * @example
+ * ```ts import.meta.vitest name="MissingValue"
+ * import { MissingValue } from '@resnovas/feature.sync'
+ *
+ * new MissingValue({ source: 'LICENSE', key: 'HOLDER' }).message // => 'LICENSE: no value for {{HOLDER}}'
+ * ```
+ */
 export class MissingValue extends Data.TaggedError('MissingValue')<{ readonly source: string; readonly key: string }> {
   override get message() {
     return `${this.source}: no value for {{${this.key}}}`
@@ -51,8 +60,11 @@ const PLACEHOLDER = /\{\{([A-Z][A-Z0-9_]*)\}\}/g
  * copyright holder or contact address is worse than a failed render.
  *
  * @example
- * ```ts
- * renderText('(c) {{YEAR}}', { YEAR: '2026' }) // Either.right('(c) 2026')
+ * ```ts import.meta.vitest name="renderText"
+ * import { renderText } from '@resnovas/feature.sync'
+ * import { Either } from 'effect'
+ *
+ * Either.getOrThrow(renderText('(c) {{YEAR}}', { YEAR: '2026' })) // => '(c) 2026'
  * ```
  *
  * @param text - The template.
@@ -75,6 +87,15 @@ export const renderText = (text: string, values: Values, source = 'template'): E
 
 /**
  * Renders every template, sorted by path.
+ *
+ * @example
+ * ```ts import.meta.vitest name="renderAll"
+ * import { renderAll } from '@resnovas/feature.sync'
+ * import { Either } from 'effect'
+ *
+ * const templates = [{ path: 'b', content: '{{X}}', executable: false }, { path: 'a', content: 'x', executable: false }]
+ * Either.getOrThrow(renderAll(templates, { X: 'y' })).map((file) => file.path).join(', ') // => 'a, b'
+ * ```
  *
  * @param templates - The templates.
  * @param values - The values by key.

@@ -28,8 +28,10 @@ import { matchesPreset, presetDescription } from './presets.js'
  * Finding rule ids are `conventions.<rule key>`.
  *
  * @example
- * ```ts
- * findings.filter((finding) => finding.feature === FEATURE)
+ * ```ts import.meta.vitest name="FEATURE"
+ * import { conventions, FEATURE } from '@resnovas/feature.conventions'
+ *
+ * conventions.name === FEATURE // => true
  * ```
  */
 export const FEATURE = 'conventions'
@@ -59,9 +61,14 @@ const explain = (result: ConditionResult): ReadonlyArray<string> => {
  * failed `$and` or `$or`, the conditions inside it that failed.
  *
  * @example
- * ```ts
- * describeEvaluation(yield* evaluate(rule.when, subject))
- * // 'Expected 1 of 1 condition(s) to pass, but 0 did: title does not match ^feat'
+ * ```ts import.meta.vitest name="describeEvaluation"
+ * import { evaluate } from '@resnovas/conditions'
+ * import { describeEvaluation } from '@resnovas/feature.conventions'
+ * import { Effect } from 'effect'
+ *
+ * const subject = { kind: 'issue' as const, number: 1, title: 'fix: typo', body: '', author: 'ann', open: true, locked: false, labels: [], updatedAt: new Date(0) }
+ * const evaluation = Effect.runSync(evaluate({ condition: [{ type: 'titleMatches', condition: '^feat' }] }, subject))
+ * describeEvaluation(evaluation) // => 'Expected 1 of 1 condition(s) to pass, but 0 did: title does not match ^feat'
  * ```
  *
  * @param evaluation - A failed evaluation of the rule's `when`.
@@ -81,9 +88,13 @@ export const describeEvaluation = (evaluation: Evaluation): string => {
  * every part that needs fixing. The rule's `on` is not considered here.
  *
  * @example
- * ```ts
- * const failures = yield* checkRule({ preset: 'conventionalCommits' }, subject)
- * failures.length === 0 // the rule passed
+ * ```ts import.meta.vitest name="checkRule"
+ * import { checkRule } from '@resnovas/feature.conventions'
+ * import { Effect } from 'effect'
+ *
+ * const subject = { kind: 'issue' as const, number: 1, title: 'fix: typo', body: '', author: 'ann', open: true, locked: false, labels: [], updatedAt: new Date(0) }
+ * Effect.runSync(checkRule({ preset: 'conventionalCommits' }, subject)).length // => 0
+ * Effect.runSync(checkRule({ preset: 'conventionalCommits' }, { ...subject, title: 'typo' })).length // => 1
  * ```
  *
  * @param rule - The convention rule.
@@ -137,9 +148,14 @@ const run: Feature['run'] = ({ config, subject }) =>
  * expected. The feature only records findings: the reporters post them.
  *
  * @example
- * ```ts
- * const result = yield* runFeatures({ config, event: 'pull_request', payload, features: [conventions] })
- * result.findings.filter((finding) => finding.feature === 'conventions')
+ * ```ts import.meta.vitest name="conventions"
+ * import { runFeatures } from '@resnovas/engine'
+ * import { conventions } from '@resnovas/feature.conventions'
+ *
+ * const config = { version: 2 as const, conventions: { rules: { title: { preset: 'conventionalCommits' as const } } } }
+ * // Needs GitHub provided to run.
+ * const program = runFeatures({ config, event: 'pull_request', payload: {}, features: [conventions] })
+ * conventions.enabled?.(config) // => true
  * ```
  */
 export const conventions: Feature = {

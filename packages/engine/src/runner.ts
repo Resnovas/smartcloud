@@ -24,6 +24,7 @@ import { makeReport, Report, type ReportSnapshot } from './report.js'
 
 /** The events a feature can act on. */
 export type SupportedEnvelope = PullRequestEnvelope | IssueEnvelope | RepositoryEnvelope
+/** The kinds of event a feature can declare it handles. */
 export type EnvelopeKind = SupportedEnvelope['kind']
 
 /** What a feature is given to act on. */
@@ -63,6 +64,14 @@ export interface RunResult extends ReportSnapshot {
 /**
  * How long each feature takes, in milliseconds, tagged by `feature` and
  * `outcome` (`success` or `failure`).
+ *
+ * @example
+ * ```ts
+ * import { featureDuration } from '@resnovas/engine'
+ * import { Effect, Metric } from 'effect'
+ *
+ * const runs = Effect.map(Metric.value(Metric.tagged(featureDuration, 'feature', 'labels')), (state) => state.count)
+ * ```
  */
 export const featureDuration = Metric.histogram(
   'smartcloud.feature.duration_ms',
@@ -76,6 +85,15 @@ export const featureDuration = Metric.histogram(
  * @remarks
  * Traced as `smartcloud.engine.loadFacets`, with the subject's kind and the
  * facets asked for.
+ *
+ * @example
+ * ```ts
+ * import type { Subject } from '@resnovas/conditions'
+ * import { loadFacets } from '@resnovas/engine'
+ *
+ * declare const pullRequest: Subject
+ * const withFiles = loadFacets(pullRequest, new Set(['files', 'reviews'] as const))
+ * ```
  *
  * @param subject - The pull request.
  * @param facets - The facets to load.
@@ -146,8 +164,13 @@ const instrument = <R>(feature: Feature, kind: EnvelopeKind, report: Context.Tag
  *
  * @example
  * ```ts
- * const result = yield* runFeatures({ config, event: 'pull_request', payload, features: [labels, conventions] })
- * result.findings.filter((finding) => finding.level === 'error')
+ * import { type Feature, runFeatures } from '@resnovas/engine'
+ * import { Effect } from 'effect'
+ *
+ * declare const features: ReadonlyArray<Feature>
+ * const errors = runFeatures({ config: { version: 2 }, event: 'schedule', payload: {}, features }).pipe(
+ *   Effect.map((result) => result.findings.filter((finding) => finding.level === 'error')),
+ * )
  * ```
  *
  * @param options - The config, the event and the features to run.

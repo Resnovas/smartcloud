@@ -27,10 +27,28 @@ const DAY = 86_400_000
 /** The config's `stale` section. */
 export type StaleConfig = NonNullable<SmartcloudConfig['stale']>
 
-/** Marks the one stale comment smartcloud keeps on an item. */
+/**
+ * Marks the one stale comment smartcloud keeps on an item.
+ *
+ * @example
+ * ```ts import.meta.vitest name="STALE_MARKER"
+ * import { STALE_MARKER } from '@resnovas/feature.stale'
+ *
+ * STALE_MARKER // => '<!-- smartcloud:stale -->'
+ * ```
+ */
 export const STALE_MARKER = '<!-- smartcloud:stale -->'
 
-/** Marks the one abandoned comment smartcloud keeps on an item. */
+/**
+ * Marks the one abandoned comment smartcloud keeps on an item.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ABANDONED_MARKER"
+ * import { ABANDONED_MARKER } from '@resnovas/feature.stale'
+ *
+ * ABANDONED_MARKER // => '<!-- smartcloud:abandoned -->'
+ * ```
+ */
 export const ABANDONED_MARKER = '<!-- smartcloud:abandoned -->'
 
 /**
@@ -40,6 +58,13 @@ export const ABANDONED_MARKER = '<!-- smartcloud:abandoned -->'
  * Adding the label and writing the comment each bump GitHub's `updated_at`
  * a moment after the mark time is taken, so activity only counts once it is
  * this much later than the mark.
+ *
+ * @example
+ * ```ts import.meta.vitest name="MARK_GRACE_MS"
+ * import { MARK_GRACE_MS } from '@resnovas/feature.stale'
+ *
+ * MARK_GRACE_MS / 60_000 // => 10
+ * ```
  */
 export const MARK_GRACE_MS = 10 * 60_000
 
@@ -51,8 +76,11 @@ const SINCE = /<!-- smartcloud:stale-since ([0-9TZ:.+-]{1,40}) -->/
  * The stale comment's body: the marker, the mark time, and the configured text.
  *
  * @example
- * ```ts
- * staleBody('Closing soon unless there is activity.', new Date(0))
+ * ```ts import.meta.vitest name="staleBody"
+ * import { staleBody } from '@resnovas/feature.stale'
+ *
+ * const body = staleBody('Closing soon unless there is activity.', new Date(0))
+ * body.split('\n')[1] // => '<!-- smartcloud:stale-since 1970-01-01T00:00:00.000Z -->'
  * ```
  *
  * @param text - The configured `staleComment`.
@@ -75,8 +103,12 @@ const markerComment = (comments: ReadonlyArray<Comment>, marker: string, trusted
  * so nobody can forge the mark time by posting the marker themselves.
  *
  * @example
- * ```ts
- * markedSince([{ id: 1, author: 'smartcloud[bot]', bot: true, body: staleBody('text', new Date(0)) }]) // Date(0)
+ * ```ts import.meta.vitest name="markedSince"
+ * import { markedSince, staleBody } from '@resnovas/feature.stale'
+ *
+ * const comment = { id: 1, author: 'smartcloud[bot]', bot: true, body: staleBody('text', new Date(0)) }
+ * markedSince([comment])?.getTime() // => 0
+ * markedSince([{ ...comment, author: 'someone', bot: false }]) // => undefined
  * ```
  *
  * @param comments - The item's comments.
@@ -91,6 +123,14 @@ export const markedSince = (comments: ReadonlyArray<Comment>, trusted: ReadonlyA
 
 /**
  * The subject conditions see for an item from a scheduled sweep.
+ *
+ * @example
+ * ```ts import.meta.vitest name="subjectOf"
+ * import { subjectOf } from '@resnovas/feature.stale'
+ *
+ * const item = { number: 3, title: 'Bug', body: '', author: 'ann', open: true, locked: false, labels: [], updatedAt: new Date(0), isPullRequest: true }
+ * subjectOf(item).kind // => 'pullRequest'
+ * ```
  *
  * @param item - The open issue or pull request.
  * @returns The subject, without facets.
@@ -189,7 +229,16 @@ const abandon = (stale: StaleConfig, subject: Subject, label: string, comments: 
  *
  * @example
  * ```ts
- * yield* sweepItem(config.stale, subject, yield* Clock.currentTimeMillis)
+ * import { subjectOf, sweepItem } from '@resnovas/feature.stale'
+ * import { GitHub } from '@resnovas/integrations.github'
+ * import { Clock, Effect } from 'effect'
+ *
+ * // Needs the GitHub service and a Report, as the engine provides them.
+ * const stale = { staleAfterDays: 30, staleLabel: 'stale' }
+ * const program = Effect.gen(function* () {
+ *   const now = yield* Clock.currentTimeMillis
+ *   for (const item of yield* Effect.flatMap(GitHub, (github) => github.listOpenIssues)) yield* sweepItem(stale, subjectOf(item), now)
+ * })
  * ```
  *
  * @param stale - The config's `stale` section.
@@ -253,7 +302,10 @@ const conditionTypes = (value: unknown): ReadonlyArray<string> => {
  *
  * @example
  * ```ts
- * yield* sweepStale(config) // with GitHub and Report provided
+ * import { sweepStale } from '@resnovas/feature.stale'
+ *
+ * // Needs the GitHub service and a Report, as the engine provides them.
+ * const program = sweepStale({ version: 2, stale: { staleAfterDays: 30, staleLabel: 'stale', close: true } })
  * ```
  *
  * @param config - The whole config; only `stale` is read.

@@ -26,6 +26,13 @@ import { SmartcloudConfig } from './schema.js'
  * Committed at `schema/smartcloud.schema.json` for editors, and checked by a
  * test that fails when the committed copy is stale.
  *
+ * @example
+ * ```ts import.meta.vitest name="configJsonSchema"
+ * import { configJsonSchema } from '@resnovas/config'
+ *
+ * JSON.stringify(configJsonSchema()).includes('SmartcloudConfig') // => true
+ * ```
+ *
  * @returns The JSON Schema document.
  */
 export const configJsonSchema = () => JSONSchema.make(SmartcloudConfig)

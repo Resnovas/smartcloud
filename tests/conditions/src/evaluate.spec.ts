@@ -17,7 +17,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Exit, TestClock } from 'effect'
-import { evaluate, MissingFacet, type Condition, type Subject } from '@resnovas/conditions'
+import { evaluate, MissingFacet, requiredFacets, type Condition, type Subject } from '@resnovas/conditions'
 import { commit, issue, pullRequest } from './fixtures.js'
 
 const passes = (condition: Condition, subject: Subject) =>
@@ -291,4 +291,37 @@ describe('evaluate: groups and combinators', () => {
       expect(negated.results[0]?.detail).toBe('the group passed')
     }),
   )
+})
+
+describe('requiredFacets', () => {
+  it('collects the facets used anywhere, including inside combinators', () => {
+    const facets = requiredFacets([
+      { condition: [{ type: 'filesMatch', condition: '**' }] },
+      {
+        condition: [
+          { type: '$or', condition: [{ condition: [{ type: 'isApproved', condition: 1 }] }] },
+          { type: '$not', condition: [{ condition: [{ type: 'hasTrailer', trailer: 'X' }] }] },
+          { type: '$not', requires: 1, condition: [{ type: 'isApproved', condition: 1 }] },
+          { type: 'titleMatches', condition: 'x' },
+        ],
+      },
+    ])
+    expect([...facets].sort()).toStrictEqual(['commits', 'files', 'pendingReviewers', 'reviews'])
+  })
+
+  it('looks inside $and and $only too', () => {
+    const facets = requiredFacets([
+      {
+        condition: [
+          { type: '$and', condition: [{ condition: [{ type: 'filesMatch', condition: '**' }] }] },
+          { type: '$only', requires: 1, condition: [{ condition: [{ type: 'commitsSignedOff', condition: true }] }] },
+        ],
+      },
+    ])
+    expect([...facets].sort()).toStrictEqual(['commits', 'files'])
+  })
+
+  it('needs nothing for conditions on the event payload alone', () => {
+    expect(requiredFacets([{ condition: [{ type: 'isOpen', condition: true }] }]).size).toBe(0)
+  })
 })

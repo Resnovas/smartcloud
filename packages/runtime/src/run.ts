@@ -31,7 +31,16 @@ export interface GitHubEvent {
   readonly payload: unknown
 }
 
-/** A feature failed during a run that otherwise completed; reported to error tracking. */
+/**
+ * A feature failed during a run that otherwise completed; reported to error tracking.
+ *
+ * @example
+ * ```ts import.meta.vitest name="FeatureFailed"
+ * import { FeatureFailed } from '@resnovas/runtime'
+ *
+ * new FeatureFailed({ feature: 'labels', reason: 'down' }).message // => 'the labels feature failed: down'
+ * ```
+ */
 export class FeatureFailed extends Data.TaggedError('FeatureFailed')<{ readonly feature: string; readonly reason: string }> {
   override get message() {
     return `the ${this.feature} feature failed: ${this.reason}`
@@ -58,6 +67,14 @@ export interface RunOutcome {
  * ran, were skipped or failed, and every failure for error tracking. A
  * feature whose flag is off is skipped with the flag named as the reason;
  * with telemetry off or PostHog unreachable, every flag keeps its default.
+ *
+ * @example
+ * ```ts
+ * import { runEvent } from '@resnovas/runtime'
+ *
+ * // Needs the GitHub service; the event is as GitHub sends it.
+ * const outcome = runEvent({ config: {}, features: ['labels'], event: { name: 'schedule', payload: {} } })
+ * ```
  *
  * @param options - Where the config is, which features to run (all when omitted), and the event.
  * @returns What the run did.
@@ -92,7 +109,16 @@ export const runEvent = (options: {
     })
   })
 
-/** The repository events a dry run can simulate. */
+/**
+ * The repository events a dry run can simulate.
+ *
+ * @example
+ * ```ts import.meta.vitest name="REPOSITORY_EVENTS"
+ * import { REPOSITORY_EVENTS } from '@resnovas/runtime'
+ *
+ * REPOSITORY_EVENTS.join(', ') // => 'schedule, push, workflow_dispatch'
+ * ```
+ */
 export const REPOSITORY_EVENTS = ['schedule', 'push', 'workflow_dispatch'] as const
 
 /** A repository event a dry run can simulate. */
@@ -104,14 +130,32 @@ export type Trigger =
   | { readonly kind: 'issue'; readonly number: number }
   | { readonly kind: 'repository'; readonly event: RepositoryEvent }
 
-/** A dry run was not told what to simulate, or was told more than one thing. */
+/**
+ * A dry run was not told what to simulate, or was told more than one thing.
+ *
+ * @example
+ * ```ts import.meta.vitest name="InvalidTrigger"
+ * import { InvalidTrigger } from '@resnovas/runtime'
+ *
+ * new InvalidTrigger({ reason: 'nothing to simulate' }).message.startsWith('nothing to simulate: give exactly one') // => true
+ * ```
+ */
 export class InvalidTrigger extends Data.TaggedError('InvalidTrigger')<{ readonly reason: string }> {
   override get message() {
     return `${this.reason}: give exactly one of a pull request, an issue, or an event (${REPOSITORY_EVENTS.join(', ')})`
   }
 }
 
-/** GitHub answered a read with something other than the documented shape. */
+/**
+ * GitHub answered a read with something other than the documented shape.
+ *
+ * @example
+ * ```ts import.meta.vitest name="UnexpectedResponse"
+ * import { UnexpectedResponse } from '@resnovas/runtime'
+ *
+ * new UnexpectedResponse({ operation: 'GET /commits/main' }).message // => 'GET /commits/main: unexpected response from GitHub'
+ * ```
+ */
 export class UnexpectedResponse extends Data.TaggedError('UnexpectedResponse')<{ readonly operation: string }> {
   override get message() {
     return `${this.operation}: unexpected response from GitHub`
@@ -123,6 +167,15 @@ const isRepositoryEvent = (name: string): name is RepositoryEvent => REPOSITORY_
 /**
  * Works out what to simulate from a pull request number, an issue number or
  * an event name, of which exactly one must be given.
+ *
+ * @example
+ * ```ts import.meta.vitest name="triggerOf"
+ * import { triggerOf } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * Effect.runSync(triggerOf({ pr: 7 })).kind // => 'pullRequest'
+ * Effect.runSync(Effect.flip(triggerOf({ pr: 7, event: 'push' }))).reason // => 'more than one thing to simulate'
+ * ```
  *
  * @param options - The pull request, issue or event.
  * @returns The trigger.
@@ -151,6 +204,14 @@ const CommitRef = Schema.Struct({ sha: Schema.String })
  * webhook payloads, so they are used as they come. A pull request is sent as
  * `synchronize`, an issue as `edited`, and a push as a push of the default
  * branch's head commit. Only reads are made.
+ *
+ * @example
+ * ```ts
+ * import { syntheticEvent } from '@resnovas/runtime'
+ *
+ * // Needs the GitHub service, to read the pull request as it is now.
+ * const event = syntheticEvent({ kind: 'pullRequest', number: 7 })
+ * ```
  *
  * @param trigger - What to simulate.
  * @returns The event name and payload.
@@ -189,6 +250,14 @@ export interface DryRunOutcome extends RunOutcome {
  * Runs every selected feature for a simulated event through the dry-run
  * layer, so reads reach GitHub and every write is only recorded.
  *
+ * @example
+ * ```ts
+ * import { dryRun } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * const writes = dryRun({ trigger: { kind: 'repository', event: 'schedule' }, config: {} }).pipe(Effect.map((outcome) => outcome.writes))
+ * ```
+ *
  * @param options - What to simulate, where the config is, and which features to run.
  * @returns What the run found and the writes it would have made.
  */
@@ -211,6 +280,13 @@ const DETAIL_LIMIT = 160
 /**
  * One line for a recorded write.
  *
+ * @example
+ * ```ts import.meta.vitest name="describeWrite"
+ * import { describeWrite } from '@resnovas/runtime'
+ *
+ * describeWrite({ operation: 'deleteLabel', details: { name: 'bug' } }) // => 'deleteLabel {"name":"bug"}'
+ * ```
+ *
  * @param write - The write.
  * @returns The operation and a shortened copy of its details.
  */
@@ -222,6 +298,14 @@ export const describeWrite = (write: RecordedWrite): string => {
 /**
  * A dry run as text: the job summary, warnings, then every write that would
  * have been made.
+ *
+ * @example
+ * ```ts
+ * import { dryRun, dryRunText } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * const text = dryRun({ trigger: { kind: 'pullRequest', number: 7 }, config: {} }).pipe(Effect.map(dryRunText))
+ * ```
  *
  * @param outcome - The dry run.
  * @returns Markdown.
@@ -253,6 +337,13 @@ export interface DryRunRequest {
  * The config location for a request: a local file when one is named,
  * otherwise the repository's config on its default branch.
  *
+ * @example
+ * ```ts
+ * import { configLocationFor } from '@resnovas/runtime'
+ *
+ * const location = configLocationFor('smartcloud.yml')
+ * ```
+ *
  * @param file - The local file, if any.
  * @returns The location.
  */
@@ -261,6 +352,13 @@ export const configLocationFor = (file: string | undefined) =>
 
 /**
  * Connects to a repository and dry-runs it.
+ *
+ * @example
+ * ```ts
+ * import { dryRunRepository, liveConnect } from '@resnovas/runtime'
+ *
+ * const outcome = dryRunRepository(liveConnect(), { repository: 'Resnovas/smartcloud', pr: 7 })
+ * ```
  *
  * @param connect - Opens the GitHub service.
  * @param request - The repository, what to simulate, the config and the features.

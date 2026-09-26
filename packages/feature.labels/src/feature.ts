@@ -32,8 +32,13 @@ import { syncLabels } from './sync.js'
  * has a `labels` or a `labelling` section.
  *
  * @example
- * ```ts
- * const result = yield* runFeatures({ config, event: 'pull_request', payload, features: [labels] })
+ * ```ts import.meta.vitest name="labels"
+ * import { runFeatures } from '@resnovas/engine'
+ * import { labels } from '@resnovas/feature.labels'
+ *
+ * // Needs GitHub provided to run.
+ * const program = runFeatures({ config: { version: 2, labels: {} }, event: 'schedule', payload: {}, features: [labels] })
+ * labels.handles.length // => 3
  * ```
  */
 export const labels: Feature = {

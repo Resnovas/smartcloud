@@ -31,11 +31,38 @@ import { unquote } from './values.js'
 // controlled, so lines are parsed with string operations and anchored
 // patterns that cannot backtrack, keeping every check linear.
 
-/** Opens the managed block. */
+/**
+ * Opens the managed block.
+ *
+ * @example
+ * ```ts import.meta.vitest name="BEGIN"
+ * import { BEGIN } from '@resnovas/feature.sync'
+ *
+ * BEGIN // => 'house:managed:begin'
+ * ```
+ */
 export const BEGIN = 'house:managed:begin'
-/** Closes the managed block. */
+/**
+ * Closes the managed block.
+ *
+ * @example
+ * ```ts import.meta.vitest name="END"
+ * import { END } from '@resnovas/feature.sync'
+ *
+ * END // => 'house:managed:end'
+ * ```
+ */
 export const END = 'house:managed:end'
-/** Marks where a repository's own additions go. */
+/**
+ * Marks where a repository's own additions go.
+ *
+ * @example
+ * ```ts import.meta.vitest name="LOCAL"
+ * import { LOCAL } from '@resnovas/feature.sync'
+ *
+ * LOCAL // => 'house:local'
+ * ```
+ */
 export const LOCAL = 'house:local'
 
 const MARKER_FOLLOWER = /^[\w:-]$/
@@ -48,6 +75,14 @@ const MARKER_FOLLOWER = /^[\w:-]$/
  * `<!-- ...` in Markdown. A document that merely mentions a marker in its
  * prose, as GOVERNANCE does, stays a whole-file document. The marker must
  * not run on into a longer word, so `house:managed:beginning` is not one.
+ *
+ * @example
+ * ```ts import.meta.vitest name="isMarker"
+ * import { BEGIN, isMarker } from '@resnovas/feature.sync'
+ *
+ * isMarker('# house:managed:begin', BEGIN) // => true
+ * isMarker('See house:managed:begin in GOVERNANCE.', BEGIN) // => false
+ * ```
  *
  * @param line - The line.
  * @param marker - {@link BEGIN}, {@link END} or {@link LOCAL}.
@@ -71,6 +106,14 @@ export interface ManagedParts {
 
 /**
  * Splits a file around its managed block.
+ *
+ * @example
+ * ```ts import.meta.vitest name="splitManaged"
+ * import { splitManaged } from '@resnovas/feature.sync'
+ *
+ * splitManaged('# house:managed:begin\na: 1\n# house:managed:end\n') === undefined // => false
+ * splitManaged('no block here\n') // => undefined
+ * ```
  *
  * @param text - The file.
  * @returns The parts, or undefined when the file has no well-formed block.
@@ -110,6 +153,14 @@ const withoutTrailingNewlines = (text: string) => {
  * The first time a file the repository already had is adopted, its content
  * is kept commented out at the `house:local` line (or at the end), so
  * nothing is lost silently.
+ *
+ * @example
+ * ```ts import.meta.vitest name="mergeManaged"
+ * import { mergeManaged } from '@resnovas/feature.sync'
+ *
+ * const template = '# house:managed:begin\nversion: 2\n# house:managed:end\n# house:local\n'
+ * mergeManaged(template, null, '.github/dependabot.yml') // => template
+ * ```
  *
  * @param rendered - The template after placeholder substitution.
  * @param existing - The file in the repository, or null if it does not exist.
@@ -265,6 +316,14 @@ const isDependabot = (path: string) => path.endsWith('dependabot.yml') || path.e
  * redefine a synced top-level key, issue form field id or workflow job; and
  * that a local Dependabot update does not duplicate a synced one.
  *
+ * @example
+ * ```ts import.meta.vitest name="managedConflicts"
+ * import { managedConflicts } from '@resnovas/feature.sync'
+ *
+ * const synced = '# house:managed:begin\nversion: 2\n# house:managed:end\n# house:local\n'
+ * managedConflicts('.github/dependabot.yml', synced, synced).length // => 0
+ * ```
+ *
  * @param path - The file's path.
  * @param rendered - The rendered template.
  * @param current - The file as it is, or would be after a sync.
@@ -336,6 +395,14 @@ export interface SyncFinding {
  * branch, or brings it in line with the latest templates (a sync). Local
  * rules outside a managed block may be added, unless they conflict with
  * the synced ones ({@link managedConflicts}).
+ *
+ * @example
+ * ```ts import.meta.vitest name="syncFindings"
+ * import { syncFindings } from '@resnovas/feature.sync'
+ *
+ * const findings = syncFindings([{ path: 'LICENSE', rendered: 'MIT\n', base: 'MIT\n', head: 'Apache\n' }])
+ * findings.length // => 1
+ * ```
  *
  * @param files - The synced files, with their base and head content.
  * @returns The findings, in file order.

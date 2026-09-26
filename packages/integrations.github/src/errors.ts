@@ -17,28 +17,64 @@
 
 import { Data } from 'effect'
 
-/** The thing asked for does not exist, or the token cannot see it. */
+/**
+ * The thing asked for does not exist, or the token cannot see it.
+ *
+ * @example
+ * ```ts import.meta.vitest name="NotFound"
+ * import { NotFound } from '@resnovas/integrations.github'
+ *
+ * new NotFound({ operation: 'getFile', detail: 'Not Found' }).message // => 'getFile: not found (Not Found)'
+ * ```
+ */
 export class NotFound extends Data.TaggedError('NotFound')<{ readonly operation: string; readonly detail: string }> {
   override get message() {
     return `${this.operation}: not found (${this.detail})`
   }
 }
 
-/** The token is not allowed to do this. */
+/**
+ * The token is not allowed to do this.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Forbidden"
+ * import { Forbidden } from '@resnovas/integrations.github'
+ *
+ * new Forbidden({ operation: 'createLabel', detail: 'Resource not accessible by integration' }).message // => 'createLabel: forbidden (Resource not accessible by integration)'
+ * ```
+ */
 export class Forbidden extends Data.TaggedError('Forbidden')<{ readonly operation: string; readonly detail: string }> {
   override get message() {
     return `${this.operation}: forbidden (${this.detail})`
   }
 }
 
-/** GitHub rate-limited the request. Retried with backoff before surfacing. */
+/**
+ * GitHub rate-limited the request. Retried with backoff before surfacing.
+ *
+ * @example
+ * ```ts import.meta.vitest name="RateLimited"
+ * import { RateLimited } from '@resnovas/integrations.github'
+ *
+ * new RateLimited({ operation: 'listLabels', detail: 'API rate limit exceeded' }).message // => 'listLabels: rate limited (API rate limit exceeded)'
+ * ```
+ */
 export class RateLimited extends Data.TaggedError('RateLimited')<{ readonly operation: string; readonly detail: string }> {
   override get message() {
     return `${this.operation}: rate limited (${this.detail})`
   }
 }
 
-/** GitHub rejected the request as invalid, for example a duplicate label. */
+/**
+ * GitHub rejected the request as invalid, for example a duplicate label.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ValidationFailed"
+ * import { ValidationFailed } from '@resnovas/integrations.github'
+ *
+ * new ValidationFailed({ operation: 'createLabel', detail: 'already_exists' }).message // => 'createLabel: rejected (already_exists)'
+ * ```
+ */
 export class ValidationFailed extends Data.TaggedError('ValidationFailed')<{
   readonly operation: string
   readonly detail: string
@@ -48,7 +84,16 @@ export class ValidationFailed extends Data.TaggedError('ValidationFailed')<{
   }
 }
 
-/** GitHub or the network failed. Retried with backoff before surfacing, except by calls that create something. */
+/**
+ * GitHub or the network failed. Retried with backoff before surfacing, except by calls that create something.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Unavailable"
+ * import { Unavailable } from '@resnovas/integrations.github'
+ *
+ * new Unavailable({ operation: 'listLabels', detail: 'Bad Gateway' }).message // => 'listLabels: GitHub unavailable (Bad Gateway)'
+ * ```
+ */
 export class Unavailable extends Data.TaggedError('Unavailable')<{ readonly operation: string; readonly detail: string }> {
   override get message() {
     return `${this.operation}: GitHub unavailable (${this.detail})`
@@ -68,6 +113,15 @@ export type GitHubError = NotFound | Forbidden | RateLimited | ValidationFailed 
  * would fail the same way again, so it is `ValidationFailed` and never
  * retried; only timeouts, server errors and network failures are
  * `Unavailable`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="fromStatus"
+ * import { fromStatus } from '@resnovas/integrations.github'
+ *
+ * fromStatus('listLabels', 404, 'Not Found')._tag // => 'NotFound'
+ * fromStatus('listLabels', 403, 'API rate limit exceeded')._tag // => 'RateLimited'
+ * fromStatus('createLabel', 422, 'already_exists')._tag // => 'ValidationFailed'
+ * ```
  *
  * @param operation - The operation that failed, for the error message.
  * @param status - The HTTP status, or undefined for a network failure.
@@ -91,6 +145,14 @@ export const fromStatus = (operation: string, status: number | undefined, detail
  * GitHub answers such a request with status 200 and an `errors` list, so
  * there is no status to map. A rate limit is retried like any other; every
  * other GraphQL error is a problem with the request itself.
+ *
+ * @example
+ * ```ts import.meta.vitest name="fromGraphqlErrors"
+ * import { fromGraphqlErrors } from '@resnovas/integrations.github'
+ *
+ * fromGraphqlErrors('graphql', 'API rate limit exceeded')._tag // => 'RateLimited'
+ * fromGraphqlErrors('graphql', "Field 'x' doesn't exist")._tag // => 'ValidationFailed'
+ * ```
  *
  * @param operation - The operation that failed, for the error message.
  * @param detail - GitHub's message.

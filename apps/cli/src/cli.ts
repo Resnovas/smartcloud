@@ -65,6 +65,14 @@ const config = Options.text('config').pipe(
 /**
  * The `smartcloud` command and its subcommands.
  *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ * import { makeSmartcloud } from '@resnovas/smartcloud'
+ *
+ * const command = makeSmartcloud(liveConnect())
+ * ```
+ *
  * @param connect - Opens the GitHub service for commands that read a repository.
  * @returns The command.
  */
@@ -115,6 +123,14 @@ export const makeSmartcloud = (connect: Connect) => {
 /**
  * Runs the CLI against an argument vector, as `process.argv` gives it.
  *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ * import { runWith } from '@resnovas/smartcloud'
+ *
+ * const validate = runWith(liveConnect())(['node', 'smartcloud', 'validate'])
+ * ```
+ *
  * @param connect - Opens the GitHub service; the real API by default.
  * @returns A function taking the node binary, the script, then the arguments.
  */
@@ -123,7 +139,15 @@ export const runWith = (connect: Connect = liveConnect()) => Command.run(makeSma
 /**
  * Runs the CLI against the real GitHub API.
  *
- * @param argv - The node binary, the script, then the arguments.
+ * @example
+ * ```ts
+ * import { run } from '@resnovas/smartcloud'
+ *
+ * // Needs the platform's services, such as NodeContext.layer, to run.
+ * const program = run(process.argv)
+ * ```
+ *
+ * @param args - The node binary, the script, then the arguments.
  * @returns The run.
  */
 export const run = runWith()
@@ -143,6 +167,14 @@ const oneLine = (message: string) =>
  * Usage errors are already printed with the help text by the time they
  * arrive here, so only the exit code is set for them. A message that spans
  * lines, such as a schema error's tree, is joined onto the one line.
+ *
+ * @example
+ * ```ts
+ * import { main } from '@resnovas/smartcloud'
+ *
+ * // The entry point provides NodeContext.layer and runs this with NodeRuntime.runMain.
+ * const program = main(process.argv)
+ * ```
  *
  * @param argv - The node binary, the script, then the arguments.
  * @param connect - Opens the GitHub service; the real API by default.

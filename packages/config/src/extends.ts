@@ -39,9 +39,11 @@ const REF =
  * Parses an `extends` entry of the form `owner/repo/path@ref`.
  *
  * @example
- * ```ts
- * parseExtendsRef('Resnovas/.github/smartcloud/house.yml@main')
- * // { owner: 'Resnovas', repo: '.github', path: 'smartcloud/house.yml', ref: 'main' }
+ * ```ts import.meta.vitest name="parseExtendsRef"
+ * import { parseExtendsRef } from '@resnovas/config'
+ *
+ * parseExtendsRef('Resnovas/.github/smartcloud/house.yml@main')?.path // => 'smartcloud/house.yml'
+ * parseExtendsRef('o/r/../escape.yml') // => undefined
  * ```
  *
  * @param entry - The entry as written in the config.
@@ -58,13 +60,31 @@ export const parseExtendsRef = (entry: string): ExtendsRef | undefined => {
  * Formats a reference back to its `owner/repo/path@ref` form, used as the
  * preset's name in errors and warnings.
  *
+ * @example
+ * ```ts import.meta.vitest name="formatExtendsRef"
+ * import { formatExtendsRef } from '@resnovas/config'
+ *
+ * formatExtendsRef({ owner: 'o', repo: 'r', path: 'p.yml', ref: 'v1' }) // => 'o/r/p.yml@v1'
+ * ```
+ *
  * @param ref - The reference.
  * @returns The formatted entry.
  */
 export const formatExtendsRef = (ref: ExtendsRef): string =>
   `${ref.owner}/${ref.repo}/${ref.path}${ref.ref === undefined ? '' : `@${ref.ref}`}`
 
-/** An `extends` entry, validated as `owner/repo/path@ref`. */
+/**
+ * An `extends` entry, validated as `owner/repo/path@ref`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ExtendsEntry"
+ * import { ExtendsEntry } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(ExtendsEntry)('Resnovas/.github/smartcloud/house.yml@main') // => true
+ * Schema.is(ExtendsEntry)('not-a-ref') // => false
+ * ```
+ */
 export const ExtendsEntry = Schema.String.pipe(
   Schema.filter((entry) => parseExtendsRef(entry) !== undefined || `expected owner/repo/path@ref, got "${entry}"`, {
     identifier: 'ExtendsEntry',

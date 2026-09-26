@@ -26,6 +26,8 @@ import { gitmojis } from 'gitmojis'
  *
  * @example
  * ```ts
+ * import type { Preset } from '@resnovas/feature.conventions'
+ *
  * const preset: Preset = 'conventionalCommits'
  * ```
  */
@@ -38,8 +40,10 @@ export type Preset = typeof ConventionPreset.Type
  * The Conventional Commits types used by commitlint's conventional config.
  *
  * @example
- * ```ts
- * CONVENTIONAL_TYPES.includes('feat') // true
+ * ```ts import.meta.vitest name="CONVENTIONAL_TYPES"
+ * import { CONVENTIONAL_TYPES } from '@resnovas/feature.conventions'
+ *
+ * CONVENTIONAL_TYPES.includes('feat') // => true
  * ```
  */
 export const CONVENTIONAL_TYPES: ReadonlyArray<string> = [
@@ -64,8 +68,10 @@ export const CONVENTIONAL_TYPES: ReadonlyArray<string> = [
  * Copied from v1's `semantic` list, so v1 titles keep passing.
  *
  * @example
- * ```ts
- * SEMANTIC_TYPES.includes('bug') // true
+ * ```ts import.meta.vitest name="SEMANTIC_TYPES"
+ * import { SEMANTIC_TYPES } from '@resnovas/feature.conventions'
+ *
+ * SEMANTIC_TYPES.includes('bug') // => true
  * ```
  */
 export const SEMANTIC_TYPES: ReadonlyArray<string> = [
@@ -247,9 +253,11 @@ const conventional = (title: string, contexts: ReadonlyArray<string>) => {
  * matches when it appears between a `(` and a later `):` on one line.
  *
  * @example
- * ```ts
- * matchesPreset('conventionalCommits', 'feat(labels): sync labels', ['labels']) // true
- * matchesPreset('semanticTitle', 'fix: typo') // true
+ * ```ts import.meta.vitest name="matchesPreset"
+ * import { matchesPreset } from '@resnovas/feature.conventions'
+ *
+ * matchesPreset('conventionalCommits', 'feat(labels): sync labels', ['labels']) // => true
+ * matchesPreset('semanticTitle', 'fix: typo') // => true
  * ```
  *
  * @param preset - The preset.
@@ -277,9 +285,10 @@ const GITMOJI_LINK = 'The gitmojis are listed at https://gitmoji.dev/'
  * rule sets none; the docs and the CLI use it to describe presets.
  *
  * @example
- * ```ts
- * presetDescription('conventionalCommits', ['labels'])
- * // 'Title it as a conventional commit, `type(scope)!: description` ...'
+ * ```ts import.meta.vitest name="presetDescription"
+ * import { presetDescription } from '@resnovas/feature.conventions'
+ *
+ * presetDescription('conventionalCommits', ['labels']).startsWith('Title it as a conventional commit') // => true
  * ```
  *
  * @param preset - The preset.

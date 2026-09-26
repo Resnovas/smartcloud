@@ -25,7 +25,22 @@ export interface RecordedWrite {
   readonly details: Readonly<Record<string, unknown>>
 }
 
-/** The writes recorded by the dry-run layer, in the order they were made. */
+/**
+ * The writes recorded by the dry-run layer, in the order they were made.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DryRunLog"
+ * import { Effect } from 'effect'
+ * import { DryRun, DryRunLog, GitHub, GitHubMemory } from '@resnovas/integrations.github'
+ *
+ * const program = Effect.gen(function* () {
+ *   yield* (yield* GitHub).closeIssue(1)
+ *   return yield* (yield* DryRunLog).writes
+ * })
+ * const writes = await Effect.runPromise(program.pipe(Effect.provide(DryRun), Effect.provide(GitHubMemory())))
+ * writes[0]?.operation // => 'closeIssue'
+ * ```
+ */
 export class DryRunLog extends Context.Tag('@resnovas/integrations.github/DryRunLog')<
   DryRunLog,
   { readonly writes: Effect.Effect<ReadonlyArray<RecordedWrite>> }
@@ -39,6 +54,18 @@ export class DryRunLog extends Context.Tag('@resnovas/integrations.github/DryRun
  * return a value return a placeholder: comment and check run ids of `0`.
  * GraphQL mutations count as writes wherever they appear in the document,
  * after comments or fragments included; queries pass through.
+ *
+ * @example
+ * ```ts import.meta.vitest name="dryRunGitHub"
+ * import { Effect, Ref } from 'effect'
+ * import { dryRunGitHub, makeMemoryGitHub, type RecordedWrite } from '@resnovas/integrations.github'
+ *
+ * const log = Ref.unsafeMake<ReadonlyArray<RecordedWrite>>([])
+ * const memory = makeMemoryGitHub({ labels: [{ name: 'bug', color: 'd73a4a', description: '' }] })
+ * await Effect.runPromise(dryRunGitHub(memory.service, log).deleteLabel('bug'))
+ * Effect.runSync(Ref.get(log)).length // => 1
+ * memory.state.labels.length // => 1
+ * ```
  *
  * @param inner - The service to read through.
  * @param log - Where writes are recorded.
@@ -75,6 +102,16 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
 /**
  * Turns whichever GitHub layer is provided into a dry run, and provides the
  * {@link DryRunLog} of what it would have written.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DryRun"
+ * import { Effect } from 'effect'
+ * import { DryRun, GitHub, GitHubMemory } from '@resnovas/integrations.github'
+ *
+ * const program = Effect.flatMap(GitHub, (github) => github.createComment(7, 'Thanks!'))
+ * const comment = await Effect.runPromise(program.pipe(Effect.provide(DryRun), Effect.provide(GitHubMemory())))
+ * comment.id // => 0
+ * ```
  */
 export const DryRun = Layer.effectContext(
   Effect.gen(function* () {

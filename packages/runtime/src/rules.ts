@@ -28,7 +28,16 @@ export interface RuleExplanation {
   readonly link?: string
 }
 
-/** No rule has this id. */
+/**
+ * No rule has this id.
+ *
+ * @example
+ * ```ts import.meta.vitest name="UnknownRule"
+ * import { UnknownRule } from '@resnovas/runtime'
+ *
+ * new UnknownRule({ rule: 'nope' }).message.startsWith('no smartcloud rule is called "nope"') // => true
+ * ```
+ */
 export class UnknownRule extends Data.TaggedError('UnknownRule')<{ readonly rule: string }> {
   override get message() {
     return `no smartcloud rule is called "${this.rule}"; the ids are in the finding, for example AI-02, DCO or conventions.title`
@@ -91,6 +100,15 @@ const NOTICE_FEATURES: ReadonlyArray<string> = ['labels', 'stale', 'settings', '
  * the rule's own message or its preset's description. Any other id with a
  * feature prefix, such as `stale.sweep`, is an operational notice from that
  * feature.
+ *
+ * @example
+ * ```ts import.meta.vitest name="explainRule"
+ * import { explainRule } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * Effect.runSync(explainRule('dco', { version: 2 })).rule // => 'DCO'
+ * Effect.runSync(Effect.flip(explainRule('nope', { version: 2 })))._tag // => 'UnknownRule'
+ * ```
  *
  * @param rule - The rule id.
  * @param config - The config the finding came from.

@@ -17,6 +17,7 @@
 
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import * as Doctest from '@effect/doctest/Plugin'
 import { defineConfig } from 'vitest/config'
 
 // Coverage records sources by absolute path, so globs are anchored here.
@@ -31,6 +32,10 @@ const workspaceRoot = dirname(fileURLToPath(import.meta.url))
  * Coverage below 100% of lines fails the run: the house standard for this
  * repository.
  *
+ * The `@effect/doctest` plugin also collects every `@example` fence marked
+ * `ts import.meta.vitest` in the covered sources and runs it as a test, so
+ * documented examples, and their `// =>` assertions, stay true.
+ *
  * @param name - The test project's name, shown in the reporter.
  * @param covers - Source globs of the package under test, relative to the
  *   workspace root, for example `['packages/config/src/**']`.
@@ -38,6 +43,7 @@ const workspaceRoot = dirname(fileURLToPath(import.meta.url))
  */
 export const testProject = (name: string, covers: ReadonlyArray<string>) =>
   defineConfig({
+    plugins: [Doctest.plugin()],
     // Resolve workspace packages to their TypeScript sources, as tsconfig's
     // customConditions does, so coverage measures src rather than dist.
     resolve: { conditions: ['@resnovas/source'] },
@@ -47,6 +53,8 @@ export const testProject = (name: string, covers: ReadonlyArray<string>) =>
       watch: false,
       environment: 'node',
       include: ['src/**/*.spec.ts'],
+      // Doctests are collected from the covered sources: a directory glob or a single file.
+      includeSource: covers.map((glob) => join(workspaceRoot, glob.endsWith('.ts') ? glob : join(glob, '*.ts'))),
       reporters: ['default'],
       coverage: {
         enabled: true,

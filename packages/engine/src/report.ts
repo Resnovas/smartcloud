@@ -46,6 +46,16 @@ export interface ReportSnapshot {
 /**
  * Where features record findings and changes during a run. The reporters
  * turn the snapshot into check runs, comments and the job summary.
+ *
+ * @example
+ * ```ts
+ * import { Report } from '@resnovas/engine'
+ * import { Effect } from 'effect'
+ *
+ * const warn = Effect.flatMap(Report, (report) =>
+ *   report.add({ feature: 'labels', rule: 'labels.prune', level: 'warning', message: 'Would delete "wontfix".' }),
+ * )
+ * ```
  */
 export class Report extends Context.Tag('@resnovas/engine/Report')<
   Report,
@@ -62,6 +72,14 @@ export class Report extends Context.Tag('@resnovas/engine/Report')<
  * @remarks
  * The tags name only the feature and the level, never what a finding is
  * about, so the counter is safe to send to telemetry.
+ *
+ * @example
+ * ```ts
+ * import { findingsCounter } from '@resnovas/engine'
+ * import { Effect, Metric } from 'effect'
+ *
+ * const errors = Effect.map(Metric.value(Metric.tagged(findingsCounter, 'level', 'error')), (state) => state.count)
+ * ```
  */
 export const findingsCounter = Metric.counter('smartcloud.findings', { description: 'Findings recorded by smartcloud features, by level and feature', incremental: true })
 
@@ -80,6 +98,17 @@ const recordFinding = (finding: Finding) =>
  * @remarks
  * Every finding added also increments {@link findingsCounter} and writes a
  * debug log naming its feature, rule and level.
+ *
+ * @example
+ * ```ts import.meta.vitest name="makeReport"
+ * import { makeReport } from '@resnovas/engine'
+ * import { Effect } from 'effect'
+ *
+ * const snapshot = Effect.runSync(
+ *   Effect.flatMap(makeReport, (report) => Effect.zipRight(report.change({ feature: 'labels', description: 'labelled #7' }), report.snapshot)),
+ * )
+ * snapshot.changes.length // => 1
+ * ```
  *
  * @returns The report service.
  */

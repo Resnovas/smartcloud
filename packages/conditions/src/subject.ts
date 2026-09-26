@@ -19,15 +19,33 @@ import { Schema } from 'effect'
 
 /**
  * A review on a pull request, reduced to what conditions need.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Review"
+ * import { Review } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Review)({ author: 'jane', state: 'APPROVED' }) // => true
+ * ```
  */
 export const Review = Schema.Struct({
   author: Schema.String,
   state: Schema.Literal('APPROVED', 'CHANGES_REQUESTED', 'COMMENTED', 'DISMISSED', 'PENDING'),
 })
+/** A decoded {@link Review}. */
 export type Review = typeof Review.Type
 
 /**
  * A commit on a pull request, reduced to what conditions need.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Commit"
+ * import { Commit } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * const commit = { sha: 'abc', message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com', parents: 1 }
+ * Schema.is(Commit)(commit) // => true
+ * ```
  */
 export const Commit = Schema.Struct({
   sha: Schema.String,
@@ -37,6 +55,7 @@ export const Commit = Schema.Struct({
   /** Number of parents: more than one is a merge commit. */
   parents: Schema.Number,
 })
+/** A decoded {@link Commit}. */
 export type Commit = typeof Commit.Type
 
 /**
@@ -48,6 +67,15 @@ export type Commit = typeof Commit.Type
  * API call each, so the engine loads only the ones a config needs (see
  * `requiredFacets`). Evaluating a condition whose facet was not loaded fails
  * with `MissingFacet` rather than guessing.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Subject"
+ * import { Subject } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * const issue = { kind: 'issue', number: 3, title: 'Bug', body: '', author: 'sam', open: true, locked: false, labels: [], updatedAt: new Date(0) }
+ * Schema.is(Subject)(issue) // => true
+ * ```
  */
 export const Subject = Schema.Struct({
   kind: Schema.Literal('pullRequest', 'issue'),
@@ -69,6 +97,7 @@ export const Subject = Schema.Struct({
   pendingReviewers: Schema.optionalWith(Schema.Number, { exact: true }),
   commits: Schema.optionalWith(Schema.Array(Commit), { exact: true }),
 })
+/** A decoded {@link Subject}. */
 export type Subject = typeof Subject.Type
 
 /** A subject property that is loaded on demand. */

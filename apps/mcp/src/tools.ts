@@ -69,6 +69,14 @@ export interface ConfigInput {
 /**
  * Checks a config and everything it extends.
  *
+ * @example
+ * ```ts
+ * import { validateConfigTool } from '@resnovas/smartcloud-mcp'
+ *
+ * // Needs a config source, for presets named in `extends`.
+ * const result = validateConfigTool({ config: 'version: 2\n' })
+ * ```
+ *
  * @param input - The config text and its name.
  * @returns The sources it was built from and every warning, as JSON.
  */
@@ -82,6 +90,16 @@ export const validateConfigTool = (input: ConfigInput) =>
 /**
  * Converts a v1 JSON config to v2 YAML.
  *
+ * @example
+ * ```ts import.meta.vitest name="migrateConfigTool"
+ * import { migrateConfigTool } from '@resnovas/smartcloud-mcp'
+ * import { Effect } from 'effect'
+ *
+ * const result = await Effect.runPromise(migrateConfigTool({ config: '{}', source: 'config.json' }))
+ * result.isError === true // => false
+ * result.content[0]?.text.includes('version: 2') // => true
+ * ```
+ *
  * @param input - The v1 config text and its name.
  * @returns The YAML, then the warnings as JSON.
  */
@@ -91,6 +109,14 @@ export const migrateConfigTool = (input: ConfigInput) =>
 /**
  * Explains a config: which features it enables and the rules each one reads.
  *
+ * @example
+ * ```ts
+ * import { explainConfigTool } from '@resnovas/smartcloud-mcp'
+ *
+ * // Needs a config source, for presets named in `extends`.
+ * const result = explainConfigTool({ config: 'version: 2\nlabels: {}\n' })
+ * ```
+ *
  * @param input - The config text and its name.
  * @returns The explanation as JSON.
  */
@@ -99,7 +125,16 @@ export const explainConfigTool = (input: ConfigInput) =>
 
 const PASS_TEXT = 'pass the config itself as configText instead.'
 
-/** The server will not read the config it was asked to. */
+/**
+ * The server will not read the config it was asked to.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ConfigRefused"
+ * import { ConfigRefused } from '@resnovas/smartcloud-mcp'
+ *
+ * new ConfigRefused({ reason: 'no' }).message.startsWith('no. The MCP server only reads') // => true
+ * ```
+ */
 export class ConfigRefused extends Data.TaggedError('ConfigRefused')<{ readonly reason: string }> {
   override get message() {
     return `${this.reason}. The MCP server only reads a config file given as a relative path to a regular file inside its working directory; ${PASS_TEXT}`
@@ -114,6 +149,14 @@ export class ConfigRefused extends Data.TaggedError('ConfigRefused')<{ readonly 
  * An assistant may be steered by what it reads, and clients may approve
  * read-only tools without asking, so the path is never trusted: it must be
  * relative, resolve (symlinks included) inside `root`, and be a regular file.
+ *
+ * @example
+ * ```ts
+ * import { readConfinedConfig } from '@resnovas/smartcloud-mcp'
+ *
+ * // Needs the platform's FileSystem and Path; fails with ConfigRefused for `../secret.yml`.
+ * const config = readConfinedConfig(process.cwd(), 'smartcloud.yml')
+ * ```
  *
  * @param root - The directory the server may read from, its working directory.
  * @param file - The path the assistant gave.
@@ -168,6 +211,14 @@ export interface DryRunInput extends RepositoryConfigInput {
 /**
  * Dry-runs every feature against a repository. Nothing is written.
  *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ * import { dryRunTool } from '@resnovas/smartcloud-mcp'
+ *
+ * const result = dryRunTool(liveConnect(), { repository: 'Resnovas/example', pr: 7 }, process.cwd())
+ * ```
+ *
  * @param connect - Opens the GitHub service.
  * @param input - The repository, what to simulate, the config and the features.
  * @param root - The only directory a config file may be read from.
@@ -194,6 +245,14 @@ export interface PlanSettingsInput extends RepositoryConfigInput {
 
 /**
  * Plans a repository's settings without applying them.
+ *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ * import { planSettingsTool } from '@resnovas/smartcloud-mcp'
+ *
+ * const result = planSettingsTool(liveConnect(), { repository: 'Resnovas/example' }, process.cwd())
+ * ```
  *
  * @param connect - Opens the GitHub service.
  * @param input - The repository, and the config to use instead of its own.
@@ -231,6 +290,14 @@ export interface CommitMessageInput {
 /**
  * Checks a commit message for DCO and AI attribution before committing.
  *
+ * @example
+ * ```ts
+ * import { checkCommitMessageTool } from '@resnovas/smartcloud-mcp'
+ *
+ * // Needs a config source, for presets named in `extends`.
+ * const result = checkCommitMessageTool({ message: 'fix: x', authorName: 'Jane Doe', authorEmail: 'jane@example.com' })
+ * ```
+ *
  * @param input - The message, its author, and optionally the config.
  * @returns Whether it passes and every finding, as JSON.
  */
@@ -244,6 +311,14 @@ export const checkCommitMessageTool = (input: CommitMessageInput) =>
 
 /**
  * Explains a rule from the id a finding reports, and how to satisfy it.
+ *
+ * @example
+ * ```ts
+ * import { explainRuleTool } from '@resnovas/smartcloud-mcp'
+ *
+ * // Needs a config source, for presets named in `extends`.
+ * const result = explainRuleTool({ rule: 'DCO' })
+ * ```
  *
  * @param input - The rule id, and the config for conventions and links.
  * @returns The explanation as JSON.

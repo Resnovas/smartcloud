@@ -31,19 +31,50 @@ const Subjects = Schema.Array(Schema.Literal('pullRequest', 'issue'))
 /**
  * Who is who. Maintainers get warnings where contributors get errors, and
  * count towards the review gate; trusted bots skip the contributor checks.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Roles"
+ * import { Roles } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Roles)({ maintainers: ['TGTGamer'], trustedBots: ['dependabot[bot]'] }) // => true
+ * Schema.is(Roles)({ maintainers: 'TGTGamer' }) // => false
+ * ```
  */
 export const Roles = Schema.Struct({
   maintainers: opt(Logins),
   trustedBots: opt(Logins),
 }).annotations({ identifier: 'Roles' })
 
-/** Where findings link to, so every broken rule points at its text. */
+/**
+ * Where findings link to, so every broken rule points at its text.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Links"
+ * import { Links } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Links)({ policyBase: 'https://github.com/Resnovas/.github/blob/main' }) // => true
+ * Schema.is(Links)({ policyBase: 1 }) // => false
+ * ```
+ */
 export const Links = Schema.Struct({
   /** Base URL of the governance documents, for example `https://github.com/Resnovas/.github/blob/main`. */
   policyBase: opt(Schema.String),
 }).annotations({ identifier: 'Links' })
 
-/** DCO sign-off and AI attribution rules for commits. */
+/**
+ * DCO sign-off and AI attribution rules for commits.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Commits"
+ * import { Commits } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Commits)({ dco: true, aiAttribution: true, maintainerLevel: 'warning' }) // => true
+ * Schema.is(Commits)({ maintainerLevel: 'fatal' }) // => false
+ * ```
+ */
 export const Commits = Schema.Struct({
   /** Every non-merge commit is signed off by its author. */
   dco: opt(Schema.Boolean),
@@ -55,7 +86,18 @@ export const Commits = Schema.Struct({
   maintainerLevel: opt(Level),
 }).annotations({ identifier: 'Commits' })
 
-/** The AI disclosure a pull request description must carry. */
+/**
+ * The AI disclosure a pull request description must carry.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Disclosure"
+ * import { Disclosure } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Disclosure)({ fields: { level: 'AI level' }, requireDraft: true }) // => true
+ * Schema.is(Disclosure)({ requireDraft: 'yes' }) // => false
+ * ```
+ */
 export const Disclosure = Schema.Struct({
   /** The labels of the disclosure fields, if a repository renames them. */
   fields: opt(
@@ -71,19 +113,52 @@ export const Disclosure = Schema.Struct({
   maintainerLevel: opt(Level),
 }).annotations({ identifier: 'Disclosure' })
 
-/** Reviewers to request when conditions pass. */
+/**
+ * Reviewers to request when conditions pass.
+ *
+ * @example
+ * ```ts import.meta.vitest name="RequestApproval"
+ * import { RequestApproval } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(RequestApproval)({ reviewers: ['TGTGamer'], when: { condition: [{ type: 'isDraft', condition: false }] } }) // => true
+ * Schema.is(RequestApproval)({ reviewers: ['TGTGamer'] }) // => false
+ * ```
+ */
 export const RequestApproval = Schema.Struct({
   reviewers: Logins,
   when: ConditionGroup,
 }).annotations({ identifier: 'RequestApproval' })
 
-/** An automatic approval when conditions pass, for example for dependabot. */
+/**
+ * An automatic approval when conditions pass, for example for dependabot.
+ *
+ * @example
+ * ```ts import.meta.vitest name="AutomaticApprove"
+ * import { AutomaticApprove } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(AutomaticApprove)({ when: { condition: [{ type: 'creatorMatches', condition: '^dependabot' }] }, message: 'Approved' }) // => true
+ * Schema.is(AutomaticApprove)({ message: 'Approved' }) // => false
+ * ```
+ */
 export const AutomaticApprove = Schema.Struct({
   when: ConditionGroup,
   message: opt(Schema.String),
 }).annotations({ identifier: 'AutomaticApprove' })
 
-/** The maintainer review gate and approval automation. */
+/**
+ * The maintainer review gate and approval automation.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Reviews"
+ * import { Reviews } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Reviews)({ gate: { outside: 2, maintainer: 1 } }) // => true
+ * Schema.is(Reviews)({ gate: { outside: -1 } }) // => false
+ * ```
+ */
 export const Reviews = Schema.Struct({
   /**
    * Maintainer approvals needed before merge, counted from each maintainer's
@@ -100,7 +175,18 @@ export const Reviews = Schema.Struct({
   automaticApprove: opt(Schema.Record({ key: Schema.String, value: AutomaticApprove })),
 }).annotations({ identifier: 'Reviews' })
 
-/** Scheduled marking of inactive issues and pull requests. */
+/**
+ * Scheduled marking of inactive issues and pull requests.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Stale"
+ * import { Stale } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Stale)({ staleAfterDays: 60, staleLabel: 'stale' }) // => true
+ * Schema.is(Stale)({ staleLabel: 'stale' }) // => false
+ * ```
+ */
 export const Stale = Schema.Struct({
   on: opt(Subjects),
   staleAfterDays: Schema.NonNegative,
@@ -114,7 +200,18 @@ export const Stale = Schema.Struct({
   exempt: opt(Schema.Struct({ labels: opt(Schema.Array(Schema.String)), when: opt(ConditionGroup) })),
 }).annotations({ identifier: 'Stale' })
 
-/** The repository settings baseline. Anything omitted is left as it is. */
+/**
+ * The repository settings baseline. Anything omitted is left as it is.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Settings"
+ * import { Settings } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Settings)({ merging: { squash: true }, security: { codeScanning: 'extended' } }) // => true
+ * Schema.is(Settings)({ security: { codeScanning: 'maximum' } }) // => false
+ * ```
+ */
 export const Settings = Schema.Struct({
   merging: opt(
     Schema.Struct({
@@ -168,7 +265,18 @@ export const Settings = Schema.Struct({
   ),
 }).annotations({ identifier: 'Settings' })
 
-/** Files synced from a template directory in another repository. */
+/**
+ * Files synced from a template directory in another repository.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Sync"
+ * import { Sync } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Sync)({ source: 'Resnovas/.github/templates@main', values: { ORG_NAME: 'Resnovas' } }) // => true
+ * Schema.is(Sync)({ values: { ORG_NAME: 'Resnovas' } }) // => false
+ * ```
+ */
 export const Sync = Schema.Struct({
   /** The template directory, as `owner/repo/path@ref`. */
   source: Schema.String,

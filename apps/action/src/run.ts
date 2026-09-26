@@ -19,7 +19,16 @@ import { runEvent, type ConfigLocation, type RunOutcome } from '@resnovas/runtim
 import { Effect, Option } from 'effect'
 import type { Inputs } from './inputs.js'
 
-export { FEATURES, NoConfig, PresetUnreadable, UnknownFeatures } from '@resnovas/runtime'
+export {
+  /** Every feature smartcloud can run, in the order their results are reported. */
+  FEATURES,
+  /** No config was found where smartcloud looked for one. */
+  NoConfig,
+  /** A preset named in `extends` exists but could not be read. */
+  PresetUnreadable,
+  /** A feature was asked for by a name that does not exist. */
+  UnknownFeatures,
+} from '@resnovas/runtime'
 
 /** What a run did, for the entry point to write out. */
 export interface Outcome extends RunOutcome {
@@ -36,6 +45,15 @@ export interface Outcome extends RunOutcome {
  * `configRef` says otherwise, so no checkout is needed. Reading it from the
  * default branch also means a pull request cannot loosen the rules it is
  * checked against.
+ *
+ * @example
+ * ```ts
+ * import { readInputs, runAction } from '@resnovas/action'
+ * import { Effect } from 'effect'
+ *
+ * // Needs the GitHub service and a config source to run.
+ * const run = Effect.flatMap(readInputs, (inputs) => runAction(inputs, { name: 'pull_request', payload: {} }))
+ * ```
  *
  * @param inputs - The action's inputs.
  * @param event - The event name and its payload.
