@@ -51,8 +51,9 @@ describe('settingsFeature', () => {
         const { service, state } = makeMemoryGitHub({ repository: publicRepository })
         const result = yield* runFeatures({ config, event, payload, features: [settingsFeature] }).pipe(Effect.provideService(GitHub, service))
         expect(result.ran).toStrictEqual(['settings'])
-        // The in-memory GitHub answers the rulesets listing with null, which
-        // is not a list, so the ruleset step is reported rather than guessed.
+        // The in-memory GitHub answers the rulesets and deployment policy
+        // listings with null, which is not a list, so both steps are reported
+        // rather than guessed.
         expect(result.findings).toStrictEqual([
           {
             feature: 'settings',
@@ -60,10 +61,17 @@ describe('settingsFeature', () => {
             level: 'error',
             message: 'Ruleset "house: default branch": GET /rulesets: unexpected response (expected a list of rulesets)',
           },
+          {
+            feature: 'settings',
+            rule: 'settings.deployment-policies:Production',
+            level: 'error',
+            message:
+              'Deployment policies for "Production": branch main, tag v*: GET /environments/Production/deployment-branch-policies: unexpected response (expected a list of deployment branch policies)',
+          },
           pushLimit,
         ])
         expect(result.changes).toHaveLength(11)
-        expect(state.requests).toHaveLength(11)
+        expect(state.requests).toHaveLength(12)
         expect(state.graphql).toHaveLength(1)
       }),
     )
@@ -111,6 +119,7 @@ describe('settingsFeature', () => {
       )
       expect(result.findings.map(({ rule, level }) => `${level} ${rule}`)).toStrictEqual([
         'warning settings.ruleset',
+        'error settings.deployment-policies:Production',
         'notice settings.secret-scanning',
         'notice settings.private-vulnerability-reporting',
         'notice settings.push-limit',

@@ -459,7 +459,15 @@ settings:
       const { service, state } = memory({ '.github/smartcloud.yml': SETTINGS })
       const connect: Connect = () => Effect.succeed(service)
       const plan = yield* planSettingsForRepository(connect, { repository: 'Resnovas/example' })
-      expect(plan.steps.map((step) => step.id)).toStrictEqual(['merging', 'features', 'dependabot-alerts', 'code-scanning', 'ruleset', 'environment:Production'])
+      expect(plan.steps.map((step) => step.id)).toStrictEqual([
+        'merging',
+        'features',
+        'dependabot-alerts',
+        'code-scanning',
+        'ruleset',
+        'environment:Production',
+        'deployment-policies:Production',
+      ])
       const text = settingsPlanText(plan)
       expect(text.split('\n')[0]).toBe('Settings for Resnovas/example, in order:')
       expect(text).toContain('PATCH /repos/{owner}/{repo} {"allow_squash_merge":true}')
@@ -467,6 +475,11 @@ settings:
       expect(text).toContain('GraphQL mutation($id: ID!)')
       expect(text).toContain('(may fail; reported as a warning)')
       expect(text).toContain('create or update by name: {"name":"house: default branch"')
+      expect(text).toContain('{"deployment_branch_policy":{"protected_branches":false,"custom_branch_policies":true}}')
+      expect(text).toContain(
+        '- `deployment-policies:Production`: Deployment policies for "Production": branch main, tag v*\n' +
+          '  create if missing: POST /repos/{owner}/{repo}/environments/Production/deployment-branch-policies {"name":"main","type":"branch"} {"name":"v*","type":"tag"}',
+      )
       expect(state.requests).toStrictEqual([])
     }).pipe(Effect.provide(NodeContext.layer)),
   )

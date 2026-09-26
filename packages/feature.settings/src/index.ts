@@ -25,19 +25,23 @@
  * @packageDocumentation
  */
 
-export { applySettings, FEATURE, UnexpectedResponse, upsertRuleset } from './apply.js'
+export { applySettings, ensureDeploymentPolicies, FEATURE, UnexpectedResponse, upsertRuleset } from './apply.js'
 export { SETTINGS_EVENTS, settingsFeature } from './feature.js'
 export {
   DEFAULT_RULESET_NAME,
+  deploymentPoliciesFor,
   ENVIRONMENT_SETS,
   environmentBody,
   environmentsFor,
   isProtectedEnvironment,
   planSettings,
+  RELEASE_TAG_PATTERN,
   rulesetBody,
 } from './plan.js'
 export type {
   BypassActor,
+  DeploymentPoliciesStep,
+  DeploymentPolicy,
   GraphqlStep,
   ProjectType,
   RestStep,

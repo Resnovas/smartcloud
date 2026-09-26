@@ -18,7 +18,7 @@
 import { Report } from '@resnovas/engine'
 import { GitHub, type GitHubError } from '@resnovas/integrations.github'
 import { Data, Effect, Either, Schema } from 'effect'
-import type { RulesetBody, SettingsStep } from './plan.js'
+import type { DeploymentPolicy, RulesetBody, SettingsStep } from './plan.js'
 
 /** The feature name findings and changes are recorded under. */
 export const FEATURE = 'settings'
@@ -59,6 +59,46 @@ export const upsertRuleset = (ruleset: RulesetBody): Effect.Effect<void, GitHubE
     )
   })
 
+// Only the fields the check needs. GitHub sends `type` on every policy now;
+// one without it predates tag policies, so it is a branch policy.
+const PolicyList = Schema.Struct({
+  branch_policies: Schema.Array(
+    Schema.Struct({ name: Schema.String, type: Schema.optionalWith(Schema.Literal('branch', 'tag'), { default: () => 'branch' as const }) }),
+  ),
+})
+
+/**
+ * Creates the deployment branch and tag policies an environment is missing.
+ *
+ * @remarks
+ * Existing policies are listed first and matched by name and type, so
+ * re-running creates nothing new. Policies the environment has that are not
+ * asked for are left alone. The environment must already use custom branch
+ * policies, which `environmentBody` sets for a protected environment.
+ *
+ * @param environment - The environment name.
+ * @param policies - The policies it must have.
+ * @returns Nothing; fails when GitHub rejects a call or lists policies in an unexpected shape.
+ */
+export const ensureDeploymentPolicies = (
+  environment: string,
+  policies: ReadonlyArray<DeploymentPolicy>,
+): Effect.Effect<void, GitHubError | UnexpectedResponse, GitHub> =>
+  Effect.gen(function* () {
+    const github = yield* GitHub
+    const path = `/environments/${encodeURIComponent(environment)}/deployment-branch-policies`
+    const response = yield* github.repositoryRequest({ method: 'GET', path: `${path}?per_page=100` })
+    const listed = Schema.decodeUnknownEither(PolicyList)(response)
+    if (Either.isLeft(listed)) {
+      return yield* new UnexpectedResponse({ operation: `GET ${path}`, detail: 'expected a list of deployment branch policies' })
+    }
+    const existing = listed.right.branch_policies
+    for (const policy of policies) {
+      if (existing.some((entry) => entry.name === policy.name && entry.type === policy.type)) continue
+      yield* github.repositoryRequest({ method: 'POST', path, body: policy })
+    }
+  })
+
 const perform = (step: SettingsStep): Effect.Effect<void, GitHubError | UnexpectedResponse, GitHub> => {
   switch (step.kind) {
     case 'ruleset':
@@ -67,6 +107,8 @@ const perform = (step: SettingsStep): Effect.Effect<void, GitHubError | Unexpect
       return Effect.flatMap(GitHub, (github) => github.graphql(step.query, step.variables))
     case 'rest':
       return Effect.flatMap(GitHub, (github) => github.repositoryRequest(step.request))
+    case 'deploymentPolicies':
+      return ensureDeploymentPolicies(step.environment, step.policies)
   }
 }
 
