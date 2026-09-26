@@ -1,0 +1,29 @@
+{
+  "name": "@resnovas/feature.reviews",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The reviews feature: the maintainer review gate, requested approvals and automatic approval.",
+  "license": "SEE LICENSE IN LICENSE",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "nx": {
+    "tags": [
+      "type_extension",
+      "layer_backend"
+    ]
+  },
+  "dependencies": {
+    "@resnovas/conditions": "workspace:*",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1"
+  }
+}
