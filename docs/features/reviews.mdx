@@ -51,6 +51,37 @@ Make the `smartcloud / reviews` check required in the branch ruleset to enforce 
 
 Each entry in `requestApprovals` requests reviews from its `reviewers` when its `when` passes. The pull request's author is left out, as GitHub rejects a request for your own review, and so is anyone who has already reviewed, since a new request would put them back on the pending list. A leading `@` on a login is optional.
 
+### Assignment strategies
+
+Set `strategy` on a request rule to select reviewers instead of requesting everyone:
+
+```yaml
+reviews:
+  requestApprovals:
+    rotation:
+      reviewers: [ann, bo, cy]
+      strategy: round-robin
+      count: 1
+      when:
+        condition:
+          - type: isDraft
+            condition: false
+```
+
+| Strategy        | Selection                                                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `round-robin`   | Rotates the configured pool by `(PR number - 1) % pool size`, then selects in that order. This is a deterministic rotation, not a persisted assignment cursor; gaps in PR numbers can skip turns. |
+| `load-balanced` | Selects the users with the fewest pending review requests on open PRs in this repository. The same rotation breaks ties. Submitted reviews no longer contribute to load.                          |
+| `codeowners`    | Selects owners of changed files from CODEOWNERS at the PR's base commit. Set `reviewers: []` to use all matching owners, including teams, or list logins to restrict the pool.                    |
+
+`count` is a positive integer, defaulting to one when a strategy is set. It is the desired total from that rule's eligible pool: pending requests and submitted reviews count toward it, so later events do not request extra reviewers. The author, duplicate logins, and already requested or reviewed users are excluded from new requests. Logins compare without case or a leading `@`. Draft and closed PRs receive no strategic assignments. An empty or exhausted pool does nothing; fewer eligible reviewers than `count` requests everyone available.
+
+CODEOWNERS uses the first file present in `.github/CODEOWNERS`, `CODEOWNERS`, or `docs/CODEOWNERS`. The last valid matching line wins for each changed path; a line with no owners clears ownership. Unsupported lines and email owners are ignored. Team owners must belong to the repository's organization. Previously requested teams count toward `count` even after a member reviews or someone removes the request; the PR timeline prevents repeated team notifications without requiring access to private team membership. No CODEOWNERS file means no requests. The PR cannot alter its own assignment policy by changing CODEOWNERS, since the base commit is used.
+
+These strategies use ordinary repository read access and pull request write access, with no organization membership or PAT-only API. Forbidden reads or writes produce a warning. Load balancing reads each open PR's pending requests; concurrent runs may observe the same load and choose the same reviewer. It does not promise an atomic global queue. Configure workflow concurrency per PR to prevent duplicate concurrent assignment runs.
+
+Without `strategy`, the existing request-everyone behavior is unchanged and `count` is unused. Strategies are opt-in and are not enabled in the house preset or templates.
+
 ## Automatic approval
 
 Each entry in `automaticApprove` approves the pull request when its `when` passes, with its `message` as the review body (default: "Approved automatically by smartcloud."). One approval is made per run, by the first rule that passes.

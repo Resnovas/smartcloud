@@ -128,6 +128,10 @@ export const Disclosure = Schema.Struct({
  */
 export const RequestApproval = Schema.Struct({
   reviewers: Logins,
+  /** Omit to request everyone; strategies choose at most count reviewers. */
+  strategy: opt(Schema.Literal('round-robin', 'load-balanced', 'codeowners')),
+  /** Total desired reviewers from this rule, including pending or completed reviews. Defaults to one with a strategy. */
+  count: opt(Schema.Int.pipe(Schema.positive())),
   when: ConditionGroup,
 }).annotations({ identifier: 'RequestApproval' })
 

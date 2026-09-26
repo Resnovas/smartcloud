@@ -9,9 +9,20 @@
   },
   "include": ["src/**/*.ts"],
   "references": [
-    { "path": "../conditions/tsconfig.lib.json" },
-    { "path": "../config/tsconfig.lib.json" },
-    { "path": "../integrations.github/tsconfig.lib.json" },
-    { "path": "../engine/tsconfig.lib.json" }
+    {
+      "path": "../feature.codeowners/tsconfig.lib.json"
+    },
+    {
+      "path": "../integrations.github/tsconfig.lib.json"
+    },
+    {
+      "path": "../engine/tsconfig.lib.json"
+    },
+    {
+      "path": "../config/tsconfig.lib.json"
+    },
+    {
+      "path": "../conditions/tsconfig.lib.json"
+    }
   ]
 }

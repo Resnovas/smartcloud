@@ -19,6 +19,7 @@ import type { SmartcloudConfig } from '@resnovas/config'
 import { type Feature, type FeatureContext, Report } from '@resnovas/engine'
 import { GitHub, type GitHubError } from '@resnovas/integrations.github'
 import { Effect } from 'effect'
+import { assignReviewers } from './assignment.js'
 import { DEFAULT_POLICY_BASE, evaluateGate, gateMessage, latestDecisive, normaliseLogin, sameLogin } from './gate.js'
 
 /**
@@ -124,6 +125,10 @@ const runRequestApprovals = (
         Effect.annotateLogs({ feature: FEATURE, rule: `reviews.requestApprovals.${key}`, passed: evaluation.passed }),
       )
       if (!evaluation.passed) continue
+      if (rule.strategy !== undefined) {
+        yield* assignReviewers(rule, subject, reviews)
+        continue
+      }
       // GitHub rejects a request for the author's own review, so drop them.
       const reviewers = rule.reviewers
         .filter((login) => !sameLogin(login, subject.author) && !reviewed.some((author) => sameLogin(login, author)))
