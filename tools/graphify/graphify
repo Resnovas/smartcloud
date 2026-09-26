@@ -1,0 +1,362 @@
+#!/usr/bin/env sh
+#
+# House Graphify wrapper, synced from Resnovas/.github
+# templates/tools/graphify/graphify. Edit it there, not here: the next house
+# sync overwrites local edits.
+#
+# Builds and queries the repository knowledge graph committed under
+# graphify-out/. The tool itself is installed once per machine, outside the
+# repository, and shared by every clone that uses this wrapper.
+#
+# Usage: sh tools/graphify/graphify <command> [args]
+# Run `sh tools/graphify/graphify help` for the command list.
+
+set -eu
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd -P)
+REPO_ROOT=$(CDPATH= cd -- "$SCRIPT_DIR/../.." && pwd -P)
+
+# --- Configuration ------------------------------------------------------------
+# Graphify is deliberately not pinned: every machine tracks the latest release
+# so new extractors and fixes arrive without a house change. The wrapper checks
+# for a newer release at most once every GRAPHIFY_UPGRADE_HOURS (0 checks on
+# every run). A release can change the graph, so an upgrade may show up as a
+# graph change on the next update; that is expected.
+GRAPHIFY_SPEC='graphifyy[mcp,ollama,sql]'
+GRAPHIFY_UPGRADE_HOURS='24'
+GRAPHIFY_PYTHON='3.13'
+GRAPHIFY_MODEL='qwen2.5-coder:7b'
+OLLAMA_ROOT='http://127.0.0.1:11434'
+# Ollama serves a 2,048 token context unless the server is told otherwise, and
+# anything longer comes back empty. Small chunks keep every request inside it.
+GRAPHIFY_TOKEN_BUDGET='1200'
+
+# Optional per-machine overrides, never committed. See `help`.
+if [ -f "$SCRIPT_DIR/graphify.local.env" ]; then
+    # shellcheck disable=SC1091
+    . "$SCRIPT_DIR/graphify.local.env"
+fi
+
+STATE_DIR="${GRAPHIFY_STATE_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/resnovas-graphify}"
+TOOL_DIR="$STATE_DIR/tools"
+BIN_DIR="$STATE_DIR/bin"
+UPGRADE_STAMP="$STATE_DIR/last-upgrade-check"
+GRAPHIFY_HOME="$STATE_DIR/home"
+OUT_DIR="$REPO_ROOT/graphify-out"
+GRAPH_JSON="$OUT_DIR/graph.json"
+VENV_PYTHON="$TOOL_DIR/graphifyy/bin/python"
+
+die() {
+    printf 'graphify: %s\n' "$1" >&2
+    exit 1
+}
+
+info() {
+    printf '%s\n' "$1" >&2
+}
+
+require_uv() {
+    command -v uv >/dev/null 2>&1 && return 0
+    cat >&2 <<'EOF'
+graphify: `uv` is not on PATH.
+
+uv is the Python installer this wrapper uses. Install it, then re-run setup:
+
+  curl -LsSf https://astral.sh/uv/install.sh | sh     # macOS / Linux
+  brew install uv                                     # Homebrew
+EOF
+    exit 1
+}
+
+installed_version() {
+    "$BIN_DIR/graphify" --version 2>/dev/null | sed -n 's/^graphify //p' | head -n 1
+}
+
+# Installs the latest release, or upgrades an existing install in place. The
+# install path never changes, so the git hooks keep working across upgrades.
+install_latest() {
+    UV_TOOL_DIR="$TOOL_DIR" UV_TOOL_BIN_DIR="$BIN_DIR" \
+        uv tool install --upgrade --python "$GRAPHIFY_PYTHON" "$GRAPHIFY_SPEC" >&2
+    touch "$UPGRADE_STAMP"
+}
+
+maybe_upgrade() {
+    command -v uv >/dev/null 2>&1 || return 0
+    if [ -f "$UPGRADE_STAMP" ] && [ "$GRAPHIFY_UPGRADE_HOURS" -gt 0 ] &&
+        [ -z "$(find "$UPGRADE_STAMP" -mmin +$((GRAPHIFY_UPGRADE_HOURS * 60)) 2>/dev/null)" ]; then
+        return 0
+    fi
+    before=$(installed_version)
+    install_latest 2>/dev/null || {
+        info "graphify: could not check for a newer release; keeping $before."
+        return 0
+    }
+    after=$(installed_version)
+    [ "$before" = "$after" ] || info "graphify: upgraded $before -> $after."
+}
+
+require_setup() {
+    [ -x "$BIN_DIR/graphify" ] || die 'not set up yet. Run: sh tools/graphify/graphify setup'
+    maybe_upgrade
+}
+
+require_graph() {
+    [ -f "$GRAPH_JSON" ] || die 'no graph yet. Run: sh tools/graphify/graphify update'
+}
+
+# Runs graphify with a hardened environment.
+#
+# Provider API keys are cleared so an ambient key in the shell cannot send
+# repository content to a paid model: Graphify's default backend is "whichever
+# API key is set". HOME points at a private directory so Graphify's global
+# graph (~/.graphify/global-graph.json) never collects this repository, and
+# query logging is off because upstream docs and source disagree on its default.
+# Ollama needs no key; the placeholder only silences a warning per request.
+run_graphify() {
+    env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY \
+        -u GOOGLE_API_KEY -u DEEPSEEK_API_KEY -u MOONSHOT_API_KEY \
+        -u KIMI_API_KEY -u AWS_ACCESS_KEY_ID -u AWS_SECRET_ACCESS_KEY \
+        -u AWS_SESSION_TOKEN \
+        HOME="$GRAPHIFY_HOME" \
+        OLLAMA_BASE_URL="$OLLAMA_ROOT/v1" \
+        OLLAMA_API_KEY=local \
+        GRAPHIFY_QUERY_LOG_DISABLE=1 \
+        "$BIN_DIR/graphify" "$@"
+}
+
+require_ollama() {
+    command -v curl >/dev/null 2>&1 || die 'curl is needed to check the local Ollama server.'
+    tags=$(curl -fsS --max-time 5 "$OLLAMA_ROOT/api/tags" 2>/dev/null) ||
+        die "no Ollama server answering at $OLLAMA_ROOT. Start it with 'ollama serve'."
+    printf '%s' "$tags" | grep -q "\"$GRAPHIFY_MODEL\"" ||
+        die "model '$GRAPHIFY_MODEL' is not pulled. Run: ollama pull $GRAPHIFY_MODEL"
+}
+
+# `graphify hook install` appends its merge-driver line to the root
+# .gitattributes. The house ships that line in graphify-out/.gitattributes
+# instead, so the root file is put back exactly as it was and no clone is left
+# with a change to commit.
+install_hooks() {
+    attrs="$REPO_ROOT/.gitattributes"
+    saved=''
+    if [ -f "$attrs" ]; then
+        saved=$(mktemp)
+        cp "$attrs" "$saved"
+    fi
+    (cd "$REPO_ROOT" && run_graphify hook install)
+    if [ -n "$saved" ]; then
+        mv "$saved" "$attrs"
+    else
+        rm -f "$attrs"
+    fi
+}
+
+cmd_setup() {
+    hooks='yes'
+    for arg in "$@"; do
+        case "$arg" in
+            --no-hooks) hooks='no' ;;
+            *) die "unknown option for setup: $arg" ;;
+        esac
+    done
+    require_uv
+    mkdir -p "$TOOL_DIR" "$BIN_DIR" "$GRAPHIFY_HOME"
+    info "Installing the latest $GRAPHIFY_SPEC into $STATE_DIR (shared by every clone, about 220 MiB)..."
+    install_latest
+    if [ "$hooks" = 'yes' ]; then
+        info 'Installing git hooks: rebuild the code graph after each commit and checkout, and union-merge graph.json.'
+        install_hooks
+    fi
+    info ''
+    info "Ready: graphify $(installed_version). Next: sh tools/graphify/graphify update"
+}
+
+# Code-only refresh. Local AST parsers only: no model, no network, no cost.
+# Semantic nodes already in the committed graph are kept.
+cmd_update() {
+    require_setup
+    force=''
+    for arg in "$@"; do
+        case "$arg" in
+            --force) force='--force' ;;
+            *) die "unknown option for update: $arg" ;;
+        esac
+    done
+    # Always `update`, never `extract --code-only`: update also reads Markdown
+    # headings structurally (no model), and it is what the git hooks and
+    # `check` run, so every path produces the same graph.
+    # shellcheck disable=SC2086
+    run_graphify update "$REPO_ROOT" $force
+    cmd_status
+}
+
+# Adds documents through a local Ollama model. Every result lands in
+# graphify-out/cache/semantic/, which is committed, so the next person to run
+# this only pays for files that changed.
+cmd_semantic() {
+    require_setup
+    require_ollama
+    force=''
+    for arg in "$@"; do
+        case "$arg" in
+            --force) force='--force' ;;
+            *) die "unknown option for semantic: $arg" ;;
+        esac
+    done
+    info "Extracting documents with $GRAPHIFY_MODEL on $OLLAMA_ROOT (local, no paid inference)..."
+    # shellcheck disable=SC2086
+    run_graphify extract "$REPO_ROOT" \
+        --backend ollama --model "$GRAPHIFY_MODEL" \
+        --max-concurrency 1 --token-budget "$GRAPHIFY_TOKEN_BUDGET" \
+        --no-cluster $force
+    run_graphify cluster-only "$REPO_ROOT" --no-label --no-viz
+    cmd_status
+}
+
+cmd_ask() {
+    verb=$1
+    shift
+    require_setup
+    require_graph
+    [ "$#" -gt 0 ] || die "$verb needs an argument. Run: sh tools/graphify/graphify help"
+    run_graphify "$verb" "$@" --graph "$GRAPH_JSON"
+}
+
+cmd_mcp() {
+    require_setup
+    if [ "${1:-}" = '--print-config' ]; then
+        name=$(basename "$REPO_ROOT" | tr -c 'A-Za-z0-9_\n-' '-')
+        cat <<EOF
+{
+  "mcpServers": {
+    "graphify-$name": {
+      "command": "sh",
+      "args": ["$REPO_ROOT/tools/graphify/graphify", "mcp"]
+    }
+  }
+}
+EOF
+        return 0
+    fi
+    require_graph
+    # stdio only. The MCP server treats a client-supplied project_path as a
+    # lookup key, not an authorization boundary, and will read any graph.json
+    # the process can reach. stdio limits that to the one client that started
+    # it. Shared remote access belongs on Graphify Cloud, not on this wrapper.
+    exec env -u OPENAI_API_KEY -u ANTHROPIC_API_KEY -u GEMINI_API_KEY \
+        -u GOOGLE_API_KEY -u DEEPSEEK_API_KEY -u MOONSHOT_API_KEY -u KIMI_API_KEY \
+        HOME="$GRAPHIFY_HOME" GRAPHIFY_QUERY_LOG_DISABLE=1 \
+        "$BIN_DIR/graphify-mcp" --graph "$GRAPH_JSON" --transport stdio
+}
+
+graph_counts() {
+    "$VENV_PYTHON" - "$1" <<'PY'
+import json, sys
+g = json.load(open(sys.argv[1], encoding="utf-8"))
+print(f"nodes     : {len(g.get('nodes', []))}")
+print(f"edges     : {len(g.get('links', g.get('edges', [])))}")
+PY
+}
+
+cmd_status() {
+    if [ ! -x "$BIN_DIR/graphify" ]; then
+        printf 'installed : no (run: sh tools/graphify/graphify setup)\n'
+        return 0
+    fi
+    printf 'installed : graphify %s in %s\n' "$(installed_version)" "$STATE_DIR"
+    if [ ! -f "$GRAPH_JSON" ]; then
+        printf 'graph     : none (run: sh tools/graphify/graphify update)\n'
+        return 0
+    fi
+    printf 'graph     : %s\n' "$GRAPH_JSON"
+    graph_counts "$GRAPH_JSON"
+    if [ -d "$OUT_DIR/cache/semantic" ]; then
+        printf 'semantic  : %s cached document(s)\n' "$(find "$OUT_DIR/cache/semantic" -name '*.json' | wc -l | tr -d ' ')"
+    fi
+}
+
+# Rebuilds the code graph from the last commit in a scratch copy and compares
+# it with the graph.json in that same commit. Exit 1 means the committed graph
+# is stale. Uncommitted changes are ignored, so run it after committing.
+cmd_check() {
+    require_setup
+    command -v git >/dev/null 2>&1 || die 'git is needed for check.'
+    scratch=$(mktemp -d)
+    trap 'rm -rf "$scratch"' EXIT INT TERM
+    git -C "$REPO_ROOT" archive --format=tar HEAD | tar -xf - -C "$scratch"
+    [ -f "$scratch/graphify-out/graph.json" ] ||
+        die 'the last commit has no graphify-out/graph.json. Run update and commit graphify-out/.'
+    cp "$scratch/graphify-out/graph.json" "$scratch/committed-graph.json"
+    run_graphify update "$scratch" --force >/dev/null 2>&1 || die 'rebuild in scratch copy failed.'
+    "$VENV_PYTHON" - "$scratch/committed-graph.json" "$scratch/graphify-out/graph.json" <<'PY'
+import json, sys
+
+def shape(path):
+    g = json.load(open(path, encoding="utf-8"))
+    nodes = {n["id"] for n in g.get("nodes", [])}
+    edges = {(e.get("source"), e.get("target"), e.get("relation")) for e in g.get("links", g.get("edges", []))}
+    return nodes, edges
+
+committed_nodes, committed_edges = shape(sys.argv[1])
+fresh_nodes, fresh_edges = shape(sys.argv[2])
+missing = fresh_nodes - committed_nodes
+extra = committed_nodes - fresh_nodes
+edge_drift = len(fresh_edges ^ committed_edges)
+if missing or extra or edge_drift:
+    print(f"graphify-out/graph.json is stale: {len(missing)} node(s) missing, {len(extra)} node(s) no longer in the code, {edge_drift} edge(s) differ.")
+    print("Run: sh tools/graphify/graphify update, then commit graphify-out/.")
+    sys.exit(1)
+print("graphify-out/graph.json matches the committed code.")
+PY
+}
+
+cmd_help() {
+    cat <<'EOF'
+House Graphify wrapper. The graph is committed in graphify-out/; the tool is
+installed once per machine under ~/.local/share/resnovas-graphify.
+
+  setup [--no-hooks]    Install the latest Graphify and the git hooks that keep
+                        the graph current after each commit and checkout.
+  update [--force]      Refresh the code graph. Local parsers only: no model,
+                        no network, no cost. Keeps committed document nodes.
+  semantic [--force]    Add documents through a local Ollama model
+                        (qwen2.5-coder:7b). Results are cached in
+                        graphify-out/cache/semantic/ and committed, so nobody
+                        pays twice for an unchanged file.
+  query "<question>"    Print the part of the graph relevant to a question.
+  explain "<node>"      Explain one node and its neighbours.
+  path "<a>" "<b>"      Shortest path between two nodes.
+  affected "<node>"     What depends on a node.
+  mcp [--print-config]  Serve the graph to an MCP client over stdio.
+  status                Show the install and the graph size.
+  check                 Exit 1 if the committed graph no longer matches the
+                        committed code.
+  -- <args>             Pass arguments to the graphify binary.
+
+Graphify is not pinned. The wrapper checks for a newer release at most once a
+day; set GRAPHIFY_UPGRADE_HOURS to change that.
+
+Per-machine overrides go in tools/graphify/graphify.local.env (never commit
+it): GRAPHIFY_MODEL, OLLAMA_ROOT, GRAPHIFY_TOKEN_BUDGET, GRAPHIFY_STATE_DIR,
+GRAPHIFY_UPGRADE_HOURS.
+EOF
+}
+
+command=${1:-help}
+[ "$#" -gt 0 ] && shift
+
+case "$command" in
+    setup) cmd_setup "$@" ;;
+    update) cmd_update "$@" ;;
+    semantic) cmd_semantic "$@" ;;
+    query | explain | path | affected) cmd_ask "$command" "$@" ;;
+    mcp) cmd_mcp "$@" ;;
+    status) cmd_status ;;
+    check) cmd_check ;;
+    --)
+        require_setup
+        run_graphify "$@"
+        ;;
+    help | -h | --help) cmd_help ;;
+    *) die "unknown command '$command'. Run: sh tools/graphify/graphify help" ;;
+esac
