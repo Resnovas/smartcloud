@@ -22,6 +22,7 @@
     "@resnovas/feature.conventions": "workspace:*",
     "@resnovas/feature.disclosure": "workspace:*",
     "@resnovas/feature.labels": "workspace:*",
+    "@resnovas/feature.required": "workspace:*",
     "@resnovas/feature.reviews": "workspace:*",
     "@resnovas/feature.settings": "workspace:*",
     "@resnovas/feature.stale": "workspace:*",

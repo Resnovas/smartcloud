@@ -36,6 +36,22 @@ describe('runAction', () => {
     }),
   )
 
+  it.effect('passes the job check run to the features, so the required feature leaves the job out', () =>
+    Effect.gen(function* () {
+      const { service, state } = memory({ '.github/smartcloud.yml': 'version: 2\nrequired: {}\n' })
+      state.commitChecks.set('abc123', [
+        { name: 'smartcloud', source: 'checkRun', id: 42, state: 'pending', detail: 'in_progress' },
+        { name: 'ci', source: 'checkRun', id: 43, state: 'failure', detail: 'failure' },
+      ])
+      const outcome = yield* runAction(inputs({ checkRunId: Option.some(42) }), { name: 'pull_request', payload: pullRequest('feat: x') }).pipe(
+        Effect.provideService(GitHub, service),
+      )
+      expect(outcome.result.findings.map((finding) => finding.message)).toStrictEqual(['The ci check concluded failure.'])
+      const skipped = yield* runAction(inputs(), { name: 'pull_request', payload: pullRequest('feat: x') }).pipe(Effect.provideService(GitHub, service))
+      expect(skipped.result.skipped).toContainEqual({ feature: 'required', reason: 'runs only in a job that passes checkRunId' })
+    }),
+  )
+
   it.effect('prefers configJson, then the config input, and honours configRef', () =>
     Effect.gen(function* () {
       const { service, state } = memory()
@@ -112,7 +128,7 @@ describe('runAction', () => {
         Effect.provideService(GitHub, service),
       )
       expect([...only.result.ran, ...only.result.skipped.map((skip) => skip.feature)]).toStrictEqual(['labels'])
-      expect(FEATURES.map((feature) => feature.name)).toStrictEqual(['conventions', 'commits', 'disclosure', 'reviews', 'labels', 'stale', 'settings', 'sync'])
+      expect(FEATURES.map((feature) => feature.name)).toStrictEqual(['conventions', 'commits', 'disclosure', 'reviews', 'labels', 'stale', 'settings', 'sync', 'required'])
     }),
   )
 })

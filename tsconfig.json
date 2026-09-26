@@ -56,6 +56,9 @@
     },
     {
       "path": "./apps/mcp"
+    },
+    {
+      "path": "./packages/feature.required"
     }
   ]
 }

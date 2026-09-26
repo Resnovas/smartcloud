@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { ConditionGroup } from '@resnovas/conditions'
+import { ConditionGroup, Pattern } from '@resnovas/conditions'
 import { Schema } from 'effect'
 
 // The configuration sections of the policy, review, stale, settings and sync
@@ -216,6 +216,56 @@ const WebhookUrl = Schema.String.pipe(
 )
 const VariableName = /^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$/
 const REPOSITORY_ROLES = ['read', 'triage', 'write', 'maintain', 'admin'] as const
+
+/**
+ * How long the aggregate check waits for the others, in minutes, when
+ * `required.timeout` is left out.
+ *
+ * @example
+ * ```ts import.meta.vitest name="REQUIRED_TIMEOUT"
+ * import { REQUIRED_TIMEOUT } from '@resnovas/config'
+ *
+ * REQUIRED_TIMEOUT // => 60
+ * ```
+ */
+export const REQUIRED_TIMEOUT = 60
+
+/**
+ * One aggregate check that passes only when every other check on the pull
+ * request's head commit has passed, so a ruleset requires that check alone
+ * instead of a list of names.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Required"
+ * import { Required } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Required)({ ignore: ['^codecov/'], timeout: 30 }) // => true
+ * Schema.is(Required)({ timeout: 0 }) // => false
+ * ```
+ */
+export const Required = Schema.Struct({
+  /** Checks that do not count, matched by name, as patterns. */
+  ignore: opt(
+    Schema.Array(Pattern).annotations({
+      description:
+        'Checks that do not count towards the aggregate, as patterns matched against each check run name or status context, for example ^codecov/.',
+    }),
+  ),
+  /** Minutes to wait for the other checks to finish before failing. */
+  timeout: opt(
+    Schema.Int.pipe(
+      Schema.between(1, 360),
+      Schema.annotations({
+        description: `Minutes to wait for the other checks to finish before failing, from 1 to 360 (the longest an Actions job may run). Defaults to ${REQUIRED_TIMEOUT}.`,
+      }),
+    ),
+  ),
+}).annotations({
+  identifier: 'Required',
+  description:
+    'One aggregate check that passes only when every other check on the pull request has passed, so a ruleset requires that one check instead of a list of names.',
+})
 
 /**
  * The repository settings baseline. Anything omitted is left as it is.

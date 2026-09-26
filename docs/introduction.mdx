@@ -108,6 +108,7 @@ Each capability is a feature with its own section in the config. A feature whose
 | `pull-requests: write` | Labels, review requests, automatic approvals and the report comment on pull requests. |
 | `checks: write` | One check run per feature on the commit. |
 | `issues: write` | Labels, stale comments and the report comment on issues. Repository labels are managed through this permission too. |
+| `statuses: read` | Only for the [required](/features/required) feature, which reads the commit statuses as well as the check runs. |
 
 The settings feature changes repository administration settings, and the sync feature reads its source from another repository and may push workflow files, which the workflow token cannot do. Pass a stronger token as `GITHUB_TOKEN`, with the workflow token as the fallback. A GitHub App token is best: GitHub signs the commits smartcloud makes with it, it can create check runs, and its rate limit is the app's own. Mint it with `actions/create-github-app-token`, and skip that step where the key is missing, as on forks and Dependabot runs:
 
@@ -151,6 +152,7 @@ Every input is optional.
 | `configRef` | the default branch | The branch, tag or commit to read the config from. |
 | `dryRun` | `false` | Record every write in the job summary instead of making it. |
 | `features` | every configured feature | A comma-separated list of the features to run, for example `labels,stale`. |
+| `checkRunId` | none | The job's own check run, as `${{ job.check_run_id }}` gives it. The [required](/features/required) feature runs only when it is set, so it can wait for every other check and leave this job out. |
 
 The config is read through the GitHub API, so the workflow needs no checkout step. It comes from the default branch unless `configRef` says otherwise, so a pull request cannot loosen the rules it is checked against.
 

@@ -20,6 +20,7 @@ import { commitsFeature } from '@resnovas/feature.commits'
 import { conventions } from '@resnovas/feature.conventions'
 import { disclosureFeature } from '@resnovas/feature.disclosure'
 import { labels } from '@resnovas/feature.labels'
+import { requiredFeature } from '@resnovas/feature.required'
 import { reviewsFeature } from '@resnovas/feature.reviews'
 import { settingsFeature } from '@resnovas/feature.settings'
 import { stale } from '@resnovas/feature.stale'
@@ -45,6 +46,7 @@ export const FEATURES: ReadonlyArray<Feature> = [
   stale,
   settingsFeature,
   syncFeature,
+  requiredFeature,
 ]
 
 /** A top-level config section a feature can read. */
@@ -67,6 +69,7 @@ export const FEATURE_SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = 
   ['stale', ['stale']],
   ['settings', ['settings', 'roles']],
   ['sync', ['sync']],
+  ['required', ['required']],
 ])
 
 /**

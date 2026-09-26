@@ -83,7 +83,8 @@ export interface RunOutcome {
  * const outcome = runEvent({ config: {}, features: ['labels'], event: { name: 'schedule', payload: {} } })
  * ```
  *
- * @param options - Where the config is, which features to run (all when omitted), the event, and the run's access (full when omitted).
+ * @param options - Where the config is, which features to run (all when omitted), the event, the run's access (full when omitted),
+ *   and the check run of the job running smartcloud, when there is one.
  * @returns What the run did.
  */
 export const runEvent = (options: {
@@ -91,6 +92,8 @@ export const runEvent = (options: {
   readonly features?: ReadonlyArray<string> | undefined
   readonly event: GitHubEvent
   readonly access?: Access | undefined
+  /** The check run of the Actions job running smartcloud, which features reading a commit's checks leave out. */
+  readonly checkRunId?: number | undefined
 }) =>
   Effect.flatMap(GitHub, (github) => {
     const repository = github.coordinates
@@ -105,6 +108,7 @@ export const runEvent = (options: {
         payload: options.event.payload,
         features,
         turnedOff,
+        checkRunId: options.checkRunId,
       })
       const result: RunResult = {
         ...featureRun,

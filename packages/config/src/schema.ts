@@ -17,7 +17,7 @@
 import { ConditionGroup } from '@resnovas/conditions'
 import { Schema } from 'effect'
 import { ExtendsEntry } from './extends.js'
-import { Commits, Disclosure, Links, Reviews, Roles, Settings, Stale, Sync } from './sections.js'
+import { Commits, Disclosure, Links, Required, Reviews, Roles, Settings, Stale, Sync } from './sections.js'
 
 // Every rule is a keyed record, never a list, so presets and repositories
 // merge by key and a locked rule can be named in an error.
@@ -351,6 +351,7 @@ export const SmartcloudConfig = Schema.Struct({
   commits: Schema.optionalWith(Commits, { exact: true }),
   disclosure: Schema.optionalWith(Disclosure, { exact: true }),
   reviews: Schema.optionalWith(Reviews, { exact: true }),
+  required: Schema.optionalWith(Required, { exact: true }),
   stale: Schema.optionalWith(Stale, { exact: true }),
   settings: Schema.optionalWith(Settings, { exact: true }),
   sync: Schema.optionalWith(Sync, { exact: true }),

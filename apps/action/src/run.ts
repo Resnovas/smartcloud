@@ -72,7 +72,8 @@ export const runAction = (
       ...Option.match(inputs.configRef, { onNone: () => ({}), onSome: (ref) => ({ ref }) }),
     }
     const features = Option.match(inputs.features, { onNone: () => ({}), onSome: (names) => ({ features: names }) })
-    const outcome = yield* runEvent({ config, event, access, ...features })
+    const checkRunId = Option.getOrUndefined(inputs.checkRunId)
+    const outcome = yield* runEvent({ config, event, access, ...features, checkRunId })
     const result: Outcome = { ...outcome, warnings: [...inputs.deprecations, ...outcome.warnings] }
     return result
   })

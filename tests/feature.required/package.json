@@ -1,0 +1,12 @@
+{
+  "name": "@resnovas/feature.required-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@resnovas/feature.required": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/config": "workspace:*"
+  }
+}

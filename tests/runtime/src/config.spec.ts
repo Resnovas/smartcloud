@@ -109,6 +109,7 @@ describe('explainConfig', () => {
         ['stale', true],
         ['settings', false],
         ['sync', false],
+        ['required', false],
       ])
       expect(explained.features[4]?.rules).toStrictEqual({ labels: { bug: { name: 'bug', color: 'd73a4a' } } })
       expect(explained.features[3]?.rules).toStrictEqual({ roles: { maintainers: ['a'] } })

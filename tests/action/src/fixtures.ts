@@ -57,6 +57,7 @@ export const inputs = (overrides: Partial<Inputs> = {}): Inputs => ({
   configRef: Option.none(),
   dryRun: false,
   features: Option.none(),
+  checkRunId: Option.none(),
   telemetry: true,
   deprecations: [],
   given: [],

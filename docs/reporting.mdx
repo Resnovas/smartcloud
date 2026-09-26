@@ -22,7 +22,7 @@ Each feature that ran gets one completed check run on the commit, named `smartcl
 
 A feature that failed to run concludes as failure with the error as its summary, so a broken feature can never pass a required check. Findings with a file and line appear as annotations on the diff.
 
-Because each feature has its own check, you can make just the ones you enforce required in a ruleset.
+Because each feature has its own check, you can make just the ones you enforce required in a ruleset. To require everything without listing names, use the [required](/features/required) feature and require the job's own check instead.
 
 Findings that belong to no feature get a check of their own too: in a restricted run, `smartcloud / access` carries the restriction notice and a warning for each part of the config it left out (see [Restricted runs](#restricted-runs)).
 
