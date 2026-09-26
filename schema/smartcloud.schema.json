@@ -1288,6 +1288,9 @@
         },
         "check": {
           "type": "boolean"
+        },
+        "maintainerLevel": {
+          "$ref": "#/$defs/Level"
         }
       },
       "additionalProperties": false

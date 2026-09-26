@@ -180,4 +180,6 @@ export const Sync = Schema.Struct({
   branch: opt(Schema.String),
   /** Fail pull requests that edit synced content. On by default. */
   check: opt(Schema.Boolean),
+  /** Level for maintainers' own pull requests that edit synced content; a warning by default. */
+  maintainerLevel: opt(Level),
 }).annotations({ identifier: 'Sync' })
