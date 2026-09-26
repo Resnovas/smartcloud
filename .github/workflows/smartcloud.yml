@@ -42,6 +42,10 @@ jobs:
   smartcloud:
     name: smartcloud
     runs-on: ubuntu-latest
+    # Without the app's credentials, as in a repository outside the
+    # organisation, the mint is skipped rather than attempted with empty inputs.
+    env:
+      HAS_APP_KEY: ${{ vars.RESNOVAS_BOT_APP_ID != '' && secrets.RESNOVAS_BOT_PRIVATE_KEY != '' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -66,7 +70,7 @@ jobs:
       # mint falls back to the workflow token rather than failing the run.
       - name: Mint the Resnovas Bot token
         id: app
-        if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
+        if: env.HAS_APP_KEY == 'true' && github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
         continue-on-error: true
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
