@@ -77,3 +77,4 @@ Each rule in `labelling` names a `label`, an optional `on` (`pullRequest`, `issu
 - A label is added when any rule for it passes, and removed when every rule for it fails. Several rules may name the same label, for example one per subject kind.
 - Names compare ignoring case, as GitHub does.
 - If a label has already gone when smartcloud removes it, that is a warning, not a failure.
+- If GitHub forbids adding or removing a label, as it does on the read-only token of a pull request from a fork, that is a warning (`labels.add` or `labels.remove`), not a failure, and the rest of the run carries on.

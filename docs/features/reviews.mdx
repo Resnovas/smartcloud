@@ -56,3 +56,7 @@ Each entry in `requestApprovals` requests reviews from its `reviewers` when its 
 Each entry in `automaticApprove` approves the pull request when its `when` passes, with its `message` as the review body (default: "Approved automatically by smartcloud."). One approval is made per run, by the first rule that passes.
 
 smartcloud does not approve again while any reviewer's standing review is an approval, so new pushes do not stack approvals. Once a stale approval is dismissed, the next run approves again.
+
+## Pull requests from forks
+
+A pull request from a fork runs with a read-only token, so GitHub forbids requesting reviewers and approving. Each forbidden request or approval is reported as a warning (`reviews.requestApprovals` or `reviews.automaticApprove`) rather than failing the feature, and the review gate still runs. Any other error from GitHub still fails the feature.

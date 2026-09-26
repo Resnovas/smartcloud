@@ -46,7 +46,7 @@ A failing rule becomes a finding with the rule id `conventions.<key>`, for examp
 | `gitmojis` | A title starting with a gitmoji (the emoji, its `:code:` or its HTML entity), for example `:bug:(scope): description`. |
 | `semanticEmoji` | A gitmoji, then a semantic type, for example `:bug: fix(scope): description`. |
 
-`semanticTitle`, `gitmojis` and `semanticEmoji` accept exactly the titles v1 accepted. With `contexts`, those three also require one of the contexts in parentheses before the colon.
+`semanticTitle`, `gitmojis` and `semanticEmoji` accept exactly the titles v1 accepted. With `contexts`, those three also require, as v1 did, one line of the title to hold an opening parenthesis, then one of the contexts, then `):` somewhere after it. The context is matched ignoring case and need not fill the parentheses, and the parentheses need not come before the title's first colon: `feat: add login (auth):` passes with the context `auth`, and so does `feat(web-auth): add login`.
 
 ## Comment header and footer
 
