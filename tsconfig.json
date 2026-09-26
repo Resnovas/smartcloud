@@ -23,6 +23,9 @@
     },
     {
       "path": "./packages/feature.conventions"
+    },
+    {
+      "path": "./packages/feature.commits"
     }
   ]
 }
