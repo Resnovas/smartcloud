@@ -80,16 +80,28 @@ export interface Annotation {
   readonly title?: string
 }
 
-/** A check run to create or update. */
-export interface CheckRun {
+/** What every check run carries, whatever its status. */
+export interface CheckRunFields {
   readonly name: string
   readonly headSha: string
-  readonly status: 'in_progress' | 'completed'
-  readonly conclusion?: 'success' | 'failure' | 'neutral' | 'skipped'
   readonly title: string
   readonly summary: string
   readonly annotations?: ReadonlyArray<Annotation>
 }
+
+/**
+ * A check run to create or update.
+ *
+ * @remarks
+ * GitHub requires a conclusion on a completed run and completes any run
+ * given one, so a completed run must name its conclusion and a run in
+ * progress cannot.
+ */
+export type CheckRun = CheckRunFields &
+  (
+    | { readonly status: 'in_progress'; readonly conclusion?: never }
+    | { readonly status: 'completed'; readonly conclusion: 'success' | 'failure' | 'neutral' | 'skipped' }
+  )
 
 /** A pull request review to submit. */
 export interface NewReview {

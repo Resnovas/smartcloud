@@ -21,6 +21,7 @@ export { GitHub } from './service.js'
 export type {
   Annotation,
   CheckRun,
+  CheckRunFields,
   Comment,
   FileLocation,
   GitHubService,

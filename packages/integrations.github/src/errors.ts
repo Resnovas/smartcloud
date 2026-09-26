@@ -48,7 +48,7 @@ export class ValidationFailed extends Data.TaggedError('ValidationFailed')<{
   }
 }
 
-/** GitHub or the network failed. Retried with backoff before surfacing. */
+/** GitHub or the network failed. Retried with backoff before surfacing, except by calls that create something. */
 export class Unavailable extends Data.TaggedError('Unavailable')<{ readonly operation: string; readonly detail: string }> {
   override get message() {
     return `${this.operation}: GitHub unavailable (${this.detail})`
@@ -63,7 +63,11 @@ export type GitHubError = NotFound | Forbidden | RateLimited | ValidationFailed 
  *
  * @remarks
  * GitHub reports primary rate limits as 403 or 429 with a "rate limit"
- * message, so those are distinguished from a plain 403.
+ * message, so those are distinguished from a plain 403. Any other client
+ * error (400 to 499, except a 408 timeout) is the request's own fault and
+ * would fail the same way again, so it is `ValidationFailed` and never
+ * retried; only timeouts, server errors and network failures are
+ * `Unavailable`.
  *
  * @param operation - The operation that failed, for the error message.
  * @param status - The HTTP status, or undefined for a network failure.
@@ -76,6 +80,21 @@ export const fromStatus = (operation: string, status: number | undefined, detail
     return new RateLimited({ operation, detail })
   }
   if (status === 401 || status === 403) return new Forbidden({ operation, detail })
-  if (status === 409 || status === 422) return new ValidationFailed({ operation, detail })
+  if (status !== undefined && status >= 400 && status < 500 && status !== 408) return new ValidationFailed({ operation, detail })
   return new Unavailable({ operation, detail })
 }
+
+/**
+ * Maps a GraphQL response that carried errors to a typed error.
+ *
+ * @remarks
+ * GitHub answers such a request with status 200 and an `errors` list, so
+ * there is no status to map. A rate limit is retried like any other; every
+ * other GraphQL error is a problem with the request itself.
+ *
+ * @param operation - The operation that failed, for the error message.
+ * @param detail - GitHub's message.
+ * @returns The typed error.
+ */
+export const fromGraphqlErrors = (operation: string, detail: string): GitHubError =>
+  /rate limit/i.test(detail) ? new RateLimited({ operation, detail }) : new ValidationFailed({ operation, detail })

@@ -17,7 +17,7 @@
 
 import type { Commit, Review } from '@resnovas/conditions'
 import { Effect, Layer } from 'effect'
-import { NotFound, ValidationFailed } from './errors.js'
+import { type GitHubError, NotFound, ValidationFailed } from './errors.js'
 import {
   type CheckRun,
   type Comment,
@@ -122,9 +122,13 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
         ? Effect.fail(new ValidationFailed({ operation: 'createLabel', detail: `label ${label.name} already exists` }))
         : Effect.sync(() => void state.labels.push(label)),
     updateLabel: (current, label) =>
-      Effect.suspend(() => {
+      Effect.suspend((): Effect.Effect<void, GitHubError> => {
         const index = state.labels.findIndex((existing) => same(existing.name, current))
         if (index === -1) return Effect.fail(new NotFound({ operation: 'updateLabel', detail: `label ${current}` }))
+        // GitHub refuses a rename onto a name another label already has, ignoring case.
+        if (state.labels.some((existing, other) => other !== index && same(existing.name, label.name))) {
+          return Effect.fail(new ValidationFailed({ operation: 'updateLabel', detail: `label ${label.name} already exists` }))
+        }
         state.labels[index] = label
         for (const entry of state.issues.values()) entry.labels = entry.labels.map((name) => (same(name, current) ? label.name : name))
         return Effect.void

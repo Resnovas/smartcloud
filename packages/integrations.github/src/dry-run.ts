@@ -16,6 +16,7 @@
  */
 
 import { Context, Effect, Layer, Ref } from 'effect'
+import { isGraphqlWrite } from './graphql.js'
 import { GitHub, type GitHubService } from './service.js'
 
 /** A write the dry-run layer recorded instead of performing. */
@@ -36,7 +37,8 @@ export class DryRunLog extends Context.Tag('@resnovas/integrations.github/DryRun
  * @remarks
  * Used by the action's `dryRun` input and every CLI dry run. Writes that
  * return a value return a placeholder: comment and check run ids of `0`.
- * GraphQL mutations count as writes; queries pass through.
+ * GraphQL mutations count as writes wherever they appear in the document,
+ * after comments or fragments included; queries pass through.
  *
  * @param inner - The service to read through.
  * @param log - Where writes are recorded.
@@ -62,7 +64,7 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
     repositoryRequest: (request) =>
       request.method === 'GET' ? inner.repositoryRequest(request) : Effect.as(record('repositoryRequest', { request }), null),
     graphql: (query, variables) =>
-      /^\s*mutation\b/.test(query) ? Effect.as(record('graphql', { query, variables }), null) : inner.graphql(query, variables),
+      isGraphqlWrite(query) ? Effect.as(record('graphql', { query, variables }), null) : inner.graphql(query, variables),
   }
 }
 

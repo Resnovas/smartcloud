@@ -16,7 +16,7 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect } from 'effect'
+import { Effect, Layer } from 'effect'
 import { DryRun, DryRunLog, fileKey, fromStatus, GitHub, GitHubMemory, makeMemoryGitHub } from '@resnovas/integrations.github'
 
 const bug = { name: 'bug', color: 'd73a4a', description: '' }
@@ -39,6 +39,18 @@ describe('in-memory GitHub', () => {
       expect(state.issues.get(1)?.labels).toStrictEqual([])
       expect((yield* Effect.flip(service.deleteLabel('defect')))._tag).toBe('NotFound')
       expect(yield* service.listLabels).toStrictEqual([bug])
+    }),
+  )
+
+  it.effect('refuses to rename a label onto a name another label already has, ignoring case', () =>
+    Effect.gen(function* () {
+      const docs = { name: 'docs', color: '0075ca', description: '' }
+      const { service, state } = makeMemoryGitHub({ labels: [bug, docs] })
+      const error = yield* Effect.flip(service.updateLabel('docs', { ...docs, name: 'BUG' }))
+      expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: 'label BUG already exists' })
+      expect(state.labels).toStrictEqual([bug, docs])
+      yield* service.updateLabel('bug', { ...bug, name: 'Bug', color: 'ffffff' })
+      expect(state.labels.map((label) => label.name)).toStrictEqual(['Bug', 'docs'])
     }),
   )
 
@@ -121,7 +133,7 @@ describe('dry run', () => {
       yield* github.closeIssue(1)
       yield* github.createReview(7, { event: 'COMMENT', body: 'b' })
       yield* github.requestReviewers(7, ['ann'])
-      const run = { name: 'n', headSha: 'h', status: 'completed' as const, title: 't', summary: 's' }
+      const run = { name: 'n', headSha: 'h', status: 'completed' as const, conclusion: 'success' as const, title: 't', summary: 's' }
       expect(yield* github.createCheckRun(run)).toBe(0)
       yield* github.updateCheckRun(0, run)
       expect(yield* github.repositoryRequest({ method: 'PATCH', path: '', body: { has_wiki: false } })).toBeNull()
@@ -148,6 +160,36 @@ describe('dry run', () => {
       expect(yield* github.listLabels).toStrictEqual([bug])
     }).pipe(Effect.provide(DryRun), Effect.provide(GitHubMemory({ labels: [bug] }))),
   )
+
+  it.effect('records a GraphQL mutation wherever it sits in the document, and passes plain queries through', () => {
+    const { service, state } = makeMemoryGitHub()
+    const writes = [
+      '# create the label\nmutation { createLabel(input: {}) { clientMutationId } }',
+      'fragment Id on Repository { id }\nmutation Update { updateRepository(input: {}) { repository { ...Id } } }',
+      'query Read { viewer { login } }\nmutation Write { x }',
+      'subscription { x }',
+      'query($a: String = "unclosed) { x }',
+      'query { x(a: """unclosed) }',
+      'query { x(a: "line\nbreak") }',
+      'query { x',
+      'query { x } }',
+    ]
+    const reads = [
+      'query { viewer { login } }',
+      '{ repository(name: "mutation") { id } }',
+      '# mutation in a comment only\nquery { x }',
+      'query($a: String = "say \\"mutation\\"") { x(b: """block \\""" mutation""") { y } }',
+      'query Read($ids: [ID!]!) { nodes(ids: $ids) { id } } fragment F on Mutation { x }',
+      'query { x } # trailing comment with no newline',
+    ]
+    return Effect.gen(function* () {
+      const github = yield* GitHub
+      const log = yield* DryRunLog
+      for (const query of [...writes, ...reads]) yield* github.graphql(query, {})
+      expect((yield* log.writes).map((write) => write.details['query'])).toStrictEqual(writes)
+      expect(state.graphql.map((call) => call.query)).toStrictEqual(reads)
+    }).pipe(Effect.provide(DryRun), Effect.provide(Layer.succeed(GitHub, service)))
+  })
 })
 
 describe('fromStatus', () => {
@@ -157,6 +199,10 @@ describe('fromStatus', () => {
     expect(fromStatus('op', 401, 'API rate limit exceeded')._tag).toBe('RateLimited')
     expect(fromStatus('op', 401, 'Bad credentials')._tag).toBe('Forbidden')
     expect(fromStatus('op', 409, 'x')._tag).toBe('ValidationFailed')
+    expect(fromStatus('op', 400, 'x')._tag).toBe('ValidationFailed')
+    expect(fromStatus('op', 410, 'x')._tag).toBe('ValidationFailed')
+    expect(fromStatus('op', 408, 'x')._tag).toBe('Unavailable')
+    expect(fromStatus('op', 503, 'x')._tag).toBe('Unavailable')
     expect(fromStatus('op', undefined, 'x')._tag).toBe('Unavailable')
   })
 
