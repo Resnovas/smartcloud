@@ -137,8 +137,12 @@ interface Caches {
  *   issue's, since only the comment id is known;
  * - a review invalidates that pull request's reviews and requested
  *   reviewers, and a review request its requested reviewers;
- * - a proposal invalidates every file and directory read and the open
- *   issues, which gain its pull request;
+ * - a proposal invalidates every file and directory read, the open
+ *   issues, which gain its pull request, and every pull request read, since
+ *   updating its branch changes that pull request's commits, files and
+ *   mergeability;
+ * - a mergeability GitHub has not computed yet (`UNKNOWN`) is not cached,
+ *   so the next read asks again;
  * - the checks on a commit are never cached, because a caller polling them
  *   needs every change;
  * - every write invalidates raw repository `GET`s, which can read anything,
@@ -191,7 +195,9 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       caches.pulls,
       RequestResolver.fromEffect(({ pullRequest }: CountRequestedReviewers) => inner.countRequestedReviewers(pullRequest)),
     )
-    const getMergeable = lookup(caches.pulls, RequestResolver.fromEffect(({ pullRequest }: GetMergeable) => inner.getMergeable(pullRequest)))
+    const readMergeable = lookup(caches.pulls, RequestResolver.fromEffect(({ pullRequest }: GetMergeable) => inner.getMergeable(pullRequest)))
+    const getMergeable = (request: GetMergeable) =>
+      Effect.tap(readMergeable(request), (mergeable) => (mergeable === 'UNKNOWN' ? caches.pulls.invalidate(request) : Effect.void))
     const getFile = lookup(caches.contents, RequestResolver.fromEffect((request: GetFile) => inner.getFile(locationOf(request))))
     const listDirectory = lookup(caches.contents, RequestResolver.fromEffect((request: ListDirectory) => inner.listDirectory(locationOf(request))))
     const repositoryGet = lookup(
@@ -241,7 +247,8 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
 
       getFile: (location) => getFile(GetFile(locationKey(location))),
       listDirectory: (location) => listDirectory(ListDirectory(locationKey(location))),
-      proposeChanges: (proposal) => writing(inner.proposeChanges(proposal), [caches.contents.invalidateAll, caches.issues.invalidateAll]),
+      proposeChanges: (proposal) =>
+        writing(inner.proposeChanges(proposal), [caches.contents.invalidateAll, caches.issues.invalidateAll, caches.pulls.invalidateAll]),
 
       repositoryRequest: (request) =>
         request.method === 'GET' && request.body === undefined
