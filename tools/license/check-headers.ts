@@ -24,7 +24,7 @@
 // Runs on Node's built-in TypeScript support, so it needs no build step.
 
 import { execFileSync } from 'node:child_process'
-import { readFileSync, writeFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -33,19 +33,33 @@ const template = readFileSync(join(root, 'tools/license/header.txt'), 'utf8').tr
 const fix = process.argv.includes('--fix')
 
 const SOURCE = /\.(ts|mts|cts|js|mjs|cjs)$/
-const EXCLUDED = /^(legacy|graphify-out|node_modules)\/|\/dist\/|\.d\.ts$/
+const EXCLUDED = /^(graphify-out|node_modules)\/|\/dist\/|\.d\.ts$/
 
 const header = (file: string) => template.replace('{{FILE}}', file)
 
 // A header already present, possibly for another file name after a move.
 const EXISTING = /^\/\*\*\n \* @file [^\n]*\n[\s\S]*?DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE\.\n \*\/\n?/
 
-const tracked = execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], {
-  cwd: root,
-  encoding: 'utf8',
-})
-  .split('\n')
-  .filter((file) => SOURCE.test(file) && !EXCLUDED.test(file))
+// Walks the tree when there is no git checkout, for example in a copy of the
+// workspace, skipping the directories git would ignore.
+const IGNORED_DIRECTORIES = new Set(['.git', '.nx', 'node_modules', 'dist', 'release', 'coverage', 'out-tsc', 'test-output', 'tmp'])
+const walk = (directory: string): string[] =>
+  readdirSync(join(root, directory), { withFileTypes: true }).flatMap((entry) => {
+    const path = directory === '' ? entry.name : `${directory}/${entry.name}`
+    if (entry.isDirectory()) return IGNORED_DIRECTORIES.has(entry.name) ? [] : walk(path)
+    return entry.isFile() ? [path] : []
+  })
+
+const listFiles = (): string[] => {
+  try {
+    return execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard'], { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).split('\n')
+  } catch {
+    return walk('')
+  }
+}
+
+// Deleted files stay in the git index until committed, so only existing files count.
+const tracked = listFiles().filter((file) => SOURCE.test(file) && !EXCLUDED.test(file) && existsSync(join(root, file)))
 
 const wrong: string[] = []
 for (const file of tracked) {
