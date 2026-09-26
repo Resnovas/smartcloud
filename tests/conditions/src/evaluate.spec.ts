@@ -144,6 +144,84 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['milestoneMatches', { type: 'milestoneMatches', condition: '^v2' }, pullRequest({ milestone: 'v2.0' }), true],
   ['milestoneMatches, no match', { type: 'milestoneMatches', condition: '^v3' }, issue({ milestone: 'v2.0' }), false],
   ['milestoneMatches, in no milestone', { type: 'milestoneMatches', condition: '.*' }, issue(), false],
+  ['linksIssue, none', { type: 'linksIssue', condition: true }, pullRequest(), false],
+  ['linksIssue false, none', { type: 'linksIssue', condition: false }, pullRequest(), true],
+  ['linksIssue, closes #12', { type: 'linksIssue', condition: true }, pullRequest({ body: 'Closes #12' }), true],
+  ['linksIssue false, closes #12', { type: 'linksIssue', condition: false }, pullRequest({ body: 'fixes #12' }), false],
+  [
+    'linksIssue, a closing keyword with a colon and another repository',
+    { type: 'linksIssue', condition: true, keys: ['SMC'] },
+    pullRequest({ body: 'Resolved: Resnovas/smartcloud#12' }),
+    true,
+  ],
+  [
+    'linksIssue, a closing issue URL',
+    { type: 'linksIssue', condition: true },
+    pullRequest({ body: 'Fixed https://github.com/Resnovas/smartcloud/issues/12.' }),
+    true,
+  ],
+  [
+    'linksIssue, a mention without a closing keyword',
+    { type: 'linksIssue', condition: true },
+    pullRequest({ body: 'See #12, prefix #13' }),
+    false,
+  ],
+  [
+    'linksIssue, a closing keyword in code',
+    { type: 'linksIssue', condition: true },
+    pullRequest({ body: 'Write `Closes #12`, or:\n\n```md\nFixes #13\n```\n\n~~~\nResolves #14' }),
+    false,
+  ],
+  [
+    'linksIssue, a closing keyword after code',
+    { type: 'linksIssue', condition: true },
+    pullRequest({ body: '```\nx\n```\nCloses #12' }),
+    true,
+  ],
+  [
+    'linksIssue, closes a Linear key',
+    { type: 'linksIssue', condition: true },
+    pullRequest({ body: 'Closes SMC-55' }),
+    true,
+  ],
+  [
+    'linksIssue, closes a Linear key of another team',
+    { type: 'linksIssue', condition: true, keys: ['SMC'] },
+    pullRequest({ body: 'Closes ENG-55' }),
+    false,
+  ],
+  [
+    'linksIssue, a Linear key in a lower-case branch',
+    { type: 'linksIssue', condition: true, keys: ['SMC'] },
+    pullRequest({ headBranch: 'claude/smc-55-links-issue' }),
+    true,
+  ],
+  [
+    'linksIssue, a listed key must stand alone',
+    { type: 'linksIssue', condition: true, keys: ['SMC'] },
+    pullRequest({ headBranch: 'feat/xsmc-55', title: 'feat: SMC-55a' }),
+    false,
+  ],
+  [
+    'linksIssue, a Linear key in the title',
+    { type: 'linksIssue', condition: true },
+    pullRequest({ title: 'feat(conditions): linksIssue (SMC-55)' }),
+    true,
+  ],
+  [
+    'linksIssue, a lower-case key in the title needs a listed key',
+    { type: 'linksIssue', condition: true },
+    pullRequest({ title: 'fix: decode utf-8' }),
+    false,
+  ],
+  [
+    'linksIssue, a listed key in the title in any case',
+    { type: 'linksIssue', condition: true, keys: ['ENG', 'SMC'] },
+    pullRequest({ title: 'fix: smc-55' }),
+    true,
+  ],
+  ['linksIssue, missing branch', { type: 'linksIssue', condition: true }, withoutBranch, false],
+  ['linksIssue, on an issue', { type: 'linksIssue', condition: true }, issue({ body: 'Closes #12' }), false],
   ['isOpen', { type: 'isOpen', condition: true }, pullRequest(), true],
   ['isOpen false on a closed item', { type: 'isOpen', condition: false }, pullRequest({ open: false }), true],
   ['isLocked', { type: 'isLocked', condition: true }, issue({ locked: true }), true],
@@ -520,6 +598,24 @@ describe('evaluate: milestones', () => {
   )
 })
 
+describe('evaluate: linked issues', () => {
+  const detail = (condition: Condition, subject: Subject) =>
+    Effect.map(evaluate({ condition: [condition] }, subject), (evaluation) => evaluation.results[0]?.detail)
+
+  it.effect('explains the first link, from the description, then the branch, then the title', () =>
+    Effect.gen(function* () {
+      const linked = { type: 'linksIssue', condition: true } as const
+      const everywhere = pullRequest({ body: 'Closes #12', headBranch: 'smc-55-x', title: 'feat: SMC-56' })
+      expect(yield* detail(linked, everywhere)).toBe('closes #12')
+      expect(yield* detail(linked, pullRequest({ headBranch: 'smc-55-x', title: 'feat: SMC-56' }))).toBe(
+        'Linear key smc-55 in the branch',
+      )
+      expect(yield* detail(linked, pullRequest({ title: 'feat: SMC-56' }))).toBe('Linear key SMC-56 in the title')
+      expect(yield* detail(linked, pullRequest())).toBe('links no issue')
+    }),
+  )
+})
+
 describe('evaluate: facets', () => {
   it.effect('a facet that was not loaded fails with MissingFacet', () =>
     Effect.gen(function* () {
@@ -764,5 +860,6 @@ describe('requiredFacets', () => {
   it('needs nothing for conditions on the event payload alone', () => {
     expect(requiredFacets([{ condition: [{ type: 'isOpen', condition: true }] }]).size).toBe(0)
     expect(requiredFacets([{ condition: [{ type: 'milestoneMatches', condition: 'x' }] }]).size).toBe(0)
+    expect(requiredFacets([{ condition: [{ type: 'linksIssue', condition: true }] }]).size).toBe(0)
   })
 })

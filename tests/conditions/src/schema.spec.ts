@@ -52,6 +52,8 @@ describe('ConditionGroup', () => {
       { type: 'assigneeMatches', condition: 'x' },
       { type: 'hasMilestone', condition: true },
       { type: 'milestoneMatches', condition: 'x' },
+      { type: 'linksIssue', condition: true },
+      { type: 'linksIssue', condition: false, keys: ['SMC', 'eng2'] },
       { type: 'isOpen', condition: true },
       { type: 'isLocked', condition: true },
       { type: 'isDraft', condition: true },
@@ -81,6 +83,8 @@ describe('ConditionGroup', () => {
     expect(Either.isLeft(decode({ condition: [{ type: 'isFriday', condition: true }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'isStale', condition: -1 }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'titleMatches', condition: '[' }] }))).toBe(true)
+    expect(Either.isLeft(decode({ condition: [{ type: 'linksIssue', condition: true, keys: [] }] }))).toBe(true)
+    expect(Either.isLeft(decode({ condition: [{ type: 'linksIssue', condition: true, keys: ['SMC-'] }] }))).toBe(true)
   })
 
   it('round-trips: encoding then decoding returns the original', () => {
