@@ -23,6 +23,7 @@ import { conventions } from '@resnovas/feature.conventions'
 import { disclosureFeature } from '@resnovas/feature.disclosure'
 import { freezeFeature } from '@resnovas/feature.freeze'
 import { labels } from '@resnovas/feature.labels'
+import { lock } from '@resnovas/feature.lock'
 import { requiredFeature } from '@resnovas/feature.required'
 import { reviewsFeature } from '@resnovas/feature.reviews'
 import { settingsFeature } from '@resnovas/feature.settings'
@@ -53,6 +54,7 @@ export const FEATURES: ReadonlyArray<Feature> = [
   freezeFeature,
   branchesFeature,
   codeownersFeature,
+  lock,
 ]
 
 /** A top-level config section a feature can read. */
@@ -79,6 +81,7 @@ export const FEATURE_SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = 
   ['freeze', ['freeze']],
   ['branches', ['branches']],
   ['codeowners', ['codeowners']],
+  ['lock', ['lock', 'roles']],
 ])
 
 /**

@@ -25,6 +25,7 @@
     "@resnovas/feature.disclosure": "workspace:*",
     "@resnovas/feature.freeze": "workspace:*",
     "@resnovas/feature.labels": "workspace:*",
+    "@resnovas/feature.lock": "workspace:*",
     "@resnovas/feature.required": "workspace:*",
     "@resnovas/feature.reviews": "workspace:*",
     "@resnovas/feature.settings": "workspace:*",

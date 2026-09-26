@@ -40,6 +40,9 @@
       "path": "../feature.freeze/tsconfig.lib.json"
     },
     {
+      "path": "../feature.lock/tsconfig.lib.json"
+    },
+    {
       "path": "../feature.branches/tsconfig.lib.json"
     },
     {
