@@ -75,6 +75,18 @@ jobs:
       # Lifecycle scripts never run with the job token.
       - run: pnpm install --frozen-lockfile --ignore-scripts
 
+      # Shares the CI workflow's entries under its own key, so neither run's
+      # save replaces the other's. Nx replays the bundle only when the hash of
+      # its inputs matches, and a pull request's entries stay on its ref.
+      - name: Restore the Nx cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-smartcloud
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nx-${{ runner.os }}-
+
       - name: Bundle the action
         run: pnpm nx run @resnovas/action:bundle
 
