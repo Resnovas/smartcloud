@@ -237,7 +237,7 @@ describe('cached reads: invalidation after writes', () => {
         [`POST ${REPO}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
         [`POST ${REPO}/git/trees`]: { status: 201, body: { sha: 'tree' } },
         [`GET ${REPO}/git/ref/heads/sync`]: { status: 404, body: { message: 'Not Found' } },
-        [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'commit', author: DEFAULT_COMMITTER } },
+        [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'commit', author: DEFAULT_COMMITTER, verification: { verified: true } } },
         [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
         [`GET ${REPO}/pulls`]: { body: [] },
         [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'u' } },

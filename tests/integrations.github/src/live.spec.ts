@@ -352,7 +352,7 @@ describe('live GitHub: proposing changes', () => {
     [`GET ${REPO}/git/commits/base`]: { body: { sha: 'base', tree: { sha: 'base-tree' }, parents: [] } },
     [`POST ${REPO}/git/blobs`]: [{ status: 201, body: { sha: 'blob-1' } }, { status: 201, body: { sha: 'blob-2' } }],
     [`POST ${REPO}/git/trees`]: { status: 201, body: { sha: 'new-tree' } },
-    [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'new-commit', author: DEFAULT_COMMITTER } },
+    [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'new-commit', author: DEFAULT_COMMITTER, verification: { verified: true } } },
   }
 
   it.effect('builds a signed-off commit on the base as the token, creates the branch and opens a pull request', () =>
@@ -427,9 +427,9 @@ describe('live GitHub: proposing changes', () => {
         ...baseRoutes,
         [`POST ${REPO}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
         [`POST ${REPO}/git/commits`]: [
-          { status: 201, body: { sha: 'guessed', author: app } },
-          { status: 201, body: { sha: 'signed-off', author: app } },
-          { status: 201, body: { sha: 'again', author: app } },
+          { status: 201, body: { sha: 'guessed', author: app, verification: { verified: true } } },
+          { status: 201, body: { sha: 'signed-off', author: app, verification: { verified: true } } },
+          { status: 201, body: { sha: 'again', author: app, verification: { verified: true } } },
         ],
         [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { status: 404, body: { message: 'Not Found' } },
         [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
@@ -482,6 +482,18 @@ describe('live GitHub: proposing changes', () => {
         sha: 'new-commit',
         force: true,
       })
+    }),
+  )
+
+  it.effect('leaves an unsigned branch with the same changes when the token cannot sign either', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        ...sameChanges(false),
+        [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'unsigned', author: DEFAULT_COMMITTER, verification: { verified: false } } },
+      })
+      expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
+      expect(requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toHaveLength(1)
+      expect(requests.some((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))).toBe(false)
     }),
   )
 

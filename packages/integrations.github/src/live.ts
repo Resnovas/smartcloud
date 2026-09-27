@@ -364,7 +364,13 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           parents: [parent],
           ...(named ? { author: identity, committer: identity } : {}),
         }),
-      ).pipe(Effect.map(({ data }) => ({ sha: data.sha, author: { name: data.author.name, email: data.author.email } })))
+      ).pipe(
+        Effect.map(({ data }) => ({
+          sha: data.sha,
+          author: { name: data.author.name, email: data.author.email },
+          verified: data.verification.verified,
+        })),
+      )
 
     // A named committer is written as author and committer, and GitHub leaves
     // the commit unsigned. Otherwise GitHub records the token's identity and
@@ -375,11 +381,11 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         ? Effect.gen(function* () {
             const guess = yield* Ref.get(signer)
             const first = yield* createCommit(title, tree, parent, guess, false)
-            if (first.author.name === guess.name && first.author.email === guess.email) return first.sha
+            if (first.author.name === guess.name && first.author.email === guess.email) return first
             yield* Ref.set(signer, first.author)
-            return (yield* createCommit(title, tree, parent, first.author, false)).sha
+            return yield* createCommit(title, tree, parent, first.author, false)
           })
-        : createCommit(title, tree, parent, options.committer, true).pipe(Effect.map(({ sha }) => sha))
+        : createCommit(title, tree, parent, options.committer, true)
 
     const proposeChanges: GitHubService['proposeChanges'] = (proposal) =>
       Effect.gen(function* () {
@@ -418,28 +424,30 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         // alone, so a scheduled run does not push an identical commit each time.
         // Without a named committer the commit must also be signed: an unsigned
         // tip (pushed by someone else, or before the token could sign) is made
-        // again, so the pull request passes a signed-commits rule.
+        // again, so the pull request passes a signed-commits rule. The branch
+        // only moves if the new commit is signed; a token GitHub does not sign
+        // for would otherwise make the branch again on every run.
         const current =
           branchSha === undefined
             ? undefined
             : (yield* call('proposeChanges: read branch commit', () =>
                 octokit.rest.git.getCommit({ owner, repo, commit_sha: branchSha }),
               )).data
-        const upToDate =
+        const sameChanges =
           current !== undefined &&
           current.tree.sha === tree.data.sha &&
-          current.parents.map((parent) => parent.sha).join(' ') === baseSha &&
-          (options.committer !== undefined || current.verification.verified)
-        if (!upToDate) {
-          const commit = yield* commitChanges(proposal.title, tree.data.sha, baseSha)
+          current.parents.map((parent) => parent.sha).join(' ') === baseSha
+        const upToDate = sameChanges && (options.committer !== undefined || current.verification.verified)
+        const commit = upToDate ? undefined : yield* commitChanges(proposal.title, tree.data.sha, baseSha)
+        if (commit !== undefined && !(sameChanges && !commit.verified)) {
           yield* branchSha === undefined
             ? call(
                 'proposeChanges: create branch',
-                () => octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${proposal.branch}`, sha: commit }),
+                () => octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${proposal.branch}`, sha: commit.sha }),
                 rateLimited,
               )
             : call('proposeChanges: update branch', () =>
-                octokit.rest.git.updateRef({ owner, repo, ref: `heads/${proposal.branch}`, sha: commit, force: true }),
+                octokit.rest.git.updateRef({ owner, repo, ref: `heads/${proposal.branch}`, sha: commit.sha, force: true }),
               )
         }
 
