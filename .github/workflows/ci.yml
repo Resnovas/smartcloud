@@ -156,6 +156,10 @@ jobs:
       - name: Formatting
         run: pnpm run format:check
 
+      # LLMS.md is generated from ai-docs/src; a change to either must regenerate it.
+      - name: LLMS.md is up to date
+        run: pnpm ai-docs:check
+
   typecheck:
     name: typecheck
     needs: changes

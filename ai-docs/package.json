@@ -1,0 +1,18 @@
+{
+  "name": "@resnovas/ai-docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The sources of LLMS.md: guidance for AI agents, with examples the build compiles.",
+  "license": "SEE LICENSE IN LICENSE",
+  "devDependencies": {
+    "@effect/vitest": "^0.30.0",
+    "@resnovas/conditions": "workspace:*",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/integrations.posthog": "workspace:*",
+    "@resnovas/runtime": "workspace:*",
+    "effect": "catalog:"
+  }
+}

@@ -40,6 +40,9 @@ LICENSE
 tools/graphify/
 tools/dev/surfaces.mjs
 tools/dev/open.mjs
+tools/ai-docs/
+ai-docs/README.md
+ai-docs/src/05_house-standards/
 .agents/surfaces.jsonc
 .agents/mcp.jsonc
 .agents/prompts/verify.md
@@ -58,6 +61,8 @@ orca.yaml
 .cursor/mcp.json
 .vscode/mcp.json
 .codex/config.toml
+# Generated from ai-docs/src by tools/ai-docs/docgen.mjs.
+LLMS.md
 # The committed code graph.
 graphify-out/
 # house:managed:end

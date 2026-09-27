@@ -2,6 +2,8 @@ packages:
   - 'packages/*'
   - 'apps/*'
   - 'tests/*'
+  # The sources of LLMS.md, a project so the build compiles their examples.
+  - 'ai-docs'
   # Vendored upstream source (externals/) is reference material, never a workspace package.
   - '!externals/**'
 allowBuilds:

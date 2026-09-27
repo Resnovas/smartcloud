@@ -248,6 +248,33 @@ importers:
         specifier: ^5.0.1
         version: 5.0.1(@opentelemetry/api@1.9.1)(@types/node@25.9.8)(@vitest/coverage-v8@5.0.1)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))
 
+  ai-docs:
+    devDependencies:
+      '@effect/vitest':
+        specifier: ^0.30.0
+        version: 0.30.0(effect@3.22.2)(vitest@5.0.1)
+      '@resnovas/conditions':
+        specifier: workspace:*
+        version: link:../packages/conditions
+      '@resnovas/config':
+        specifier: workspace:*
+        version: link:../packages/config
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../packages/engine
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../packages/integrations.github
+      '@resnovas/integrations.posthog':
+        specifier: workspace:*
+        version: link:../packages/integrations.posthog
+      '@resnovas/runtime':
+        specifier: workspace:*
+        version: link:../packages/runtime
+      effect:
+        specifier: 'catalog:'
+        version: 3.22.2
+
   apps/action:
     dependencies:
       '@effect/platform':

@@ -1,0 +1,20 @@
+{
+  "name": "@resnovas/ai-docs",
+  "$schema": "../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "ai-docs/src",
+  "tags": ["type_docs", "layer_backend"],
+  "targets": {
+    "typecheck": {
+      "executor": "nx:run-commands",
+      "dependsOn": ["^build"],
+      "options": {
+        "command": "tsc -p ai-docs/tsconfig.json --noEmit --declaration false --declarationMap false",
+        "cwd": "{workspaceRoot}"
+      },
+      "cache": true,
+      "inputs": ["default", "^default", "{workspaceRoot}/tsconfig.base.json"],
+      "outputs": []
+    }
+  }
+}

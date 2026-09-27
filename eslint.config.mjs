@@ -30,6 +30,8 @@ const typeConstraints = [
     onlyDependOnLibsWithTags: ['type_core', 'type_shared', 'type_database', 'type_extension', 'type_platform'],
   },
   { sourceTag: 'type_test', onlyDependOnLibsWithTags: ['*'] },
+  // ai-docs shows agents how every layer is used, so, like the tests, it may import any of them.
+  { sourceTag: 'type_docs', onlyDependOnLibsWithTags: ['*'] },
 ]
 
 const layerConstraints = [

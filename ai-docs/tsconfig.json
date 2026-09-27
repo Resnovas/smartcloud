@@ -1,0 +1,32 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "outDir": "out-tsc",
+    "rootDir": "..",
+    "types": ["node"],
+    "noEmit": true,
+    "composite": false,
+    "emitDeclarationOnly": false
+  },
+  "include": ["src/**/*.ts"],
+  "references": [
+    {
+      "path": "../packages/runtime"
+    },
+    {
+      "path": "../packages/integrations.posthog"
+    },
+    {
+      "path": "../packages/integrations.github"
+    },
+    {
+      "path": "../packages/engine"
+    },
+    {
+      "path": "../packages/config"
+    },
+    {
+      "path": "../packages/conditions"
+    }
+  ]
+}
