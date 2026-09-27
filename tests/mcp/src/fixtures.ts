@@ -44,16 +44,24 @@ export const pull = {
 // The in-memory GitHub: a repository with a config, a preset, and the pull request read a dry run makes.
 export const memory = () => {
   const github = makeMemoryGitHub()
-  github.state.files.set(fileKey('Resnovas', 'example', '.github/smartcloud.yml'), `${CONVENTIONS}settings:\n  merging: { squash: true }\n`)
+  github.state.files.set(
+    fileKey('Resnovas', 'example', '.github/smartcloud.yml'),
+    `${CONVENTIONS}settings:\n  merging: { squash: true }\n`,
+  )
   github.state.files.set(fileKey('Resnovas', '.github', 'house.yml'), 'version: 2\nroles: { maintainers: [a] }\n')
   github.state.pulls.set(7, { commits: [], files: [], reviews: [], requestedReviewers: [], submittedReviews: [] })
   const service: GitHubService = {
     ...github.service,
     repositoryRequest: (request) =>
-      request.method === 'GET' && request.path === '/pulls/7' ? Effect.succeed(pull) : github.service.repositoryRequest(request),
+      request.method === 'GET' && request.path === '/pulls/7'
+        ? Effect.succeed(pull)
+        : github.service.repositoryRequest(request),
   }
   const connect: Connect = () => Effect.succeed(service)
-  const layer = Layer.mergeAll(NodeContext.layer, ConfigSourceFromGitHub.pipe(Layer.provide(Layer.succeed(GitHub, service))))
+  const layer = Layer.mergeAll(
+    NodeContext.layer,
+    ConfigSourceFromGitHub.pipe(Layer.provide(Layer.succeed(GitHub, service))),
+  )
   return { connect, layer, state: github.state }
 }
 
@@ -77,8 +85,16 @@ export const liveTelemetry = () => {
       Effect.provide(Layer.provideMerge(telemetry('mcp', '9.9.9', { fetch }), Logger.add(Logger.prettyLoggerDefault))),
       Effect.withConfigProvider(ConfigProvider.fromMap(new Map())),
     )
-  const batch = () => sent.filter((request) => request.path === '/batch/').map((request) => request.body).join('\n')
-  const logs = () => sent.filter((request) => request.path === '/i/v1/logs').map((request) => request.body).join('\n')
+  const batch = () =>
+    sent
+      .filter((request) => request.path === '/batch/')
+      .map((request) => request.body)
+      .join('\n')
+  const logs = () =>
+    sent
+      .filter((request) => request.path === '/i/v1/logs')
+      .map((request) => request.body)
+      .join('\n')
   return { run, sent, batch, logs }
 }
 
@@ -86,7 +102,9 @@ export const liveTelemetry = () => {
 export const captureConsole = () => {
   const lines: Array<string> = []
   for (const method of ['log', 'error', 'warn', 'info', 'debug'] as const)
-    vi.spyOn(console, method).mockImplementation((...args: Array<unknown>) => void lines.push(args.map(String).join(' ')))
+    vi.spyOn(console, method).mockImplementation(
+      (...args: Array<unknown>) => void lines.push(args.map(String).join(' ')),
+    )
   return lines
 }
 
@@ -95,5 +113,8 @@ export const missingRepository: Connect = (coordinates) =>
   Effect.succeed({
     ...makeMemoryGitHub().service,
     coordinates,
-    getRepository: Effect.zipRight(Effect.logDebug('github getRepository: NotFound (404)'), Effect.fail(new NotFound({ operation: 'getRepository', detail: '404' }))),
+    getRepository: Effect.zipRight(
+      Effect.logDebug('github getRepository: NotFound (404)'),
+      Effect.fail(new NotFound({ operation: 'getRepository', detail: '404' })),
+    ),
   })

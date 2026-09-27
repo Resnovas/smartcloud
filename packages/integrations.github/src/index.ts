@@ -14,7 +14,15 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-export { Forbidden, fromGraphqlErrors, fromStatus, NotFound, RateLimited, Unavailable, ValidationFailed } from './errors.js'
+export {
+  Forbidden,
+  fromGraphqlErrors,
+  fromStatus,
+  NotFound,
+  RateLimited,
+  Unavailable,
+  ValidationFailed,
+} from './errors.js'
 export type { GitHubError } from './errors.js'
 export { isTrustedComment } from './comments.js'
 export { GitHub } from './service.js'

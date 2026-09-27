@@ -28,7 +28,8 @@ const pushLimit = {
   feature: 'settings',
   rule: 'settings.push-limit',
   level: 'notice',
-  message: 'The push limit has no API, so set it by hand: Settings > General > Pushes > limit branch and tag updates per push.',
+  message:
+    'The push limit has no API, so set it by hand: Settings > General > Pushes > limit branch and tag updates per push.',
 }
 
 describe('settingsFeature', () => {
@@ -48,7 +49,9 @@ describe('settingsFeature', () => {
     it.effect(`applies the settings on ${event} and records the push limit notice`, () =>
       Effect.gen(function* () {
         const { service, state } = makeMemoryGitHub({ repository: publicRepository })
-        const result = yield* runFeatures({ config, event, payload, features: [settingsFeature] }).pipe(Effect.provideService(GitHub, service))
+        const result = yield* runFeatures({ config, event, payload, features: [settingsFeature] }).pipe(
+          Effect.provideService(GitHub, service),
+        )
         expect(result.ran).toStrictEqual(['settings'])
         // The in-memory GitHub answers the rulesets and deployment policy
         // listings with null, which is not a list, so both steps are reported
@@ -58,7 +61,8 @@ describe('settingsFeature', () => {
             feature: 'settings',
             rule: 'settings.ruleset',
             level: 'error',
-            message: 'Ruleset "house: default branch": GET /rulesets: unexpected response (expected a list of rulesets)',
+            message:
+              'Ruleset "house: default branch": GET /rulesets: unexpected response (expected a list of rulesets)',
           },
           {
             feature: 'settings',
@@ -72,7 +76,16 @@ describe('settingsFeature', () => {
         expect(result.changes).toHaveLength(11)
         // Only counts are measured: 11 steps applied, the ruleset and deployment policies failed.
         expect(result.facts).toStrictEqual([
-          { feature: 'settings', name: 'settings applied', values: { applied: 11, failed: 2, skipped: 0, project_type: houseSettings.environments?.projectType ?? 'none' } },
+          {
+            feature: 'settings',
+            name: 'settings applied',
+            values: {
+              applied: 11,
+              failed: 2,
+              skipped: 0,
+              project_type: houseSettings.environments?.projectType ?? 'none',
+            },
+          },
         ])
         expect(state.requests).toHaveLength(12)
         expect(state.graphql).toHaveLength(1)
@@ -83,9 +96,12 @@ describe('settingsFeature', () => {
   it.effect('does nothing on other repository events', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub()
-      const result = yield* runFeatures({ config, event: 'repository_dispatch', payload: {}, features: [settingsFeature] }).pipe(
-        Effect.provideService(GitHub, service),
-      )
+      const result = yield* runFeatures({
+        config,
+        event: 'repository_dispatch',
+        payload: {},
+        features: [settingsFeature],
+      }).pipe(Effect.provideService(GitHub, service))
       expect(result.ran).toStrictEqual(['settings'])
       expect(result.findings).toStrictEqual([])
       expect(state.requests).toStrictEqual([])
@@ -95,9 +111,12 @@ describe('settingsFeature', () => {
   it.effect('is skipped when the config has no settings section', () =>
     Effect.gen(function* () {
       const { service } = makeMemoryGitHub()
-      const result = yield* runFeatures({ config: { version: 2 }, event: 'schedule', payload: {}, features: [settingsFeature] }).pipe(
-        Effect.provideService(GitHub, service),
-      )
+      const result = yield* runFeatures({
+        config: { version: 2 },
+        event: 'schedule',
+        payload: {},
+        features: [settingsFeature],
+      }).pipe(Effect.provideService(GitHub, service))
       expect(result.skipped).toStrictEqual([{ feature: 'settings', reason: 'not configured' }])
     }),
   )
@@ -164,7 +183,9 @@ describe('settingsFeature', () => {
         features: [settingsFeature],
       }).pipe(Effect.provideService(GitHub, service))
       expect(result.findings).toStrictEqual([pushLimit])
-      expect(state.requests).toStrictEqual([{ method: 'PUT', path: '/actions/permissions/access', body: { access_level: 'organization' } }])
+      expect(state.requests).toStrictEqual([
+        { method: 'PUT', path: '/actions/permissions/access', body: { access_level: 'organization' } },
+      ])
     }),
   )
 

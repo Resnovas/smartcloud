@@ -1,6 +1,6 @@
 # CI for the v2 workspace: lint, typecheck, test with coverage, build, and
-# check the API docs and contracts of the projects a change affects, plus the licence header check and the check that
-# docs/reference/configuration.mdx matches the JSON Schema.
+# check the API docs and contracts of the projects a change affects, plus the licence header check, the Prettier check
+# and the check that docs/reference/configuration.mdx matches the JSON Schema.
 name: CI
 
 on:
@@ -54,6 +54,9 @@ jobs:
 
       - name: Licence headers
         run: pnpm headers
+
+      - name: Formatting
+        run: pnpm run format:check
 
       - name: Configuration reference is up to date
         run: pnpm docs:reference:check

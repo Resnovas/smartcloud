@@ -17,7 +17,13 @@
 import { type ConditionGroup, evaluate, requiredFacets, type Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { loadFacets, Report } from '@resnovas/engine'
-import { GitHub, isTrustedComment, type Comment, type GitHubError, type IssueSummary } from '@resnovas/integrations.github'
+import {
+  GitHub,
+  isTrustedComment,
+  type Comment,
+  type GitHubError,
+  type IssueSummary,
+} from '@resnovas/integrations.github'
 import { Clock, Effect } from 'effect'
 
 const FEATURE = 'stale'
@@ -114,7 +120,10 @@ const markerComment = (comments: ReadonlyArray<Comment>, marker: string, trusted
  * @param trusted - Logins trusted as well as bot accounts, normally `roles.trustedBots`.
  * @returns The mark time, or undefined when there is no readable stale comment.
  */
-export const markedSince = (comments: ReadonlyArray<Comment>, trusted: ReadonlyArray<string> = []): Date | undefined => {
+export const markedSince = (
+  comments: ReadonlyArray<Comment>,
+  trusted: ReadonlyArray<string> = [],
+): Date | undefined => {
   const found = markerComment(comments, STALE_MARKER, trusted)?.body.match(SINCE)?.[1]
   const since = found === undefined ? Number.NaN : Date.parse(found)
   return Number.isNaN(since) ? undefined : new Date(since)
@@ -151,7 +160,13 @@ const has = (subject: Subject, label: string) =>
 
 // One comment per marker: an existing trusted one is edited rather than
 // repeated, and one anyone else wrote is left alone.
-const upsertComment = (number: number, marker: string, body: string, comments: ReadonlyArray<Comment>, trusted: ReadonlyArray<string>) =>
+const upsertComment = (
+  number: number,
+  marker: string,
+  body: string,
+  comments: ReadonlyArray<Comment>,
+  trusted: ReadonlyArray<string>,
+) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const existing = markerComment(comments, marker, trusted)
@@ -200,14 +215,26 @@ const unmark = (stale: StaleConfig, subject: Subject) =>
     )
   })
 
-const abandon = (stale: StaleConfig, subject: Subject, label: string, comments: ReadonlyArray<Comment>, trusted: ReadonlyArray<string>) =>
+const abandon = (
+  stale: StaleConfig,
+  subject: Subject,
+  label: string,
+  comments: ReadonlyArray<Comment>,
+  trusted: ReadonlyArray<string>,
+) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const report = yield* Report
     yield* github.addLabels(subject.number, [label])
     yield* report.change({ feature: FEATURE, description: `labelled #${subject.number} "${label}"` })
     if (stale.abandonedComment !== undefined) {
-      yield* upsertComment(subject.number, ABANDONED_MARKER, `${ABANDONED_MARKER}\n${stale.abandonedComment}`, comments, trusted)
+      yield* upsertComment(
+        subject.number,
+        ABANDONED_MARKER,
+        `${ABANDONED_MARKER}\n${stale.abandonedComment}`,
+        comments,
+        trusted,
+      )
       yield* report.change({ feature: FEATURE, description: `commented on #${subject.number} that it is abandoned` })
     }
     if (stale.close === true) {
@@ -341,9 +368,14 @@ export const sweepStale = (config: SmartcloudConfig): Effect.Effect<void, GitHub
     }
     const now = yield* Clock.currentTimeMillis
     const items = yield* github.listOpenIssues
-    const swept = items.map(subjectOf).filter(
-      (listed) => kinds.includes(listed.kind) && !exemptLabels.some((label) => has(listed, label)) && !(unanswerable && listed.kind === 'pullRequest'),
-    )
+    const swept = items
+      .map(subjectOf)
+      .filter(
+        (listed) =>
+          kinds.includes(listed.kind) &&
+          !exemptLabels.some((label) => has(listed, label)) &&
+          !(unanswerable && listed.kind === 'pullRequest'),
+      )
     yield* Effect.logInfo(`stale: sweeping ${swept.length} of ${items.length} open item(s)`).pipe(
       Effect.annotateLogs({ feature: FEATURE, rule: 'stale.sweep', open: items.length, swept: swept.length }),
     )
@@ -356,7 +388,12 @@ export const sweepStale = (config: SmartcloudConfig): Effect.Effect<void, GitHub
         yield* sweepItem(stale, subject, now, config.roles?.trustedBots ?? [])
       }).pipe(
         Effect.catchAll((error) =>
-          report.add({ feature: FEATURE, rule: 'stale.sweep', level: 'error', message: `#${listed.number} was not swept: ${error.message}` }),
+          report.add({
+            feature: FEATURE,
+            rule: 'stale.sweep',
+            level: 'error',
+            message: `#${listed.number} was not swept: ${error.message}`,
+          }),
         ),
       )
     }

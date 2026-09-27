@@ -23,7 +23,15 @@ import { mkdir, mkdtemp, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, vi } from 'vitest'
-import { captureConsole, CONVENTIONS, fixture, liveTelemetry, memorySource, missingRepository, repository } from './fixtures.js'
+import {
+  captureConsole,
+  CONVENTIONS,
+  fixture,
+  liveTelemetry,
+  memorySource,
+  missingRepository,
+  repository,
+} from './fixtures.js'
 
 let dir: string
 let logs: Array<string>
@@ -90,7 +98,17 @@ describe('dry-run', () => {
   it.effect('prints the summary and the writes it recorded, writing nothing', () =>
     Effect.gen(function* () {
       const { connect, state } = repository({ [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: CONVENTIONS })
-      yield* runWith(connect)(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--pr', '7', '--features', 'conventions, labels'])
+      yield* runWith(connect)([
+        'node',
+        'smartcloud',
+        'dry-run',
+        '--repo',
+        'Resnovas/example',
+        '--pr',
+        '7',
+        '--features',
+        'conventions, labels',
+      ])
       expect(logs[0]).toContain('Event: `pull_request` (synchronize) on #7')
       expect(logs[0]).toContain('**Dry run:** these writes were recorded, not made:\n- createCheckRun')
       expect(state.checkRuns).toStrictEqual([])
@@ -103,7 +121,17 @@ describe('dry-run', () => {
       const file = join(dir, 'smartcloud.yml')
       yield* Effect.promise(() => writeFile(file, 'version: 2\n'))
       const { connect } = repository({})
-      yield* runWith(connect)(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--event', 'schedule', '--config', file])
+      yield* runWith(connect)([
+        'node',
+        'smartcloud',
+        'dry-run',
+        '--repo',
+        'Resnovas/example',
+        '--event',
+        'schedule',
+        '--config',
+        file,
+      ])
       expect(logs[0]).toContain('Event: `schedule`')
       expect(logs[0]).toContain('**Dry run:** nothing would have been written.')
     }).pipe(Effect.provide(NodeContext.layer)),
@@ -113,7 +141,10 @@ describe('dry-run', () => {
     Effect.gen(function* () {
       const { connect } = repository({ [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: CONVENTIONS })
       const dry = (...extra: Array<string>) =>
-        Effect.map(runWith(connect)(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--pr', '7', ...extra]), () => logs.splice(0).join('\n'))
+        Effect.map(
+          runWith(connect)(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--pr', '7', ...extra]),
+          () => logs.splice(0).join('\n'),
+        )
       const all = yield* dry()
       expect(yield* dry('--features', ',')).toBe(all)
       expect(yield* dry('--features', 'conventions')).not.toBe(all)
@@ -125,10 +156,13 @@ describe('plan settings', () => {
   it.effect('prints the planned steps without applying them', () =>
     Effect.gen(function* () {
       const { connect, state } = repository({
-        [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: 'version: 2\nsettings:\n  merging: { squash: true }\n',
+        [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]:
+          'version: 2\nsettings:\n  merging: { squash: true }\n',
       })
       yield* runWith(connect)(['node', 'smartcloud', 'plan', 'settings', '--repo', 'Resnovas/example'])
-      expect(logs[0]).toBe('Settings for Resnovas/example, in order:\n- `merging`: Merging, branches, sign-off and wiki\n  PATCH /repos/{owner}/{repo} {"allow_squash_merge":true}')
+      expect(logs[0]).toBe(
+        'Settings for Resnovas/example, in order:\n- `merging`: Merging, branches, sign-off and wiki\n  PATCH /repos/{owner}/{repo} {"allow_squash_merge":true}',
+      )
       expect(state.requests).toStrictEqual([])
     }).pipe(Effect.provide(NodeContext.layer)),
   )
@@ -144,22 +178,46 @@ describe('check-commit', () => {
   it.effect('runs from the command line', () =>
     Effect.gen(function* () {
       const file = yield* Effect.promise(() => message('fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>\n'))
-      yield* run(['node', 'smartcloud', 'check-commit', file, '--author-name', 'Jane Doe', '--author-email', 'jane@example.com'])
+      yield* run([
+        'node',
+        'smartcloud',
+        'check-commit',
+        file,
+        '--author-name',
+        'Jane Doe',
+        '--author-email',
+        'jane@example.com',
+      ])
       expect(logs).toContain('The commit message passes.')
     }).pipe(Effect.provide(Layer.merge(memorySource({}), NodeContext.layer))),
   )
 })
 
 describe('telemetry for every command', () => {
-  const failures: ReadonlyArray<{ readonly name: string; readonly argv: ReadonlyArray<string>; readonly command: string; readonly tag: string }> = [
+  const failures: ReadonlyArray<{
+    readonly name: string
+    readonly argv: ReadonlyArray<string>
+    readonly command: string
+    readonly tag: string
+  }> = [
     {
       name: 'a repository GitHub does not have',
       argv: ['dry-run', '--repo', 'Resnovas/this-repo-does-not-exist-xyz', '--event', 'push'],
       command: 'dry-run',
       tag: 'NotFound',
     },
-    { name: 'a config file that cannot be read', argv: ['dry-run', '--repo', 'Resnovas/example', '--event', 'push', '--config', 'missing.yml'], command: 'dry-run', tag: 'SystemError' },
-    { name: 'an invalid repository name', argv: ['plan', 'settings', '--repo', 'not-a-repo'], command: 'plan settings', tag: 'InvalidRepository' },
+    {
+      name: 'a config file that cannot be read',
+      argv: ['dry-run', '--repo', 'Resnovas/example', '--event', 'push', '--config', 'missing.yml'],
+      command: 'dry-run',
+      tag: 'SystemError',
+    },
+    {
+      name: 'an invalid repository name',
+      argv: ['plan', 'settings', '--repo', 'not-a-repo'],
+      command: 'plan settings',
+      tag: 'InvalidRepository',
+    },
     { name: 'a missing file to validate', argv: ['validate', 'missing.yml'], command: 'validate', tag: 'SystemError' },
   ]
   for (const failure of failures) {
@@ -191,11 +249,19 @@ describe('telemetry for every command', () => {
       const lines = captureConsole()
       const live = liveTelemetry()
       const before = process.exitCode
-      yield* live.run(main(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/this-repo-does-not-exist-xyz', '--event', 'push'], missingRepository))
+      yield* live.run(
+        main(
+          ['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/this-repo-does-not-exist-xyz', '--event', 'push'],
+          missingRepository,
+        ),
+      )
       process.exitCode = before
       expect(lines.some((line) => line.includes('DEBUG'))).toBe(false)
       expect(live.logs()).toContain('github getRepository: NotFound (404)')
-      const traces = live.sent.filter((request) => request.path === '/i/v1/traces').map((request) => request.body).join('\n')
+      const traces = live.sent
+        .filter((request) => request.path === '/i/v1/traces')
+        .map((request) => request.body)
+        .join('\n')
       expect(traces).toContain('"smartcloud.command"')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
@@ -205,13 +271,19 @@ describe('telemetry for every command', () => {
       const lines = captureConsole()
       const live = liveTelemetry()
       const before = process.exitCode
-      yield* live.run(main(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--event', 'schedule'], () => Effect.die(new TypeError('broken'))))
+      yield* live.run(
+        main(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--event', 'schedule'], () =>
+          Effect.die(new TypeError('broken')),
+        ),
+      )
       expect(process.exitCode).toBe(1)
       process.exitCode = before
       expect(lines).toStrictEqual(['smartcloud: unexpected failure: broken'])
       expect(live.batch()).toContain('"expected":false')
       expect(live.batch()).toContain('"error_tag":"TypeError"')
-      yield* main(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--event', 'schedule'], () => Effect.die('not an error'))
+      yield* main(['node', 'smartcloud', 'dry-run', '--repo', 'Resnovas/example', '--event', 'schedule'], () =>
+        Effect.die('not an error'),
+      )
       process.exitCode = before
       expect(lines.at(-1)).toBe('smartcloud: unexpected failure: not an error')
     }).pipe(Effect.provide(NodeContext.layer)),

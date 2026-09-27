@@ -31,7 +31,10 @@ const matches = <T extends string>(type: T, description: string) =>
   Schema.Struct({ type: Schema.Literal(type), condition: Pattern }).annotations({ identifier: type, description })
 
 const flag = <T extends string>(type: T, description: string) =>
-  Schema.Struct({ type: Schema.Literal(type), condition: Schema.Boolean }).annotations({ identifier: type, description })
+  Schema.Struct({ type: Schema.Literal(type), condition: Schema.Boolean }).annotations({
+    identifier: type,
+    description,
+  })
 
 /**
  * The title matches a pattern.
@@ -218,11 +221,14 @@ const CheckName = Schema.NonEmptyString.annotations({
  */
 export const ChecksPass = Schema.Struct({
   type: Schema.Literal('checksPass'),
-  checks: Schema.NonEmptyArray(CheckName).annotations({ description: 'Check run names or commit status contexts, matched exactly.' }),
+  checks: Schema.NonEmptyArray(CheckName).annotations({
+    description: 'Check run names or commit status contexts, matched exactly.',
+  }),
   condition: Schema.Boolean,
 }).annotations({
   identifier: 'checksPass',
-  description: 'Every named check succeeded, or at least one has not when false. A check that has not reported yet has not succeeded.',
+  description:
+    'Every named check succeeded, or at least one has not when false. A check that has not reported yet has not succeeded.',
 })
 
 /**
@@ -245,7 +251,9 @@ export const ChecksPass = Schema.Struct({
 export const CheckStatus = Schema.Struct({
   type: Schema.Literal('checkStatus'),
   check: CheckName,
-  condition: CheckState.annotations({ description: 'success, failure or pending; a check that has not reported yet is pending.' }),
+  condition: CheckState.annotations({
+    description: 'success, failure or pending; a check that has not reported yet is pending.',
+  }),
 }).annotations({
   identifier: 'checkStatus',
   description: 'The named check is in this state. A check that has not reported yet is pending.',
@@ -364,7 +372,8 @@ export const IsApproved = Schema.Struct({
   ),
 }).annotations({
   identifier: 'isApproved',
-  description: 'No reviewer is requesting changes, at least this many approved, and none are pending unless allowPending is set.',
+  description:
+    'No reviewer is requesting changes, at least this many approved, and none are pending unless allowPending is set.',
 })
 
 /**

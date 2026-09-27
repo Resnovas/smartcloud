@@ -35,7 +35,8 @@ const live = (routes: Routes) => {
     // One read per call, so the counts below show what the cache shares.
     mergeablePoll: Schedule.stop,
   })
-  const calls = (method: string, path: string) => fake.requests.filter((request: Recorded) => request.method === method && request.path === path).length
+  const calls = (method: string, path: string) =>
+    fake.requests.filter((request: Recorded) => request.method === method && request.path === path).length
   return { service, requests: fake.requests, calls }
 }
 
@@ -56,7 +57,14 @@ describe('cached reads: sharing and caching', () => {
     Effect.gen(function* () {
       const { service, requests, calls } = live({
         [`GET ${REPO}`]: {
-          body: { owner: { login: 'Resnovas' }, name: 'example', full_name: 'Resnovas/example', node_id: 'R_1', private: false, default_branch: 'main' },
+          body: {
+            owner: { login: 'Resnovas' },
+            name: 'example',
+            full_name: 'Resnovas/example',
+            node_id: 'R_1',
+            private: false,
+            default_branch: 'main',
+          },
         },
         [`GET ${REPO}/labels`]: { body: [label('bug')] },
         [`GET ${REPO}/issues`]: { body: [issue(1, ['bug'])] },
@@ -65,12 +73,23 @@ describe('cached reads: sharing and caching', () => {
       })
       const github = yield* service
       // Concurrent equal reads wait on the same call.
-      const concurrent = yield* Effect.all([github.listLabels, github.listLabels, github.listLabels], { concurrency: 'unbounded' })
+      const concurrent = yield* Effect.all([github.listLabels, github.listLabels, github.listLabels], {
+        concurrency: 'unbounded',
+      })
       expect(concurrent.map((labels) => labels.map(({ name }) => name))).toStrictEqual([['bug'], ['bug'], ['bug']])
       // With batching on, the reads go out together, still one call per distinct read.
-      yield* Effect.all([github.getRepository, github.listOpenIssues, github.listComments(3), github.listComments(3), github.listComments(4)], {
-        batching: true,
-      })
+      yield* Effect.all(
+        [
+          github.getRepository,
+          github.listOpenIssues,
+          github.listComments(3),
+          github.listComments(3),
+          github.listComments(4),
+        ],
+        {
+          batching: true,
+        },
+      )
       yield* github.getRepository
       yield* github.listOpenIssues
       yield* github.listLabels
@@ -151,7 +170,12 @@ describe('cached reads: invalidation after writes', () => {
     Effect.gen(function* () {
       const { service, calls } = live({
         [`GET ${REPO}/labels`]: { body: [label('bug')] },
-        [`GET ${REPO}/issues`]: [{ body: [issue(3, [])] }, { body: [issue(3, ['bug'])] }, { body: [issue(3, [])] }, { body: [] }],
+        [`GET ${REPO}/issues`]: [
+          { body: [issue(3, [])] },
+          { body: [issue(3, ['bug'])] },
+          { body: [issue(3, [])] },
+          { body: [] },
+        ],
         [`POST ${REPO}/issues/3/labels`]: { body: [] },
         [`DELETE ${REPO}/issues/3/labels/bug`]: { body: [] },
         [`PATCH ${REPO}/issues/3`]: { body: {} },
@@ -175,7 +199,11 @@ describe('cached reads: invalidation after writes', () => {
   it.effect("a new comment invalidates that issue's comments, and an edit every issue's", () =>
     Effect.gen(function* () {
       const { service, calls } = live({
-        [`GET ${REPO}/issues/3/comments`]: [{ body: [] }, { body: [{ id: 10, body: 'hi', user: null }] }, { body: [{ id: 10, body: 'edited', user: null }] }],
+        [`GET ${REPO}/issues/3/comments`]: [
+          { body: [] },
+          { body: [{ id: 10, body: 'hi', user: null }] },
+          { body: [{ id: 10, body: 'edited', user: null }] },
+        ],
         [`GET ${REPO}/issues/4/comments`]: { body: [] },
         [`POST ${REPO}/issues/3/comments`]: { status: 201, body: { id: 10, body: 'hi', user: null } },
         [`PATCH ${REPO}/issues/comments/10`]: { body: {} },
@@ -196,48 +224,52 @@ describe('cached reads: invalidation after writes', () => {
     }),
   )
 
-  it.effect('a review invalidates the reviews and requested reviewers, and a review request the requested reviewers only', () =>
-    Effect.gen(function* () {
-      const { service, calls } = live({
-        [`GET ${REPO}/pulls/7/commits`]: { body: [] },
-        [`GET ${REPO}/pulls/7/files`]: { body: [] },
-        [`GET ${REPO}/pulls/7`]: { body: { mergeable: true } },
-        [`GET ${REPO}/pulls/7/reviews`]: [{ body: [] }, { body: [{ user: { login: 'bot' }, state: 'COMMENTED' }] }],
-        [`GET ${REPO}/pulls/7/requested_reviewers`]: [
-          { body: { users: [], teams: [] } },
-          { body: { users: [{}], teams: [] } },
-          { body: { users: [], teams: [] } },
-        ],
-        [`POST ${REPO}/pulls/7/requested_reviewers`]: { status: 201, body: {} },
-        [`POST ${REPO}/pulls/7/reviews`]: { body: {} },
-      })
-      const github = yield* service
-      const read = Effect.all([
-        github.listCommits(7),
-        github.listFiles(7),
-        github.listReviews(7),
-        github.countRequestedReviewers(7),
-        github.getMergeable(7),
-      ])
-      yield* read
-      yield* github.requestReviewers(7, ['ann'])
-      expect(yield* github.countRequestedReviewers(7)).toBe(1)
-      expect(yield* github.listReviews(7)).toStrictEqual([])
-      yield* github.createReview(7, { event: 'COMMENT', body: 'b' })
-      expect(yield* github.listReviews(7)).toStrictEqual([{ author: 'bot', state: 'COMMENTED' }])
-      expect(yield* github.countRequestedReviewers(7)).toBe(0)
-      yield* read
-      expect(calls('GET', `${REPO}/pulls/7/commits`)).toBe(1)
-      expect(calls('GET', `${REPO}/pulls/7/files`)).toBe(1)
-      expect(calls('GET', `${REPO}/pulls/7`)).toBe(1)
-      expect(calls('GET', `${REPO}/pulls/7/reviews`)).toBe(2)
-      expect(calls('GET', `${REPO}/pulls/7/requested_reviewers`)).toBe(3)
-    }),
+  it.effect(
+    'a review invalidates the reviews and requested reviewers, and a review request the requested reviewers only',
+    () =>
+      Effect.gen(function* () {
+        const { service, calls } = live({
+          [`GET ${REPO}/pulls/7/commits`]: { body: [] },
+          [`GET ${REPO}/pulls/7/files`]: { body: [] },
+          [`GET ${REPO}/pulls/7`]: { body: { mergeable: true } },
+          [`GET ${REPO}/pulls/7/reviews`]: [{ body: [] }, { body: [{ user: { login: 'bot' }, state: 'COMMENTED' }] }],
+          [`GET ${REPO}/pulls/7/requested_reviewers`]: [
+            { body: { users: [], teams: [] } },
+            { body: { users: [{}], teams: [] } },
+            { body: { users: [], teams: [] } },
+          ],
+          [`POST ${REPO}/pulls/7/requested_reviewers`]: { status: 201, body: {} },
+          [`POST ${REPO}/pulls/7/reviews`]: { body: {} },
+        })
+        const github = yield* service
+        const read = Effect.all([
+          github.listCommits(7),
+          github.listFiles(7),
+          github.listReviews(7),
+          github.countRequestedReviewers(7),
+          github.getMergeable(7),
+        ])
+        yield* read
+        yield* github.requestReviewers(7, ['ann'])
+        expect(yield* github.countRequestedReviewers(7)).toBe(1)
+        expect(yield* github.listReviews(7)).toStrictEqual([])
+        yield* github.createReview(7, { event: 'COMMENT', body: 'b' })
+        expect(yield* github.listReviews(7)).toStrictEqual([{ author: 'bot', state: 'COMMENTED' }])
+        expect(yield* github.countRequestedReviewers(7)).toBe(0)
+        yield* read
+        expect(calls('GET', `${REPO}/pulls/7/commits`)).toBe(1)
+        expect(calls('GET', `${REPO}/pulls/7/files`)).toBe(1)
+        expect(calls('GET', `${REPO}/pulls/7`)).toBe(1)
+        expect(calls('GET', `${REPO}/pulls/7/reviews`)).toBe(2)
+        expect(calls('GET', `${REPO}/pulls/7/requested_reviewers`)).toBe(3)
+      }),
   )
 
   it.effect('a proposal invalidates file and directory reads, the open issues, pull request reads and checks', () =>
     Effect.gen(function* () {
-      const file = (text: string) => ({ body: { type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64') } })
+      const file = (text: string) => ({
+        body: { type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64') },
+      })
       const pull = (mergeable: boolean) => ({ body: { mergeable, head: { sha: 'head' } } })
       const { service, calls } = live({
         [`GET ${REPO}/contents/LICENSE`]: [file('old'), file('new')],
@@ -248,7 +280,10 @@ describe('cached reads: invalidation after writes', () => {
         [`POST ${REPO}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
         [`POST ${REPO}/git/trees`]: { status: 201, body: { sha: 'tree' } },
         [`GET ${REPO}/git/ref/heads/sync`]: { status: 404, body: { message: 'Not Found' } },
-        [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'commit', author: DEFAULT_COMMITTER, verification: { verified: true } } },
+        [`POST ${REPO}/git/commits`]: {
+          status: 201,
+          body: { sha: 'commit', author: DEFAULT_COMMITTER, verification: { verified: true } },
+        },
         [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
         [`GET ${REPO}/pulls`]: { body: [] },
         [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'u' } },
@@ -309,7 +344,9 @@ describe('cached reads: invalidation after writes', () => {
 
   it.effect('an unknown mergeability is not cached', () =>
     Effect.gen(function* () {
-      const { service, calls } = live({ [`GET ${REPO}/pulls/7`]: [{ body: { mergeable: null } }, { body: { mergeable: false } }] })
+      const { service, calls } = live({
+        [`GET ${REPO}/pulls/7`]: [{ body: { mergeable: null } }, { body: { mergeable: false } }],
+      })
       const github = yield* service
       expect(yield* github.getMergeable(7)).toBe('UNKNOWN')
       expect(yield* github.getMergeable(7)).toBe('CONFLICTING')
@@ -334,43 +371,45 @@ describe('cached reads: invalidation after writes', () => {
 })
 
 describe('cached reads: repository requests and GraphQL', () => {
-  it.effect('caches repository GETs, which every write invalidates, and a raw write or mutation invalidates everything', () =>
-    Effect.gen(function* () {
-      const { service, calls } = live({
-        [`GET ${REPO}/rulesets`]: { body: [] },
-        [`GET ${REPO}/labels`]: { body: [] },
-        [`POST ${REPO}/check-runs`]: { status: 201, body: { id: 1 } },
-        [`PATCH ${REPO}/check-runs/1`]: { body: {} },
-        [`PATCH ${REPO}`]: { body: {} },
-        [`POST /graphql`]: { body: { data: { x: 1 } } },
-      })
-      const github = yield* service
-      const rulesets = github.repositoryRequest({ method: 'GET', path: '/rulesets' })
-      const run = { name: 'n', headSha: 'h', status: 'in_progress', title: 't', summary: 's' } as const
-      yield* Effect.all([rulesets, rulesets, github.listLabels])
-      // A GET with a body is never cached.
-      yield* github.repositoryRequest({ method: 'GET', path: '/rulesets', body: {} })
-      expect(calls('GET', `${REPO}/rulesets`)).toBe(2)
-      yield* github.createCheckRun(run)
-      yield* rulesets
-      yield* github.updateCheckRun(1, run)
-      yield* rulesets
-      yield* github.listLabels
-      expect(calls('GET', `${REPO}/rulesets`)).toBe(4)
-      expect(calls('GET', `${REPO}/labels`)).toBe(1)
-      yield* github.repositoryRequest({ method: 'PATCH', path: '', body: { has_wiki: false } })
-      yield* github.listLabels
-      yield* rulesets
-      expect(calls('GET', `${REPO}/labels`)).toBe(2)
-      expect(calls('GET', `${REPO}/rulesets`)).toBe(5)
-      // A GraphQL query is not cached; a mutation invalidates everything.
-      yield* github.graphql('query { x }', {})
-      yield* github.graphql('query { x }', {})
-      yield* github.graphql('mutation { x }', {})
-      yield* github.listLabels
-      expect(calls('POST', '/graphql')).toBe(3)
-      expect(calls('GET', `${REPO}/labels`)).toBe(3)
-    }),
+  it.effect(
+    'caches repository GETs, which every write invalidates, and a raw write or mutation invalidates everything',
+    () =>
+      Effect.gen(function* () {
+        const { service, calls } = live({
+          [`GET ${REPO}/rulesets`]: { body: [] },
+          [`GET ${REPO}/labels`]: { body: [] },
+          [`POST ${REPO}/check-runs`]: { status: 201, body: { id: 1 } },
+          [`PATCH ${REPO}/check-runs/1`]: { body: {} },
+          [`PATCH ${REPO}`]: { body: {} },
+          [`POST /graphql`]: { body: { data: { x: 1 } } },
+        })
+        const github = yield* service
+        const rulesets = github.repositoryRequest({ method: 'GET', path: '/rulesets' })
+        const run = { name: 'n', headSha: 'h', status: 'in_progress', title: 't', summary: 's' } as const
+        yield* Effect.all([rulesets, rulesets, github.listLabels])
+        // A GET with a body is never cached.
+        yield* github.repositoryRequest({ method: 'GET', path: '/rulesets', body: {} })
+        expect(calls('GET', `${REPO}/rulesets`)).toBe(2)
+        yield* github.createCheckRun(run)
+        yield* rulesets
+        yield* github.updateCheckRun(1, run)
+        yield* rulesets
+        yield* github.listLabels
+        expect(calls('GET', `${REPO}/rulesets`)).toBe(4)
+        expect(calls('GET', `${REPO}/labels`)).toBe(1)
+        yield* github.repositoryRequest({ method: 'PATCH', path: '', body: { has_wiki: false } })
+        yield* github.listLabels
+        yield* rulesets
+        expect(calls('GET', `${REPO}/labels`)).toBe(2)
+        expect(calls('GET', `${REPO}/rulesets`)).toBe(5)
+        // A GraphQL query is not cached; a mutation invalidates everything.
+        yield* github.graphql('query { x }', {})
+        yield* github.graphql('query { x }', {})
+        yield* github.graphql('mutation { x }', {})
+        yield* github.listLabels
+        expect(calls('POST', '/graphql')).toBe(3)
+        expect(calls('GET', `${REPO}/labels`)).toBe(3)
+      }),
   )
 })
 

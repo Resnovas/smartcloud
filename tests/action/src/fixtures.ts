@@ -21,7 +21,8 @@ import type { Inputs } from '@resnovas/action'
 import { fileKey, makeMemoryGitHub, type MemoryState } from '@resnovas/integrations.github'
 import { ConfigProvider, Effect, Option, Redacted } from 'effect'
 
-export const withEnv = (env: Record<string, string>) => Effect.withConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))
+export const withEnv = (env: Record<string, string>) =>
+  Effect.withConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))
 
 // A pull request payload with the fields GitHub sends.
 export const pullRequest = (title: string) => ({

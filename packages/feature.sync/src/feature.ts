@@ -16,7 +16,14 @@
 
 import { type ExtendsRef, formatExtendsRef, parseExtendsRef, type SmartcloudConfig } from '@resnovas/config'
 import { type Feature, type PullRequestEnvelope, Report } from '@resnovas/engine'
-import { type DirectoryEntry, type FileLocation, GitHub, type GitHubError, type GitHubService, type Repository } from '@resnovas/integrations.github'
+import {
+  type DirectoryEntry,
+  type FileLocation,
+  GitHub,
+  type GitHubError,
+  type GitHubService,
+  type Repository,
+} from '@resnovas/integrations.github'
 import { Data, Effect } from 'effect'
 import { syncFindings } from './managed.js'
 import { type CurrentFile, planSync, type PlannedFile, type SyncPlan } from './plan.js'
@@ -117,7 +124,12 @@ const joinPath = (directory: string, path: string) => {
 
 const readTemplate = (github: GitHubService, source: ExtendsRef, entry: DirectoryEntry) =>
   Effect.map(
-    github.getFile({ owner: source.owner, repo: source.repo, path: joinPath(source.path, entry.path), ...at(source.ref) }),
+    github.getFile({
+      owner: source.owner,
+      repo: source.repo,
+      path: joinPath(source.path, entry.path),
+      ...at(source.ref),
+    }),
     (content): Template => ({ path: entry.path, content, executable: entry.executable }),
   )
 
@@ -130,9 +142,13 @@ const readTemplates = (github: GitHubService, source: ExtendsRef) =>
 const readOptional = (github: GitHubService, location: FileLocation) =>
   github.getFile(location).pipe(Effect.catchTag('NotFound', () => Effect.succeed(null)))
 
-const valuesFor = (sync: SyncConfig, repository: Repository): Values => ({ ...sync.values, REPOSITORY: repository.fullName })
+const valuesFor = (sync: SyncConfig, repository: Repository): Values => ({
+  ...sync.values,
+  REPOSITORY: repository.fullName,
+})
 
-const linkFor = (config: SmartcloudConfig) => `${config.links?.policyBase ?? DEFAULT_POLICY_BASE}/GOVERNANCE.md#synced-files`
+const linkFor = (config: SmartcloudConfig) =>
+  `${config.links?.policyBase ?? DEFAULT_POLICY_BASE}/GOVERNANCE.md#synced-files`
 
 const isSourceRepository = (repository: Repository, source: ExtendsRef) =>
   repository.fullName.toLowerCase() === `${source.owner}/${source.repo}`.toLowerCase()
@@ -147,7 +163,8 @@ const readCurrent = (github: GitHubService, repository: Repository, templates: R
     const present = templates.filter((template) => executable.has(template.path))
     const read = yield* Effect.forEach(
       present,
-      (template) => Effect.map(readOptional(github, { ...location, path: template.path }), (content) => ({ template, content })),
+      (template) =>
+        Effect.map(readOptional(github, { ...location, path: template.path }), (content) => ({ template, content })),
       { concurrency: CONCURRENCY },
     )
     const current = new Map<string, CurrentFile>()
@@ -201,7 +218,9 @@ export interface SyncPreview {
  * @param sync - The `sync` section of the config.
  * @returns The preview, or why the templates could not be read or rendered.
  */
-export const previewSync = (sync: SyncConfig): Effect.Effect<SyncPreview, SyncSourceInvalid | MissingValue | GitHubError, GitHub> =>
+export const previewSync = (
+  sync: SyncConfig,
+): Effect.Effect<SyncPreview, SyncSourceInvalid | MissingValue | GitHubError, GitHub> =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const source = yield* parseSource(sync.source)
@@ -220,10 +239,22 @@ const runSync = (config: SmartcloudConfig, sync: SyncConfig) =>
     const report = yield* Report
     const { source, repository, plan } = yield* previewSync(sync)
     yield* Effect.logInfo(`sync: ${plan.files.length} file(s) to propose, ${plan.conflicts.length} conflict(s)`).pipe(
-      Effect.annotateLogs({ feature: FEATURE, rule: 'SYNC', files: plan.files.length, conflicts: plan.conflicts.length }),
+      Effect.annotateLogs({
+        feature: FEATURE,
+        rule: 'SYNC',
+        files: plan.files.length,
+        conflicts: plan.conflicts.length,
+      }),
     )
     for (const { path, problem } of plan.conflicts) {
-      yield* report.add({ feature: FEATURE, rule: 'SYNC', level: 'warning', message: `${path} ${problem}`, path, link: linkFor(config) })
+      yield* report.add({
+        feature: FEATURE,
+        rule: 'SYNC',
+        level: 'warning',
+        message: `${path} ${problem}`,
+        path,
+        link: linkFor(config),
+      })
     }
     // Only counts are measured: paths name the repository's files.
     const count = (reason: PlannedFile['reason']) => plan.files.filter((file) => file.reason === reason).length
@@ -257,7 +288,10 @@ const runSync = (config: SmartcloudConfig, sync: SyncConfig) =>
       yield* report.change({ feature: FEATURE, description: `${file.path} ${REASONS[file.reason]}` })
     // A dry run proposes nothing, so it has no pull request number to name.
     const where = result.number === 0 ? '' : ` in ${result.created ? 'new ' : ''}pull request #${result.number}`
-    yield* report.change({ feature: FEATURE, description: `Proposed ${plan.files.length} synced file(s) on ${branch}${where}` })
+    yield* report.change({
+      feature: FEATURE,
+      description: `Proposed ${plan.files.length} synced file(s) on ${branch}${where}`,
+    })
   })
 
 const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequestEnvelope) =>
@@ -288,11 +322,15 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
       { concurrency: CONCURRENCY },
     )
     // Contributors fail; a maintainer's own edit is a warning unless sync.maintainerLevel says otherwise.
-    const level = levelFor(authorRole(envelope.subject.author, config.roles, repository.owner), 'SYNC', sync.maintainerLevel)
-    const findings = syncFindings(files)
-    yield* Effect.logInfo(`sync: ${files.length} synced file(s) checked, ${findings.length} edit(s) to synced content`).pipe(
-      Effect.annotateLogs({ feature: FEATURE, rule: 'SYNC', files: files.length, edits: findings.length, level }),
+    const level = levelFor(
+      authorRole(envelope.subject.author, config.roles, repository.owner),
+      'SYNC',
+      sync.maintainerLevel,
     )
+    const findings = syncFindings(files)
+    yield* Effect.logInfo(
+      `sync: ${files.length} synced file(s) checked, ${findings.length} edit(s) to synced content`,
+    ).pipe(Effect.annotateLogs({ feature: FEATURE, rule: 'SYNC', files: files.length, edits: findings.length, level }))
     for (const { path, message, local } of findings) {
       yield* report.add({
         feature: FEATURE,

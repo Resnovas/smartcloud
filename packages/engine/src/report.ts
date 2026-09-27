@@ -98,7 +98,10 @@ export class Report extends Context.Tag('@resnovas/engine/Report')<
  * const errors = Effect.map(Metric.value(Metric.tagged(findingsCounter, 'level', 'error')), (state) => state.count)
  * ```
  */
-export const findingsCounter = Metric.counter('smartcloud.findings', { description: 'Findings recorded by smartcloud features, by level and feature', incremental: true })
+export const findingsCounter = Metric.counter('smartcloud.findings', {
+  description: 'Findings recorded by smartcloud features, by level and feature',
+  incremental: true,
+})
 
 // A finding's message can quote titles and logins, so only its rule, level and feature are logged.
 const recordFinding = (finding: Finding) =>

@@ -8,8 +8,5 @@
     "types": ["node"]
   },
   "include": ["src/**/*.ts"],
-  "references": [
-    { "path": "../engine/tsconfig.lib.json" },
-    { "path": "../integrations.github/tsconfig.lib.json" }
-  ]
+  "references": [{ "path": "../engine/tsconfig.lib.json" }, { "path": "../integrations.github/tsconfig.lib.json" }]
 }

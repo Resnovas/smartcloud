@@ -205,7 +205,11 @@ describe('applySettings', () => {
               },
               {
                 type: 'code_scanning',
-                parameters: { code_scanning_tools: [{ tool: 'CodeQL', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' }] },
+                parameters: {
+                  code_scanning_tools: [
+                    { tool: 'CodeQL', security_alerts_threshold: 'high_or_higher', alerts_threshold: 'errors' },
+                  ],
+                },
               },
               { type: 'copilot_code_review', parameters: { review_draft_pull_requests: true, review_on_push: true } },
             ],

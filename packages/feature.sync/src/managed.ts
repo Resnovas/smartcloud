@@ -279,7 +279,9 @@ const dependabotEntries = (lines: ReadonlyArray<string>): ReadonlyArray<string> 
     if (branch !== undefined) current.branch = unquote(branch)
   }
   return entries.flatMap((entry) =>
-    entry.directories.map((directory) => `${entry.ecosystem} in ${directory}${entry.branch === '' ? '' : ` on ${entry.branch}`}`),
+    entry.directories.map(
+      (directory) => `${entry.ecosystem} in ${directory}${entry.branch === '' ? '' : ` on ${entry.branch}`}`,
+    ),
   )
 }
 
@@ -329,7 +331,8 @@ const isYaml = (path: string) => path.endsWith('.yml') || path.endsWith('.yaml')
 
 // Issue and discussion forms give their fields ids; a workflow's step ids
 // are its own business and may repeat the template's.
-const isForm = (path: string) => isYaml(path) && (path.includes('ISSUE_TEMPLATE/') || path.includes('DISCUSSION_TEMPLATE/'))
+const isForm = (path: string) =>
+  isYaml(path) && (path.includes('ISSUE_TEMPLATE/') || path.includes('DISCUSSION_TEMPLATE/'))
 
 const isDependabot = (path: string) => path.endsWith('dependabot.yml') || path.endsWith('dependabot.yaml')
 

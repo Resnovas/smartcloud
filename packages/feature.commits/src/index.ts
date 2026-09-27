@@ -19,5 +19,13 @@ export type { Attribution, ClassifiedAttribution } from './attribution.js'
 export { checkCommitMessage, commitsFeature } from './feature.js'
 export { isAiIdentity, makeAiIdentityMatcher } from './identity.js'
 export type { AiIdentityPatterns, Identity } from './identity.js'
-export { authorRole, CommitsNotLoaded, DEFAULT_POLICY_BASE, levelFor, policyBase, pullRequestCommits, sameLogin } from './policy.js'
+export {
+  authorRole,
+  CommitsNotLoaded,
+  DEFAULT_POLICY_BASE,
+  levelFor,
+  policyBase,
+  pullRequestCommits,
+  sameLogin,
+} from './policy.js'
 export type { MaintainerLevel, Role } from './policy.js'

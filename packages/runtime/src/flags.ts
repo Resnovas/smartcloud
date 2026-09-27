@@ -104,14 +104,19 @@ export const featureEnabled = (repository: RepositoryName, flag: FeatureFlag): E
  * @param features - The features about to run.
  * @returns Each turned-off feature's name and reason; features without a flag are never turned off.
  */
-export const turnedOffFeatures = (repository: RepositoryName, features: ReadonlyArray<Feature>): Effect.Effect<ReadonlyMap<string, string>> =>
+export const turnedOffFeatures = (
+  repository: RepositoryName,
+  features: ReadonlyArray<Feature>,
+): Effect.Effect<ReadonlyMap<string, string>> =>
   Effect.map(
     Effect.forEach(
       features,
       (feature) => {
         const flag = flagFor(feature.name)
         return isFeatureFlag(flag)
-          ? Effect.map(featureEnabled(repository, flag), (enabled) => (enabled ? [] : [[feature.name, `turned off by feature flag ${flag}`] as const]))
+          ? Effect.map(featureEnabled(repository, flag), (enabled) =>
+              enabled ? [] : [[feature.name, `turned off by feature flag ${flag}`] as const],
+            )
           : Effect.succeed([])
       },
       { concurrency: 'unbounded' },
@@ -121,7 +126,9 @@ export const turnedOffFeatures = (repository: RepositoryName, features: Readonly
     Effect.tap((off) =>
       Effect.zipRight(
         Effect.annotateCurrentSpan({ features: features.length, turned_off: [...off.keys()] }),
-        Effect.logDebug(`flags: ${off.size} of ${features.length} feature(s) turned off`).pipe(Effect.annotateLogs({ turned_off: [...off.keys()] })),
+        Effect.logDebug(`flags: ${off.size} of ${features.length} feature(s) turned off`).pipe(
+          Effect.annotateLogs({ turned_off: [...off.keys()] }),
+        ),
       ),
     ),
     Effect.withSpan('smartcloud.flags.evaluate', { captureStackTrace: false }),

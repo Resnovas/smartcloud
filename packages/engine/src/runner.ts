@@ -18,7 +18,14 @@ import type { Facet, Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { GitHub, type GitHubError } from '@resnovas/integrations.github'
 import { Cause, type Context, Duration, Effect, Exit, LogLevel, Metric, MetricBoundaries } from 'effect'
-import { decodeEvent, type Envelope, type EventDecodeError, type IssueEnvelope, type PullRequestEnvelope, type RepositoryEnvelope } from './events.js'
+import {
+  decodeEvent,
+  type Envelope,
+  type EventDecodeError,
+  type IssueEnvelope,
+  type PullRequestEnvelope,
+  type RepositoryEnvelope,
+} from './events.js'
 import { makeReport, Report, type ReportSnapshot } from './report.js'
 
 /** The events a feature can act on. */
@@ -128,7 +135,12 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
       { concurrency: 'unbounded' },
     )
     return Object.assign({}, subject, ...parts)
-  }).pipe(Effect.withSpan('smartcloud.engine.loadFacets', { captureStackTrace: false, attributes: { 'subject.kind': subject.kind, facets: [...facets] } }))
+  }).pipe(
+    Effect.withSpan('smartcloud.engine.loadFacets', {
+      captureStackTrace: false,
+      attributes: { 'subject.kind': subject.kind, facets: [...facets] },
+    }),
+  )
 
 type Outcome = { readonly feature: string; readonly failure: string | undefined; readonly duration: number }
 
@@ -150,7 +162,10 @@ const instrument = <R>(
         const found = findings.filter((finding) => finding.feature === feature.name).length
         const changed = changes.filter((change) => change.feature === feature.name).length
         yield* Effect.annotateCurrentSpan({ outcome: result, findings: found, changes: changed })
-        yield* Metric.update(Metric.tagged(Metric.tagged(featureDuration, 'feature', feature.name), 'outcome', result), milliseconds)
+        yield* Metric.update(
+          Metric.tagged(Metric.tagged(featureDuration, 'feature', feature.name), 'outcome', result),
+          milliseconds,
+        )
         yield* Effect.logWithLevel(
           result === 'success' ? LogLevel.Info : LogLevel.Warning,
           `${feature.name}: ${result} in ${milliseconds} ms, ${found} finding(s), ${changed} change(s)`,
@@ -159,7 +174,10 @@ const instrument = <R>(
     ),
     Effect.map(([elapsed, outcome]) => ({ ...outcome, duration: Math.round(Duration.toMillis(elapsed)) })),
     Effect.annotateLogs({ feature: feature.name }),
-    Effect.withSpan(`smartcloud.feature.${feature.name}`, { captureStackTrace: false, attributes: { feature: feature.name, 'event.kind': kind } }),
+    Effect.withSpan(`smartcloud.feature.${feature.name}`, {
+      captureStackTrace: false,
+      attributes: { feature: feature.name, 'event.kind': kind },
+    }),
   )
 
 /**
@@ -253,7 +271,10 @@ export const runFeatures = (options: {
         message: `${feature} is configured but the workflow does not pass checkRunId: \${{ job.check_run_id }}, so it could not run. Update the workflow.`,
       })
     }
-    for (const skip of skipped) yield* Effect.logDebug(`${skip.feature}: skipped, ${skip.reason}`).pipe(Effect.annotateLogs({ feature: skip.feature }))
+    for (const skip of skipped)
+      yield* Effect.logDebug(`${skip.feature}: skipped, ${skip.reason}`).pipe(
+        Effect.annotateLogs({ feature: skip.feature }),
+      )
 
     const needs = (feature: Feature) => feature.facets?.(options.config) ?? new Set<Facet>()
     const facets = [...new Set(applicable.flatMap((feature) => [...needs(feature)]))]
@@ -262,7 +283,9 @@ export const runFeatures = (options: {
     const loads =
       base === undefined
         ? []
-        : yield* Effect.forEach(facets, (facet) => Effect.exit(loadFacets(base, new Set([facet]))), { concurrency: 'unbounded' })
+        : yield* Effect.forEach(facets, (facet) => Effect.exit(loadFacets(base, new Set([facet]))), {
+            concurrency: 'unbounded',
+          })
     const unavailable = new Map<Facet, string>()
     const loaded: Array<Subject> = []
     loads.forEach((exit, index) => {
@@ -311,7 +334,12 @@ export const runFeatures = (options: {
       else failed.push({ feature: outcome.feature, message: outcome.failure })
     }
     const snapshot = yield* report.snapshot
-    const counts = { ran: ran.length, skipped: skipped.length, failed: failed.length, findings: snapshot.findings.length }
+    const counts = {
+      ran: ran.length,
+      skipped: skipped.length,
+      failed: failed.length,
+      findings: snapshot.findings.length,
+    }
     yield* Effect.annotateCurrentSpan(counts)
     yield* Effect.logInfo(
       `engine: ${counts.ran} ran, ${counts.skipped} skipped, ${counts.failed} failed, ${counts.findings} finding(s)`,

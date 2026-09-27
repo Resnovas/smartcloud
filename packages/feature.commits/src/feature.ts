@@ -47,7 +47,12 @@ const namesToolAndModel = (value: string): boolean => TOOL_AND_MODEL.test(value.
  * @param isAi - The AI identity predicate.
  * @returns The broken rules, in the order AI-02, AI-03, DCO.
  */
-const checkCommit = (commit: Commit, section: CommitsSection, base: string, isAi: (identity: Identity) => boolean): ReadonlyArray<Draft> => {
+const checkCommit = (
+  commit: Commit,
+  section: CommitsSection,
+  base: string,
+  isAi: (identity: Identity) => boolean,
+): ReadonlyArray<Draft> => {
   const found: Array<Draft> = []
   const attribution = classifyAttribution(commit.message, isAi)
   // GitHub writes merge commits itself, so they carry no sign-off to check.
@@ -58,7 +63,12 @@ const checkCommit = (commit: Commit, section: CommitsSection, base: string, isAi
     // Both trailers travel together: Co-authored-by shows on GitHub,
     // Assisted-by records the exact tool and model.
     if (attribution.aiAttributed && !attribution.aiCoAuthored) {
-      found.push({ rule: 'AI-02', message: 'This commit has Assisted-by but no Co-authored-by trailer for the AI tool.', link, commit: commit.sha })
+      found.push({
+        rule: 'AI-02',
+        message: 'This commit has Assisted-by but no Co-authored-by trailer for the AI tool.',
+        link,
+        commit: commit.sha,
+      })
     } else if (attribution.aiCoAuthored && !attribution.assistedBy.some(namesToolAndModel)) {
       found.push({
         rule: 'AI-02',
@@ -122,7 +132,12 @@ export const checkCommitMessage = (
   config: SmartcloudConfig,
 ): ReadonlyArray<Finding> => {
   const section = config.commits ?? {}
-  const drafts = checkCommit({ sha: '', parents: 1, ...commit }, section, policyBase(config), makeAiIdentityMatcher(section.aiIdentities))
+  const drafts = checkCommit(
+    { sha: '', parents: 1, ...commit },
+    section,
+    policyBase(config),
+    makeAiIdentityMatcher(section.aiIdentities),
+  )
   return drafts.map(({ commit: _sha, ...draft }) => ({ feature: NAME, level: 'error', ...draft }))
 }
 
@@ -162,7 +177,10 @@ export const commitsFeature: Feature = {
       const { subject, commits } = yield* pullRequestCommits(context, NAME)
       const github = yield* GitHub
       const role = authorRole(subject.author, context.config.roles, github.coordinates.owner)
-      if (role === 'bot') return yield* Effect.logInfo('commits: skipped, the author is a trusted bot').pipe(Effect.annotateLogs({ feature: NAME, role }))
+      if (role === 'bot')
+        return yield* Effect.logInfo('commits: skipped, the author is a trusted bot').pipe(
+          Effect.annotateLogs({ feature: NAME, role }),
+        )
 
       const report = yield* Report
       const base = policyBase(context.config)
@@ -172,7 +190,13 @@ export const commitsFeature: Feature = {
         yield* report.add({ feature: NAME, level: levelFor(role, draft.rule, section.maintainerLevel), ...draft })
       }
       yield* Effect.logInfo(`commits: ${commits.length} commit(s) checked, ${drafts.length} problem(s)`).pipe(
-        Effect.annotateLogs({ feature: NAME, role, commits: commits.length, problems: drafts.length, rules: [...new Set(drafts.map((draft) => draft.rule))] }),
+        Effect.annotateLogs({
+          feature: NAME,
+          role,
+          commits: commits.length,
+          problems: drafts.length,
+          rules: [...new Set(drafts.map((draft) => draft.rule))],
+        }),
       )
     }),
 }

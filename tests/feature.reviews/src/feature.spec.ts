@@ -73,8 +73,16 @@ const pull = (state: ReturnType<typeof memory>['state']) => state.pulls.get(7)
 // GitHub as a fork pull request's read-only token sees it: every review write is forbidden.
 const readOnly = (reviews: Array<Review> = []) => {
   const github = memory(reviews)
-  const forbidden = (operation: string) => () => Effect.fail(new Forbidden({ operation, detail: 'Resource not accessible by integration' }))
-  return { ...github, service: { ...github.service, requestReviewers: forbidden('requestReviewers'), createReview: forbidden('createReview') } }
+  const forbidden = (operation: string) => () =>
+    Effect.fail(new Forbidden({ operation, detail: 'Resource not accessible by integration' }))
+  return {
+    ...github,
+    service: {
+      ...github.service,
+      requestReviewers: forbidden('requestReviewers'),
+      createReview: forbidden('createReview'),
+    },
+  }
 }
 
 describe('reviewsFeature', () => {
@@ -281,7 +289,13 @@ describe('requestApprovals', () => {
         }
         const { state } = yield* run(config, memory([{ author: 'Owner-One', state: 'COMMENTED' }]))
         expect(pull(state)?.requestedReviewers).toStrictEqual(['Owner-Two'])
-        const { result } = yield* run(config, memory([{ author: 'owner-one', state: 'APPROVED' }, { author: 'owner-two', state: 'CHANGES_REQUESTED' }]))
+        const { result } = yield* run(
+          config,
+          memory([
+            { author: 'owner-one', state: 'APPROVED' },
+            { author: 'owner-two', state: 'CHANGES_REQUESTED' },
+          ]),
+        )
         expect(result.changes).toStrictEqual([])
       }),
     ))
@@ -311,7 +325,8 @@ describe('a read-only token, as on a pull request from a fork', () => {
             feature: FEATURE,
             rule: 'reviews.requestApprovals',
             level: 'warning',
-            message: 'Could not request review from @owner-one on #7 (deps) on a read-only token, for example a pull request from a fork.',
+            message:
+              'Could not request review from @owner-one on #7 (deps) on a read-only token, for example a pull request from a fork.',
           },
           {
             feature: FEATURE,
@@ -329,12 +344,21 @@ describe('a read-only token, as on a pull request from a fork', () => {
         const github = memory()
         const limited = {
           ...github,
-          service: { ...github.service, createReview: () => Effect.fail(new RateLimited({ operation: 'createReview', detail: 'secondary limit' })) },
+          service: {
+            ...github.service,
+            createReview: () => Effect.fail(new RateLimited({ operation: 'createReview', detail: 'secondary limit' })),
+          },
         }
-        const { result } = yield* run({ version: 2, reviews: { automaticApprove: { deps: { when: { condition: [] } } } } }, limited, {
-          event: 'pull_request',
-        })
-        expect(result.failed).toStrictEqual([{ feature: FEATURE, message: expect.stringContaining('createReview: rate limited (secondary limit)') }])
+        const { result } = yield* run(
+          { version: 2, reviews: { automaticApprove: { deps: { when: { condition: [] } } } } },
+          limited,
+          {
+            event: 'pull_request',
+          },
+        )
+        expect(result.failed).toStrictEqual([
+          { feature: FEATURE, message: expect.stringContaining('createReview: rate limited (secondary limit)') },
+        ])
       }),
     ))
 })

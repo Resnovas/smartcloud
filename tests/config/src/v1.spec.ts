@@ -40,7 +40,10 @@ describe('v1 compatibility: the real configs', () => {
         abandonedComment: 'This has been automatically marked as abandoned by the bot.',
       })
       expect(config.reviews?.automaticApprove?.['pr.0']?.when.condition[0]).toMatchObject({ type: 'creatorMatches' })
-      expect(config.reviews?.requestApprovals?.['pr.all']).toMatchObject({ reviewers: ['tgtgamer'], when: { requires: 1 } })
+      expect(config.reviews?.requestApprovals?.['pr.all']).toMatchObject({
+        reviewers: ['tgtgamer'],
+        when: { requires: 1 },
+      })
       expect(warnings).toEqual(
         expect.arrayContaining([
           'smartcloud/.github/config.json: runners[0].pr.manageRelease: dropped, releases are release-please territory, as the v1 README advised',
@@ -68,7 +71,10 @@ describe('migrateV1: edge cases', () => {
       runners: [{ pr: { labels: { bug: { condition: [] } } } }, { issue: { labels: { bug: { condition: [] } } } }],
     })
     expect(Object.keys(config['labelling'] ?? {})).toStrictEqual(['r0.pr.bug', 'r1.issue.bug'])
-    expect(config['labelling']).toMatchObject({ 'r0.pr.bug': { on: ['pullRequest'] }, 'r1.issue.bug': { on: ['issue'] } })
+    expect(config['labelling']).toMatchObject({
+      'r0.pr.bug': { on: ['pullRequest'] },
+      'r1.issue.bug': { on: ['issue'] },
+    })
   })
 
   it('maps enforceConventions with messages, contexts, conditions and comment text', () => {
@@ -99,7 +105,9 @@ describe('migrateV1: edge cases', () => {
         'issue.2': { on: ['issue'], when: { condition: [{ type: 'isLocked', condition: false }] } },
       },
     })
-    expect(warnings).toContain('runners[0].issue.enforceConventions: onColumn and moveToColumn dropped, it used classic Projects, which GitHub has retired')
+    expect(warnings).toContain(
+      'runners[0].issue.enforceConventions: onColumn and moveToColumn dropped, it used classic Projects, which GitHub has retired',
+    )
   })
 
   it('reports dropped, unknown and not-yet-migrated keys instead of losing them silently', () => {
@@ -122,16 +130,22 @@ describe('migrateV1: edge cases', () => {
     const { config } = migrateV1({
       labels: [{ name: 'Needs Review!', color: 'ffffff', description: 'd' }, { name: 3 }, 'x'],
     })
-    expect(config['labels']).toStrictEqual({ 'needs-review-': { name: 'Needs Review!', color: 'ffffff', description: 'd' } })
+    expect(config['labels']).toStrictEqual({
+      'needs-review-': { name: 'Needs Review!', color: 'ffffff', description: 'd' },
+    })
     expect(migrateV1({ labels: { a: { name: 'a' }, b: 'x' } }).config['labels']).toBeUndefined()
   })
 
   it('handles enforceConventions with no rules, and a rule with no condition', () => {
-    expect(migrateV1({ runners: [{ pr: { enforceConventions: { commentFooter: 'f' } } }] }).config['conventions']).toStrictEqual({
+    expect(
+      migrateV1({ runners: [{ pr: { enforceConventions: { commentFooter: 'f' } } }] }).config['conventions'],
+    ).toStrictEqual({
       comment: { footer: 'f' },
       rules: {},
     })
-    const { config } = migrateV1({ runners: [{ sharedConfig: { enforceConventions: { condition: [{ requires: 1 }, {}] } } }] })
+    const { config } = migrateV1({
+      runners: [{ sharedConfig: { enforceConventions: { condition: [{ requires: 1 }, {}] } } }],
+    })
     expect(config['conventions']).toStrictEqual({
       rules: { 'shared.0': { when: { requires: 1, condition: [] } }, 'shared.1': { when: { condition: [] } } },
     })
@@ -155,8 +169,14 @@ describe('migrateV1: edge cases', () => {
       requestApprovals: { 'pr.team': { reviewers: ['ann'], when: { condition: [] } } },
       automaticApprove: { 'pr.0': { when: { condition: [{ type: 'isDraft', condition: false }] } } },
     })
-    expect(warnings).toStrictEqual(['runners[0].pr.stale: dropped, v2 has one stale section and an earlier context already set it'])
-    expect(migrateV1({ runners: [{ pr: { requestApprovals: { a: { reviewers: [] } }, automaticApprove: {} } }] }).config['reviews']).toStrictEqual({
+    expect(warnings).toStrictEqual([
+      'runners[0].pr.stale: dropped, v2 has one stale section and an earlier context already set it',
+    ])
+    expect(
+      migrateV1({ runners: [{ pr: { requestApprovals: { a: { reviewers: [] } }, automaticApprove: {} } }] }).config[
+        'reviews'
+      ],
+    ).toStrictEqual({
       requestApprovals: { 'pr.a': { reviewers: [], when: { condition: [] } } },
     })
   })
@@ -181,7 +201,9 @@ describe('migrateV1: edge cases', () => {
   })
 
   it('keeps a label keyed __proto__ as data, so decoding reports it', () => {
-    const input: Parameters<typeof migrateV1>[0] = JSON.parse('{"labels": {"__proto__": {"name": "x", "color": "111111"}}}')
+    const input: Parameters<typeof migrateV1>[0] = JSON.parse(
+      '{"labels": {"__proto__": {"name": "x", "color": "111111"}}}',
+    )
     const { config } = migrateV1(input)
     const labels = config['labels']
     expect(typeof labels === 'object' && labels !== null && Object.hasOwn(labels, '__proto__')).toBe(true)

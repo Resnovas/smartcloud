@@ -1,6 +1,6 @@
 ---
-title: "MCP server"
-description: "Let AI assistants validate, explain and dry-run smartcloud configs through the Model Context Protocol."
+title: 'MCP server'
+description: 'Let AI assistants validate, explain and dry-run smartcloud configs through the Model Context Protocol.'
 ---
 
 `smartcloud-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. Assistants and agents use the same code as the action and the CLI to work with a repository's smartcloud config, rather than guessing at it.
@@ -26,15 +26,15 @@ Tools that read GitHub use `GITHUB_TOKEN`, or the token of the signed-in GitHub 
 
 ## Tools
 
-| Tool | Input | What it returns |
-| --- | --- | --- |
-| `validate_config` | `config` (YAML or JSON), optional `source` | Whether the config is valid once every `extends` preset is applied, with migration warnings. Strict, like `smartcloud validate`: unknown keys and invalid values are errors. |
-| `migrate_config` | `config` (a v1 `config.json`), optional `source` | The v2 YAML, and a warning for everything not carried over. |
-| `explain_config` | `config`, optional `source` | Which features the resolved config enables and the rules each one applies. |
-| `dry_run` | `repository` (`owner/name`), one of `pr`, `issue` or `event`, optional `config` or `configText`, optional `features` | The run's summary and the writes it would make. |
-| `plan_settings` | `repository`, optional `config` or `configText` | Every repository settings step the config would apply. |
-| `check_commit_message` | `message`, `authorName`, `authorEmail`, optional `config` | Whether a commit message passes the DCO and AI attribution rules, and every finding. An agent should call it before each commit. |
-| `explain_rule` | `rule` (the id a finding reports, such as `AI-02`, `DCO` or `conventions.title`), optional `config` | What the rule asks for, how to satisfy it, and a link to the policy text. |
+| Tool                   | Input                                                                                                                | What it returns                                                                                                                                                              |
+| ---------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validate_config`      | `config` (YAML or JSON), optional `source`                                                                           | Whether the config is valid once every `extends` preset is applied, with migration warnings. Strict, like `smartcloud validate`: unknown keys and invalid values are errors. |
+| `migrate_config`       | `config` (a v1 `config.json`), optional `source`                                                                     | The v2 YAML, and a warning for everything not carried over.                                                                                                                  |
+| `explain_config`       | `config`, optional `source`                                                                                          | Which features the resolved config enables and the rules each one applies.                                                                                                   |
+| `dry_run`              | `repository` (`owner/name`), one of `pr`, `issue` or `event`, optional `config` or `configText`, optional `features` | The run's summary and the writes it would make.                                                                                                                              |
+| `plan_settings`        | `repository`, optional `config` or `configText`                                                                      | Every repository settings step the config would apply.                                                                                                                       |
+| `check_commit_message` | `message`, `authorName`, `authorEmail`, optional `config`                                                            | Whether a commit message passes the DCO and AI attribution rules, and every finding. An agent should call it before each commit.                                             |
+| `explain_rule`         | `rule` (the id a finding reports, such as `AI-02`, `DCO` or `conventions.title`), optional `config`                  | What the rule asks for, how to satisfy it, and a link to the policy text.                                                                                                    |
 
 `event` is one of `schedule`, `push` or `workflow_dispatch`. An empty `features` list runs every feature, as leaving it out does. Without `config` or `configText`, `dry_run` and `plan_settings` read the repository's config from its default branch, as the action does.
 

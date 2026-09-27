@@ -24,7 +24,8 @@ import { Effect } from 'effect'
 // reads the same as the one it replaces.
 
 export const signed = 'Signed-off-by: A Contributor <contrib@example.com>'
-export const coAuthor = 'Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: claude-code:claude-opus-5-5'
+export const coAuthor =
+  'Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: claude-code:claude-opus-5-5'
 
 export const commit = (message: string, extra: Partial<Commit> = {}): Commit => ({
   sha: 'a'.repeat(40),
@@ -61,7 +62,9 @@ export const runOn = (feature: Feature, pr: PullRequest): Effect.Effect<RunResul
       private: false,
       defaultBranch: 'main',
     },
-    pulls: new Map([[7, { commits: [...pr.commits], files: [], reviews: [], requestedReviewers: [], submittedReviews: [] }]]),
+    pulls: new Map([
+      [7, { commits: [...pr.commits], files: [], reviews: [], requestedReviewers: [], submittedReviews: [] }],
+    ]),
   })
   const payload = {
     action: pr.action ?? 'edited',
@@ -78,7 +81,9 @@ export const runOn = (feature: Feature, pr: PullRequest): Effect.Effect<RunResul
       head: { ref: 'fix/auth', sha: 'abc123' },
     },
   }
-  return runFeatures({ config: pr.config, event: 'pull_request', payload, features: [feature] }).pipe(Effect.provideService(GitHub, service))
+  return runFeatures({ config: pr.config, event: 'pull_request', payload, features: [feature] }).pipe(
+    Effect.provideService(GitHub, service),
+  )
 }
 
 /** The rule ids of the findings, optionally only those at one level. */

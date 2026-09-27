@@ -93,7 +93,8 @@ export interface MemoryState {
  * @param ref - The branch, tag or commit; empty for the default branch.
  * @returns The key for `MemoryState.files`.
  */
-export const fileKey = (owner: string, repo: string, path: string, ref = ''): string => `${owner}/${repo}/${path}@${ref}`
+export const fileKey = (owner: string, repo: string, path: string, ref = ''): string =>
+  `${owner}/${repo}/${path}@${ref}`
 
 const defaults = (): MemoryState => ({
   repository: {
@@ -152,7 +153,9 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
   }
   const pull = (operation: string, number: number) => {
     const found = state.pulls.get(number)
-    return found === undefined ? Effect.fail(new NotFound({ operation, detail: `pull request #${number}` })) : Effect.succeed(found)
+    return found === undefined
+      ? Effect.fail(new NotFound({ operation, detail: `pull request #${number}` }))
+      : Effect.succeed(found)
   }
 
   const service: GitHubService = {
@@ -169,24 +172,29 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
         if (index === -1) return Effect.fail(new NotFound({ operation: 'updateLabel', detail: `label ${current}` }))
         // GitHub refuses a rename onto a name another label already has, ignoring case.
         if (state.labels.some((existing, other) => other !== index && same(existing.name, label.name))) {
-          return Effect.fail(new ValidationFailed({ operation: 'updateLabel', detail: `label ${label.name} already exists` }))
+          return Effect.fail(
+            new ValidationFailed({ operation: 'updateLabel', detail: `label ${label.name} already exists` }),
+          )
         }
         state.labels[index] = label
-        for (const entry of state.issues.values()) entry.labels = entry.labels.map((name) => (same(name, current) ? label.name : name))
+        for (const entry of state.issues.values())
+          entry.labels = entry.labels.map((name) => (same(name, current) ? label.name : name))
         return Effect.void
       }),
     deleteLabel: (name) =>
       Effect.suspend(() => {
         const before = state.labels.length
         state.labels = state.labels.filter((existing) => !same(existing.name, name))
-        if (state.labels.length === before) return Effect.fail(new NotFound({ operation: 'deleteLabel', detail: `label ${name}` }))
+        if (state.labels.length === before)
+          return Effect.fail(new NotFound({ operation: 'deleteLabel', detail: `label ${name}` }))
         for (const entry of state.issues.values()) entry.labels = entry.labels.filter((label) => !same(label, name))
         return Effect.void
       }),
     addLabels: (number, labels) =>
       Effect.sync(() => {
         const entry = issue(number)
-        for (const label of labels) if (!entry.labels.some((existing) => same(existing, label))) entry.labels.push(label)
+        for (const label of labels)
+          if (!entry.labels.some((existing) => same(existing, label))) entry.labels.push(label)
       }),
     removeLabel: (number, label) =>
       Effect.suspend(() => {
@@ -221,10 +229,12 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
     listCommits: (number) => Effect.map(pull('listCommits', number), (entry) => [...entry.commits]),
     listFiles: (number) => Effect.map(pull('listFiles', number), (entry) => [...entry.files]),
     listReviews: (number) => Effect.map(pull('listReviews', number), (entry) => [...entry.reviews]),
-    countRequestedReviewers: (number) => Effect.map(pull('countRequestedReviewers', number), (entry) => entry.requestedReviewers.length),
+    countRequestedReviewers: (number) =>
+      Effect.map(pull('countRequestedReviewers', number), (entry) => entry.requestedReviewers.length),
     getMergeable: (number) => Effect.map(pull('getMergeable', number), (entry) => entry.mergeable ?? 'MERGEABLE'),
     listChecks: (number) => Effect.map(pull('listChecks', number), (entry) => [...(entry.checks ?? [])]),
-    createReview: (number, review) => Effect.map(pull('createReview', number), (entry) => void entry.submittedReviews.push(review)),
+    createReview: (number, review) =>
+      Effect.map(pull('createReview', number), (entry) => void entry.submittedReviews.push(review)),
     requestReviewers: (number, logins) =>
       Effect.map(pull('requestReviewers', number), (entry) => void entry.requestedReviewers.push(...logins)),
     createCheckRun: (run) =>
@@ -245,18 +255,26 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
       Effect.suspend(() => {
         const text = state.files.get(fileKey(location.owner, location.repo, location.path, location.ref))
         return text === undefined
-          ? Effect.fail(new NotFound({ operation: 'getFile', detail: `${location.owner}/${location.repo}/${location.path}` }))
+          ? Effect.fail(
+              new NotFound({ operation: 'getFile', detail: `${location.owner}/${location.repo}/${location.path}` }),
+            )
           : Effect.succeed(text)
       }),
     listDirectory: (location) =>
       Effect.sync(() => {
-        const directory = location.path.split('/').filter((part) => part !== '').join('/')
+        const directory = location.path
+          .split('/')
+          .filter((part) => part !== '')
+          .join('/')
         const prefix = `${location.owner}/${location.repo}/${directory === '' ? '' : `${directory}/`}`
         const suffix = `@${location.ref ?? ''}`
         return [...state.files.keys()]
           .filter((key) => key.startsWith(prefix) && key.endsWith(suffix))
           .sort()
-          .map((key) => ({ path: key.slice(prefix.length, key.length - suffix.length), executable: state.executables.has(key) }))
+          .map((key) => ({
+            path: key.slice(prefix.length, key.length - suffix.length),
+            executable: state.executables.has(key),
+          }))
       }),
     proposeChanges: (proposal) =>
       Effect.sync(() => {
@@ -266,7 +284,11 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
         const entry = { ...proposal, number, open: true }
         if (existing === undefined) state.proposals.push(entry)
         else state.proposals[index] = entry
-        return { number, url: `https://github.com/${state.repository.fullName}/pull/${number}`, created: existing === undefined }
+        return {
+          number,
+          url: `https://github.com/${state.repository.fullName}/pull/${number}`,
+          created: existing === undefined,
+        }
       }),
     repositoryRequest: (request) => Effect.sync(() => (state.requests.push(request), null)),
     graphql: (query, variables) => Effect.sync(() => (state.graphql.push({ query, variables }), null)),

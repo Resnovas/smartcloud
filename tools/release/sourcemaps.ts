@@ -80,10 +80,27 @@ for (const bundle of bundles.map((path) => resolve(path))) {
   renameSync(bundle, join(work, name))
   renameSync(`${bundle}.map`, join(work, `${name}.map`))
   const cli = (...args: Array<string>) =>
-    execFileSync('npx', ['--yes', POSTHOG_CLI, '--host', HOST, 'sourcemap', ...args, '--directory', work, '--release-name', RELEASE_NAME, '--release-version', version], {
-      stdio: 'inherit',
-      env: { ...process.env, POSTHOG_CLI_PROJECT_ID: PROJECT_ID },
-    })
+    execFileSync(
+      'npx',
+      [
+        '--yes',
+        POSTHOG_CLI,
+        '--host',
+        HOST,
+        'sourcemap',
+        ...args,
+        '--directory',
+        work,
+        '--release-name',
+        RELEASE_NAME,
+        '--release-version',
+        version,
+      ],
+      {
+        stdio: 'inherit',
+        env: { ...process.env, POSTHOG_CLI_PROJECT_ID: PROJECT_ID },
+      },
+    )
   try {
     cli('inject')
     // --delete-after removes the map and the sourceMappingURL comment once they are uploaded.

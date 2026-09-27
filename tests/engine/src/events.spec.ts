@@ -17,7 +17,13 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect } from 'effect'
 import { decodeEvent } from '@resnovas/engine'
-import { commentOnPullRequestPayload, issuePayload, mergeGroupPayload, pullRequestPayload, pushPayload } from './fixtures.js'
+import {
+  commentOnPullRequestPayload,
+  issuePayload,
+  mergeGroupPayload,
+  pullRequestPayload,
+  pushPayload,
+} from './fixtures.js'
 
 describe('decodeEvent', () => {
   for (const event of ['pull_request', 'pull_request_target', 'pull_request_review', 'pull_request_review_comment']) {
@@ -51,7 +57,14 @@ describe('decodeEvent', () => {
   it.effect('fills defaults for optional pull request fields', () =>
     Effect.map(
       decodeEvent('pull_request', {
-        pull_request: { ...pullRequestPayload.pull_request, draft: undefined, additions: undefined, deletions: undefined, user: null, body: null },
+        pull_request: {
+          ...pullRequestPayload.pull_request,
+          draft: undefined,
+          additions: undefined,
+          deletions: undefined,
+          user: null,
+          body: null,
+        },
       }),
       (envelope) => expect(envelope).toMatchObject({ subject: { draft: false, changes: 0, author: '', body: '' } }),
     ),
@@ -77,7 +90,10 @@ describe('decodeEvent', () => {
 
   it.effect('a comment on a pull request is unsupported, with the reason', () =>
     Effect.map(decodeEvent('issue_comment', commentOnPullRequestPayload), (envelope) =>
-      expect(envelope).toMatchObject({ kind: 'unsupported', reason: expect.stringContaining('comments on pull requests') }),
+      expect(envelope).toMatchObject({
+        kind: 'unsupported',
+        reason: expect.stringContaining('comments on pull requests'),
+      }),
     ),
   )
 
@@ -89,35 +105,55 @@ describe('decodeEvent', () => {
         action: 'checks_requested',
         headSha: 'def456',
       })
-      expect(yield* decodeEvent('push', pushPayload)).toStrictEqual({ kind: 'repository', event: 'push', headSha: 'fed789' })
+      expect(yield* decodeEvent('push', pushPayload)).toStrictEqual({
+        kind: 'repository',
+        event: 'push',
+        headSha: 'fed789',
+      })
       expect(yield* decodeEvent('schedule', {})).toStrictEqual({ kind: 'repository', event: 'schedule' })
-      expect(yield* decodeEvent('workflow_dispatch', {})).toStrictEqual({ kind: 'repository', event: 'workflow_dispatch' })
-      expect(yield* decodeEvent('merge_group', { merge_group: mergeGroupPayload.merge_group })).not.toHaveProperty('action')
+      expect(yield* decodeEvent('workflow_dispatch', {})).toStrictEqual({
+        kind: 'repository',
+        event: 'workflow_dispatch',
+      })
+      expect(yield* decodeEvent('merge_group', { merge_group: mergeGroupPayload.merge_group })).not.toHaveProperty(
+        'action',
+      )
     }),
   )
 
   it.effect('a repository dispatch keeps its event type as the action', () =>
     Effect.gen(function* () {
-      expect(yield* decodeEvent('repository_dispatch', { action: 'sync-templates', client_payload: {} })).toStrictEqual({
+      expect(yield* decodeEvent('repository_dispatch', { action: 'sync-templates', client_payload: {} })).toStrictEqual(
+        {
+          kind: 'repository',
+          event: 'repository_dispatch',
+          action: 'sync-templates',
+        },
+      )
+      expect(yield* decodeEvent('repository_dispatch', {})).toStrictEqual({
         kind: 'repository',
         event: 'repository_dispatch',
-        action: 'sync-templates',
       })
-      expect(yield* decodeEvent('repository_dispatch', {})).toStrictEqual({ kind: 'repository', event: 'repository_dispatch' })
       expect((yield* Effect.flip(decodeEvent('repository_dispatch', { action: 7 })))._tag).toBe('EventDecodeError')
     }),
   )
 
   it.effect('a malformed timestamp is a typed error, not an invalid date', () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(decodeEvent('issues', { ...issuePayload, issue: { ...issuePayload.issue, updated_at: 'yesterday' } }))
+      const error = yield* Effect.flip(
+        decodeEvent('issues', { ...issuePayload, issue: { ...issuePayload.issue, updated_at: 'yesterday' } }),
+      )
       expect(error).toMatchObject({ _tag: 'EventDecodeError', event: 'issues' })
     }),
   )
 
   it.effect('any other event is unsupported rather than a crash (v1 threw here)', () =>
     Effect.map(decodeEvent('release', {}), (envelope) =>
-      expect(envelope).toStrictEqual({ kind: 'unsupported', event: 'release', reason: 'smartcloud does not act on release events' }),
+      expect(envelope).toStrictEqual({
+        kind: 'unsupported',
+        event: 'release',
+        reason: 'smartcloud does not act on release events',
+      }),
     ),
   )
 

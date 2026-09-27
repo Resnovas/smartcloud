@@ -48,7 +48,9 @@ describe('trailers', () => {
   })
 
   it('keeps only well-formed trailer lines in the final paragraph', () => {
-    expect(parseTrailers('x\n\nFixes: #1\nnot a trailer\nBad Key: x\nEmpty:\n:nokey')).toStrictEqual([{ key: 'Fixes', value: '#1' }])
+    expect(parseTrailers('x\n\nFixes: #1\nnot a trailer\nBad Key: x\nEmpty:\n:nokey')).toStrictEqual([
+      { key: 'Fixes', value: '#1' },
+    ])
   })
 
   it('parses adversarial messages in linear time (CodeQL js/polynomial-redos)', () => {

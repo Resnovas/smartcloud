@@ -38,14 +38,26 @@ describe('JSON Schema', () => {
   it('carries the runtime checks that editors can express', () => {
     const schema: unknown = JSON.parse(JSON.stringify(configJsonSchema()))
     const at = (...keys: ReadonlyArray<string>): unknown =>
-      keys.reduce<unknown>((value, key) => (typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined), schema)
+      keys.reduce<unknown>(
+        (value, key) => (typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined),
+        schema,
+      )
     const pattern = at('$defs', 'ExtendsEntry', 'pattern')
     expect(typeof pattern).toBe('string')
     const matches = new RegExp(typeof pattern === 'string' ? pattern : '$^', 'u')
-    for (const entry of ['o/r/p.yml', 'Resnovas/.github/smartcloud/house.yml@main', 'nope', 'o/r/../p.yml', 'o/r/p@a@b', 'o/r/a//b']) {
+    for (const entry of [
+      'o/r/p.yml',
+      'Resnovas/.github/smartcloud/house.yml@main',
+      'nope',
+      'o/r/../p.yml',
+      'o/r/p@a@b',
+      'o/r/a//b',
+    ]) {
       expect([entry, matches.test(entry)]).toStrictEqual([entry, parseExtendsRef(entry) !== undefined])
     }
-    expect(at('$defs', 'ConventionRule', 'allOf')).toStrictEqual([{ anyOf: [{ required: ['preset'] }, { required: ['when'] }] }])
+    expect(at('$defs', 'ConventionRule', 'allOf')).toStrictEqual([
+      { anyOf: [{ required: ['preset'] }, { required: ['when'] }] },
+    ])
     expect(at('$defs', 'ConventionRule', 'additionalProperties')).toBe(false)
     expect(at('$defs', 'RuleId', 'not')).toStrictEqual({ const: '__proto__' })
   })

@@ -15,7 +15,14 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { DEFAULT_LABELS, disclosureLabels, isLevel, LEVELS, parseDisclosure, stripHtmlComments } from '@resnovas/feature.disclosure'
+import {
+  DEFAULT_LABELS,
+  disclosureLabels,
+  isLevel,
+  LEVELS,
+  parseDisclosure,
+  stripHtmlComments,
+} from '@resnovas/feature.disclosure'
 import { body } from './fixtures.js'
 
 describe('stripHtmlComments', () => {
@@ -56,7 +63,10 @@ describe('parseDisclosure', () => {
   })
 
   it('ignores case, leading whitespace, backticks and carriage returns', () => {
-    expect(parseDisclosure('  ai LEVEL: `chat`\r\nAI Tools:\t`Copilot` \r\n')).toStrictEqual({ level: 'chat', tools: 'Copilot' })
+    expect(parseDisclosure('  ai LEVEL: `chat`\r\nAI Tools:\t`Copilot` \r\n')).toStrictEqual({
+      level: 'chat',
+      tools: 'Copilot',
+    })
   })
 
   it('takes the first line with a label, even when it is empty', () => {
@@ -67,7 +77,10 @@ describe('parseDisclosure', () => {
   it('reads renamed labels literally, metacharacters and all', () => {
     const labels = disclosureLabels({ level: 'Autonomy (level)', review: 'Reviewed?' })
     expect(labels).toStrictEqual({ ...DEFAULT_LABELS, level: 'Autonomy (level)', review: 'Reviewed?' })
-    expect(parseDisclosure('Autonomy (level): none\nReviewed?: yes\nAutonomy level: chat', labels)).toStrictEqual({ level: 'none', review: 'yes' })
+    expect(parseDisclosure('Autonomy (level): none\nReviewed?: yes\nAutonomy level: chat', labels)).toStrictEqual({
+      level: 'none',
+      review: 'yes',
+    })
     expect(disclosureLabels(undefined)).toStrictEqual(DEFAULT_LABELS)
   })
 

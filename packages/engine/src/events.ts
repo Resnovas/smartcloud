@@ -111,7 +111,10 @@ export type Envelope = PullRequestEnvelope | IssueEnvelope | RepositoryEnvelope 
  * new EventDecodeError({ event: 'push', reason: 'ref is missing' }).message // => 'the push payload could not be read: ref is missing'
  * ```
  */
-export class EventDecodeError extends Data.TaggedError('EventDecodeError')<{ readonly event: string; readonly reason: string }> {
+export class EventDecodeError extends Data.TaggedError('EventDecodeError')<{
+  readonly event: string
+  readonly reason: string
+}> {
   override get message() {
     return `the ${this.event} payload could not be read: ${this.reason}`
   }
@@ -133,14 +136,20 @@ const subjectOf = (kind: Subject['kind'], item: IssueLike): Subject => ({
 
 const decode = <A, I>(schema: Schema.Schema<A, I>, event: string, payload: unknown) =>
   Either.match(Schema.decodeUnknownEither(schema)(payload), {
-    onLeft: (error) => Effect.fail(new EventDecodeError({ event, reason: ParseResult.TreeFormatter.formatErrorSync(error) })),
+    onLeft: (error) =>
+      Effect.fail(new EventDecodeError({ event, reason: ParseResult.TreeFormatter.formatErrorSync(error) })),
     onRight: Effect.succeed,
   })
 
 const withAction = <T extends object>(envelope: T, action: string | undefined): T & { readonly action?: string } =>
   action === undefined ? envelope : { ...envelope, action }
 
-const PULL_REQUEST_EVENTS = new Set(['pull_request', 'pull_request_target', 'pull_request_review', 'pull_request_review_comment'])
+const PULL_REQUEST_EVENTS = new Set([
+  'pull_request',
+  'pull_request_target',
+  'pull_request_review',
+  'pull_request_review_comment',
+])
 const REPOSITORY_EVENTS = new Set(['schedule', 'workflow_dispatch'])
 
 /**
@@ -203,7 +212,11 @@ export const decodeEvent = (event: string, payload: unknown): Effect.Effect<Enve
     )
   }
   if (event === 'push') {
-    return Effect.map(decode(PushPayload, event, payload), ({ after }) => ({ kind: 'repository' as const, event, headSha: after }))
+    return Effect.map(decode(PushPayload, event, payload), ({ after }) => ({
+      kind: 'repository' as const,
+      event,
+      headSha: after,
+    }))
   }
   if (event === 'repository_dispatch') {
     return Effect.map(decode(RepositoryDispatchPayload, event, payload), ({ action }) =>

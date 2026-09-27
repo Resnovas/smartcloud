@@ -18,7 +18,16 @@ import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { ConfigSource } from '@resnovas/config'
 import { Forbidden, NotFound, RateLimited, Unavailable } from '@resnovas/integrations.github'
-import { gitHubConfigSource, InvalidRepository, liveConnect, MissingToken, parseRepository, presetError, PresetUnreadable, resolveToken } from '@resnovas/runtime'
+import {
+  gitHubConfigSource,
+  InvalidRepository,
+  liveConnect,
+  MissingToken,
+  parseRepository,
+  presetError,
+  PresetUnreadable,
+  resolveToken,
+} from '@resnovas/runtime'
 import { Effect, Either, Redacted } from 'effect'
 import { withEnv } from './fixtures.js'
 import { chmod, mkdtemp, writeFile } from 'node:fs/promises'
@@ -58,21 +67,26 @@ describe('tokens and connections', () => {
     expect(Redacted.value(token)).toBe('from-gh')
     vi.unstubAllEnvs()
     await withFakeGh('')
-    const missing = await Effect.runPromise(Effect.either(resolveToken.pipe(withEnv({}), Effect.provide(NodeContext.layer))))
+    const missing = await Effect.runPromise(
+      Effect.either(resolveToken.pipe(withEnv({}), Effect.provide(NodeContext.layer))),
+    )
     expect(missing).toStrictEqual(Either.left(new MissingToken()))
     expect(new MissingToken().message).toContain('GITHUB_TOKEN')
   })
 
   it('falls back to the GitHub CLI when GITHUB_TOKEN is set but blank', async () => {
     await withFakeGh('from-gh')
-    const token = await Effect.runPromise(resolveToken.pipe(withEnv({ GITHUB_TOKEN: ' ' }), Effect.provide(NodeContext.layer)))
+    const token = await Effect.runPromise(
+      resolveToken.pipe(withEnv({ GITHUB_TOKEN: ' ' }), Effect.provide(NodeContext.layer)),
+    )
     expect(Redacted.value(token)).toBe('from-gh')
   })
 
   it.effect('parses owner/name, rejecting anything else', () =>
     Effect.gen(function* () {
       expect(yield* parseRepository('Resnovas/smartcloud')).toStrictEqual({ owner: 'Resnovas', repo: 'smartcloud' })
-      for (const bad of ['Resnovas', 'a/b/c', 'a /b', '/b']) expect(yield* Effect.flip(parseRepository(bad))).toBeInstanceOf(InvalidRepository)
+      for (const bad of ['Resnovas', 'a/b/c', 'a /b', '/b'])
+        expect(yield* Effect.flip(parseRepository(bad))).toBeInstanceOf(InvalidRepository)
       expect(new InvalidRepository({ repository: 'x' }).message).toBe('the repository must be owner/name, got "x"')
     }),
   )
@@ -90,7 +104,9 @@ describe('tokens and connections', () => {
         seen.push(`${String(input)} ${new Headers(init?.headers).get('authorization') ?? ''}`)
         return Promise.resolve(contents('hello'))
       }
-      const github = yield* liveConnect({ fetch })({ owner: 'Resnovas', repo: 'example' }).pipe(withEnv({ GITHUB_TOKEN: 'secret' }))
+      const github = yield* liveConnect({ fetch })({ owner: 'Resnovas', repo: 'example' }).pipe(
+        withEnv({ GITHUB_TOKEN: 'secret' }),
+      )
       expect(yield* github.getFile({ owner: 'Resnovas', repo: 'example', path: 'a.txt' })).toBe('hello')
       expect(seen[0]).toContain('/repos/Resnovas/example/contents/a.txt')
       expect(seen[0]).toContain('secret')
@@ -102,12 +118,13 @@ describe('tokens and connections', () => {
     Effect.gen(function* () {
       const ok: typeof globalThis.fetch = () => Promise.resolve(contents('version: 2\n'))
       const read = (fetch: typeof globalThis.fetch) =>
-        Effect.flatMap(ConfigSource, (source) => source.read({ owner: 'Resnovas', repo: '.github', path: 'a.yml', ref: 'v1' })).pipe(
-          Effect.provide(gitHubConfigSource({ fetch })),
-          withEnv({ GITHUB_TOKEN: 'secret' }),
-        )
+        Effect.flatMap(ConfigSource, (source) =>
+          source.read({ owner: 'Resnovas', repo: '.github', path: 'a.yml', ref: 'v1' }),
+        ).pipe(Effect.provide(gitHubConfigSource({ fetch })), withEnv({ GITHUB_TOKEN: 'secret' }))
       expect(yield* read(ok)).toBe('version: 2\n')
-      const error = yield* Effect.flip(read(() => Promise.resolve(new Response('{"message":"Not Found"}', { status: 404 }))))
+      const error = yield* Effect.flip(
+        read(() => Promise.resolve(new Response('{"message":"Not Found"}', { status: 404 }))),
+      )
       expect(error).toMatchObject({ _tag: 'ConfigNotFound', source: 'Resnovas/.github/a.yml@v1' })
       expect(gitHubConfigSource()).toBeDefined()
     }).pipe(Effect.provide(NodeContext.layer)),
@@ -119,22 +136,31 @@ describe('preset read errors', () => {
     Effect.gen(function* () {
       const read = (fetch: typeof globalThis.fetch, env: Record<string, string>) =>
         Effect.flip(
-          Effect.flatMap(ConfigSource, (source) => source.read({ owner: 'Resnovas', repo: '.github', path: 'a.yml' })).pipe(
-            Effect.provide(gitHubConfigSource({ fetch })),
-            withEnv(env),
-          ),
+          Effect.flatMap(ConfigSource, (source) =>
+            source.read({ owner: 'Resnovas', repo: '.github', path: 'a.yml' }),
+          ).pipe(Effect.provide(gitHubConfigSource({ fetch })), withEnv(env)),
         )
       const unauthorised: typeof globalThis.fetch = () =>
-        Promise.resolve(new Response('{"message":"Bad credentials"}', { status: 401, headers: { 'content-type': 'application/json' } }))
+        Promise.resolve(
+          new Response('{"message":"Bad credentials"}', {
+            status: 401,
+            headers: { 'content-type': 'application/json' },
+          }),
+        )
       const denied = yield* read(unauthorised, { GITHUB_TOKEN: 'secret' })
       expect(denied).toBeInstanceOf(PresetUnreadable)
       expect(denied).toMatchObject({ _tag: 'ConfigNotFound', source: 'Resnovas/.github/a.yml' })
-      expect(denied.message).toBe('the extends preset Resnovas/.github/a.yml could not be read: getFile: forbidden (Bad credentials)')
+      expect(denied.message).toBe(
+        'the extends preset Resnovas/.github/a.yml could not be read: getFile: forbidden (Bad credentials)',
+      )
       expect(denied.message).not.toContain('secret')
       yield* Effect.promise(() => withFakeGh(''))
-      const unused: typeof globalThis.fetch = () => Promise.reject(new Error('GitHub must not be called without a token'))
+      const unused: typeof globalThis.fetch = () =>
+        Promise.reject(new Error('GitHub must not be called without a token'))
       const signedOut = yield* read(unused, {})
-      expect(signedOut.message).toBe(`the extends preset Resnovas/.github/a.yml could not be read: ${new MissingToken().message}`)
+      expect(signedOut.message).toBe(
+        `the extends preset Resnovas/.github/a.yml could not be read: ${new MissingToken().message}`,
+      )
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
@@ -142,8 +168,12 @@ describe('preset read errors', () => {
     const ref = { owner: 'Resnovas', repo: '.github', path: 'a.yml' }
     expect(presetError(ref)(new NotFound({ operation: 'getFile', detail: 'x' }))).not.toBeInstanceOf(PresetUnreadable)
     expect(presetError(ref)(new Unavailable({ operation: 'getFile', detail: 'down' }))).toBeInstanceOf(PresetUnreadable)
-    expect(presetError(ref)(new Unavailable({ operation: 'getFile', detail: 'down' }))).toMatchObject({ transient: true })
-    expect(presetError(ref)(new RateLimited({ operation: 'getFile', detail: 'slow down' }))).toMatchObject({ transient: true })
+    expect(presetError(ref)(new Unavailable({ operation: 'getFile', detail: 'down' }))).toMatchObject({
+      transient: true,
+    })
+    expect(presetError(ref)(new RateLimited({ operation: 'getFile', detail: 'slow down' }))).toMatchObject({
+      transient: true,
+    })
     expect(presetError(ref)(new Forbidden({ operation: 'getFile', detail: 'no' }))).toMatchObject({ transient: false })
   })
 })

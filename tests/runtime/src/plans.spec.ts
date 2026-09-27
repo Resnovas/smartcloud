@@ -18,7 +18,16 @@ import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { fileKey, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
 import { identify } from '@resnovas/integrations.posthog'
-import { command, NoSection, planRepositorySettings, planSettingsForRepository, renderRepositorySync, renderSyncForRepository, settingsPlanText, type Connect } from '@resnovas/runtime'
+import {
+  command,
+  NoSection,
+  planRepositorySettings,
+  planSettingsForRepository,
+  renderRepositorySync,
+  renderSyncForRepository,
+  settingsPlanText,
+  type Connect,
+} from '@resnovas/runtime'
 import { Effect } from 'effect'
 import { memory, recording, withConfig } from './fixtures.js'
 
@@ -73,7 +82,9 @@ settings:
   variables: { REGION: where it runs }
 `
       const { service } = memory({ '.github/smartcloud.yml': config })
-      const text = settingsPlanText(yield* planSettingsForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }))
+      const text = settingsPlanText(
+        yield* planSettingsForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }),
+      )
       expect(text).toContain('GraphQL updateTeamsRepository: team Resnovas/docs as WRITE')
       expect(text).toContain('create or update by URL: {"url":"(configured)","events":["release"]}')
       expect(text).not.toContain('T0K3N')
@@ -82,7 +93,9 @@ settings:
       )
       expect(text).toContain('check only: GET /repos/{owner}/{repo}/actions/variables for REGION')
       const unpublished = memory({ '.github/smartcloud.yml': 'version: 2\nsettings:\n  pages: { enabled: false }\n' })
-      const off = settingsPlanText(yield* planSettingsForRepository(() => Effect.succeed(unpublished.service), { repository: 'Resnovas/example' }))
+      const off = settingsPlanText(
+        yield* planSettingsForRepository(() => Effect.succeed(unpublished.service), { repository: 'Resnovas/example' }),
+      )
       expect(off).toContain('DELETE /repos/{owner}/{repo}/pages')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
@@ -91,7 +104,9 @@ settings:
     Effect.gen(function* () {
       const plan = yield* planRepositorySettings({ version: 2 }).pipe(Effect.provideService(GitHub, memory().service))
       expect(plan.steps).toStrictEqual([])
-      expect(settingsPlanText(plan)).toBe('Nothing to apply to Resnovas/example: the config sets no repository settings.')
+      expect(settingsPlanText(plan)).toBe(
+        'Nothing to apply to Resnovas/example: the config sets no repository settings.',
+      )
     }),
   )
 })
@@ -101,7 +116,8 @@ describe('sync renders', () => {
   const repo = (path: string) => fileKey('Resnovas', 'example', path)
   const managed = (ecosystem: string) =>
     `# house:managed:begin\nversion: 2\nupdates:\n  - package-ecosystem: ${ecosystem}\n    directory: /\n# house:managed:end\n# house:local\n`
-  const SYNC = 'version: 2\nsync:\n  source: Resnovas/.github/templates@main\n  values: { HOLDER: Resnovas }\n  exclude: [KEEP.md]\n'
+  const SYNC =
+    'version: 2\nsync:\n  source: Resnovas/.github/templates@main\n  values: { HOLDER: Resnovas }\n  exclude: [KEEP.md]\n'
 
   const seeded = () => {
     const github = memory({ '.github/smartcloud.yml': SYNC })
@@ -142,7 +158,9 @@ describe('sync renders', () => {
 
   it.effect('fails without a sync section', () =>
     Effect.gen(function* () {
-      const error = yield* Effect.flip(renderRepositorySync({ version: 2 }).pipe(Effect.provideService(GitHub, memory().service)))
+      const error = yield* Effect.flip(
+        renderRepositorySync({ version: 2 }).pipe(Effect.provideService(GitHub, memory().service)),
+      )
       expect(error).toBeInstanceOf(NoSection)
       expect(error.message).toBe('the config has no sync section')
     }),
@@ -154,19 +172,27 @@ describe('runEvent with telemetry', () => {
     Effect.gen(function* () {
       const recorded = recording()
       const service = withConfig('version: 2\nsettings:\n  merging: { squash: true }\n')
-      yield* command(planSettingsForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }), { command: 'plan settings' }).pipe(
-        Effect.provide(recorded.layer),
-      )
+      yield* command(
+        planSettingsForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }),
+        { command: 'plan settings' },
+      ).pipe(Effect.provide(recorded.layer))
       yield* Effect.flip(
-        command(renderSyncForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }), { command: 'sync' }).pipe(Effect.provide(recorded.layer)),
+        command(
+          renderSyncForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }),
+          { command: 'sync' },
+        ).pipe(Effect.provide(recorded.layer)),
       )
-      expect(recorded.named('command run').map((event) => [event.properties['command'], event.properties['outcome']])).toStrictEqual([
+      expect(
+        recorded.named('command run').map((event) => [event.properties['command'], event.properties['outcome']]),
+      ).toStrictEqual([
         ['plan settings', 'success'],
         ['sync', 'failure'],
       ])
       expect(recorded.named('config resolved')).toHaveLength(2)
       expect(recorded.exceptions.map((exception) => exception.properties['error_tag'])).toStrictEqual(['NoSection'])
-      expect(new Set(recorded.events.map((event) => event.identity.distinctId))).toStrictEqual(new Set([identify({ owner: 'Resnovas', repo: 'example' }).distinctId]))
+      expect(new Set(recorded.events.map((event) => event.identity.distinctId))).toStrictEqual(
+        new Set([identify({ owner: 'Resnovas', repo: 'example' }).distinctId]),
+      )
       expect(recorded.protectedValues).toContain('Resnovas/example')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
@@ -175,14 +201,20 @@ describe('runEvent with telemetry', () => {
     Effect.gen(function* () {
       const recorded = recording()
       const github = makeMemoryGitHub()
-      github.state.files.set(fileKey('Resnovas', 'example', '.github/smartcloud.yml'), 'version: 2\nsync:\n  source: Resnovas/.github/templates@main\n')
-      github.state.files.set(fileKey('Resnovas', '.github', 'templates/NEW.md', 'main'), 'new\n')
-      const render = yield* command(renderSyncForRepository(() => Effect.succeed(github.service), { repository: 'Resnovas/example' }), { command: 'sync' }).pipe(
-        Effect.provide(recorded.layer),
+      github.state.files.set(
+        fileKey('Resnovas', 'example', '.github/smartcloud.yml'),
+        'version: 2\nsync:\n  source: Resnovas/.github/templates@main\n',
       )
+      github.state.files.set(fileKey('Resnovas', '.github', 'templates/NEW.md', 'main'), 'new\n')
+      const render = yield* command(
+        renderSyncForRepository(() => Effect.succeed(github.service), { repository: 'Resnovas/example' }),
+        { command: 'sync' },
+      ).pipe(Effect.provide(recorded.layer))
       expect(render.files.length).toBeGreaterThan(0)
       expect(recorded.named('command run')[0]?.identity).toStrictEqual(identify({ owner: 'Resnovas', repo: 'example' }))
-      expect(recorded.named('config resolved')[0]?.properties).toMatchObject({ features_enabled: expect.arrayContaining(['sync']) })
+      expect(recorded.named('config resolved')[0]?.properties).toMatchObject({
+        features_enabled: expect.arrayContaining(['sync']),
+      })
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })

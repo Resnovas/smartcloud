@@ -1,6 +1,6 @@
 ---
-title: "Migrating from v1"
-description: "Convert a v1 .github/config.json to a v2 .github/smartcloud.yml."
+title: 'Migrating from v1'
+description: 'Convert a v1 .github/config.json to a v2 .github/smartcloud.yml.'
 ---
 
 v2 replaces v1's `runners` and per-context JSON with one flat YAML file where each feature has its own section. `smartcloud migrate` converts a v1 config for you, and warns about every v1 key it does not carry over.
@@ -12,6 +12,7 @@ v2 replaces v1's `runners` and per-context JSON with one flat YAML file where ea
     ```
 
     See [CLI](/cli) for how to run the command. Read every warning it prints.
+
   </Step>
   <Step title="Review the result">
     Rule keys are generated from v1's contexts and positions, such as `pr.xs` or `shared.0`. Rename them if you like: keys only need to be unique. Then add the v2 features v1 did not have, such as [commits](/features/commits) or [reviews](/features/reviews) `gate`.
@@ -27,23 +28,24 @@ v2 replaces v1's `runners` and per-context JSON with one flat YAML file where ea
 </Steps>
 
 <Note>
-  Until you switch, v2 still reads a v1 config: a file without `version: 2` is migrated on the fly on every run, with the same warnings. Converting once keeps the warnings out of your runs and lets you use v2's own sections.
+  Until you switch, v2 still reads a v1 config: a file without `version: 2` is migrated on the fly on every run, with
+  the same warnings. Converting once keeps the warnings out of your runs and lets you use v2's own sections.
 </Note>
 
 ## What maps where
 
-| v1 | v2 |
-| --- | --- |
-| `labels` (a list or a map) | `labels`, keyed by the v1 key, or for a list by the label's name in lower case with other characters replaced by `-`. |
-| `runners[].<context>.labels` | `labelling`, one rule per label keyed `<context>.<label>`. |
-| `runners[].<context>.enforceConventions` | `conventions.rules`, keyed `<context>.<position>`. The named conventions `semanticTitle`, `gitmojis` and `semanticEmoji` become a `preset`; condition lists become `when`. `failedComment` becomes `message`, and `contexts` is kept. |
-| `enforceConventions.commentHeader`, `commentFooter` | `conventions.comment.header`, `footer`. |
-| `runners[].<context>.stale` | `stale`. `stale.days` becomes `staleAfterDays` (default 60), `abandoned.days` becomes `abandonedAfterDays`, and the comments and labels carry over. |
-| `runners[].<context>.automaticApprove` | `reviews.automaticApprove`, keyed `<context>.<position>`. |
-| `runners[].<context>.requestApprovals` | `reviews.requestApprovals`, keyed `<context>.<name>`. |
-| The `skipDelete` action input | `labelSync.prune`. v2 never deletes labels unless `prune` is `true`. |
-| The `fillEmpty` action input | `extends`. Shared settings now come from presets; the input is ignored with a warning. |
-| The `config: .github/config.json` input | Nothing. v2 finds `.github/config.json` on its own and migrates it on the fly, with a warning for each dropped key, until you commit `.github/smartcloud.yml`. |
+| v1                                                  | v2                                                                                                                                                                                                                                    |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels` (a list or a map)                          | `labels`, keyed by the v1 key, or for a list by the label's name in lower case with other characters replaced by `-`.                                                                                                                 |
+| `runners[].<context>.labels`                        | `labelling`, one rule per label keyed `<context>.<label>`.                                                                                                                                                                            |
+| `runners[].<context>.enforceConventions`            | `conventions.rules`, keyed `<context>.<position>`. The named conventions `semanticTitle`, `gitmojis` and `semanticEmoji` become a `preset`; condition lists become `when`. `failedComment` becomes `message`, and `contexts` is kept. |
+| `enforceConventions.commentHeader`, `commentFooter` | `conventions.comment.header`, `footer`.                                                                                                                                                                                               |
+| `runners[].<context>.stale`                         | `stale`. `stale.days` becomes `staleAfterDays` (default 60), `abandoned.days` becomes `abandonedAfterDays`, and the comments and labels carry over.                                                                                   |
+| `runners[].<context>.automaticApprove`              | `reviews.automaticApprove`, keyed `<context>.<position>`.                                                                                                                                                                             |
+| `runners[].<context>.requestApprovals`              | `reviews.requestApprovals`, keyed `<context>.<name>`.                                                                                                                                                                                 |
+| The `skipDelete` action input                       | `labelSync.prune`. v2 never deletes labels unless `prune` is `true`.                                                                                                                                                                  |
+| The `fillEmpty` action input                        | `extends`. Shared settings now come from presets; the input is ignored with a warning.                                                                                                                                                |
+| The `config: .github/config.json` input             | Nothing. v2 finds `.github/config.json` on its own and migrates it on the fly, with a warning for each dropped key, until you commit `.github/smartcloud.yml`.                                                                        |
 
 v1's contexts become the `on` of each rule: `pr` rules get `on: [pullRequest]`, `issue` rules get `on: [issue]`, and `sharedConfig` and `schedule` rules apply to both. In keys, `sharedConfig` is written `shared`. With more than one runner, keys are prefixed `r0.`, `r1.` and so on so none collide.
 
@@ -51,16 +53,16 @@ v1 conditions carry over unchanged: v2 keeps the same field names, pattern forms
 
 ### What is dropped
 
-| v1 key | Why |
-| --- | --- |
-| `versioning`, `prereleaseName`, `manageRelease` | Versioning and releases belong to release-please, as the v1 README advised. |
-| `duplicateHotfix`, `createMilestone`, `assignMilestone`, `createBranch`, `openBranch` | v1 never implemented them. |
-| `assignProject`, the `project` context, `onColumn`, `moveToColumn` | They used classic Projects, which GitHub has retired. |
-| `syncRemote` | It used classic Projects or was never implemented. |
-| `root` | v1 never read it. |
-| `branch` | v2 runs on the event it receives. |
-| `retryLimit` | v2 retries GitHub API calls itself. |
-| `$schema` | v2 uses its own schema. |
+| v1 key                                                                                | Why                                                                         |
+| ------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `versioning`, `prereleaseName`, `manageRelease`                                       | Versioning and releases belong to release-please, as the v1 README advised. |
+| `duplicateHotfix`, `createMilestone`, `assignMilestone`, `createBranch`, `openBranch` | v1 never implemented them.                                                  |
+| `assignProject`, the `project` context, `onColumn`, `moveToColumn`                    | They used classic Projects, which GitHub has retired.                       |
+| `syncRemote`                                                                          | It used classic Projects or was never implemented.                          |
+| `root`                                                                                | v1 never read it.                                                           |
+| `branch`                                                                              | v2 runs on the event it receives.                                           |
+| `retryLimit`                                                                          | v2 retries GitHub API calls itself.                                         |
+| `$schema`                                                                             | v2 uses its own schema.                                                     |
 
 Any other key is reported as unknown and ignored. v2 has a single `stale` section, so a second `stale` in another context is dropped with a warning.
 
@@ -101,7 +103,7 @@ labels:
     description: Core module - can be depended on by any other module
   layer:backend:
     name: layer:backend
-    color: "5319E7"
+    color: '5319E7'
     description: Backend layer - can depend on backend and shared layers
 ```
 
