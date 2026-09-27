@@ -48,6 +48,9 @@ How many depends on how many maintainers the project has.
 
 A review of an AI-assisted pull request follows [AI-40](AI_POLICY.md#ai-40): an approval states that the reviewer read every changed line and checked the evidence.
 
+An automated approval agent may approve a low-risk pull request under the [Approval Policy](APPROVAL_POLICY.md), which says what it may approve, what always goes to a maintainer, and the evidence it checks first.
+Its approval never counts towards the table above.
+
 ### <a id="enforcing-review"></a>Enforcement
 
 [smartcloud](https://github.com/Resnovas/smartcloud) counts approvals from the maintainers in the house preset and applies the table above, reporting the result as the `smartcloud / reviews` check.
@@ -88,7 +91,7 @@ One setting has no API and is set by hand: pushes are limited to updating five b
 
 The governance documents, templates and shared configuration are synced from [Resnovas/.github](https://github.com/Resnovas/.github).
 
-- **Documents** (the Markdown documents at the root and `LICENSE`) are synced whole.
+- **Documents** (the Markdown documents at the root and `LICENSE`) are synced whole, except the [Approval Policy](APPROVAL_POLICY.md), whose house rules sit in a managed block so a repository can add its own after them.
 - **Configuration** (`CODEOWNERS`, `dependabot.yml`, `FUNDING.yml`, the issue forms and their `config.yml`, the pull request template, `.github/smartcloud.yml`, and the smartcloud and Graphify workflows) contains a block between `house:managed:begin` and `house:managed:end`.
 The sync only ever replaces that block.
 A repository adds its own rules outside it, at the `house:local` line, and those are kept.
