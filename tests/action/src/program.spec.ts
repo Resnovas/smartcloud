@@ -112,6 +112,20 @@ describe('program', () => {
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
+  it.effect('lists the notifications a dry run would have sent', () =>
+    Effect.gen(function* () {
+      const { service } = memory({
+        '.github/smartcloud.yml': `${CONVENTIONS}notifications:\n  channels:\n    team: { type: slack }\n`,
+      })
+      const vars = yield* Effect.promise(() => env(pullRequest('Add things'), { INPUT_DRYRUN: 'true' }))
+      yield* program(() => Effect.succeed(service)).pipe(withEnv(vars))
+      const summary = yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))
+      expect(summary).toContain(
+        '**Dry run:** these notifications were not sent:\n- team (slack): 1 policy failure on pull request #7',
+      )
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
   it.effect('records writes instead of making them in a dry run', () =>
     Effect.gen(function* () {
       const { service, state } = memory({ '.github/smartcloud.yml': CONVENTIONS })

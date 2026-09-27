@@ -3,7 +3,7 @@ title: 'Introduction'
 description: 'What smartcloud does, and how to run it in a repository.'
 ---
 
-smartcloud is a GitHub Action that automates repository housekeeping and enforces contribution policy from one declarative file, `.github/smartcloud.yml`. It labels pull requests and issues, checks titles and commits, gates reviews, marks inactive work stale, locks long-closed threads, backports merged pull requests by label, keeps repository settings in line, and syncs shared files from a template repository.
+smartcloud is a GitHub Action that automates repository housekeeping and enforces contribution policy from one declarative file, `.github/smartcloud.yml`. It labels pull requests and issues, checks titles and commits, gates reviews, marks inactive work stale, locks long-closed threads, backports merged pull requests by label, keeps repository settings in line, syncs shared files from a template repository, and notifies Slack, Discord or Linear of policy failures and stale items.
 
 Each capability is a feature with its own section in the config. A feature whose section is absent does not run, so you opt in to exactly what you need.
 

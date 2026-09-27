@@ -37,6 +37,7 @@ Declarative repository automation: labels, conventions and policy.
 | `backport` | [Backport](#backport) | no |  |
 | `settings` | [Settings](#settings) | no |  |
 | `sync` | [Sync](#sync) | no |  |
+| `notifications` | [Notifications](#notifications) | no |  |
 
 Other keys are an error.
 
@@ -549,6 +550,66 @@ Other keys are an error.
 | `maintainerLevel` | [Level](#level) | no |  |
 
 Other keys are an error.
+
+### Notifications
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `channels` | map of [NonEmptyTrimmedString](#nonemptytrimmedstring) to [NotificationChannel](#notificationchannel) | yes |  |
+
+Other keys are an error.
+
+### NotificationChannel
+
+Type: any of [SlackChannel](#slackchannel), [DiscordChannel](#discordchannel), [LinearChannel](#linearchannel).
+
+### SlackChannel
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `slack` | yes |  |
+| `secret` | [SecretName](#secretname) | no |  |
+| `on` | list of one of `failures`, `stale` | no |  |
+| `level` | [Level](#level) | no |  |
+
+Other keys are an error.
+
+### SecretName
+
+The name of the environment variable holding the secret. Pattern: `^[A-Za-z_][A-Za-z0-9_]*$`.
+
+Type: string.
+
+### DiscordChannel
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `discord` | yes |  |
+| `secret` | [SecretName](#secretname) | no |  |
+| `on` | list of one of `failures`, `stale` | no |  |
+| `level` | [Level](#level) | no |  |
+| `username` | string | no |  |
+
+Other keys are an error.
+
+### LinearChannel
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `linear` | yes |  |
+| `secret` | [SecretName](#secretname) | no |  |
+| `on` | list of one of `failures`, `stale` | no |  |
+| `level` | [Level](#level) | no |  |
+| `team` | [NonEmptyTrimmedString](#nonemptytrimmedstring) | yes |  |
+| `labels` | list of string | no |  |
+
+Other keys are an error.
+
+### NonEmptyTrimmedString
+
+a non empty string Pattern: `^\S[\s\S]*\S$|^\S$|^$`. At least 1 character(s).
+
+Type: string.
 
 ## Conditions
 

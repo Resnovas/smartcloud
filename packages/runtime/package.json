@@ -34,6 +34,7 @@
     "@resnovas/feature.sync": "workspace:*",
     "@resnovas/integrations.github": "workspace:*",
     "@resnovas/integrations.posthog": "workspace:*",
+    "@resnovas/notifications": "workspace:*",
     "@resnovas/reporting": "workspace:*",
     "effect": "catalog:",
     "tslib": "^2.8.1",

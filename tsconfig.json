@@ -52,6 +52,9 @@
       "path": "./packages/feature.sync"
     },
     {
+      "path": "./packages/notifications"
+    },
+    {
       "path": "./apps/action"
     },
     {

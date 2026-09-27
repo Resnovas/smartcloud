@@ -31,7 +31,7 @@ import {
   UnexpectedResponse,
   type Connect,
 } from '@resnovas/runtime'
-import { Effect } from 'effect'
+import { ConfigProvider, Effect } from 'effect'
 import { CONVENTIONS, fixture, issue, LABELS, memory, pull, PUSH, recording, withConfig } from './fixtures.js'
 import { carried, observe, spanNamed } from './observe.js'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
@@ -256,6 +256,39 @@ describe('runEvent and dryRun', () => {
       expect(text).toContain('## smartcloud')
       expect(text).toContain('**Dry run:** these writes were recorded, not made:\n- createCheckRun {"run":')
       expect(text).toContain('...')
+    }),
+  )
+
+  it.effect('plans notifications in a dry run instead of sending them', () =>
+    Effect.gen(function* () {
+      const { service } = memory({
+        '.github/smartcloud.yml': `${CONVENTIONS}notifications:\n  channels:\n    team: { type: slack }\n`,
+      })
+      const outcome = yield* dryRun({
+        trigger: { kind: 'pullRequest', number: 7 },
+        config: {},
+        features: ['conventions'],
+      }).pipe(Effect.provideService(GitHub, service))
+      expect(outcome.notified.deliveries.map((delivery) => delivery.outcome)).toStrictEqual(['planned'])
+      expect(dryRunText(outcome)).toContain(
+        '**Dry run:** these notifications were not sent:\n- team (slack): 1 policy failure on pull request #7 in Resnovas/example',
+      )
+    }),
+  )
+
+  it.effect('notifies failures once, and skips a channel whose secret is unset with a warning', () =>
+    Effect.gen(function* () {
+      const { service } = memory({
+        '.github/smartcloud.yml': `${CONVENTIONS}notifications:\n  channels:\n    team: { type: slack }\n`,
+      })
+      const once = Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) =>
+        runEvent({ config: {}, event, features: ['conventions'] }),
+      ).pipe(Effect.provideService(GitHub, service), Effect.withConfigProvider(ConfigProvider.fromMap(new Map())))
+      const first = yield* once
+      expect(first.warnings).toContain('notifications: failures not sent on team: SLACK_WEBHOOK_URL is not set')
+      const second = yield* once
+      expect(second.published.comment).toBe('unchanged')
+      expect(second.notified.deliveries).toStrictEqual([])
     }),
   )
 
