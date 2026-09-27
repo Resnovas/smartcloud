@@ -41,6 +41,8 @@ Pin every third-party action to a full commit SHA with its release as a trailing
 
 The synced House workflow lint runs actionlint and zizmor on every pull request and fails on any finding. Run them locally with `uvx --from actionlint-py actionlint` and `uvx zizmor .`. zizmor reads the synced `.github/zizmor.yml`; ignore an intended finding where it occurs with a trailing `# zizmor: ignore[<audit>]` comment, and put the reason on the line above. smartcloud's actionlint exceptions go in `.github/actionlint.yaml`.
 
+The synced House dependency review fails a pull request that adds a runtime or development dependency with a high or critical advisory, and lists the changed dependencies in its job summary. Allow an advisory that does not apply, with the reason, in `.github/dependency-review-config.yml` (`allow-ghsas`).
+
 ## Adding a package
 
 1. `packages/<name>/package.json`: `"name": "@resnovas/<name>"`, `"type": "module"`, and an export map whose `.` entry lists `"@resnovas/source": "./src/index.ts"` first, then `types` and `import` pointing at `dist/`. Nx configuration stays out of `package.json`.

@@ -18,6 +18,7 @@ LICENSE
 .github/PULL_REQUEST_TEMPLATE.md
 .github/smartcloud.yml
 .github/workflows/house-codeql.yml
+.github/workflows/house-dependency-review.yml
 .github/zizmor.yml
 .github/workflows/house-graphify.yml
 .github/workflows/house-workflow-lint.yml

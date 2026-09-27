@@ -1,0 +1,21 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-dependency-review.yml. Edits inside this block are overwritten.
+#
+# Dependency review. Fails a pull request or merge queue entry that adds a
+# dependency with a known high or critical vulnerability, and writes the
+# changed dependencies to the job summary. Add allowed advisories or a licence
+# policy in .github/dependency-review-config.yml. Uses only the workflow token.
+name: House dependency review
+
+on:
+  pull_request:
+  merge_group:
+
+permissions: {}
+
+jobs:
+  house-dependency-review:
+    uses: Resnovas/.github/.github/workflows/dependency-review.yml@main
+    permissions:
+      contents: read
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.
