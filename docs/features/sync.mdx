@@ -157,7 +157,7 @@ Findings link to `GOVERNANCE.md#synced-files` under [`links.policyBase`](/config
 
 ## Forks and restricted runs
 
-Sync needs a token that can read the source and push workflow files, so a [restricted run](/reporting#restricted-runs) skips the whole feature, syncing and the edit check alike, and the job summary says "cross-repository sync needs a token that can read the source and push workflow files". That covers runs with only the workflow token, pull requests from forks, and Dependabot's runs and pull requests.
+Sync needs a token that can read the source and push workflow files, so a [restricted run](/reporting#restricted-runs) skips the whole feature, syncing and the edit check alike, and the job summary says "cross-repository sync needs a token that can read the source and push workflow files". That covers runs with only the workflow token, pull requests from forks, and Dependabot's runs and pull requests. The one exception: a pull request run given a read-only `houseToken` still runs the edit check, which only reads the templates in `.github`; see [Tokens and access](/tokens).
 
 <Note>
   Because the edit check is skipped on a fork's pull request, a reviewer should look for edits to synced files there by

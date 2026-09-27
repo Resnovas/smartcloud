@@ -432,10 +432,13 @@ const runRepository = (codeowners: CodeOwners) =>
  *
  * codeownersFeature.enabled?.({ version: 2, codeowners: {} }) // => true
  * codeownersFeature.enabled?.({ version: 2 }) // => false
+ * codeownersFeature.privileged // => true
  * ```
  */
 export const codeownersFeature: Feature = {
   name: FEATURE,
+  // Needs the app or access token: the workflow token cannot do this, or the pull requests it opens would start no workflows.
+  privileged: true,
   handles: ['repository', 'pullRequest'],
   enabled: (config) => config.codeowners !== undefined,
   run: ({ config, envelope }) => {

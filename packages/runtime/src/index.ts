@@ -25,14 +25,17 @@
 export {
   accessFindings,
   accessFor,
+  connectTokens,
   connectWithFallback,
   externalRun,
   FULL_ACCESS,
+  HOUSE_REPOSITORY,
   PAT_ONLY_FEATURES,
   restrictedFeatures,
   skippablePreset,
+  withHouseReads,
 } from './access.js'
-export type { Access, Connected } from './access.js'
+export type { Access, Connected, SplitConnection } from './access.js'
 export {
   ANALYTICS_EVENTS,
   command,

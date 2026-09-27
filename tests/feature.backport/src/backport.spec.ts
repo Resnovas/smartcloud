@@ -24,8 +24,15 @@ import {
   pickRange,
   runBackports,
 } from '@resnovas/feature.backport'
-import { Forbidden, GitHub, NotFound, Unavailable } from '@resnovas/integrations.github'
-import { Effect } from 'effect'
+import {
+  Forbidden,
+  GitHub,
+  NotFound,
+  type RecordedWrite,
+  restrictedGitHub,
+  Unavailable,
+} from '@resnovas/integrations.github'
+import { Effect, Ref } from 'effect'
 import { commentsOf, memory, payload, run } from './fixtures.js'
 
 const config = { version: 2, backport: {} } as const
@@ -295,10 +302,28 @@ describe('runBackports', () => {
         service,
       )
       expect(result.findings.map(({ level, message }) => [level, message])).toStrictEqual([
-        ['warning', '#7 was not backported to v1 on a read-only token, for example a pull request event from a fork.'],
+        [
+          'warning',
+          '#7 was not backported to v1: the token cannot push, as on a pull request event from a fork or a run with no app token. Give the job contents: write or an app token.',
+        ],
         ['error', '#7 was not backported to v2: backport: merge: GitHub unavailable (Bad Gateway)'],
       ])
       expect(github.state.backports.map(({ base }) => base)).toStrictEqual(['v3'])
+    }),
+  )
+
+  it.effect('says nothing was backported, rather than announcing #0, when a restricted run cannot push', () =>
+    Effect.gen(function* () {
+      const github = memory()
+      const refused = {
+        ...github.service,
+        backport: () =>
+          Effect.fail(new Forbidden({ operation: 'backport: create scratch commit', detail: 'read-only' })),
+      }
+      const log = yield* Ref.make<ReadonlyArray<RecordedWrite>>([])
+      const result = yield* run(config, github, payload(), 'pull_request', restrictedGitHub(refused, log))
+      expect(result.findings.map(({ level }) => level)).toStrictEqual(['warning'])
+      expect(commentsOf(github).some((body) => body.includes('Backported to'))).toBe(false)
     }),
   )
 

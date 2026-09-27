@@ -17,7 +17,7 @@
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { ConfigSource, parseConfig } from '@resnovas/config'
-import { fileKey, GitHub } from '@resnovas/integrations.github'
+import { fileKey, GitHub, makeMemoryGitHub, PrivilegedGitHub } from '@resnovas/integrations.github'
 import {
   CONFIG_CANDIDATES,
   configLocationFor,
@@ -81,6 +81,28 @@ describe('loading config', () => {
         ).pipe(Effect.provide(ConfigSourceFromGitHub), Effect.provideService(GitHub, service)),
       )
       expect(read).toMatchObject({ _tag: 'ConfigNotFound', source: 'Resnovas/.github/gone.yml' })
+    }),
+  )
+
+  it.effect('reads presets in other repositories with the privileged service, and its own with GitHub', () =>
+    Effect.gen(function* () {
+      const { service, state } = memory({
+        '.github/smartcloud.yml': 'version: 2\nextends: [Resnovas/.github/house.yml, Resnovas/example/local.yml]\n',
+        'local.yml': 'version: 2\n',
+      })
+      const privileged = makeMemoryGitHub()
+      privileged.state.files.set(fileKey('Resnovas', '.github', 'house.yml'), CONVENTIONS)
+      // The in-repository service cannot see the other repository at all.
+      state.files.delete(fileKey('Resnovas', '.github', 'house.yml'))
+      const resolved = yield* loadConfig({}).pipe(
+        Effect.provideService(GitHub, service),
+        Effect.provideService(PrivilegedGitHub, privileged.service),
+      )
+      expect(resolved.sources).toStrictEqual([
+        'Resnovas/.github/house.yml',
+        'Resnovas/example/local.yml',
+        '.github/smartcloud.yml',
+      ])
     }),
   )
 

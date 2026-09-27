@@ -20,7 +20,7 @@ import type { Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { type Feature, featureDuration, findingsCounter, loadFacets, Report, runFeatures } from '@resnovas/engine'
 import { GitHubMemory, makeMemoryGitHub } from '@resnovas/integrations.github'
-import { Forbidden, GitHub } from '@resnovas/integrations.github'
+import { Forbidden, GitHub, PrivilegedGitHub } from '@resnovas/integrations.github'
 import { issuePayload, pullRequestPayload } from './fixtures.js'
 import { carried, observe, spanNamed } from './observe.js'
 
@@ -62,6 +62,36 @@ const memory = () =>
   })
 
 describe('runFeatures', () => {
+  it.effect('runs a privileged feature through the privileged service when the run has one', () =>
+    Effect.gen(function* () {
+      const inRepository = makeMemoryGitHub()
+      const privileged = makeMemoryGitHub()
+      const seen: Array<string> = []
+      const probe = (name: string, flag: boolean) =>
+        feature(name, {
+          privileged: flag,
+          run: () =>
+            Effect.flatMap(GitHub, (github) =>
+              Effect.sync(() => seen.push(`${name}:${github === privileged.service ? 'privileged' : 'repository'}`)),
+            ),
+        })
+      const features = [probe('settings', true), probe('labels', false)]
+      yield* runFeatures({ config, event: 'schedule', payload: {}, features, concurrency: 1 }).pipe(
+        Effect.provideService(GitHub, inRepository.service),
+        Effect.provideService(PrivilegedGitHub, privileged.service),
+      )
+      yield* runFeatures({ config, event: 'schedule', payload: {}, features, concurrency: 1 }).pipe(
+        Effect.provideService(GitHub, inRepository.service),
+      )
+      expect(seen).toStrictEqual([
+        'settings:privileged',
+        'labels:repository',
+        'settings:repository',
+        'labels:repository',
+      ])
+    }),
+  )
+
   it.effect('runs the features that handle the event, in the order given, whatever order they finish in', () =>
     Effect.gen(function* () {
       const slow = feature('slow', {

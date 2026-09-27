@@ -16,11 +16,38 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Layer } from 'effect'
-import { DryRun, DryRunLog, GitHub, GitHubMemory } from '@resnovas/integrations.github'
+import {
+  DryRun,
+  DryRunLog,
+  GitHub,
+  GitHubMemory,
+  makeMemoryGitHub,
+  PrivilegedGitHub,
+} from '@resnovas/integrations.github'
 
 const bug = { name: 'bug', color: 'd73a4a', description: '' }
 
 describe('dry run', () => {
+  it.effect('wraps the privileged service too, recording its writes in the same log', () =>
+    Effect.gen(function* () {
+      const inRepository = makeMemoryGitHub()
+      const privileged = makeMemoryGitHub({ labels: [bug] })
+      const writes = yield* Effect.gen(function* () {
+        yield* (yield* GitHub).closeIssue(1)
+        const strong = yield* PrivilegedGitHub
+        expect(yield* strong.listLabels).toStrictEqual([bug])
+        yield* strong.deleteLabel('bug')
+        return yield* (yield* DryRunLog).writes
+      }).pipe(
+        Effect.provide(DryRun),
+        Effect.provideService(GitHub, inRepository.service),
+        Effect.provideService(PrivilegedGitHub, privileged.service),
+      )
+      expect(writes.map((write) => write.operation)).toStrictEqual(['closeIssue', 'deleteLabel'])
+      expect(privileged.state.labels).toStrictEqual([bug])
+    }),
+  )
+
   it.effect('passes reads through and records writes in order, touching nothing', () =>
     Effect.gen(function* () {
       const github = yield* GitHub

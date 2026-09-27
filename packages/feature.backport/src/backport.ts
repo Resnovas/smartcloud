@@ -350,7 +350,7 @@ export const runBackports = (
               feature: FEATURE,
               rule: 'backport',
               level: 'warning',
-              message: `#${subject.number} was not backported to ${target} on a read-only token, for example a pull request event from a fork.`,
+              message: `#${subject.number} was not backported to ${target}: the token cannot push, as on a pull request event from a fork or a run with no app token. Give the job contents: write or an app token.`,
             }),
         }),
         Effect.catchAll((error) =>

@@ -53,6 +53,7 @@ export const memory = (files: Record<string, string> = {}, seed: Partial<MemoryS
 export const inputs = (overrides: Partial<Inputs> = {}): Inputs => ({
   token: Redacted.make('t'),
   workflowToken: Option.none(),
+  houseToken: Option.none(),
   config: Option.none(),
   configJson: Option.none(),
   configRef: Option.none(),

@@ -58,6 +58,8 @@ export { CHECK_RUN_EXTERNAL_ID, DEFAULT_COMMITTER, GitHubLive, makeLiveGitHub, s
 export type { LiveOptions } from './live.js'
 export { DryRun, DryRunLog, dryRunGitHub } from './dry-run.js'
 export { Restricted, restrictedGitHub, SkippedWrites } from './restricted.js'
+// The app or access token's service, beside the workflow token's `GitHub`.
+export { PrivilegedGitHub } from './service.js'
 export {
   githubDuration,
   githubRateLimitRemaining,

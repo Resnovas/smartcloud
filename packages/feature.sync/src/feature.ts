@@ -417,10 +417,13 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
  *
  * syncFeature.enabled?.({ version: 2, sync: { source: 'Resnovas/.github/templates@main' } }) // => true
  * syncFeature.enabled?.({ version: 2 }) // => false
+ * syncFeature.privileged // => true
  * ```
  */
 export const syncFeature: Feature = {
   name: FEATURE,
+  // Needs the app or access token: the workflow token cannot do this, or the pull requests it opens would start no workflows.
+  privileged: true,
   handles: ['repository', 'pullRequest'],
   enabled: (config) => config.sync !== undefined,
   run: ({ config, envelope }) => {
