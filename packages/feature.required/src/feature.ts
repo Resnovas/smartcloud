@@ -33,7 +33,8 @@ import { type Assessment, assessChecks } from './assess.js'
 export const FEATURE = 'required'
 
 /**
- * How long the feature waits between looks at the commit's checks.
+ * How long the feature first waits between looks at the commit's checks,
+ * and again after a look that finds them changed.
  *
  * @example
  * ```ts import.meta.vitest name="POLL_INTERVAL"
@@ -45,12 +46,33 @@ export const FEATURE = 'required'
  */
 export const POLL_INTERVAL = Duration.seconds(15)
 
+/**
+ * The longest wait between looks: each look that finds nothing changed
+ * doubles the wait, up to this, so a long CI run costs few requests.
+ *
+ * @example
+ * ```ts import.meta.vitest name="MAX_POLL_INTERVAL"
+ * import { MAX_POLL_INTERVAL } from '@resnovas/feature.required'
+ * import { Duration } from 'effect'
+ *
+ * Duration.toSeconds(MAX_POLL_INTERVAL) // => 60
+ * ```
+ */
+export const MAX_POLL_INTERVAL = Duration.seconds(60)
+
 // The names of the checks that count, so a settled commit is only trusted
 // once two looks in a row agree: a workflow queued a moment after the rest
 // adds its checks between them.
 const namesOf = (assessment: Assessment) =>
   assessment.counted
     .map((check) => `${check.app ?? ''}\u0000${check.name}`)
+    .sort()
+    .join('\n')
+
+// The counted checks with their states, to tell whether anything changed between looks.
+const statesOf = (assessment: Assessment) =>
+  assessment.counted
+    .map((check) => `${check.app ?? ''}\u0000${check.name}\u0000${check.state}`)
     .sort()
     .join('\n')
 
@@ -83,9 +105,15 @@ export const waitForChecks = (
     )
     const publishers = viewer?.endsWith('[bot]') === true ? [viewer.slice(0, -'[bot]'.length)] : []
     let settled: string | undefined
+    let previous: string | undefined
+    let wait = POLL_INTERVAL
     for (;;) {
       const assessment = assessChecks(yield* github.listCommitChecks(headSha), { ...options, publishers })
       const names = namesOf(assessment)
+      const states = statesOf(assessment)
+      // Nothing changed: wait twice as long next time. A change starts the waits over.
+      wait = states === previous ? Duration.min(Duration.times(wait, 2), MAX_POLL_INTERVAL) : POLL_INTERVAL
+      previous = states
       const counts = {
         counted: assessment.counted.length,
         pending: assessment.pending.length,
@@ -104,8 +132,10 @@ export const waitForChecks = (
         settled = undefined
       }
       // A settled commit at the deadline has passed on the one look it had.
-      if ((yield* Clock.currentTimeMillis) >= deadline) return assessment
-      yield* Effect.sleep(POLL_INTERVAL)
+      const now = yield* Clock.currentTimeMillis
+      if (now >= deadline) return assessment
+      // The last look is at the deadline, however long the wait has grown.
+      yield* Effect.sleep(Duration.min(wait, Duration.millis(deadline - now)))
     }
   })
 
@@ -123,8 +153,11 @@ const linked = (check: CommitCheck) => (check.url === undefined ? {} : { link: c
  * Runs on pull request events when the config has a `required` section and
  * the workflow passes the job's `checkRunId`; without it the job would wait
  * for itself, so the feature is skipped. It looks at the head commit's
- * latest run of each check and latest status of each context every
- * {@link POLL_INTERVAL}, leaving out every run of its own job,
+ * latest run of each check and latest status of each context, first after
+ * {@link POLL_INTERVAL} and then twice as long after each look that finds
+ * nothing changed, up to {@link MAX_POLL_INTERVAL}; the live service reads
+ * them with the workflow token and conditional requests, so an unchanged
+ * look costs no rate limit. It leaves out every run of its own job,
  * smartcloud's per-feature checks and `required.ignore` matches (see
  * `assessChecks`). Success, neutral and skipped pass. It fails as soon as any check
  * fails, passes once every check has passed on two looks in a row, and

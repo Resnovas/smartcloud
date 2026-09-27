@@ -17,7 +17,7 @@
 import { describe, expect, it } from '@effect/vitest'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
-import { FEATURE, POLL_INTERVAL, requiredFeature } from '@resnovas/feature.required'
+import { FEATURE, MAX_POLL_INTERVAL, POLL_INTERVAL, requiredFeature } from '@resnovas/feature.required'
 import {
   CHECK_RUN_EXTERNAL_ID,
   type CommitCheck,
@@ -114,9 +114,10 @@ const findings = (result: Effect.Effect.Success<ReturnType<typeof run>>) =>
   }))
 
 describe('requiredFeature', () => {
-  it('names the feature and waits fifteen seconds between looks', () => {
+  it('names the feature and waits fifteen seconds between looks, backing off to a minute', () => {
     expect(FEATURE).toBe('required')
     expect(Duration.toSeconds(POLL_INTERVAL)).toBe(15)
+    expect(Duration.toSeconds(MAX_POLL_INTERVAL)).toBe(60)
     expect(requiredFeature.enabled?.({ version: 2 })).toBe(false)
     expect(requiredFeature.enabled?.({ version: 2, required: {} })).toBe(true)
   })
@@ -316,18 +317,42 @@ describe('requiredFeature', () => {
           link: undefined,
         },
       ])
-      // Looks at 0, 15, 30, 45 and 60 seconds.
+      // Looks at 0, 15, 45 and, the wait cut short by the deadline, 60 seconds.
+      expect(github.looks()).toBe(4)
+    }),
+  )
+
+  it.effect('backs off while nothing changes, up to a minute, and looks again soon after a change', () =>
+    Effect.gen(function* () {
+      const pending = [check('ci / test', 'pending')]
+      const github = scripted([
+        ...Array.from({ length: 5 }, () => pending),
+        [check('ci / test', 'success')],
+        [check('ci / test', 'success')],
+      ])
+      const fiber = yield* Effect.fork(run(github))
+      // Waits of 15, 30, 60 and 60 seconds: five looks by 165 seconds, not twelve.
+      for (const seconds of [0, 15, 30, 60, 60]) {
+        yield* TestClock.adjust(Duration.seconds(seconds))
+      }
       expect(github.looks()).toBe(5)
+      // The sixth look, a minute on, finds the change; the confirming look comes 15 seconds later.
+      yield* TestClock.adjust(Duration.seconds(60))
+      expect(github.looks()).toBe(6)
+      yield* TestClock.adjust(POLL_INTERVAL)
+      const result = yield* Fiber.join(fiber)
+      expect(github.looks()).toBe(7)
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.passed'])
     }),
   )
 
   it.effect('passes a commit that settles just as the deadline comes', () =>
     Effect.gen(function* () {
       const pending = [check('ci / test', 'pending')]
-      const github = scripted([pending, pending, pending, pending, [check('ci / test', 'success')]])
+      const github = scripted([pending, pending, pending, [check('ci / test', 'success')]])
       const result = yield* runPolling(github, { version: 2, required: { timeout: 1 } })
       expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.passed'])
-      expect(github.looks()).toBe(5)
+      expect(github.looks()).toBe(4)
     }),
   )
 

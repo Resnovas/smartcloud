@@ -16,4 +16,4 @@
 
 export { assessChecks, latestChecks, OWN_CHECK_PREFIX } from './assess.js'
 export type { Assessment } from './assess.js'
-export { FEATURE, POLL_INTERVAL, requiredFeature } from './feature.js'
+export { FEATURE, MAX_POLL_INTERVAL, POLL_INTERVAL, requiredFeature } from './feature.js'

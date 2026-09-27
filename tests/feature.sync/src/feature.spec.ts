@@ -27,6 +27,7 @@ import {
   type GitHubService,
   makeMemoryGitHub,
   NotFound,
+  ValidationFailed,
 } from '@resnovas/integrations.github'
 
 const SOURCE = 'Resnovas/.github/templates@main'
@@ -82,6 +83,18 @@ const pullRequest = {
     updated_at: '2026-09-01T00:00:00Z',
     head: { ref: 'docs/tweak', sha: 'head-sha' },
   },
+}
+
+// Records the files pull request #7 changes.
+const changes = (memory: ReturnType<typeof seed>, files: ReadonlyArray<string>) => {
+  memory.state.pulls.set(7, {
+    commits: [],
+    files: [...files],
+    reviews: [],
+    requestedReviewers: [],
+    submittedReviews: [],
+  })
+  return memory
 }
 
 describe('sync run', () => {
@@ -216,6 +229,7 @@ describe('sync run', () => {
         { path: 'LICENSE', content: '(c) Resnovas/example\n', executable: false },
       ])
       state.files.set(repo('LICENSE', 'head-sha'), 'edited\n')
+      changes({ service, state }, ['LICENSE'])
       const check = yield* run(
         service,
         { version: 2, sync: { source: 'Resnovas/.github/templates' } },
@@ -263,7 +277,7 @@ describe('synced files check', () => {
   // A pull request that edits a synced document and a managed block, deletes a
   // synced file, and adds an allowed local rule.
   const withHead = () => {
-    const memory = seed()
+    const memory = changes(seed(), ['LICENSE', '.github/dependabot.yml', 'KEEP.md', 'tools/run'])
     const { files } = memory.state
     files.set(repo('LICENSE'), '(c) Resnovas for Resnovas/example\n')
     files.set(repo('LICENSE', 'head-sha'), 'Changed\n')
@@ -334,7 +348,7 @@ describe('synced files check', () => {
 
   it.effect('asks for a local conflict the pull request adds to be fixed here, not in the source', () =>
     Effect.gen(function* () {
-      const { service, state } = seed()
+      const { service, state } = changes(seed(), ['.github/dependabot.yml'])
       state.files.set(repo('.github/dependabot.yml'), dependabot('npm'))
       state.files.set(
         repo('.github/dependabot.yml', 'head-sha'),
@@ -351,7 +365,7 @@ describe('synced files check', () => {
 
   it.effect('allows a pull request that brings synced files up to date', () =>
     Effect.gen(function* () {
-      const { service, state } = seed()
+      const { service, state } = changes(seed(), ['LICENSE', '.github/dependabot.yml', 'tools/run'])
       state.files.set(repo('LICENSE', 'head-sha'), '(c) Resnovas for Resnovas/example\n')
       state.files.set(repo('.github/dependabot.yml', 'head-sha'), dependabot('npm'))
       state.files.set(repo('tools/run', 'head-sha'), '#!/bin/sh\n')
@@ -369,6 +383,99 @@ describe('synced files check', () => {
       const source = yield* run(service, config(), 'pull_request', pullRequest)
       expect(source.ran).toStrictEqual(['sync'])
       expect(source.findings).toStrictEqual([])
+    }),
+  )
+
+  it.effect('reads only the synced files the pull request changes', () =>
+    Effect.gen(function* () {
+      const memory = changes(seed(), ['src/index.ts'])
+      // Differs from the base, as when the base branch moved on, but the pull request does not change it.
+      memory.state.files.set(repo('LICENSE', 'head-sha'), 'Changed\n')
+      memory.state.files.set(repo('.github/dependabot.yml', 'head-sha'), dependabot('npm'))
+      memory.state.files.set(repo('tools/run', 'head-sha'), '#!/bin/sh\n')
+      const reads: Array<string> = []
+      const service: GitHubService = {
+        ...memory.service,
+        getFile: (location) => {
+          reads.push(location.path)
+          return memory.service.getFile(location)
+        },
+      }
+      const result = yield* run(service, config(), 'pull_request', pullRequest)
+      expect(result.findings).toStrictEqual([])
+      expect(reads).toStrictEqual([])
+    }),
+  )
+
+  it.effect('checks a synced file missing at the head, since a rename lists only its new path', () =>
+    Effect.gen(function* () {
+      const memory = changes(seed(), ['docs/LICENSE'])
+      memory.state.files.set(repo('docs/LICENSE', 'head-sha'), 'MIT\n')
+      memory.state.files.set(
+        repo('.github/dependabot.yml', 'head-sha'),
+        `${dependabot('yarn')}  - package-ecosystem: npm\n    directory: /\n`,
+      )
+      memory.state.files.set(repo('tools/run', 'head-sha'), '#!/bin/sh\n')
+      const result = yield* run(memory.service, config(), 'pull_request', pullRequest)
+      expect(result.findings.map((finding) => finding.message)).toStrictEqual([
+        'LICENSE deletes a synced file. Change it in Resnovas/.github instead.',
+      ])
+    }),
+  )
+
+  it.effect('checks every synced file when the base or the head has too many files to list', () =>
+    Effect.gen(function* () {
+      for (const ref of [undefined, 'head-sha']) {
+        const memory = changes(seed(), [])
+        memory.state.files.set(repo('LICENSE', 'head-sha'), 'Changed\n')
+        const service: GitHubService = {
+          ...memory.service,
+          listDirectory: (location) =>
+            location.owner === 'Resnovas' && location.repo === 'example' && location.ref === ref
+              ? Effect.fail(new ValidationFailed({ operation: 'listDirectory', detail: 'too many files' }))
+              : memory.service.listDirectory(location),
+        }
+        const result = yield* run(service, config(), 'pull_request', pullRequest)
+        expect(result.findings.map((finding) => finding.path)).toStrictEqual([
+          '.github/dependabot.yml',
+          'LICENSE',
+          'tools/run',
+        ])
+      }
+    }),
+  )
+
+  it.effect('checks every synced file when the pull request lists as many files as GitHub returns', () =>
+    Effect.gen(function* () {
+      const memory = changes(
+        seed(),
+        Array.from({ length: 3_000 }, (_, index) => `generated/${index}.txt`),
+      )
+      memory.state.files.set(repo('LICENSE', 'head-sha'), 'Changed\n')
+      memory.state.files.set(repo('.github/dependabot.yml', 'head-sha'), dependabot('bun'))
+      memory.state.files.set(repo('tools/run', 'head-sha'), '#!/bin/sh\n')
+      const result = yield* run(memory.service, config(), 'pull_request', pullRequest)
+      expect(result.findings.map((finding) => finding.path)).toStrictEqual(['.github/dependabot.yml', 'LICENSE'])
+    }),
+  )
+
+  it.effect('reads nothing for a synced file neither the base nor the head has', () =>
+    Effect.gen(function* () {
+      const memory = changes(seed(), [])
+      memory.state.files.delete(repo('tools/run'))
+      memory.state.files.set(repo('LICENSE', 'head-sha'), 'MIT\n')
+      memory.state.files.set(repo('.github/dependabot.yml', 'head-sha'), 'x')
+      const reads: Array<string> = []
+      const service: GitHubService = {
+        ...memory.service,
+        getFile: (location) => {
+          reads.push(location.path)
+          return memory.service.getFile(location)
+        },
+      }
+      const result = yield* run(service, config(), 'pull_request', pullRequest)
+      expect(result.findings).toStrictEqual([])
+      expect(reads).toStrictEqual([])
     }),
   )
 
