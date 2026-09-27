@@ -215,6 +215,18 @@ conventions:
       ),
   )
 
+  it.effect('treats Actions hardening and collaborator access as settings that only tighten policy', () =>
+    Effect.map(
+      resolve(
+        'version: 2\nsettings:\n  actions: { enabled: true, allowedActions: localonly }\n  collaborators: { octocat: nobody }\n',
+      ),
+      ({ config, loosened }) => {
+        expect(config.settings?.actions).toStrictEqual({ enabled: true })
+        expect(loosened).toHaveLength(2)
+      },
+    ),
+  )
+
   it.effect('leaves loosened out when nothing that tightens policy was dropped', () =>
     Effect.map(resolve('version: 2\nroles: { admins: [b] }\n'), ({ ignored, loosened }) => {
       expect(ignored).toHaveLength(1)
