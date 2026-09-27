@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Either, Schema } from 'effect'
-import { Commit, Review, Subject } from '@resnovas/conditions'
+import { ChangedFile, Commit, Review, Subject } from '@resnovas/conditions'
 import { commit, issue, pullRequest } from './fixtures.js'
 
 describe('Subject', () => {
@@ -36,6 +36,14 @@ describe('Review', () => {
   it('accepts the review states GitHub reports and nothing else', () => {
     expect(Schema.is(Review)({ author: 'jane', state: 'CHANGES_REQUESTED' })).toBe(true)
     expect(Schema.is(Review)({ author: 'jane', state: 'LGTM' })).toBe(false)
+  })
+})
+
+describe('ChangedFile', () => {
+  it('accepts the statuses GitHub reports and nothing else', () => {
+    expect(Schema.is(ChangedFile)({ path: 'logo.png', status: 'renamed', binary: true })).toBe(true)
+    expect(Schema.is(ChangedFile)({ path: 'logo.png', status: 'moved', binary: true })).toBe(false)
+    expect(Schema.is(ChangedFile)({ path: 'logo.png', status: 'added' })).toBe(false)
   })
 })
 

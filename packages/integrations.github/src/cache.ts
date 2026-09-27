@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Check, Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { ChangedFile, Check, Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Duration, Effect, Request, RequestResolver } from 'effect'
 import type { GitHubError } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
@@ -50,6 +50,10 @@ interface ListCommits extends Request.Request<ReadonlyArray<Commit>, GitHubError
 }
 interface ListFiles extends Request.Request<ReadonlyArray<string>, GitHubError> {
   readonly _tag: 'ListFiles'
+  readonly pullRequest: number
+}
+interface ListChangedFiles extends Request.Request<ReadonlyArray<ChangedFile>, GitHubError> {
+  readonly _tag: 'ListChangedFiles'
   readonly pullRequest: number
 }
 interface ListReviews extends Request.Request<ReadonlyArray<Review>, GitHubError> {
@@ -96,6 +100,7 @@ const ListOpenIssues = Request.tagged<ListOpenIssues>('ListOpenIssues')
 const ListComments = Request.tagged<ListComments>('ListComments')
 const ListCommits = Request.tagged<ListCommits>('ListCommits')
 const ListFiles = Request.tagged<ListFiles>('ListFiles')
+const ListChangedFiles = Request.tagged<ListChangedFiles>('ListChangedFiles')
 const ListReviews = Request.tagged<ListReviews>('ListReviews')
 const CountRequestedReviewers = Request.tagged<CountRequestedReviewers>('CountRequestedReviewers')
 const ListRequestedReviewers = Request.tagged<ListRequestedReviewers>('ListRequestedReviewers')
@@ -235,6 +240,10 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       caches.pulls,
       RequestResolver.fromEffect(({ pullRequest }: ListFiles) => inner.listFiles(pullRequest)),
     )
+    const listChangedFiles = lookup(
+      caches.pulls,
+      RequestResolver.fromEffect(({ pullRequest }: ListChangedFiles) => inner.listChangedFiles(pullRequest)),
+    )
     const listReviews = lookup(
       caches.pulls,
       RequestResolver.fromEffect(({ pullRequest }: ListReviews) => inner.listReviews(pullRequest)),
@@ -307,6 +316,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
 
       listCommits: (pullRequest) => listCommits(ListCommits({ pullRequest })),
       listFiles: (pullRequest) => listFiles(ListFiles({ pullRequest })),
+      listChangedFiles: (pullRequest) => listChangedFiles(ListChangedFiles({ pullRequest })),
       listReviews: (pullRequest) => listReviews(ListReviews({ pullRequest })),
       countRequestedReviewers: (pullRequest) => countRequestedReviewers(CountRequestedReviewers({ pullRequest })),
       listRequestedReviewers: (pullRequest) => listRequestedReviewers(ListRequestedReviewers({ pullRequest })),

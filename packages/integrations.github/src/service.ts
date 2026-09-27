@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Association, Check, Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { Association, ChangedFile, Check, Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Context, type Effect } from 'effect'
 import type { GitHubError } from './errors.js'
 
@@ -226,6 +226,8 @@ export interface GitHubService {
 
   readonly listCommits: (pullRequest: number) => Effect.Effect<ReadonlyArray<Commit>, GitHubError>
   readonly listFiles: (pullRequest: number) => Effect.Effect<ReadonlyArray<string>, GitHubError>
+  /** The changed files with their status and whether GitHub reports them as binary. */
+  readonly listChangedFiles: (pullRequest: number) => Effect.Effect<ReadonlyArray<ChangedFile>, GitHubError>
   readonly listReviews: (pullRequest: number) => Effect.Effect<ReadonlyArray<Review>, GitHubError>
   readonly countRequestedReviewers: (pullRequest: number) => Effect.Effect<number, GitHubError>
   /** The logins and team slugs asked to review the pull request that have not reviewed yet. */

@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [lockfileChanged](#lockfilechanged), [fileCount](#filecount), [binaryFilesAdded](#binaryfilesadded), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -680,6 +680,40 @@ Lines added plus deleted are at least min and below max.
 | `type` | `changesSize` | yes |  |
 | `min` | [NonNegativeInt](#nonnegativeint) | yes |  |
 | `max` | [NonNegativeInt](#nonnegativeint) | no |  |
+
+Other keys are an error.
+
+### lockfileChanged
+
+A dependency lockfile changed, or none did when false.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `lockfileChanged` | yes |  |
+| `condition` | boolean | yes |  |
+
+Other keys are an error.
+
+### fileCount
+
+The number of changed files is at least min and below max.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `fileCount` | yes |  |
+| `min` | [NonNegativeInt](#nonnegativeint) | yes |  |
+| `max` | [NonNegativeInt](#nonnegativeint) | no |  |
+
+Other keys are an error.
+
+### binaryFilesAdded
+
+The pull request adds a binary file, or none when false.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `binaryFilesAdded` | yes |  |
+| `condition` | boolean | yes |  |
 
 Other keys are an error.
 

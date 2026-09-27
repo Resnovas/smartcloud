@@ -444,6 +444,20 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         octokit.paginate(octokit.rest.pulls.listFiles, { owner, repo, pull_number, per_page: 100 }),
       ).pipe(Effect.map((files) => files.map((file) => file.filename)))
 
+    const listChangedFiles: GitHubService['listChangedFiles'] = (pull_number) =>
+      call('listChangedFiles', () =>
+        octokit.paginate(octokit.rest.pulls.listFiles, { owner, repo, pull_number, per_page: 100 }),
+      ).pipe(
+        Effect.map((files) =>
+          files.map((file) => ({
+            path: file.filename,
+            status: file.status,
+            // GitHub sends no patch and counts no lines for binary content.
+            binary: file.patch === undefined && file.changes === 0,
+          })),
+        ),
+      )
+
     const listReviews: GitHubService['listReviews'] = (pull_number) =>
       call('listReviews', () =>
         octokit.paginate(octokit.rest.pulls.listReviews, { owner, repo, pull_number, per_page: 100 }),
@@ -820,6 +834,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         ),
       listCommits,
       listFiles,
+      listChangedFiles,
       listReviews,
       countRequestedReviewers,
       listRequestedReviewers,

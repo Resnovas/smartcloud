@@ -278,6 +278,7 @@ describe('loadFacets', () => {
         },
         new Set([
           'files',
+          'changedFiles',
           'reviews',
           'pendingReviewers',
           'requestedReviewers',
@@ -289,6 +290,7 @@ describe('loadFacets', () => {
       ).pipe(Effect.provideService(GitHub, service))
       expect(subject).toMatchObject({
         files: ['src/a.ts'],
+        changedFiles: [{ path: 'src/a.ts', status: 'modified', binary: false }],
         reviews: [{ author: 'ann' }],
         pendingReviewers: 1,
         requestedReviewers: ['bo'],
@@ -515,6 +517,83 @@ describe('engine telemetry', () => {
         'subject.kind': 'pullRequest',
         facets: ['files'],
       })
+    }),
+  )
+})
+
+describe('loadFacets, shared reads', () => {
+  it.effect('reads the requested reviewers once, before the reviews', () =>
+    Effect.gen(function* () {
+      const { service } = memory()
+      const calls: Array<string> = []
+      const record =
+        <A, E>(name: string, read: (number: number) => Effect.Effect<A, E>) =>
+        (number: number) =>
+          Effect.zipRight(
+            Effect.sync(() => calls.push(name)),
+            read(number),
+          )
+      const recorded = {
+        ...service,
+        listReviews: record('reviews', service.listReviews),
+        countRequestedReviewers: record('count', service.countRequestedReviewers),
+        listRequestedReviewers: record('requested', service.listRequestedReviewers),
+      }
+      const subject = yield* loadFacets(
+        {
+          kind: 'pullRequest',
+          number: 7,
+          title: 't',
+          body: '',
+          author: 'a',
+          open: true,
+          locked: false,
+          labels: [],
+          updatedAt: new Date(0),
+        },
+        new Set(['reviews', 'pendingReviewers', 'requestedReviewers'] as const),
+      ).pipe(Effect.provideService(GitHub, recorded))
+      expect(subject).toMatchObject({ reviews: [{ author: 'ann' }], pendingReviewers: 1, requestedReviewers: ['bo'] })
+      expect(calls).toStrictEqual(['requested', 'reviews'])
+    }),
+  )
+
+  it.effect('lists the files once for both the paths and the changed files', () =>
+    Effect.gen(function* () {
+      const { service } = memory()
+      const calls: Array<string> = []
+      const recorded = {
+        ...service,
+        listFiles: (number: number) =>
+          Effect.zipRight(
+            Effect.sync(() => calls.push('files')),
+            service.listFiles(number),
+          ),
+        listChangedFiles: (number: number) =>
+          Effect.zipRight(
+            Effect.sync(() => calls.push('changed')),
+            service.listChangedFiles(number),
+          ),
+      }
+      const subject = yield* loadFacets(
+        {
+          kind: 'pullRequest',
+          number: 7,
+          title: 't',
+          body: '',
+          author: 'a',
+          open: true,
+          locked: false,
+          labels: [],
+          updatedAt: new Date(0),
+        },
+        new Set(['files', 'changedFiles'] as const),
+      ).pipe(Effect.provideService(GitHub, recorded))
+      expect(subject).toMatchObject({
+        files: ['src/a.ts'],
+        changedFiles: [{ path: 'src/a.ts', status: 'modified', binary: false }],
+      })
+      expect(calls).toStrictEqual(['changed'])
     }),
   )
 })
