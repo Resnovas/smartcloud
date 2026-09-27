@@ -1,0 +1,62 @@
+# Cuts a nightly pre-release of smartcloud from main with
+# tools/release/nightly.ts: a v<next>-nightly.<date> tag on a release commit
+# that holds the bundled action, and a GitHub pre-release with generated notes.
+# Until the first stable v2 release, v2 follows the nightlies, so the house
+# workflows pinned to resnovas/smartcloud@v2 run the newest nightly; after it,
+# v2 moves only with stable releases (release.yml). Nothing goes to npm.
+#
+# Runs every night, and skips a night when main has not moved. Start it by
+# hand from the Actions tab for a nightly now, or with dry-run ticked to see
+# the version it would cut.
+name: nightly
+
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Print the version without tagging or releasing
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  nightly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # Nightlies come only from main.
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      # Pushes the tags and creates the pre-release.
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+          # The script pushes the tags with the workflow token.
+          persist-credentials: true
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Cut the nightly
+        env:
+          GH_TOKEN: ${{ github.token }}
+          POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+          DRY_RUN: ${{ inputs.dry-run }}
+        run: |
+          if [ "$DRY_RUN" = 'true' ]; then node tools/release/nightly.ts --dry-run; else node tools/release/nightly.ts; fi
