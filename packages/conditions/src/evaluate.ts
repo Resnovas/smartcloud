@@ -248,6 +248,29 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
         ),
       )
     }
+    case 'hasMilestone': {
+      const { milestone } = subject
+      return Effect.succeed(
+        result(
+          condition.type,
+          (milestone !== undefined) === condition.condition,
+          milestone === undefined ? 'in no milestone' : `in milestone ${milestone}`,
+        ),
+      )
+    }
+    case 'milestoneMatches': {
+      const { milestone } = subject
+      const passed = milestone !== undefined && compilePattern(condition.condition).test(milestone)
+      return Effect.succeed(
+        result(
+          condition.type,
+          passed,
+          milestone === undefined
+            ? 'in no milestone'
+            : `milestone ${milestone} ${passed ? 'matches' : 'does not match'}`,
+        ),
+      )
+    }
     case 'isOpen':
       return Effect.succeed(
         result(condition.type, subject.open === condition.condition, subject.open ? 'open' : 'closed'),
