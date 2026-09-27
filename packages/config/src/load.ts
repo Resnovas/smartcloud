@@ -305,9 +305,10 @@ const decodeSections = (value: Readonly<Record<string, Json>>) => {
  * for a newer smartcloud still runs with everything this build knows. A value
  * inside a rule's `when` drops the whole `when`, never part of its
  * conditions, and a rule or section left incomplete once every file is
- * merged, such as `sync` without `source`, is dropped too. Only a config that
- * is unusable as a whole still fails: one that is not YAML or JSON, is not a
- * mapping, or has a malformed `extends`. `options.strict` fails on every
+ * merged, such as `sync` without `source`, is dropped too. What is not about
+ * one key still fails: a file that is not YAML or JSON, is not a mapping or
+ * has a malformed `extends`, an unreadable preset, an extends cycle or chain
+ * too deep, and a change to a locked value. `options.strict` fails on every
  * problem instead, for authors checking a config.
  *
  * @example

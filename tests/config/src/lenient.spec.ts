@@ -136,7 +136,7 @@ stale: { staleAfterDays: 30, staleLabel: stale, exempt: { labels: [pinned], when
           'smartcloud.yml: ignored labels.v1\\.0.emoji, because labels.v1\\.0.emoji is unexpected, expected: "name" | "color" | "description" | "aliases"',
           `${HOUSE}: ignored labels.bug.color, because labels.bug.color: Expected Six hex digits, for example 0E8A16., actual "red"`,
           `${HOUSE}: ignored labelSync.archive, because labelSync.archive is unexpected, expected: "prune"`,
-          `smartcloud.yml with ${HOUSE}: ignored labels.bug, because labels.bug.color is missing`,
+          `${HOUSE}: ignored labels.bug, because labels.bug.color is missing`,
         ])
       },
     ),

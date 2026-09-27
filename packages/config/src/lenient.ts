@@ -90,9 +90,17 @@ const valueAt = (value: Json | undefined, path: Path): Json | undefined => {
 
 // Whether merging could still fix a problem: a missing key, or an object
 // that fails as a whole, such as a convention with neither preset nor when,
-// which a preset's rule of the same name may complete.
-const completable = (issue: ParseResult.ArrayFormatterIssue, value: Readonly<Record<string, Json>>): boolean =>
-  issue._tag === 'Missing' || (issue._tag !== 'Unexpected' && isRecord(valueAt(value, issue.path)))
+// which a preset's rule of the same name may complete. A key this file had
+// but that was dropped as invalid is not one: the file's own entry is broken,
+// and waiting would leave a restricted run to drop the whole section for it.
+const completable = (
+  issue: ParseResult.ArrayFormatterIssue,
+  value: Readonly<Record<string, Json>>,
+  dropped: ReadonlySet<string>,
+): boolean =>
+  issue._tag === 'Missing'
+    ? !dropped.has(dotted(issue.path))
+    : issue._tag !== 'Unexpected' && isRecord(valueAt(value, issue.path))
 
 // Removes the value at a path from a copy the caller owns, saying whether
 // it was there. Keys come from config files, so they are read as own data,
@@ -135,6 +143,7 @@ export interface Lenient {
  */
 export const dropInvalid = (value: Readonly<Record<string, Json>>, source: string, keepIncomplete = false): Lenient => {
   const warnings: Array<string> = []
+  const dropped = new Set<string>()
   let current = value
   for (;;) {
     const decoded = decodeV2({ ...current, version: 2 })
@@ -155,9 +164,10 @@ export const dropInvalid = (value: Readonly<Record<string, Json>>, source: strin
     for (const [key, { unit, issues }] of units) {
       // What a preset may still complete is left for the merged config; it
       // still explains a unit dropped for another problem.
-      if (keepIncomplete && issues.every((issue) => completable(issue, current))) continue
+      if (keepIncomplete && issues.every((issue) => completable(issue, current, dropped))) continue
       if (!remove(next, unit)) continue
       changed = true
+      dropped.add(key)
       warnings.push(`${source}: ignored ${key}, because ${describe(issues)}`)
     }
     // Nothing more can be taken out: a file left incomplete for its presets.

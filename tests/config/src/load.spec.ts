@@ -349,14 +349,16 @@ describe('resolveConfig: extends and locked presets', () => {
       expect(typo.warnings).toStrictEqual([
         expect.stringMatching(/^repo: ignored lables, because lables is unexpected/),
       ])
-      const malformed = yield* resolve('labels:\n  docs: { name: 7, color: 0E8A16 }\n')
-      // Without its name the section is incomplete, which the skipped preset
-      // may have completed, so it is left out as skipped.
-      expect(malformed.config.labels).toBeUndefined()
+      // The broken label goes on its own; its valid siblings stay.
+      const malformed = yield* resolve(
+        'labels:\n  docs: { name: 7, color: 0E8A16 }\n  ok: { name: ok, color: 0E8A16 }\n',
+      )
+      expect(malformed.config.labels).toStrictEqual({ ok: { name: 'ok', color: '0E8A16' } })
       expect(malformed.warnings).toStrictEqual([
         'repo: ignored labels.docs.name, because labels.docs.name: Expected string, actual 7',
+        'repo: ignored labels.docs, because labels.docs.name is missing',
       ])
-      expect(malformed.skipped).toContain('the labels section: incomplete without the skipped preset(s)')
+      expect(malformed.skipped).toStrictEqual([expect.stringMatching(/^the extends preset /)])
       const convention = yield* resolve('conventions:\n  rules:\n    title: { level: loud, preset: semanticTitle }\n')
       expect(convention.config.conventions?.rules?.['title']).toStrictEqual({ preset: 'semanticTitle' })
       const proto = yield* resolve('__proto__:\n  labels: {}\n')
