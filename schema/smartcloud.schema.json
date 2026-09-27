@@ -631,10 +631,14 @@
         },
         "condition": {
           "$ref": "#/$defs/NonNegativeInt"
+        },
+        "allowPending": {
+          "type": "boolean",
+          "description": "Count approvals while other requested reviewers are still pending (default false)."
         }
       },
       "additionalProperties": false,
-      "description": "No reviewer is pending or requesting changes, and at least this many approved."
+      "description": "No reviewer is requesting changes, at least this many approved, and none are pending unless allowPending is set."
     },
     "commitMessagesMatch": {
       "type": "object",

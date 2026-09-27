@@ -55,6 +55,7 @@ describe('ConditionGroup', () => {
       { type: 'filesMatch', condition: 'src/**' },
       { type: 'changesSize', min: 0, max: 10 },
       { type: 'isApproved', condition: 1 },
+      { type: 'isApproved', condition: 2, allowPending: true },
       { type: 'commitMessagesMatch', condition: '^feat', scope: 'any' },
       { type: 'hasTrailer', trailer: 'Assisted-by', condition: ':', scope: 'all' },
     ]

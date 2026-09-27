@@ -265,19 +265,33 @@ export const ChangesSize = Schema.Struct({
 }).annotations({ identifier: 'changesSize', description: 'Lines added plus deleted are at least min and below max.' })
 
 /**
- * Every reviewer approved, none are pending, and at least `condition` approved.
+ * No reviewer is requesting changes, at least `condition` approved, and none
+ * are pending unless `allowPending` is set.
+ *
+ * @remarks
+ * `allowPending` defaults to `false`, so a condition without it keeps its v1
+ * meaning: every requested reviewer must have reviewed first.
  *
  * @example
  * ```ts import.meta.vitest name="IsApproved"
  * import { IsApproved } from '@resnovas/conditions'
  * import { Schema } from 'effect'
  *
- * Schema.is(IsApproved)({ type: 'isApproved', condition: 1 }) // => true
+ * Schema.is(IsApproved)({ type: 'isApproved', condition: 2, allowPending: true }) // => true
  * ```
  */
-export const IsApproved = Schema.Struct({ type: Schema.Literal('isApproved'), condition: Count }).annotations({
+export const IsApproved = Schema.Struct({
+  type: Schema.Literal('isApproved'),
+  condition: Count,
+  allowPending: Schema.optionalWith(
+    Schema.Boolean.annotations({
+      description: 'Count approvals while other requested reviewers are still pending (default false).',
+    }),
+    { exact: true },
+  ),
+}).annotations({
   identifier: 'isApproved',
-  description: 'No reviewer is pending or requesting changes, and at least this many approved.',
+  description: 'No reviewer is requesting changes, at least this many approved, and none are pending unless allowPending is set.',
 })
 
 /**

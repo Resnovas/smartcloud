@@ -43,7 +43,7 @@ Conditions that match text take a pattern: a regular expression written either b
 | `changesSize` | `min`, optional `max`: lines | Lines added plus deleted are at least `min` and below `max`. |
 | `pendingReview` | `condition`: boolean | Some requested reviewers have not reviewed yet (`true`), or none are pending (`false`). |
 | `requestedChanges` | `condition`: boolean | A reviewer's latest review requests changes (`true`), or none does (`false`). |
-| `isApproved` | `condition`: count | No reviewer is pending or requesting changes, and at least this many approved. |
+| `isApproved` | `condition`: count, optional `allowPending`: boolean | No reviewer is requesting changes, at least this many approved, and no reviewer is pending. With `allowPending: true`, pending reviewers do not block. |
 | `commitMessagesMatch` | `condition`: pattern, optional `scope` | Commit messages match. |
 | `commitsSignedOff` | `condition`: boolean | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`). |
 | `hasTrailer` | `trailer`: key, optional `condition`: pattern, optional `scope` | Commits carry the trailer, with a value matching the pattern when one is given. |
@@ -52,6 +52,14 @@ Conditions that match text take a pattern: a regular expression written either b
 Activity is GitHub's `updated_at` time for the issue or pull request.
 
 Reviews count each reviewer's latest decisive review: comments and pending reviews do not change an earlier approval or change request.
+
+`isApproved` waits for every requested reviewer by default, as in v1. To pass once enough reviewers have approved, even while others are still requested, set `allowPending`. A change request still blocks.
+
+```yaml
+- type: isApproved
+  condition: 2
+  allowPending: true
+```
 
 ### Pull request only conditions
 

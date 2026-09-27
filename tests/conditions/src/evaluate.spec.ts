@@ -31,6 +31,7 @@ const { headBranch: _headBranch, ...withoutBranch } = pullRequest()
 const { draft: _draft, ...withoutDraft } = pullRequest()
 const { changes: _changes, ...withoutChanges } = pullRequest()
 const { reviews: _reviews, ...withoutReviews } = pullRequest()
+const { pendingReviewers: _pending, ...withoutPending } = pullRequest({ reviews: [approved('ann')] })
 
 const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['titleMatches, bare pattern', { type: 'titleMatches', condition: '^feat' }, pullRequest(), true],
@@ -81,7 +82,12 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     }),
     true,
   ],
-  ['isApproved', { type: 'isApproved', condition: 2 }, pullRequest({ reviews: [approved('ann'), approved('bo')] }), true],
+  [
+    'isApproved',
+    { type: 'isApproved', condition: 2 },
+    pullRequest({ reviews: [approved('ann'), approved('bo')] }),
+    true,
+  ],
   ['isApproved, too few', { type: 'isApproved', condition: 2 }, pullRequest({ reviews: [approved('ann')] }), false],
   [
     'isApproved, a comment does not block (v1 bug)',
@@ -93,6 +99,36 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     'isApproved, pending reviewer blocks',
     { type: 'isApproved', condition: 1 },
     pullRequest({ reviews: [approved('ann')], pendingReviewers: 1 }),
+    false,
+  ],
+  [
+    'isApproved, allowPending counts approvals while reviews are pending',
+    { type: 'isApproved', condition: 2, allowPending: true },
+    pullRequest({ reviews: [approved('ann'), approved('bo')], pendingReviewers: 1 }),
+    true,
+  ],
+  [
+    'isApproved, allowPending still needs enough approvals',
+    { type: 'isApproved', condition: 2, allowPending: true },
+    pullRequest({ reviews: [approved('ann')], pendingReviewers: 2 }),
+    false,
+  ],
+  [
+    'isApproved, allowPending does not need pending reviewers loaded',
+    { type: 'isApproved', condition: 1, allowPending: true },
+    withoutPending,
+    true,
+  ],
+  [
+    'isApproved, allowPending: false keeps pending reviewers blocking',
+    { type: 'isApproved', condition: 1, allowPending: false },
+    pullRequest({ reviews: [approved('ann')], pendingReviewers: 1 }),
+    false,
+  ],
+  [
+    'isApproved, allowPending does not ignore a change request',
+    { type: 'isApproved', condition: 1, allowPending: true },
+    pullRequest({ reviews: [approved('ann'), { author: 'bo', state: 'CHANGES_REQUESTED' }], pendingReviewers: 1 }),
     false,
   ],
   [
@@ -132,12 +168,32 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     pullRequest({ commits: [commit('feat: a'), commit('feat: b')] }),
     true,
   ],
-  ['hasConflict, conflicting', { type: 'hasConflict', condition: true }, pullRequest({ mergeable: 'CONFLICTING' }), true],
+  [
+    'hasConflict, conflicting',
+    { type: 'hasConflict', condition: true },
+    pullRequest({ mergeable: 'CONFLICTING' }),
+    true,
+  ],
   ['hasConflict, mergeable', { type: 'hasConflict', condition: true }, pullRequest(), false],
   ['hasConflict false, mergeable', { type: 'hasConflict', condition: false }, pullRequest(), true],
-  ['hasConflict false, conflicting', { type: 'hasConflict', condition: false }, pullRequest({ mergeable: 'CONFLICTING' }), false],
-  ['hasConflict, unknown counts as not conflicting', { type: 'hasConflict', condition: true }, pullRequest({ mergeable: 'UNKNOWN' }), false],
-  ['hasConflict false, unknown counts as not conflicting', { type: 'hasConflict', condition: false }, pullRequest({ mergeable: 'UNKNOWN' }), true],
+  [
+    'hasConflict false, conflicting',
+    { type: 'hasConflict', condition: false },
+    pullRequest({ mergeable: 'CONFLICTING' }),
+    false,
+  ],
+  [
+    'hasConflict, unknown counts as not conflicting',
+    { type: 'hasConflict', condition: true },
+    pullRequest({ mergeable: 'UNKNOWN' }),
+    false,
+  ],
+  [
+    'hasConflict false, unknown counts as not conflicting',
+    { type: 'hasConflict', condition: false },
+    pullRequest({ mergeable: 'UNKNOWN' }),
+    true,
+  ],
   ['commitsSignedOff', { type: 'commitsSignedOff', condition: true }, pullRequest(), true],
   [
     'commitsSignedOff, email must match the author',
@@ -201,9 +257,7 @@ describe('evaluate: pull request conditions on issues', () => {
 describe('evaluate: facets', () => {
   it.effect('a facet that was not loaded fails with MissingFacet', () =>
     Effect.gen(function* () {
-      const exit = yield* Effect.exit(
-        evaluate({ condition: [{ type: 'isApproved', condition: 1 }] }, withoutReviews),
-      )
+      const exit = yield* Effect.exit(evaluate({ condition: [{ type: 'isApproved', condition: 1 }] }, withoutReviews))
       expect(exit).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'reviews', condition: 'isApproved' })))
     }),
   )
@@ -220,7 +274,10 @@ describe('evaluate: facets', () => {
     Effect.gen(function* () {
       const detail = (mergeable: Subject['mergeable']) =>
         Effect.map(
-          evaluate({ condition: [{ type: 'hasConflict', condition: true }] }, pullRequest(mergeable === undefined ? {} : { mergeable })),
+          evaluate(
+            { condition: [{ type: 'hasConflict', condition: true }] },
+            pullRequest(mergeable === undefined ? {} : { mergeable }),
+          ),
           (evaluation) => evaluation.results[0]?.detail,
         )
       expect(yield* detail('CONFLICTING')).toBe('conflicts with the base branch')
@@ -248,7 +305,10 @@ describe('evaluate: stale and abandoned (v1 had these inverted)', () => {
       yield* TestClock.adjust('20 days')
       expect(yield* passes(abandoned, pullRequest())).toBe(false)
       expect(yield* passes(abandoned, pullRequest({ labels: ['Stale'] }))).toBe(true)
-      const young = yield* evaluate({ condition: [abandoned] }, pullRequest({ labels: ['stale'], updatedAt: new Date(10 * 86_400_000) }))
+      const young = yield* evaluate(
+        { condition: [abandoned] },
+        pullRequest({ labels: ['stale'], updatedAt: new Date(10 * 86_400_000) }),
+      )
       expect(young.passed).toBe(false)
     }),
   )
@@ -262,7 +322,12 @@ describe('evaluate: groups and combinators', () => {
   it.effect('requires defaults to every condition', () =>
     Effect.gen(function* () {
       const evaluation = yield* evaluate(
-        { condition: [{ type: 'isOpen', condition: true }, { type: 'isDraft', condition: true }] },
+        {
+          condition: [
+            { type: 'isOpen', condition: true },
+            { type: 'isDraft', condition: true },
+          ],
+        },
         subject,
       )
       expect(evaluation).toMatchObject({ passed: false, matched: 1, required: 2 })
@@ -271,7 +336,16 @@ describe('evaluate: groups and combinators', () => {
 
   it.effect('requires counts the conditions that must pass (v1 form)', () =>
     Effect.map(
-      evaluate({ requires: 1, condition: [{ type: 'isOpen', condition: true }, { type: 'isDraft', condition: true }] }, subject),
+      evaluate(
+        {
+          requires: 1,
+          condition: [
+            { type: 'isOpen', condition: true },
+            { type: 'isDraft', condition: true },
+          ],
+        },
+        subject,
+      ),
       (evaluation) => expect(evaluation.passed).toBe(true),
     ),
   )
@@ -294,7 +368,7 @@ describe('evaluate: groups and combinators', () => {
     }),
   )
 
-  it.effect('$not accepts the inline form from smartcloud\'s own v1 config', () =>
+  it.effect("$not accepts the inline form from smartcloud's own v1 config", () =>
     Effect.gen(function* () {
       // requestApprovals in smartcloud's v1 .github/config.json
       const notDependabot = {
@@ -304,7 +378,13 @@ describe('evaluate: groups and combinators', () => {
       } as const
       expect(yield* passes(notDependabot, subject)).toBe(true)
       expect(yield* passes(notDependabot, pullRequest({ author: 'dependabot[bot]' }))).toBe(false)
-      const allOf = { type: '$not', condition: [{ type: 'isOpen', condition: true }, { type: 'isDraft', condition: true }] } as const
+      const allOf = {
+        type: '$not',
+        condition: [
+          { type: 'isOpen', condition: true },
+          { type: 'isDraft', condition: true },
+        ],
+      } as const
       expect(yield* passes(allOf, subject)).toBe(true)
     }),
   )
@@ -312,7 +392,10 @@ describe('evaluate: groups and combinators', () => {
   it.effect('explains combinators with their nested groups', () =>
     Effect.gen(function* () {
       const evaluation = yield* evaluate({ condition: [{ type: '$or', condition: [draft, open] }] }, subject)
-      expect(evaluation.results[0]).toMatchObject({ detail: '1 of 2 group(s) passed', groups: [{ passed: false }, { passed: true }] })
+      expect(evaluation.results[0]).toMatchObject({
+        detail: '1 of 2 group(s) passed',
+        groups: [{ passed: false }, { passed: true }],
+      })
       const negated = yield* evaluate({ condition: [{ type: '$not', condition: open }] }, subject)
       expect(negated.results[0]?.detail).toBe('the group passed')
     }),
@@ -346,6 +429,11 @@ describe('requiredFacets', () => {
       },
     ])
     expect([...facets].sort()).toStrictEqual(['commits', 'files'])
+  })
+
+  it('needs only reviews for isApproved when pending reviews are allowed', () => {
+    const facets = requiredFacets([{ condition: [{ type: 'isApproved', condition: 1, allowPending: true }] }])
+    expect([...facets]).toStrictEqual(['reviews'])
   })
 
   it('needs nothing for conditions on the event payload alone', () => {
