@@ -215,14 +215,14 @@ conventions:
       ),
   )
 
-  it.effect('treats Actions hardening and collaborator access as settings that only tighten policy', () =>
+  it.effect('treats Actions hardening, collaborator and team access as settings that only tighten policy', () =>
     Effect.map(
       resolve(
-        'version: 2\nsettings:\n  actions: { enabled: true, allowedActions: localonly }\n  collaborators: { octocat: nobody }\n',
+        'version: 2\nsettings:\n  actions: { enabled: true, allowedActions: localonly }\n  collaborators: { octocat: nobody }\n  teams: { core: owner }\n',
       ),
       ({ config, loosened }) => {
         expect(config.settings?.actions).toStrictEqual({ enabled: true })
-        expect(loosened).toHaveLength(2)
+        expect(loosened).toHaveLength(3)
       },
     ),
   )

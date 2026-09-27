@@ -149,8 +149,10 @@ const RESTRICTIONS: ReadonlyArray<Path> = [
   ['settings', 'ruleset'],
   // Actions hardening, such as the allow-list, SHA pinning and token permissions.
   ['settings', 'actions'],
-  // A role of none revokes access, so dropping it would leave access in place.
+  // A role of none revokes access, and a lower role reduces it, so dropping
+  // either would leave more access in place.
   ['settings', 'collaborators'],
+  ['settings', 'teams'],
   ['sync', 'check'],
 ]
 
