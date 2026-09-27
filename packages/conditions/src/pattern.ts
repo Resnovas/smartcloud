@@ -15,18 +15,34 @@
  */
 
 import { Schema } from 'effect'
+import { backtrackingRisk } from './backtracking.js'
 
 // v1 wrote patterns either as a bare regular expression source or as
 // `/source/flags`; both forms keep working.
 const DELIMITED = /^\/(.*)\/([a-z]*)$/s
+
+// Patterns are compiled on every event, so each one is checked for
+// catastrophic backtracking once. Bounded, as the MCP server lives long.
+const risks = new Map<string, string | undefined>()
+const riskOf = (regex: RegExp): string | undefined => {
+  const key = `${regex.flags}/${regex.source}`
+  if (risks.has(key)) return risks.get(key)
+  if (risks.size >= 1_000) risks.clear()
+  const risk = backtrackingRisk(regex.source, regex.flags)
+  risks.set(key, risk)
+  return risk
+}
 
 /**
  * Compiles a smartcloud pattern string into a regular expression.
  *
  * @remarks
  * A pattern is either a bare regular expression source (`^feat`) or a
- * delimited one with flags (`/^feat/i`), exactly as v1 read them. The config
- * schema rejects invalid patterns, so this only throws for strings that never
+ * delimited one with flags (`/^feat/i`), exactly as v1 read them. A pattern
+ * that could take exponential time on some input (catastrophic backtracking,
+ * see {@link backtrackingRisk}) is refused like an invalid one: patterns run on
+ * text any contributor controls, such as titles, branch names and comments.
+ * The config schema rejects both, so this only throws for strings that never
  * passed through {@link Pattern}.
  *
  * @example
@@ -42,12 +58,16 @@ const DELIMITED = /^\/(.*)\/([a-z]*)$/s
  */
 export const compilePattern = (pattern: string): RegExp => {
   const delimited = DELIMITED.exec(pattern)
-  return delimited ? new RegExp(delimited[1] ?? '', delimited[2]) : new RegExp(pattern)
+  const regex = delimited ? new RegExp(delimited[1] ?? '', delimited[2]) : new RegExp(pattern)
+  const risk = riskOf(regex)
+  if (risk !== undefined) throw new SyntaxError(risk)
+  return regex
 }
 
 /**
  * A regular expression written as a string, validated when the config is
- * decoded so a typo fails at startup rather than on the first event.
+ * decoded so a typo, or a pattern open to catastrophic backtracking, fails at
+ * startup rather than on the first event.
  *
  * @example
  * ```ts import.meta.vitest name="Pattern"
@@ -56,6 +76,7 @@ export const compilePattern = (pattern: string): RegExp => {
  *
  * Schema.is(Pattern)('/^feat/i') // => true
  * Schema.is(Pattern)('(unclosed') // => false
+ * Schema.is(Pattern)('^(a+)+$') // => false
  * ```
  */
 export const Pattern = Schema.String.pipe(

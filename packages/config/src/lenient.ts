@@ -64,12 +64,16 @@ const unitOf = (issue: ParseResult.ArrayFormatterIssue): Path => {
 }
 
 // A union reports one issue per member, such as `Expected "default", actual
-// "max"` for each literal; they read better as one. An unknown or missing key
+// "max"` for each literal; they read better as one. An unknown or missing key,
+// or a value of the right type that failed a check, such as a refused pattern,
 // says more than a member that did not match, such as a condition's `$and`.
 const describe = (
   issues: readonly [ParseResult.ArrayFormatterIssue, ...Array<ParseResult.ArrayFormatterIssue>],
 ): string => {
-  const first = issues.find((issue) => issue._tag === 'Unexpected' || issue._tag === 'Missing') ?? issues[0]
+  const first =
+    issues.find((issue) => issue._tag === 'Unexpected' || issue._tag === 'Missing') ??
+    issues.find((issue) => issue._tag === 'Refinement') ??
+    issues[0]
   const at = dotted(first.path)
   if (first._tag === 'Missing' || first._tag === 'Unexpected') return `${at} ${first.message}`
   const alike = issues.filter((issue) => issue._tag === first._tag && dotted(issue.path) === at)

@@ -77,6 +77,22 @@ labelling:
     ),
   )
 
+  it.effect('says why a pattern was refused, dropping the when that holds it', () =>
+    Effect.map(
+      resolve(`version: 2
+labelling:
+  fix: { label: fix, when: { condition: [{ type: titleMatches, condition: '^fix: (\\w+\\s?)+$' }] } }
+`),
+      ({ config, warnings }) => {
+        expect(config.labelling).toStrictEqual({})
+        expect(warnings[0]).toMatch(
+          /^smartcloud\.yml: ignored labelling\.fix\.when, because labelling\.fix\.when\.condition\.0\.condition: invalid pattern /,
+        )
+        expect(warnings[0]).toContain('(catastrophic backtracking)')
+      },
+    ),
+  )
+
   it.effect('treats a rule named when as a rule, not as its conditions', () =>
     Effect.map(
       resolve(`version: 2

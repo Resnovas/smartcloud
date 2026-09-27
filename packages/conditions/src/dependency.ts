@@ -89,7 +89,10 @@ const summaryOf = (body: string): string => {
 
 // The PEP 440 epoch, 0 when there is none, and the numeric parts after it.
 const parts = (version: string): readonly [number, ReadonlyArray<number>] => {
-  const [, epoch = '0', rest = ''] = /^[\^~=v]*(?:(\d+)!)?(.*)$/.exec(version) ?? []
+  // Two steps, so no two parts of one pattern can match the same characters
+  // and a long run of range operators cannot make it backtrack.
+  const bare = version.replace(/^[\^~=v]+/, '')
+  const [, epoch = '0', rest = bare] = /^(\d+)!(.*)$/s.exec(bare) ?? []
   return [Number(epoch), (/^\d+(?:\.\d+)*/.exec(rest)?.[0] ?? '').split('.').map(Number)]
 }
 

@@ -14,6 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
+export { backtrackingRisk } from './backtracking.js'
 export { codeownersOf, parseCodeowners } from './codeowners.js'
 export type { CodeownersRule } from './codeowners.js'
 export { dependencyUpdate, updateTypeOf, UpdateType } from './dependency.js'

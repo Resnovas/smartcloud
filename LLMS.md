@@ -592,6 +592,21 @@ I/O.
 - Patterns (`Pattern`) are either a bare regular expression or a delimited one
   with flags (`/^feat/i`), exactly as v1 read them; the schema rejects an
   invalid one, so `compilePattern` never throws on decoded config.
+- Patterns run on text contributors control (titles, bodies, branch names,
+  comments), so `compilePattern` also refuses one open to catastrophic
+  backtracking, such as `^(a+)+$` or `(a|aa)+$`, using `backtrackingRisk` in
+  `backtracking.ts`: a static check (it never runs the pattern) that builds the
+  pattern's position automaton and looks for a state with two different loops
+  over the same text. A repeat that nothing after it can fail, as in an
+  unanchored `^fix: (\w+\s?)+`, is checked at its minimum count. The refusal
+  is an ordinary `Pattern` failure: `validate` errors, and a run's lenient
+  decode drops the group that holds it with a warning naming the pattern
+  (`describe` in `packages/config/src/lenient.ts` prefers a refinement message
+  over a union member mismatch). Every pattern that takes config text must go
+  through `Pattern` and `compilePattern`; never `new RegExp` on config text.
+  Each verdict is cached per source and flags, so compiling on every event is
+  cheap. Keep `tests/conditions/src/backtracking.spec.ts` green: it runs every
+  YAML pattern in `docs/` and smartcloud's own configs through the check.
 
 ### The subject and its facets
 
