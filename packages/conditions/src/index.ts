@@ -16,6 +16,8 @@
 
 export { codeownersOf, parseCodeowners } from './codeowners.js'
 export type { CodeownersRule } from './codeowners.js'
+export { dependencyUpdate, updateTypeOf, UpdateType } from './dependency.js'
+export type { DependencyUpdate } from './dependency.js'
 export { compilePattern, Pattern } from './pattern.js'
 export {
   AssigneeMatches,
@@ -35,6 +37,7 @@ export {
   Condition,
   ConditionGroup,
   CreatorMatches,
+  DependencyUpdateType,
   DescriptionMatches,
   FileCount,
   FilesMatch,

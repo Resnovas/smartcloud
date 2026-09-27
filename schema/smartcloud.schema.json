@@ -316,6 +316,9 @@
             },
             {
               "$ref": "#/$defs/timeWindow"
+            },
+            {
+              "$ref": "#/$defs/dependencyUpdateType"
             }
           ]
         },
@@ -1266,6 +1269,55 @@
     "TimeZone": {
       "type": "string",
       "description": "An IANA time zone name, such as Europe/London, or UTC."
+    },
+    "dependencyUpdateType": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "dependencyUpdateType"
+          ]
+        },
+        "condition": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/UpdateType"
+          },
+          "description": "The update types that pass; any one is enough."
+        },
+        "bots": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/NonEmptyTrimmedString"
+          },
+          "description": "More logins that open dependency updates, such as a self-hosted Renovate app; dependabot[bot] and renovate[bot] always count."
+        }
+      },
+      "additionalProperties": false,
+      "description": "A Dependabot or Renovate pull request's largest version change is one of these: patch, minor or major."
+    },
+    "UpdateType": {
+      "type": "string",
+      "enum": [
+        "patch",
+        "minor",
+        "major"
+      ],
+      "description": "A version update: patch, minor or major."
+    },
+    "NonEmptyTrimmedString": {
+      "type": "string",
+      "description": "a non empty string",
+      "title": "nonEmptyString",
+      "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+      "minLength": 1
     },
     "$and": {
       "type": "object",

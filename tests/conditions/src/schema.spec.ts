@@ -89,6 +89,8 @@ describe('ConditionGroup', () => {
       { type: 'createdBefore', condition: '2026-01-01' },
       { type: 'createdBefore', condition: '2026-01-01T09:30:00.5+01:00' },
       { type: 'timeWindow', condition: true },
+      { type: 'dependencyUpdateType', condition: ['patch'] },
+      { type: 'dependencyUpdateType', condition: ['minor', 'major'], bots: ['my-renovate[bot]'] },
       {
         type: 'timeWindow',
         condition: false,
@@ -109,6 +111,14 @@ describe('ConditionGroup', () => {
     expect(Either.isLeft(decode({ condition: [{ type: 'titleMatches', condition: '[' }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'linksIssue', condition: true, keys: [] }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'linksIssue', condition: true, keys: ['SMC-'] }] }))).toBe(true)
+    for (const bad of [
+      { condition: [] },
+      { condition: ['digest'] },
+      { condition: ['patch'], bots: [] },
+      { condition: ['patch'], bots: [' '] },
+    ]) {
+      expect(Either.isLeft(decode({ condition: [{ type: 'dependencyUpdateType', ...bad }] }))).toBe(true)
+    }
     expect(Either.isLeft(decode({ condition: [{ type: 'codeownersTouched', condition: 'core' }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'commentMatches', condition: '(' }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'reactionCount', reaction: 'thumbsup', min: 1 }] }))).toBe(true)
