@@ -49,6 +49,8 @@ describe('ConditionGroup', () => {
       { type: 'requestedChanges', condition: true },
       { type: 'commitsSignedOff', condition: true },
       { type: 'hasConflict', condition: true },
+      { type: 'checksPass', checks: ['build', 'test'], condition: true },
+      { type: 'checkStatus', check: 'test', condition: 'pending' },
       { type: 'hasLabel', label: 'bug', condition: true },
       { type: 'isStale', condition: 30 },
       { type: 'isAbandoned', condition: 14, label: 'stale' },

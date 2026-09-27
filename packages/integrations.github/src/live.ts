@@ -15,7 +15,7 @@
  */
 
 import { Octokit } from '@octokit/rest'
-import type { Mergeable, Review } from '@resnovas/conditions'
+import type { CheckState, Mergeable, Review } from '@resnovas/conditions'
 import { Config, Effect, Layer, Option, Redacted, Ref, Schedule } from 'effect'
 import { cacheReads } from './cache.js'
 import { fromGraphqlErrors, fromStatus, type GitHubError, ValidationFailed } from './errors.js'
@@ -167,6 +167,13 @@ const DEFAULT_MERGEABLE_POLL = Schedule.spaced('2 seconds').pipe(Schedule.inters
 
 // GitHub leaves `mergeable` null until its background job has compared the branches.
 const mergeableOf = (mergeable: boolean | null): Mergeable => (mergeable === null ? 'UNKNOWN' : mergeable ? 'MERGEABLE' : 'CONFLICTING')
+
+// A completed check run passes when it succeeded, or finished neutral or skipped.
+const PASSING = new Set(['success', 'neutral', 'skipped'])
+const runState = (run: { readonly status: string; readonly conclusion: string | null }): CheckState =>
+  run.status !== 'completed' ? 'pending' : PASSING.has(run.conclusion ?? '') ? 'success' : 'failure'
+// Commit statuses are `error`, `failure`, `pending` or `success`.
+const statusState = (state: string): CheckState => (state === 'success' || state === 'pending' ? state : 'failure')
 
 const statusOf = (error: unknown): number | undefined =>
   typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number' ? error.status : undefined
@@ -410,6 +417,31 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         Effect.map(({ data }) => mergeableOf(data.mergeable)),
         Effect.repeat({ schedule: Schedule.passthrough(mergeablePoll), until: (mergeable) => mergeable !== 'UNKNOWN' }),
       )
+
+    // Check runs (GitHub Actions and apps) and commit statuses (older CI) both report on the head commit.
+    // They are read with the checks token, which has checks and statuses read when the main token may not.
+    // GitHub's default `latest` filter is deliberate: a re-run replaces the run it repeats, as on the checks tab.
+    const listChecks: GitHubService['listChecks'] = (pull_number) =>
+      Effect.gen(function* () {
+        const { data } = yield* call('listChecks: pull request', () => octokit.rest.pulls.get({ owner, repo, pull_number }))
+        const ref = data.head.sha
+        const [runs, statuses] = yield* Effect.all(
+          [
+            call('listChecks: check runs', () => checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, per_page: 100 })),
+            call('listChecks: commit statuses', () =>
+              checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),
+            ),
+          ],
+          { concurrency: 'unbounded' },
+        )
+        // Statuses come newest first, and only each context's latest counts.
+        const latest = new Map<string, CheckState>()
+        for (const status of statuses) if (!latest.has(status.context)) latest.set(status.context, statusState(status.state))
+        return [
+          ...runs.map((run) => ({ name: run.name, state: runState(run) })),
+          ...[...latest].map(([name, state]) => ({ name, state })),
+        ]
+      })
 
     const getFile: GitHubService['getFile'] = (location) =>
       call('getFile', () =>
@@ -656,6 +688,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       listReviews,
       countRequestedReviewers,
       getMergeable,
+      listChecks,
       createReview: (pull_number, review) =>
         Effect.asVoid(call('createReview', () => octokit.rest.pulls.createReview({ owner, repo, pull_number, ...review }), rateLimited)),
       requestReviewers: (pull_number, logins) =>

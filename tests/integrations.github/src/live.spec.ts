@@ -246,6 +246,53 @@ describe('live GitHub: pull requests', () => {
     }),
   )
 
+  it.effect("reads the check runs and latest commit statuses on a pull request's head commit", () =>
+    Effect.gen(function* () {
+      const run = (name: string, status: string, conclusion: string | null) => ({ name, status, conclusion })
+      const { service, requests } = live({
+        [`GET ${REPO}/pulls/7`]: { body: { head: { sha: 'abc' } } },
+        [`GET ${REPO}/commits/abc/check-runs`]: {
+          body: {
+            total_count: 7,
+            check_runs: [
+              run('build', 'completed', 'success'),
+              run('docs', 'completed', 'skipped'),
+              run('audit', 'completed', 'neutral'),
+              run('test', 'completed', 'failure'),
+              run('e2e', 'completed', 'cancelled'),
+              run('lint', 'in_progress', null),
+              run('odd', 'completed', null),
+            ],
+          },
+        },
+        [`GET ${REPO}/commits/abc/statuses`]: {
+          body: [
+            { context: 'ci/circle', state: 'success' },
+            { context: 'ci/circle', state: 'failure' },
+            { context: 'deploy', state: 'pending' },
+            { context: 'coverage', state: 'error' },
+            { context: 'legacy', state: 'failure' },
+          ],
+        },
+      })
+      const github = yield* service
+      expect(yield* github.listChecks(7)).toStrictEqual([
+        { name: 'build', state: 'success' },
+        { name: 'docs', state: 'success' },
+        { name: 'audit', state: 'success' },
+        { name: 'test', state: 'failure' },
+        { name: 'e2e', state: 'failure' },
+        { name: 'lint', state: 'pending' },
+        { name: 'odd', state: 'failure' },
+        { name: 'ci/circle', state: 'success' },
+        { name: 'deploy', state: 'pending' },
+        { name: 'coverage', state: 'failure' },
+        { name: 'legacy', state: 'failure' },
+      ])
+      expect(requests.find((request) => request.path === `${REPO}/commits/abc/check-runs`)?.query).toContain('per_page=100')
+    }),
+  )
+
   it.effect('submits reviews and requests reviewers', () =>
     Effect.gen(function* () {
       const { service, requests } = live(routes)
@@ -323,6 +370,24 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
       expect(yield* github.listCommitChecks('abc')).toStrictEqual([])
       yield* github.createCheckRun({ name: 'smartcloud / labels', headSha: 'abc', status: 'completed', conclusion: 'success', title: 't', summary: 's' })
       expect(fake.tokens).toStrictEqual(['workflow-token', 'workflow-token', 'access-token'])
+    }),
+  )
+
+  it.effect('reads a pull request’s checks for conditions with the checks token too', () =>
+    Effect.gen(function* () {
+      const fake = fakeFetch({
+        [`GET ${REPO}/pulls/7`]: { body: { head: { sha: 'abc' } } },
+        [`GET ${REPO}/commits/abc/check-runs`]: { body: { total_count: 0, check_runs: [] } },
+        [`GET ${REPO}/commits/abc/statuses`]: { body: [] },
+      })
+      const github = yield* makeLiveGitHub({
+        token: Redacted.make('access-token'),
+        checksToken: Redacted.make('workflow-token'),
+        coordinates: { owner: 'Resnovas', repo: 'example' },
+        fetch: fake.fetch,
+      })
+      expect(yield* github.listChecks(7)).toStrictEqual([])
+      expect(fake.tokens).toStrictEqual(['access-token', 'workflow-token', 'workflow-token'])
     }),
   )
 

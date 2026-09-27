@@ -18,13 +18,14 @@ import { Clock, Data, Effect } from 'effect'
 import picomatch from 'picomatch'
 import { compilePattern } from './pattern.js'
 import type { Condition, ConditionGroup, Not } from './schema.js'
-import type { Commit, Facet, Review, Subject } from './subject.js'
+import type { Check, CheckState, Commit, Facet, Review, Subject } from './subject.js'
 import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 
 /**
- * A condition needed a facet (files, reviews, pending reviewers, commits or
- * mergeability) that was not loaded onto the subject. This is an engine bug,
- * not a user error: the engine loads every facet `requiredFacets` reports.
+ * A condition needed a facet (files, reviews, pending reviewers, commits,
+ * mergeability or checks) that was not loaded onto the subject. This is an
+ * engine bug, not a user error: the engine loads every facet `requiredFacets`
+ * reports.
  *
  * @example
  * ```ts import.meta.vitest name="MissingFacet"
@@ -117,6 +118,19 @@ const ageInDays = (subject: Subject) =>
 const hasLabel = (subject: Subject, label: string) =>
   subject.labels.some((name) => name.toLowerCase() === label.toLowerCase())
 
+// A name can be reported more than once (by two workflows, or by both a check
+// run and a commit status): the worst state wins, and an unreported check is
+// pending.
+const RANK: Record<CheckState, number> = { success: 0, pending: 1, failure: 2 }
+
+const checkState = (checks: ReadonlyArray<Check>, name: string): CheckState =>
+  checks
+    .filter((check) => check.name === name)
+    .reduce<CheckState | undefined>(
+      (worst, check) => (worst === undefined || RANK[check.state] > RANK[worst] ? check.state : worst),
+      undefined,
+    ) ?? 'pending'
+
 const PULL_REQUEST_ONLY = new Set([
   'branchMatches',
   'isDraft',
@@ -129,6 +143,8 @@ const PULL_REQUEST_ONLY = new Set([
   'commitsSignedOff',
   'hasTrailer',
   'hasConflict',
+  'checksPass',
+  'checkStatus',
 ])
 
 const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effect<ConditionResult, MissingFacet> => {
@@ -275,6 +291,23 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
               : 'no conflicts'
         return result(condition.type, conflicting === condition.condition, detail)
       })
+    case 'checksPass':
+      return Effect.map(facet(subject, 'checks', condition.type), (checks) => {
+        const unfinished = condition.checks.filter((name) => checkState(checks, name) !== 'success')
+        const detail =
+          unfinished.length === 0 ? 'every named check succeeded' : `not succeeded: ${unfinished.join(', ')}`
+        return result(condition.type, (unfinished.length === 0) === condition.condition, detail)
+      })
+    case 'checkStatus':
+      return Effect.map(facet(subject, 'checks', condition.type), (checks) => {
+        const state = checkState(checks, condition.check)
+        const reported = checks.some((check) => check.name === condition.check)
+        return result(
+          condition.type,
+          state === condition.condition,
+          `${condition.check} ${reported ? state : 'has not reported'}`,
+        )
+      })
     case '$and':
       return combine(condition.type, condition.condition, subject, (passed, total) => passed === total)
     case '$or':
@@ -352,6 +385,8 @@ const FACETS: Partial<Record<Condition['type'], ReadonlyArray<Facet>>> = {
   commitsSignedOff: ['commits'],
   hasTrailer: ['commits'],
   hasConflict: ['mergeable'],
+  checksPass: ['checks'],
+  checkStatus: ['checks'],
 }
 
 const groupsOf = (condition: Condition): ReadonlyArray<ConditionGroup> => {

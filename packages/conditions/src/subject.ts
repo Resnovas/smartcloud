@@ -74,13 +74,49 @@ export const Mergeable = Schema.Literal('MERGEABLE', 'CONFLICTING', 'UNKNOWN')
 export type Mergeable = typeof Mergeable.Type
 
 /**
+ * Where a CI check stands: `success` when it passed (or finished neutral or
+ * skipped), `failure` when it finished any other way, and `pending` until it
+ * has finished.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CheckState"
+ * import { CheckState } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CheckState)('pending') // => true
+ * ```
+ */
+export const CheckState = Schema.Literal('success', 'failure', 'pending')
+/** A decoded {@link CheckState}. */
+export type CheckState = typeof CheckState.Type
+
+/**
+ * A CI check on a pull request's head commit: a check run, or a commit
+ * status under its context name.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Check"
+ * import { Check } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Check)({ name: 'test', state: 'success' }) // => true
+ * ```
+ */
+export const Check = Schema.Struct({
+  name: Schema.String,
+  state: CheckState,
+})
+/** A decoded {@link Check}. */
+export type Check = typeof Check.Type
+
+/**
  * The thing a condition is evaluated against: an issue or a pull request,
  * normalised from whichever GitHub event delivered it.
  *
  * @remarks
- * `files`, `reviews`, `pendingReviewers`, `commits` and `mergeable` are facets
- * that cost an API call each, so the engine loads only the ones a config
- * needs (see `requiredFacets`). Evaluating a condition whose facet was not loaded fails
+ * `files`, `reviews`, `pendingReviewers`, `commits`, `mergeable` and `checks`
+ * are facets that cost an API call each, so the engine loads only the ones a
+ * config needs (see `requiredFacets`). Evaluating a condition whose facet was not loaded fails
  * with `MissingFacet` rather than guessing.
  *
  * @example
@@ -112,9 +148,11 @@ export const Subject = Schema.Struct({
   pendingReviewers: Schema.optionalWith(Schema.Number, { exact: true }),
   commits: Schema.optionalWith(Schema.Array(Commit), { exact: true }),
   mergeable: Schema.optionalWith(Mergeable, { exact: true }),
+  /** The CI checks on the head commit. */
+  checks: Schema.optionalWith(Schema.Array(Check), { exact: true }),
 })
 /** A decoded {@link Subject}. */
 export type Subject = typeof Subject.Type
 
 /** A subject property that is loaded on demand. */
-export type Facet = 'files' | 'reviews' | 'pendingReviewers' | 'commits' | 'mergeable'
+export type Facet = 'files' | 'reviews' | 'pendingReviewers' | 'commits' | 'mergeable' | 'checks'

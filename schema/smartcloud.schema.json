@@ -237,6 +237,12 @@
               "$ref": "#/$defs/hasConflict"
             },
             {
+              "$ref": "#/$defs/checksPass"
+            },
+            {
+              "$ref": "#/$defs/checkStatus"
+            },
+            {
               "$ref": "#/$defs/hasLabel"
             },
             {
@@ -498,6 +504,71 @@
       },
       "additionalProperties": false,
       "description": "The pull request conflicts with its base branch, or does not when false. Unknown mergeability counts as not conflicting."
+    },
+    "checksPass": {
+      "type": "object",
+      "required": [
+        "type",
+        "checks",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "checksPass"
+          ]
+        },
+        "checks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "description": "A check run name or commit status context, matched exactly.",
+            "title": "nonEmptyString",
+            "minLength": 1
+          },
+          "description": "Check run names or commit status contexts, matched exactly."
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "Every named check succeeded, or at least one has not when false. A check that has not reported yet has not succeeded."
+    },
+    "checkStatus": {
+      "type": "object",
+      "required": [
+        "type",
+        "check",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "checkStatus"
+          ]
+        },
+        "check": {
+          "type": "string",
+          "description": "A check run name or commit status context, matched exactly.",
+          "title": "nonEmptyString",
+          "minLength": 1
+        },
+        "condition": {
+          "type": "string",
+          "enum": [
+            "success",
+            "failure",
+            "pending"
+          ],
+          "description": "success, failure or pending; a check that has not reported yet is pending."
+        }
+      },
+      "additionalProperties": false,
+      "description": "The named check is in this state. A check that has not reported yet is pending."
     },
     "hasLabel": {
       "type": "object",

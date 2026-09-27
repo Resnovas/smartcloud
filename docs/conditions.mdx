@@ -48,6 +48,8 @@ Conditions that match text take a pattern: a regular expression written either b
 | `commitsSignedOff` | `condition`: boolean | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`). |
 | `hasTrailer` | `trailer`: key, optional `condition`: pattern, optional `scope` | Commits carry the trailer, with a value matching the pattern when one is given. |
 | `hasConflict` | `condition`: boolean | The pull request conflicts with its base branch (`true`), or does not (`false`). |
+| `checksPass` | `checks`: list of check names, `condition`: boolean | Every named check succeeded (`true`), or at least one has not (`false`). |
+| `checkStatus` | `check`: check name, `condition`: `success`, `failure` or `pending` | The named check is in that state. |
 
 Activity is GitHub's `updated_at` time for the issue or pull request.
 
@@ -63,7 +65,7 @@ Reviews count each reviewer's latest decisive review: comments and pending revie
 
 ### Pull request only conditions
 
-`branchMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer` and `hasConflict` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass` and `checkStatus` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 
@@ -97,7 +99,41 @@ labelling:
 
 Like every labelling rule, it is evaluated when the pull request gets one of the events your workflow runs on, such as a push to its branch, an edit, reopening it or a review. A push to the base branch can create a conflict without any pull request event, and `push` and `schedule` runs do not evaluate labelling rules yet, so the label follows on the pull request's next event.
 
-Conditions that need a pull request's files, reviews, commits or mergeability cost an API call each. smartcloud loads only the ones the configured rules use.
+### CI checks
+
+`checksPass` and `checkStatus` read the CI checks on the pull request's head commit: check runs, such as GitHub Actions jobs, and commit statuses, which older CI services post, under their context name. A check is named exactly as GitHub shows it in the pull request's checks list, for example `test (ubuntu-latest)`; names are not patterns and compare with case.
+
+- A check is `success` when it passed, or finished as neutral or skipped. It is `failure` when it finished any other way: failed, cancelled, timed out or needing action. Until it finishes it is `pending`.
+- A named check that has not reported yet is `pending`, so `checksPass` does not pass until every named check has run.
+- When a name is reported more than once, for example by a workflow that runs on both `push` and `pull_request`, the worst state counts: `failure`, then `pending`, then `success`. A re-run replaces the run it repeats, so a passing re-run clears an earlier failure.
+
+```yaml
+labelling:
+  ready:
+    label: "Status: Ready to merge"
+    on: [pullRequest]
+    when:
+      condition:
+        - type: checksPass
+          checks: [build, test]
+          condition: true
+        - type: isApproved
+          condition: 1
+  failing:
+    label: "Status: CI failing"
+    on: [pullRequest]
+    when:
+      condition:
+        - type: checkStatus
+          check: test
+          condition: failure
+```
+
+Do not name smartcloud's own check runs: they are still running while smartcloud evaluates the rule, so they are always `pending`.
+
+Reading commit statuses needs the `statuses: read` permission in your workflow, as well as `checks`; without it, the rules that use these conditions fail with a permissions error. A check that finishes does not start a smartcloud run by itself, so, as with `hasConflict`, the result follows on the pull request's next event.
+
+Conditions that need a pull request's files, reviews, commits, mergeability or checks cost an API call each. smartcloud loads only the ones the configured rules use.
 
 ## Combinators
 
