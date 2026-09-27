@@ -14,7 +14,8 @@
       "{workspaceRoot}/.prettierrc",
       "{workspaceRoot}/.editorconfig",
       "{workspaceRoot}/vitest.shared.ts",
-      "{workspaceRoot}/vitest.setup.ts"
+      "{workspaceRoot}/vitest.setup.ts",
+      "{workspaceRoot}/tools/ci/flaky-tests.ts"
     ]
   },
   "plugins": [
