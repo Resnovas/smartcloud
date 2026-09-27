@@ -685,6 +685,62 @@ describe('evaluate: facets', () => {
     }),
   )
 
+  it.effect('codeownersTouched needs the files and CODEOWNERS facets', () =>
+    Effect.gen(function* () {
+      const condition = { condition: [{ type: 'codeownersTouched', condition: '@org/core' }] } as const
+      const { codeowners: _, ...unread } = pullRequest({ codeowners: '' })
+      expect(yield* Effect.exit(evaluate(condition, unread))).toStrictEqual(
+        Exit.fail(new MissingFacet({ facet: 'codeowners', condition: 'codeownersTouched' })),
+      )
+      const { files: __, ...unlisted } = pullRequest({ codeowners: '' })
+      expect(yield* Effect.exit(evaluate(condition, unlisted))).toStrictEqual(
+        Exit.fail(new MissingFacet({ facet: 'files', condition: 'codeownersTouched' })),
+      )
+    }),
+  )
+
+  it.effect('codeownersTouched passes when a changed file is owned by the owner, in any case', () =>
+    Effect.gen(function* () {
+      const codeowners = '* @org/core\n/docs/ @org/docs @Jane\n/docs/legal/ # unowned\n'
+      const touched = (owner: string, files: ReadonlyArray<string>) =>
+        Effect.map(
+          evaluate(
+            { condition: [{ type: 'codeownersTouched', condition: owner }] },
+            pullRequest({ codeowners, files }),
+          ),
+          (evaluation) => evaluation.results[0],
+        )
+      expect(yield* touched('@org/docs', ['src/a.ts', 'docs/a.md', 'docs/b.md'])).toMatchObject({
+        passed: true,
+        detail: '2 changed file(s) owned by @org/docs',
+      })
+      expect(yield* touched('@jane', ['docs/a.md'])).toMatchObject({ passed: true })
+      expect(yield* touched('@ORG/CORE', ['src/a.ts'])).toMatchObject({ passed: true })
+      // The last matching rule wins, so docs belong to the docs team alone.
+      expect(yield* touched('@org/core', ['docs/a.md'])).toMatchObject({
+        passed: false,
+        detail: 'no changed file owned by @org/core',
+      })
+      // A rule without owners leaves its files unowned.
+      expect(yield* touched('@org/docs', ['docs/legal/terms.md'])).toMatchObject({ passed: false })
+      expect(
+        yield* Effect.map(
+          evaluate(
+            { condition: [{ type: 'codeownersTouched', condition: '@org/core' }] },
+            pullRequest({ codeowners: '# nothing here\n' }),
+          ),
+          (evaluation) => evaluation.results[0],
+        ),
+      ).toMatchObject({ passed: false, detail: 'no CODEOWNERS rules' })
+      expect(
+        yield* Effect.map(
+          evaluate({ condition: [{ type: 'codeownersTouched', condition: '@org/core' }] }, issue()),
+          (evaluation) => evaluation.results[0]?.detail,
+        ),
+      ).toBe('only applies to pull requests')
+    }),
+  )
+
   it.effect('explains the mergeable state', () =>
     Effect.gen(function* () {
       const detail = (mergeable: Subject['mergeable']) =>
@@ -855,6 +911,11 @@ describe('requiredFacets', () => {
   it('needs requested reviewers and reviews for reviewerMatches', () => {
     const facets = requiredFacets([{ condition: [{ type: 'reviewerMatches', condition: 'x' }] }])
     expect([...facets].sort()).toStrictEqual(['requestedReviewers', 'reviews'])
+  })
+
+  it('needs the files and CODEOWNERS for codeownersTouched', () => {
+    const facets = requiredFacets([{ condition: [{ type: 'codeownersTouched', condition: '@org/core' }] }])
+    expect([...facets].sort()).toStrictEqual(['codeowners', 'files'])
   })
 
   it('needs nothing for conditions on the event payload alone', () => {

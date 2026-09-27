@@ -48,6 +48,7 @@ Conditions that match text take a pattern: a regular expression written either b
 | `isStale`             | `condition`: days                                                   | There has been no activity for at least this many days.                                                                                                |
 | `isAbandoned`         | `condition`: days, `label`: name                                    | The subject carries `label` and has had no activity for at least this many days.                                                                       |
 | `filesMatch`          | `condition`: glob                                                   | At least one changed file matches.                                                                                                                     |
+| `codeownersTouched`   | `condition`: owner                                                  | At least one changed file is owned, in CODEOWNERS, by the owner: `@org/team`, `@user` or an email.                                                     |
 | `changesSize`         | `min`, optional `max`: lines                                        | Lines added plus deleted are at least `min` and below `max`.                                                                                           |
 | `pendingReview`       | `condition`: boolean                                                | Some requested reviewers have not reviewed yet (`true`), or none are pending (`false`).                                                                |
 | `requestedChanges`    | `condition`: boolean                                                | A reviewer's latest review requests changes (`true`), or none does (`false`).                                                                          |
@@ -142,7 +143,7 @@ A Linear key is a team key, a dash and a number. List your teams in `keys` to co
 
 ### Pull request only conditions
 
-`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus` and `linksIssue` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass`, `checkStatus`, `linksIssue` and `codeownersTouched` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 
@@ -210,7 +211,29 @@ Do not name smartcloud's own check runs: they are still running while smartcloud
 
 Reading commit statuses needs the `statuses: read` permission in your workflow, as well as `checks`; without it, the rules that use these conditions fail with a permissions error. A check that finishes does not start a smartcloud run by itself, so, as with `hasConflict`, the result follows on the pull request's next event.
 
-Conditions that need a pull request's files, reviews, commits, mergeability or checks cost an API call each. smartcloud loads only the ones the configured rules use.
+### Code owners
+
+`codeownersTouched` passes when the pull request changes a file that your CODEOWNERS file assigns to the owner you name: a team such as `@resnovas/security`, a user such as `@jane`, or an email. It reads CODEOWNERS the way GitHub does:
+
+- From the pull request's base branch, the first of `.github/CODEOWNERS`, `CODEOWNERS` and `docs/CODEOWNERS` that exists. A repository without one owns nothing, so the condition fails.
+- A file's owners are those of the last rule that matches it, so a later rule replaces an earlier one rather than adding to it, and a rule with no owners leaves its files unowned.
+- Patterns follow gitignore syntax. As on GitHub, a line that uses `!` negation, `[ ]` ranges or a `\#` escape is skipped. A backslash escapes a space in a path, as in `docs/My\ Files/`. A pattern with a slash before its end, such as `/docs/` or `docs/github`, is anchored at the repository root; otherwise it matches at any depth. A pattern naming a directory also covers everything inside it, except one ending in `/*`, such as `docs/*`, which covers only the files directly in that directory.
+- Owners compare in any case.
+
+```yaml
+labelling:
+  security:
+    label: 'Area: Security'
+    on: [pullRequest]
+    when:
+      condition:
+        - type: codeownersTouched
+          condition: '@resnovas/security'
+```
+
+It needs the changed files and CODEOWNERS, two API calls, both covered by `contents: read`. In a stale sweep's `exempt.when`, the listing has no base branch, so CODEOWNERS is read from the default branch.
+
+Conditions that need a pull request's files, reviews, commits, mergeability, checks or CODEOWNERS cost an API call each. smartcloud loads only the ones the configured rules use.
 
 ## Combinators
 

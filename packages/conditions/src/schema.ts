@@ -262,6 +262,35 @@ export const LinksIssue = Schema.Struct({
 })
 
 /**
+ * The pull request changes a file that CODEOWNERS assigns to an owner: a
+ * team such as `@org/team`, a user such as `@jane`, or an email.
+ *
+ * @remarks
+ * A file's owners are those of the last CODEOWNERS rule matching it, as on
+ * GitHub, read from `.github/CODEOWNERS`, `CODEOWNERS` or `docs/CODEOWNERS`
+ * on the base branch, the first that exists. Owners compare in any case. A
+ * repository without a CODEOWNERS file owns nothing, so the condition fails.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CodeownersTouched"
+ * import { CodeownersTouched } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CodeownersTouched)({ type: 'codeownersTouched', condition: '@resnovas/security' }) // => true
+ * Schema.is(CodeownersTouched)({ type: 'codeownersTouched', condition: 'security' }) // => false
+ * ```
+ */
+export const CodeownersTouched = Schema.Struct({
+  type: Schema.Literal('codeownersTouched'),
+  condition: Schema.String.pipe(Schema.pattern(/^(?:@[A-Za-z0-9][\w.-]*(?:\/[\w.-]+)?|[^\s@]+@[^\s@]+)$/)).annotations({
+    description: 'A CODEOWNERS owner: @org/team, @user or an email.',
+  }),
+}).annotations({
+  identifier: 'codeownersTouched',
+  description: 'At least one changed file is owned by this owner in CODEOWNERS.',
+})
+
+/**
  * The subject is open (true) or closed (false).
  *
  * @example
@@ -601,6 +630,7 @@ const Leaf = Schema.Union(
   IsStale,
   IsAbandoned,
   FilesMatch,
+  CodeownersTouched,
   ChangesSize,
   IsApproved,
   CommitMessagesMatch,

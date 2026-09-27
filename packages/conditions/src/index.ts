@@ -14,6 +14,8 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
+export { codeownersOf, parseCodeowners } from './codeowners.js'
+export type { CodeownersRule } from './codeowners.js'
 export { compilePattern, Pattern } from './pattern.js'
 export {
   AssigneeMatches,
@@ -23,6 +25,7 @@ export {
   ChangesSize,
   CheckStatus,
   ChecksPass,
+  CodeownersTouched,
   CommitMessagesMatch,
   CommitsSignedOff,
   Condition,
