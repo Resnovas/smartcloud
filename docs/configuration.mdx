@@ -28,7 +28,7 @@ The [configuration reference](/reference/configuration) lists every key.
 A run never fails because a key is unknown or a value is invalid, in your config or in any preset it extends. smartcloud drops it, warns, and runs with the rest, so a preset written for a newer smartcloud, such as one with a `settings` section this version does not know yet, keeps working with an older action. Each warning names the file and the key, for example:
 
 ```text
-Resnovas/.github/smartcloud/house.yml@main: ignored settings.actions, because settings.actions is unexpected, expected: "merging" | "features" | "security" | "ruleset" | "environments"
+Resnovas/.github/smartcloud/house.yml@main: ignored settings.codespaces, because settings.codespaces is unexpected, expected: "merging" | "features" | …
 ```
 
 What is dropped:

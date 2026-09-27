@@ -94,10 +94,10 @@ describe('validate', () => {
     Effect.gen(function* () {
       const file = join(dir, 'strict.yml')
       yield* Effect.promise(() => writeFile(file, 'version: 2\nextends: [Resnovas/.github/smartcloud.yml@main]\n'))
-      const preset = { [fileKey('Resnovas', '.github', 'smartcloud.yml', 'main')]: 'version: 2\nsettings: { actions: { enabled: true } }\n' }
+      const preset = { [fileKey('Resnovas', '.github', 'smartcloud.yml', 'main')]: 'version: 2\nsettings: { codespaces: { enabled: true } }\n' }
       const error = yield* Effect.flip(validate(file).pipe(Effect.provide(memorySource(preset))))
       expect(error._tag).toBe('ConfigDecodeError')
-      expect(error.message).toContain('actions')
+      expect(error.message).toContain('codespaces')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })
