@@ -45,6 +45,8 @@ export {
 export type { ResolveOptions, ResolvedConfig } from './load.js'
 export {
   AutomaticApprove,
+  BranchName,
+  Branches,
   Commits,
   Disclosure,
   Freeze,

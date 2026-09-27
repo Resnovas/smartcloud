@@ -15,6 +15,7 @@
  */
 
 import type { SmartcloudConfig } from '@resnovas/config'
+import { BRANCH_RULE, describeBranches } from '@resnovas/feature.branches'
 import { policyBase } from '@resnovas/feature.commits'
 import { presetDescription } from '@resnovas/feature.conventions'
 import { Data, Effect } from 'effect'
@@ -107,7 +108,8 @@ const NOTICE_FEATURES: ReadonlyArray<string> = [
  * @remarks
  * Policy rules come from a fixed catalogue linked under `links.policyBase`.
  * A `conventions.<id>` rule is read from the config, so its explanation is
- * the rule's own message or its preset's description. Any other id with a
+ * the rule's own message or its preset's description, and `branches.name`
+ * from the `branches` section's accepted names. Any other id with a
  * feature prefix, such as `stale.sweep`, is an operational notice from that
  * feature.
  *
@@ -146,6 +148,14 @@ const explain = (rule: string, config: SmartcloudConfig): RuleExplanation | unde
       rule,
       summary: `The ${id} convention of this repository's config.`,
       fix: expected ?? 'Change the title or description so the conditions under its when section pass.',
+    }
+  }
+  if (rule === BRANCH_RULE && config.branches !== undefined) {
+    return {
+      rule,
+      summary:
+        "The branch naming policy of this repository's config: a pull request's head branch matches one of the accepted names.",
+      fix: describeBranches(config.branches),
     }
   }
   if (NOTICE_FEATURES.includes(feature) && id !== '') {

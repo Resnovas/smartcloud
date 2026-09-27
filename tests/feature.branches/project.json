@@ -1,0 +1,7 @@
+{
+  "name": "@resnovas/feature.branches-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tests/feature.branches/src",
+  "tags": ["type_test", "layer_backend"]
+}

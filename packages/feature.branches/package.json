@@ -1,0 +1,23 @@
+{
+  "name": "@resnovas/feature.branches",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The branches feature: a branch naming policy for pull requests.",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@resnovas/conditions": "workspace:*",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1"
+  }
+}

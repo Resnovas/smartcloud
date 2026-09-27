@@ -16,6 +16,7 @@
 
 import type { SmartcloudConfig } from '@resnovas/config'
 import type { Feature } from '@resnovas/engine'
+import { branchesFeature } from '@resnovas/feature.branches'
 import { commitsFeature } from '@resnovas/feature.commits'
 import { conventions } from '@resnovas/feature.conventions'
 import { disclosureFeature } from '@resnovas/feature.disclosure'
@@ -49,6 +50,7 @@ export const FEATURES: ReadonlyArray<Feature> = [
   syncFeature,
   requiredFeature,
   freezeFeature,
+  branchesFeature,
 ]
 
 /** A top-level config section a feature can read. */
@@ -73,6 +75,7 @@ export const FEATURE_SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = 
   ['sync', ['sync']],
   ['required', ['required']],
   ['freeze', ['freeze']],
+  ['branches', ['branches']],
 ])
 
 /**

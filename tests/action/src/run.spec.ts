@@ -172,6 +172,7 @@ describe('runAction', () => {
         'sync',
         'required',
         'freeze',
+        'branches',
       ])
     }),
   )

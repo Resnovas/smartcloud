@@ -17,6 +17,8 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Either, Schema } from 'effect'
 import {
+  BranchName,
+  Branches,
   Freeze,
   FreezeWindow,
   parseConfig,
@@ -237,4 +239,36 @@ describe('Freeze', () => {
       expect(error._tag).toBe('ConfigDecodeError')
     }),
   )
+})
+
+describe('Branches', () => {
+  const problem = (name: unknown) =>
+    Either.match(Schema.decodeUnknownEither(BranchName)(name), { onLeft: (error) => error.message, onRight: () => '' })
+
+  it('needs a preset or a pattern, with prefixes and keys only on their presets', () => {
+    const is = Schema.is(BranchName)
+    expect(is({ preset: 'prefixed', pattern: '^[a-z]' })).toBe(true)
+    expect(is({ preset: 'issueKey', keys: ['SMC', 'ops2'] })).toBe(true)
+    expect(is({ preset: 'issueKey', keys: ['2SMC'] })).toBe(false)
+    expect(is({ preset: 'prefixed', prefixes: [''] })).toBe(false)
+    expect(is({ pattern: '(unclosed' })).toBe(false)
+    expect(problem({})).toContain('a branch name needs a preset or a pattern')
+    expect(problem({ preset: 'issueKey', prefixes: ['feat'] })).toContain('prefixes go with the prefixed preset')
+    expect(problem({ preset: 'prefixed', keys: ['SMC'] })).toContain('keys with issueKey')
+  })
+
+  it('is a section of the config, with names by key and exemptions', () => {
+    expect(Schema.is(Branches)({})).toBe(true)
+    const config = {
+      version: 2,
+      branches: {
+        names: { person: { preset: 'prefixed' }, issue: { preset: 'issueKey', keys: ['SMC'] } },
+        level: 'warning',
+        message: 'Name the branch <you>/<what>.',
+        exempt: { branches: ['^dependabot/'], authors: ['renovate[bot]'] },
+      },
+    }
+    expect(Schema.is(SmartcloudConfig)(config)).toBe(true)
+    expect(Schema.is(SmartcloudConfig)({ version: 2, branches: { level: 'fatal' } })).toBe(false)
+  })
 })

@@ -60,5 +60,10 @@ describe('JSON Schema', () => {
     ])
     expect(at('$defs', 'ConventionRule', 'additionalProperties')).toBe(false)
     expect(at('$defs', 'RuleId', 'not')).toStrictEqual({ const: '__proto__' })
+    expect(at('$defs', 'BranchName', 'allOf')).toStrictEqual([
+      { anyOf: [{ required: ['preset'] }, { required: ['pattern'] }] },
+      { if: { required: ['prefixes'] }, then: { required: ['preset'], properties: { preset: { const: 'prefixed' } } } },
+      { if: { required: ['keys'] }, then: { required: ['preset'], properties: { preset: { const: 'issueKey' } } } },
+    ])
   })
 })
