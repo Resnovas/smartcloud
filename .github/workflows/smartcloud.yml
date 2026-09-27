@@ -46,6 +46,8 @@ jobs:
     name: smartcloud
     if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
+    # Above the aggregate check's 60-minute wait for the other checks (required.timeout).
+    timeout-minutes: 75
     # Without the app's credentials, as in a repository outside the
     # organisation, the mint is skipped rather than attempted with empty inputs.
     env:

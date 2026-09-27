@@ -59,6 +59,7 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     # Releases come only from main.
     if: github.ref == 'refs/heads/main'
     permissions:
@@ -144,6 +145,7 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
     outputs:
@@ -177,6 +179,7 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     # Every write goes through the app's token.
     permissions: {}
     steps:
@@ -258,6 +261,7 @@ jobs:
     needs: release
     if: needs.release.outputs.released == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     permissions:
       contents: read
       id-token: write
@@ -351,6 +355,7 @@ jobs:
   publish-release:
     needs: [draft-release, attest]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: write
     steps:

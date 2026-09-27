@@ -92,6 +92,7 @@ Each capability is a feature with its own section in the config. A feature whose
     jobs:
       smartcloud:
         runs-on: ubuntu-latest
+        timeout-minutes: 75
         permissions:
           contents: write
           pull-requests: write
@@ -114,7 +115,7 @@ Each capability is a feature with its own section in the config. A feature whose
 | `issues: write`        | Labels, stale comments and the report comment on issues. Repository labels are managed through this permission too.                                  |
 | `statuses: read`       | For the [required](/features/required) feature, and when a rule uses `checksPass` or `checkStatus`: they read commit statuses as well as check runs. |
 
-Grant these on the job and leave the workflow's `permissions` empty, so a job added later starts with no access. The settings feature changes repository administration settings, which the workflow token cannot do. See [Settings](/features/settings).
+Grant these on the job and leave the workflow's `permissions` empty, so a job added later starts with no access. `timeout-minutes` stops a hung run long before GitHub's six-hour default, and leaves room for the aggregate check, which waits up to `required.timeout` (60 minutes by default) for the other checks. The settings feature changes repository administration settings, which the workflow token cannot do. See [Settings](/features/settings).
 
 <Note>
   A run with only the workflow token is restricted rather than failed: smartcloud skips settings, sync, private presets
