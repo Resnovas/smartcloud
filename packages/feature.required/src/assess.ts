@@ -39,6 +39,8 @@ export interface Assessment {
   readonly failed: ReadonlyArray<CommitCheck>
   /** Whether the job's own check run was listed; until it is, other runs of the aggregate cannot be told apart. */
   readonly selfListed: boolean
+  /** The `expect` patterns no counted check matches yet. */
+  readonly missing: ReadonlyArray<string>
 }
 
 // A check run is identified as a ruleset identifies a required check: by the
@@ -124,6 +126,8 @@ export const assessChecks = (
     readonly ignore: ReadonlyArray<string>
     /** Apps smartcloud publishes its feature checks as, beyond the job's own, such as the GitHub App whose token the run used. */
     readonly publishers?: ReadonlyArray<string> | undefined
+    /** Patterns a counted check must match; one no check matches is missing. */
+    readonly expect?: ReadonlyArray<string> | undefined
   },
 ): Assessment => {
   const ignored = options.ignore.map(compilePattern)
@@ -158,5 +162,12 @@ export const assessChecks = (
     pending: counted.filter((check) => check.state === 'pending'),
     failed: counted.filter((check) => check.state === 'failure'),
     selfListed: own !== undefined,
+    missing: (options.expect ?? []).filter((source) => {
+      const pattern = compilePattern(source)
+      return !counted.some((check) => {
+        pattern.lastIndex = 0
+        return pattern.test(check.name)
+      })
+    }),
   }
 }

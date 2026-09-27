@@ -189,6 +189,28 @@ describe('requiredFeature', () => {
     }),
   )
 
+  it.effect('waits for an expected check and fails when it never appears', () =>
+    Effect.gen(function* () {
+      const late = yield* runPolling(
+        scripted([[check('lint', 'success')], [check('lint', 'success'), check('check', 'success')]]),
+        { version: 2, required: { expect: ['^check$'] } },
+      )
+      expect(findings(late).map((finding) => finding.rule)).toStrictEqual(['required.passed'])
+      const never = yield* runPolling(scripted([[check('lint', 'success')]]), {
+        version: 2,
+        required: { expect: ['^check$'], timeout: 1 },
+      })
+      expect(findings(never)).toStrictEqual([
+        {
+          rule: 'required.missing',
+          level: 'error',
+          message: 'No check matching ^check$ passed on this commit within 1 minute(s); required.expect needs one.',
+          link: undefined,
+        },
+      ])
+    }),
+  )
+
   it.effect('waits for pending checks, and for a check that appears after the rest settled', () =>
     Effect.gen(function* () {
       const github = scripted([

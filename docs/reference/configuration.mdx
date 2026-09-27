@@ -232,6 +232,7 @@ One aggregate check that passes only when every other check on the pull request 
 | Key | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `ignore` | list of [Pattern](#pattern) | no | Checks that do not count towards the aggregate, as patterns matched against each check run name or status context, for example ^codecov/. |
+| `expect` | list of [Pattern](#pattern) | no | Checks that must appear on the head commit and pass, as patterns matched against each check run name or status context, for example ^check$. One that has not appeared by the timeout fails the aggregate, so a deleted or renamed CI job cannot pass unnoticed. |
 | `timeout` | [Int](#int) | no | Minutes to wait for the other checks to finish before failing, from 1 to 360 (the longest an Actions job may run). Defaults to 60. Minimum: 1. |
 
 Other keys are an error.

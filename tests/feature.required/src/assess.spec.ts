@@ -163,6 +163,17 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
     expect(assessment.counted).toStrictEqual([])
   })
 
+  it('names each expect pattern no counted check matches', () => {
+    const assessment = assessChecks(
+      [
+        { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' },
+        { name: 'check', source: 'checkRun', id: 2, app: actions, state: 'success', detail: 'success' },
+      ],
+      { checkRunId: 1, ignore: [], expect: ['^check$', '^e2e/', '/g'] },
+    )
+    expect(assessment.missing).toStrictEqual(['^e2e/', '/g'])
+  })
+
   it('counts an unmarked smartcloud-named run, because only marked runs are smartcloud’s own', () => {
     const assessment = assessChecks(
       [

@@ -203,6 +203,12 @@ export const runFeatures = (options: {
   readonly turnedOff?: ReadonlyMap<string, string>
   /** The check run of the Actions job running smartcloud, passed on to the features. */
   readonly checkRunId?: number | undefined
+  /**
+   * Whether a feature that needs the job's check run fails the run without
+   * one, as in an Actions job whose workflow does not pass it, rather than
+   * being skipped, as in a CLI dry run.
+   */
+  readonly checkRunRequired?: boolean | undefined
 }): Effect.Effect<RunResult, EventDecodeError, GitHub> =>
   Effect.gen(function* () {
     const envelope = yield* decodeEvent(options.event, options.payload)
@@ -214,6 +220,7 @@ export const runFeatures = (options: {
     }
 
     const skipped: Array<{ feature: string; reason: string }> = []
+    const missingCheckRun: Array<string> = []
     const applicable = options.features.filter((feature) => {
       const turnedOff = options.turnedOff?.get(feature.name)
       if (turnedOff !== undefined) {
@@ -230,10 +237,20 @@ export const runFeatures = (options: {
       }
       if (feature.needsCheckRun === true && options.checkRunId === undefined) {
         skipped.push({ feature: feature.name, reason: 'runs only in a job that passes checkRunId' })
+        if (options.checkRunRequired === true) missingCheckRun.push(feature.name)
         return false
       }
       return true
     })
+    // A configured feature the workflow cannot run fails closed, so its check never passes unchecked.
+    for (const feature of missingCheckRun) {
+      yield* report.add({
+        feature,
+        rule: `${feature}.check-run-missing`,
+        level: 'error',
+        message: `${feature} is configured but the workflow does not pass checkRunId: \${{ job.check_run_id }}, so it could not run. Update the workflow.`,
+      })
+    }
     for (const skip of skipped) yield* Effect.logDebug(`${skip.feature}: skipped, ${skip.reason}`).pipe(Effect.annotateLogs({ feature: skip.feature }))
 
     const needs = (feature: Feature) => feature.facets?.(options.config) ?? new Set<Facet>()
