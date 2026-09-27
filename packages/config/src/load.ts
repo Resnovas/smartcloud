@@ -238,9 +238,10 @@ const parseLayer = (text: string, source: string) =>
 // section that fails only for keys it is missing, which a skipped preset may
 // have set, and names them. A convention rule with neither preset nor when is
 // missing keys too: it tweaks a rule the skipped preset defined. Any other failure, such as an unknown key or a
-// malformed value, is kept, so it still fails the config.
+// malformed value, is kept, so it still fails the config. Kept sections are
+// collected in a Map, so a key such as `__proto__` stays data and still fails.
 const decodeSections = (value: Readonly<Record<string, Json>>) => {
-  const kept: Record<string, Json> = {}
+  const kept = new Map<string, Json>()
   const dropped: Array<string> = []
   for (const [key, section] of Object.entries(value)) {
     const decoded = decodeV2({ version: 2, [key]: section })
@@ -251,9 +252,9 @@ const decodeSections = (value: Readonly<Record<string, Json>>) => {
           issue._tag === 'Missing' || (issue._tag === 'Refinement' && issue.message === conventionNeedsPresetOrWhen),
       )
     if (incomplete) dropped.push(key)
-    else kept[key] = section
+    else kept.set(key, section)
   }
-  return { kept, dropped }
+  return { kept: Object.fromEntries(kept), dropped }
 }
 
 /**

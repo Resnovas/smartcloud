@@ -270,6 +270,10 @@ describe('resolveConfig: extends and locked presets', () => {
         ),
       )
       expect(convention._tag).toBe('ConfigDecodeError')
+      const proto = yield* Effect.flip(
+        resolveConfig(local('__proto__:\n  labels: {}\n'), 'repo', skipAll).pipe(Effect.provide(presets({}))),
+      )
+      expect(proto._tag).toBe('ConfigDecodeError')
     }),
   )
 
