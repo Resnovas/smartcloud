@@ -132,7 +132,8 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
       ],
       { checkRunId: 1, ignore: [] },
     )
-    expect(assessment.counted.map((check) => check.id)).toStrictEqual([3, 4])
+    // The newer marked run 9 is the latest of that app and name, so the older run 4 is replaced.
+    expect(assessment.counted.map((check) => check.id)).toStrictEqual([3])
     expect(assessment.selfListed).toBe(true)
   })
 
@@ -148,6 +149,18 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
       { checkRunId: 1, ignore: [], publishers: ['resnovas-smartcloud'] },
     )
     expect(assessment.counted.map((check) => check.id)).toStrictEqual([3, 4, 5])
+  })
+
+  it('lets a newer marked smartcloud run replace an older unmarked one of the same app and name', () => {
+    const assessment = assessChecks(
+      [
+        { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' },
+        { name: 'smartcloud / reviews', source: 'checkRun', id: 3, app: actions, state: 'failure', detail: 'cancelled' },
+        { name: 'smartcloud / reviews', source: 'checkRun', id: 7, app: actions, externalId: CHECK_RUN_EXTERNAL_ID, state: 'success', detail: 'success' },
+      ],
+      { checkRunId: 1, ignore: [] },
+    )
+    expect(assessment.counted).toStrictEqual([])
   })
 
   it('counts an unmarked smartcloud-named run, because only marked runs are smartcloud’s own', () => {

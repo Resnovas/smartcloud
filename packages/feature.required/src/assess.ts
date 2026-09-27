@@ -141,8 +141,11 @@ export const assessChecks = (
     check.externalId === CHECK_RUN_EXTERNAL_ID &&
     check.app !== undefined &&
     publishers.has(check.app)
-  // Smartcloud's runs go first, so one never stands in for a same-named run another workflow published.
-  const counted = latestChecks(checks.filter((check) => !aggregate(check) && !smartcloudFeature(check))).filter(
+  // The latest run of each check is picked first, so a newer marked smartcloud
+  // run replaces an older unmarked one of the same app and name before it is left out.
+  const counted = latestChecks(checks.filter((check) => !aggregate(check)))
+    .filter((check) => !smartcloudFeature(check))
+    .filter(
     (check) =>
       !ignored.some((pattern) => {
         // A global or sticky pattern moves lastIndex after a hit, so every name starts from 0.

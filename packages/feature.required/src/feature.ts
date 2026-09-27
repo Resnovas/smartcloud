@@ -94,6 +94,9 @@ export const waitForChecks = (
       if (assessment.selfListed) {
         if (assessment.failed.length > 0 || (assessment.pending.length === 0 && names === settled)) return assessment
         settled = assessment.pending.length === 0 ? names : undefined
+      } else {
+        // Two settled looks must be consecutive, so a look without the job's own run starts over.
+        settled = undefined
       }
       // A settled commit at the deadline has passed on the one look it had.
       if ((yield* Clock.currentTimeMillis) >= deadline) return assessment

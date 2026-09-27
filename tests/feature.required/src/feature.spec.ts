@@ -176,6 +176,19 @@ describe('requiredFeature', () => {
     }),
   )
 
+  it.effect('starts the two looks over when a look misses the job’s own run', () =>
+    Effect.gen(function* () {
+      const passing = [self, check('ci / test', 'success')]
+      const looks = [passing, [check('ci / test', 'success')], passing, passing]
+      let served = 0
+      const memory = makeMemoryGitHub()
+      const service = { ...memory.service, listCommitChecks: () => Effect.sync(() => looks[Math.min(served++, looks.length - 1)] ?? []) }
+      const result = yield* runPolling({ service, looks: () => served })
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.passed'])
+      expect(served).toBe(4)
+    }),
+  )
+
   it.effect('waits for pending checks, and for a check that appears after the rest settled', () =>
     Effect.gen(function* () {
       const github = scripted([
