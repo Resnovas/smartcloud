@@ -243,6 +243,40 @@ conventions:
     ),
   )
 
+  it.effect('drops a conflicting merge queue method alone, as a warning that does not loosen policy', () =>
+    Effect.map(
+      // The preset turns linear history on; the repository's own queue merges.
+      resolve(
+        `version: 2\nextends: ['${HOUSE}']\nsettings:\n  ruleset: { mergeQueue: { method: merge, grouping: headGreen } }\n`,
+        { [HOUSE]: 'version: 2\nsettings:\n  ruleset: { linearHistory: true }\n' },
+      ),
+      ({ config, ignored, loosened }) => {
+        expect(config.settings?.ruleset).toStrictEqual({ linearHistory: true, mergeQueue: { grouping: 'headGreen' } })
+        expect(ignored).toStrictEqual([
+          expect.stringMatching(
+            /: ignored settings\.ruleset\.mergeQueue\.method, because settings\.ruleset\.mergeQueue\.method: the merge queue cannot use merge while linearHistory is on/,
+          ),
+        ])
+        expect(loosened).toBeUndefined()
+      },
+    ),
+  )
+
+  it.effect('fails a strict config whose merge queue method conflicts', () =>
+    Effect.map(
+      Effect.flip(
+        resolveConfig(
+          'version: 2\nsettings:\n  ruleset: { mergeQueue: { method: rebase }, pullRequest: { mergeMethods: [squash] } }\n',
+          'smartcloud.yml',
+          { strict: true },
+        ).pipe(Effect.provide(presets({}))),
+      ),
+      (error) => {
+        expect(error.message).toContain('the merge queue method rebase is not one of pullRequest.mergeMethods (squash)')
+      },
+    ),
+  )
+
   it.effect('leaves loosened out when nothing that tightens policy was dropped', () =>
     Effect.map(resolve('version: 2\nroles: { admins: [b] }\n'), ({ ignored, loosened }) => {
       expect(ignored).toHaveLength(1)

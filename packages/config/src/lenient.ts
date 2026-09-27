@@ -162,10 +162,16 @@ const RESTRICTIONS: ReadonlyArray<Path> = [
 
 const within = (inner: Path, outer: Path): boolean => outer.every((key, index) => inner[index] === key)
 
+// Paths inside a restriction whose value has a safe fallback, so dropping it
+// does not loosen policy: a merge queue method that conflicts with the
+// ruleset falls back to one that fits it.
+const FALLBACKS: ReadonlyArray<Path> = [['settings', 'ruleset', 'mergeQueue', 'method']]
+
 /**
  * Whether dropping the value at a path could loosen policy: the path is, is
  * inside, or holds one of the settings that only tighten it, such as
- * `roles.maintainers` or `settings.ruleset`.
+ * `roles.maintainers` or `settings.ruleset`. A value with a safe fallback,
+ * `settings.ruleset.mergeQueue.method`, is not one.
  *
  * @internal
  *
@@ -173,6 +179,7 @@ const within = (inner: Path, outer: Path): boolean => outer.every((key, index) =
  * @returns True when the path touches a restriction.
  */
 export const isRestriction = (path: Path): boolean =>
+  !FALLBACKS.some((fallback) => within(path, fallback)) &&
   RESTRICTIONS.some((restriction) => within(path, restriction) || within(restriction, path))
 
 /**

@@ -274,6 +274,33 @@ preset, a cycle, and a change to a locked value. `resolveConfig(text, source,
 { strict: true })`, which `smartcloud validate` and the MCP `validate_config`
 tool use, fails on every problem instead.
 
+### Cross-field checks
+
+A rule that ties two keys together is a `Schema.filter` on the struct that
+holds both, checked on the merged config (a preset may set one key and the
+repository the other). Return `Schema.FilterIssue`s whose `path` points at the
+one key a lenient run should drop, never the whole struct: a failing filter
+without a path drops the object it sits on, which for `settings.ruleset` would
+throw away every branch protection. Give the filter `jsonSchema: {}` unless
+the rule can be written as JSON Schema too.
+
+The merge queue check (SMC-122) is the model: `mergeQueueConflicts` in
+`sections.ts` reports `settings.ruleset.mergeQueue.method` when it is `merge`
+under `linearHistory: true`, or not in `pullRequest.mergeMethods`.
+
+- `smartcloud validate` (strict) fails with the message and path.
+- A run drops only the method, with a `config.ignored` warning. The path is in
+  `FALLBACKS` in `lenient.ts`, so it is not counted as `loosened`: the planner
+  (`defaultQueueMethod` in `feature.settings/src/plan.ts`) then picks squash,
+  else the first of rebase and merge the ruleset allows.
+- `planRepositorySettings(config, resolved.ignored)` keeps the `settings.*`
+  lines of `ignored`, and `settingsPlanText` lists them under "Ignored, so not
+  applied", so `smartcloud plan settings` and the MCP `plan_settings` tool
+  show them.
+
+When the dropped value has a safe fallback like this, add its path to
+`FALLBACKS`; otherwise leave it a restriction so dropping it is an error.
+
 ### The schema
 
 `SmartcloudConfig` in `packages/config/src/schema.ts` is the single source of
@@ -405,6 +432,45 @@ const decode = Schema.decodeUnknownEither(Archive, { onExcessProperty: 'error', 
 export const example = {
   valid: decode({ afterDays: 30, label: 'archived' }),
   missingKey: decode({ label: 'archived' }),
+}
+```
+
+### A cross-field check that drops one key
+
+A filter on the struct that holds both keys, returning an issue whose path
+names the key to drop. Strict decoding reports it at that path; a lenient
+run drops only that key and warns.
+
+```ts
+import { Settings } from '@resnovas/config'
+import { Schema } from 'effect'
+
+type Method = 'squash' | 'rebase' | 'merge'
+
+// The shape `mergeQueueConflicts` in sections.ts follows.
+export const queueConflicts = (ruleset: {
+  readonly linearHistory?: boolean
+  readonly mergeQueue?: { readonly method?: Method }
+}): Array<Schema.FilterIssue> =>
+  ruleset.mergeQueue?.method === 'merge' && ruleset.linearHistory === true
+    ? [{ path: ['mergeQueue', 'method'], message: 'the merge queue cannot use merge while linearHistory is on' }]
+    : []
+
+export const Ruleset = Schema.Struct({
+  linearHistory: Schema.optionalWith(Schema.Boolean, { exact: true }),
+  mergeQueue: Schema.optionalWith(
+    Schema.Struct({ method: Schema.optionalWith(Schema.Literal('squash', 'rebase', 'merge'), { exact: true }) }),
+    { exact: true },
+  ),
+}).pipe(Schema.filter(queueConflicts, { jsonSchema: {} }))
+
+const decode = Schema.decodeUnknownEither(Settings, { errors: 'all' })
+
+export const example = {
+  // Left: ["ruleset"]["mergeQueue"]["method"] with the message.
+  conflict: decode({ ruleset: { linearHistory: true, mergeQueue: { method: 'merge' } } }),
+  // Right: leave the method out and the planner picks one that fits.
+  fits: decode({ ruleset: { linearHistory: true, mergeQueue: {} } }),
 }
 ```
 

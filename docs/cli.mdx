@@ -136,7 +136,7 @@ Prints every repository settings step the config would apply, with its request, 
 smartcloud plan settings --repo my-org/my-repo --config .github/smartcloud.yml
 ```
 
-It reads only the repository itself, so any token that can read the repository works. A config without a `settings` section prints no steps.
+It reads only the repository itself, so any token that can read the repository works. A config without a `settings` section prints no steps. When a run would ignore part of the `settings` section, such as a merge queue method that conflicts with the rest of the ruleset, the plan lists it after the steps under "Ignored, so not applied", with the reason.
 
 ## sync
 

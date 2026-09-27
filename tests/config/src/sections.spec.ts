@@ -33,6 +33,7 @@ import {
   RequestApproval,
   Required,
   REQUIRED_TIMEOUT,
+  Settings,
   SmartcloudConfig,
 } from '@resnovas/config'
 
@@ -325,6 +326,41 @@ describe('Branches', () => {
     }
     expect(Schema.is(SmartcloudConfig)(config)).toBe(true)
     expect(Schema.is(SmartcloudConfig)({ version: 2, branches: { level: 'fatal' } })).toBe(false)
+  })
+})
+
+describe('Settings merge queue method', () => {
+  const problem = (ruleset: unknown) =>
+    Either.match(Schema.decodeUnknownEither(Settings, { errors: 'all' })({ ruleset }), {
+      onLeft: (error) => error.message,
+      onRight: () => '',
+    })
+
+  it('rejects a merge queue that merges while linear history is on', () => {
+    const message = problem({ linearHistory: true, mergeQueue: { method: 'merge' } })
+    expect(message).toContain('["mergeQueue"]["method"]')
+    expect(message).toContain('the merge queue cannot use merge while linearHistory is on')
+    expect(problem({ linearHistory: false, mergeQueue: { method: 'merge' } })).toBe('')
+    expect(problem({ linearHistory: true, mergeQueue: { method: 'rebase' } })).toBe('')
+  })
+
+  it('rejects a merge queue method pull requests may not use', () => {
+    const message = problem({ mergeQueue: { method: 'rebase' }, pullRequest: { mergeMethods: ['squash', 'merge'] } })
+    expect(message).toContain('["mergeQueue"]["method"]')
+    expect(message).toContain('the merge queue method rebase is not one of pullRequest.mergeMethods (squash, merge)')
+    expect(problem({ mergeQueue: { method: 'squash' }, pullRequest: { mergeMethods: ['squash'] } })).toBe('')
+    expect(problem({ mergeQueue: { method: 'merge' }, pullRequest: {} })).toBe('')
+  })
+
+  it('reports both conflicts at once, and none for a queue without a method', () => {
+    const message = problem({
+      linearHistory: true,
+      mergeQueue: { method: 'merge' },
+      pullRequest: { mergeMethods: ['squash'] },
+    })
+    expect(message).toContain('linearHistory is on')
+    expect(message).toContain('is not one of pullRequest.mergeMethods (squash)')
+    expect(problem({ linearHistory: true, mergeQueue: {}, pullRequest: { mergeMethods: ['rebase'] } })).toBe('')
   })
 })
 

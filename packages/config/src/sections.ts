@@ -769,8 +769,49 @@ export const CodeOwners = Schema.Struct({
 /** A decoded {@link CodeOwners}. */
 export type CodeOwners = typeof CodeOwners.Type
 
+type MergeMethod = 'squash' | 'rebase' | 'merge'
+
+// A merge queue method GitHub cannot use with the rest of the ruleset: a
+// merge commit under linear history, or a method pull requests may not use.
+// Both leave every queued pull request unable to merge.
+const mergeQueueConflicts = (ruleset: {
+  readonly linearHistory?: boolean
+  readonly mergeQueue?: { readonly method?: MergeMethod }
+  readonly pullRequest?: { readonly mergeMethods?: ReadonlyArray<MergeMethod> }
+}): Array<Schema.FilterIssue> => {
+  const method = ruleset.mergeQueue?.method
+  if (method === undefined) return []
+  const path = ['mergeQueue', 'method']
+  const allowed = ruleset.pullRequest?.mergeMethods
+  return [
+    ...(method === 'merge' && ruleset.linearHistory === true
+      ? [
+          {
+            path,
+            message:
+              'the merge queue cannot use merge while linearHistory is on, because a merge commit breaks linear history; use squash or rebase',
+          },
+        ]
+      : []),
+    ...(allowed !== undefined && !allowed.includes(method)
+      ? [
+          {
+            path,
+            message: `the merge queue method ${method} is not one of pullRequest.mergeMethods (${allowed.join(', ')}); add it there or use one of them`,
+          },
+        ]
+      : []),
+  ]
+}
+
 /**
  * The repository settings baseline. Anything omitted is left as it is.
+ *
+ * @remarks
+ * A ruleset's `mergeQueue.method` must suit the rest of the ruleset: not
+ * `merge` while `linearHistory` is on, and one of `pullRequest.mergeMethods`
+ * when those are listed. Either conflict is reported at
+ * `settings.ruleset.mergeQueue.method`.
  *
  * @example
  * ```ts import.meta.vitest name="Settings"
@@ -782,6 +823,8 @@ export type CodeOwners = typeof CodeOwners.Type
  * Schema.is(Settings)({ security: { codeScanning: 'maximum' } }) // => false
  * Schema.is(Settings)({ actions: { workflowPermissions: 'read' }, collaborators: { octocat: 'write' } }) // => true
  * Schema.is(Settings)({ collaborators: { octocat: 'owner' } }) // => false
+ * Schema.is(Settings)({ ruleset: { linearHistory: true, mergeQueue: { method: 'merge' } } }) // => false
+ * Schema.is(Settings)({ ruleset: { mergeQueue: { method: 'rebase' }, pullRequest: { mergeMethods: ['squash'] } } }) // => false
  * ```
  */
 export const Settings = Schema.Struct({
@@ -893,7 +936,13 @@ export const Settings = Schema.Struct({
       copilotReview: opt(Schema.Boolean),
       /** Repository admins may bypass the ruleset. On by default. */
       adminBypass: opt(Schema.Boolean),
-    }),
+    }).pipe(
+      Schema.filter(mergeQueueConflicts, {
+        // The problem is reported at mergeQueue.method, so a lenient run
+        // drops only the method and the queue falls back to one that fits.
+        jsonSchema: {},
+      }),
+    ),
   ),
   environments: opt(
     Schema.Struct({
