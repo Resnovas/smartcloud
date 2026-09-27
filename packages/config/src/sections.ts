@@ -252,6 +252,13 @@ export const Required = Schema.Struct({
         'Checks that do not count towards the aggregate, as patterns matched against each check run name or status context, for example ^codecov/.',
     }),
   ),
+  /** Checks that must appear and pass, matched by name, as patterns. */
+  expect: opt(
+    Schema.Array(Pattern).annotations({
+      description:
+        'Checks that must appear on the head commit and pass, as patterns matched against each check run name or status context, for example ^check$. One that has not appeared by the timeout fails the aggregate, so a deleted or renamed CI job cannot pass unnoticed.',
+    }),
+  ),
   /** Minutes to wait for the other checks to finish before failing. */
   timeout: opt(
     Schema.Int.pipe(

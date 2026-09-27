@@ -66,7 +66,11 @@ const namesOf = (assessment: Assessment) =>
  */
 export const waitForChecks = (
   headSha: string,
-  options: { readonly checkRunId: number; readonly ignore: ReadonlyArray<string> },
+  options: {
+    readonly checkRunId: number
+    readonly ignore: ReadonlyArray<string>
+    readonly expect?: ReadonlyArray<string> | undefined
+  },
   deadline: number,
 ) =>
   Effect.gen(function* () {
@@ -92,8 +96,9 @@ export const waitForChecks = (
       ).pipe(Effect.annotateLogs({ feature: FEATURE, ...counts }))
       // Until the job's own run is listed, another run of the aggregate would count, so nothing is concluded from the look.
       if (assessment.selfListed) {
-        if (assessment.failed.length > 0 || (assessment.pending.length === 0 && names === settled)) return assessment
-        settled = assessment.pending.length === 0 ? names : undefined
+        const done = assessment.pending.length === 0 && assessment.missing.length === 0
+        if (assessment.failed.length > 0 || (done && names === settled)) return assessment
+        settled = done ? names : undefined
       } else {
         // Two settled looks must be consecutive, so a look without the job's own run starts over.
         settled = undefined
@@ -152,7 +157,7 @@ export const requiredFeature: Feature = {
       const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(Duration.minutes(timeout))
       const assessment = yield* waitForChecks(
         envelope.headSha,
-        { checkRunId, ignore: config.required?.ignore ?? [] },
+        { checkRunId, ignore: config.required?.ignore ?? [], expect: config.required?.expect ?? [] },
         deadline,
       )
       for (const check of assessment.failed) {
@@ -184,7 +189,15 @@ export const requiredFeature: Feature = {
           ...linked(check),
         })
       }
-      if (assessment.pending.length > 0) return
+      for (const pattern of assessment.missing) {
+        yield* report.add({
+          feature: FEATURE,
+          rule: 'required.missing',
+          level: 'error',
+          message: `No check matching ${pattern} passed on this commit within ${timeout} minute(s); required.expect needs one.`,
+        })
+      }
+      if (assessment.pending.length > 0 || assessment.missing.length > 0) return
       const count = assessment.counted.length
       yield* report.add({
         feature: FEATURE,

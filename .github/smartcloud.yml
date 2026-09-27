@@ -23,3 +23,9 @@ sync:
 settings:
   environments:
     projectType: library
+
+# The aggregate check waits for smartcloud's CI job too, so a renamed or
+# deleted CI job cannot let the aggregate pass with nothing to wait for.
+required:
+  expect:
+    - ^check$

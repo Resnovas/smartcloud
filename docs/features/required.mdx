@@ -30,12 +30,13 @@ jobs:
           checkRunId: ${{ job.check_run_id }}
 ```
 
-Then require the `smartcloud` check, and only that, in the ruleset; with the [settings](/features/settings#ruleset) feature, `requiredChecks: [smartcloud]`.
+Then require the `smartcloud` check in the ruleset; with the [settings](/features/settings#ruleset) feature, `requiredChecks: [smartcloud]`. List your main CI check under `expect` too, so a deleted or renamed CI job cannot let the aggregate pass with nothing to wait for. Until every repository does, keep that CI check required in the ruleset beside `smartcloud`, because a restricted run (a fork or Dependabot pull request) skips the private house preset and with it `required`.
 
-| Key       | Default | Meaning                                                                                                         |
-| --------- | ------- | --------------------------------------------------------------------------------------------------------------- |
-| `ignore`  | none    | Checks that do not count, as [patterns](/conditions) matched against each check run's name or status's context. |
-| `timeout` | `60`    | Minutes to wait for the other checks, from 1 to 360. Checks still running then fail the aggregate.              |
+| Key       | Default | Meaning                                                                                                                         |
+| --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| `ignore`  | none    | Checks that do not count, as [patterns](/conditions) matched against each check run's name or status's context.                 |
+| `expect`  | none    | Checks that must appear and pass, as patterns, such as `^check$`. One that has not appeared by the timeout fails the aggregate. |
+| `timeout` | `60`    | Minutes to wait for the other checks, from 1 to 360. Checks still running then fail the aggregate.                              |
 
 ## What counts
 
@@ -55,11 +56,13 @@ The feature looks at the checks every 15 seconds.
 
 - As soon as one check fails, the aggregate fails, with one error per failed check linking to it.
 - When nothing is pending, it looks once more, so a workflow queued a moment after the rest is not missed. Two looks in a row with the same checks, all passed, pass the aggregate with a notice.
+- An `expect` pattern no check matches yet keeps it waiting; one still missing after `timeout` minutes fails it (`required.missing`).
 - Checks still pending after `timeout` minutes fail it, one error each.
+- If GitHub never lists the job's own run before the timeout, it fails (`required.unconfirmed`) rather than pass unconfirmed.
 
 Every other feature runs alongside, so labels and review requests are not delayed; the report comment and the per-feature check runs are published once the wait ends. Re-run the smartcloud job after re-running a failed check.
 
-Without `checkRunId` the job would wait for itself, so the feature is skipped with that reason, as it is in CLI dry runs. Runs of the same aggregate job never wait for each other, but use one aggregate job per commit: two differently named jobs that each wait for every other check wait for each other until they time out. Give the workflow a `concurrency` group per pull request and event with `cancel-in-progress`, so a newer run replaces an older one on the same event instead of waiting beside it.
+Without `checkRunId` the job would wait for itself. In the action, a configured `required` section without it is an error (`required.check-run-missing`), so a workflow that was not updated cannot pass the aggregate unchecked; in CLI dry runs the feature is skipped. Runs of the same aggregate job never wait for each other, but use one aggregate job per commit: two differently named jobs that each wait for every other check wait for each other until they time out. Give the workflow a `concurrency` group per pull request and event with `cancel-in-progress`, so a newer run replaces an older one on the same event instead of waiting beside it.
 
 ## Tokens
 

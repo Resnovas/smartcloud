@@ -94,6 +94,8 @@ export const runEvent = (options: {
   readonly access?: Access | undefined
   /** The check run of the Actions job running smartcloud, which features reading a commit's checks leave out. */
   readonly checkRunId?: number | undefined
+  /** Whether a feature that needs the check run fails without one, as in the action, instead of being skipped. */
+  readonly checkRunRequired?: boolean | undefined
 }) =>
   Effect.flatMap(GitHub, (github) => {
     const repository = github.coordinates
@@ -109,6 +111,7 @@ export const runEvent = (options: {
         features,
         turnedOff,
         checkRunId: options.checkRunId,
+        checkRunRequired: options.checkRunRequired,
       })
       const result: RunResult = {
         ...featureRun,
