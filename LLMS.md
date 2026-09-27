@@ -285,6 +285,24 @@ conventions and sizes). Two artefacts are generated from it and checked:
 | `schema/smartcloud.schema.json` (for editors) | `SMARTCLOUD_UPDATE_SCHEMA=1 pnpm nx test @resnovas/config-tests` | `tests/config/src/json-schema.spec.ts` |
 | `docs/reference/configuration.mdx`            | `pnpm docs:reference`                                            | `pnpm docs:reference:check`            |
 
+The JSON Schema declares draft-07, where every keyword beside a `$ref` is
+ignored. `configJsonSchema` (`packages/config/src/json-schema.ts`) therefore
+rewrites Effect's output so no `$ref` has siblings: annotations (`title`,
+`description`) stay on the node and constraints move into an `allOf`, and the
+root points at `SmartcloudConfig` the same way beside `$defs`:
+
+```json
+{
+  "description": "The fewest lines added plus deleted that make a pull request Size: S. Defaults to 10.",
+  "title": "positive",
+  "allOf": [{ "$ref": "#/$defs/Int" }, { "exclusiveMinimum": 0 }]
+}
+```
+
+A spec in `json-schema.spec.ts` fails if any `$ref` gains a sibling, and
+`tools/docs/config-reference.ts` folds the wrapper back when it renders the
+reference page. Keep both in step if you change the shape.
+
 Annotate every field with a `description` (it becomes the JSON Schema and the
 reference page), and use `Schema.optionalWith(x, { exact: true })` for optional
 keys, as the `opt` helper in `sections.ts` does, because

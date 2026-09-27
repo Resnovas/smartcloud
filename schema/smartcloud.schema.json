@@ -1465,28 +1465,52 @@
           "required": [],
           "properties": {
             "s": {
-              "$ref": "#/$defs/Int",
               "description": "The fewest lines added plus deleted that make a pull request Size: S. Defaults to 10.",
               "title": "positive",
-              "exclusiveMinimum": 0
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Int"
+                },
+                {
+                  "exclusiveMinimum": 0
+                }
+              ]
             },
             "m": {
-              "$ref": "#/$defs/Int",
               "description": "The fewest lines added plus deleted that make a pull request Size: M. Defaults to 100.",
               "title": "positive",
-              "exclusiveMinimum": 0
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Int"
+                },
+                {
+                  "exclusiveMinimum": 0
+                }
+              ]
             },
             "l": {
-              "$ref": "#/$defs/Int",
               "description": "The fewest lines added plus deleted that make a pull request Size: L. Defaults to 500.",
               "title": "positive",
-              "exclusiveMinimum": 0
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Int"
+                },
+                {
+                  "exclusiveMinimum": 0
+                }
+              ]
             },
             "xl": {
-              "$ref": "#/$defs/Int",
               "description": "The fewest lines added plus deleted that make a pull request Size: XL. Defaults to 1000.",
               "title": "positive",
-              "exclusiveMinimum": 0
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Int"
+                },
+                {
+                  "exclusiveMinimum": 0
+                }
+              ]
             }
           },
           "additionalProperties": false,
@@ -1749,10 +1773,16 @@
           ]
         },
         "count": {
-          "$ref": "#/$defs/Int",
           "description": "a positive number",
           "title": "positive",
-          "exclusiveMinimum": 0
+          "allOf": [
+            {
+              "$ref": "#/$defs/Int"
+            },
+            {
+              "exclusiveMinimum": 0
+            }
+          ]
         },
         "when": {
           "$ref": "#/$defs/ConditionGroup"
@@ -1794,11 +1824,17 @@
           "description": "Checks that must appear on the head commit and pass, as patterns matched against each check run name or status context, for example ^check$. One that has not appeared by the timeout fails the aggregate, so a deleted or renamed CI job cannot pass unnoticed."
         },
         "timeout": {
-          "$ref": "#/$defs/Int",
           "description": "Minutes to wait for the other checks to finish before failing, from 1 to 360 (the longest an Actions job may run). Defaults to 60.",
           "title": "between(1, 360)",
-          "minimum": 1,
-          "maximum": 360
+          "allOf": [
+            {
+              "$ref": "#/$defs/Int"
+            },
+            {
+              "minimum": 1,
+              "maximum": 360
+            }
+          ]
         }
       },
       "additionalProperties": false,
@@ -2079,10 +2115,16 @@
           "description": "error fails the check; warning only reports. Defaults to error."
         },
         "branch": {
-          "$ref": "#/$defs/Trimmed",
           "description": "The branch generated changes are proposed from. Defaults to smartcloud/codeowners.",
           "title": "nonEmptyString",
-          "minLength": 1
+          "allOf": [
+            {
+              "$ref": "#/$defs/Trimmed"
+            },
+            {
+              "minLength": 1
+            }
+          ]
         }
       },
       "additionalProperties": false,
@@ -2401,39 +2443,69 @@
                   ]
                 },
                 "checkTimeoutMinutes": {
-                  "$ref": "#/$defs/Int",
                   "description": "a number between 1 and 360",
                   "title": "between(1, 360)",
-                  "minimum": 1,
-                  "maximum": 360
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/Int"
+                    },
+                    {
+                      "minimum": 1,
+                      "maximum": 360
+                    }
+                  ]
                 },
                 "maxEntriesToBuild": {
-                  "$ref": "#/$defs/Int",
                   "description": "a number between 0 and 100",
                   "title": "between(0, 100)",
-                  "minimum": 0,
-                  "maximum": 100
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/Int"
+                    },
+                    {
+                      "minimum": 0,
+                      "maximum": 100
+                    }
+                  ]
                 },
                 "minEntriesToMerge": {
-                  "$ref": "#/$defs/Int",
                   "description": "a number between 0 and 100",
                   "title": "between(0, 100)",
-                  "minimum": 0,
-                  "maximum": 100
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/Int"
+                    },
+                    {
+                      "minimum": 0,
+                      "maximum": 100
+                    }
+                  ]
                 },
                 "maxEntriesToMerge": {
-                  "$ref": "#/$defs/Int",
                   "description": "a number between 0 and 100",
                   "title": "between(0, 100)",
-                  "minimum": 0,
-                  "maximum": 100
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/Int"
+                    },
+                    {
+                      "minimum": 0,
+                      "maximum": 100
+                    }
+                  ]
                 },
                 "minEntriesToMergeWaitMinutes": {
-                  "$ref": "#/$defs/Int",
                   "description": "a number between 0 and 360",
                   "title": "between(0, 360)",
-                  "minimum": 0,
-                  "maximum": 360
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/Int"
+                    },
+                    {
+                      "minimum": 0,
+                      "maximum": 360
+                    }
+                  ]
                 }
               },
               "additionalProperties": false
@@ -2452,10 +2524,16 @@
               "required": [],
               "properties": {
                 "requiredApprovals": {
-                  "$ref": "#/$defs/NonNegativeInt",
                   "description": "a number less than or equal to 10",
                   "title": "lessThanOrEqualTo(10)",
-                  "maximum": 10
+                  "allOf": [
+                    {
+                      "$ref": "#/$defs/NonNegativeInt"
+                    },
+                    {
+                      "maximum": 10
+                    }
+                  ]
                 },
                 "dismissStaleReviews": {
                   "type": "boolean"
@@ -3082,11 +3160,17 @@
           "description": "Per-command changes to who may use it, by command name."
         },
         "snoozeDays": {
-          "$ref": "#/$defs/Int",
           "description": "Days /stale-snooze keeps an item from being marked stale when no number is given; 30 by default.",
           "title": "between(1, 365)",
-          "minimum": 1,
-          "maximum": 365
+          "allOf": [
+            {
+              "$ref": "#/$defs/Int"
+            },
+            {
+              "minimum": 1,
+              "maximum": 365
+            }
+          ]
         },
         "mergeMethod": {
           "type": "string",
@@ -3150,5 +3234,9 @@
       "additionalProperties": false
     }
   },
-  "$ref": "#/$defs/SmartcloudConfig"
+  "allOf": [
+    {
+      "$ref": "#/$defs/SmartcloudConfig"
+    }
+  ]
 }
