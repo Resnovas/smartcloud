@@ -34,6 +34,7 @@ describe('dry run', () => {
       expect(yield* github.createComment(1, 'hi')).toStrictEqual({ id: 0, body: 'hi', author: '', bot: true })
       yield* github.updateComment(5, 'x')
       yield* github.closeIssue(1)
+      yield* github.lockIssue(1, 'resolved')
       yield* github.createReview(7, { event: 'COMMENT', body: 'b' })
       yield* github.requestReviewers(7, ['ann'])
       const run = {
@@ -89,6 +90,7 @@ describe('dry run', () => {
         'createComment',
         'updateComment',
         'closeIssue',
+        'lockIssue',
         'createReview',
         'requestReviewers',
         'createCheckRun',

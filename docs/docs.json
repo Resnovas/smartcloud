@@ -35,6 +35,7 @@
               "features/codeowners",
               "features/labels",
               "features/stale",
+              "features/lock",
               "features/settings",
               "features/sync"
             ]

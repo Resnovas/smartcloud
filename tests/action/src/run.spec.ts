@@ -174,6 +174,7 @@ describe('runAction', () => {
         'freeze',
         'branches',
         'codeowners',
+        'lock',
       ])
     }),
   )

@@ -179,10 +179,12 @@ describe('cached reads: invalidation after writes', () => {
           { body: [issue(3, ['bug'])] },
           { body: [issue(3, [])] },
           { body: [] },
+          { body: [] },
         ],
         [`POST ${REPO}/issues/3/labels`]: { body: [] },
         [`DELETE ${REPO}/issues/3/labels/bug`]: { body: [] },
         [`PATCH ${REPO}/issues/3`]: { body: {} },
+        [`PUT ${REPO}/issues/3/lock`]: { status: 204 },
       })
       const github = yield* service
       const labelsOf = Effect.map(github.listOpenIssues, (issues) => issues.map(({ labels }) => labels))
@@ -194,8 +196,10 @@ describe('cached reads: invalidation after writes', () => {
       expect(yield* labelsOf).toStrictEqual([[]])
       yield* github.closeIssue(3)
       expect(yield* labelsOf).toStrictEqual([])
+      yield* github.lockIssue(3, 'resolved')
+      expect(yield* labelsOf).toStrictEqual([])
       yield* github.listLabels
-      expect(calls('GET', `${REPO}/issues`)).toBe(4)
+      expect(calls('GET', `${REPO}/issues`)).toBe(5)
       expect(calls('GET', `${REPO}/labels`)).toBe(1)
     }),
   )

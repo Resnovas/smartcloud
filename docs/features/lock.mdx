@@ -1,0 +1,44 @@
+---
+title: 'Lock'
+description: 'Lock the conversations of issues and pull requests that have been closed for a while.'
+---
+
+The lock feature locks the conversation of every issue and pull request that has been closed for a number of days, so old threads stop collecting comments that belong in a new issue. It runs on `schedule` and `workflow_dispatch` events only, and is enabled by a `lock` section.
+
+```yaml
+lock:
+  on: [issue, pullRequest]
+  afterDays: 30
+  reason: resolved
+  comment: This thread has been closed for 30 days, so it is locked. Please open a new issue for anything related.
+  label: locked
+  exempt:
+    labels: [pinned]
+```
+
+| Key             | Default  | Meaning                                                                                                         |
+| --------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
+| `on`            | both     | `issue`, `pullRequest`, or both.                                                                                |
+| `afterDays`     | required | Days an item has been closed before it is locked. Fractions are allowed.                                        |
+| `reason`        | none     | The reason GitHub shows: `resolved`, `off-topic`, `too heated` or `spam`.                                       |
+| `comment`       | none     | Posted on the item just before it is locked.                                                                    |
+| `label`         | none     | Added to the item just before it is locked. A label name as GitHub shows it, not a key of the `labels` section. |
+| `exempt.labels` | none     | Items with any of these labels, ignoring case, are never locked.                                                |
+
+A pull request counts as closed whether it was merged or not.
+
+## How a sweep works
+
+1. smartcloud searches the repository for closed, unlocked issues and pull requests closed more than `afterDays` ago, one search for each kind in `on`.
+2. Items with an `exempt.labels` label are skipped.
+3. For each other item, smartcloud posts `comment`, adds `label`, and then locks the conversation with `reason`. The comment and label come first, while the thread is still open to them.
+
+smartcloud keeps at most one lock comment per item, and edits an existing one rather than posting again, so an item that failed part way, or that GitHub's search still lists as unlocked for a moment after locking, is not commented on twice. Only a lock comment written by a bot account or by a login in `roles.trustedBots` counts.
+
+GitHub's search returns at most 1,000 items for each kind. A repository with a larger backlog of closed, unlocked threads is worked through over several sweeps.
+
+Each item is locked on its own. When GitHub fails on one, the sweep records an error naming it and carries on with the rest.
+
+## Permissions
+
+Locking needs `issues: write` for issues and `pull-requests: write` for pull requests, which the workflow token has with the permissions in the [introduction](/introduction#permissions). Scheduled and manually dispatched runs never come from a fork, so the feature never runs with a fork's read-only token.

@@ -42,7 +42,13 @@ export const fakeFetch = (routes: Routes) => {
     const text = typeof init?.body === 'string' ? init.body : undefined
     // Octokit encodes the slashes in nested content paths; GitHub accepts both forms.
     const path = decodeURIComponent(url.pathname)
-    requests.push({ method, path, query: url.search, body: text === undefined ? undefined : JSON.parse(text) })
+    // Octokit sends an empty body with a PUT that has no parameters.
+    requests.push({
+      method,
+      path,
+      query: url.search,
+      body: text === undefined || text === '' ? undefined : JSON.parse(text),
+    })
     tokens.push(new Headers(init?.headers).get('authorization')?.replace(/^(token|bearer) /i, ''))
     const key = `${method} ${path}`
     const route = routes[key]

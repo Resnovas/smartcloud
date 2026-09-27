@@ -48,6 +48,7 @@ export const FEATURE_FLAGS = {
   'smartcloud-freeze': true,
   'smartcloud-branches': true,
   'smartcloud-codeowners': true,
+  'smartcloud-lock': true,
 } as const satisfies Readonly<Record<string, boolean>>
 
 /** A feature flag smartcloud evaluates. */

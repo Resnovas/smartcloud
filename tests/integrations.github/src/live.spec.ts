@@ -311,6 +311,90 @@ describe('live GitHub: issues and comments', () => {
     }),
   )
 
+  it.effect('searches closed, unlocked issues and pull requests closed before a time', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        'GET /search/issues': {
+          body: {
+            total_count: 2,
+            incomplete_results: false,
+            items: [
+              {
+                number: 1,
+                title: 'a',
+                body: null,
+                user: null,
+                state: 'closed',
+                locked: false,
+                labels: [{ name: 'bug' }],
+                updated_at: '2026-01-02T00:00:00Z',
+                closed_at: '2026-01-01T00:00:00Z',
+              },
+              {
+                number: 2,
+                title: 'b',
+                body: 'x',
+                user: { login: 'jane' },
+                state: 'closed',
+                locked: false,
+                labels: [],
+                updated_at: '2026-01-03T00:00:00Z',
+                closed_at: null,
+                pull_request: {},
+              },
+            ],
+          },
+        },
+      })
+      const github = yield* service
+      expect(yield* github.listClosedUnlocked('issue', new Date('2026-02-01T12:30:45.678Z'))).toStrictEqual([
+        {
+          number: 1,
+          title: 'a',
+          body: '',
+          author: '',
+          open: false,
+          locked: false,
+          labels: ['bug'],
+          updatedAt: new Date('2026-01-02T00:00:00Z'),
+          closedAt: new Date('2026-01-01T00:00:00Z'),
+          isPullRequest: false,
+        },
+        {
+          number: 2,
+          title: 'b',
+          body: 'x',
+          author: 'jane',
+          open: false,
+          locked: false,
+          labels: [],
+          updatedAt: new Date('2026-01-03T00:00:00Z'),
+          closedAt: new Date('2026-01-03T00:00:00Z'),
+          isPullRequest: true,
+        },
+      ])
+      yield* github.listClosedUnlocked('pullRequest', new Date('2026-02-01T00:00:00Z'))
+      const queries = requests.map(({ query }) => new URLSearchParams(query).get('q'))
+      expect(queries).toStrictEqual([
+        'repo:Resnovas/example is:issue is:closed is:unlocked closed:<2026-02-01T12:30:45Z',
+        'repo:Resnovas/example is:pr is:closed is:unlocked closed:<2026-02-01T00:00:00Z',
+      ])
+    }),
+  )
+
+  it.effect('locks a conversation, with a reason when given', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({ [`PUT ${REPO}/issues/3/lock`]: { status: 204 } })
+      const github = yield* service
+      yield* github.lockIssue(3, 'resolved')
+      yield* github.lockIssue(3)
+      expect(requests.map(({ method, body }) => `${method} ${JSON.stringify(body)}`)).toStrictEqual([
+        'PUT {"lock_reason":"resolved"}',
+        'PUT undefined',
+      ])
+    }),
+  )
+
   it.effect('lists open pull requests with their head commits', () =>
     Effect.gen(function* () {
       const { service, requests } = live({

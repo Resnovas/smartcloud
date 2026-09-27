@@ -64,6 +64,9 @@
       "path": "./packages/feature.freeze"
     },
     {
+      "path": "./packages/feature.lock"
+    },
+    {
       "path": "./packages/feature.branches"
     },
     {

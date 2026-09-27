@@ -1,0 +1,11 @@
+{
+  "$schema": "../../node_modules/@effect/docgen/schema.json",
+  "srcLink": "https://github.com/Resnovas/smartcloud/blob/main/packages/feature.lock/src/",
+  "outDir": "dist/docs",
+  "exclude": ["src/index.ts", "src/main.ts"],
+  "tscExecutable": "../../node_modules/.bin/tsc",
+  "enforceDescriptions": true,
+  "enforceVersion": false,
+  "parseCompilerOptions": "tsconfig.lib.json",
+  "examplesCompilerOptions": "../../tsconfig.docgen.json"
+}

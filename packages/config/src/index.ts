@@ -56,6 +56,8 @@ export {
   Freeze,
   FreezeWindow,
   Links,
+  Lock,
+  LockReason,
   parseFreezeTime,
   RequestApproval,
   Required,

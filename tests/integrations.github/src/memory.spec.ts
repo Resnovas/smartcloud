@@ -103,6 +103,36 @@ describe('in-memory GitHub', () => {
     }),
   )
 
+  it.effect('lists closed, unlocked items closed before a time, and locks them', () =>
+    Effect.gen(function* () {
+      const closed = (number: number, isPullRequest: boolean, closedAt: number, locked = false) => ({
+        number,
+        title: 't',
+        body: '',
+        author: 'a',
+        open: false,
+        locked,
+        labels: [],
+        updatedAt: new Date(closedAt),
+        closedAt: new Date(closedAt),
+        isPullRequest,
+      })
+      const { service, state } = makeMemoryGitHub({
+        closedIssues: [closed(1, false, 0), closed(2, true, 0), closed(3, false, 100), closed(4, false, 0, true)],
+      })
+      const numbers = (kind: 'issue' | 'pullRequest') =>
+        Effect.map(service.listClosedUnlocked(kind, new Date(50)), (items) => items.map((item) => item.number))
+      expect(yield* numbers('issue')).toStrictEqual([1])
+      expect(yield* numbers('pullRequest')).toStrictEqual([2])
+      yield* service.lockIssue(1, 'resolved')
+      yield* service.lockIssue(2)
+      expect(state.issues.get(1)).toMatchObject({ locked: true, lockReason: 'resolved' })
+      expect(state.issues.get(2)?.lockReason).toBeUndefined()
+      expect(yield* numbers('issue')).toStrictEqual([])
+      expect(yield* numbers('pullRequest')).toStrictEqual([])
+    }),
+  )
+
   it.effect('serves pull request data and records reviews', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub({

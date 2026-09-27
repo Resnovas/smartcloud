@@ -113,6 +113,7 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
       Effect.as(record('createComment', { issue, body }), { id: 0, body, author: '', bot: true }),
     updateComment: (id, body) => record('updateComment', { id, body }),
     closeIssue: (issue) => record('closeIssue', { issue }),
+    lockIssue: (issue, reason) => record('lockIssue', { issue, reason }),
     createReview: (pullRequest, review) => record('createReview', { pullRequest, review }),
     requestReviewers: (pullRequest, logins) => record('requestReviewers', { pullRequest, logins }),
     createCheckRun: (run) => Effect.as(record('createCheckRun', { run }), 0),

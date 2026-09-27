@@ -24,8 +24,10 @@ import {
   type CommitCheck,
   GitHub,
   type GitHubService,
+  type ClosedIssueSummary,
   type IssueSummary,
   type Label,
+  type LockReason,
   type NewReview,
   type PullRequestSummary,
   type Repository,
@@ -54,6 +56,9 @@ export interface MemoryIssue {
   open: boolean
   /** The reactions on the item itself; none when omitted. */
   reactions?: Reactions
+  /** Whether the conversation is locked, and why. */
+  locked?: boolean
+  lockReason?: LockReason
 }
 
 /** A proposal the in-memory GitHub received, with the pull request it opened. */
@@ -73,6 +78,8 @@ export interface MemoryState {
   /** Labels, comments and reactions on each issue or pull request, by number. */
   issues: Map<number, MemoryIssue>
   openIssues: Array<IssueSummary>
+  /** The closed issues and pull requests `listClosedUnlocked` searches. */
+  closedIssues: Array<ClosedIssueSummary>
   /** The open pull requests `listOpenPullRequests` returns. */
   openPullRequests: Array<PullRequestSummary>
   pulls: Map<number, MemoryPullRequest>
@@ -124,6 +131,7 @@ const defaults = (): MemoryState => ({
   labels: [],
   issues: new Map(),
   openIssues: [],
+  closedIssues: [],
   openPullRequests: [],
   pulls: new Map(),
   files: new Map(),
@@ -245,6 +253,22 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
     getReactions: (number) => Effect.sync(() => ({ ...(issue(number).reactions ?? NO_REACTIONS) })),
     listOpenPullRequests: Effect.sync(() => [...state.openPullRequests]),
     closeIssue: (number) => Effect.sync(() => void (issue(number).open = false)),
+    listClosedUnlocked: (kind, closedBefore) =>
+      Effect.sync(() =>
+        state.closedIssues.filter(
+          (summary) =>
+            summary.isPullRequest === (kind === 'pullRequest') &&
+            !summary.locked &&
+            state.issues.get(summary.number)?.locked !== true &&
+            summary.closedAt.getTime() < closedBefore.getTime(),
+        ),
+      ),
+    lockIssue: (number, reason) =>
+      Effect.sync(() => {
+        const entry = issue(number)
+        entry.locked = true
+        if (reason !== undefined) entry.lockReason = reason
+      }),
     listCommits: (number) => Effect.map(pull('listCommits', number), (entry) => [...entry.commits]),
     listFiles: (number) => Effect.map(pull('listFiles', number), (entry) => [...entry.files]),
     listChangedFiles: (number) =>

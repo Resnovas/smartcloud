@@ -24,6 +24,7 @@ import {
   Disclosure,
   Freeze,
   Links,
+  Lock,
   Required,
   Reviews,
   Roles,
@@ -369,6 +370,7 @@ export const SmartcloudConfig = Schema.Struct({
   branches: Schema.optionalWith(Branches, { exact: true }),
   codeowners: Schema.optionalWith(CodeOwners, { exact: true }),
   stale: Schema.optionalWith(Stale, { exact: true }),
+  lock: Schema.optionalWith(Lock, { exact: true }),
   settings: Schema.optionalWith(Settings, { exact: true }),
   sync: Schema.optionalWith(Sync, { exact: true }),
 }).annotations({

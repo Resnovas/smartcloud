@@ -1,0 +1,23 @@
+{
+  "name": "@resnovas/feature.lock",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The lock feature: locks the conversations of issues and pull requests that have been closed for a while.",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1"
+  }
+}
