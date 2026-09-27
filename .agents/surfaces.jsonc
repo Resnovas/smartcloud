@@ -17,5 +17,10 @@
   ],
   // house:managed:end
   // house:local - add this repository's own actions to the list below.
-  "actions": [],
+  "actions": [
+    { "id": "dev", "label": "Dev: watch build", "script": "dev", "primary": true },
+    { "id": "docs", "label": "Docs: local server", "script": "docs:dev", "url": "http://localhost:3000" },
+    { "id": "fix", "label": "Fix: format and licence headers", "script": "fix" },
+    { "id": "release", "label": "Release: dry run", "script": "release:dry-run" },
+  ],
 }

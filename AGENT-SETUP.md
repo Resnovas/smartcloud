@@ -75,7 +75,7 @@ Port 3000 only for `docs:dev`. Affected only: `pnpm nx affected -t lint typechec
 | Copilot         | `.github/workflows/copilot-setup-steps.yml`                         | repo secret or variable `GITHUB_TOKEN` optional                                                                                      |
 | Codex desktop   | `.codex/environments/environment.toml`                              | none                                                                                                                                 |
 | Orca            | `orca.yaml`                                                         | none; `node tools/dev/surfaces.mjs install` (run by setup) adds quick commands and agent prompts                                     |
-| OpenChamber     | `.opencode/commands/`                                               | none; `node tools/dev/surfaces.mjs install` (run by setup) adds project actions                                                      |
+| OpenChamber     | `.agents/surfaces.jsonc`                                            | none; `node tools/dev/surfaces.mjs install` (run by setup) adds project actions                                                      |
 | Zed             | `.zed/tasks.json`, `.zed/debug.json`                                | none                                                                                                                                 |
 
 ## Breaks

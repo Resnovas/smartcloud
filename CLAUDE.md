@@ -6,9 +6,4 @@ The agent instructions for this repository live in [`AGENTS.md`](AGENTS.md), sha
 @AGENTS.md
 <!-- house:managed:end -->
 <!-- house:local - add instructions only Claude Code needs below this line; everything shared belongs in AGENTS.md. -->
-<!-- Previous content of this file, kept when it was first synced. Re-add what is still needed as local rules, then delete this. -->
-<!--
-@AGENTS.md
-
 Machine setup, environment and runner settings: @AGENT-SETUP.md
--->

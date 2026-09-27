@@ -33,5 +33,8 @@
   // house:managed:end
   // house:local - add this repository's own servers below, in the same shape.
   // A local server may not reuse a house server's name.
-  "servers": {},
+  "servers": {
+    // smartcloud's own MCP server, built from this checkout.
+    "smartcloud": { "command": "pnpm", "args": ["--silent", "run", "mcp"] },
+  },
 }
