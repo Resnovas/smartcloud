@@ -44,27 +44,39 @@ name: smartcloud
 
 on:
   pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft, closed]
   pull_request_review:
+    types: [submitted, dismissed]
   issues:
+    types: [opened, edited, reopened, labeled, unlabeled]
+  issue_comment:
+    types: [created]
   push:
     branches: [main]
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
-  checks: write
-  issues: write
+permissions: {}
 
 jobs:
   smartcloud:
+    name: smartcloud
     runs-on: ubuntu-latest
     timeout-minutes: 75
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+      issues: write
+      statuses: read
     steps:
       - uses: resnovas/smartcloud@v2
+        with:
+          checkRunId: ${{ job.check_run_id }}
 ```
+
+The workflow token covers every feature except repository settings, file sync and presets in other private repositories, which need a GitHub App token. The [getting started guide](docs/getting-started.mdx) walks through the whole setup, including the app, the first run and how to read the report.
 
 Coming from v1? `smartcloud migrate` converts `.github/config.json`; see the [migration guide](docs/migration.mdx).
 
@@ -74,7 +86,14 @@ smartcloud sends anonymous telemetry to PostHog: usage events, logs, traces, met
 
 ## Documentation
 
-The documentation lives in [`docs/`](docs/introduction.mdx) and is built with Mintlify. Start with the [introduction](docs/introduction.mdx), then [configuration](docs/configuration.mdx), the [conditions](docs/conditions.mdx), the [migration guide](docs/migration.mdx) and [telemetry](docs/telemetry.mdx).
+The documentation lives in [`docs/`](docs/introduction.mdx) and is built with Mintlify (`pnpm run docs:dev` serves it locally).
+
+- New here: [getting started](docs/getting-started.mdx), then the [introduction](docs/introduction.mdx) and [configuration](docs/configuration.mdx).
+- Sharing a config across repositories: [presets and extends](docs/presets.mdx), including the Resnovas house preset.
+- One page per feature under [`docs/features/`](docs/features), each with every option, a complete example and troubleshooting.
+- The [conditions](docs/conditions.mdx) language, [reporting](docs/reporting.mdx), the [CLI](docs/cli.mdx) (including `doctor`), the [MCP server](docs/mcp-server.mdx), the [migration guide](docs/migration.mdx) and [telemetry](docs/telemetry.mdx).
+- Stuck: [troubleshooting and FAQ](docs/troubleshooting.mdx) and the [glossary](docs/glossary.mdx).
+- Every config key: the generated [configuration reference](docs/reference/configuration.mdx).
 
 ## Development
 

@@ -3,17 +3,53 @@ title: 'CLI'
 description: 'Validate and migrate smartcloud configs from the command line.'
 ---
 
-The `smartcloud` command checks configs and converts v1 configs, without running the action.
+The `smartcloud` command runs the same code as the action on your own machine. Use it to check a config before you push it, convert a v1 config, see what a run would do without doing it, and find out why a repository is not set up right. Nothing it does writes to GitHub.
 
-The CLI is not published to a registry yet. Run it from a checkout of this repository:
+| Command                           | Use it to                                                                       | Needs a token      |
+| --------------------------------- | ------------------------------------------------------------------------------- | ------------------ |
+| [`validate`](#validate)           | Check a config and every preset it extends.                                     | Only for `extends` |
+| [`migrate`](#migrate)             | Convert a v1 `.github/config.json` to v2 YAML.                                  | No                 |
+| [`check-commit`](#check-commit)   | Check a commit message for DCO sign-off and AI attribution, as a git hook.      | No                 |
+| [`dry-run`](#dry-run)             | Run every feature against a real pull request, issue or event, writing nothing. | Yes                |
+| [`plan settings`](#plan-settings) | List the repository settings the config would apply.                            | Yes                |
+| [`sync`](#sync)                   | Render the files the sync feature would write into a local folder.              | Yes                |
+| [`doctor`](#doctor)               | Check the token, config, presets, private actions, secrets and variables.       | Yes                |
 
-```sh
-pnpm install
-pnpm nx run @resnovas/smartcloud:build
-node apps/cli/dist/main.js --help
-```
+## Install
 
-The examples below write `smartcloud` for `node apps/cli/dist/main.js`.
+You need Node 24 or later.
+
+<Tabs>
+  <Tab title="From npm">
+    From the first v2 release, the CLI and the [MCP server](/mcp-server) are published together as `@resnovas/smartcloud`:
+
+    ```sh
+    npx @resnovas/smartcloud --help
+    # or install it once
+    npm install --global @resnovas/smartcloud
+    smartcloud --help
+    ```
+
+  </Tab>
+  <Tab title="From a checkout">
+    Until then, or to try unreleased changes, build it from this repository:
+
+    ```sh
+    git clone https://github.com/Resnovas/smartcloud.git
+    cd smartcloud
+    pnpm install
+    pnpm nx run @resnovas/smartcloud:build
+    node apps/cli/dist/main.js --help
+    ```
+
+    Inside the checkout, `pnpm run cli <command>` does the same.
+
+  </Tab>
+</Tabs>
+
+The examples below write `smartcloud` for whichever you use. `smartcloud --version` prints the version, and `smartcloud <command> --help` lists a command's options.
+
+A command that fails prints one line starting `smartcloud:` on stderr and exits with code 1. Any other result exits with code 0.
 
 ## validate
 
@@ -21,7 +57,7 @@ The examples below write `smartcloud` for `node apps/cli/dist/main.js`.
 smartcloud validate [path]
 ```
 
-Checks a config and every preset it extends, merges them under the [locked preset rules](/configuration#add-never-change), and prints where the config was built from and any migration warnings.
+Checks a config and every preset it extends, merges them under the [locked preset rules](/presets#add-never-change), and prints where the config was built from and any migration warnings.
 
 Without a path, it uses the first of `.github/smartcloud.yml`, `.github/smartcloud.yaml` and `.github/config.json` in the current directory.
 
@@ -80,13 +116,27 @@ Runs every feature against a real pull request, issue or repository event, throu
 
 Give exactly one of `--pr`, `--issue` or `--event`.
 
+```sh
+# What would smartcloud do on pull request 42, with the config I am editing?
+smartcloud dry-run --repo my-org/my-repo --pr 42 --config .github/smartcloud.yml
+
+# What would the daily sweep do, stale and lock only?
+smartcloud dry-run --repo my-org/my-repo --event schedule --features stale,lock
+```
+
 ## plan settings
 
 ```sh
 smartcloud plan settings --repo <owner/name> [--config <file>]
 ```
 
-Prints every repository settings step the config would apply, with its request, without applying any of them.
+Prints every repository settings step the config would apply, with its request, without applying any of them. Use it before merging a change to the [settings](/features/settings) section, since those steps change the repository for everyone.
+
+```sh
+smartcloud plan settings --repo my-org/my-repo --config .github/smartcloud.yml
+```
+
+It reads only the repository itself, so any token that can read the repository works. A config without a `settings` section prints no steps.
 
 ## sync
 
@@ -94,7 +144,11 @@ Prints every repository settings step the config would apply, with its request, 
 smartcloud sync --repo <owner/name> --out <dir> [--config <file>]
 ```
 
-Renders the files the sync feature would write to the repository into a local directory, with each file's status (added, updated, made executable or unchanged), and lists any conflicts. Nothing is sent to GitHub. Every file is checked before any is written: one that would land outside the directory, or be written through a symlink inside it, stops the command with nothing written.
+```sh
+smartcloud sync --repo my-org/my-repo --out /tmp/sync-preview
+```
+
+Renders the files the [sync](/features/sync) feature would write to the repository into a local directory, with each file's status (added, updated, made executable or unchanged), and lists any conflicts. Nothing is sent to GitHub. A config without a `sync` section fails with `the config has no sync section`. Every file is checked before any is written: one that would land outside the directory, or be written through a symlink inside it, stops the command with nothing written.
 
 ## doctor
 
@@ -111,6 +165,7 @@ Checks what smartcloud needs to run on a repository, with the token the CLI find
 | `repository`            | The token cannot read the repository (fails, and the remaining checks are skipped), or is not an admin, so the settings feature cannot run (warns).                                                                                                                         |
 | `config`, `presets`     | The config, or any preset it extends, cannot be read or is invalid (fails). A private preset in another repository is noted, because runs with the workflow token skip it.                                                                                                  |
 | `actions access`        | A workflow uses an action or reusable workflow from a private repository whose Actions access (Settings > Actions > General > Access) does not allow it (fails). Reading the access level needs admin access to that repository; without it, the check warns.               |
+| `workflows`             | The workflow files under `.github/workflows` cannot be read (warns), so the checks that read them are skipped.                                                                                                                                                              |
 | `secrets`, `variables`  | A workflow reads a secret or variable that the repository, its organisation and its environments do not have (fails). Listing them needs admin access; when a list cannot be read, the check warns instead.                                                                 |
 
 Run it with your own token to check the repository, or with the token a workflow passes to smartcloud to check that token:

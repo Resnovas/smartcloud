@@ -3,12 +3,88 @@ title: 'Commits'
 description: 'DCO sign-off and AI attribution rules for the commits on a pull request.'
 ---
 
-The commits feature checks every commit on a pull request: each is signed off by its author, and AI tools are credited but never sign off. It runs on pull request events and is enabled by a `commits` section, even an empty one.
+Every commit on a pull request says who wrote it. The commits feature checks two things about that:
+
+- **DCO sign-off.** The Developer Certificate of Origin (DCO) is a short statement a contributor agrees to: "I wrote this, or have the right to submit it". You agree by adding a `Signed-off-by: Your Name <you@example.com>` line to each commit, which `git commit -s` does for you. smartcloud checks every commit has one that matches its author.
+- **AI attribution.** When an AI tool helped write a commit, the commit credits it with two trailers, `Co-authored-by` and `Assisted-by`, and the tool never signs off, because only a person can agree to the DCO.
+
+Why use it: it makes your contribution policy automatic. A missing sign-off is caught on the pull request, with a link to your policy, instead of in review.
+
+A trailer is a `Key: value` line at the end of a commit message, such as `Signed-off-by: ...`.
+
+## Turn it on
+
+<Steps>
+  <Step title="Add the workflow events">
+    The feature runs on pull request events. Include `synchronize`, so new commits are checked:
+
+    ```yaml
+    on:
+      pull_request:
+        types: [opened, edited, synchronize, reopened]
+    ```
+
+  </Step>
+  <Step title="Grant the permissions">
+    `pull-requests: write` (to list the pull request's commits and write the report comment) and `checks: write`. The [workflow token](/glossary#workflow-token) is enough.
+  </Step>
+  <Step title="Add the section">
+    An empty section turns on both checks with their defaults:
+
+    ```yaml
+    commits: {}
+    ```
+
+  </Step>
+  <Step title="List your maintainers and bots (recommended)">
+    [Maintainers](/glossary#maintainer) get warnings instead of errors on their own pull requests, and [trusted bots](/glossary#trusted-bot) are skipped:
+
+    ```yaml
+    roles:
+      maintainers: [octocat]
+      trustedBots: ['dependabot[bot]', 'renovate[bot]']
+    ```
+
+  </Step>
+</Steps>
+
+## Options
+
+| Key                           | Default   | What it does                                                                                                      |
+| ----------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------- |
+| `commits.dco`                 | `true`    | Check every non-merge commit is signed off by its author (rule `DCO`). `false` turns the check off.               |
+| `commits.aiAttribution`       | `true`    | Check AI attribution trailers (rules `AI-02` and `AI-03`). `false` turns the check off.                           |
+| `commits.aiIdentities.emails` | none      | Extra regular expressions matched against trailer emails, to recognise more AI tools. Added to the built-in list. |
+| `commits.aiIdentities.names`  | none      | Extra regular expressions matched against trailer names. Added to the built-in list.                              |
+| `commits.maintainerLevel`     | `warning` | The level for findings on a maintainer's own pull request: `warning` or `error`. `AI-03` is always an error.      |
+
+The feature also reads `roles.maintainers`, `roles.trustedBots` and `links.policyBase`; see [Roles](/configuration#roles) and [Links](/configuration#links). `commits.aiIdentities` is shared with the [disclosure feature](/features/disclosure).
+
+### Recognising your own AI tool
+
+Patterns are bare regular expressions, or `/source/flags`:
 
 ```yaml
+commits:
+  aiIdentities:
+    emails: ["@example-ai\\.dev$"]
+    names: ['/^robo( assistant)?$/i']
+```
+
+A pattern that does not compile is matched as literal text, ignoring case, rather than failing the run.
+
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
 roles:
   maintainers: [octocat]
-  trustedBots: ['dependabot[bot]']
+  trustedBots: ['dependabot[bot]', 'renovate[bot]']
+
+links:
+  # Findings link to CONTRIBUTING.md#dco and AI_POLICY.md#ai-02 under this.
+  policyBase: https://github.com/my-org/.github/blob/main
 
 commits:
   dco: true
@@ -19,20 +95,17 @@ commits:
   maintainerLevel: warning
 ```
 
-| Key                                         | Default   | Meaning                                                          |
-| ------------------------------------------- | --------- | ---------------------------------------------------------------- |
-| `dco`                                       | `true`    | Check the DCO sign-off.                                          |
-| `aiAttribution`                             | `true`    | Check AI attribution trailers.                                   |
-| `aiIdentities.emails`, `aiIdentities.names` | none      | Extra patterns identifying AI tools, added to the built-in list. |
-| `maintainerLevel`                           | `warning` | The level for errors on a maintainer's own pull request.         |
+## How it works
 
-## Rules
+For each pull request event, smartcloud loads the pull request's commits and checks each one.
 
-| Rule    | Finding                                                                                                                                                                |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DCO`   | A non-merge commit has no `Signed-off-by` whose email matches the commit author's. An AI sign-off never counts, even when its email matches. Fix with `git commit -s`. |
-| `AI-02` | A commit has `Assisted-by` but no AI `Co-authored-by`, or an AI `Co-authored-by` but no `Assisted-by: TOOL:MODEL`. The two travel together.                            |
-| `AI-03` | A `Signed-off-by` names an AI tool. Only a person can sign off.                                                                                                        |
+| Rule    | Finding                                                                                                                                                                                                                 |
+| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DCO`   | A non-merge commit has no `Signed-off-by` whose email matches the commit author's email, ignoring case. An AI sign-off never counts, even when its email matches. Fix with `git commit -s`.                             |
+| `AI-02` | A commit has `Assisted-by` but no AI `Co-authored-by`, or an AI `Co-authored-by` but no `Assisted-by: TOOL:MODEL`. The two travel together: `Co-authored-by` shows on GitHub, `Assisted-by` records the tool and model. |
+| `AI-03` | A `Signed-off-by` on a non-merge commit names an AI tool. Only a person can sign off.                                                                                                                                   |
+
+Merge commits (commits with more than one parent) are written by Git or GitHub, so they are not checked for `DCO` or `AI-03`.
 
 A correctly attributed AI-assisted commit ends like this:
 
@@ -44,13 +117,62 @@ Assisted-by: example-tool:example-model-1
 Signed-off-by: Jane Doe <jane@example.com>
 ```
 
-Findings link to `AI_POLICY.md#ai-02`, `AI_POLICY.md#ai-03` and `CONTRIBUTING.md#dco` under [`links.policyBase`](/configuration#links).
+`Assisted-by` follows the Linux kernel form `TOOL:MODEL`, optionally followed by more tools. The first word must have text on both sides of a colon.
 
-## AI identities
+Findings link to `CONTRIBUTING.md#dco`, `AI_POLICY.md#ai-02` and `AI_POLICY.md#ai-03` under [`links.policyBase`](/configuration#links) (by default `https://github.com/Resnovas/.github/blob/main`).
 
-An identity in a trailer is an AI tool when its email ends in `@anthropic.com`, `@openai.com`, `@cursor.com`, `@cursor.sh`, `copilot` or `.invalid` (the reserved domain for a tool with no address of its own), or when its name contains a known tool name such as Claude, Codex, ChatGPT, Copilot, Cursor, Gemini, Devin or Aider. `aiIdentities` adds regular expressions, bare or as `/source/flags`; one that does not compile is matched as literal text, ignoring case.
+### AI identities
 
-## Roles
+An identity in a trailer is an AI tool when:
 
-- Pull requests from trusted bots are skipped.
-- On a pull request opened by a maintainer, or by the repository owner, errors are reported at `maintainerLevel`. `AI-03` is never downgraded.
+- its email ends in `@anthropic.com`, `@openai.com`, `@cursor.com`, `@cursor.sh`, `copilot` or `.invalid` (the reserved domain for a tool with no address of its own), or
+- its name contains, as a whole word, one of Claude, Codex, ChatGPT, GPT followed by a number (such as GPT-4), Copilot, Cursor, Gemini, Devin, Aider, Windsurf, Jules, Codeium or Tabnine, ignoring case.
+
+`commits.aiIdentities` adds to this list; it never replaces it.
+
+### Roles
+
+- Pull requests opened by a [trusted bot](/glossary#trusted-bot) are skipped entirely.
+- On a pull request opened by a [maintainer](/glossary#maintainer), or by the repository owner, findings are reported at `maintainerLevel` (`warning` by default). `AI-03` is never downgraded.
+- Everyone else gets errors.
+
+Logins compare ignoring case, and a leading `@` is optional.
+
+## What you will see on GitHub
+
+- **Check run.** `smartcloud / commits`: failure on any error, neutral when there are only warnings (such as a maintainer's missing sign-off), success otherwise. Each finding names the commit it is about.
+- **Report comment.** The smartcloud comment on the pull request lists each problem with a link to the policy.
+- **Job summary and annotations.** Every finding, including the commit SHA.
+
+To fix a missing sign-off on existing commits, the author can run `git rebase --signoff <base>` and force-push; the next run checks the new commits.
+
+## Forks and restricted runs
+
+The check needs only read access to the pull request's commits, so it runs on forks and Dependabot pull requests too. On a read-only token the check run and report comment cannot be written; they are skipped and listed under **Restricted access** in the job summary, and the findings still appear in the summary and as annotations. Dependabot is usually a trusted bot, so its pull requests are skipped anyway.
+
+## In the house preset
+
+The [Resnovas house preset](/presets) sets `dco: true`, `aiAttribution: true` and `maintainerLevel: warning`. An AI sign-off is an error for everyone; anything else on a maintainer's own pull request is a warning. A repository may add `aiIdentities` (the preset leaves it unset), but cannot turn either check off.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="No Signed-off-by matching the author <...>">
+    The commit has no sign-off, or the sign-off's email differs from the commit's author email. Set `git config user.email` to the address you sign off with, then `git rebase --signoff <base>` (or `git commit --amend -s` for the last commit) and force-push.
+  </Accordion>
+  <Accordion title="This commit credits an AI co-author but has no Assisted-by: TOOL:MODEL trailer">
+    Add a line such as `Assisted-by: example-tool:example-model-1` next to the `Co-authored-by` trailer.
+  </Accordion>
+  <Accordion title="This commit has Assisted-by but no Co-authored-by trailer for the AI tool">
+    Add a `Co-authored-by` trailer whose name or email identifies the tool. If your tool is not recognised, add a pattern under `commits.aiIdentities`.
+  </Accordion>
+  <Accordion title="Signed-off-by ... is an AI tool. Only a human can sign off.">
+    Remove the AI's sign-off and sign off yourself. This is an error even on a maintainer's pull request.
+  </Accordion>
+  <Accordion title="the commits feature needs the pull request's commits, but they were not loaded">
+    smartcloud could not read the pull request's commits, so the feature failed rather than pass unchecked. Check the token can read pull requests, then re-run.
+  </Accordion>
+  <Accordion title="A person's name is treated as an AI tool">
+    The name contains one of the built-in words (for example "Cursor" or "Devin") as a whole word. Use a different trailer name, such as the person's full name, in the sign-off.
+  </Accordion>
+</AccordionGroup>

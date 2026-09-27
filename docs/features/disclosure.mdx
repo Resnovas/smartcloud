@@ -3,9 +3,90 @@ title: 'Disclosure'
 description: 'The AI disclosure a pull request description must carry.'
 ---
 
-The disclosure feature reads how AI was used from the pull request description and checks it against the pull request's commits. It runs on pull request events and is enabled by a `disclosure` section, even an empty one.
+An AI disclosure is a few lines in a pull request description that say how AI was used to make the change: not at all, as autocomplete, in a chat, or as an agent. It also names the person who is accountable for the change and what they checked by hand.
+
+The disclosure feature reads those lines and checks them:
+
+- the disclosure is there and uses a known level;
+- it agrees with the commits (if the commits credit an AI tool, the disclosure cannot say `none`, and the other way round);
+- AI-assisted pull requests start as drafts and only leave draft once the accountable person has reviewed them.
+
+Why use it: reviewers know how a change was made before they read it, and nobody can quietly submit unreviewed AI output.
+
+## Turn it on
+
+<Steps>
+  <Step title="Add the workflow events">
+    The feature runs on pull request events. Include `edited` (the description changed) and `ready_for_review`:
+
+    ```yaml
+    on:
+      pull_request:
+        types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft]
+    ```
+
+  </Step>
+  <Step title="Grant the permissions">
+    `pull-requests: write` (to read the commits and write the report comment) and `checks: write`. The [workflow token](/glossary#workflow-token) is enough.
+  </Step>
+  <Step title="Add the fields to your pull request template">
+    In `.github/pull_request_template.md`:
+
+    ```markdown
+    AI level:
+    AI tools:
+    Accountable human:
+    Human review:
+    ```
+
+    Guidance inside HTML comments (`<!-- ... -->`) is ignored, so you can explain each field there.
+
+  </Step>
+  <Step title="Add the section">
+    ```yaml
+    disclosure: {}
+    ```
+
+    An empty section uses the defaults below.
+
+  </Step>
+</Steps>
+
+## Options
+
+| Key                             | Default             | What it does                                                                                    |
+| ------------------------------- | ------------------- | ----------------------------------------------------------------------------------------------- |
+| `disclosure.fields.level`       | `AI level`          | The label of the level field, as written before the colon.                                      |
+| `disclosure.fields.tools`       | `AI tools`          | The label of the tools field.                                                                   |
+| `disclosure.fields.accountable` | `Accountable human` | The label of the accountable-person field.                                                      |
+| `disclosure.fields.review`      | `Human review`      | The label of the human-review field.                                                            |
+| `disclosure.requireDraft`       | `true`              | AI-assisted pull requests must be opened as drafts (rule `AI-20`). `false` turns that rule off. |
+| `disclosure.maintainerLevel`    | `warning`           | The level for findings on a maintainer's own pull request: `warning` or `error`.                |
+
+The feature also reads `roles`, `links.policyBase` and `commits.aiIdentities` (to recognise AI tools in commits). It works without the [commits feature](/features/commits) turned on.
+
+### Renaming the fields
+
+Set `fields` only if your template uses different labels:
 
 ```yaml
+disclosure:
+  fields:
+    level: AI usage
+    accountable: Owner
+```
+
+Fields you leave out keep their default labels.
+
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+roles:
+  maintainers: [octocat]
+  trustedBots: ['dependabot[bot]']
+
 disclosure:
   requireDraft: true
   maintainerLevel: warning
@@ -16,9 +97,7 @@ disclosure:
     review: Human review
 ```
 
-The fields above are the defaults, matching the Resnovas pull request template. Set `fields` only if your template names them differently.
-
-A description that satisfies the check:
+A description that passes, for an AI-assisted pull request by `@jane`:
 
 ```markdown
 AI level: agent
@@ -27,25 +106,84 @@ Accountable human: @jane
 Human review: Read the whole diff, ran the test suite and tried the CLI by hand.
 ```
 
-Each field is the first line starting with its label and a colon, ignoring case and leading spaces. HTML comments are ignored, so guidance inside a template's comments is never read as an answer. Backticks are dropped from values.
+A description that passes when no AI was used:
 
-## Levels
+```markdown
+AI level: none
+AI tools: none
+```
 
-`none`, `autocomplete`, `chat`, `agent` or `autonomous`.
+## How it works
 
-## Rules
+### Reading the fields
 
-| Rule    | Finding                                                                                                                                                                            |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AI-01` | The level is missing or not one of the levels above. With `none`: `AI tools` lists something, or a commit credits an AI tool. With any other level: `AI tools` is empty or `none`. |
-| `AI-02` | The level is not `none`, but no commit has an AI `Co-authored-by` trailer. The commits feature checks each commit's trailer pairing under the same rule.                           |
-| `AI-20` | An AI-assisted pull request was opened ready for review. Skipped when `requireDraft` is `false`.                                                                                   |
-| `AI-21` | An AI-assisted pull request is ready for review, but `Accountable human` is not the pull request's author, or `Human review` is empty.                                             |
+Each field is the first line that starts with its label followed straight away by a colon, ignoring case and leading spaces. So `AI level: agent` and `  ai level: Agent` both work, but `**AI level:** agent` does not, because the line starts with `**`.
 
-`AI-20` is checked only when the pull request is opened; `AI-21` whenever it is not a draft. Together they mean AI-assisted work starts as a draft and leaves draft only once the accountable person has reviewed it.
+- HTML comments are removed first, so guidance in a template's comments is never read as an answer.
+- Backticks are dropped from values.
+- The first matching line decides, even if it is empty.
+- An empty value counts as missing.
 
-AI tools are recognised the same way as in the [commits feature](/features/commits#ai-identities), including `commits.aiIdentities`.
+### Levels
 
-## Roles
+The level must be one of `none`, `autocomplete`, `chat`, `agent` or `autonomous`, ignoring case.
 
-Trusted bots are skipped. On a maintainer's own pull request, or the repository owner's, errors are reported at `maintainerLevel` (`warning` by default).
+### Rules
+
+| Rule    | Finding                                                                                                                                                                                              |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AI-01` | The level is missing or not one of the levels above. With `none`: `AI tools` lists something other than `none`, or a commit credits an AI tool. With any other level: `AI tools` is empty or `none`. |
+| `AI-02` | The level is not `none`, but no commit has an AI `Co-authored-by` trailer. The commits feature checks each commit's trailer pairing under the same rule.                                             |
+| `AI-20` | An AI-assisted pull request was opened ready for review. Skipped when `requireDraft` is `false`.                                                                                                     |
+| `AI-21` | An AI-assisted pull request is ready for review, but `Accountable human` is not the pull request's author, or `Human review` is empty.                                                               |
+
+When the level is missing or unknown, only that one `AI-01` is reported; the other rules wait until the level is fixed.
+
+`AI-20` is checked only on the `opened` event; `AI-21` on every event while the pull request is not a draft. Together they mean AI-assisted work starts as a draft and leaves draft only once the accountable person has reviewed it. `Accountable human` compares with the author's login ignoring case, with or without a leading `@`.
+
+AI tools in commits are recognised as in the [commits feature](/features/commits#ai-identities), including `commits.aiIdentities`. A commit credits an AI tool when it has an AI `Co-authored-by` or any `Assisted-by` trailer.
+
+Findings link to `AI_POLICY.md#ai-01`, `#ai-02`, `#ai-20` and `#ai-21` under [`links.policyBase`](/configuration#links).
+
+### Roles
+
+[Trusted bots](/glossary#trusted-bot) are skipped. On a [maintainer's](/glossary#maintainer) own pull request, or the repository owner's, findings are reported at `maintainerLevel` (`warning` by default). Everyone else gets errors.
+
+## What you will see on GitHub
+
+- **Check run.** `smartcloud / disclosure`: failure on any error, neutral with only warnings, success otherwise.
+- **Report comment.** The smartcloud comment lists each problem, for example `The AI disclosure is missing. Fill in "AI level:" with one of: none, autocomplete, chat, agent, autonomous.`
+- **Job summary and annotations.** Every finding; findings about a commit carry its SHA.
+
+The feature never edits the description and never converts a pull request to a draft; it only reports.
+
+## Forks and restricted runs
+
+The check reads only the description and the commits, so it runs the same on a fork's pull request. On a read-only token the check run and report comment cannot be written; they are skipped and listed under **Restricted access** in the job summary, while the findings still appear there and as annotations.
+
+## In the house preset
+
+The [Resnovas house preset](/presets) sets `requireDraft: true` and `maintainerLevel: warning`, and keeps the default field labels, which match the Resnovas pull request template. A repository may add `fields` (the preset leaves them unset) but cannot turn `requireDraft` off.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The AI disclosure is missing, but my description has it">
+    The label must start the line and be followed straight away by a colon. Remove bold or other formatting before the label (`**AI level:**` does not match), and check the label matches `disclosure.fields`. Answers inside `<!-- -->` comments are ignored.
+  </Accordion>
+  <Accordion title="... is not a level">
+    Use one of `none`, `autocomplete`, `chat`, `agent` or `autonomous`, on its own.
+  </Accordion>
+  <Accordion title="AI level is none but this commit credits an AI tool">
+    A commit has an AI `Co-authored-by` or an `Assisted-by` trailer. Either change the level, or, if no AI was used, remove the trailer from that commit.
+  </Accordion>
+  <Accordion title="AI-assisted pull requests must be opened as drafts">
+    Convert the pull request to a draft, finish your review, then mark it ready. The rule only fires when a pull request is opened, so once converted it will not come back.
+  </Accordion>
+  <Accordion title="Accountable human must be the pull request author">
+    Put the author's own login in `Accountable human`, for example `@jane`. Someone else cannot be accountable for your pull request.
+  </Accordion>
+  <Accordion title="the disclosure feature needs the pull request's commits, but they were not loaded">
+    smartcloud could not read the pull request's commits, so the feature failed rather than pass unchecked. Check the token can read pull requests, then re-run.
+  </Accordion>
+</AccordionGroup>

@@ -3,48 +3,153 @@ title: 'Branches'
 description: 'A branch naming policy for pull requests.'
 ---
 
-The branches feature checks each pull request's head branch against a naming policy, such as `<name>/<description>` or a branch that carries an issue key. A branch that meets none of the accepted names fails the feature's `smartcloud / branches` check, with a finding that lists what the policy accepts.
+The branches feature checks the name of the branch each pull request comes from (its head branch) against your naming rules. You might want every branch to look like `<name>/<description>`, or to carry an issue key such as `SMC-75`, so you can tell who owns a branch or link it to your tracker at a glance.
 
-It is enabled by a `branches` section with at least one accepted name:
+A branch that meets none of the accepted names fails the `smartcloud / branches` check, with a message that lists what the policy accepts.
+
+## Turn it on
+
+<Steps>
+  <Step title="Add a branches section with at least one accepted name">
+    ```yaml .github/smartcloud.yml
+    branches:
+      names:
+        person:
+          preset: prefixed
+    ```
+
+    The feature runs only when `names` has at least one entry.
+
+  </Step>
+  <Step title="Exempt your bots">
+    Bots name their own branches. Exempt them by branch or by author:
+
+    ```yaml .github/smartcloud.yml
+    branches:
+      exempt:
+        branches: ['^dependabot/', '^renovate/']
+    ```
+
+  </Step>
+  <Step title="Run on pull request events">
+    The feature runs on pull request events and only records [findings](/glossary#finding). It needs `checks: write` for its check run, and `pull-requests: write` so a failing branch name reaches the report comment smartcloud posts or updates on the pull request.
+  </Step>
+  <Step title="Enforce it">
+    To block merging, require `smartcloud / branches` in the ruleset, or use the [required](/features/required) aggregate, which counts it with the rest. Start with `level: warning` to report the policy without blocking while a team moves over.
+  </Step>
+</Steps>
+
+## Options
+
+| Key                    | Default                    | What it does                                                                                                                      |
+| ---------------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `names`                | none (feature off)         | The accepted forms of branch name, by key, so a preset's and a repository's merge. A branch passes when it meets any one of them. |
+| `names.<key>.preset`   | none                       | A built-in form: `prefixed` or `issueKey`. See [Accepted names](#accepted-names).                                                 |
+| `names.<key>.prefixes` | any prefix                 | With `prefixed` only: the prefixes it accepts, such as `[feat, fix, docs]` or people's names. Compared exactly.                   |
+| `names.<key>.keys`     | any key                    | With `issueKey` only: the issue tracker keys it accepts, such as `[SMC]`. A letter then up to nine letters or digits; any case.   |
+| `names.<key>.pattern`  | none                       | A regular expression the name must match, bare (`^release/`) or as `/source/flags`.                                               |
+| `level`                | `error`                    | `error` fails the check; `warning` only reports.                                                                                  |
+| `message`              | the list of accepted names | Shown in the finding instead of the list of accepted names.                                                                       |
+| `exempt.branches`      | none                       | Head branches matching any of these patterns are not checked, such as `^dependabot/`.                                             |
+| `exempt.authors`       | none                       | Pull requests opened by these logins are not checked, such as `renovate[bot]`. Compared exactly, including case.                  |
+
+Each entry in `names` needs a `preset`, a `pattern`, or both. With both, the branch must meet both. `prefixes` only go with `prefixed` and `keys` only with `issueKey`; anything else is a config error.
+
+## Accepted names
+
+- **`prefixed`**: `<prefix>/<description>`: a non-empty prefix, a slash and a non-empty description, such as `ann/fix-typo` or `feat/size-labels`. List `prefixes` to accept only those.
+- **`issueKey`**: an issue key anywhere in the name, such as `smc-75` in `ann/smc-75-branch-names`. A key is a letter, up to nine more letters or digits, a hyphen and a number, with no letter or digit either side, in any case. List `keys` to accept only your tracker's: GitHub's own `patch-1` has the same shape.
+- **`pattern`**: a regular expression, such as `^release/\d+\.\d+$`.
 
 ```yaml
 branches:
   names:
+    # ann/smc-75-branch-names passes both parts.
+    tracked:
+      preset: prefixed
+      pattern: '/smc-\d+/i'
+    # feat/..., fix/... or docs/... only.
+    typed:
+      preset: prefixed
+      prefixes: [feat, fix, docs]
+```
+
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+branches:
+  names:
+    # Any <prefix>/<description>, such as ann/fix-typo.
     person:
       preset: prefixed
+    # A branch carrying an SMC issue key, such as smc-75-freeze.
     issue:
       preset: issueKey
       keys: [SMC]
+    # Release branches, such as release/2.1.
     release:
       pattern: '^release/\d+\.\d+$'
+  # Fail the check; use warning while people get used to it.
   level: error
   exempt:
     branches: ['^dependabot/', '^renovate/']
     authors: ['github-actions[bot]']
 ```
 
-| Key               | Default | Meaning                                                                                                               |
-| ----------------- | ------- | --------------------------------------------------------------------------------------------------------------------- |
-| `names`           | none    | The accepted forms of branch name, by key, so a preset's and a repository's merge. A branch passes when it meets any. |
-| `level`           | `error` | `error` fails the check; `warning` only reports.                                                                      |
-| `message`         | none    | Shown instead of the list of accepted names.                                                                          |
-| `exempt.branches` | none    | Head branches matching any of these patterns are not checked.                                                         |
-| `exempt.authors`  | none    | Pull requests opened by these logins are not checked.                                                                 |
+## How it works
 
-## Accepted names
+On every pull request event, the feature reads the head branch and the author.
 
-Each entry sets a `preset`, a `pattern`, or both, when the branch must meet both.
+1. If the author is in `exempt.authors`, or the branch matches an `exempt.branches` pattern, nothing is checked.
+2. If the branch meets any entry in `names`, it passes.
+3. Otherwise it records a finding (rule `branches.name`) at `level`. The finding says the branch does not follow the policy, lists the accepted names (or shows `message` instead), and asks for the work to be pushed to a correctly named branch.
 
-- **`prefixed`**: `<prefix>/<description>`, a non-empty prefix, a slash and a non-empty description, such as `ann/fix-typo` or `feat/size-labels`. List `prefixes` to accept only those, such as `[feat, fix, docs]` or the names of the team; they are compared exactly.
-- **`issueKey`**: an issue key anywhere in the name, such as `smc-75` in `ann/smc-75-branch-names`. A key is a letter, up to nine more letters or digits, a hyphen and a number, with no letter or digit either side, in any case. List `keys` to accept only your tracker's, such as `[SMC]`: GitHub's own `patch-1` has the same shape.
-- **`pattern`**: a regular expression, bare or as `/source/flags`, such as `^release/`.
+A branch cannot be renamed under an open pull request. To fix a failing pull request, push the work to a branch named the right way and open a new pull request from it; the finding says so.
 
-`prefixes` only go with `prefixed` and `keys` only with `issueKey`; anything else is a config error.
+## What you will see on GitHub
 
-## Exemptions
+- A `smartcloud / branches` [check run](/glossary#check-run): failure for a bad name at `level: error`, neutral at `level: warning`, success otherwise.
+- The finding in the [report comment](/glossary#report-comment) on the pull request, for example:
 
-Bots name their own branches, so exempt them by branch or by author: `^dependabot/` and `^renovate/` cover Dependabot and Renovate. A branch cannot be renamed under an open pull request, so a failing pull request is fixed by pushing the work to a branch named the right way and opening the pull request from it; the finding says so.
+  ```text
+  The branch `my-change` does not follow this repository's branch naming policy.
 
-## Enforcing it
+  Name the branch one of these ways:
+  - person: `<prefix>/<description>`
+  - issue: an issue key such as `SMC-123`, with the key `SMC`
 
-The feature runs on pull request events and only records findings, so it needs no more permissions than the other pull request features. To block merging, require its check in the ruleset, or the [required](/features/required) aggregate, which counts it with the rest. Set `level: warning` to report the policy without blocking while a team moves over.
+  Push the work to a branch named that way and open the pull request from it.
+  ```
+
+- The same finding in the job summary and as an annotation on the run.
+
+## Forks and restricted runs
+
+The feature only reads the pull request, so it works the same on forks and Dependabot pull requests. A fork's read-only token may not be able to post the report comment or the check run; those writes are skipped and listed under **Restricted access** in the job summary (see [Restricted runs](/reporting#restricted-runs)), and the job's own result still carries the finding. Dependabot's branches start with `dependabot/`, so exempt them.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The feature does not run at all">
+    `branches` needs at least one entry under `names`. A section with only `exempt` or `level` is skipped as not
+    configured.
+  </Accordion>
+  <Accordion title="patch-1 passes the issueKey preset">
+    GitHub's web editor names branches like `patch-1`, which has the shape of an issue key. List your tracker's `keys`,
+    such as `[SMC]`.
+  </Accordion>
+  <Accordion title="Config warning: a branch name needs a preset or a pattern; prefixes go with the prefixed preset, keys with issueKey">
+    Every entry in `names` needs `preset` or `pattern`, `prefixes` needs `preset: prefixed`, and `keys` needs `preset:
+    issueKey`.
+  </Accordion>
+  <Accordion title="A bot's pull request fails the policy">
+    Add its branch prefix to `exempt.branches` (`^dependabot/`, `^renovate/`) or its exact login to `exempt.authors`
+    (`renovate[bot]`).
+  </Accordion>
+  <Accordion title="How do I fix a pull request with a badly named branch?">
+    Create a new branch with an accepted name from the same commit, push it, open a pull request from it, and close the
+    old one. GitHub cannot rename the head branch of an open pull request.
+  </Accordion>
+</AccordionGroup>

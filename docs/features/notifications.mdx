@@ -3,24 +3,106 @@ title: 'Notifications'
 description: 'Send policy failures and stale items to Slack, Discord or Linear.'
 ---
 
-Notifications send what a run found to the places your team already looks. Each run can send two kinds:
+smartcloud reports its results on GitHub: check runs, a comment and the job summary. Notifications also send them to the places your team already looks, so nobody has to watch GitHub to notice that a pull request broke a rule or that old issues are being closed.
 
-- `failures`: the run's policy findings, at `error` level by default, on the pull request, issue or repository the run was about.
-- `stale`: what the [stale feature](/features/stale) changed in a sweep: items it marked, unmarked, abandoned or closed.
+Each run can send two kinds of notification:
 
-Channels are named in a `notifications` section. The name is yours; `type` says where the channel sends.
+- `failures`: the run's policy [findings](/glossary#finding), at `error` level by default, on the pull request, issue or repository the run was about.
+- `stale`: what the [stale feature](/features/stale) changed in a [sweep](/glossary#sweep): items it marked, unmarked, abandoned or closed.
+
+You can send them to three kinds of channel:
+
+- **Slack**, through an incoming webhook.
+- **Discord**, through a channel webhook.
+- **Linear**, where each notification opens an issue in a team.
+
+Notifications are not a check of their own: they never change a run's result, and a channel that fails is only a warning.
+
+## Turn it on
+
+<Steps>
+  <Step title="Get the channel's secret">
+    - **Slack:** create an [incoming webhook](https://api.slack.com/messaging/webhooks) for the channel and copy its URL.
+    - **Discord:** in the channel's settings, open **Integrations > Webhooks**, create a [webhook](https://support.discord.com/hc/en-us/articles/228383668) and copy its URL.
+    - **Linear:** create a [personal API key](https://linear.app/docs/api-and-webhooks) that can create issues in the team, and copy the id (a UUID) of the team issues should go to. Label ids are UUIDs too.
+  </Step>
+  <Step title="Store it as an Actions secret">
+    In the repository or organisation, open **Settings > Secrets and variables > Actions** and add the secret, for example `SLACK_WEBHOOK_URL`. Never put it in the config file: anyone who can read the repository can read that.
+  </Step>
+  <Step title="Pass it to smartcloud as an environment variable">
+    ```yaml .github/workflows/smartcloud.yml
+    - uses: resnovas/smartcloud@v2
+      env:
+        SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+    ```
+  </Step>
+  <Step title="Add a channel">
+    ```yaml .github/smartcloud.yml
+    notifications:
+      channels:
+        maintainers:
+          type: slack
+    ```
+
+    The key (`maintainers`) is a name of your choosing; `type` says where it sends. Send yourself a test by running a feature that finds an error, or preview with a [dry run](/glossary#dry-run), which lists the notifications it would have sent.
+
+  </Step>
+</Steps>
+
+## Options
+
+`notifications.channels` maps a name of your choosing to a channel.
+
+| Key                        | Default                | What it does                                                                                                       |
+| -------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `channels.<name>.type`     | required               | Where the channel sends: `slack`, `discord` or `linear`.                                                           |
+| `channels.<name>.secret`   | per type, below        | The name of the environment variable that holds the channel's secret. Not the secret itself.                       |
+| `channels.<name>.on`       | `[failures, stale]`    | What to send: `failures`, `stale`, or both.                                                                        |
+| `channels.<name>.level`    | `error`                | The lowest finding level sent as a failure: `error`, or `warning` for errors and warnings. Notices are never sent. |
+| `channels.<name>.username` | the webhook's own name | Discord only: the name messages are posted under.                                                                  |
+| `channels.<name>.team`     | required for Linear    | Linear only: the id of the team issues are opened in.                                                              |
+| `channels.<name>.labels`   | none                   | Linear only: ids of labels put on each issue.                                                                      |
+
+| Type      | Secret                                               | Default variable      |
+| --------- | ---------------------------------------------------- | --------------------- |
+| `slack`   | An incoming webhook URL.                             | `SLACK_WEBHOOK_URL`   |
+| `discord` | A channel webhook URL.                               | `DISCORD_WEBHOOK_URL` |
+| `linear`  | A Linear API key that can create issues in the team. | `LINEAR_API_KEY`      |
+
+`secret` is only needed when two channels of the same type need different secrets, or your secret has another name:
 
 ```yaml
 notifications:
   channels:
+    community:
+      type: discord
+      secret: DISCORD_ALERTS_WEBHOOK # read from this environment variable
+```
+
+Give each secret the least it needs: a webhook posts to one channel only, and a Linear key can belong to a member of just the team it writes to.
+
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+stale:
+  staleAfterDays: 60
+  staleLabel: stale
+
+notifications:
+  channels:
+    # Errors and warnings from pull requests and issues, in Slack.
     maintainers:
       type: slack
       on: [failures]
       level: warning
+    # Everything, in a community Discord, under a custom name.
     community:
       type: discord
       secret: DISCORD_ALERTS_WEBHOOK
       username: smartcloud
+    # One Linear issue per stale sweep that changed something.
     triage:
       type: linear
       team: 476cd006-7f53-41a0-8743-44dc922b42a0
@@ -28,21 +110,7 @@ notifications:
       on: [stale]
 ```
 
-| Key        | Default             | Meaning                                                                                                            |
-| ---------- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `type`     | required            | `slack`, `discord` or `linear`.                                                                                    |
-| `secret`   | per type, below     | The environment variable that holds the channel's secret.                                                          |
-| `on`       | both                | `failures`, `stale`, or both.                                                                                      |
-| `level`    | `error`             | The lowest finding level sent as a failure: `error`, or `warning` for errors and warnings. Notices are never sent. |
-| `username` | the webhook's name  | Discord only: the name messages are posted under.                                                                  |
-| `team`     | required for Linear | Linear only: the id of the team issues are opened in.                                                              |
-| `labels`   | none                | Linear only: ids of labels put on each issue.                                                                      |
-
-## Secrets
-
-Secrets never go in the config file, which anyone who can read the repository can read. The config names the environment variable that holds each secret instead, and the workflow sets it from a repository or organisation secret:
-
-```yaml
+```yaml .github/workflows/smartcloud.yml
 - uses: resnovas/smartcloud@v2
   env:
     SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -50,29 +118,51 @@ Secrets never go in the config file, which anyone who can read the repository ca
     LINEAR_API_KEY: ${{ secrets.LINEAR_API_KEY }}
 ```
 
-| Type      | Secret                                                                                           | Default variable      |
-| --------- | ------------------------------------------------------------------------------------------------ | --------------------- |
-| `slack`   | An [incoming webhook](https://api.slack.com/messaging/webhooks) URL.                             | `SLACK_WEBHOOK_URL`   |
-| `discord` | A channel [webhook](https://support.discord.com/hc/en-us/articles/228383668) URL.                | `DISCORD_WEBHOOK_URL` |
-| `linear`  | A Linear [API key](https://linear.app/docs/api-and-webhooks) that can create issues in the team. | `LINEAR_API_KEY`      |
+## How it works
 
-Give each secret the least it needs: a webhook posts to one channel only, and a Linear key can be a member of just the team it writes to.
+After every run, once the check runs and the report comment are published, smartcloud looks at each channel:
 
-When a channel's variable is unset or empty, the channel is skipped and the run records a warning. That is what happens on a pull request from a fork, where GitHub passes no secrets: the run carries on without notifications and never fails because of them.
+1. It works out which kinds (`on`) the run has something to say about. A `failures` notification needs at least one finding at `level` or above; a `stale` one needs at least one change the stale feature made.
+2. It reads the channel's secret from its environment variable. When the variable is unset or empty, the channel is skipped with a warning.
+3. It sends the notification. Channels are sent to in parallel; one that fails or does not answer within 15 seconds is recorded as a warning, and the others are still sent to.
 
-## What is sent
+Failures are not sent again while they are unchanged: on a pull request or issue whose [report comment](/reporting#one-comment) already says the same thing, a new push does not notify again. Stale changes are sent each time a sweep makes some, which is once per item and step of the lifecycle.
 
-- **Slack**: the title, linked to the pull request, issue or repository, and one bullet per finding or change. Text is escaped, so a title cannot mention `@channel` or inject a link.
-- **Discord**: one embed with the same content, sent through [dfx](https://github.com/tim-smart/dfx)'s Discord REST client. Mentions are switched off, so a title cannot ping `@everyone`.
-- **Linear**: a new issue in `team`, titled like the message, whose description lists the findings or changes and links back to GitHub.
+In a [dry run](/glossary#dry-run) nothing is sent and no secret is read: the job summary, the CLI and the MCP server list the notifications that would have been sent instead.
 
-A message lists at most 20 findings or changes and counts the rest.
+## What you will see
 
-Failures are not sent again while they are unchanged: on a pull request or issue whose [report comment](/reporting) already says the same thing, a new push does not notify again. Stale changes are sent each time a sweep makes some, which is once per item and step of the lifecycle.
+- **Slack:** a message titled, for example, "2 policy failures on pull request #42 in my-org/app", linked to the pull request, issue or repository, with one bullet per finding (`error DCO: ...`) or change. Text is escaped, so a title cannot mention `@channel` or inject a link.
+- **Discord:** one embed with the same content. Mentions are switched off, so a title cannot ping `@everyone`.
+- **Linear:** a new issue in `team`, titled like the message, whose description lists the findings or changes and links back to GitHub.
 
-A channel that fails or does not answer within 15 seconds is recorded as a warning, and the others are still sent to. Notifying never changes the run's result.
+A stale notification is titled like "3 stale changes in my-org/app". A message lists at most 20 findings or changes and counts the rest.
 
-In a dry run nothing is sent: the job summary, the CLI and the MCP server list the notifications that would have been sent instead.
+On GitHub, a channel that was skipped or failed shows as a warning annotation on the run, such as `notifications: failures not sent on maintainers: SLACK_WEBHOOK_URL is not set`.
+
+## Forks and restricted runs
+
+GitHub passes no secrets to a pull request from a fork, or to Dependabot's runs, so every channel's variable is empty there. Each channel is skipped with a warning, and the run carries on and never fails because of it. Scheduled runs, which carry stale changes, always have their secrets.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="notifications: failures not sent on <channel>: SLACK_WEBHOOK_URL is not set">
+    The environment variable the channel reads is missing or empty. Pass the secret in the workflow step's `env`, with
+    the name the channel's `secret` gives (or the default for its type). On a fork's pull request this is expected.
+  </Accordion>
+  <Accordion title="slack: no answer within 15s">
+    The service did not answer in time. The notification is dropped for this run; the next run with something to say
+    sends again.
+  </Accordion>
+  <Accordion title="Nothing is sent although the check failed">
+    Check the channel's `on` includes `failures`, and its `level`: with the default `error`, warnings are not sent. A
+    pull request whose report comment has not changed since the last run is not notified again.
+  </Accordion>
+  <Accordion title="Linear rejects the request">
+    The API key must be able to create issues in `team`, and `team` and `labels` must be ids, not names.
+  </Accordion>
+</AccordionGroup>
 
 ## Adding a channel
 

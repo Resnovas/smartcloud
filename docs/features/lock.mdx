@@ -3,31 +3,78 @@ title: 'Lock'
 description: 'Lock the conversations of issues and pull requests that have been closed for a while.'
 ---
 
-The lock feature locks the conversation of every issue and pull request that has been closed for a number of days, so old threads stop collecting comments that belong in a new issue. It runs on `schedule` and `workflow_dispatch` events only, and is enabled by a `lock` section.
+When an issue or pull request has been closed for a long time, new comments on it are usually in the wrong place: a new bug report hiding in an old thread, or a "me too" nobody will read. The lock feature locks the conversation of every item that has been closed for a number of days. Once locked, only people with write access can comment, and GitHub tells everyone else to open a new issue.
 
-```yaml
+You would use it to keep old threads tidy and make sure new problems are reported where maintainers will see them.
+
+The feature runs as a [sweep](/glossary#sweep): once per scheduled or manual run, it finds every closed, unlocked item old enough to lock.
+
+## Turn it on
+
+<Steps>
+  <Step title="Run smartcloud on a schedule">
+    The sweep runs only on `schedule` and `workflow_dispatch` events. Make sure your workflow has both:
+
+    ```yaml .github/workflows/smartcloud.yml
+    on:
+      schedule:
+        - cron: '0 6 * * *'
+      workflow_dispatch:
+    ```
+
+  </Step>
+  <Step title="Give the job write access to issues and pull requests">
+    Locking needs `issues: write` for issues and `pull-requests: write` for pull requests. The [workflow token](/glossary#workflow-token) has both with the permissions in [Getting started](/getting-started).
+  </Step>
+  <Step title="Add a lock section">
+    ```yaml .github/smartcloud.yml
+    lock:
+      afterDays: 30
+      reason: resolved
+    ```
+  </Step>
+  <Step title="Run it once by hand">
+    Run the workflow from the Actions tab and read the job summary. With the action's `dryRun: true` input, it lists what it would lock without locking anything.
+  </Step>
+</Steps>
+
+## Options
+
+| Key             | Default                | What it does                                                                                                     |
+| --------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `on`            | `[pullRequest, issue]` | Which [subjects](/glossary#subject) to lock: `issue`, `pullRequest`, or both.                                    |
+| `afterDays`     | required               | Days an item has been closed before it is locked. Zero or more; fractions are allowed.                           |
+| `reason`        | none                   | The reason GitHub shows on the item: `resolved`, `off-topic`, `too heated` or `spam`. Without it, none is shown. |
+| `comment`       | none                   | Posted on the item just before it is locked.                                                                     |
+| `label`         | none                   | Added to the item just before it is locked. A label name as GitHub shows it, not a key of the `labels` section.  |
+| `exempt.labels` | none                   | Items with any of these labels, ignoring case, are never locked.                                                 |
+
+A pull request counts as closed whether it was merged or not.
+
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+labels:
+  locked:
+    name: locked
+    color: EDEDED
+    description: Closed and locked; open a new issue instead.
+
 lock:
   on: [issue, pullRequest]
+  # Lock 30 days after closing.
   afterDays: 30
   reason: resolved
   comment: This thread has been closed for 30 days, so it is locked. Please open a new issue for anything related.
   label: locked
   exempt:
+    # Keep these open for comments.
     labels: [pinned]
 ```
 
-| Key             | Default  | Meaning                                                                                                         |
-| --------------- | -------- | --------------------------------------------------------------------------------------------------------------- |
-| `on`            | both     | `issue`, `pullRequest`, or both.                                                                                |
-| `afterDays`     | required | Days an item has been closed before it is locked. Fractions are allowed.                                        |
-| `reason`        | none     | The reason GitHub shows: `resolved`, `off-topic`, `too heated` or `spam`.                                       |
-| `comment`       | none     | Posted on the item just before it is locked.                                                                    |
-| `label`         | none     | Added to the item just before it is locked. A label name as GitHub shows it, not a key of the `labels` section. |
-| `exempt.labels` | none     | Items with any of these labels, ignoring case, are never locked.                                                |
-
-A pull request counts as closed whether it was merged or not.
-
-## How a sweep works
+## How it works
 
 1. smartcloud searches the repository for closed, unlocked issues and pull requests closed more than `afterDays` ago, one search for each kind in `on`.
 2. Items with an `exempt.labels` label are skipped.
@@ -39,6 +86,31 @@ GitHub's search returns at most 1,000 items for each kind. A repository with a l
 
 Each item is locked on its own. When GitHub fails on one, the sweep records an error naming it and carries on with the rest.
 
-## Permissions
+## What you will see on GitHub
 
-Locking needs `issues: write` for issues and `pull-requests: write` for pull requests, which the workflow token has with the permissions in the [introduction](/introduction#permissions). Scheduled and manually dispatched runs never come from a fork, so the feature never runs with a fork's read-only token.
+- **On the item:** your `comment`, your `label`, and the conversation locked, with GitHub's "locked as resolved" (or your `reason`) note.
+- **Check run:** `smartcloud / lock`, concluding `success` when every item was locked and `failure` when any could not be. See [check runs](/glossary#check-run).
+- **Job summary:** each comment, label and lock, as a list of changes.
+
+## Forks and restricted runs
+
+Scheduled and manually dispatched runs never come from a fork, so the feature never runs with a fork's read-only token. It works with the plain [workflow token](/glossary#workflow-token). In a [restricted run](/glossary#restricted-run), a write GitHub refuses is skipped and listed under **Restricted access** in the job summary.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Nothing is locked on pull request or push runs">
+    The sweep runs only on `schedule` and `workflow_dispatch`. Add a schedule, or run the workflow by hand.
+  </Accordion>
+  <Accordion title="Error: #123 was not locked: ...">
+    GitHub refused or failed that item. Usually the job is missing `issues: write` (for issues) or `pull-requests:
+    write` (for pull requests). The rest of the sweep carried on, and the next sweep tries again.
+  </Accordion>
+  <Accordion title="Some old items are still unlocked">
+    GitHub's search returns at most 1,000 items of each kind per sweep, so a large backlog takes several sweeps. Search
+    results can also lag a few minutes behind recent closes.
+  </Accordion>
+  <Accordion title="The config is rejected: reason">
+    `reason` accepts only `resolved`, `off-topic`, `too heated` (with the space) or `spam`.
+  </Accordion>
+</AccordionGroup>

@@ -35,7 +35,7 @@ What is dropped:
 
 - An unknown key, or a value of the wrong type or outside its allowed values, is dropped on its own; the rest of its section still applies.
 - A problem anywhere in a rule's `when` drops the whole `when`, so a rule never runs with some of its conditions missing. A rule that cannot work without its `when`, such as a labelling rule or an automatic approval, is then dropped too; a convention that also names a `preset` keeps the preset. A problem inside any other list drops the whole list, never one item.
-- A section or rule still incomplete once every file is merged, such as `sync` without `source`, a label without `color`, or a convention with neither `preset` nor `when`, is dropped. A repository can still complete a rule its preset starts, or restate one to add a field, as [Add, never change](#add-never-change) describes.
+- A section or rule still incomplete once every file is merged, such as `sync` without `source`, a label without `color`, or a convention with neither `preset` nor `when`, is dropped. A repository can still complete a rule its preset starts, or restate one to add a field, as [Add, never change](/presets#add-never-change) describes.
 
 Dropping a setting that only tightens policy would loosen it. For example, a `roles.maintainers` list with one bad entry would leave fewer than two maintainers, and that opens the review gate. So an invalid value dropped from one of these settings is an error in the `smartcloud / config` check, not a warning. Every feature still runs, but the check fails and blocks merging until the config is fixed:
 
@@ -54,7 +54,7 @@ This applies to an invalid value at, inside or around one of these, such as a wh
 
 A value a preset sets that this version cannot read is dropped from the preset but stays locked: your config cannot set that key either, and a value it sets there is ignored with a warning. A preset that asks for a stricter setting than this version knows can never be turned into a weaker one.
 
-Some problems still fail the run, because they are not about one key: a file that is not YAML or JSON, is not a mapping, or has a malformed `extends` entry; a preset that cannot be read (outside a [restricted run](/reporting#restricted-runs)); presets that extend each other in a loop or more than five deep; and a config that changes a value its preset set, which [Add, never change](#add-never-change) describes.
+Some problems still fail the run, because they are not about one key: a file that is not YAML or JSON, is not a mapping, or has a malformed `extends` entry; a preset that cannot be read (outside a [restricted run](/reporting#restricted-runs)); presets that extend each other in a loop or more than five deep; and a config that changes a value its preset set, which [Add, never change](/presets#add-never-change) describes.
 
 The warnings appear in a `smartcloud / config` check run and the job summary; see [Reporting](/reporting#config-warnings). To catch mistakes before they reach a run, check the config with [`smartcloud validate`](/cli#validate) or the MCP server's `validate_config`, which are strict and report every unknown key and invalid value as an error, or let your editor check it against the JSON Schema named in the first line of the example above, which is strict too.
 
@@ -62,9 +62,6 @@ The warnings appear in a `smartcloud / config` check run and the job summary; se
 
 | Section                                          | Feature                                  |
 | ------------------------------------------------ | ---------------------------------------- |
-| ------------------------------------------------ | ---------------------------------------- |
-| `labels`, `labelSync`, `labelling`               | [Labels](/features/labels)               |
-| ------------------------------------------------ | ------------------------------------     |
 | `labels`, `labelSync`, `labelling`, `sizeLabels` | [Labels](/features/labels)               |
 | `conventions`                                    | [Conventions](/features/conventions)     |
 | `commits`                                        | [Commits](/features/commits)             |
@@ -99,62 +96,6 @@ Every rule is a keyed map, never a list. Keys are how presets and repositories m
 
 ## Presets and `extends`
 
-`extends` lists preset files to build on, each written as `owner/repo/path@ref`. The ref (a branch, tag or commit) is optional; without it the repository's default branch is read.
+`extends` lists preset files to build on, each written as `owner/repo/path@ref`. Presets are merged first, in order, and the repository's config last. Everything a preset sets is locked: a repository may add to it, or restate it exactly, but changing it fails the run.
 
-```yaml
-extends:
-  - Resnovas/.github/smartcloud/house.yml@main
-  - my-org/.github/smartcloud/typescript.yml@v1.2.0
-```
-
-A preset is an ordinary config file with `version: 2`, and may extend presets of its own. Presets are merged first, in the order listed, each preset's own presets before it, and the repository's config last. Presets extending each other in a loop are an error, as is nesting more than five deep.
-
-### Add, never change
-
-Everything a preset sets is locked. A repository may add to what it inherits, but never change or remove it:
-
-- **Adding is allowed.** A new label, a new rule, or a new field on an inherited rule that the preset left unset.
-- **Identical restatements are allowed.** Repeating an inherited value exactly as it already is changes nothing, so a repository can keep a full copy of a rule without error.
-- **Changing is an error.** Any other value for something already set, whether a scalar, a list or a different shape, fails the whole run.
-
-Lists are values, not collections to append to: if a preset sets `roles.maintainers`, a repository cannot add a name to it.
-
-Given this preset:
-
-```yaml Resnovas/.github/smartcloud/house.yml
-version: 2
-labels:
-  bug:
-    name: bug
-    color: D73A4A
-```
-
-This repository config is valid: it restates `bug` identically, adds a description the preset left unset, and adds a new label.
-
-```yaml .github/smartcloud.yml
-version: 2
-extends:
-  - Resnovas/.github/smartcloud/house.yml@main
-labels:
-  bug:
-    name: bug
-    color: D73A4A
-    description: Something is not working
-  docs:
-    name: documentation
-    color: 0075CA
-```
-
-Changing the colour instead fails with an error naming the path and the preset that set it:
-
-```text
-.github/smartcloud.yml cannot change "labels.bug.color": it is set by Resnovas/.github/smartcloud/house.yml@main. Add a new rule instead.
-```
-
-The same rule applies between presets: a later preset cannot change what an earlier one set.
-
-`version`, `extends` and `$schema` describe a file rather than rules, so they are never merged.
-
-### Reading presets
-
-The action reads presets through the GitHub API with its own token, so a preset in a private repository needs a token that can read that repository. A [restricted run](/reporting#restricted-runs), such as a pull request from a fork, leaves out a preset from another repository that its token cannot read, and warns that the preset's rules were not checked, rather than failing. The CLI resolves a token only when a config extends something; see [CLI](/cli#tokens).
+[Presets and extends](/presets) explains writing and using presets, the merge order, the add-never-change rule with worked examples, reading private presets, and what the Resnovas house preset turns on.

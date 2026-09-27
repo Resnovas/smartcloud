@@ -3,25 +3,59 @@ title: 'Commands'
 description: 'Label, assign, rebase, approve, backport and more with slash commands in comments, limited by repository role.'
 ---
 
-The commands feature answers slash commands in issue and pull request comments. Anyone can write one; smartcloud runs it only when the commenter's role in the repository allows it. It is enabled by a `commands` section, which can be empty:
+Slash commands let people act on an issue or pull request by writing a comment. Type `/label bug` and smartcloud adds the label; type `/rebase` and it rebases the pull request. It saves a trip to the sidebar, works from the GitHub mobile app and email replies, and lets contributors do safe things themselves, such as marking their own pull request ready, without being given write access.
 
-```yaml
-commands: {}
-```
+Anyone can write a command. smartcloud runs it only when the commenter's role in the repository allows it, and the role needed for each command is yours to change.
 
-The workflow must run on new comments. Add `closed` to the pull request types too if you want [backports on merge](#backports):
+## Turn it on
 
-```yaml
-on:
-  issue_comment:
-    types: [created]
-  pull_request:
-    types: [opened, edited, synchronize, reopened, ready_for_review, closed]
-```
+<Steps>
+  <Step title="Run the workflow on new comments">
+    Commands arrive as `issue_comment` events. Add `closed` to the pull request types too if you want [backports on merge](#backports):
+
+    ```yaml .github/workflows/smartcloud.yml
+    on:
+      issue_comment:
+        types: [created]
+      pull_request:
+        types: [opened, edited, synchronize, reopened, ready_for_review, closed]
+    ```
+
+    The job needs `issues: write` and `pull-requests: write` for labels, replies and reviews, and `contents: write` for `/rebase`, `/update` and `/backport`.
+
+  </Step>
+  <Step title="Optionally, start jobs only for people who can use commands">
+    Every command checks the commenter's role itself, but you can stop a job starting at all for a comment that has no command or comes from outside the repository:
+
+    ```yaml
+    jobs:
+      smartcloud:
+        if: >-
+          github.event_name != 'issue_comment' || (
+            contains(github.event.comment.body, '/') &&
+            contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+          )
+    ```
+
+    Leave this out if you want outside contributors to use the commands their author rights allow, such as `/ready` on their own pull request.
+
+  </Step>
+  <Step title="Add a commands section">
+    An empty section turns every command on with its default roles:
+
+    ```yaml .github/smartcloud.yml
+    commands: {}
+    ```
+
+  </Step>
+  <Step title="Try it">
+    Comment `/help` on any issue. smartcloud replies with the commands you can use there.
+  </Step>
+</Steps>
 
 ## Writing commands
 
-A command is a line that starts with `/` and a command name. Put each command on its own line; one comment can hold up to ten.
+A command is a line that starts with `/` and a command name. Put each command on its own line; one comment can hold up to ten, and any after the tenth are refused.
 
 ```text
 Thanks, this looks right.
@@ -30,9 +64,11 @@ Thanks, this looks right.
 /backport release/1.x
 ```
 
-Arguments are separated by spaces. Quote an argument that has spaces in it. Names are not case-sensitive. smartcloud skips lines in fenced code blocks and quoted lines (`> /close`), so quoting or showing a command does not run it. Lines that start with `/` but are not a command, such as a path, are ignored. Edited comments are not run again, and comments by bot accounts are ignored.
-
-smartcloud reacts to the comment with 👍 when every command worked and 😕 otherwise. It replies when a command was refused, was written wrongly, or failed, and when a command has output, such as `/help`. Every command is recorded in the run's job summary: a change when it worked, a warning when it did not.
+- Arguments are separated by spaces. Quote an argument that has spaces in it.
+- Names are not case-sensitive.
+- Lines in fenced code blocks and quoted lines (`> /close`) are skipped, so quoting or showing a command does not run it.
+- Lines that start with `/` but are not a command, such as a path, are ignored.
+- Edited comments are not run again, and comments by bot accounts are ignored, so smartcloud never answers itself.
 
 ## Commands
 
@@ -63,53 +99,83 @@ smartcloud reacts to the comment with 👍 when every command worked and 😕 ot
 
 "Or the author" means the person who opened the issue or pull request may use the command on it whatever their role.
 
-## Who may use a command
+## Options
 
-Roles are GitHub's repository roles, lowest first: `read`, `triage`, `write`, `maintain` and `admin`. Each includes the ones before it. smartcloud reads the commenter's role from GitHub for every comment. A custom role counts as the role it is based on. Someone who is not a collaborator has no role, and if GitHub's answer cannot be read, smartcloud assumes no role and records a warning, so commands fail closed.
+| Key                              | Default                               | What it does                                                                                |
+| -------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `overrides.<command>.enabled`    | `true`                                | Set to `false` to refuse the command ("/merge is turned off in this repository").           |
+| `overrides.<command>.permission` | per command, above                    | The lowest role that may use the command: `read`, `triage`, `write`, `maintain` or `admin`. |
+| `overrides.<command>.author`     | per command, above                    | Whether the item's author may use the command on it whatever their role.                    |
+| `snoozeDays`                     | `30`                                  | How long `/stale-snooze` snoozes when no number of days is given, from 1 to 365.            |
+| `mergeMethod`                    | `squash`                              | How `/merge` and `/automerge` merge when no method is given: `merge`, `squash` or `rebase`. |
+| `backport.labelPrefix`           | `backport.prefix`, else `"backport "` | The start of a label that asks for a backport on merge.                                     |
+| `backport.branchPrefix`          | `"backport/"`                         | The start of every backport branch's name.                                                  |
+| `reactions`                      | `true`                                | Set to `false` to stop smartcloud reacting to command comments.                             |
 
-Change who may use a command, or turn it off, under `overrides`:
+The `overrides` keys are command names without the slash, such as `stale-snooze`.
 
 ```yaml
 commands:
   overrides:
-    approve: { permission: maintain }
-    merge: { enabled: false }
-    close: { author: false }
-    assign: { permission: read }
+    approve: { permission: maintain } # only maintainers may approve through smartcloud
+    merge: { enabled: false } # merging goes through the merge queue instead
+    close: { author: false } # authors cannot close their own issues
+    assign: { permission: read } # anyone with read access may assign
 ```
 
-| Key                              | Default            | Meaning                                                                          |
-| -------------------------------- | ------------------ | -------------------------------------------------------------------------------- |
-| `overrides.<command>.enabled`    | `true`             | Set to `false` to refuse the command.                                            |
-| `overrides.<command>.permission` | per command, above | The lowest role that may use the command.                                        |
-| `overrides.<command>.author`     | per command, above | Whether the item's author may use the command on it whatever their role.         |
-| `snoozeDays`                     | `30`               | How long `/stale-snooze` snoozes when no number of days is given, from 1 to 365. |
-| `mergeMethod`                    | `squash`           | How `/merge` and `/automerge` merge when no method is given.                     |
-| `backport.labelPrefix`           | `"backport "`      | The start of a label that asks for a backport on merge.                          |
-| `backport.branchPrefix`          | `"backport/"`      | The start of every backport branch's name.                                       |
-| `reactions`                      | `true`             | Set to `false` to stop smartcloud reacting to command comments.                  |
+## Complete example
 
-The `overrides` keys are command names without the slash, such as `stale-snooze`.
+```yaml .github/smartcloud.yml
+version: 2
 
-## Tokens
+# /stale-snooze needs the stale feature.
+stale:
+  staleAfterDays: 60
+  staleLabel: stale
+
+commands:
+  overrides:
+    approve: { permission: maintain }
+    merge: { enabled: false }
+    automerge: { permission: maintain }
+  snoozeDays: 14
+  mergeMethod: squash
+  backport:
+    labelPrefix: 'backport '
+    branchPrefix: 'backport/'
+  reactions: true
+```
+
+## How it works
+
+### Who may use a command
+
+Roles are GitHub's repository roles, lowest first: `read`, `triage`, `write`, `maintain` and `admin`. Each includes the ones before it. smartcloud reads the commenter's role from GitHub for every comment. A custom role counts as the role it is based on. Someone who is not a collaborator has no role, and if GitHub's answer cannot be read, smartcloud assumes no role and records a warning (`commands.role`), so commands fail closed.
+
+A command is refused when:
+
+- it is turned off (`/merge is turned off in this repository`);
+- the commenter's role is too low (`needs the write role, or to be the author; @someone has the read role`);
+- it only works on pull requests and was used on an issue (`/rebase only works on pull requests`);
+- it is the eleventh or later in the comment.
+
+### Tokens
 
 Commands act with the action's token, and some need more than the workflow token has:
 
-- Changes the workflow token makes do not start other workflows. A pull request that `/rebase`, `/update` or `/backport` changes gets no CI run from it. Give the action a token of your own, such as a GitHub App token, for those to run CI.
-- `/approve` with the workflow token needs **Allow GitHub Actions to create and approve pull requests** turned on in the repository's Actions settings. The approval is by the token's account, and its text names who asked for it.
+- Changes the [workflow token](/glossary#workflow-token) makes do not start other workflows. A pull request that `/rebase`, `/update` or `/backport` changes gets no CI run from it. Give the action a token of your own, such as a [GitHub App](/glossary#github-app) token, for those to run CI.
+- `/approve` with the workflow token needs **Allow GitHub Actions to create and approve pull requests** turned on in the repository's Actions settings (`settings.actions.createPullRequests`). The approval is by the token's account, and its text names who asked for it.
 - `/rebase`, `/update` and `/backport` cannot change a branch in a fork unless its author allows maintainers to edit it.
 
 GitHub's answer is reported when it refuses a command, for example "Pull Request is not mergeable" for `/merge`.
 
-`issue_comment` workflows always run the default branch's workflow with the base repository's token, including for comments on pull requests from forks. That is why every command checks the commenter's role before it does anything.
-
-## Stale snooze
+### Stale snooze
 
 `/stale-snooze` needs the [stale feature](/features/stale) to be configured. It writes one smartcloud comment on the item saying until when it is snoozed, updating it on a later snooze, and removes the stale label. The stale sweep does not mark a snoozed item stale, and unmarks one that is. Only a snooze comment written by a bot account or a `roles.trustedBots` login counts, so nobody can snooze an item by typing the marker.
 
-## Backports
+### Backports
 
-On a merged pull request, `/backport release/1.x` backports at once. On an open one it adds the label `backport release/1.x`, and the pull request is backported when it is merged: add `closed` to the workflow's pull request types for that. Labelling a pull request by hand works the same way. Labels need the triage role, so anyone who can add one can ask for a backport; the backport is a pull request, which still needs review and merging.
+On a merged pull request, `/backport release/1.x` backports at once. On an open one it adds the label `backport release/1.x`, and the pull request is backported when it is merged: add `closed` to the workflow's pull request types for that. Labelling a pull request by hand works the same way. Labels need the triage role, so anyone who can add one can ask for a backport; the backport is a pull request, which still needs review and merging. A pull request closed without merging is refused.
 
 For each target branch, smartcloud:
 
@@ -120,12 +186,63 @@ For each target branch, smartcloud:
 
 If the changes do not apply cleanly, smartcloud deletes the branch and says so; backport by hand. If the branch already exists, it leaves it alone. Pull requests with more than 100 commits are not backported. When the backport was asked for by label, smartcloud comments on the merged pull request with how each went.
 
-## Running features again
+<Note>
+  When the [backport feature](/features/backport) is configured (a `backport` section), it does every backport on merge
+  and this command only adds the label, using that feature's `prefix`. Without a `backport` section, the commands
+  feature does the backport itself. Either way a label is backported once, and a label naming the branch the pull
+  request merged into is ignored.
+</Note>
+
+### Running features again
 
 `/run` runs smartcloud's features again for the item the comment is on: every feature for it when none are named, or the ones named, such as `/run conventions labels`. Their results are published as the item's own run would be: check runs and the report comment. This is how to recheck a pull request after fixing its title without pushing.
 
-Features that act on the whole repository, such as `settings`, `sync` and `stale`, run as a manual dispatch would, and need the `maintain` role whatever `overrides.run` says. A feature turned off by its [feature flag](/telemetry) stays off.
+Features that act on the whole repository, such as `settings`, `sync` and `stale`, run as a manual dispatch would, and need the `maintain` role whatever `overrides.run` says. A feature turned off by its [feature flag](/telemetry) stays off. A name that is not a feature is refused with the list of features there are.
 
-## Dry runs
+### Dry runs
 
-In a dry run, commands record the writes they would make instead of making them. `/backport` reads what it needs and says which branch it would open a backport from.
+In a [dry run](/glossary#dry-run), commands record the writes they would make instead of making them. `/backport` reads what it needs and says which branch it would open a backport from.
+
+## What you will see on GitHub
+
+- **A reaction** on the comment: thumbs up (`+1`) when every command worked, confused (`confused`) otherwise (unless `reactions: false`).
+- **A reply** when a command was refused, written wrongly or failed, and when a command has output, such as `/help`.
+- **The change itself**: the label, assignee, review, merge or backport pull request.
+- **The job summary**, listing every command: a change when it worked, and a warning (`commands.denied`, `commands.invalid` or `commands.failed`) when it did not.
+
+A comment run publishes no check run and no report comment, because a comment is not a commit. Backports asked for by label run on the merged pull request's `closed` event, so they also show as a `smartcloud / commands` [check run](/glossary#check-run) there.
+
+## Forks and restricted runs
+
+`issue_comment` workflows always run the default branch's workflow with the base repository's token, including for comments on pull requests from forks. The comment never runs code from the pull request, and the run is not [restricted](/glossary#restricted-run). That is why every command checks the commenter's role before it does anything, and why the job condition in [Turn it on](#turn-it-on) is worth adding when the job mints a stronger token.
+
+A fork's branch can only be changed by `/rebase`, `/update` or `/backport` when its author allows maintainers to edit it.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Nothing happens when I comment">
+    Check the workflow runs on `issue_comment` with `types: [created]`, the config has a `commands` section, and the command is on its own line starting with `/`. Edited comments, comments by bots, quoted lines and lines in code blocks are ignored. A job condition on `author_association` also stops comments from outside the repository.
+  </Accordion>
+  <Accordion title="needs the write role, or to be the author">
+    Your repository role is below the command's. Ask a maintainer, or lower the role with `overrides.<command>.permission`.
+  </Accordion>
+  <Accordion title="could not read the role of @someone, so none is assumed">
+    GitHub did not answer the permission lookup, so smartcloud refused rather than guessed. Try again; if it persists, check the token can read the repository's collaborators.
+  </Accordion>
+  <Accordion title="The rebased or backported pull request has no CI run">
+    Changes made with the workflow token do not start workflows. Pass a GitHub App token as `GITHUB_TOKEN`.
+  </Accordion>
+  <Accordion title="/approve fails with GitHub Actions is not permitted to approve pull requests">
+    Turn on **Allow GitHub Actions to create and approve pull requests** (Settings > Actions > General), or set `settings.actions.createPullRequests: true`, or use an app token.
+  </Accordion>
+  <Accordion title="/stale-snooze: the stale feature is not configured">
+    Add a `stale` section; snoozing only means something when items can go stale.
+  </Accordion>
+  <Accordion title="/run: changes the whole repository, which needs the maintain role">
+    `settings`, `sync`, `stale` and other repository-wide features need the maintain role whatever `overrides.run` says. Name only the item's own features, or ask a maintainer.
+  </Accordion>
+  <Accordion title="The backport did not apply cleanly">
+    smartcloud deletes the branch and says so. Cherry-pick the change onto the target branch by hand and open the pull request yourself.
+  </Accordion>
+</AccordionGroup>

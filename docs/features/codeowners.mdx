@@ -3,34 +3,82 @@ title: 'CODEOWNERS'
 description: 'Validate CODEOWNERS on pull requests, and generate it from the config.'
 ---
 
-The codeowners feature checks the repository's CODEOWNERS file, and can write owners from the config into it. It is enabled by a `codeowners` section, which may be empty to only check the file:
+A CODEOWNERS file tells GitHub who owns which files. When a pull request changes a file, GitHub asks its owners to review it, and a [ruleset](/glossary#ruleset) can require their approval before merging. It is a plain text file of lines like `/docs/ @my-org/docs`.
 
-```yaml
+The trouble is that GitHub quietly ignores lines it does not understand. A typo in a team name, or a pattern GitHub does not support, and nobody is asked to review. The codeowners feature does two things about that:
+
+- **Checking:** on a pull request that changes CODEOWNERS, it reports every line GitHub rejects or ignores, and every rule that can never apply.
+- **Generating:** it can write owners you list in the smartcloud config into a marked block of the file, so a shared [preset](/glossary#preset) can set owners across many repositories.
+
+## Turn it on
+
+<Steps>
+  <Step title="Run smartcloud on pull requests and pushes">
+    Checking needs `pull_request` events. Generating runs on `push`, `schedule` and `workflow_dispatch`. The workflow in [Getting started](/getting-started) has all of them.
+  </Step>
+  <Step title="Grant the permissions">
+    Checking needs `checks: write` for its check run and `pull-requests: write` for the report comment it posts or updates when a finding needs action. Generating also pushes a branch and opens a pull request, so it needs `contents: write` as well.
+  </Step>
+  <Step title="Add a codeowners section">
+    An empty section only checks the file you already have:
+
+    ```yaml .github/smartcloud.yml
+    codeowners: {}
+    ```
+
+    Add `rules` to generate owners too (see [Options](#options)).
+
+  </Step>
+  <Step title="Require the check">
+    To block a pull request that breaks CODEOWNERS, require the `smartcloud / codeowners` check in a ruleset, or use the [required](/features/required) feature's single aggregate check.
+  </Step>
+</Steps>
+
+## Options
+
+| Key                   | Default                                        | What it does                                                                                                                           |
+| --------------------- | ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `path`                | the first that exists, or `.github/CODEOWNERS` | Where the file lives: `.github/CODEOWNERS`, `CODEOWNERS` or `docs/CODEOWNERS`, the places GitHub reads, in that order.                 |
+| `rules`               | none                                           | Rules to generate, by key, so a preset's and a repository's rules merge. Written in the order given.                                   |
+| `rules.<key>.paths`   | required                                       | One or more path patterns, each written as its own line, such as `/docs/`, `*.md` or `apps/**/*.ts`.                                   |
+| `rules.<key>.owners`  | required                                       | Who owns those paths: a user as `@login`, a team as `@org/team`, or an email address. An empty list leaves the paths without an owner. |
+| `rules.<key>.comment` | none                                           | A `#` comment written above the rule's lines.                                                                                          |
+| `check`               | `true`                                         | Check pull requests that change CODEOWNERS. `false` turns checking off and leaves only generation.                                     |
+| `level`               | `error`                                        | How serious a problem on a pull request is: `error` fails the check; `warning` only reports.                                           |
+| `branch`              | `smartcloud/codeowners`                        | The branch generated changes are proposed from. It is force-updated, so it cannot be the default branch.                               |
+
+About patterns and keys:
+
+- A rule with no owners leaves its paths without an owner, overriding an earlier rule, as GitHub documents. That is useful for vendored code.
+- GitHub does not support `!` (negation), `[ ]` (character ranges) or a pattern starting with an escaped `\#`, so the config rejects them.
+- Write a space in a path as `\ `, as in `docs/My\ Files/`.
+- A rule's key must not be a whole number such as `2`: such a key is always read first, so its rule would be written before the others.
+
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
 codeowners:
+  # Leave path unset to use the file GitHub already reads.
+  level: error
   rules:
     docs:
       comment: Documentation.
       paths: ['/docs/', '*.md']
-      owners: ['@Resnovas/docs']
+      owners: ['@my-org/docs']
     tests:
       paths: ['/tests/', '*.spec.ts']
-      owners: ['@Resnovas/qa']
+      owners: ['@my-org/qa']
     vendored:
+      # No owners: nobody is asked to review vendored code.
       paths: ['/vendor/']
       owners: []
 ```
 
-| Key      | Default                                        | Meaning                                                                                                                |
-| -------- | ---------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| `path`   | the first that exists, or `.github/CODEOWNERS` | Where the file lives: `.github/CODEOWNERS`, `CODEOWNERS` or `docs/CODEOWNERS`, the places GitHub reads, in that order. |
-| `rules`  | none                                           | Rules to generate, by key, so a preset's and a repository's merge.                                                     |
-| `check`  | `true`                                         | Check pull requests that change CODEOWNERS.                                                                            |
-| `level`  | `error`                                        | `error` fails the check; `warning` only reports.                                                                       |
-| `branch` | `smartcloud/codeowners`                        | The branch generated changes are proposed from. It is force-updated, so it cannot be the default branch.               |
+## How it works
 
-Each rule has `paths`, at least one pattern, `owners`, each a user as `@login`, a team as `@org/team` or an email address, and an optional `comment`. A rule with no owners leaves its paths without an owner, overriding an earlier rule, as GitHub documents. Write a space in a path as `\ `, as in `docs/My\ Files/`. A rule's key must not be a whole number such as `2`, which would be written before the other rules.
-
-## Checking
+### Checking
 
 On a pull request that changes CODEOWNERS, unless `check` is `false`, smartcloud checks the file at the pull request's head:
 
@@ -42,9 +90,9 @@ On a pull request that changes CODEOWNERS, unless `check` is `false`, smartcloud
 
 GitHub's own CODEOWNERS errors come first. They need only read access, so they also work for pull requests from forks; when they cannot be read, smartcloud's own checks still run. A pull request that does not touch CODEOWNERS is not checked, so a problem already on the default branch does not fail unrelated pull requests.
 
-On a schedule, a manual dispatch or a push, the file on the default branch is checked the same way, and its problems are warnings.
+On a schedule, a manual dispatch or a push, the file on the default branch is checked the same way, and its problems are warnings, since no pull request caused them.
 
-## Generating
+### Generating
 
 When `rules` has an entry, smartcloud writes them between two markers on a schedule, a manual dispatch or a push, and proposes the result as one pull request from `branch`, titled `chore(codeowners): generate CODEOWNERS from the smartcloud config`:
 
@@ -59,9 +107,53 @@ When `rules` has an entry, smartcloud writes them between two markers on a sched
 # smartcloud:codeowners:end
 ```
 
-- Everything outside the markers is kept. The first generation adds the block at the end of the file, or just above a block the [sync](/features/sync) feature manages, which stays last so synced owners always apply. A block found below the synced one is moved above it.
+- Everything outside the markers is kept. The first generation adds the block at the end of the file, or just above a block the [sync](/features/sync) feature manages (`house:managed:begin`), which stays last so synced owners always apply. A block found below the synced one is moved above it.
 - When `path` is set but GitHub reads an existing file before it, such as `.github/CODEOWNERS` before `docs/CODEOWNERS`, nothing is generated and a `codeowners.generate` error names the file GitHub uses.
 - Rules are written in the order the config gives them, and later rules win, as they do everywhere in CODEOWNERS. A repository's own rules come after its presets' rules.
-- A token that cannot push, such as a workflow token with `contents: read`, skips the proposal with a `codeowners.generate` warning rather than failing the run.
+- When the file is already up to date, nothing is proposed.
+- The same pull request is updated on later runs, since the branch is force-updated.
 
-Proposing needs `contents: write` and `pull-requests: write`, as the sync feature does. Require the feature's check, or the [required](/features/required) aggregate, to block a pull request that breaks CODEOWNERS.
+## What you will see on GitHub
+
+- **Check run:** `smartcloud / codeowners`. It fails when a problem at `error` level is found, is `neutral` with only warnings, and passes otherwise. Each problem is an annotation on the CODEOWNERS line it is about.
+- **Report comment:** errors and warnings also appear in smartcloud's single [report comment](/glossary#report-comment) on the pull request.
+- **Pull request:** when generating, one pull request from `smartcloud/codeowners` (or your `branch`) into the default branch. Merge it to apply the owners.
+- **Job summary:** the problems found, and "Proposed the generated `<path>` on `<branch>` in pull request #N" when it opened or updated one.
+
+## Forks and restricted runs
+
+Checking a pull request from a fork works: GitHub's CODEOWNERS errors need only read access. In a [restricted run](/glossary#restricted-run), writing the check run or report comment may be refused and is then listed under **Restricted access** in the job summary; the job's own summary and annotations still show every problem.
+
+Generating runs on pushes and schedules, which never come from a fork. A token that cannot push, such as a [workflow token](/glossary#workflow-token) with `contents: read`, skips the proposal with a `codeowners.generate` warning rather than failing the run.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Error: codeowners.path is docs/CODEOWNERS, but GitHub reads .github/CODEOWNERS first">
+    GitHub uses only the first CODEOWNERS file it finds, in the order `.github/CODEOWNERS`, `CODEOWNERS`,
+    `docs/CODEOWNERS`. Delete the earlier file, or set `codeowners.path` to it. Nothing is generated until you do.
+  </Accordion>
+  <Accordion title="The feature fails: codeowners.branch is the default branch">
+    The proposal branch is force-updated, so it can never be the branch pull requests merge into. Leave `branch` unset
+    or choose another name.
+  </Accordion>
+  <Accordion title="Warning: Could not propose the generated CODEOWNERS">
+    The token cannot push or open pull requests. Grant the job `contents: write` and `pull-requests: write`.
+  </Accordion>
+  <Accordion title="codeowners.generated: the pull request edits the generated block">
+    The block between the `smartcloud:codeowners` markers is written from the config. Undo the hand edit and change
+    `codeowners.rules` instead; smartcloud regenerates the block. To stop generating entirely, remove `rules`.
+  </Accordion>
+  <Accordion title="codeowners.shadowed: a rule never applies">
+    Two lines have the same pattern, and the last matching line wins, so the earlier one does nothing. Merge the owners
+    into one line or remove the earlier one.
+  </Accordion>
+  <Accordion title="An owner is reported as not existing or unable to write">
+    That comes from GitHub: the user or team does not exist, is misspelled, or has no write access to the repository.
+    Give the team write access, or fix the name.
+  </Accordion>
+  <Accordion title="A pull request with a broken CODEOWNERS was not checked">
+    Only pull requests that change one of the CODEOWNERS locations are checked. Problems already on the default branch
+    are reported as warnings on the next push or scheduled run.
+  </Accordion>
+</AccordionGroup>

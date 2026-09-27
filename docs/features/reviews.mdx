@@ -3,27 +3,105 @@ title: 'Reviews'
 description: 'The maintainer review gate, requested reviewers and automatic approval.'
 ---
 
-The reviews feature runs on pull request events, including `pull_request_review`, so it re-evaluates whenever a review is submitted or dismissed. It is enabled by a `reviews` section.
+The reviews feature looks after pull request reviews. It does three separate jobs, and you can turn on any of them:
 
-When a ruleset requires smartcloud's check, don't run smartcloud on `pull_request_review`: a second run adds a second check of the same name to the commit, and a run whose smartcloud job is skipped adds one that GitHub counts as passed. Instead, re-run the pull request's own smartcloud run from a separate workflow when a review is submitted or dismissed, as smartcloud's `.github/workflows/smartcloud-review.yml` and the Resnovas house workflows do, so the one required check reads the reviews again.
+- **The review gate.** A pull request must be approved by enough [maintainers](/glossary#maintainer) before it may merge. An outside contributor needs more approvals than a maintainer does.
+- **Requested reviewers.** When a pull request matches a rule, such as "it changes `docs/**`", smartcloud asks the right people to review it. It can ask everyone on a list, or pick one or more by rotation, by workload, or from CODEOWNERS.
+- **Automatic approval.** When a pull request matches a rule, such as "Dependabot opened it", smartcloud approves it for you.
 
-```yaml
+Use it when you want a written, enforced review policy instead of relying on people remembering it.
+
+## Turn it on
+
+<Steps>
+  <Step title="List your maintainers">
+    The gate counts approvals from the logins in `roles.maintainers`. It stays open (it lets everything through, with a notice) until at least two different maintainers are listed, so a sole owner is never blocked.
+
+    ```yaml .github/smartcloud.yml
+    roles:
+      maintainers: [octocat, hubot]
+      trustedBots: ['dependabot[bot]']
+    ```
+
+  </Step>
+  <Step title="Add a reviews section">
+    ```yaml .github/smartcloud.yml
+    reviews:
+      gate: {}
+    ```
+
+    `gate: {}` turns the gate on with its defaults: two maintainer approvals for an outside pull request, one for a maintainer's own. Leave `gate` out and only the other parts you configure run.
+
+  </Step>
+  <Step title="Run on pull request events">
+    The feature runs on `pull_request`, `pull_request_target`, `pull_request_review` and `pull_request_review_comment` events. The job needs `pull-requests: write` to request reviewers and approve, and `checks: write` for its check run. The workflow in [Getting started](/getting-started) has both.
+  </Step>
+  <Step title="Require the check">
+    Make the `smartcloud / reviews` check required in the branch [ruleset](/glossary#ruleset), or use the [required](/features/required) aggregate, which counts it with every other check. Without that, the gate reports but does not block merging.
+  </Step>
+</Steps>
+
+## Options
+
+| Key                                | Default                                 | What it does                                                                                                                               |
+| ---------------------------------- | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `gate`                             | none (no gate)                          | Turns the review gate on.                                                                                                                  |
+| `gate.outside`                     | `2`                                     | Maintainer approvals a pull request needs when its author is not a maintainer. A whole number, 0 or more.                                  |
+| `gate.maintainer`                  | `1`                                     | Approvals from other maintainers a maintainer's own pull request needs. A whole number, 0 or more.                                         |
+| `requestApprovals`                 | none                                    | Rules that request reviewers, by key.                                                                                                      |
+| `requestApprovals.<key>.reviewers` | required                                | GitHub logins to request, or the pool a strategy picks from. A leading `@` is optional. For `codeowners`, `[]` means every matching owner. |
+| `requestApprovals.<key>.strategy`  | none (request everyone)                 | `round-robin`, `load-balanced` or `codeowners`. See [Assignment strategies](#assignment-strategies).                                       |
+| `requestApprovals.<key>.count`     | `1` when a strategy is set              | How many reviewers this rule should end up with in total. A positive whole number. Ignored without a strategy.                             |
+| `requestApprovals.<key>.when`      | required                                | The [condition group](/conditions) that must pass for the rule to request anyone.                                                          |
+| `automaticApprove`                 | none                                    | Rules that approve the pull request, by key.                                                                                               |
+| `automaticApprove.<key>.when`      | required                                | The [condition group](/conditions) that must pass for the rule to approve.                                                                 |
+| `automaticApprove.<key>.message`   | `Approved automatically by smartcloud.` | The body of the approving review.                                                                                                          |
+
+The feature also reads two shared settings from the top of the config:
+
+| Key                 | Used for                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `roles.maintainers` | Whose approvals count, and whether the author is a maintainer. Logins compare ignoring case and a leading `@`.            |
+| `roles.trustedBots` | Pull requests these [trusted bots](/glossary#trusted-bot) open skip the gate.                                             |
+| `links.policyBase`  | The gate's error links to `GOVERNANCE.md#review` under this URL. Default `https://github.com/Resnovas/.github/blob/main`. |
+
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
 roles:
+  # Three maintainers, so the gate is enforced.
   maintainers: [octocat, hubot, monalisa]
+  # Dependabot's pull requests skip the gate.
   trustedBots: ['dependabot[bot]']
 
 reviews:
+  # Two maintainer approvals from outside, one from another maintainer.
   gate:
     outside: 2
     maintainer: 1
+
   requestApprovals:
+    # Anyone changing the docs gets a review from monalisa.
     docs:
       reviewers: ['@monalisa']
       when:
         condition:
           - type: filesMatch
             condition: 'docs/**'
+    # Every ready pull request gets one reviewer from the rotation.
+    rotation:
+      reviewers: [octocat, hubot, monalisa]
+      strategy: round-robin
+      count: 1
+      when:
+        condition:
+          - type: isDraft
+            condition: false
+
   automaticApprove:
+    # Dependabot's updates are approved for you.
     dependabot:
       message: Approved automatically for a dependency update.
       when:
@@ -32,30 +110,28 @@ reviews:
             condition: "^dependabot\\[bot\\]$"
 ```
 
-## The review gate
+## How it works
 
-`gate` sets how many maintainer approvals a pull request needs before merge:
+### The review gate
 
-| Key          | Default | Applies when                    |
-| ------------ | ------- | ------------------------------- |
-| `outside`    | `2`     | The author is not a maintainer. |
-| `maintainer` | `1`     | The author is a maintainer.     |
+Each maintainer's latest decisive review counts. Comments and pending reviews are ignored, and a later change request or dismissal withdraws an approval. The author's own review never counts, and one login listed twice (in another case, or with an `@`) counts once.
 
-Each maintainer's latest decisive review counts: comments and pending reviews are ignored, and a later change request or dismissal withdraws an approval. The author's own review never counts.
+- While fewer than two distinct maintainers are listed in `roles.maintainers`, the gate is open and records a notice: the owner merges at their discretion.
+- Pull requests opened by a login in `roles.trustedBots` skip the gate, with a notice.
+- Too few approvals is an error with the rule id `REVIEW`, for example `Needs 2 maintainer approval(s) from someone other than the author; has 1 (approved by @octocat).` It links to `GOVERNANCE.md#review` under [`links.policyBase`](/configuration#links).
 
-- While fewer than two distinct maintainers are listed in `roles.maintainers` (logins compare ignoring case and a leading `@`), the gate is open and records a notice: the owner merges at their discretion.
-- Pull requests from trusted bots skip the gate, with a notice.
-- Too few approvals is an error with the rule id `REVIEW`, linking to `GOVERNANCE.md#review` under [`links.policyBase`](/configuration#links).
+A review changes the answer, so the gate has to look again when one is submitted or dismissed. When a ruleset requires smartcloud's check, do not run smartcloud on `pull_request_review`: a second run adds a second check of the same name to the commit, and a run whose smartcloud job is skipped adds one that GitHub counts as passed. Instead, re-run the pull request's own smartcloud run from a separate workflow when a review is submitted or dismissed, as smartcloud's `.github/workflows/smartcloud-review.yml` and the Resnovas house workflows do, so the one required check reads the reviews again.
 
-Make the `smartcloud / reviews` check required in the branch ruleset to enforce the gate.
+### Requested reviewers
 
-## Requested reviewers
+Each rule in `requestApprovals` whose `when` passes requests reviews. Without a `strategy`, it requests everyone in `reviewers`, except:
 
-Each entry in `requestApprovals` requests reviews from its `reviewers` when its `when` passes. The pull request's author is left out, as GitHub rejects a request for your own review, and so is anyone who has already reviewed, since a new request would put them back on the pending list. A leading `@` on a login is optional.
+- the pull request's author, because GitHub rejects a request for your own review;
+- anyone who has already reviewed, since a new request would put them back on the pending list and notify them again.
 
 ### Assignment strategies
 
-Set `strategy` on a request rule to select reviewers instead of requesting everyone:
+Set `strategy` on a rule to pick some reviewers instead of requesting everyone:
 
 ```yaml
 reviews:
@@ -70,26 +146,86 @@ reviews:
             condition: false
 ```
 
-| Strategy        | Selection                                                                                                                                                                                         |
+| Strategy        | How it picks                                                                                                                                                                                      |
 | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `round-robin`   | Rotates the configured pool by `(PR number - 1) % pool size`, then selects in that order. This is a deterministic rotation, not a persisted assignment cursor; gaps in PR numbers can skip turns. |
-| `load-balanced` | Selects the users with the fewest pending review requests on open PRs in this repository. The same rotation breaks ties. Submitted reviews no longer contribute to load.                          |
-| `codeowners`    | Selects owners of changed files from CODEOWNERS at the PR's base commit. Set `reviewers: []` to use all matching owners, including teams, or list logins to restrict the pool.                    |
+| `round-robin`   | Rotates the pool by `(PR number - 1) % pool size`, then picks in that order. The rotation comes from the pull request number, not a saved cursor, so gaps in pull request numbers can skip turns. |
+| `load-balanced` | Picks the people with the fewest pending review requests on open pull requests in this repository. The same rotation breaks ties. Submitted reviews no longer count as load.                      |
+| `codeowners`    | Picks owners of the changed files from CODEOWNERS at the pull request's base commit. Set `reviewers: []` to use every matching owner, including teams, or list logins to limit the pool.          |
 
-`count` is a positive integer, defaulting to one when a strategy is set. It is the desired total from that rule's eligible pool: pending requests and submitted reviews count toward it, so later events do not request extra reviewers. The author, duplicate logins, and already requested or reviewed users are excluded from new requests. Logins compare without case or a leading `@`. Draft and closed PRs receive no strategic assignments. An empty or exhausted pool does nothing; fewer eligible reviewers than `count` requests everyone available.
+`count` is the total the rule wants from its pool. Pending requests and submitted reviews already in the pool count towards it, so later events do not request extra people. The author, duplicate logins, and people already requested or who have reviewed are never requested again. Logins compare without case or a leading `@`. Draft and closed pull requests get no strategic requests. An empty or used-up pool does nothing; fewer eligible reviewers than `count` requests everyone available.
 
-CODEOWNERS uses the first file present in `.github/CODEOWNERS`, `CODEOWNERS`, or `docs/CODEOWNERS`. The last valid matching line wins for each changed path; a line with no owners clears ownership. Unsupported lines and email owners are ignored. Team owners must belong to the repository's organization. Previously requested teams count toward `count` even after a member reviews or someone removes the request; the PR timeline prevents repeated team notifications without requiring access to private team membership. No CODEOWNERS file means no requests. The PR cannot alter its own assignment policy by changing CODEOWNERS, since the base commit is used.
+For `codeowners`, smartcloud reads the first of `.github/CODEOWNERS`, `CODEOWNERS` and `docs/CODEOWNERS`. The last matching line wins for each changed path, and a line with no owners clears ownership. Unsupported lines and email owners are ignored. Team owners must belong to the repository's organisation. A team requested before counts towards `count` even after a member reviews or someone removes the request; smartcloud reads the pull request's timeline for this, so it never needs access to private team membership. No CODEOWNERS file means no requests. Because the base commit is read, a pull request cannot change its own reviewers by editing CODEOWNERS.
 
-These strategies use ordinary repository read access and pull request write access, with no organization membership or PAT-only API. Forbidden reads or writes produce a warning. Load balancing reads each open PR's pending requests; concurrent runs may observe the same load and choose the same reviewer. It does not promise an atomic global queue. Configure workflow concurrency per PR to prevent duplicate concurrent assignment runs.
+The strategies need only ordinary repository read access and pull request write access: no organisation membership and no personal access token. `load-balanced` reads each open pull request's pending requests, so two runs at the same moment can see the same load and pick the same person; it is not an atomic queue. Give the workflow a `concurrency` group per pull request to avoid that.
 
-Without `strategy`, the existing request-everyone behavior is unchanged and `count` is unused. Strategies are opt-in and are not enabled in the house preset or templates.
+Strategies are opt-in, and neither the house preset nor the templates turn them on.
 
-## Automatic approval
+### Automatic approval
 
-Each entry in `automaticApprove` approves the pull request when its `when` passes, with its `message` as the review body (default: "Approved automatically by smartcloud."). One approval is made per run, by the first rule that passes.
+Rules in `automaticApprove` are tried in the order the config lists them. The first rule whose `when` passes approves the pull request, with its `message` as the review body, and the rest are not tried: one approval per run is enough.
 
-smartcloud does not approve again while any reviewer's standing review is an approval, so new pushes do not stack approvals. Once a stale approval is dismissed, the next run approves again.
+smartcloud does not approve while any reviewer's standing review is an approval, so new pushes do not stack approvals; it records a notice instead. Once a stale approval is dismissed, the next run approves again.
 
-## Pull requests from forks
+## What you will see on GitHub
 
-A pull request from a fork runs with a read-only token, so GitHub forbids requesting reviewers and approving. Each forbidden request or approval is reported as a warning (`reviews.requestApprovals` or `reviews.automaticApprove`) rather than failing the feature, and the review gate still runs. Any other error from GitHub still fails the feature.
+- A `smartcloud / reviews` [check run](/glossary#check-run) on the head commit. It fails when the gate has too few approvals, is neutral when there are only warnings (for example a request the token could not make), and passes otherwise.
+- A gate failure in the [report comment](/glossary#report-comment) on the pull request, with a link to your review policy.
+- Review requests from the people and teams your rules chose, and approving reviews with your `message`, made by the account whose token smartcloud runs with.
+- Every request and approval listed under changes in the job summary, such as `Requested review from @monalisa on #42 (docs).` With [`dryRun`](/glossary#dry-run), they are listed but not made.
+
+## Forks and restricted runs
+
+A pull request from a fork, or from Dependabot, runs with a read-only token (see [Restricted runs](/reporting#restricted-runs)). GitHub forbids requesting reviewers and approving with it. Each forbidden request or approval is reported as a warning (rule `reviews.requestApprovals` or `reviews.automaticApprove`) instead of failing the feature, and the review gate still runs, because it only reads. Any other error from GitHub still fails the feature.
+
+## In the house preset
+
+The [Resnovas house preset](/presets#the-resnovas-house-preset) sets:
+
+```yaml
+roles:
+  maintainers: [TGTGamer]
+  trustedBots: ['dependabot[bot]', 'renovate[bot]', 'github-actions[bot]', 'resnovas-smartcloud[bot]']
+
+reviews:
+  gate:
+    outside: 2
+    maintainer: 1
+```
+
+With one maintainer listed, the gate is open in every Resnovas repository until a second maintainer is added to the preset. A repository cannot change `gate` or `roles`, but it can add its own `requestApprovals` and `automaticApprove` rules.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="The gate is always open, with a notice about fewer than two maintainers">
+    The gate needs at least two different logins in `roles.maintainers`. Add another maintainer. If your preset sets
+    `roles.maintainers`, you cannot add to it from the repository; lists in a preset are locked as a whole (see
+    [Presets](/presets)).
+  </Accordion>
+  <Accordion title="The gate still fails after a maintainer approved">
+    Only the latest decisive review of each maintainer counts. Check that they did not later request changes, that the
+    approval was not dismissed by a new push, and that the approver is not the author. If the check ran before the
+    review, it has to run again: re-run the smartcloud workflow, or add a workflow like `smartcloud-review.yml` that
+    does it on each review.
+  </Accordion>
+  <Accordion title="Warning: Could not request review ... on a read-only token">
+    The pull request comes from a fork or from Dependabot, so the token cannot write. This is expected. A maintainer can
+    request reviewers by hand.
+  </Accordion>
+  <Accordion title="Nobody is requested by a strategy">
+    Strategies skip draft and closed pull requests, and people who are the author, already requested or already
+    reviewed. If `count` people from the pool are already requested or have reviewed, nobody new is asked. For
+    `codeowners`, check that a CODEOWNERS file exists on the base branch and that it names GitHub users or teams of this
+    organisation, not emails.
+  </Accordion>
+  <Accordion title="The automatic approval did not happen">
+    smartcloud records a notice and does not approve when the pull request already has a standing approval from anyone.
+    On a fork or Dependabot pull request the approval is forbidden and becomes a warning. Otherwise, check the rule's
+    `when` with [`smartcloud dry-run`](/cli#dry-run).
+  </Accordion>
+  <Accordion title="Two smartcloud checks appear on the same commit">
+    Your workflow runs smartcloud on `pull_request_review` as well as on `pull_request`. Remove `pull_request_review`
+    from the main workflow and re-run the pull request's run from a separate review workflow instead, as described in
+    [The review gate](#the-review-gate).
+  </Accordion>
+</AccordionGroup>

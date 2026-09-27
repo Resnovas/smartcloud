@@ -1,0 +1,242 @@
+---
+title: 'Presets and extends'
+description: 'Share one config across many repositories with extends, how presets lock what they set, and what the Resnovas house preset turns on.'
+---
+
+A **preset** is a smartcloud config file that other repositories build on. You write your organisation's rules once, in one place, and every repository that lists the preset under `extends` gets them. Change the preset and every repository follows on its next run.
+
+Why use one:
+
+- **One source of truth.** Labels, title rules, review rules and repository settings stay the same everywhere.
+- **Rules that stick.** A repository can add to a preset but cannot weaken it. A contributor cannot quietly turn off the DCO check in one repository.
+- **Short configs.** A repository's own file holds only what makes it different.
+
+## Use a preset
+
+<Steps>
+  <Step title="Name it under extends">
+    Add an `extends` list to `.github/smartcloud.yml`. Each entry is `owner/repo/path@ref`:
+
+    ```yaml .github/smartcloud.yml
+    version: 2
+    extends:
+      - Resnovas/.github/smartcloud/house.yml@main
+      - my-org/.github/smartcloud/typescript.yml@v1.2.0
+    ```
+
+    | Part    | Meaning                                                                                 |
+    | ------- | --------------------------------------------------------------------------------------- |
+    | `owner` | The user or organisation that owns the repository holding the preset.                  |
+    | `repo`  | That repository.                                                                         |
+    | `path`  | The file inside it. It may not contain `.` or `..` segments.                            |
+    | `@ref`  | Optional. A branch, tag or commit. Without it, the repository's default branch is read. |
+
+  </Step>
+  <Step title="Make sure the token can read it">
+    smartcloud reads presets through the GitHub API with the token it acts with. A preset in a **public** repository, or in the same repository, always works. A preset in **another private** repository needs a token that can read it, such as a [GitHub App](/getting-started#optional-create-a-github-app) installed on both repositories. With only the [workflow token](/glossary#workflow-token), the preset is skipped with a warning; see [Reading presets](#reading-presets).
+  </Step>
+  <Step title="Check it">
+    ```sh
+    smartcloud validate
+    ```
+
+    ```text
+    .github/smartcloud.yml is a valid smartcloud config.
+    Built from: Resnovas/.github/smartcloud/house.yml@main, my-org/.github/smartcloud/typescript.yml@v1.2.0, .github/smartcloud.yml
+    ```
+
+    "Built from" lists every file, in the order they were merged. The [CLI](/cli#tokens) needs a token to read presets; it uses `GITHUB_TOKEN` or the GitHub CLI's login.
+
+  </Step>
+</Steps>
+
+Pinning a tag or commit (`@v1.2.0`) means the preset only changes when you move the ref. Tracking a branch (`@main`) means every repository picks up a change on its next run.
+
+## Write a preset
+
+A preset is an ordinary config file with `version: 2`. Put it in any repository, commonly the organisation's `.github` repository. It may extend presets of its own, up to five levels deep.
+
+```yaml my-org/.github/smartcloud/typescript.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+
+labels:
+  bug:
+    name: bug
+    color: D73A4A
+
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+
+commits:
+  dco: true
+```
+
+Leave out anything a repository should decide for itself. Whatever the preset sets, repositories cannot change.
+
+## How files are merged
+
+Presets are merged first, in the order listed. Each preset's own presets come before it. The repository's config comes last.
+
+```text
+house.yml's own presets  ->  house.yml  ->  typescript.yml  ->  .github/smartcloud.yml
+```
+
+Rules are keyed maps, never lists (see [Configuration](/configuration#sections)), so two files talking about the same key are talking about the same rule. `version`, `extends` and `$schema` describe a file rather than rules, so they are never merged.
+
+### Add, never change
+
+Everything a preset sets is **locked**. A repository may add to what it inherits, but never change or remove it:
+
+- **Adding is allowed.** A new label, a new rule, or a new field on an inherited rule that the preset left unset.
+- **Identical restatements are allowed.** Repeating an inherited value exactly as it already is changes nothing, so a repository can keep a full copy of a rule without error.
+- **Changing is an error.** Any other value for something already set, whether a scalar, a list or a different shape, fails the whole run.
+
+Lists are values, not collections to append to: if a preset sets `roles.maintainers`, a repository cannot add a name to it.
+
+Given a preset like this one (an example, not the Resnovas house preset):
+
+```yaml your-org/.github/smartcloud/base.yml
+version: 2
+labels:
+  bug:
+    name: bug
+    color: D73A4A
+```
+
+This repository config is valid: it restates `bug` identically, adds a description the preset left unset, and adds a new label.
+
+```yaml .github/smartcloud.yml
+version: 2
+extends:
+  - your-org/.github/smartcloud/base.yml@main
+labels:
+  bug:
+    name: bug
+    color: D73A4A
+    description: Something is not working
+  docs:
+    name: documentation
+    color: 0075CA
+```
+
+Changing the colour instead fails with an error naming the path and the preset that set it:
+
+```text
+.github/smartcloud.yml cannot change "labels.bug.color": it is set by your-org/.github/smartcloud/base.yml@main. Add a new rule instead.
+```
+
+The same rule applies between presets: a later preset cannot change what an earlier one set.
+
+A value a preset sets that this version of smartcloud cannot read is dropped from the preset but stays locked: your config cannot set that key either, and a value it sets there is ignored with a warning. A preset that asks for a stricter setting than this version knows can never be turned into a weaker one. See [Unknown keys and invalid values](/configuration#unknown-keys-and-invalid-values).
+
+### "I need something different from the preset"
+
+Because locked values cannot change, you have three honest options:
+
+1. **Add a new rule next to it.** For example, a second convention rule with its own key, or an extra label. This is what the error message suggests.
+2. **Fill in what the preset left open.** Presets often leave fields unset on purpose, such as `sync.exclude` or `settings.environments`, so each repository adds its own.
+3. **Change the preset**, or stop extending it and copy what you need. If a rule is wrong for one repository, it is usually wrong in the preset.
+
+## Reading presets
+
+The action reads presets through the GitHub API with its own token, so a preset in a private repository needs a token that can read that repository.
+
+A [restricted run](/glossary#restricted-run), such as a pull request from a fork or a run with only the workflow token, leaves out a preset from another repository that its token cannot read. It warns that the preset's rules were not checked (`access.config-skipped`) rather than failing, and each feature's check that would pass concludes as neutral with "config left out" in its title. A missing preset in the repository itself still fails the run. See [Restricted runs](/reporting#restricted-runs).
+
+These problems fail the run, because the config as a whole cannot be trusted:
+
+| Problem                                            | Message starts with                                |
+| -------------------------------------------------- | -------------------------------------------------- |
+| A preset cannot be read (outside a restricted run) | `owner/repo/path could not be read`                |
+| A malformed `extends` entry                        | `expected owner/repo/path@ref, got "..."`          |
+| Presets extend each other in a loop                | `presets extend each other in a loop: a -> b -> a` |
+| Presets nested more than five deep                 | `extends is nested more than 5 deep`               |
+| A file changes a value an earlier file set         | `... cannot change "path": it is set by ...`       |
+
+## The Resnovas house preset
+
+Every Resnovas repository extends `Resnovas/.github/smartcloud/house.yml@main`, the **house preset**. It lives in the public `Resnovas/.github` repository, so any token can read it, including the read-only token of a pull request from a fork. The settings and sync sections it sets still need the Resnovas Bot app token, which the house workflow mints; forks and Dependabot run without it, [restricted](/glossary#restricted-run).
+
+What it turns on:
+
+| Section       | What the house preset sets                                                                                                                                                                                                                                                                                              |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `roles`       | `maintainers: [TGTGamer]`; `trustedBots`: Dependabot, Renovate, `github-actions[bot]` and `resnovas-smartcloud[bot]`.                                                                                                                                                                                                   |
+| `links`       | `policyBase: https://github.com/Resnovas/.github/blob/main`, so findings link to the house policies.                                                                                                                                                                                                                    |
+| `labels`      | The process labels from the AI policy: `needs-disclosure`, `needs-dco`, `needs-reproduction`, `needs-evidence`, `needs-tests`, `needs-human-explanation`, `needs-scope-approval`, `needs-refactor`, plus `house-sync` for its own sync pull requests.                                                                   |
+| `conventions` | `title`: pull request titles must be Conventional Commits (bots and the maintainer exempt); `title-maintainer`: the same as a warning for the maintainer; warnings for emoji (`no-emoji`), em and en dashes (`no-long-dashes`) and unticked checklist items (`checklist-done`).                                         |
+| `commits`     | `dco: true`, `aiAttribution: true`, `maintainerLevel: warning`.                                                                                                                                                                                                                                                         |
+| `disclosure`  | `requireDraft: true`, `maintainerLevel: warning`.                                                                                                                                                                                                                                                                       |
+| `reviews`     | `gate`: two approvals for an outside pull request, one for a maintainer's own. The gate stays open while fewer than two maintainers are listed.                                                                                                                                                                         |
+| `settings`    | Squash and rebase merging only, auto-merge, delete branches on merge, web commit sign-off, discussions on and wiki off, the security features on, the `house: default branch` ruleset (merge queue, signed commits, one approval, the `smartcloud` check, CodeQL and code quality gates) and read-only workflow tokens. |
+| `required`    | `{}`: the job's `smartcloud` check waits for every other check.                                                                                                                                                                                                                                                         |
+| `sync`        | Syncs governance files from `Resnovas/.github/templates@main` on the `house/sync` branch, with the edit check on and the organisation's placeholder values.                                                                                                                                                             |
+
+Left unset on purpose, so each repository adds its own:
+
+- `settings.environments` (a `projectType` such as `library`, or named environments);
+- `settings.ruleset` fields `requiredDeployments`, `statusChecks.checks` (the repository's CI job), `codeScanning.ESLint` and `codeCoverage.enabled`;
+- `sync.exclude`, for template files the repository keeps its own copy of;
+- `required.expect`, the check names the aggregate must wait for;
+- any other labels, labelling rules, stale, lock, backport, freeze, notifications or commands sections.
+
+The feature pages each have an **In the house preset** section with the details.
+
+### house:managed and house:local
+
+In a Resnovas repository you do not write the `extends` line yourself. The [sync](/features/sync) feature keeps `.github/smartcloud.yml` in line with a template, using a [managed block](/features/sync#managed-blocks):
+
+```yaml .github/smartcloud.yml
+# house:managed:begin - synced from Resnovas/.github templates/.github/smartcloud.yml. Edits inside this block are overwritten.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+extends:
+  - Resnovas/.github/smartcloud/house.yml@main
+# house:managed:end
+# house:local - add this repository's own configuration below this line.
+
+settings:
+  environments:
+    projectType: library
+
+required:
+  expect:
+    - ^check$
+
+commands: {}
+```
+
+- **Between `house:managed:begin` and `house:managed:end`** is the house's part. Sync rewrites it, and a pull request that edits it fails the sync edit check (rule `SYNC`).
+- **Below `house:local`** is the repository's part. Sync never touches it. Put your additions here.
+
+"Override" in a Resnovas repository therefore means **add below `house:local`**, within the add-never-change rule: new labels and rules, and the keys the house preset leaves unset. A value the house preset already sets cannot be changed there; restating it exactly is allowed, but any other value fails the run. To change a house value, change `house.yml` in `Resnovas/.github`.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title='"cannot change ... it is set by ..."'>
+    Your file gives a different value for something a preset already set. Remove the line, or restate it exactly as the
+    preset has it, or add a new rule with a new key. See [Add, never change](#add-never-change).
+  </Accordion>
+  <Accordion title="A warning says a preset's rules were not checked">
+    The run was [restricted](/glossary#restricted-run) and could not read a preset in another private repository. This
+    is expected on pull requests from forks and from Dependabot. On your own pull requests, pass a token that can read
+    the preset, such as a GitHub App installed on both repositories.
+  </Accordion>
+  <Accordion title='"could not be read"'>
+    The path, repository or ref is wrong, or the token cannot see the repository. Check the entry by opening
+    `https://github.com/owner/repo/blob/ref/path`. Run [`smartcloud doctor`](/cli#doctor) to test the token.
+  </Accordion>
+  <Accordion title="A preset key is ignored with a warning">
+    The preset uses a key this version of smartcloud does not know, usually because the preset was written for a newer
+    release. The run carries on without it. Update the action (`resnovas/smartcloud@v2` moves with every v2 release) to
+    pick it up.
+  </Accordion>
+  <Accordion title='"presets extend each other in a loop" or "nested more than 5 deep"'>
+    Follow the chain in the message and remove one `extends` entry so the chain ends.
+  </Accordion>
+</AccordionGroup>

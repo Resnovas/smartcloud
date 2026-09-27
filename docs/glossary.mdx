@@ -1,0 +1,118 @@
+---
+title: 'Glossary'
+description: 'Plain-words definitions of the terms used across the smartcloud documentation.'
+---
+
+Terms are in alphabetical order. Each links to where it is covered in depth.
+
+## Aggregate check
+
+The job's own `smartcloud` check when the [required](/features/required) feature is on. It waits for every other check on the pull request and fails if any of them fails, so a [ruleset](#ruleset) can require this one check instead of a list of names.
+
+## Alias
+
+An earlier name of a label, listed under `aliases`. When a label is renamed, smartcloud renames the existing label rather than creating a new one, so issues keep it. See [Labels](/features/labels).
+
+## Check run
+
+A pass, fail or neutral result that appears in a pull request's **Checks** tab and on the commit. smartcloud creates one per feature, named `smartcloud / <feature>`, for example `smartcloud / conventions`. See [Reporting](/reporting#check-runs).
+
+## Condition group
+
+A `when:` block: a list of conditions under `condition`, and optionally `requires`, the number that must pass (all by default). Conditions test a pull request or issue, such as its title, files, author or labels. See [Conditions](/conditions).
+
+## Config
+
+The file `.github/smartcloud.yml` (or `.yaml`) that tells smartcloud what to do. See [Configuration](/configuration).
+
+## DCO
+
+The Developer Certificate of Origin: a statement that you have the right to contribute your change. You agree to it by ending each commit message with `Signed-off-by: Your Name <you@example.com>` (`git commit -s` adds it). See [Commits](/features/commits).
+
+## Dry run
+
+A run that decides everything a real run would do but writes nothing. Every write is listed instead. Use the action's `dryRun: true` input, [`smartcloud dry-run`](/cli#dry-run) or the MCP server's `dry_run` tool.
+
+## Event
+
+What starts a GitHub Actions workflow, such as `pull_request`, `issues`, `issue_comment`, `push` or `schedule`. Each smartcloud feature acts only on some events; see [which events run which features](/introduction#which-events-run-which-features).
+
+## Extends
+
+The config key that lists [presets](#preset) to build on, each as `owner/repo/path@ref`. See [Presets and extends](/presets).
+
+## Feature
+
+One capability of smartcloud, such as labels, stale or settings, turned on by its own section in the config. A feature whose section is absent does not run.
+
+## Finding
+
+Something a feature reports: a broken rule or a remark, with a rule id, a message and a **level**. An **error** fails the feature's check; a **warning** makes it neutral; a **notice** is information only. See [Reporting](/reporting).
+
+## GitHub App
+
+An identity that an organisation or user creates and installs on repositories, with exactly the permissions it is given. A workflow can mint a short-lived token for it with `actions/create-github-app-token`. smartcloud needs one for [settings](/features/settings), [sync](/features/sync) and private presets in other repositories. See [Getting started](/getting-started#optional-create-a-github-app).
+
+## House preset
+
+The Resnovas organisation's shared [preset](#preset), `Resnovas/.github/smartcloud/house.yml`, which every Resnovas repository extends. See [The Resnovas house preset](/presets#the-resnovas-house-preset).
+
+## Locked
+
+A value set by a [preset](#preset). A repository that extends the preset may restate it exactly but not change it. See [Add, never change](/presets#add-never-change).
+
+## Maintainer
+
+A GitHub login listed under `roles.maintainers`. Maintainers get warnings instead of errors on their own pull requests from the commits, disclosure and sync checks, and the review gate treats their pull requests differently. The repository owner counts as a maintainer for the `maintainerLevel` settings. See [Roles](/configuration#roles).
+
+## Managed block
+
+The lines between `house:managed:begin` and `house:managed:end` in a file the [sync](/features/sync) feature keeps. Sync owns what is inside; the repository owns what is outside, and adds its own content after `house:local`. See [Managed blocks](/features/sync#managed-blocks).
+
+## Merge queue
+
+A GitHub feature that tests pull requests together before merging them, sending `merge_group` events. See [Required](/features/required) and [Freeze](/features/freeze).
+
+## MCP
+
+The Model Context Protocol, a standard way for AI assistants to call tools. smartcloud's [MCP server](/mcp-server) lets an assistant validate and dry-run configs.
+
+## Preset
+
+A smartcloud config file that other repositories build on by listing it under `extends`. Everything it sets is [locked](#locked). See [Presets and extends](/presets).
+
+## Report comment
+
+The one comment smartcloud keeps on a pull request or issue, listing its errors and warnings. It is edited in place on every run, and says "All smartcloud checks pass." once everything is fixed. See [Reporting](/reporting#one-comment).
+
+## Restricted run
+
+A run that acts with the [workflow token](#workflow-token) because it cannot or should not use a stronger one: pull requests from forks, Dependabot, runs where no other token was passed, or a token GitHub rejected. It skips what that token cannot do (settings, sync, unreadable presets, refused writes) and says so, rather than failing. See [Restricted runs](/reporting#restricted-runs).
+
+## Rule id
+
+The short name a [finding](#finding) carries, such as `DCO`, `AI-02`, `SYNC` or `conventions.title`. [`smartcloud`'s MCP server](/mcp-server) explains any rule id with `explain_rule`.
+
+## Ruleset
+
+GitHub's modern branch protection: rules such as "require these checks" or "require one approval" for a set of branches. The [settings](/features/settings) feature can manage the default branch ruleset.
+
+## Subject
+
+The pull request or issue a rule looks at. Rules take `on: [pullRequest]`, `on: [issue]` or both (the default).
+
+## Sweep
+
+A pass over every open (or every closed) issue and pull request in the repository, on `schedule` and `workflow_dispatch` events. The [stale](/features/stale) and [lock](/features/lock) features sweep.
+
+## Trusted bot
+
+A bot login listed under `roles.trustedBots`, such as `dependabot[bot]`. Trusted bots skip the commits and disclosure checks and the review gate, and only comments by bots or trusted bots count as smartcloud's own marker comments.
+
+## Workflow
+
+A YAML file under `.github/workflows/` that GitHub Actions runs on [events](#event). smartcloud runs as one step of a workflow job. See [Getting started](/getting-started#2-add-the-workflow).
+
+## Workflow token
+
+The token GitHub gives every workflow run automatically, `${{ github.token }}`. Its access is set by the job's `permissions`. It cannot change repository settings, push workflow files, or read other private repositories, and on pull requests from forks it is read-only.

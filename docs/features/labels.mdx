@@ -3,46 +3,114 @@ title: 'Labels'
 description: 'Keep repository labels in line with the config, and apply them by condition.'
 ---
 
-The labels feature does two jobs:
+Labels are the coloured tags on GitHub issues and pull requests, such as `bug` or `documentation`. Keeping them tidy by hand is tedious: names drift, colours differ between repositories, and people forget to add them.
 
-- **Label sync.** On repository events (push, schedule, manual dispatch, repository dispatch and merge queue), it makes the repository's labels match the `labels` section.
-- **Labelling.** On pull request and issue events, it adds and removes labels on the subject as its `labelling` rules pass and fail.
-- **Size labels.** A `sizeLabels` section adds built-in `Size: XS` to `Size: XL` labels, applied to pull requests by how many lines they change.
+The labels feature does three jobs for you:
 
-It is enabled when the config has a `labels`, `labelling` or `sizeLabels` section.
+- **Label sync.** It makes the repository's list of labels match the `labels` section of your config: it creates missing labels, fixes colours and descriptions, renames old labels, and (only if you ask) deletes labels you did not define.
+- **Labelling.** It adds a label to a pull request or issue while a rule's conditions pass, and takes it off again when they stop passing. For example, "label every pull request that touches `docs/**` as documentation".
+- **Size labels.** With a `sizeLabels` section, it adds built-in `Size: XS` to `Size: XL` labels to pull requests by how many lines they change.
+
+It is turned on when the config has a `labels`, `labelling` or `sizeLabels` section. You can use any of the three on its own.
+
+## Turn it on
+
+<Steps>
+  <Step title="Add the workflow events">
+    Label sync runs on repository events: `push`, `schedule`, `workflow_dispatch`, `repository_dispatch` and `merge_group`. Labelling runs on pull request and issue events. The workflow in [Getting started](/getting-started) listens to all of them. At minimum you need:
+
+    ```yaml
+    on:
+      push:
+        branches: [main]
+      pull_request:
+      issues:
+    ```
+
+  </Step>
+  <Step title="Grant the permissions">
+    The job needs `issues: write` (repository labels, and labels on issues) and `pull-requests: write` (labels on pull requests). The [workflow token](/glossary#workflow-token) is enough; no app or personal token is needed.
+  </Step>
+  <Step title="Define your labels">
+    Add a `labels` section to `.github/smartcloud.yml`. Each entry has a key you choose, a `name` and a `color`:
+
+    ```yaml
+    labels:
+      docs:
+        name: documentation
+        color: 0075CA
+    ```
+
+  </Step>
+  <Step title="Add a labelling rule (optional)">
+    Point a rule at the label's key and give it a [condition group](/glossary#condition-group):
+
+    ```yaml
+    labelling:
+      docs:
+        label: docs
+        on: [pullRequest]
+        when:
+          condition:
+            - type: filesMatch
+              condition: 'docs/**'
+    ```
+
+  </Step>
+  <Step title="Run it">
+    Push to `main` (or run the workflow by hand) to sync the labels. Open a pull request that changes a file under `docs/` to see the label applied.
+  </Step>
+</Steps>
+
+## Options
+
+| Key                        | Default                 | What it does                                                                                                                           |
+| -------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels.<key>`             | none                    | One label. The key is an id you choose; rules refer to the label by it.                                                                |
+| `labels.<key>.name`        | required                | The label's name as GitHub shows it.                                                                                                   |
+| `labels.<key>.color`       | required                | Six hexadecimal digits, with or without a leading `#`, for example `0E8A16` or `'#0E8A16'`.                                            |
+| `labels.<key>.description` | left as it is on GitHub | The label's description. At most 100 characters, which is GitHub's limit.                                                              |
+| `labels.<key>.aliases`     | none                    | Earlier names of this label. A repository label with one of these names is renamed, so issues and pull requests that carry it keep it. |
+| `labelSync.prune`          | `false`                 | Delete repository labels the config does not define.                                                                                   |
+| `labelling.<key>`          | none                    | One labelling rule. The key is an id you choose.                                                                                       |
+| `labelling.<key>.label`    | required                | The label to apply: a key of `labels`, whose `name` is applied. Any other value is used as the label's name itself.                    |
+| `labelling.<key>.on`       | `[pullRequest, issue]`  | The [subjects](/glossary#subject) the rule applies to: `pullRequest`, `issue`, or both.                                                |
+| `labelling.<key>.when`     | required                | The [condition group](/conditions) that must pass for the label to be on.                                                              |
+| `sizeLabels`               | none                    | Turns on the built-in size labels. `sizeLabels: {}` uses the default thresholds.                                                       |
+| `sizeLabels.thresholds.s`  | `10`                    | The fewest changed lines (added plus deleted) that make a pull request `Size: S`.                                                      |
+| `sizeLabels.thresholds.m`  | `100`                   | The fewest changed lines that make it `Size: M`.                                                                                       |
+| `sizeLabels.thresholds.l`  | `500`                   | The fewest changed lines that make it `Size: L`.                                                                                       |
+| `sizeLabels.thresholds.xl` | `1000`                  | The fewest changed lines that make it `Size: XL`.                                                                                      |
+
+Keys of `labels` and `labelling` are any non-empty text without leading or trailing spaces, except `__proto__`.
+
+### Renaming a label with `aliases`
+
+To rename `bug` to `Type: Bug` without losing it on existing issues, give the new name and list the old one as an alias:
 
 ```yaml
 labels:
   bug:
     name: 'Type: Bug'
     color: D73A4A
-    description: Something is not working
     aliases: [bug, defect]
-  docs:
-    name: 'Type: Documentation'
-    color: '#0075CA'
-  xs:
-    name: 'Size: XS'
-    color: C2E0C6
+```
 
-labelSync:
-  prune: false
+The next sync renames the repository's `bug` label in place. Every issue that had `bug` now shows `Type: Bug`.
 
+### Several rules for one label
+
+A label is on when any rule naming it passes. That lets you use one rule per subject kind:
+
+```yaml
 labelling:
-  docs:
-    label: docs
-    when:
-      condition:
-        - type: filesMatch
-          condition: 'docs/**'
-  xs:
-    label: xs
+  bug-pr:
+    label: bug
     on: [pullRequest]
     when:
       condition:
-        - type: changesSize
-          min: 0
-          max: 10
+        - type: branchMatches
+          condition: '^fix/'
   bug-issue:
     label: bug
     on: [issue]
@@ -52,52 +120,9 @@ labelling:
           condition: "/\\bbug\\b/i"
 ```
 
-## Label sync
+### Size thresholds
 
-Each entry in `labels` is keyed by an id you choose, and has a `name`, a `color` (six hex digits, with or without `#`), and optionally a `description` and `aliases`.
-
-- A configured label is matched to a repository label by name, ignoring case, and updated when its colour or description differs.
-- Failing that, a repository label named in `aliases` is renamed, so issues carrying the old name keep the label. Exact names are matched before aliases, so an alias never takes a label another entry names directly.
-- Anything else is created.
-- A `description` left out of the config is left as it is on GitHub.
-- GitHub accepts descriptions of up to 100 characters. A label with a longer one is reported as an error and left as it is, and the rest still sync.
-- When two entries name the same label, ignoring case, only the first is synced, with a warning.
-- With `labelSync.prune: true`, repository labels the config does not define are deleted. A label named in an entry's `aliases` counts as defined, even when the entry's own name already exists. Pruning is off by default.
-
-Label sync never runs on pull request events: those from forks carry a read-only token.
-
-<Note>
-  v1's `skipDelete` input deleted unconfigured labels unless it was set. v2 never deletes a label unless
-  `labelSync.prune` is `true`.
-</Note>
-
-## Labelling
-
-Each rule in `labelling` names a `label`, an optional `on` (`pullRequest`, `issue`, or both by default), and a `when` [condition group](/conditions).
-
-- `label` is a key of `labels`, and the label's `name` is what gets applied. A value that is not a key is used as the label's name itself.
-- A label is added when any rule for it passes, and removed when every rule for it fails. Several rules may name the same label, for example one per subject kind.
-- Names compare ignoring case, as GitHub does.
-- If a label has already gone when smartcloud removes it, that is a warning, not a failure.
-- If GitHub forbids adding or removing a label, as it does on the read-only token of a pull request from a fork, that is a warning (`labels.add` or `labels.remove`), not a failure, and the rest of the run carries on.
-
-## Size labels
-
-`sizeLabels` adds five labels and a labelling rule for each, so every pull request carries one size label that moves as the pull request grows or shrinks:
-
-```yaml
-sizeLabels: {}
-```
-
-| Key       | Label      | Lines added plus deleted |
-| --------- | ---------- | ------------------------ |
-| `size-xs` | `Size: XS` | 0 to 9                   |
-| `size-s`  | `Size: S`  | 10 to 99                 |
-| `size-m`  | `Size: M`  | 100 to 499               |
-| `size-l`  | `Size: L`  | 500 to 999               |
-| `size-xl` | `Size: XL` | 1000 or more             |
-
-Each size's band starts at its threshold and stops just before the next size's. Change any threshold under `thresholds`. Any size you leave out keeps its default, and the thresholds must rise from `s` to `xl`:
+Change a threshold under `sizeLabels.thresholds`. Sizes you leave out keep their defaults. The thresholds must rise from `s` to `xl`, or the section is rejected:
 
 ```yaml
 sizeLabels:
@@ -106,6 +131,146 @@ sizeLabels:
     xl: 2000
 ```
 
-- The preset's labels and rules are ordinary `labels` and `labelling` entries, so label sync creates the labels, and `labelSync.prune` counts them as defined.
-- A `labels` or `labelling` entry you write with the same key replaces the preset's. For example, define `labels.size-xl` to rename or recolour XL, or `labelling.size-xl` to change when it applies. A renamed size keeps its built-in name among its `aliases`, so label sync renames the existing label instead of leaving the old one on pull requests.
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+labels:
+  bug:
+    name: 'Type: Bug'
+    color: D73A4A
+    description: Something is not working
+    aliases: [bug, defect] # old names, renamed in place
+  docs:
+    name: 'Type: Documentation'
+    color: '#0075CA'
+  pinned:
+    name: pinned
+    color: FEF2C0
+
+labelSync:
+  prune: false # keep labels the config does not define
+
+labelling:
+  # Label pull requests that touch the docs.
+  docs:
+    label: docs
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'docs/**'
+  # Label issues whose title mentions a bug.
+  bug-issue:
+    label: bug
+    on: [issue]
+    when:
+      condition:
+        - type: titleMatches
+          condition: "/\\bbug\\b/i"
+
+# Size: XS to Size: XL on every pull request.
+sizeLabels:
+  thresholds:
+    s: 20
+```
+
+## How it works
+
+### Label sync
+
+Label sync runs on `push`, `schedule`, `workflow_dispatch`, `repository_dispatch` and `merge_group` events. It never runs on pull request events, because those from forks carry a read-only token. For each entry in `labels`:
+
+1. A repository label with the same name, ignoring case, is matched and updated when its name, colour or description differs.
+2. Failing that, a repository label named in `aliases` is renamed. Exact names are matched before aliases, so an alias never takes a label another entry names directly.
+3. Anything else is created.
+
+Then:
+
+- A `description` left out of the config is left as it is on GitHub, so a config that only sets colours never blanks descriptions set by hand.
+- A label whose description is longer than 100 characters is reported as an error and left as it is. The rest still sync.
+- When two entries name the same label, ignoring case, only the first is synced, with a warning.
+- With `labelSync.prune: true`, repository labels the config does not define are deleted. A label named in an entry's `aliases` counts as defined, even when the entry's own name already exists.
+
+<Note>
+  v1's `skipDelete` input deleted unconfigured labels unless it was set. v2 never deletes a label unless
+  `labelSync.prune` is `true`.
+</Note>
+
+### Labelling
+
+Labelling runs on pull request events (`pull_request`, `pull_request_target`, `pull_request_review`, `pull_request_review_comment`) and on `issues` events. It does not run on comments.
+
+- `label` is a key of `labels`, and that label's `name` is applied. A value that is not a key is used as the name itself.
+- For each label, smartcloud checks every rule that names it and applies to the subject's kind. The label is added when any of them passes, and removed when all of them fail.
+- Names compare ignoring case, as GitHub does.
+- A label that has already gone when smartcloud removes it is a warning, not a failure.
+- A label GitHub forbids adding or removing, as on the read-only token of a fork's pull request, is a warning (`labels.add` or `labels.remove`), and the run carries on.
+
+Labelling only touches labels some rule names. A label a person adds by hand, which no rule names, is never removed.
+
+### Size labels
+
+`sizeLabels` adds five labels and a labelling rule for each, so every pull request carries one size label that moves as it grows or shrinks. Changed lines are additions plus deletions.
+
+| Key       | Label      | Colour   | Lines, with default thresholds |
+| --------- | ---------- | -------- | ------------------------------ |
+| `size-xs` | `Size: XS` | `3CBF00` | 0 to 9                         |
+| `size-s`  | `Size: S`  | `5D9801` | 10 to 99                       |
+| `size-m`  | `Size: M`  | `7F7203` | 100 to 499                     |
+| `size-l`  | `Size: L`  | `A14C05` | 500 to 999                     |
+| `size-xl` | `Size: XL` | `C32607` | 1000 or more                   |
+
+Each label's description states its range, for example "Changes 10 to 99 lines".
+
+- The built-in labels and rules are ordinary `labels` and `labelling` entries, so label sync creates the labels and `labelSync.prune` counts them as defined.
+- A `labels` or `labelling` entry you write with the same key replaces the built-in one. Define `labels.size-xl` to rename or recolour XL, or `labelling.size-xl` to change when it applies. A renamed size keeps its built-in name among its `aliases`, so label sync renames the existing label instead of leaving the old one on pull requests.
 - The rules use the [`changesSize`](/conditions) condition and apply to pull requests only.
+
+To apply labels by hand from a comment, turn on the [commands](/features/commands) feature and use `/label`.
+
+## What you will see on GitHub
+
+- **Labels page.** After a sync, the repository's labels (Issues, then Labels) match your config.
+- **Labels on items.** Labels appear on pull requests and issues as their rules pass, and disappear when they stop passing. The timeline shows them added by the account smartcloud runs as.
+- **Check run.** A `smartcloud / labels` [check run](/glossary#check-run) on the commit. It succeeds when there is nothing wrong, is neutral with warnings (a repeated label name, a label already gone, a write refused), and fails on an error (an over-long description).
+- **Job summary.** Every label created, updated, renamed, deleted, added or removed is listed as a change.
+
+## Forks and restricted runs
+
+On a pull request from a fork, or a Dependabot pull request, smartcloud acts with the read-only [workflow token](/glossary#workflow-token) (see [restricted runs](/glossary#restricted-run)). Labelling still evaluates its rules, but GitHub refuses the write: each refused add or remove becomes a `labels.add` or `labels.remove` warning and is listed under **Restricted access** in the job summary. Label sync never runs on pull request events, so it is not affected.
+
+To label fork pull requests, also run the workflow on `pull_request_target`, where GitHub gives the workflow token write access. The run is still restricted (smartcloud acts with the workflow token, never a stronger one), but that token can now write labels. That event runs your default branch's workflow, and smartcloud reads the config from the default branch, so the fork cannot change the rules.
+
+## In the house preset
+
+The [house preset](/presets#the-resnovas-house-preset) defines nine labels and nothing else from this page: the AI policy's process labels `needs-disclosure`, `needs-dco`, `needs-reproduction`, `needs-evidence`, `needs-tests`, `needs-human-explanation`, `needs-scope-approval` and `needs-refactor`, and `house-sync` for its own sync pull requests. It sets no `labelSync`, `labelling` or `sizeLabels`.
+
+A Resnovas repository adds its own labels and rules below `house:local` under new keys. It cannot change the name, colour or description of a house label, and should not turn on `labelSync.prune` unless every label it wants to keep is in the config.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="A label was not created or updated">
+    Label sync only runs on `push`, `schedule`, `workflow_dispatch`, `repository_dispatch` and `merge_group`. A pull request run does not sync labels. Push to the default branch or run the workflow by hand.
+  </Accordion>
+  <Accordion title="label ... was not synced: its description is longer than GitHub's 100 characters">
+    GitHub rejects longer descriptions. Shorten `labels.<key>.description` to 100 characters or fewer.
+  </Accordion>
+  <Accordion title="labels.x names ..., which labels.y already names; only the first is synced">
+    Two entries have the same `name`, ignoring case. Remove or rename one of them.
+  </Accordion>
+  <Accordion title="could not add ... on a read-only token, for example a pull request from a fork">
+    The run's token cannot write labels. See [Forks and restricted runs](#forks-and-restricted-runs).
+  </Accordion>
+  <Accordion title="The old label is still there after a rename">
+    Add the old name to the entry's `aliases`. Without it, sync creates a new label and leaves the old one (and deletes it only with `labelSync.prune: true`, which drops it from every issue).
+  </Accordion>
+  <Accordion title="size thresholds must rise from s to xl">
+    Each threshold must be larger than the one before it, counting the defaults for sizes you left out. For example, `m: 5` fails because `s` is still 10.
+  </Accordion>
+  <Accordion title="A label I added by hand keeps being removed">
+    A labelling rule names that label and its conditions fail, so smartcloud takes it off. Change the rule, or use a label no rule names.
+  </Accordion>
+</AccordionGroup>

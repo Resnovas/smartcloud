@@ -668,6 +668,15 @@ Tests mirror sources file for file: `packages/<name>/src/<path>.ts` is tested by
 
 Every exported const, function and class carries a description, a typed `@example` importing from the package's public path, `@param` per parameter and `@returns` unless it returns void; add `@remarks` where behaviour needs explaining. Exports left out of the package's `index.ts` are marked `@internal`. Each package and app has a `docgen.json` for `@effect/docgen`, whose `docgen` target type-checks every example and writes the API docs to `dist/docs`; the `contracts` target (`tools/docs/check-contracts.ts`) checks the built declarations for the tags. Mark an example fence `ts import.meta.vitest` to run it as a test through `@effect/doctest`, and assert with a trailing `// => value` comment (primitives only: Effect 3's `Equal` compares plain objects and arrays by reference). Vitest counts a run example's coverage against the source file it sits in, so a runnable example must call every function it defines; leave the marker off an example that cannot.
 
+## Documentation
+
+Everything is documented twice, in the same change as the code:
+
+- **For people, in `docs/`** (the Mintlify site, navigation in `docs/docs.json`): every feature, configuration option, preset, CLI command, MCP tool and workflow, written ELI5. Say what it is and why you would want it before how, give step-by-step setup a newcomer can follow, one complete example, what they will see on GitHub, every option with its default, and common problems with their fixes. Define every term on first use. `docs/reference/configuration.mdx` is generated from the schema (`pnpm docs:reference`); never edit it by hand.
+- **For agents, in `ai-docs/`**: numbered sections (`ai-docs/src/NN_name/index.md`) with compiled `.ts` examples beside them, assembled into `LLMS.md` by `pnpm ai-docs`. `pnpm run check` fails when `LLMS.md` is stale or an example stops compiling. The generator (`tools/ai-docs/docgen.mjs`), `ai-docs/README.md` and the house-standards section are synced from `Resnovas/.github`; smartcloud's own sections start at `10_`.
+
+A feature, option or preset is not done until both are updated.
+
 ## Releasing
 
 Releases are cut by Nx release from the `release` workflow (Actions, run on `main`); see `docs/releasing.mdx`. Conventional commits since the last `v*` tag decide the version, and the tag is the only record of it: the release commit is never on `main`, whose app versions stay `0.0.0`. The workflow pushes a `v<version>` tag on a release commit that holds `dist/index.js` and the bumped versions, writes the notes to a draft GitHub release, moves `v<major>`, publishes `@resnovas/smartcloud` to npm, attaches the SBOMs and attestations, and then publishes the release (immutable releases lock a published one).

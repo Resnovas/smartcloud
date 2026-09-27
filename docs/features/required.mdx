@@ -3,21 +3,121 @@ title: 'Required'
 description: 'One aggregate check that passes only when every other check on a pull request has passed.'
 ---
 
-A ruleset requires status checks by name, so every new workflow job means editing the ruleset, and a renamed job silently stops being required. The required feature replaces that list with one check: the job running smartcloud waits for every other check on the pull request's head commit, and passes only when they all have. The ruleset then requires that job's check alone.
+GitHub lets a branch [ruleset](/glossary#ruleset) block merging until named checks pass. The trouble is the names: every new workflow job means editing the ruleset, and a renamed job quietly stops being required.
 
-It is enabled by a `required` section, and runs on pull request events in a job that passes its own check run id:
+The required feature replaces that list with one check. The job running smartcloud waits for every other check on the pull request's head commit, and passes only when they have all passed. Your ruleset then requires that one job's check, and any job you add later is covered without touching the ruleset.
+
+## Turn it on
+
+<Steps>
+  <Step title="Pass the job's own check run id">
+    The feature must know which check is its own, or it would wait for itself. Give the job a stable `name`, pass `checkRunId`, and grant `statuses: read` so it can read commit statuses as well as check runs:
+
+    ```yaml .github/workflows/smartcloud.yml
+    jobs:
+      smartcloud:
+        name: smartcloud
+        runs-on: ubuntu-latest
+        timeout-minutes: 75
+        permissions:
+          contents: read
+          pull-requests: write
+          checks: write
+          issues: write
+          statuses: read
+        steps:
+          - uses: resnovas/smartcloud@v2
+            with:
+              checkRunId: ${{ job.check_run_id }}
+    ```
+
+    `timeout-minutes` must be longer than `required.timeout` (60 minutes by default), so the job is not killed while it waits.
+
+  </Step>
+  <Step title="Add a required section">
+    ```yaml .github/smartcloud.yml
+    required:
+      expect: ['^check$']
+    ```
+
+    `required: {}` is enough to turn it on. List your main CI job under `expect` so a deleted or renamed CI job fails the aggregate instead of letting it pass with nothing to wait for.
+
+  </Step>
+  <Step title="Require the smartcloud check">
+    Require the `smartcloud` check (the job's name) in the ruleset. With the [settings](/features/settings#ruleset) feature:
+
+    ```yaml .github/smartcloud.yml
+    settings:
+      ruleset:
+        statusChecks:
+          checks:
+            smartcloud: true
+            check: true
+    ```
+
+    Keep your main CI check required beside `smartcloud` too. A [restricted run](/glossary#restricted-run), such as a fork or Dependabot pull request, leaves out any preset from another repository that its token cannot read. If `required` comes from such a preset it is skipped there, and only the ruleset's own list protects the branch.
+
+  </Step>
+</Steps>
+
+## Options
+
+| Key       | Default | What it does                                                                                                                                           |
+| --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ignore`  | none    | Checks that do not count, as [patterns](/conditions) matched against each check run's name or commit status's context. For example `^codecov/`.        |
+| `expect`  | none    | Checks that must appear and pass, as patterns, such as `^check$`. One that has not appeared by the timeout fails the aggregate.                        |
+| `timeout` | `60`    | Minutes to wait for the other checks, a whole number from 1 to 360 (the longest an Actions job may run). Checks still running then fail the aggregate. |
+
+A pattern is a regular expression, written bare (`^codecov/`) or as `/source/flags` (`/preview/i` to ignore case).
 
 ```yaml
 required:
+  # Coverage uploads and preview deployments never block a merge.
   ignore: ['^codecov/', '/preview/i']
-  timeout: 60
+  # The CI job and the docs build must be on every commit.
+  expect: ['^check$', '^docs$']
+  # Long test suites get two hours.
+  timeout: 120
 ```
 
-```yaml
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+required:
+  ignore: ['^codecov/']
+  expect: ['^check$']
+  timeout: 60
+
+settings:
+  ruleset:
+    statusChecks:
+      checks:
+        # The aggregate job, and the CI job it expects.
+        smartcloud: true
+        check: true
+```
+
+```yaml .github/workflows/smartcloud.yml
+name: smartcloud
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft, closed]
+
+permissions: {}
+
+# A newer run on the same pull request and event replaces the older one.
+concurrency:
+  group: smartcloud-${{ github.event.pull_request.number }}-${{ github.event_name }}
+  cancel-in-progress: true
+
 jobs:
   smartcloud:
     name: smartcloud
     runs-on: ubuntu-latest
+    timeout-minutes: 75
     permissions:
       contents: read
       pull-requests: write
@@ -30,49 +130,106 @@ jobs:
           checkRunId: ${{ job.check_run_id }}
 ```
 
-Then require the `smartcloud` check in the ruleset; with the [settings](/features/settings#ruleset) feature, `requiredChecks: [smartcloud]`. List your main CI check under `expect` too, so a deleted or renamed CI job cannot let the aggregate pass with nothing to wait for. Until every repository does, keep that CI check required in the ruleset beside `smartcloud`, because a restricted run (a fork or Dependabot pull request) skips the private house preset and with it `required`.
+## How it works
 
-| Key       | Default | Meaning                                                                                                                         |
-| --------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| `ignore`  | none    | Checks that do not count, as [patterns](/conditions) matched against each check run's name or status's context.                 |
-| `expect`  | none    | Checks that must appear and pass, as patterns, such as `^check$`. One that has not appeared by the timeout fails the aggregate. |
-| `timeout` | `60`    | Minutes to wait for the other checks, from 1 to 360. Checks still running then fail the aggregate.                              |
+### What counts
 
-## What counts
-
-Every check on the head commit counts: the latest check run of each app and name, from GitHub Actions or any app, and the latest commit status of each context. A ruleset picks a required check the same way. A re-run, or a workflow started again by an edit or a review, leaves the older runs of its checks on the commit, often cancelled; only the latest run of each check counts, so an older cancelled or failed run never fails the aggregate. Two jobs with the same name published by the same app are one check, as they are to a ruleset, so give jobs in different workflows different names.
+Every check on the head commit counts: the latest check run of each app and name, from GitHub Actions or any other app, and the latest commit status of each context. A ruleset picks a required check the same way. A re-run, or a workflow started again by an edit or a review, leaves the older runs of its checks on the commit, often cancelled; only the latest run of each check counts, so an older cancelled or failed run never fails the aggregate. Two jobs with the same name published by the same app are one check, as they are to a ruleset, so give jobs in different workflows different names.
 
 Three kinds are left out:
 
-- every run of the job running smartcloud (until its own run shows up in the list, the feature concludes nothing and looks again): its own, found by `checkRunId`, and any other run with the same app and name, such as one a review started while this one waits;
-- smartcloud's own `smartcloud / <feature>` check runs, because their findings already decide the job's own result. smartcloud marks every check run it creates with the `external_id` `smartcloud`, and only runs with that mark from an app smartcloud runs as (the job's app, or the GitHub App its token acts as) are left out. A check run of the same name from another app or workflow, unmarked or marked otherwise, counts;
+- every run of the job running smartcloud: its own, found by `checkRunId`, and any other run with the same app and name, such as one a review started while this one waits. Until its own run shows up in GitHub's list, the feature concludes nothing and looks again;
+- smartcloud's own `smartcloud / <feature>` check runs, because their findings already decide the job's own result. smartcloud marks every check run it creates with the `external_id` `smartcloud`, and only runs with that mark from an app smartcloud runs as (the job's app, or the [GitHub App](/glossary#github-app) its token acts as) are left out. A check run of the same name from another app or workflow, unmarked or marked otherwise, counts;
 - anything an `ignore` pattern matches.
 
-A check run that concludes success, neutral or skipped passes, as it does for a ruleset. Any other conclusion (failure, cancelled, timed out, action required, stale) fails, as does a status of failure or error.
+A check run that concludes success, neutral or skipped passes, as it does for a ruleset. Any other conclusion (failure, cancelled, timed out, action required, stale) fails, as does a commit status of failure or error.
 
-## How it waits
+Because smartcloud's own checks are left out, the [freeze](/features/freeze) feature's `smartcloud / merge freeze` check is not covered by the aggregate: require it in the ruleset on its own.
 
-The feature looks at the checks every 15 seconds.
+### How it waits
 
-- As soon as one check fails, the aggregate fails, with one error per failed check linking to it.
-- When nothing is pending, it looks once more, so a workflow queued a moment after the rest is not missed. Two looks in a row with the same checks, all passed, pass the aggregate with a notice.
+The feature looks at the checks every 15 seconds. While nothing changes between looks, it waits twice as long before the next, up to a minute; any change starts the waits over at 15 seconds. The last look is always at the deadline.
+
+- As soon as one check fails, the aggregate fails, with one error (`required.failed`) per failed check, linking to it.
+- When nothing is pending, it looks once more, so a workflow queued a moment after the rest is not missed. Two looks in a row with the same checks, all passed, pass the aggregate with a notice (`required.passed`), such as `All 7 other check(s) on this commit passed.`
 - An `expect` pattern no check matches yet keeps it waiting; one still missing after `timeout` minutes fails it (`required.missing`).
-- Checks still pending after `timeout` minutes fail it, one error each.
+- Checks still pending after `timeout` minutes fail it, one error (`required.pending`) each.
 - If GitHub never lists the job's own run before the timeout, it fails (`required.unconfirmed`) rather than pass unconfirmed.
 
-Every other feature runs alongside, so labels and review requests are not delayed; the report comment and the per-feature check runs are published once the wait ends. Re-run the smartcloud job after re-running a failed check.
+Every other feature runs alongside, so labels and review requests are not delayed; the report comment and the per-feature check runs are published once the wait ends. After re-running a failed check, re-run the smartcloud job too.
 
-Without `checkRunId` the job would wait for itself. In the action, a configured `required` section without it is an error (`required.check-run-missing`), so a workflow that was not updated cannot pass the aggregate unchecked; in CLI dry runs the feature is skipped. Runs of the same aggregate job never wait for each other, but use one aggregate job per commit: two differently named jobs that each wait for every other check wait for each other until they time out. Give the workflow a `concurrency` group per pull request and event with `cancel-in-progress`, so a newer run replaces an older one on the same event instead of waiting beside it.
+Runs of the same aggregate job never wait for each other, but use one aggregate job per commit: two differently named jobs that each wait for every other check wait for each other until they time out. Give the workflow a `concurrency` group per pull request and event with `cancel-in-progress`, as in the example, so a newer run replaces an older one instead of waiting beside it.
 
-## Tokens
+### Without checkRunId
 
-The checks are read with the workflow's own token (the `workflowToken` input, which defaults to it), not `GITHUB_TOKEN`: that can be a personal access token or an app token without checks and statuses read, while the job's `checks` and `statuses` permissions give the workflow token both. On a pull request from a fork, the workflow token is read-only, which is enough.
+In the action, a configured `required` section without `checkRunId` is an error (`required.check-run-missing`: `required is configured but the workflow does not pass checkRunId: ${{ job.check_run_id }}, so it could not run. Update the workflow.`). A workflow that was not updated therefore fails instead of passing the aggregate unchecked. In CLI dry runs the feature is skipped.
 
-## Rolling it out
+### Tokens
 
-The feature does nothing until the workflow passes `checkRunId`, so the order is:
+The checks are read with the workflow's own token (the `workflowToken` input, which defaults to it), not `GITHUB_TOKEN`. `GITHUB_TOKEN` can be a personal access token or an app token without checks and statuses read, while the job's `checks` and `statuses` permissions give the [workflow token](/glossary#workflow-token) both.
 
-1. Release a smartcloud version with the feature, and use it in the workflow.
-2. Add the `required` section to the config, or to a preset the config extends. Until the next step it is skipped, and the `smartcloud` check reports the other features as before.
-3. Pass `checkRunId` and grant `statuses: read` in the workflow. From here the `smartcloud` check waits for every other check.
-4. Only then make the ruleset require the `smartcloud` check alone. Dropping the other required checks before step 3 would leave pull requests gated by nothing but smartcloud's own findings.
+## What you will see on GitHub
+
+- The job's own check (named after the job, such as `smartcloud`) stays in progress while the feature waits, then fails if any counted check failed, is still pending, is missing, or its own run was never listed. That is the check your ruleset requires.
+- A `smartcloud / required` [check run](/glossary#check-run) with the same findings: failure on any error, success with the `required.passed` notice otherwise.
+- The failed, pending and missing checks in the [report comment](/glossary#report-comment) on the pull request, each linking to the check.
+- In the job summary, every [finding](/glossary#finding), including the notice with the number of checks that passed.
+
+## Forks and restricted runs
+
+On a pull request from a fork, the workflow token is read-only, which is enough to read checks, so the feature still runs. But a [restricted run](/reporting#restricted-runs) leaves out a preset from another repository that it cannot read. If `required` comes from such a preset, the aggregate is skipped on fork and Dependabot pull requests, and the job's check reports only smartcloud's own findings. That is why your main CI check should stay required in the ruleset beside `smartcloud`.
+
+## In the house preset
+
+The [Resnovas house preset](/presets#the-resnovas-house-preset) sets `required: {}`, and requires the `smartcloud` check in its ruleset (`settings.ruleset.statusChecks.checks.smartcloud: true`). A repository adds its main CI job under both `required.expect` and `settings.ruleset.statusChecks.checks`, as smartcloud does:
+
+```yaml .github/smartcloud.yml
+required:
+  expect:
+    - ^check$
+
+settings:
+  ruleset:
+    statusChecks:
+      checks:
+        check: true
+```
+
+It can also add `ignore` and `timeout`, which the preset leaves unset.
+
+### Rolling it out
+
+The feature does nothing useful until the workflow passes `checkRunId`, so change things in this order:
+
+1. Use a smartcloud release with the feature in the workflow.
+2. Pass `checkRunId` and grant `statuses: read` in the workflow.
+3. Add the `required` section to the config, or to a preset the config extends. From here the `smartcloud` check waits for every other check.
+4. Only then make the ruleset require the `smartcloud` check alone. Dropping the other required checks earlier would leave pull requests gated by nothing but smartcloud's own findings.
+
+If the section arrives before the workflow change, the action reports `required.check-run-missing` and the check fails until the workflow is updated.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="required.check-run-missing: the workflow does not pass checkRunId">
+    Add `checkRunId: ${{ job.check_run_id }}` to the smartcloud step's `with`, as in [Turn it on](#turn-it-on).
+  </Accordion>
+  <Accordion title="The job runs for an hour and fails with required.pending">
+    A check never finished within `timeout` minutes. Open the check the error links to. If it is a check that never concludes on its own, such as a deployment preview, add it to `ignore`. If your CI is slow, raise `timeout` and the job's `timeout-minutes`.
+  </Accordion>
+  <Accordion title="required.missing: No check matching ^check$ passed">
+    No check on the commit matches an `expect` pattern. The CI job may have been renamed, skipped by a path filter, or not run for this event. Rename the pattern or make the job run on every pull request.
+  </Accordion>
+  <Accordion title="required.unconfirmed: GitHub did not list this job's own check run">
+    GitHub never returned the job's own check run, so smartcloud could not tell its own runs apart from the rest. Check that `checkRunId` is `${{ job.check_run_id }}` of the same job, and re-run the job.
+  </Accordion>
+  <Accordion title="Two smartcloud jobs wait for each other until they time out">
+    Two differently named jobs both use the required feature on the same commit. Keep one aggregate job, and give the workflow a `concurrency` group with `cancel-in-progress`.
+  </Accordion>
+  <Accordion title="The aggregate passed but a failed check was re-run later">
+    The aggregate only sees the checks while it waits. Re-run the smartcloud job after re-running any other check.
+  </Accordion>
+  <Accordion title="The job cannot read checks or statuses">
+    Grant `checks: write` and `statuses: read` on the job, and leave the `workflowToken` input at its default.
+  </Accordion>
+</AccordionGroup>

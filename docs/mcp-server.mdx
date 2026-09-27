@@ -3,26 +3,49 @@ title: 'MCP server'
 description: 'Let AI assistants validate, explain and dry-run smartcloud configs through the Model Context Protocol.'
 ---
 
-`smartcloud-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) server. Assistants and agents use the same code as the action and the CLI to work with a repository's smartcloud config, rather than guessing at it.
+`smartcloud-mcp` is a [Model Context Protocol](https://modelcontextprotocol.io) ([MCP](/glossary#mcp)) server. It lets an AI assistant, such as Claude Code, Cursor or VS Code's Copilot agent, check and explain smartcloud configs by calling the same code as the action and the CLI, rather than guessing at them.
 
-Every tool only reads. `dry_run` runs through the dry-run layer, so it lists the writes a run would make and never makes them.
+Why connect it: an assistant editing `.github/smartcloud.yml` can validate its change before suggesting it, explain why a check failed from the rule id, and check each commit message before committing, so its commits pass the [commits](/features/commits) check first time.
+
+Every tool only reads. `dry_run` runs through the [dry-run](/glossary#dry-run) layer, so it lists the writes a run would make and never makes them. There is no `doctor` tool; run [`smartcloud doctor`](/cli#doctor) for that.
 
 ## Connect it
 
-The server speaks MCP over stdio. Add it to your client's MCP configuration:
+The server speaks MCP over stdio. It needs Node 24 or later.
 
-```json
-{
-  "mcpServers": {
-    "smartcloud": {
-      "command": "npx",
-      "args": ["-y", "-p", "@resnovas/smartcloud", "smartcloud-mcp"]
+<Steps>
+  <Step title="Add it to your client">
+    Most clients read an `mcpServers` map. From the first v2 release the server ships in the `@resnovas/smartcloud` npm package:
+
+    ```json .mcp.json
+    {
+      "mcpServers": {
+        "smartcloud": {
+          "command": "npx",
+          "args": ["-y", "-p", "@resnovas/smartcloud", "smartcloud-mcp"]
+        }
+      }
     }
-  }
-}
-```
+    ```
 
-Tools that read GitHub use `GITHUB_TOKEN`, or the token of the signed-in GitHub CLI (`gh auth login`). The token is resolved only when a tool needs GitHub, so validating a config without `extends` works offline.
+    Claude Code reads `.mcp.json` in the repository root; Cursor reads `.cursor/mcp.json`. With Claude Code you can also run `claude mcp add smartcloud -- npx -y -p @resnovas/smartcloud smartcloud-mcp`.
+
+    Before that release, build it from a checkout (`pnpm install && pnpm nx run @resnovas/smartcloud-mcp:build`) and use `"command": "node", "args": ["/path/to/smartcloud/apps/mcp/dist/main.js"]`.
+
+  </Step>
+  <Step title="Give it a token (optional)">
+    Tools that read GitHub (`dry_run`, `plan_settings`, and validating a config with `extends`) use `GITHUB_TOKEN`, or the token of the signed-in GitHub CLI (`gh auth login`). The token is resolved only when a tool needs GitHub, so validating a config without `extends` works offline.
+  </Step>
+  <Step title="Ask for it">
+    Start the server from the repository you work in, since `config` paths are read relative to it. Then ask, for example:
+
+    - "Validate `.github/smartcloud.yml` with smartcloud."
+    - "Explain the smartcloud finding `AI-02` and how to fix it."
+    - "Dry-run smartcloud on pull request 42 of my-org/my-repo with my local config."
+    - "Check this commit message with smartcloud before you commit."
+
+  </Step>
+</Steps>
 
 ## Tools
 

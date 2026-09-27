@@ -3,60 +3,113 @@ title: 'Backport'
 description: 'Cherry-pick a merged pull request onto release branches by labelling it.'
 ---
 
-The backport feature copies a merged pull request onto other branches, such as release branches. Label the pull request `backport <branch>`, and once it is merged smartcloud cherry-picks its changes onto that branch and opens a pull request with them. It is enabled by a `backport` section.
+If you maintain more than one version of a project, a bug fixed on `main` often needs fixing on older release branches too. Copying a change onto another branch is called a **backport**. Doing it by hand means cherry-picking commits, pushing a branch and opening a pull request, every time.
 
-```yaml
-backport:
-  prefix: 'backport '
-  labels: [backport]
-```
+The backport feature does that for you. Label a pull request `backport release/1.x`, and once it is merged smartcloud copies its changes onto `release/1.x` and opens a pull request with them. You review and merge that pull request like any other.
 
-| Key      | Default     | Meaning                                                                                                              |
-| -------- | ----------- | -------------------------------------------------------------------------------------------------------------------- |
-| `prefix` | `backport ` | The start of a backport label, ignoring case. The rest of the label, trimmed, is the branch: `backport release/1.x`. |
-| `labels` | none        | Added to every backport pull request. Label names as GitHub shows them, not keys of the `labels` section.            |
+## Turn it on
+
+<Steps>
+  <Step title="Add a backport workflow">
+    The feature acts on a merged pull request's `closed` and `labeled` events, which the default `pull_request` types leave out. A separate workflow keeps backports out of the concurrency group of the main smartcloud workflow, whose later runs would otherwise cancel them:
+
+    ```yaml .github/workflows/backport.yml
+    name: backport
+
+    on:
+      pull_request_target:
+        types: [closed, labeled]
+
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+
+    jobs:
+      backport:
+        if: github.event.pull_request.merged == true
+        runs-on: ubuntu-latest
+        steps:
+          - uses: resnovas/smartcloud@v2
+            with:
+              features: backport
+              GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN || github.token }}
+    ```
+
+  </Step>
+  <Step title="Give it a token that starts CI (optional)">
+    Pull requests opened with the [workflow token](/glossary#workflow-token) do not start other workflows, so CI would not run on the backport. Store a [GitHub App](/glossary#github-app) or personal access token with `contents` and `pull-requests` write as the `ACCESS_TOKEN` secret, as the workflow above expects. Without it, backports still open; they just get no CI run. A GitHub App token is better than a personal access token here: GitHub never lets a personal token create check runs, so `smartcloud / backport` cannot be published with one.
+  </Step>
+  <Step title="Add a backport section">
+    ```yaml .github/smartcloud.yml
+    backport: {}
+    ```
+
+    An empty section uses the default label prefix, `backport `.
+
+  </Step>
+  <Step title="Label a pull request">
+    Add the label `backport release/1.x` (create it first if it does not exist). When the pull request is merged, or right away if it already is, smartcloud opens the backport.
+  </Step>
+</Steps>
+
+## Options
+
+| Key      | Default     | What it does                                                                                                                                   |
+| -------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prefix` | `backport ` | The start of a backport label, ignoring case. The rest of the label, trimmed, is the target branch: `backport release/1.x`. Must not be empty. |
+| `labels` | none        | Labels added to every backport pull request. Label names as GitHub shows them, not keys of the `labels` section.                               |
 
 A pull request can carry several backport labels, one per branch. A label naming the branch the pull request was merged into is ignored.
 
-## When it runs
+A different prefix, for labels like `backport-to/release/1.x`:
 
-The feature acts on `pull_request` and `pull_request_target` events for a merged pull request:
+```yaml
+backport:
+  prefix: 'backport-to/'
+```
 
-- `closed`, when the pull request is merged, backports to every branch its labels name;
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+labels:
+  backport:
+    name: backport
+    color: C5DEF5
+    description: A backport of a merged pull request.
+  backport-1x:
+    # The label that asks for a backport to release/1.x.
+    name: backport release/1.x
+    color: C5DEF5
+
+backport:
+  prefix: 'backport '
+  # Mark every backport pull request so it is easy to find.
+  labels: [backport]
+```
+
+Together with the workflow in [Turn it on](#turn-it-on).
+
+## How it works
+
+### When it runs
+
+The feature acts on `pull_request` and `pull_request_target` events for a merged pull request. Review events carry the pull request too, but never a merge or a label change, so they are ignored.
+
+- `closed`, when the pull request is merged, backports to every branch its labels name.
 - `labeled`, after the merge, backports to the branch the new label names, so a backport can be asked for later.
 
-A label added before the merge waits for it. The workflow must subscribe to both types, which the default `pull_request` types leave out. A separate workflow keeps backports out of the concurrency group of the main smartcloud workflow, whose later runs would otherwise cancel them:
-
-```yaml .github/workflows/backport.yml
-name: backport
-
-on:
-  pull_request_target:
-    types: [closed, labeled]
-
-permissions:
-  contents: write
-  pull-requests: write
-  checks: write
-
-jobs:
-  backport:
-    if: github.event.pull_request.merged == true
-    runs-on: ubuntu-latest
-    steps:
-      - uses: resnovas/smartcloud@v2
-        with:
-          features: backport
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN || github.token }}
-```
+A label added before the merge waits for it.
 
 `pull_request_target` runs with the base repository's token, so merged pull requests from forks are backported too. That is safe here: smartcloud never checks out or runs the pull request's code, and the changes it picks are already merged. On a `pull_request` event from a fork, the token is read-only, and the feature only records a warning.
 
-## How a backport works
+### Making the backport
 
 1. smartcloud works out the changes the pull request made on its base branch. A merge commit is measured from its first parent and a squash commit from its parent. A rebase merge is recognised by the pull request's commit messages on the commits before the last one, and measured from before the first of them.
-2. It picks those changes onto the target branch as one commit, signed off by the committer smartcloud pushes as, on the branch `backport/<number>-to-<branch>`.
-3. It opens a pull request from that branch to the target. The title is the original's, so title checks such as [conventions](/features/conventions) pass as they did, and the body names the original and repeats its description.
+2. It picks those changes onto the target branch as one commit, signed off by the committer smartcloud pushes as, on the branch `backport/<number>-to-<branch>`. The commit message is the original title followed by `Backport of #<number> (<sha>) to <branch>.`
+3. It opens a pull request from that branch to the target. The title is the original's, so title checks such as [conventions](/features/conventions) pass as they did, and the body names the original and repeats its description. Any `labels` are added to it.
 4. It comments on the original pull request, linking the backport.
 
 GitHub has no cherry-pick in its API, so smartcloud builds one from the Git data API and a merge, without checking anything out.
@@ -69,14 +122,71 @@ git switch -c backport/42-to-release/1.x origin/release/1.x
 git cherry-pick -x 1a2b3c..4d5e6f
 ```
 
-When the target branch already has the changes, the comment says there is nothing to backport. When the branch does not exist, the comment says so and the run records a warning.
+For a merge commit, the last command is `git cherry-pick -x -m 1 <sha>` instead.
+
+When the target branch already has the changes, the comment says there is nothing to backport, and the run records a notice. When the branch does not exist, the comment says so and the run records a warning.
 
 smartcloud keeps one comment per target branch on the original pull request, marked `<!-- smartcloud:backport:<branch> -->`, and edits it rather than posting again. Only a comment written by a bot account or by a login in `roles.trustedBots` counts. An open backport pull request from the branch is left as it is, so running again never rewrites a backport someone is fixing up. A leftover branch with no open pull request is reset.
 
 Each branch is backported on its own. When GitHub fails on one, the run records an error naming it and carries on with the rest.
 
-## Permissions
+### Backport labels and the `/backport` command
+
+The [commands](/features/commands) feature has a `/backport <branch>` command. On an open pull request it adds a backport label, so you can ask for a backport from a comment instead of the label menu.
+
+The two work together rather than twice:
+
+- When this `backport` section is present, **this feature does every backport on merge**. The commands feature leaves merged pull requests alone, so one label never opens two backports.
+- `/backport` then adds labels that start with this section's `prefix`, so this feature reads them. (The command's own `commands.backport.labelPrefix` wins if you set it; leave it unset.)
+- Without a `backport` section, the commands feature does the backport on merge itself, using its own `commands.backport` settings.
+
+## What you will see on GitHub
+
+- **A new pull request** into the target branch, from `backport/<number>-to-<branch>`, with the original title and a body starting "Backport of #N to `<branch>`".
+- **A comment on the original** pull request: "Backported to `<branch>` in #M.", or why it could not be, with the commands to do it by hand.
+- **Check run:** `smartcloud / backport`, `neutral` when a backport did not apply or its branch is missing, `failure` when GitHub failed, `success` otherwise.
+- **Job summary:** "opened #M to backport #N to `<branch>`" for each backport opened.
+
+## Permissions and tokens
 
 Backports need `contents: write` to push the branch and `pull-requests: write` to open the pull request and comment on the original.
 
 Pull requests opened with the workflow token do not start other workflows, so CI does not run on them. Give smartcloud a GitHub App or personal access token, as the workflow above does with `ACCESS_TOKEN`, for CI to run on backports. Without one it falls back to the workflow token, and backports still open. The workflow token also cannot push changes to files under `.github/workflows`, so a pull request that changes a workflow can only be backported with such a token.
+
+## Forks and restricted runs
+
+A pull request from a fork always runs [restricted](/glossary#restricted-run): smartcloud acts with the workflow token whatever `GITHUB_TOKEN` the workflow passes. So:
+
+- On `pull_request_target`, the workflow token can write, and the fork's merged pull request is backported, but the backport pull request gets no CI run, even with `ACCESS_TOKEN` set.
+- On `pull_request`, the token is read-only. The backport is skipped and listed under **Restricted access** in the job summary, or recorded as a warning that it was not backported on a read-only token.
+
+The same applies to Dependabot's pull requests.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Nothing happens when I label a merged pull request">
+    The workflow must subscribe to `closed` and `labeled`; the default `pull_request` types leave both out. Check the
+    label starts with `prefix` (default `backport `, with the space) and names a branch other than the one the pull
+    request was merged into.
+  </Accordion>
+  <Accordion title="Warning: does not apply cleanly">
+    The target branch has diverged too far. Follow the commands in the comment on the original pull request, fix the
+    conflicts, and open the pull request yourself.
+  </Accordion>
+  <Accordion title="Warning: there is no release/1.x branch">
+    The label names a branch that does not exist. Fix the label, or create the branch, then add the label again.
+  </Accordion>
+  <Accordion title="CI does not run on the backport pull request">
+    It was opened with the workflow token, which never starts other workflows. Pass a GitHub App or personal access
+    token as `GITHUB_TOKEN`. Backports of fork pull requests always use the workflow token; push an empty commit to the
+    backport branch, or close and reopen it, to start CI.
+  </Accordion>
+  <Accordion title="A pull request that changes a workflow file fails to backport">
+    The workflow token cannot push files under `.github/workflows`. Use a token with the `workflows` permission.
+  </Accordion>
+  <Accordion title="The backport run was cancelled">
+    A later run of the same workflow cancelled it through a shared concurrency group. Run backports in their own
+    workflow, as in [Turn it on](#turn-it-on).
+  </Accordion>
+</AccordionGroup>

@@ -3,19 +3,117 @@ title: 'Stale'
 description: 'Mark inactive issues and pull requests stale, then abandon or close them.'
 ---
 
-The stale feature sweeps every open issue and pull request. It runs on `schedule` and `workflow_dispatch` events only, and is enabled by a `stale` section.
+Issues and pull requests pile up. Some are finished but nobody closed them; some wait on an answer that never comes. The stale feature finds the ones nobody has touched for a while and labels them **stale**, with a friendly comment asking whether they are still needed. If they stay quiet after that, it can label them **abandoned** and close them.
+
+You would use it to keep your issue list honest: what is open is what is being worked on. Anyone can keep an item alive just by commenting on it or pushing to it.
+
+The feature runs as a [sweep](/glossary#sweep): once per scheduled or manual run, it looks at every open issue and pull request in the repository.
+
+## Turn it on
+
+<Steps>
+  <Step title="Run smartcloud on a schedule">
+    The sweep runs only on `schedule` and `workflow_dispatch` events, never on pushes or pull request events. Make sure your smartcloud workflow has both:
+
+    ```yaml .github/workflows/smartcloud.yml
+    on:
+      schedule:
+        - cron: '0 6 * * *' # every day at 06:00 UTC
+      workflow_dispatch: # lets you run it by hand from the Actions tab
+    ```
+
+    See [Getting started](/getting-started) for the whole workflow.
+
+  </Step>
+  <Step title="Give the job write access to issues and pull requests">
+    Labelling, commenting and closing need `issues: write` and `pull-requests: write` on the job. The [workflow token](/glossary#workflow-token) is enough; no app or personal token is needed.
+  </Step>
+  <Step title="Add a stale section">
+    The smallest useful section names how many days of silence make an item stale, and which label marks it:
+
+    ```yaml .github/smartcloud.yml
+    stale:
+      staleAfterDays: 60
+      staleLabel: stale
+      staleComment: This has had no activity for 60 days. Comment or push to keep it open.
+    ```
+
+    Always set `staleComment`: it is how smartcloud remembers when it marked an item (see [How it works](#how-it-works)).
+
+  </Step>
+  <Step title="Run it once by hand">
+    Open the **Actions** tab, pick the smartcloud workflow and choose **Run workflow**. Check the job summary to see what was marked. Set the action's `dryRun: true` input first if you want to see what would happen without changing anything.
+  </Step>
+</Steps>
+
+## Options
+
+| Key                  | Default                | What it does                                                                                                       |
+| -------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `on`                 | `[pullRequest, issue]` | Which [subjects](/glossary#subject) to sweep: `issue`, `pullRequest`, or both.                                     |
+| `staleAfterDays`     | required               | Days without activity before an item is marked stale. Zero or more; fractions such as `0.5` are allowed.           |
+| `staleLabel`         | required               | The label that marks an item stale.                                                                                |
+| `staleComment`       | none                   | Posted when an item is marked stale. Also records the mark time, so later activity can be detected.                |
+| `abandonedAfterDays` | none                   | Days of further silence, after the stale mark, before an item is abandoned. Without it, items are never abandoned. |
+| `abandonedLabel`     | `abandoned`            | The label that marks an item abandoned. Must differ from `staleLabel`, ignoring case.                              |
+| `abandonedComment`   | none                   | Posted when an item is abandoned.                                                                                  |
+| `close`              | `false`                | Close abandoned items.                                                                                             |
+| `exempt.labels`      | none                   | Items with any of these labels, ignoring case, are never swept.                                                    |
+| `exempt.when`        | none                   | Items that pass this [condition group](/conditions) are never swept.                                               |
+
+`staleLabel`, `abandonedLabel` and `exempt.labels` are label names as GitHub shows them, not keys of the `labels` section. If you also manage labels with the [labels feature](/features/labels), define them there too so they get a colour and description.
+
+To sweep only issues:
 
 ```yaml
 stale:
-  on: [issue, pullRequest]
+  on: [issue]
+  staleAfterDays: 90
+  staleLabel: stale
+```
+
+To keep RFCs open however long they sit, whatever their labels:
+
+```yaml
+stale:
   staleAfterDays: 60
   staleLabel: stale
-  staleComment: This has had no activity for 60 days. Comment or push to keep it open.
+  exempt:
+    when:
+      condition:
+        - type: titleMatches
+          condition: '^RFC'
+```
+
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+# Give the two labels a colour and description.
+labels:
+  stale:
+    name: stale
+    color: CFD3D7
+    description: No activity for a while.
+  abandoned:
+    name: abandoned
+    color: CFD3D7
+    description: Closed after staying stale.
+
+stale:
+  on: [issue, pullRequest]
+  # 60 quiet days: add "stale" and post the comment below.
+  staleAfterDays: 60
+  staleLabel: stale
+  staleComment: This has had no activity for 60 days. Comment or push to keep it open, or it will be closed in 30 days.
+  # 30 more quiet days: add "abandoned", post the comment and close it.
   abandonedAfterDays: 30
   abandonedLabel: abandoned
-  abandonedComment: Closing this after a further 30 days without activity.
+  abandonedComment: Closing this after a further 30 days without activity. Reopen it if it is still needed.
   close: true
   exempt:
+    # Never sweep these, whatever their age.
     labels: [pinned, security]
     when:
       condition:
@@ -23,40 +121,80 @@ stale:
           condition: '^RFC'
 ```
 
-| Key                  | Default     | Meaning                                                                                       |
-| -------------------- | ----------- | --------------------------------------------------------------------------------------------- |
-| `on`                 | both        | `issue`, `pullRequest`, or both.                                                              |
-| `staleAfterDays`     | required    | Days without activity before an item is marked stale.                                         |
-| `staleLabel`         | required    | The label that marks an item stale.                                                           |
-| `staleComment`       | none        | Posted when an item is marked stale.                                                          |
-| `abandonedAfterDays` | none        | Days after the stale mark before an item is abandoned. Without it, items are never abandoned. |
-| `abandonedLabel`     | `abandoned` | The label that marks an item abandoned.                                                       |
-| `abandonedComment`   | none        | Posted when an item is abandoned.                                                             |
-| `close`              | `false`     | Close abandoned items.                                                                        |
-| `exempt.labels`      | none        | Items with any of these labels are skipped.                                                   |
-| `exempt.when`        | none        | Items passing this [condition group](/conditions) are skipped.                                |
+## How it works
 
-`staleLabel` and `abandonedLabel` are label names as GitHub shows them, not keys of the `labels` section. They must differ, ignoring case: if they do not, the sweep records an error and changes nothing.
+Every sweep:
 
-## Lifecycle
+1. Lists every open issue and pull request, keeps the kinds named in `on`, and drops any with an `exempt.labels` label or that pass `exempt.when`.
+2. For each item **without** the stale label: when it has had no activity for `staleAfterDays`, and it is not [snoozed](#snoozing), smartcloud posts `staleComment` and then adds the stale label.
+3. For each item **with** the stale label:
+   - If it also has the abandoned label, it is left alone.
+   - If it has had activity since it was marked, or is snoozed, the stale label comes off.
+   - Otherwise, when it has been quiet for `abandonedAfterDays`, smartcloud adds the abandoned label, posts `abandonedComment`, and closes it when `close` is `true`.
 
-1. An item without the stale label is marked once it has had no activity for `staleAfterDays`, unless it is [snoozed](#snoozing): the label is added, and `staleComment` is posted.
-2. A stale item with activity since it was marked, or snoozed since, loses the stale label.
-3. A stale item that stays quiet for `abandonedAfterDays` gets the abandoned label and `abandonedComment`, and is closed when `close` is `true`.
-4. An item already labelled abandoned is left alone.
+"Activity" is GitHub's `updated_at` time: any comment, push, edit, label or review. smartcloud's own label and comment update it too, so `abandonedAfterDays` counts from the stale mark, not from the last human activity. Changes within ten minutes of the mark are treated as smartcloud's own and do not count as activity.
 
-Activity is GitHub's `updated_at` time. smartcloud's own label and comment also update it, so `abandonedAfterDays` counts from the stale mark, not from the last human activity.
-
-The stale comment records when the item was marked, which is how later activity is detected. Without a `staleComment` there is no record, and the stale label stays until someone removes it.
+The stale comment carries a hidden record of when the item was marked. That record is how a later sweep tells new activity from the mark. Without a `staleComment` there is no record, and the stale label stays until someone removes it by hand.
 
 smartcloud keeps at most one stale and one abandoned comment per item, and edits an existing one rather than posting again. Only a marker comment written by a bot account or by a login in `roles.trustedBots` counts, for both editing and reading the mark time, so a person cannot take over the comment or forge when an item was marked. The stale comment is written before the stale label, so if GitHub fails part way the next sweep marks the item again.
 
 Each item is swept on its own. When GitHub fails on one, the sweep records an error naming it and carries on with the rest.
 
-## Snoozing
+### Snoozing
 
-With the [commands](/features/commands) feature on, `/stale-snooze [days]` in a comment keeps an item from being marked stale until the snooze ends, and takes off the stale label. smartcloud records the end of the snooze in one comment of its own on the item, which a later snooze updates. Only a snooze comment written by a bot account or a `roles.trustedBots` login counts.
+With the [commands](/features/commands) feature on, anyone with the triage role can comment `/stale-snooze [days]` on an item. It keeps the item from being marked stale until the snooze ends, and takes off the stale label if it has one. The number of days is 1 to 365; without one, `commands.snoozeDays` is used (30 by default).
 
-## Exemptions
+smartcloud records the end of the snooze in one comment of its own on the item, which a later snooze updates. Only a snooze comment written by a bot account or a `roles.trustedBots` login counts, so nobody can snooze an item by typing the marker.
 
-When `exempt.when` needs a pull request's files, reviews, requested reviewers, commits, mergeability or checks, the sweep loads them for each pull request it considers. A sweep cannot read a pull request's draft state, branches or size, so if `exempt.when` uses `isDraft`, `branchMatches`, `baseBranchMatches` or `changesSize`, the sweep records a warning and skips every pull request rather than act on one that should be exempt. Issues are swept as usual, since those conditions never hold for an issue.
+### Exemptions that need extra data
+
+When `exempt.when` needs a pull request's files, reviews, requested reviewers, commits, mergeability or checks, the sweep loads them for each pull request it considers, which takes more API calls.
+
+A sweep cannot read a pull request's draft state, branches or size. So if `exempt.when` uses `isDraft`, `branchMatches`, `baseBranchMatches` or `changesSize`, the sweep records a warning and skips every pull request rather than act on one that should be exempt. Issues are swept as usual, since those conditions never hold for an issue.
+
+## What you will see on GitHub
+
+- **On the item:** the stale label and your `staleComment` from the account smartcloud acts as (for example `github-actions[bot]`). Later, the abandoned label, `abandonedComment`, and the item closed if `close` is on.
+- **Check run:** `smartcloud / stale` on the commit the run is for, the default branch's head on a schedule. It concludes `success` with no problems, `neutral` with warnings, and `failure` when an item could not be swept or the config is wrong. See [check runs](/glossary#check-run).
+- **Job summary:** every label, comment and close it made, as a list of changes, plus any warnings and errors.
+- **Notifications:** with the [notifications](/features/notifications) feature, items that were marked, abandoned or closed can be sent to Slack, Discord or Linear.
+
+## Forks and restricted runs
+
+The sweep only runs on `schedule` and `workflow_dispatch`, which never come from a fork, so it always runs with the repository's own token. It works with the plain [workflow token](/glossary#workflow-token). If a write is still refused, for example because the job lacks `issues: write`, that write is skipped and listed under **Restricted access** in the job summary in a [restricted run](/glossary#restricted-run), or recorded as an error for that item otherwise.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Nothing happens on pull request or push runs">
+    That is expected. The sweep runs only on `schedule` and `workflow_dispatch` events. Add a `schedule` trigger to the
+    workflow, or run it by hand from the Actions tab.
+  </Accordion>
+  <Accordion title="Error: stale.staleLabel and stale.abandonedLabel are both ...">
+    The two labels have the same name, ignoring case, so a stale item would look abandoned. The sweep changes nothing
+    until you give them different names. Remember `abandonedLabel` defaults to `abandoned`, so `staleLabel: Abandoned`
+    clashes with it.
+  </Accordion>
+  <Accordion title="The stale label never comes off after someone comments">
+    smartcloud only knows when it marked an item from its `staleComment`. Without a `staleComment`, or when the comment
+    was deleted or written by a person rather than a bot, it cannot tell new activity from the mark, and the label
+    stays. Set `staleComment`; remove the label by hand for items already marked.
+  </Accordion>
+  <Accordion title="Warning: stale.exempt.when uses isDraft, branchMatches, baseBranchMatches or changesSize">
+    A sweep cannot read those for a pull request, so every pull request is skipped to avoid acting on one that should be
+    exempt. Use a label in `exempt.labels` instead, or a condition the sweep can answer, such as `titleMatches` or
+    `hasLabel`.
+  </Accordion>
+  <Accordion title="Warning: stale.unmark ... was already gone">
+    Someone removed the stale label between the listing and the sweep's own removal. Nothing is wrong; the item is
+    unmarked either way.
+  </Accordion>
+  <Accordion title="Error: #123 was not swept: ...">
+    GitHub refused or failed a request for that one item. The rest of the sweep carried on. Common causes are a missing
+    `issues: write` or `pull-requests: write` permission, or GitHub rate limits on a large repository; the next sweep
+    tries again.
+  </Accordion>
+  <Accordion title="Abandoned items are labelled but not closed">
+    `close` is `false` by default. Set `close: true`.
+  </Accordion>
+</AccordionGroup>

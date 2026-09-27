@@ -1,0 +1,145 @@
+---
+title: 'Troubleshooting and FAQ'
+description: 'What to check when smartcloud does not do what you expect, and answers to common questions.'
+---
+
+Start here when a run fails, does nothing, or skips something. Each feature page also has a **Troubleshooting** section for problems specific to that feature.
+
+## First, look in three places
+
+1. **The job summary.** Open the run in **Actions**. It lists every feature, whether it ran or was skipped and why ("not configured", or "does not handle this event"), every finding, every change, and anything skipped under **Restricted access**.
+2. **The `smartcloud / config` check.** Every key smartcloud ignored in your config or a preset is a warning here, naming the file and the key.
+3. **`smartcloud doctor`.** Run [`smartcloud doctor --repo owner/name`](/cli#doctor) on your machine. It checks the token, the config and presets, private actions, and the secrets and variables your workflows read, and prints one line per check.
+
+To see what a run would do without it doing anything, use [`smartcloud dry-run`](/cli#dry-run) or set the action's `dryRun: true` input.
+
+## The run fails or does nothing
+
+<AccordionGroup>
+  <Accordion title='"no smartcloud config in owner/name: looked for ..."'>
+    smartcloud reads the config from the **default branch**, not from the pull request. Commit `.github/smartcloud.yml` (or `.yaml`, or a v1 `.github/config.json`) to the default branch first. To read it from elsewhere, set the action's `config` (path) or `configRef` (branch, tag or commit) input.
+  </Accordion>
+  <Accordion title='The job summary says "smartcloud does not act on ... events"'>
+    The workflow ran on an event no feature handles, such as `release` or `star`. That is a clean no-op, not a failure. See [which events run which features](/introduction#which-events-run-which-features).
+  </Accordion>
+  <Accordion title="A feature never runs">
+    Check three things, in order:
+
+    1. **Its section is in the config.** A feature with no section does not run. For example, stale needs a `stale:` section, and commands needs `commands: {}` at least.
+    2. **The workflow listens for its event.** Stale and lock run only on `schedule` and `workflow_dispatch`. Commands need `issue_comment`. Backports need the `closed` pull request type. Settings and sync run on `push`, `schedule` and `workflow_dispatch`.
+    3. **The action's `features` input** does not leave it out.
+
+    The job summary names each skipped feature and why.
+
+  </Accordion>
+  <Accordion title="I changed the config in a pull request, but the run ignores it">
+    By design. The config comes from the default branch, so a pull request cannot loosen the rules it is checked against. Merge the config change first. To try a config before merging, run `smartcloud dry-run --repo owner/name --pr 42 --config .github/smartcloud.yml` locally.
+  </Accordion>
+  <Accordion title="The run fails, but every check looks fine">
+    The run fails when any finding is an **error** or any feature fails to run. Open the job summary: the failing feature and its message are at the top. A config that changes a value its preset set fails the whole run; see [Presets and extends](/presets#add-never-change).
+  </Accordion>
+  <Accordion title='"... is not valid YAML or JSON" or "expected a mapping at the top level"'>
+    The file cannot be parsed. Check indentation (spaces, never tabs) and quoting. A pattern that starts with `*` or contains `: ` needs quotes, for example `condition: 'docs/**'`. `smartcloud validate` points at the line.
+  </Accordion>
+  <Accordion title="The run was cancelled after a long time">
+    The [required](/features/required) feature waits up to `required.timeout` minutes (60 by default) for the other checks. Set the job's `timeout-minutes` above that, 75 in the examples.
+  </Accordion>
+</AccordionGroup>
+
+## Tokens and access
+
+<AccordionGroup>
+  <Accordion title='The run says it "ran with restricted access"'>
+    A [restricted run](/glossary#restricted-run) acts with the workflow token and skips what that token cannot do: settings, sync, presets it cannot read, and writes GitHub refuses. The notice gives the reason:
+
+    - **a pull request from a fork, or Dependabot**: always restricted, whatever token the workflow passes. Expected; nothing to fix.
+    - **the workflow token, without an app or access token**: pass a [GitHub App](/getting-started#optional-create-a-github-app) token as `GITHUB_TOKEN` if you need settings, sync or private presets.
+    - **GitHub rejected GITHUB_TOKEN**: the token you passed is invalid, expired or blocked by an organisation policy. Replace it.
+
+  </Accordion>
+  <Accordion title="The smartcloud checks never appear, or fail with no findings">
+    GitHub never lets a personal access token or an OAuth token create check runs. Pass the workflow token (the default) or a GitHub App token instead. Also make sure the job has `checks: write`. `smartcloud doctor` warns about this under `check runs`.
+  </Accordion>
+  <Accordion title='"Resource not accessible by integration"'>
+    GitHub refused a write because the token lacks a permission. Compare the job's `permissions` with the list in the [introduction](/introduction#permissions), or the GitHub App's permissions with the list in [Getting started](/getting-started#optional-create-a-github-app). In a restricted run these refusals are skipped and listed instead of failing.
+  </Accordion>
+  <Accordion title='"repository settings need an admin token"'>
+    The [settings](/features/settings) feature needs administration write access, which the workflow token never has. Use a GitHub App with **Administration: Read and write**.
+  </Accordion>
+  <Accordion title='"cross-repository sync needs a token that can read the source and push workflow files"'>
+    The [sync](/features/sync) feature needs a token that can read the template repository and, when templates include workflows, write them. Use a GitHub App with **Contents** and **Workflows** write, installed on both repositories.
+  </Accordion>
+  <Accordion title="Sync or backport cannot open a pull request">
+    With the workflow token, GitHub only lets Actions open pull requests when **Settings > Actions > General > Allow GitHub Actions to create and approve pull requests** is on (the settings feature's `actions.createPullRequests`). A GitHub App token does not need it.
+  </Accordion>
+  <Accordion title="Pull requests opened by smartcloud do not run CI">
+    GitHub does not start workflows for pushes and pull requests made with the workflow token, to prevent loops. Use a GitHub App token for those features.
+  </Accordion>
+</AccordionGroup>
+
+## Config and presets
+
+<AccordionGroup>
+  <Accordion title="A key is ignored with a warning">
+    The key is misspelt, in the wrong place, or newer than this version of smartcloud. A run drops it and carries on;
+    the warning in `smartcloud / config` names the file and the key. Add the schema line to the top of the file so your
+    editor flags it as you type, and run `smartcloud validate`, which treats it as an error.
+  </Accordion>
+  <Accordion title="The config check fails on an invalid value">
+    Some settings only tighten policy, such as `roles.maintainers`, `commits`, `reviews.gate` and parts of `settings`.
+    Dropping a bad value there would loosen policy, so it is an error that blocks merging instead of a warning. Fix the
+    value. The list is under [Unknown keys and invalid values](/configuration#unknown-keys-and-invalid-values).
+  </Accordion>
+  <Accordion title='"cannot change ... it is set by ..."'>
+    Your config gives a different value for something a preset set. Presets are locked: add a new rule instead. See
+    [Add, never change](/presets#add-never-change).
+  </Accordion>
+  <Accordion title="A preset's rules were not checked">
+    The token could not read a preset in another private repository, so the run left it out and each passing check is
+    neutral with "config left out". Expected on forks; otherwise pass a token that can read the preset.
+  </Accordion>
+</AccordionGroup>
+
+## Frequently asked questions
+
+<AccordionGroup>
+  <Accordion title="Does smartcloud run the code in a pull request?">
+    No. It reads the pull request through the GitHub API (title, files, commits, reviews, checks) and never checks out
+    or runs its code. The config also comes from the default branch.
+  </Accordion>
+  <Accordion title="Can I run only some features?">
+    Yes, in two ways. Leave a feature's section out of the config and it never runs. Or set the action's `features`
+    input, for example `features: labels,stale`, to run only those in one workflow.
+  </Accordion>
+  <Accordion title="How do I try a change safely?">
+    Use a [dry run](/glossary#dry-run): `smartcloud dry-run --repo owner/name --pr 42 --config .github/smartcloud.yml`
+    runs every feature against a real pull request with your local config and prints every write it would make.
+    `smartcloud plan settings` does the same for repository settings, and `smartcloud sync --out dir` renders synced
+    files to a folder.
+  </Accordion>
+  <Accordion title="Will smartcloud delete my labels?">
+    Only if you ask. Labels not in the config are deleted only when `labelSync.prune: true`. A label renamed through
+    `aliases` keeps its issues.
+  </Accordion>
+  <Accordion title="Will smartcloud edit my comments?">
+    No. It edits only comments written by a bot account or a login in `roles.trustedBots`, and finds its own by a hidden
+    marker. Anyone could type that marker, so a person's comment containing it is ignored.
+  </Accordion>
+  <Accordion title="Why is a finding a warning for me but an error for a contributor?">
+    Several features report a maintainer's own pull request at `maintainerLevel` (`warning` by default), so a sole owner
+    is never blocked by their own policy. List maintainers under `roles.maintainers`.
+  </Accordion>
+  <Accordion title="I still have a v1 .github/config.json">
+    It still works: smartcloud migrates it on every run and warns about what it drops. Run `smartcloud migrate --out
+    .github/smartcloud.yml` once to convert it. See [Migrating from v1](/migration).
+  </Accordion>
+  <Accordion title="Can I turn telemetry off?">
+    Yes, with `telemetry: false` in the config, the action's `telemetry: false` input, `SMARTCLOUD_TELEMETRY=false` or
+    `DO_NOT_TRACK=1`. It is discouraged, because telemetry is how problems are found. See [Telemetry](/telemetry) for
+    exactly what is collected.
+  </Accordion>
+  <Accordion title="Which version of the action should I use?">
+    `resnovas/smartcloud@v2` follows every v2 release. Pin a full tag such as `@v2.0.0`, or its commit SHA, to change
+    version only when you choose.
+  </Accordion>
+</AccordionGroup>

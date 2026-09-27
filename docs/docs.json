@@ -20,7 +20,7 @@
         "groups": [
           {
             "group": "Getting started",
-            "pages": ["introduction", "configuration", "conditions"]
+            "pages": ["introduction", "getting-started", "configuration", "presets", "conditions"]
           },
           {
             "group": "Features",
@@ -46,6 +46,10 @@
           {
             "group": "Running smartcloud",
             "pages": ["reporting", "cli", "migration", "mcp-server", "telemetry"]
+          },
+          {
+            "group": "Help",
+            "pages": ["troubleshooting", "glossary"]
           },
           {
             "group": "Maintaining smartcloud",

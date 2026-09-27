@@ -3,15 +3,70 @@ title: 'Conventions'
 description: 'Title and description conventions for pull requests and issues.'
 ---
 
-The conventions feature checks each pull request and issue against the rules in `conventions.rules`. It runs on pull request and issue events, and is enabled when there is at least one rule.
+A convention is a house rule about how a pull request or issue is written. The most common one is the pull request title: many projects want titles like `fix(auth): reject expired tokens`, so the history reads well and release tools can work out the next version.
+
+The conventions feature checks every pull request and issue against the rules you list in `conventions.rules`. A rule can use a ready-made title **preset** (such as conventional commits), your own **conditions** (such as "the description links an issue"), or both. When a rule fails, smartcloud reports it as an error or a warning, with a message telling the author what to fix.
+
+It only reports. It never edits a title or description.
+
+## Turn it on
+
+<Steps>
+  <Step title="Add the workflow events">
+    The feature runs on pull request events (`pull_request`, `pull_request_target`, `pull_request_review`, `pull_request_review_comment`) and `issues` events. Include `edited` in the types, so a fixed title is checked again:
+
+    ```yaml
+    on:
+      pull_request:
+        types: [opened, edited, synchronize, reopened]
+      issues:
+        types: [opened, edited, reopened]
+    ```
+
+  </Step>
+  <Step title="Grant the permissions">
+    `checks: write` for the check run, and `pull-requests: write` and `issues: write` for the [report comment](/glossary#report-comment). The [workflow token](/glossary#workflow-token) is enough.
+  </Step>
+  <Step title="Add a rule">
+    ```yaml
+    conventions:
+      rules:
+        title:
+          on: [pullRequest]
+          preset: conventionalCommits
+    ```
+
+    The feature runs once there is at least one rule.
+
+  </Step>
+  <Step title="Try it">
+    Open a pull request titled `update stuff`. The `smartcloud / conventions` check fails and the report comment explains the expected format. Rename it to `chore: update stuff` and the check passes.
+  </Step>
+</Steps>
+
+## Options
+
+| Key                                | Default                | What it does                                                                                                                   |
+| ---------------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `conventions.rules.<key>`          | none                   | One rule. The key is an id you choose, and names the finding (`conventions.<key>`).                                            |
+| `conventions.rules.<key>.on`       | `[pullRequest, issue]` | The [subjects](/glossary#subject) the rule applies to: `pullRequest`, `issue`, or both.                                        |
+| `conventions.rules.<key>.preset`   | none                   | A named title convention: `conventionalCommits`, `semanticTitle`, `gitmojis` or `semanticEmoji`. See [Presets](#presets).      |
+| `conventions.rules.<key>.contexts` | none (any scope)       | The scopes a preset allows, for example `[labels, config, cli]`.                                                               |
+| `conventions.rules.<key>.when`     | none                   | A [condition group](/conditions) the subject must pass.                                                                        |
+| `conventions.rules.<key>.level`    | `error`                | `error` fails the check; `warning` makes it neutral.                                                                           |
+| `conventions.rules.<key>.message`  | explains what failed   | The finding's text. Without it, smartcloud says what the preset expects and which conditions failed.                           |
+| `conventions.comment.header`       | none                   | Accepted, and filled by `smartcloud migrate` from v1's `commentHeader`, but not used yet: the report comment does not show it. |
+| `conventions.comment.footer`       | none                   | Accepted, and filled from v1's `commentFooter`, but not used yet.                                                              |
+
+Each rule needs a `preset`, a `when`, or both. A rule with neither is rejected.
+
+### A rule from conditions
+
+Any [condition](/conditions) works in `when`. This rule warns when a pull request does not link the issue it closes:
 
 ```yaml
 conventions:
   rules:
-    title:
-      on: [pullRequest]
-      preset: conventionalCommits
-      contexts: [labels, config, cli]
     linked-issue:
       on: [pullRequest]
       level: warning
@@ -22,32 +77,127 @@ conventions:
             condition: "/(closes|fixes|resolves) #\\d+/i"
 ```
 
-## Rules
+### A preset and conditions together
 
-Each rule has a `preset`, a `when` [condition group](/conditions), or both; a rule with neither is rejected. When both are set, both must pass, and both are always checked so the finding explains everything that needs fixing.
+When a rule has both, both must pass. Both are always checked, so the finding lists everything that needs fixing:
 
-| Key        | Meaning                                                                                            |
-| ---------- | -------------------------------------------------------------------------------------------------- |
-| `on`       | `pullRequest`, `issue`, or both (the default).                                                     |
-| `preset`   | A named title convention, below.                                                                   |
-| `contexts` | Scopes a preset allows.                                                                            |
-| `when`     | Conditions the subject must meet.                                                                  |
-| `level`    | `error` (the default) or `warning`.                                                                |
-| `message`  | The finding's text. Without it, smartcloud explains what was expected and which conditions failed. |
-
-A failing rule becomes a finding with the rule id `conventions.<key>`, for example `conventions.title`. The feature only records findings; see [Reporting](/reporting) for where they appear.
+```yaml
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+      when:
+        condition:
+          - type: titleMatches
+            condition: '^.{1,72}$' # at most 72 characters
+```
 
 ## Presets
 
+A preset checks the title only.
+
 | Preset                | Accepts                                                                                                                                                                                                                                                                                                          |
 | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `conventionalCommits` | `type(scope)!: description`, where the scope and `!` are optional. Types: feat, fix, perf, refactor, test, docs, chore, build, ci, style, revert. With `contexts`, a scope, when there is one, must be one of them.                                                                                              |
+| `conventionalCommits` | `type(scope)!: description`, where the scope and `!` are optional and a space follows the colon. Types: feat, fix, perf, refactor, test, docs, chore, build, ci, style, revert. Types are matched case-sensitively, so `Fix:` fails. With `contexts`, a scope, when there is one, must be exactly one of them.   |
 | `semanticTitle`       | A title starting with a semantic type, optionally a scope in parentheses, then a colon, for example `feat(scope): description`. Types: bug, chore, opt, optimisation, style, maint, maintenance, ref, refactor, revert, dep, deprecated, removal, docs, documentation, feat, enhance, feature, enhancement, fix. |
-| `gitmojis`            | A title starting with a gitmoji (the emoji, its `:code:` or its HTML entity), for example `:bug:(scope): description`.                                                                                                                                                                                           |
+| `gitmojis`            | A title starting with a [gitmoji](https://gitmoji.dev/) (the emoji, its `:code:` or its HTML entity), optionally a scope in parentheses, then a colon, for example `:bug:(scope): description`.                                                                                                                  |
 | `semanticEmoji`       | A gitmoji, then a semantic type, for example `:bug: fix(scope): description`.                                                                                                                                                                                                                                    |
 
-`semanticTitle`, `gitmojis` and `semanticEmoji` accept exactly the titles v1 accepted. With `contexts`, those three also require, as v1 did, one line of the title to hold an opening parenthesis, then one of the contexts, then `):` somewhere after it. The context is matched ignoring case and need not fill the parentheses, and the parentheses need not come before the title's first colon: `feat: add login (auth):` passes with the context `auth`, and so does `feat(web-auth): add login`.
+`semanticTitle`, `gitmojis` and `semanticEmoji` accept exactly the titles v1 accepted, and match ignoring case. Only the title's first line counts for the type. With `contexts`, those three also require, as v1 did, one line of the title to hold an opening parenthesis, then one of the contexts, then `):` somewhere after it. The context is matched ignoring case and need not fill the parentheses, and the parentheses need not come before the title's first colon: `feat: add login (auth):` passes with the context `auth`, and so does `feat(web-auth): add login`.
 
-## Comment header and footer
+Every preset check runs in time proportional to the title's length, so a hostile title cannot slow a run down.
 
-`conventions.comment.header` and `conventions.comment.footer` are accepted, and `smartcloud migrate` carries v1's `commentHeader` and `commentFooter` into them. The current reporter does not add them to its comment yet.
+## Complete example
+
+```yaml .github/smartcloud.yml
+version: 2
+
+conventions:
+  rules:
+    # Pull request titles are conventional commits, scoped to known areas.
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+      contexts: [labels, config, cli]
+    # Pull requests should link an issue; a warning, not a blocker.
+    linked-issue:
+      on: [pullRequest]
+      level: warning
+      message: Link the issue this pull request closes, for example "Closes #123".
+      when:
+        condition:
+          - type: descriptionMatches
+            condition: "/(closes|fixes|resolves) #\\d+/i"
+    # Issues labelled bug say how to reproduce: the rule passes when the
+    # issue is not a bug, or when it has the section.
+    bug-steps:
+      on: [issue]
+      message: Add a "Steps to reproduce" section.
+      when:
+        requires: 1
+        condition:
+          - type: hasLabel
+            label: bug
+            condition: false
+          - type: descriptionMatches
+            condition: '/steps to reproduce/i'
+```
+
+## How it works
+
+On each pull request or issue event, smartcloud takes every rule whose `on` includes the subject's kind and checks it:
+
+1. If the rule has a `preset`, the title is matched against it.
+2. If the rule has a `when`, the condition group is evaluated.
+3. If either fails, the rule becomes a [finding](/glossary#finding) with the rule id `conventions.<key>`, at the rule's `level`.
+
+Without a `message`, the finding explains what the preset expects (with a link to the Conventional Commits or gitmoji site) and which conditions failed, for example `Expected 2 of 2 condition(s) to pass, but 1 did: ...`. For a failed `$not`, it names the forbidden condition that held.
+
+The feature only records findings. It never changes the subject. See [Reporting](/reporting) for where findings appear.
+
+## What you will see on GitHub
+
+- **Check run.** `smartcloud / conventions` on the pull request's head commit: failure when an `error` rule fails, neutral when only `warning` rules fail, success otherwise.
+- **Report comment.** One smartcloud comment on the pull request or issue lists each failed rule and its message, and is updated in place as the author fixes things. See [Reporting](/reporting#one-comment).
+- **Annotations and job summary.** Each finding is also an annotation on the workflow run and a line in the job summary.
+
+## Forks and restricted runs
+
+The check itself reads only the event, so it runs the same on a fork's pull request. What changes is publishing: a fork's read-only token cannot create check runs or comments, so those writes are skipped and listed under **Restricted access** in the job summary. The findings still appear as annotations and in the summary, and the job still fails on an error. A rule set by a private preset in another repository may be left out of a restricted run; see [restricted runs](/reporting#restricted-runs).
+
+## In the house preset
+
+The [Resnovas house preset](/presets) sets five rules, all on pull requests. Trusted bots are exempt from all of them.
+
+| Rule               | Level   | What it checks                                                                                              |
+| ------------------ | ------- | ----------------------------------------------------------------------------------------------------------- |
+| `title`            | error   | The title is a conventional commit. The house maintainer is exempt here, and checked by `title-maintainer`. |
+| `title-maintainer` | warning | The same check for the house maintainer, as a warning.                                                      |
+| `no-emoji`         | warning | No emoji in the title or description.                                                                       |
+| `no-long-dashes`   | warning | No em or en dashes in the title or description.                                                             |
+| `checklist-done`   | warning | No unticked checklist items (`- [ ]`) in the description.                                                   |
+
+A repository that extends the preset can add its own rules under new keys. It cannot change these five: a different value for any key they set fails the run (see [Add, never change](/presets#add-never-change)). It can add a key a rule leaves unset, such as `contexts` on `title`.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="a convention needs a preset or when">
+    The rule has neither `preset` nor `when`. Add one. In a repository that extends a preset, a rule that only adds a
+    field (such as `level`) to a preset's rule is fine once merged; this error means the merged rule is still
+    incomplete, for example because the key is misspelt.
+  </Accordion>
+  <Accordion title="My title looks right but conventionalCommits fails">
+    Check the details: the type must be lower case (`fix`, not `Fix`), there must be a space after the colon, and the
+    scope must not contain parentheses or line breaks. With `contexts` set, the scope must be exactly one of them,
+    including case.
+  </Accordion>
+  <Accordion title="The check did not run again after I fixed the title">
+    Include `edited` in the workflow's `pull_request` (and `issues`) types, so a title change triggers a run.
+  </Accordion>
+  <Accordion title="A rule is ignored on issues">Check its `on`. `on: [pullRequest]` skips issues.</Accordion>
+  <Accordion title="The header and footer do not appear in the comment">
+    `conventions.comment.header` and `footer` are accepted but not used by the reporter yet.
+  </Accordion>
+</AccordionGroup>

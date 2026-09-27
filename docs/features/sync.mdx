@@ -3,41 +3,97 @@ title: 'Sync'
 description: 'Sync files from a template directory in another repository, and protect synced content.'
 ---
 
-The sync feature keeps files such as community health documents, issue forms, CODEOWNERS and workflows in line with a template directory in another repository. It is enabled by a `sync` section.
+Most organisations want the same files in every repository: a licence, a code of conduct, issue forms, a Dependabot config, shared workflows. Copying them by hand works once, then the copies drift.
 
-Sync needs a token that can read the source repository and push workflow files, which the workflow token cannot do. A [restricted run](/reporting#restricted-runs), such as one with only the workflow token or a pull request from a fork, skips sync and says why in the job summary.
+The sync feature keeps them in step. You keep the master copies, called templates, in one directory of one repository. smartcloud renders them for each repository that syncs from it and opens a pull request whenever a file is out of date. It also fails pull requests that edit synced content by hand, so a change is made once, in the templates, and reaches every repository.
+
+A file can be synced whole, or only in part: a **managed block** lets the template own some lines while the repository adds its own around them.
+
+## Turn it on
+
+<Steps>
+  <Step title="Put your templates in a repository">
+    Create a directory of templates, for example `templates/` in your organisation's `.github` repository. Each file is placed at the same path in the target repository, so `templates/.github/dependabot.yml` becomes `.github/dependabot.yml`. Write `{{KEY}}` wherever a value differs per repository.
+  </Step>
+  <Step title="Give smartcloud a token that can read the templates and push workflows">
+    The [workflow token](/glossary#workflow-token) cannot read another private repository or change files under `.github/workflows`, so sync needs a [GitHub App](/glossary#github-app) token. A personal access token can sync too, but GitHub never lets one create check runs, so the `smartcloud` checks cannot be published with it. The app needs Contents, Pull requests and Workflows (read and write) on the target repository and Contents (read) on the template repository. [Settings](/features/settings#turn-it-on) shows how to create the app and pass its token as `GITHUB_TOKEN`.
+  </Step>
+  <Step title="Run on the right events">
+    Syncing runs on `schedule`, `workflow_dispatch` and `push`. The edit check runs on pull request events. The workflow in [Getting started](/getting-started#2-add-the-workflow) has all of them.
+  </Step>
+  <Step title="Add a sync section">
+    ```yaml .github/smartcloud.yml
+    sync:
+      source: my-org/.github/templates@main
+      values:
+        ORG_NAME: My Org
+    ```
+  </Step>
+  <Step title="Preview the result">
+    [`smartcloud sync --out <dir>`](/cli) renders the templates into a local directory so you can see what would be proposed, and a run with `dryRun: true` lists the files without opening a pull request. Then run the workflow by hand: a pull request titled `chore(sync): sync files from my-org/.github` appears.
+  </Step>
+</Steps>
+
+## Options
+
+| Key               | Default           | What it does                                                                                                                                            |
+| ----------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source`          | required          | The template directory, as `owner/repo/path@ref`. The `@ref` (branch, tag or commit) is optional; without it the default branch is read.                |
+| `values`          | none              | Values for `{{KEY}}` placeholders. Keys are upper snake case, such as `ORG_NAME`.                                                                       |
+| `exclude`         | none              | Template paths this repository keeps its own copy of, such as `LICENSE`. Excluded templates are neither rendered nor synced nor checked.                |
+| `branch`          | `smartcloud/sync` | The branch sync pull requests are opened from. It is force-updated on every sync, so it cannot be the default branch.                                   |
+| `check`           | `true`            | Flag pull requests that edit synced content. `false` turns the edit check off.                                                                          |
+| `maintainerLevel` | `warning`         | The level for a [maintainer's](/glossary#maintainer) or the owner's own edit to synced content: `error` or `warning`. Contributors always get an error. |
 
 ```yaml
 sync:
-  source: Resnovas/.github/templates@main
-  values:
-    COPYRIGHT_HOLDER: Jonathan Stevens trading as Resnovas
-    SECURITY_EMAIL: security@example.com
+  source: my-org/.github/templates@v3 # pin to a tag for predictable updates
   exclude:
-    - .github/CODEOWNERS
-  branch: smartcloud/sync
-  check: true
+    - LICENSE # this repository keeps its own licence
+    - .github/workflows/release.yml
 ```
 
-| Key               | Default           | Meaning                                                                                                   |
-| ----------------- | ----------------- | --------------------------------------------------------------------------------------------------------- |
-| `source`          | required          | The template directory, as `owner/repo/path@ref`. The ref is optional.                                    |
-| `values`          | none              | Values for `{{KEY}}` placeholders. Keys are upper snake case.                                             |
-| `exclude`         | none              | Template paths this repository keeps its own copy of.                                                     |
-| `branch`          | `smartcloud/sync` | The branch sync pull requests are opened from. It is force-updated, so it cannot be the default branch.   |
-| `check`           | `true`            | Fail pull requests that edit synced content.                                                              |
-| `maintainerLevel` | `warning`         | The level for a maintainer's or the owner's own edit to synced content. Contributors always get an error. |
+## Complete example
 
-## Syncing
+```yaml .github/smartcloud.yml
+version: 2
 
-On `schedule`, `workflow_dispatch` and `push` events, smartcloud renders every template in `source`, merges each into the matching file on the default branch, and opens or updates one pull request from `branch` with whatever changed, titled `chore(sync): sync files from owner/repo`.
+roles:
+  maintainers: [octocat]
 
-- `{{KEY}}` placeholders are replaced from `values`. `{{REPOSITORY}}` is always available as the repository's `owner/name`. A placeholder with no value fails the sync rather than leaving a blank.
-- Excluded templates are neither rendered nor synced, so a repository that keeps its own copy need not supply that template's values.
-- An executable template makes its file executable.
-- The commit is made through the GitHub API as the token's own identity, and signed off as that identity. GitHub signs it when the token is the workflow token or a GitHub App token, so it passes a ruleset that requires signed commits. Setting `SMARTCLOUD_COMMITTER_NAME` and `SMARTCLOUD_COMMITTER_EMAIL` commits and signs off as that identity instead, which GitHub does not sign.
+sync:
+  # Templates live in my-org/.github under templates/, read from main.
+  source: my-org/.github/templates@main
+  # Filled into {{KEY}} placeholders. {{REPOSITORY}} is always available.
+  values:
+    COPYRIGHT_HOLDER: My Org Ltd
+    SECURITY_EMAIL: security@example.com
+  # Paths this repository keeps its own copy of.
+  exclude:
+    - .github/CODEOWNERS
+  # Sync pull requests come from this branch.
+  branch: smartcloud/sync
+  # Fail pull requests that edit synced files; a maintainer's own edit is a warning.
+  check: true
+  maintainerLevel: warning
+```
 
-## Managed blocks
+## How it works
+
+### Syncing
+
+On `schedule`, `workflow_dispatch` and `push` events, smartcloud:
+
+1. Reads every template in `source`, leaving out `exclude`d paths.
+2. Renders each one: `{{KEY}}` placeholders are replaced from `values`, and `{{REPOSITORY}}` is always the repository's `owner/name`. A placeholder with no value fails the sync (`<file>: no value for {{KEY}}`) rather than leaving a blank. Excluded templates are not rendered, so a repository that keeps its own copy need not supply that template's values.
+3. Merges each rendered template into the matching file on the default branch: a file without a managed block is replaced whole, and a file with one has only its block replaced.
+4. Opens, or updates, one pull request from `branch` into the default branch with every file that changed, titled `chore(sync): sync files from owner/repo`. Its body lists each file as added, updated or made executable. An executable template makes its file executable.
+
+The commit is made through the GitHub API as the token's own identity, and signed off as that identity. GitHub signs it when the token is the workflow token or a GitHub App token, so it passes a ruleset that requires signed commits. Setting `SMARTCLOUD_COMMITTER_NAME` and `SMARTCLOUD_COMMITTER_EMAIL` commits and signs off as that identity instead, which GitHub does not sign.
+
+When nothing is out of date, no pull request is opened.
+
+### Managed blocks
 
 A template without markers is synced whole. A template with a managed block is extendable: smartcloud only replaces the lines between the markers and keeps everything the repository adds around them.
 
@@ -63,14 +119,82 @@ updates:
 | `house:managed:end`   | Closes it.                               |
 | `house:local`         | Where the repository's own additions go. |
 
-Markers count only on comment lines: `#` in YAML and CODEOWNERS, `<!--` in Markdown. The first time a file the repository already had is adopted, its previous content is kept, commented out, at the `house:local` line (or at the end), so nothing is lost silently.
+Markers count only on comment lines: `#` in YAML, TOML and CODEOWNERS, `//` in JSON with comments (such as editor settings), and `<!--` in Markdown. A document that merely mentions a marker in its text is not split. The first time a file the repository already had is adopted, its previous content is kept, commented out, at the `house:local` line (or at the end), so nothing is lost silently.
 
-Local additions that conflict with the synced rules are reported as warnings when syncing: a rule after a block that must come last (as in CODEOWNERS, where the last matching rule wins), a local YAML key, issue form field id or workflow job that redefines a synced one, or a Dependabot update that duplicates a synced one (in `dependabot.yml` or `dependabot.yaml`, one entry per directory in `directories`). Field ids are checked in issue and discussion forms only.
+The Resnovas `.github/smartcloud.yml` is itself synced this way: the `extends` line sits in the managed block, and each repository adds its own config below `# house:local`. See [Presets](/presets).
 
-## The edit check
+Local additions that conflict with the synced rules are reported as warnings when syncing:
 
-On pull request events, unless `check` is `false`, smartcloud flags edits to synced content with the rule id `SYNC`, as an error for contributors and a warning for maintainers and the owner (see `maintainerLevel`): a changed synced document, a changed managed block, removed markers, a deleted synced file, or a local rule that redefines a synced one. Change synced content in the source repository instead; a conflicting local rule is fixed in the repository itself. A conflict already on the default branch is left to the sync's warning, so it does not fail unrelated pull requests or the sync's own. Bringing a file in line with the latest templates is always allowed.
+- local rules after a block that must come last, as in CODEOWNERS, where the last matching rule wins ("local rules after the managed block would override it; move them above the block");
+- a local YAML top-level key, issue or discussion form field id, or workflow job that redefines a synced one;
+- a local JSON entry that reuses a synced `label`, `name` or `id`;
+- a Dependabot update that duplicates a synced one (in `dependabot.yml` or `dependabot.yaml`, one entry per directory in `directories`).
 
-Pull requests in the source repository itself are not checked, since they legitimately change the templates.
+### The edit check
+
+On pull request events, unless `check` is `false`, smartcloud flags edits to synced content with the rule id `SYNC`:
+
+| What the pull request did                      | Message                                               |
+| ---------------------------------------------- | ----------------------------------------------------- |
+| Changed a file that is synced whole            | `edits a synced file`                                 |
+| Changed lines inside a managed block           | `edits the managed block; add local rules outside it` |
+| Removed the markers                            | `removes the house:managed markers`                   |
+| Deleted a synced file                          | `deletes a synced file`                               |
+| Added a local rule that redefines a synced one | the conflict, as listed above                         |
+
+Each is an error for contributors and a warning for maintainers and the owner (see `maintainerLevel`). Change synced content in the source repository instead; a conflicting local rule is fixed in the repository itself. A conflict already on the default branch is left to the sync's warning, so it does not fail unrelated pull requests or the sync's own. Bringing a file in line with the latest templates is always allowed.
+
+Only the synced files the pull request touches are read: the files it lists as changed, and those the base has and its head lacks, since GitHub lists a renamed file by its new path alone. Pull requests in the source repository itself are not checked, since they legitimately change the templates.
 
 Findings link to `GOVERNANCE.md#synced-files` under [`links.policyBase`](/configuration#links).
+
+## What you will see on GitHub
+
+- **A sync pull request** from `branch`, titled `chore(sync): sync files from owner/repo`, listing every file added, updated or made executable. It is updated in place on later runs until it is merged.
+- **A `smartcloud / sync` [check run](/glossary#check-run)** on the commit. On a sync run it carries conflict warnings; on a pull request it fails when a contributor edited synced content, and is neutral for a maintainer's own edit.
+- **The [report comment](/glossary#report-comment)** on a pull request, listing each `SYNC` finding with the file and a link to your governance page.
+- **The job summary**, listing each file proposed and the pull request number.
+
+## Forks and restricted runs
+
+Sync needs a token that can read the source and push workflow files, so a [restricted run](/reporting#restricted-runs) skips the whole feature, syncing and the edit check alike, and the job summary says "cross-repository sync needs a token that can read the source and push workflow files". That covers runs with only the workflow token, pull requests from forks, and Dependabot's runs and pull requests.
+
+<Note>
+  Because the edit check is skipped on a fork's pull request, a reviewer should look for edits to synced files there by
+  hand. The next scheduled sync after merging proposes putting the synced content back.
+</Note>
+
+## In the house preset
+
+The Resnovas [house preset](/presets) syncs from `Resnovas/.github/templates@main` on the branch `house/sync`, with `check: true` and the house values: `ORG_NAME`, `LEGAL_HOLDER`, `COPYRIGHT_YEAR`, `PACKAGE_SCOPE`, `CONDUCT_CONTACT`, `COVERAGE_MIN`, `SPONSORS` and the `OWNERS_*` CODEOWNERS handles. A repository adds `sync.exclude` for the templates it keeps its own copy of, and may add `maintainerLevel`; it cannot change `source`, `branch`, `check` or a value the preset sets.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Sync was skipped: restricted access">
+    The run had only the workflow token, or came from a fork or Dependabot. Pass a GitHub App token or a personal access
+    token with `repo` and `workflow` as `GITHUB_TOKEN`. `smartcloud doctor` reports a classic token without the
+    `workflow` scope.
+  </Accordion>
+  <Accordion title="LICENSE: no value for {{HOLDER}}">
+    A template uses a placeholder with no entry in `sync.values`. Add the value, or `exclude` the template if this
+    repository keeps its own copy.
+  </Accordion>
+  <Accordion title="sync.source must be owner/repo/path@ref">
+    `source` is not in the form `owner/repo/path@ref`. The path must name a directory inside the repository; `.` and
+    `..` segments are rejected.
+  </Accordion>
+  <Accordion title="sync.branch is the default branch">
+    The sync force-updates its branch, so it must not be the branch the pull request merges into. Choose another
+    `branch`, or leave it at `smartcloud/sync`.
+  </Accordion>
+  <Accordion title="A pull request fails with SYNC: edits a synced file">
+    The pull request changed content the templates own. Revert that change and make it in the template repository
+    instead. For a file with a managed block, move your change below the `house:local` line. If this repository should
+    own the file outright, add it to `sync.exclude`.
+  </Accordion>
+  <Accordion title="Refusing to allow a GitHub App to create or update workflow">
+    The token cannot push files under `.github/workflows`. Give the app Workflows (read and write), or add the
+    `workflow` scope to a classic token.
+  </Accordion>
+</AccordionGroup>

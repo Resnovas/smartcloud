@@ -1,0 +1,312 @@
+---
+title: 'Getting started'
+description: 'Set smartcloud up in a new repository: the workflow, a token, a first config, a first run, and how to read what it reports.'
+---
+
+This guide takes a repository with no smartcloud at all to its first working run. It takes about ten minutes. You need to be an admin of the repository, and GitHub Actions must be allowed to run in it (Settings > Actions > General).
+
+By the end you will have:
+
+- a workflow that runs smartcloud when pull requests, issues and comments change, and once a day on a schedule;
+- a config file, `.github/smartcloud.yml`, that turns on a few features;
+- a first run you can read, on a pull request and in the Actions tab.
+
+<Note>
+  New to the words used here? [Workflow](/glossary#workflow), [check run](/glossary#check-run),
+  [preset](/glossary#preset) and the rest are explained in the [glossary](/glossary).
+</Note>
+
+## 1. Decide which token smartcloud acts with
+
+smartcloud does its work (adding labels, posting comments, creating checks) through the GitHub API, so it needs a token. There are two choices.
+
+| Token                                                    | Good for                                                                                                                                                          | Cannot do                                                                                                                                                                                                                                          |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The [workflow token](/glossary#workflow-token) (default) | Everything that acts on one pull request or issue: labels, conventions, commits, disclosure, reviews, required, freeze, branches, stale, lock, backport, commands | Change repository settings ([settings](/features/settings)), sync files that include workflows ([sync](/features/sync)), or read a [preset](/glossary#preset) in another private repository. smartcloud skips these and says so; it does not fail. |
+| A [GitHub App](/glossary#github-app) installation token  | Everything, including settings, sync and private presets                                                                                                          | Nothing smartcloud needs, as long as the app has the permissions below.                                                                                                                                                                            |
+
+Start with the workflow token. You can add an app later without changing your config: only the workflow changes.
+
+<Warning>
+  Do not pass a personal access token. GitHub never lets a personal or OAuth token create check runs, so the
+  `smartcloud` checks cannot be published and fail. [`smartcloud doctor`](/cli#doctor) warns about this.
+</Warning>
+
+### Optional: create a GitHub App
+
+Only do this if you want the [settings](/features/settings) or [sync](/features/sync) features, or your config extends a preset in another private repository.
+
+<Steps>
+  <Step title="Create the app">
+    In your organisation (or your account), go to Settings > Developer settings > GitHub Apps > New GitHub App. Give it a name, set any homepage URL, and untick **Webhook > Active**: smartcloud runs in Actions and needs no webhook.
+  </Step>
+  <Step title="Give it repository permissions">
+    Grant these repository permissions, and leave everything else at **No access**:
+
+    | Permission      | Access         | Used by                                                                 |
+    | --------------- | -------------- | ----------------------------------------------------------------------- |
+    | Administration  | Read and write | settings                                                                |
+    | Checks          | Read and write | every feature's check run                                               |
+    | Contents        | Read and write | reading the config and presets; sync, codeowners and backport branches  |
+    | Issues          | Read and write | labels, comments, stale, lock                                           |
+    | Pull requests   | Read and write | labels, review requests, approvals, sync and backport pull requests     |
+    | Commit statuses | Read-only      | required, freeze and the `checksPass` condition                         |
+    | Workflows       | Read and write | sync, when the templates include files under `.github/workflows`        |
+    | Metadata        | Read-only      | always required by GitHub                                               |
+
+    The settings feature can manage more than this (secrets, variables, environments, Pages, webhooks, collaborators and teams). Each part needs the matching permission; the [settings page](/features/settings) lists them. A step the token cannot do is reported as a finding, not a crash.
+
+  </Step>
+  <Step title="Install it and store its credentials">
+    Create the app, then **Install App** on the repositories that should use it, and on the repository that holds any private preset you extend. Generate a private key. In the repository (or organisation) settings, add:
+
+    - a variable `SMARTCLOUD_APP_ID` holding the app's ID, and
+    - a secret `SMARTCLOUD_APP_PRIVATE_KEY` holding the whole `.pem` file.
+
+  </Step>
+</Steps>
+
+## 2. Add the workflow
+
+Create `.github/workflows/smartcloud.yml`. Pick the version for the token you chose.
+
+<Tabs>
+  <Tab title="Workflow token">
+    ```yaml .github/workflows/smartcloud.yml
+    name: smartcloud
+
+    on:
+      pull_request:
+        types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft, closed]
+      pull_request_review:
+        types: [submitted, dismissed]
+      issues:
+        types: [opened, edited, reopened, labeled, unlabeled]
+      issue_comment:
+        types: [created]
+      push:
+        branches: [main]
+      schedule:
+        - cron: '0 6 * * *'
+      workflow_dispatch:
+
+    # The workflow grants nothing; the job asks for what it needs.
+    permissions: {}
+
+    jobs:
+      smartcloud:
+        name: smartcloud
+        runs-on: ubuntu-latest
+        timeout-minutes: 75
+        permissions:
+          contents: write
+          pull-requests: write
+          checks: write
+          issues: write
+          statuses: read
+        steps:
+          - uses: resnovas/smartcloud@v2
+            with:
+              checkRunId: ${{ job.check_run_id }}
+    ```
+
+  </Tab>
+  <Tab title="GitHub App token">
+    ```yaml .github/workflows/smartcloud.yml
+    name: smartcloud
+
+    on:
+      pull_request:
+        types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft, closed]
+      pull_request_review:
+        types: [submitted, dismissed]
+      issues:
+        types: [opened, edited, reopened, labeled, unlabeled]
+      issue_comment:
+        types: [created]
+      push:
+        branches: [main]
+      schedule:
+        - cron: '0 6 * * *'
+      workflow_dispatch:
+
+    permissions: {}
+
+    jobs:
+      smartcloud:
+        name: smartcloud
+        runs-on: ubuntu-latest
+        timeout-minutes: 75
+        permissions:
+          contents: write
+          pull-requests: write
+          checks: write
+          issues: write
+          statuses: read
+        steps:
+          # Forks and Dependabot get no secrets, so no token is minted for them.
+          # smartcloud then falls back to the workflow token and runs restricted.
+          - name: Mint the app token
+            id: app
+            if: >-
+              !github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository
+            continue-on-error: true
+            uses: actions/create-github-app-token@v3
+            with:
+              client-id: ${{ vars.SMARTCLOUD_APP_ID }}
+              private-key: ${{ secrets.SMARTCLOUD_APP_PRIVATE_KEY }}
+              # Covers every repository the app is installed on, so a private
+              # preset in another repository can be read too.
+              owner: ${{ github.repository_owner }}
+
+          - uses: resnovas/smartcloud@v2
+            with:
+              GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+              checkRunId: ${{ job.check_run_id }}
+    ```
+
+    Pin third-party actions to a full commit SHA in production, as the [OpenSSF Scorecard](https://scorecard.dev) recommends.
+
+  </Tab>
+</Tabs>
+
+What each part does:
+
+- **`on`** lists the [events](/glossary#event) that start a run. Each feature acts only on some of them: stale and lock need `schedule`, commands need `issue_comment`, and backports need `closed`. The [introduction](/introduction#which-events-run-which-features) has the full table. Leaving an event out simply means the features that need it never run.
+- **`permissions`** gives the job's [workflow token](/glossary#workflow-token) the access smartcloud uses. The [introduction](/introduction#permissions) explains each one.
+- **`timeout-minutes: 75`** stops a stuck run. It is longer than the 60 minutes the [required](/features/required) feature may wait for other checks.
+- **`checkRunId`** lets the [required](/features/required) feature find the job's own check. Without it that feature is skipped.
+- **`name: smartcloud`** names the job, and so the check GitHub creates for it. A [ruleset](/glossary#ruleset) can then require the `smartcloud` check alone.
+
+There is no `actions/checkout` step: smartcloud reads the config through the GitHub API, from the default branch, so a pull request cannot loosen the rules it is checked against.
+
+## 3. Write a first config
+
+Create `.github/smartcloud.yml` on the default branch. This one is small on purpose: it keeps two labels, labels documentation changes, asks for [Conventional Commits](https://www.conventionalcommits.org) pull request titles, and marks quiet issues stale.
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+
+# The labels the repository should have. smartcloud creates or updates them.
+labels:
+  docs:
+    name: documentation
+    color: 0075CA
+    description: Improvements or additions to documentation
+  stale:
+    name: stale
+    color: CFD3D7
+
+# Add the documentation label to any pull request that touches docs/.
+labelling:
+  docs:
+    label: docs
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'docs/**'
+
+# Pull request titles must look like "feat(api): add a thing".
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+
+# Issues quiet for 60 days get the stale label and a comment.
+stale:
+  on: [issue]
+  staleAfterDays: 60
+  staleLabel: stale
+  staleComment: This has had no activity for 60 days. Comment to keep it open.
+```
+
+- `version: 2` is required. Without it the file is read as a [v1 config](/migration).
+- The first line lets editors such as VS Code (with the YAML extension) complete and check every key as you type.
+- A feature runs only when its section is present. There is no `commits` section here, so commit checks are off.
+
+Want more? Every feature page lists its options, and [Presets and extends](/presets) shows how to start from a shared config instead of writing everything yourself.
+
+### Check the config before you push
+
+If you have Node 24 or later, you can check the file locally with the [CLI](/cli):
+
+```sh
+smartcloud validate
+```
+
+```text
+.github/smartcloud.yml is a valid smartcloud config.
+Built from: .github/smartcloud.yml
+```
+
+The CLI is strict: an unknown key is an error. A real run is forgiving and only warns, so a typo never stops your repository working, but it does mean the setting is ignored. Validate to catch it.
+
+## 4. The first run
+
+Commit both files to the default branch. The push starts the first run.
+
+<Steps>
+  <Step title="Watch it in the Actions tab">
+    Open **Actions > smartcloud**. The run takes a few seconds. On a push, smartcloud syncs the labels, so `documentation` and `stale` now exist under **Issues > Labels**.
+  </Step>
+  <Step title="Try it on a pull request">
+    Open a pull request that changes a file under `docs/`, with the title `Update the readme`. Within a minute:
+
+    - the pull request gets the `documentation` label;
+    - the **Checks** tab shows `smartcloud / labels` (passed) and `smartcloud / conventions` (failed, because the title is not conventional);
+    - smartcloud posts one comment listing the problem and a link to fix it.
+
+  </Step>
+  <Step title="Fix it and watch it update">
+    Rename the pull request to `docs: update the readme`. The `edited` event starts a new run. The conventions check passes and the comment changes to "All smartcloud checks pass."
+  </Step>
+  <Step title="Run the daily jobs now">
+    Stale, lock and the settings and sync features run on the daily `schedule`. To run them without waiting, open **Actions > smartcloud > Run workflow**.
+  </Step>
+</Steps>
+
+## 5. Read the report
+
+smartcloud reports in four places. The [reporting page](/reporting) has the detail.
+
+| Where                    | What you see                                                                                                                                                                 |
+| ------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Checks** on the commit | One [check run](/glossary#check-run) per feature, named `smartcloud / <feature>`. Failure means an error, neutral means only warnings, success means nothing to fix.         |
+| One comment on the item  | The [report comment](/glossary#report-comment): a table of every error and warning, each with a rule id and a link to the policy. It is edited in place, never posted twice. |
+| The job summary          | Open the run in **Actions**. It lists every feature, what it found, what it changed, what it skipped and why, and any restriction.                                           |
+| Annotations              | Each finding also appears on the run, and on the diff when it names a file and line.                                                                                         |
+
+A finding has a **level**:
+
+- **error**: something to fix. The feature's check fails, and so does the run.
+- **warning**: worth a look. The check is neutral, which does not block a required check.
+- **notice**: information only, such as "this run was restricted". Left out of the comment.
+
+## 6. Make it enforce
+
+Checks only block merging when a [ruleset](/glossary#ruleset) or branch protection requires them. Two ways:
+
+- **Require the one job check.** With `checkRunId` in the workflow and a `required: {}` section in the config, the job's `smartcloud` check waits for every other check on the pull request and fails if any fails. Require `smartcloud` alone. See [required](/features/required).
+- **Require single features.** Require `smartcloud / conventions`, `smartcloud / commits` and so on, one by one.
+
+The [settings](/features/settings) feature can write that ruleset for you.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Presets and extends" icon="layer-group" href="/presets">
+    Share one config across many repositories.
+  </Card>
+  <Card title="Conditions" icon="filter" href="/conditions">
+    The rule language used by labelling, conventions, reviews and more.
+  </Card>
+  <Card title="Troubleshooting" icon="life-ring" href="/troubleshooting">
+    What to do when a run does not do what you expect.
+  </Card>
+  <Card title="CLI" icon="terminal" href="/cli">
+    Validate, dry-run and diagnose from your machine.
+  </Card>
+</CardGroup>

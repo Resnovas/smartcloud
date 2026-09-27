@@ -5,11 +5,38 @@ description: 'What smartcloud does, and how to run it in a repository.'
 
 smartcloud is a GitHub Action that automates repository housekeeping and enforces contribution policy from one declarative file, `.github/smartcloud.yml`. It labels pull requests and issues, checks titles and commits, gates reviews, marks inactive work stale, locks long-closed threads, backports merged pull requests by label, keeps repository settings in line, syncs shared files from a template repository, notifies Slack, Discord or Linear of policy failures and stale items, and answers slash commands in comments.
 
-Each capability is a feature with its own section in the config. A feature whose section is absent does not run, so you opt in to exactly what you need.
+## What it can do
+
+| You want to...                                                          | Feature                                  |
+| ----------------------------------------------------------------------- | ---------------------------------------- |
+| Keep a set of labels in every repository, and label items automatically | [Labels](/features/labels)               |
+| Check pull request and issue titles and descriptions                    | [Conventions](/features/conventions)     |
+| Require DCO sign-off and honest AI attribution on commits               | [Commits](/features/commits)             |
+| Require an AI disclosure in pull request descriptions                   | [Disclosure](/features/disclosure)       |
+| Require maintainer approvals, request reviewers, approve trusted bots   | [Reviews](/features/reviews)             |
+| Require one check that waits for every other check                      | [Required](/features/required)           |
+| Stop merging during a release or holiday freeze                         | [Freeze](/features/freeze)               |
+| Enforce branch names                                                    | [Branches](/features/branches)           |
+| Generate and check `CODEOWNERS`                                         | [CODEOWNERS](/features/codeowners)       |
+| Mark quiet issues and pull requests stale, then close them              | [Stale](/features/stale)                 |
+| Lock old closed threads                                                 | [Lock](/features/lock)                   |
+| Backport merged pull requests to release branches by label              | [Backport](/features/backport)           |
+| Manage repository settings, rulesets, environments and secrets as code  | [Settings](/features/settings)           |
+| Keep shared files in line with a template repository                    | [Sync](/features/sync)                   |
+| Tell Slack, Discord or Linear about failures and stale items            | [Notifications](/features/notifications) |
+| Let people run `/label`, `/rebase`, `/backport` and more in comments    | [Commands](/features/commands)           |
+
+Each capability is a feature with its own section in the config. A feature whose section is absent does not run, so you opt in to exactly what you need. You can also build on a shared config, called a [preset](/presets), so many repositories follow the same rules.
 
 <CardGroup cols={2}>
+  <Card title="Getting started" icon="rocket" href="/getting-started">
+    Set up a new repository step by step: workflow, token, first config, first run.
+  </Card>
   <Card title="Configuration" icon="file-code" href="/configuration">
-    The config file, shared presets and the "add, never change" rule.
+    The config file, its sections, and what happens to unknown keys.
+  </Card>
+  <Card title="Presets and extends" icon="layer-group" href="/presets">
+    Share one config across repositories, and the Resnovas house preset.
   </Card>
   <Card title="Conditions" icon="filter" href="/conditions">
     The condition language that labelling, conventions and reviews use.
@@ -17,95 +44,12 @@ Each capability is a feature with its own section in the config. A feature whose
   <Card title="Reporting" icon="list-check" href="/reporting">
     Check runs, the single comment and the job summary.
   </Card>
-  <Card title="Migrating from v1" icon="arrow-right-arrow-left" href="/migration">
-    Convert `.github/config.json` with `smartcloud migrate`.
+  <Card title="Troubleshooting" icon="life-ring" href="/troubleshooting">
+    Common problems and questions.
   </Card>
 </CardGroup>
 
-## Quick start
-
-<Steps>
-  <Step title="Write a config">
-    Create `.github/smartcloud.yml`. This one keeps two labels in sync, labels documentation changes, and asks for conventional commit titles:
-
-    ```yaml .github/smartcloud.yml
-    # yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
-    version: 2
-
-    labels:
-      docs:
-        name: documentation
-        color: 0075CA
-        description: Improvements or additions to documentation
-      bug:
-        name: bug
-        color: D73A4A
-
-    labelling:
-      docs:
-        label: docs
-        on: [pullRequest]
-        when:
-          condition:
-            - type: filesMatch
-              condition: "docs/**"
-
-    conventions:
-      rules:
-        title:
-          on: [pullRequest]
-          preset: conventionalCommits
-    ```
-
-    The first line points editors at the JSON Schema, so they complete and check keys as you type.
-
-  </Step>
-  <Step title="Check it locally">
-    ```sh
-    smartcloud validate
-    ```
-
-    Validation reads every preset the config extends and reports anything the schema rejects. See [CLI](/cli) for how to run it.
-
-  </Step>
-  <Step title="Add the workflow">
-    Add a workflow that runs smartcloud on the events its features act on:
-
-    ```yaml .github/workflows/smartcloud.yml
-    name: smartcloud
-
-    on:
-      pull_request:
-        types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft, closed]
-      pull_request_review:
-        types: [submitted, dismissed]
-      issues:
-        types: [opened, edited, reopened, labeled, unlabeled]
-      issue_comment:
-        types: [created]
-      push:
-        branches: [main]
-      schedule:
-        - cron: "0 6 * * *"
-      workflow_dispatch:
-
-    permissions: {}
-
-    jobs:
-      smartcloud:
-        runs-on: ubuntu-latest
-        timeout-minutes: 75
-        permissions:
-          contents: write
-          pull-requests: write
-          checks: write
-          issues: write
-        steps:
-          - uses: resnovas/smartcloud@v2
-    ```
-
-  </Step>
-</Steps>
+The rest of this page is a reference for the workflow: the permissions, the action's inputs and which events run which features. [Getting started](/getting-started) walks through it from the beginning.
 
 ## Permissions
 
@@ -119,7 +63,7 @@ Each capability is a feature with its own section in the config. A feature whose
 
 The settings feature changes repository administration settings, which the workflow token cannot do. See [Settings](/features/settings).
 
-Grant these on the job and leave the workflow's `permissions` empty, so a job added later starts with no access. `timeout-minutes` stops a hung run long before GitHub's six-hour default, and leaves room for the aggregate check, which waits up to `required.timeout` (60 minutes by default) for the other checks. The settings feature changes repository administration settings, which the workflow token cannot do. See [Settings](/features/settings).
+Grant these on the job and leave the workflow's `permissions` empty, so a job added later starts with no access. `timeout-minutes` stops a hung run long before GitHub's six-hour default, and leaves room for the aggregate check, which waits up to `required.timeout` (60 minutes by default) for the other checks.
 
 <Note>
   A run with only the workflow token is restricted rather than failed: smartcloud skips settings, sync, private presets
@@ -142,6 +86,7 @@ Every input is optional.
 | `dryRun`        | `false`                                                                                 | Record every write in the job summary instead of making it.                                                                                                                                                                                                                                                                                                  |
 | `features`      | every configured feature                                                                | A comma-separated list of the features to run, for example `labels,stale`.                                                                                                                                                                                                                                                                                   |
 | `checkRunId`    | none                                                                                    | The job's own check run, as `${{ job.check_run_id }}` gives it. The [required](/features/required) feature runs only when it is set, so it can wait for every other check and leave this job out.                                                                                                                                                            |
+| `telemetry`     | `true`                                                                                  | Set to `false` to stop sending anonymous telemetry. Discouraged; see [Telemetry](/telemetry).                                                                                                                                                                                                                                                                |
 
 The config is read through the GitHub API, so the workflow needs no checkout step. It comes from the default branch unless `configRef` says otherwise, so a pull request cannot loosen the rules it is checked against.
 
@@ -151,14 +96,14 @@ The v1 inputs `fillEmpty` and `skipDelete` are still accepted and ignored with a
 
 ## Which events run which features
 
-| Event                                                                                       | Features                                                                                                                                                                               |
-| ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `pull_request`, `pull_request_target`, `pull_request_review`, `pull_request_review_comment` | conventions, commits, disclosure, reviews, branches, codeowners (the check), labels (labelling rules), sync (the edit check), backport (`pull_request` and `pull_request_target` only) |
-| `issues`                                                                                    | conventions, labels (labelling rules)                                                                                                                                                  |
-| `issue_comment`, on an issue or a pull request                                              | commands                                                                                                                                                                               |
-| `issues`, `issue_comment` on an issue                                                       | conventions, labels (labelling rules)                                                                                                                                                  |
-| `push`                                                                                      | labels (label sync), settings, sync, codeowners                                                                                                                                        |
-| `schedule`, `workflow_dispatch`                                                             | labels (label sync), stale, lock, settings, sync, codeowners                                                                                                                           |
-| `repository_dispatch`, `merge_group`                                                        | labels (label sync)                                                                                                                                                                    |
+| Event                                                                                       | Features                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `pull_request`, `pull_request_target`, `pull_request_review`, `pull_request_review_comment` | labels (labelling and size labels), conventions, commits, disclosure, reviews, required, freeze (the check), branches, codeowners (the check), sync (the edit check), backport and commands (backports on merge; `pull_request` and `pull_request_target` only) |
+| `issues`                                                                                    | labels (labelling), conventions                                                                                                                                                                                                                                 |
+| `issue_comment`, on an issue or a pull request                                              | commands                                                                                                                                                                                                                                                        |
+| `push`                                                                                      | labels (label sync), settings, sync, codeowners                                                                                                                                                                                                                 |
+| `schedule`, `workflow_dispatch`                                                             | labels (label sync), stale, lock, freeze (refreshes the check on open pull requests), settings, sync, codeowners                                                                                                                                                |
+| `merge_group`                                                                               | labels (label sync), freeze (fails a queued group during a freeze)                                                                                                                                                                                              |
+| `repository_dispatch`                                                                       | labels (label sync)                                                                                                                                                                                                                                             |
 
-Any other event is a clean no-op that records a notice. A comment carries only the issue fields of the item it is on, so a comment runs only the [commands](/features/commands) feature; the other features act on the pull request and issue events.
+Any other event is a clean no-op that records a notice. A comment carries only the issue fields of the item it is on, so a comment runs only the [commands](/features/commands) feature; the other features act on the pull request and issue events. [Notifications](/features/notifications) are sent after any run whose results match the configured channels.
