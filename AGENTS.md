@@ -5,7 +5,7 @@ Copy this file (or its contents) into Cursor, Claude Code, Codex, GitHub Copilot
 
 **Owner:** Jonathan (Resnovas / Eventiva / Climb).  
 **Canonical location:** `templates/AGENTS.md` in [`Resnovas/.github`](https://github.com/Resnovas/.github), synced into every repository's `AGENTS.md`. `CLAUDE.md` imports this file; agents must not depend on any local vault path. Change the house rules in that template; add a repository's own instructions below the `house:local` line at the end.  
-**Updated:** 2026-09-26
+**Updated:** 2026-09-27
 
 Assume a **clean machine**: no Second Brain vault, no private disk SoT, no host-specific home paths. Standards live in **PostHog skills**; memory and knowledge live in **Cognee**. Tools live behind **Mem0 Gateway**. Engineering method is **Compound Engineering**, with **`lfg`** as the autonomous ship path.
 
@@ -65,6 +65,26 @@ Load the named PostHog skill when the bite applies. Do not invent parallel rules
 | `skills-upstream-sync` | Weekly/catalog sync of watched upstream and first-party skills into PostHog |
 
 Also useful team skills: `founder` (startup workflows), `convert-documents-to-markdown` / anydoc (office/PDF to Markdown), `proton-pass`, `orchestration` / `orca-cli` / `orca-linear` / `orca-per-workspace-env` when Orca need-check is yes.
+
+## Pull requests: one per batch
+
+Every pull request re-runs CI, smartcloud and the review bots, and every restack of a stack of pull requests re-runs them all. That burns AI credits and the Resnovas Bot app's API quota, so:
+
+1. **Work a sprint or collection of issues locally**, one stacked GitButler branch per issue. Do not push them one by one and do not open a pull request per issue.
+2. **Resolve problems locally.** Run the repository's full gate and any dry runs before anything is pushed; CI is not the debugger.
+3. **Squash each branch to one conventional, signed-off commit** with `but squash`, referencing its issue key.
+4. **Open a single pull request for the whole batch** for Jonathan's review. Its body lists each commit with its issue and `Closes` line.
+5. **Once Jonathan has reviewed and approved it, it lands as an owner fast-forward:** its signed commits are pushed onto the default branch unchanged with his ruleset bypass, after the full gate passes on top of the current default branch, so each issue keeps its own signed commit; then the pull request is closed with links to them. The merge queue squashes, because GitHub cannot sign rebased commits. Never land it before he approves.
+6. **Merge open pull requests before starting new work.**
+
+## Documentation: always twice
+
+Every change to a feature, config option, preset, workflow or setup step updates both kinds of documentation **in the same commit**:
+
+- **ELI5 docs for people** (the README, `docs/` or the docs site): plain words, what it is and why before how, step-by-step setup, one complete example, what you will see when it runs, every option with its default, common problems and fixes.
+- **ai-docs for agents**: the repository's sections under `ai-docs/src` (numbered from 10), with compiling examples in the codebase's own style.
+
+The ai-docs basics are synced from `Resnovas/.github`: `tools/ai-docs/docgen.mjs`, `ai-docs/README.md` and the house standards section `ai-docs/src/05_house-standards`. `LLMS.md` is generated from `ai-docs/src` by `node tools/ai-docs/docgen.mjs` (the `ai-docs` script) and checked by `ai-docs:check`, which the `check` script runs; never edit it by hand.
 
 ## Setup your ecosystem
 

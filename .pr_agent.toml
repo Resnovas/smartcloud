@@ -14,6 +14,10 @@
 
 [github_app]
 pr_commands = ["/agentic_review"]
+# One review per pull request, not one per push: a batch pull request gets
+# many pushes while its review threads are fixed, and each review costs
+# credits. Comment /agentic_review to check the ticket match again after a
+# push changes the scope.
 handle_push_trigger = false
 feedback_on_draft_pr = false
 
