@@ -114,7 +114,9 @@ The settings feature changes repository administration settings, and the sync fe
 ```yaml
 steps:
   - id: app
-    if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+    if: >-
+      (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)
+      && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
     continue-on-error: true
     uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
     with:

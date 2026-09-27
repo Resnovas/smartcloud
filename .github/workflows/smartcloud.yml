@@ -68,9 +68,16 @@ jobs:
 
       # Minted after the build, so no lifecycle script ever sees it. A failed
       # mint falls back to the workflow token rather than failing the run.
+      # Never minted for a pull request from another (or a deleted) repository,
+      # Dependabot's runs and pull requests, or a manual run on another branch,
+      # whose workflow file that branch controls.
       - name: Mint the Resnovas Bot token
         id: app
-        if: env.HAS_APP_KEY == 'true' && github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+        if: >-
+          env.HAS_APP_KEY == 'true'
+          && (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)
+          && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+          && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
         continue-on-error: true
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
