@@ -23,7 +23,7 @@ import {
   type ResolvedConfig,
   type ResolveOptions,
 } from '@resnovas/config'
-import type { EnvelopeKind, Feature } from '@resnovas/engine'
+import type { EnvelopeKind, Feature, Finding } from '@resnovas/engine'
 import { GitHub } from '@resnovas/integrations.github'
 import { optOut } from '@resnovas/integrations.posthog'
 import { Data, Effect, Layer, Option, Schema } from 'effect'
@@ -196,6 +196,37 @@ export const readLocalConfig = (path: string) =>
 
 // The schema hint lets editors complete and check the file.
 const SCHEMA_HINT = '# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json'
+
+/**
+ * The findings that report config a run ignored: a warning for each unknown
+ * key or invalid value dropped from the config or a preset, under the
+ * `config` source, so they get their own `smartcloud / config` check run.
+ *
+ * @remarks
+ * An invalid value dropped from a setting that only tightens policy, such as
+ * `roles.maintainers` or `settings.ruleset`, is an error instead: the run
+ * applied looser policy than the config asks for, so the check fails and
+ * blocks merging until the config is fixed, while every feature still runs.
+ *
+ * @example
+ * ```ts import.meta.vitest name="configFindings"
+ * import { configFindings } from '@resnovas/runtime'
+ *
+ * configFindings(['house.yml: ignored settings.codespaces, because settings.codespaces is unexpected'])[0]?.rule // => 'config.ignored'
+ * configFindings(['x.yml: ignored roles.maintainers, because roles.maintainers.1: Expected string, actual 1'], ['x.yml: ignored roles.maintainers, because roles.maintainers.1: Expected string, actual 1'])[0]?.level // => 'error'
+ * configFindings([]).length // => 0
+ * ```
+ *
+ * @param ignored - What was dropped, as `ResolvedConfig.ignored` lists it.
+ * @param loosened - Which of those loosened policy, as `ResolvedConfig.loosened` lists them.
+ * @returns A finding for each: an error when it loosened policy, a warning otherwise.
+ */
+export const configFindings = (ignored: ReadonlyArray<string>, loosened: ReadonlyArray<string> = []): ReadonlyArray<Finding> =>
+  ignored.map((item) =>
+    loosened.includes(item)
+      ? { feature: 'config', rule: 'config.ignored', level: 'error', message: `${item}; this setting only tightens policy, so fix it to pass this check` }
+      : { feature: 'config', rule: 'config.ignored', level: 'warning', message: item },
+  )
 
 /** A config converted to v2 YAML. */
 export interface Migrated {

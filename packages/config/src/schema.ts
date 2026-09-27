@@ -204,8 +204,9 @@ export const Conventions = Schema.Struct({
  *
  * @remarks
  * Every feature section is optional: a feature whose section is absent does
- * not run. Unknown keys are an error, so a typo in a section name fails at
- * startup.
+ * not run. Unknown keys are an error here and in the JSON Schema, so an
+ * editor or `smartcloud validate` flags a typo in a section name; a run drops
+ * them with a warning instead (see resolveConfig).
  *
  * @example
  * ```ts import.meta.vitest name="SmartcloudConfig"

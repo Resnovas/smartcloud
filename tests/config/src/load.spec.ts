@@ -133,15 +133,65 @@ describe('resolveConfig: extends and locked presets', () => {
     }),
   )
 
-  it.effect('still rejects a merged config that is incomplete or wrong, naming the file and its presets', () =>
+  it.effect(
+    'strictly, still rejects a merged config that is incomplete or wrong, naming the file and its presets',
+    () =>
+      Effect.gen(function* () {
+        const strict = { strict: true }
+        const incomplete = yield* Effect.flip(resolveConfig(local('sync:\n  exclude: [LICENSE]\n'), 'repo', strict))
+        expect(incomplete).toMatchObject({ _tag: 'ConfigDecodeError', source: `repo with ${HOUSE}` })
+        expect(incomplete.message).toContain('source')
+        const alone = yield* Effect.flip(resolveConfig('version: 2\nsync:\n  exclude: [LICENSE]\n', 'repo', strict))
+        expect(alone).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
+        const typo = yield* Effect.flip(resolveConfig(local('lables: {}\n'), 'repo', strict))
+        expect(typo.message).toContain('lables')
+        const presetTypo = yield* Effect.flip(
+          resolveConfig(local(''), 'repo', strict).pipe(
+            Effect.provide(presets({ [HOUSE]: 'version: 2\nsettings: { codespaces: {} }\n' })),
+          ),
+        )
+        expect(presetTypo.message).toContain('codespaces')
+      }).pipe(Effect.provide(presets({ [HOUSE]: house }))),
+  )
+
+  it.effect('by default, drops what is incomplete or unknown with a warning naming the file and its presets', () =>
     Effect.gen(function* () {
-      const incomplete = yield* Effect.flip(resolveConfig(local('sync:\n  exclude: [LICENSE]\n'), 'repo'))
-      expect(incomplete).toMatchObject({ _tag: 'ConfigDecodeError', source: `repo with ${HOUSE}` })
-      expect(incomplete.message).toContain('source')
-      const alone = yield* Effect.flip(resolveConfig('version: 2\nsync:\n  exclude: [LICENSE]\n', 'repo'))
-      expect(alone).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
-      const typo = yield* Effect.flip(resolveConfig(local('lables: {}\n'), 'repo'))
-      expect(typo.message).toContain('lables')
+      const incomplete = yield* resolveConfig(local('sync:\n  exclude: [LICENSE]\n'), 'repo')
+      expect(incomplete.config.sync).toBeUndefined()
+      expect(incomplete.warnings).toStrictEqual([`repo with ${HOUSE}: ignored sync, because sync.source is missing`])
+      const typo = yield* resolveConfig(local('lables: {}\n'), 'repo')
+      expect(typo.config.labels?.['bug']?.color).toBe('d73a4a')
+      expect(typo.warnings).toStrictEqual([
+        expect.stringMatching(/^repo: ignored lables, because lables is unexpected/),
+      ])
+    }).pipe(Effect.provide(presets({ [HOUSE]: house }))),
+  )
+
+  it.effect('runs a preset written for a newer smartcloud, warning about the settings section it does not know', () =>
+    Effect.gen(function* () {
+      // The house preset gained a settings section before this build knew it,
+      // as settings.actions once did.
+      const newer = `${house}settings:\n  merging: { squash: true }\n  codespaces: { enabled: true }\n`
+      const resolved = yield* resolveConfig(local('labelSync: { prune: true }\n'), '.github/smartcloud.yml').pipe(
+        Effect.provide(presets({ [HOUSE]: newer })),
+      )
+      expect(resolved.config.settings).toStrictEqual({ merging: { squash: true } })
+      expect(resolved.config.labels?.['bug']?.color).toBe('d73a4a')
+      expect(resolved.config.labelSync).toStrictEqual({ prune: true })
+      expect(resolved.warnings).toStrictEqual([
+        expect.stringMatching(
+          new RegExp(
+            `^${HOUSE.replaceAll('.', '\\.')}: ignored settings\\.codespaces, because settings\\.codespaces is unexpected, expected: "merging"`,
+          ),
+        ),
+      ])
+      expect(resolved.locked.has('settings.merging.squash')).toBe(true)
+      expect(resolved.ignored).toStrictEqual(resolved.warnings)
+    }),
+  )
+
+  it.effect('still fails a config that is unusable as a whole', () =>
+    Effect.gen(function* () {
       const badExtends = yield* Effect.flip(resolveConfig('version: 2\nextends: [nope]\n', 'repo'))
       expect(badExtends).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
       const notMapping = yield* Effect.flip(
@@ -253,9 +303,9 @@ describe('resolveConfig: extends and locked presets', () => {
     }),
   )
 
-  it.effect('still fails on unknown keys and malformed sections when a preset is skipped', () =>
+  it.effect('strictly, still fails on unknown keys and malformed sections when a preset is skipped', () =>
     Effect.gen(function* () {
-      const skipAll = { skipUnreadable: () => true }
+      const skipAll = { skipUnreadable: () => true, strict: true }
       const typo = yield* Effect.flip(
         resolveConfig(local('lables: {}\n'), 'repo', skipAll).pipe(Effect.provide(presets({}))),
       )
@@ -277,10 +327,11 @@ describe('resolveConfig: extends and locked presets', () => {
     }),
   )
 
-  it.effect('with a preset skipped, still fails a section the preset could not have completed', () =>
+  it.effect('strictly, with a preset skipped, still fails a section the preset could not have completed', () =>
     Effect.gen(function* () {
-      const skipAll = { skipUnreadable: () => true }
-      const resolve = (body: string) => Effect.flip(resolveConfig(local(body), 'repo', skipAll).pipe(Effect.provide(presets({}))))
+      const skipAll = { skipUnreadable: () => true, strict: true }
+      const resolve = (body: string) =>
+        Effect.flip(resolveConfig(local(body), 'repo', skipAll).pipe(Effect.provide(presets({}))))
       // The repository named this label, so the missing colour is its own mistake.
       const label = yield* resolve('labels:\n  docs: { name: docs }\n')
       expect(label).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
@@ -289,6 +340,39 @@ describe('resolveConfig: extends and locked presets', () => {
       const wrong = yield* resolve('sync:\n  exclude: LICENSE\n')
       expect(wrong).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
       expect(wrong.message).toContain('exclude')
+    }),
+  )
+
+  it.effect('by default, drops unknown keys and malformed values with a warning when a preset is skipped', () =>
+    Effect.gen(function* () {
+      const skipAll = { skipUnreadable: () => true }
+      const resolve = (body: string) => resolveConfig(local(body), 'repo', skipAll).pipe(Effect.provide(presets({})))
+      const typo = yield* resolve('lables: {}\n')
+      expect(typo.warnings).toStrictEqual([
+        expect.stringMatching(/^repo: ignored lables, because lables is unexpected/),
+      ])
+      // The broken label goes on its own; its valid siblings stay.
+      const malformed = yield* resolve(
+        'labels:\n  docs: { name: 7, color: 0E8A16 }\n  ok: { name: ok, color: 0E8A16 }\n',
+      )
+      expect(malformed.config.labels).toStrictEqual({ ok: { name: 'ok', color: '0E8A16' } })
+      expect(malformed.warnings).toStrictEqual([
+        'repo: ignored labels.docs.name, because labels.docs.name: Expected string, actual 7',
+        'repo: ignored labels.docs, because labels.docs.name is missing',
+      ])
+      expect(malformed.skipped).toStrictEqual([expect.stringMatching(/^the extends preset /)])
+      // A label the repository named without a colour is its own mistake, not
+      // the skipped preset's, so it is ignored rather than left out.
+      const label = yield* resolve('labels:\n  docs: { name: docs }\n  ok: { name: ok, color: 0E8A16 }\n')
+      expect(label.config.labels).toStrictEqual({ ok: { name: 'ok', color: '0E8A16' } })
+      expect(label.ignored).toStrictEqual(['repo: ignored labels.docs, because labels.docs.color is missing'])
+      const convention = yield* resolve('conventions:\n  rules:\n    title: { level: loud, preset: semanticTitle }\n')
+      expect(convention.config.conventions?.rules?.['title']).toStrictEqual({ preset: 'semanticTitle' })
+      const proto = yield* resolve('__proto__:\n  labels: {}\n')
+      expect(proto.config).toStrictEqual({ version: 2 })
+      expect(proto.warnings).toStrictEqual([
+        expect.stringMatching(/^repo: ignored __proto__, because __proto__ is unexpected/),
+      ])
     }),
   )
 

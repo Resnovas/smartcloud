@@ -31,7 +31,7 @@ $ smartcloud validate
 Built from: Resnovas/.github/smartcloud/house.yml@main, .github/smartcloud.yml
 ```
 
-A config that fails prints one line starting `smartcloud:` and exits with code 1.
+Validation is strict: an unknown key or invalid value in the config or any preset is an error, where a run only drops it with a warning. A config that fails prints one line starting `smartcloud:` and exits with code 1.
 
 ## migrate
 

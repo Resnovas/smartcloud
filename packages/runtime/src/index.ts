@@ -55,6 +55,7 @@ export {
 export type { AnalyticsEvent, AnalyticsEventName, CommandOptions } from './analytics.js'
 export {
   CONFIG_CANDIDATES,
+  configFindings,
   ConfigSourceFromGitHub,
   explainConfig,
   loadConfig,

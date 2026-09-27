@@ -28,7 +28,7 @@ Tools that read GitHub use `GITHUB_TOKEN`, or the token of the signed-in GitHub 
 
 | Tool | Input | What it returns |
 | --- | --- | --- |
-| `validate_config` | `config` (YAML or JSON), optional `source` | Whether the config is valid once every `extends` preset is applied, with migration warnings. |
+| `validate_config` | `config` (YAML or JSON), optional `source` | Whether the config is valid once every `extends` preset is applied, with migration warnings. Strict, like `smartcloud validate`: unknown keys and invalid values are errors. |
 | `migrate_config` | `config` (a v1 `config.json`), optional `source` | The v2 YAML, and a warning for everything not carried over. |
 | `explain_config` | `config`, optional `source` | Which features the resolved config enables and the rules each one applies. |
 | `dry_run` | `repository` (`owner/name`), one of `pr`, `issue` or `event`, optional `config` or `configText`, optional `features` | The run's summary and the writes it would make. |

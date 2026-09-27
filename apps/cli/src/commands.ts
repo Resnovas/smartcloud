@@ -61,6 +61,10 @@ export const locateConfig = (directory: string) =>
  * Validates a config and its whole `extends` chain, printing where it came
  * from and every migration warning.
  *
+ * @remarks
+ * Validation is strict: an unknown key or invalid value in the config or
+ * any preset is an error, where a run drops it with a warning.
+ *
  * @example
  * ```ts
  * import { validate } from '@resnovas/smartcloud'
@@ -76,7 +80,7 @@ export const validate = (file: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
     const text = yield* fs.readFileString(file)
-    const resolved: ResolvedConfig = yield* resolveConfig(text, file)
+    const resolved: ResolvedConfig = yield* resolveConfig(text, file, { strict: true })
     yield* recordConfig(resolved, text)
     yield* Console.log(`${file} is a valid smartcloud config.`)
     if (resolved.sources.length > 1) yield* Console.log(`Built from: ${resolved.sources.join(', ')}`)
