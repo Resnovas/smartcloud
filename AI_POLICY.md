@@ -77,6 +77,7 @@ If you are unsure between two levels, choose the higher one.
 Every pull request and issue **MUST** state its autonomy level and, unless the level is `none`, every AI tool and model used, for example `Claude Code (claude-opus-5-5)`.
 The pull request template and issue forms have the fields; fill them in rather than deleting them.
 A level of `none` **MUST NOT** be combined with an AI co-author or a listed tool.
+The [trusted bots](GOVERNANCE.md#trusted-bots) (`dependabot[bot], renovate[bot], github-actions[bot], resnovas-smartcloud[bot]`) are exempt from the checked rules (AI-01 to AI-03, [AI-20](#ai-20) and [AI-21](#ai-21)), because no person writes their pull requests.
 
 ### <a id="ai-02"></a>AI-02: Credit the AI as a co-author (checked)
 

@@ -83,7 +83,7 @@ The agent **MUST** confirm each item, from the pull request itself rather than i
 1. **Checks:** every required status check has finished and passed, including the `smartcloud` check. A pending, skipped or cancelled required check is not a pass.
 1. **Reviews:** every review thread is resolved or answered by the accountable human, and no review bot has an open blocking finding under [AP-31](#ap-31).
 1. **Title:** the title is a [conventional commit](CONTRIBUTING.md#pr-title).
-1. **Sign-off:** every commit carries a `Signed-off-by` trailer naming a person ([DCO.md](DCO.md), [AI-03](AI_POLICY.md#ai-03)); trusted bots named in the house preset are exempt.
+1. **Sign-off:** every commit carries a `Signed-off-by` trailer naming a person ([DCO.md](DCO.md), [AI-03](AI_POLICY.md#ai-03)); the [trusted bots](GOVERNANCE.md#trusted-bots) (`dependabot[bot], renovate[bot], github-actions[bot], resnovas-smartcloud[bot]`) are exempt.
 1. **AI disclosure:** the description declares the AI level, tools, accountable human and human review, and the commits carry the trailers, as [AI-01](AI_POLICY.md#ai-01) and [AI-02](AI_POLICY.md#ai-02) require.
 1. **Issue link:** the description links the issue it resolves, in the repository's tracker.
 1. **Tests:** changed behaviour has tests, and coverage stays at the repository's threshold ([Tests](CONTRIBUTING.md#Tests)).

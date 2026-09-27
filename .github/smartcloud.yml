@@ -3,6 +3,11 @@
 version: 2
 extends:
   - Resnovas/.github/smartcloud/house.yml@main
+#
+# The preset sets, and this file cannot change:
+#   roles.maintainers   TGTGamer
+#   roles.trustedBots   dependabot[bot], renovate[bot], github-actions[bot], resnovas-smartcloud[bot]
+#   CodeQL merge gate   true (settings.ruleset.codeScanning.CodeQL)
 # house:managed:end
 # house:local - add this repository's own configuration below this line.
 #

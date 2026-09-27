@@ -20,7 +20,8 @@ While a project has a single maintainer, the owner has full discretion over it: 
 ### <a id="maintainers"></a>Maintainers
 
 Maintainers review and merge pull requests, steer technical direction, uphold the standards in the [Contributing Guidelines](CONTRIBUTING.md) and the [AI Contribution Policy](AI_POLICY.md), and resolve conflicts.
-The current maintainers are listed under `roles.maintainers` in the house smartcloud preset, [`smartcloud/house.yml`](https://github.com/Resnovas/.github/blob/main/smartcloud/house.yml).
+The current maintainers are `TGTGamer`.
+They are set under `roles.maintainers` in the house smartcloud preset, [`smartcloud/house.yml`](https://github.com/Resnovas/.github/blob/main/smartcloud/house.yml), which is also where a new maintainer is added.
 
 ### <a id="code-owners"></a>Code owners
 
@@ -29,6 +30,13 @@ Code owners oversee designated parts of a repository, listed in its `CODEOWNERS`
 ### <a id="contributors"></a>Contributors
 
 Contributors submit issues and pull requests and take part in discussions, following the Contributing Guidelines, the AI Contribution Policy and the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+### <a id="trusted-bots"></a>Trusted bots
+
+Trusted bots are automation accounts that open routine pull requests, such as dependency updates and house syncs: `dependabot[bot], renovate[bot], github-actions[bot], resnovas-smartcloud[bot]`.
+No person writes their commits, so the automated checks skip the AI disclosure ([AI-01](AI_POLICY.md#ai-01)), the co-author and sign-off trailers ([AI-02](AI_POLICY.md#ai-02), [AI-03](AI_POLICY.md#ai-03)), the pull request title and the [review count](#review) for them.
+Their pull requests still pass every other required check, and a maintainer still decides whether they merge.
+They are set under `roles.trustedBots` in the house preset.
 
 ## <a id="decisions"></a>Decisions
 
@@ -94,12 +102,20 @@ Elsewhere its configuration is synced but inert, and Copilot code review and Cur
 ## <a id="merging"></a>Merging
 
 History on the default branch is linear and every commit on it is signed.
-Merge commits are disabled; a pull request is either squashed or rebased.
-Pull requests merge through a merge queue, which tests every queued pull request against the required checks and squashes it as it lands.
+Merge commits are disabled.
+Pull requests merge through a merge queue.
+**Merge when ready** on the pull request page, or `gh pr merge`, queues a pull request once its reviews and required checks pass.
+The queue runs the required checks again on the pull request combined with the latest default branch and every pull request queued ahead of it, and lands it only when they pass.
+A pull request that fails in the queue is removed from it, and the ones behind it are tested again without it.
 
-The queue squashes every pull request.
-The squash keeps every commit message in its body, so each `Signed-off-by`, `Co-authored-by` and `Assisted-by` trailer survives.
-Rebase merging stays allowed for the owner's bypass of the ruleset.
+The queue squashes each pull request into one commit, which GitHub signs, and keeps every commit message in its body, so each `Signed-off-by`, `Co-authored-by` and `Assisted-by` trailer survives.
+It does not rebase: GitHub cannot sign the commits it rewrites that way, and every commit on the default branch must be signed.
+
+**Batch pull requests.** Related work is batched into one pull request with one commit per issue, rather than a pull request per issue, because each pull request re-runs every check:
+
+- **Every commit must stand on its own:** one change, a Conventional Commits message, its own trailers, and a signature.
+- **Squash fix-ups, review responses and work in progress into the commit they belong to before review,** not at merge time.
+- **Once the owner has reviewed and approved it,** the batch lands as an *owner fast-forward*: its signed commits are pushed onto the default branch unchanged, with the owner's ruleset bypass, after the full checks pass on top of the current default branch. Each issue keeps its own signed commit, and the pull request is closed with a link to them.
 
 Branches can be updated from the pull request page, and head branches are deleted once merged.
 
@@ -114,7 +130,8 @@ Every repository is configured to the same baseline, applied automatically by sm
 - GitHub Actions with a read-only workflow token by default, which may still open pull requests, and on private repositories reusable workflows shared across the organisation;
 - a ruleset on the default branch requiring linear history, signed commits, a merge queue and a pull request (with approvals as above, stale approvals dismissed, conversations resolved and an extra approval for Copilot pull requests opened on no one's behalf), blocking deletion and force pushes, requiring the status checks up to date, requesting Copilot code review on every push and on drafts, and blocking merges on serious code scanning findings, code quality errors and open secret scanning alerts for provider patterns;
 - where a repository opts in: successful deployment to its pre-production environment, ESLint code scanning results, and line coverage of at least 80% dropping no more than 5 points;
-- deployment environments for what the repository ships: Production, Staging and Development for software as a service; Windows, Linux and macOS with a Beta of each for desktop applications; Release for libraries.
+- the CodeQL merge gate, which is `true` here: while it is `true`, a pull request cannot merge with a new CodeQL error or a high or critical security alert;
+- deployment environments for what the repository ships: Production, Staging and Development for software as a service; Windows, Linux and macOS with a Beta of each for desktop applications; Release for libraries. This repository ships as `library`, with the environments `that its project type implies`.
 
 One setting has no API and is set by hand: pushes are limited to updating five branches or tags at once.
 

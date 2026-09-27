@@ -99,7 +99,7 @@ A short, clear request is read sooner than a long one.
 
 ### <a id="pr-title"></a>Titling your pull request
 
-Pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), because pull requests are squash merged and the title becomes the commit that drives the changelog and releases.
+Pull request titles follow [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/), because the merge queue squashes a pull request and its title becomes the commit that drives the changelog and releases. Write each commit's message the same way: the squash keeps them in its body, and a maintainer's batch pull request lands its commits as they are.
 The check fails if the title does not follow it.
 
 Use one of `feat`, `fix`, `perf`, `refactor`, `test`, `docs`, `chore`, `build`, `ci`, `style` or `revert`, with a scope where one applies: `fix(auth): reject expired tokens`.
@@ -211,13 +211,13 @@ They follow the same process and still need a sign-off ([Developer Certificate o
 
 Once you open a pull request, automated checks run:
 
-- **House policy:** AI disclosure, co-author and sign-off trailers, and the pull request title.
+- **House policy:** AI disclosure, co-author and sign-off trailers, and the pull request title. The [trusted bots](GOVERNANCE.md#trusted-bots) (`dependabot[bot], renovate[bot], github-actions[bot], resnovas-smartcloud[bot]`) skip these.
 - **Build and test:** build, lint, type check and tests for everything the change affects.
 - **Security and quality:** the security and code quality scans configured for the repository.
 - **Automated review:** AI and analysis tools review the change, including drafts.
 Treat their comments as seriously as a person's, and reply if you disagree.
 
-Then a maintainer reviews it.
+Then a maintainer (`TGTGamer`) reviews it.
 The number of human approvals needed is set in [the governance document](GOVERNANCE.md#review): two maintainers for an outside contribution once a project has two or more maintainers.
 Code owners for the files you changed are asked to review as well.
 
@@ -226,7 +226,7 @@ A human reviewer's comment gets a reply from you, in your own words, even if the
 When every required review is in, a maintainer adds the pull request to the merge queue, which runs the required checks once more with the latest default branch and the pull requests queued ahead of it, then squashes it; merge commits are disabled.
 A maintainer may queue it before the last check passes, and it joins the queue as soon as they do.
 If it fails in the queue it is removed, and it can be queued again once fixed.
-See [merging](GOVERNANCE.md#merging) for how the queue works; the head branch is deleted automatically after the merge.
+See [merging](GOVERNANCE.md#merging) for how the queue works and what it asks of each commit; the head branch is deleted automatically after the merge.
 
 ### <a id="ReviewTools"></a>Known review tools
 
