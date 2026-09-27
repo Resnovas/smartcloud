@@ -33,6 +33,8 @@ export type Routes = Readonly<Record<string, Reply | ReadonlyArray<Reply>>>
 
 export const fakeFetch = (routes: Routes) => {
   const requests: Array<Recorded> = []
+  // The token each request was sent with, in request order.
+  const tokens: Array<string | undefined> = []
   const served = new Map<string, number>()
   const fetch: typeof globalThis.fetch = async (input, init) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
@@ -41,6 +43,7 @@ export const fakeFetch = (routes: Routes) => {
     // Octokit encodes the slashes in nested content paths; GitHub accepts both forms.
     const path = decodeURIComponent(url.pathname)
     requests.push({ method, path, query: url.search, body: text === undefined ? undefined : JSON.parse(text) })
+    tokens.push(new Headers(init?.headers).get('authorization')?.replace(/^(token|bearer) /i, ''))
     const key = `${method} ${path}`
     const route = routes[key]
     if (route === undefined) throw new Error(`no fake route for ${key}`)
@@ -58,5 +61,5 @@ export const fakeFetch = (routes: Routes) => {
     // A real fetch sets the response URL; Octokit's paginator reads it for list responses that carry a total count.
     return Object.defineProperty(response, 'url', { value: url.href })
   }
-  return { fetch, requests }
+  return { fetch, requests, tokens }
 }

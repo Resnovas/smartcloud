@@ -50,7 +50,7 @@ export const POLL_INTERVAL = Duration.seconds(15)
 // adds its checks between them.
 const namesOf = (assessment: Assessment) =>
   assessment.counted
-    .map((check) => check.name)
+    .map((check) => `${check.app ?? ''}\u0000${check.name}`)
     .sort()
     .join('\n')
 
@@ -71,9 +71,16 @@ export const waitForChecks = (
 ) =>
   Effect.gen(function* () {
     const github = yield* GitHub
+    // The app the run's token acts as publishes smartcloud's feature checks; a
+    // personal token or an unreadable viewer adds none, so nothing more is left out.
+    const viewer = yield* github.graphql('query { viewer { login } }', {}).pipe(
+      Effect.map((data) => (data as { readonly viewer?: { readonly login?: string } } | null)?.viewer?.login),
+      Effect.orElseSucceed(() => undefined),
+    )
+    const publishers = viewer?.endsWith('[bot]') === true ? [viewer.slice(0, -'[bot]'.length)] : []
     let settled: string | undefined
     for (;;) {
-      const assessment = assessChecks(yield* github.listCommitChecks(headSha), options)
+      const assessment = assessChecks(yield* github.listCommitChecks(headSha), { ...options, publishers })
       const names = namesOf(assessment)
       const counts = {
         counted: assessment.counted.length,
@@ -83,8 +90,14 @@ export const waitForChecks = (
       yield* Effect.logDebug(
         `required: ${counts.counted} check(s), ${counts.pending} pending, ${counts.failed} failed`,
       ).pipe(Effect.annotateLogs({ feature: FEATURE, ...counts }))
-      if (assessment.failed.length > 0 || (assessment.pending.length === 0 && names === settled)) return assessment
-      settled = assessment.pending.length === 0 ? names : undefined
+      // Until the job's own run is listed, another run of the aggregate would count, so nothing is concluded from the look.
+      if (assessment.selfListed) {
+        if (assessment.failed.length > 0 || (assessment.pending.length === 0 && names === settled)) return assessment
+        settled = assessment.pending.length === 0 ? names : undefined
+      } else {
+        // Two settled looks must be consecutive, so a look without the job's own run starts over.
+        settled = undefined
+      }
       // A settled commit at the deadline has passed on the one look it had.
       if ((yield* Clock.currentTimeMillis) >= deadline) return assessment
       yield* Effect.sleep(POLL_INTERVAL)
@@ -105,9 +118,10 @@ const linked = (check: CommitCheck) => (check.url === undefined ? {} : { link: c
  * Runs on pull request events when the config has a `required` section and
  * the workflow passes the job's `checkRunId`; without it the job would wait
  * for itself, so the feature is skipped. It looks at the head commit's
- * latest check runs and statuses every {@link POLL_INTERVAL}, leaving out
- * its own job, smartcloud's per-feature checks and `required.ignore`
- * matches. Success, neutral and skipped pass. It fails as soon as any check
+ * latest run of each check and latest status of each context every
+ * {@link POLL_INTERVAL}, leaving out every run of its own job,
+ * smartcloud's per-feature checks and `required.ignore` matches (see
+ * `assessChecks`). Success, neutral and skipped pass. It fails as soon as any check
  * fails, passes once every check has passed on two looks in a row, and
  * fails the checks still pending after `required.timeout` minutes. Each
  * failed or unfinished check is an error finding, which fails the job.
@@ -151,6 +165,16 @@ export const requiredFeature: Feature = {
         })
       }
       if (assessment.failed.length > 0) return
+      // Without its own run listed, the job cannot tell its other runs apart, so it fails rather than pass unconfirmed.
+      if (!assessment.selfListed) {
+        yield* report.add({
+          feature: FEATURE,
+          rule: 'required.unconfirmed',
+          level: 'error',
+          message: `GitHub did not list this job's own check run within ${timeout} minute(s), so the other checks could not be confirmed.`,
+        })
+        return
+      }
       for (const check of assessment.pending) {
         yield* report.add({
           feature: FEATURE,

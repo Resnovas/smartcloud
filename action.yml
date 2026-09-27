@@ -10,7 +10,7 @@ inputs:
     required: false
     default: ${{ github.token }}
   workflowToken:
-    description: The workflow's own token. Leave it at its default; smartcloud compares GITHUB_TOKEN with it to tell a restricted run, and acts with it on pull requests from forks and runs started by Dependabot.
+    description: The workflow's own token. Leave it at its default. smartcloud compares GITHUB_TOKEN with it to tell a restricted run, acts with it on pull requests from forks and runs started by Dependabot, and reads the pull request's checks with it for the required feature, because it has checks and statuses read from the job's permissions.
     required: false
     default: ${{ github.token }}
   config:

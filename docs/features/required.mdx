@@ -39,10 +39,12 @@ Then require the `smartcloud` check, and only that, in the ruleset; with the [se
 
 ## What counts
 
-Every check on the head commit counts: the latest check run of each name, from GitHub Actions or any app, and the latest commit status of each context. Three kinds are left out:
+Every check on the head commit counts: the latest check run of each app and name, from GitHub Actions or any app, and the latest commit status of each context. A ruleset picks a required check the same way. A re-run, or a workflow started again by an edit or a review, leaves the older runs of its checks on the commit, often cancelled; only the latest run of each check counts, so an older cancelled or failed run never fails the aggregate. Two jobs with the same name published by the same app are one check, as they are to a ruleset, so give jobs in different workflows different names.
 
-- the job running smartcloud, found by `checkRunId`;
-- smartcloud's own `smartcloud / <feature>` check runs, because their findings already decide the job's own result;
+Three kinds are left out:
+
+- every run of the job running smartcloud (until its own run shows up in the list, the feature concludes nothing and looks again): its own, found by `checkRunId`, and any other run with the same app and name, such as one a review started while this one waits;
+- smartcloud's own `smartcloud / <feature>` check runs, because their findings already decide the job's own result. smartcloud marks every check run it creates with the `external_id` `smartcloud`, and only runs with that mark from an app smartcloud runs as (the job's app, or the GitHub App its token acts as) are left out. A check run of the same name from another app or workflow, unmarked or marked otherwise, counts;
 - anything an `ignore` pattern matches.
 
 A check run that concludes success, neutral or skipped passes, as it does for a ruleset. Any other conclusion (failure, cancelled, timed out, action required, stale) fails, as does a status of failure or error.
@@ -57,6 +59,17 @@ The feature looks at the checks every 15 seconds.
 
 Every other feature runs alongside, so labels and review requests are not delayed; the report comment and the per-feature check runs are published once the wait ends. Re-run the smartcloud job after re-running a failed check.
 
-Without `checkRunId` the job would wait for itself, so the feature is skipped with that reason, as it is in CLI dry runs. Use one aggregate per commit: two jobs that each wait for every other check wait for each other until they time out.
+Without `checkRunId` the job would wait for itself, so the feature is skipped with that reason, as it is in CLI dry runs. Runs of the same aggregate job never wait for each other, but use one aggregate job per commit: two differently named jobs that each wait for every other check wait for each other until they time out. Give the workflow a `concurrency` group per pull request and event with `cancel-in-progress`, so a newer run replaces an older one on the same event instead of waiting beside it.
 
-On a pull request from a fork, the token is read-only, which is enough to read checks and statuses.
+## Tokens
+
+The checks are read with the workflow's own token (the `workflowToken` input, which defaults to it), not `GITHUB_TOKEN`: that can be a personal access token or an app token without checks and statuses read, while the job's `checks` and `statuses` permissions give the workflow token both. On a pull request from a fork, the workflow token is read-only, which is enough.
+
+## Rolling it out
+
+The feature does nothing until the workflow passes `checkRunId`, so the order is:
+
+1. Release a smartcloud version with the feature, and use it in the workflow.
+2. Add the `required` section to the config, or to a preset the config extends. Until the next step it is skipped, and the `smartcloud` check reports the other features as before.
+3. Pass `checkRunId` and grant `statuses: read` in the workflow. From here the `smartcloud` check waits for every other check.
+4. Only then make the ruleset require the `smartcloud` check alone. Dropping the other required checks before step 3 would leave pull requests gated by nothing but smartcloud's own findings.

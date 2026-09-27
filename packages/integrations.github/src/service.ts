@@ -120,8 +120,12 @@ export interface CommitCheck {
   /** The check run's name, or the status's context. */
   readonly name: string
   readonly source: 'checkRun' | 'status'
-  /** The check run's id; statuses have none. */
+  /** The check run's id; statuses have none. A later run has a higher id. */
   readonly id?: number
+  /** The slug of the app that published the check run, such as `github-actions`; statuses have none. */
+  readonly app?: string
+  /** The `external_id` its publisher gave the check run, when it gave one; smartcloud marks its own runs with one. */
+  readonly externalId?: string
   /** Pending until it finishes; then whether it lets a pull request merge. */
   readonly state: 'pending' | 'success' | 'failure'
   /** GitHub's own word for it, such as `in_progress`, `skipped` or `timed_out`. */
@@ -222,8 +226,10 @@ export interface GitHubService {
   readonly createCheckRun: (run: CheckRun) => Effect.Effect<number, GitHubError>
   readonly updateCheckRun: (id: number, run: CheckRun) => Effect.Effect<void, GitHubError>
   /**
-   * Lists the latest check run of each name and the latest status of each
-   * context on a commit. Never cached, because callers poll it.
+   * Lists the checks on a commit: every check run, including re-runs and
+   * runs from retriggered workflows, so a caller picks the latest by app and
+   * name itself, and the latest status of each context. Never cached, because
+   * callers poll it.
    */
   readonly listCommitChecks: (sha: string) => Effect.Effect<ReadonlyArray<CommitCheck>, GitHubError>
 

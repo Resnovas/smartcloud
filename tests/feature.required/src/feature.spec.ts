@@ -18,7 +18,7 @@ import { describe, expect, it } from '@effect/vitest'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
 import { FEATURE, POLL_INTERVAL, requiredFeature } from '@resnovas/feature.required'
-import { type CommitCheck, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { CHECK_RUN_EXTERNAL_ID, type CommitCheck, GitHub, makeMemoryGitHub, Unavailable } from '@resnovas/integrations.github'
 import { Duration, Effect, Fiber, TestClock } from 'effect'
 
 const SHA = 'abc123'
@@ -39,7 +39,7 @@ const payload = {
   },
 }
 
-const self: CommitCheck = { name: 'smartcloud', source: 'checkRun', id: SELF, state: 'pending', detail: 'in_progress' }
+const self: CommitCheck = { name: 'smartcloud', source: 'checkRun', id: SELF, app: 'github-actions', state: 'pending', detail: 'in_progress' }
 const check = (
   name: string,
   state: CommitCheck['state'],
@@ -122,6 +122,70 @@ describe('requiredFeature', () => {
         },
       ])
       expect(github.looks()).toBe(2)
+    }),
+  )
+
+  it.effect('leaves out the checks the app the token acts as published', () =>
+    Effect.gen(function* () {
+      const github = scripted([
+        [
+          check('ci / test', 'success'),
+          { name: 'smartcloud / reviews', source: 'checkRun', id: 99, app: 'resnovas-smartcloud', externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'cancelled' },
+        ],
+      ])
+      const service = {
+        ...github.service,
+        graphql: () => Effect.succeed({ viewer: { login: 'resnovas-smartcloud[bot]' } }),
+      }
+      const result = yield* runPolling({ ...github, service })
+      expect(findings(result).map((finding) => finding.message)).toStrictEqual([
+        'All 1 other check(s) on this commit passed.',
+      ])
+    }),
+  )
+
+  it.effect('counts every smartcloud-named run from another app when the viewer cannot be read', () =>
+    Effect.gen(function* () {
+      const github = scripted([
+        [{ name: 'smartcloud / reviews', source: 'checkRun', id: 99, app: 'resnovas-smartcloud', state: 'failure', detail: 'cancelled' }],
+      ])
+      const service = { ...github.service, graphql: () => Effect.fail(new Unavailable({ operation: 'graphql', detail: 'down' })) }
+      const result = yield* runPolling({ ...github, service })
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.failed'])
+    }),
+  )
+
+  it.effect("fails when GitHub never lists the job's own run before the deadline, rather than pass unconfirmed", () =>
+    Effect.gen(function* () {
+      const memory = makeMemoryGitHub()
+      const service = { ...memory.service, listCommitChecks: () => Effect.succeed([check('ci / test', 'success')]) }
+      const result = yield* runPolling({ service, looks: () => 0 }, { version: 2, required: { timeout: 1 } })
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.unconfirmed'])
+    }),
+  )
+
+  it.effect('does not take two looks at same-named checks from different apps as settled', () =>
+    Effect.gen(function* () {
+      const github = scripted([
+        [{ ...check('test', 'success'), app: 'circleci' }],
+        [{ ...check('test', 'success'), app: 'github-actions' }],
+      ])
+      const result = yield* runPolling(github)
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.passed'])
+      expect(github.looks()).toBe(3)
+    }),
+  )
+
+  it.effect('starts the two looks over when a look misses the job’s own run', () =>
+    Effect.gen(function* () {
+      const passing = [self, check('ci / test', 'success')]
+      const looks = [passing, [check('ci / test', 'success')], passing, passing]
+      let served = 0
+      const memory = makeMemoryGitHub()
+      const service = { ...memory.service, listCommitChecks: () => Effect.sync(() => looks[Math.min(served++, looks.length - 1)] ?? []) }
+      const result = yield* runPolling({ service, looks: () => served })
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.passed'])
+      expect(served).toBe(4)
     }),
   )
 
@@ -213,7 +277,7 @@ describe('requiredFeature', () => {
     Effect.gen(function* () {
       const github = scripted([
         [
-          check('smartcloud / reviews', 'failure'),
+          { ...check('smartcloud / reviews', 'failure'), app: 'github-actions', externalId: CHECK_RUN_EXTERNAL_ID },
           check('codecov/patch', 'failure'),
           { name: 'smartcloud / legacy', source: 'status', state: 'success', detail: 'success' },
         ],
@@ -222,6 +286,33 @@ describe('requiredFeature', () => {
       expect(findings(result).map((finding) => finding.message)).toStrictEqual([
         'All 1 other check(s) on this commit passed.',
       ])
+    }),
+  )
+
+  it.effect('passes beside another run of the aggregate and a stale run of a check, and fails on a foreign smartcloud-named run', () =>
+    Effect.gen(function* () {
+      const other = { ...self, id: SELF + 1 }
+      const stale = { ...check('ci / test', 'failure', 'cancelled'), id: 1, app: 'github-actions' }
+      const latest = { ...check('ci / test', 'success'), id: 2, app: 'github-actions' }
+      const passing = yield* runPolling(scripted([[other, stale, latest]]))
+      expect(findings(passing).map((finding) => finding.message)).toStrictEqual(['All 1 other check(s) on this commit passed.'])
+      const foreign = yield* runPolling(scripted([[other, check('smartcloud / reviews', 'failure')]]))
+      expect(findings(foreign).map((finding) => finding.message)).toStrictEqual(['The smartcloud / reviews check concluded failure.'])
+    }),
+  )
+
+  it.effect('concludes nothing until its own run is listed, so another aggregate run cannot fail it', () =>
+    Effect.gen(function* () {
+      const memory = makeMemoryGitHub()
+      const other = { ...self, id: SELF + 1, state: 'failure' as const, detail: 'cancelled' }
+      let looks = 0
+      const service = {
+        ...memory.service,
+        listCommitChecks: () => Effect.sync(() => (looks++ === 0 ? [other] : [self, other])),
+      }
+      const result = yield* runPolling({ service, looks: () => looks })
+      expect(findings(result).map((finding) => finding.message)).toStrictEqual(['No other checks ran on this commit.'])
+      expect(looks).toBe(3)
     }),
   )
 

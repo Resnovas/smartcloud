@@ -20,7 +20,7 @@ import { Config, ConfigError, Effect, Option, Redacted } from 'effect'
 /** The action's inputs, read from the `INPUT_*` variables Actions sets. */
 export interface Inputs {
   readonly token: Redacted.Redacted<string>
-  /** The workflow's own token, which the action compares the token with to tell a restricted run. */
+  /** The workflow's own token: the action compares the token with it to tell a restricted run, and reads the checks on a commit with it. */
   readonly workflowToken: Option.Option<Redacted.Redacted<string>>
   /** The config file; when omitted, the first of the runtime's `CONFIG_CANDIDATES` that exists. */
   readonly config: Option.Option<string>
