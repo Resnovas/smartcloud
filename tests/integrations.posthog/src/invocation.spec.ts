@@ -47,15 +47,18 @@ class RepositoryMissing extends Data.TaggedError('RepositoryMissing')<Record<nev
 // A Telemetry service that records what it is asked to send, and for whom.
 const recording = () => {
   const events: Array<{ readonly identity: Identity; readonly event: string; readonly properties: Properties }> = []
-  const exceptions: Array<{ readonly identity: Identity; readonly error: unknown; readonly properties: Properties }> = []
+  const exceptions: Array<{ readonly identity: Identity; readonly error: unknown; readonly properties: Properties }> =
+    []
   const organisations: Array<{ readonly identity: Identity; readonly properties: Properties }> = []
   const protectedValues: Array<string> = []
   const service: TelemetryService = {
     ...disabledTelemetry,
     protect: (value) => Effect.sync(() => void protectedValues.push(value)),
     capture: (identity, event, properties = {}) => Effect.sync(() => void events.push({ identity, event, properties })),
-    captureException: (identity, error, properties = {}) => Effect.sync(() => void exceptions.push({ identity, error, properties })),
-    describeOrganization: (identity, properties) => Effect.sync(() => void organisations.push({ identity, properties })),
+    captureException: (identity, error, properties = {}) =>
+      Effect.sync(() => void exceptions.push({ identity, error, properties })),
+    describeOrganization: (identity, properties) =>
+      Effect.sync(() => void organisations.push({ identity, properties })),
   }
   return { layer: Layer.succeed(Telemetry, service), events, exceptions, organisations, protectedValues }
 }
@@ -66,9 +69,11 @@ describe('invocation', () => {
   it.effect('sends the completion event, anonymously until a repository is bound', () =>
     Effect.gen(function* () {
       const recorded = recording()
-      const value = yield* invocation(Effect.as(emit('config resolved', { presets: ['house'] }), 7), { command: 'validate', options: ['path', 'path'], ...completed }).pipe(
-        Effect.provide(recorded.layer),
-      )
+      const value = yield* invocation(Effect.as(emit('config resolved', { presets: ['house'] }), 7), {
+        command: 'validate',
+        options: ['path', 'path'],
+        ...completed,
+      }).pipe(Effect.provide(recorded.layer))
       expect(value).toBe(7)
       expect(recorded.events.map((sent) => sent.event)).toStrictEqual(['config resolved', 'command run'])
       const [first, last] = recorded.events
@@ -100,25 +105,40 @@ describe('invocation', () => {
   it.effect('reports a typed failure as expected, with its tag, and returns it unchanged', () =>
     Effect.gen(function* () {
       const recorded = recording()
-      const exit = yield* invocation(Effect.zipRight(bindRepository(repository), new RepositoryMissing()), { command: 'dry-run', ...completed }).pipe(
-        Effect.provide(recorded.layer),
-        Effect.exit,
-      )
+      const exit = yield* invocation(Effect.zipRight(bindRepository(repository), new RepositoryMissing()), {
+        command: 'dry-run',
+        ...completed,
+      }).pipe(Effect.provide(recorded.layer), Effect.exit)
       expect(Exit.isFailure(exit)).toBe(true)
       expect(recorded.exceptions).toHaveLength(1)
       expect(recorded.exceptions[0]?.identity).toStrictEqual(bound)
       expect(recorded.exceptions[0]?.error).toBeInstanceOf(RepositoryMissing)
-      expect(recorded.exceptions[0]?.properties).toMatchObject({ command: 'dry-run', outcome: 'failure', error_tag: 'RepositoryMissing', expected: true })
-      expect(recorded.events[0]?.properties).toMatchObject({ outcome: 'failure', error_tag: 'RepositoryMissing', expected: true })
+      expect(recorded.exceptions[0]?.properties).toMatchObject({
+        command: 'dry-run',
+        outcome: 'failure',
+        error_tag: 'RepositoryMissing',
+        expected: true,
+      })
+      expect(recorded.events[0]?.properties).toMatchObject({
+        outcome: 'failure',
+        error_tag: 'RepositoryMissing',
+        expected: true,
+      })
     }),
   )
 
   it.effect('reports a defect as unexpected, and an interruption not at all', () =>
     Effect.gen(function* () {
       const recorded = recording()
-      yield* invocation(Effect.die(new TypeError('boom')), { command: 'sync', ...completed }).pipe(Effect.provide(recorded.layer), Effect.exit)
+      yield* invocation(Effect.die(new TypeError('boom')), { command: 'sync', ...completed }).pipe(
+        Effect.provide(recorded.layer),
+        Effect.exit,
+      )
       expect(recorded.exceptions[0]?.properties).toMatchObject({ error_tag: 'TypeError', expected: false })
-      const interrupted = yield* invocation(Effect.interrupt, { command: 'sync', ...completed }).pipe(Effect.provide(recorded.layer), Effect.exit)
+      const interrupted = yield* invocation(Effect.interrupt, { command: 'sync', ...completed }).pipe(
+        Effect.provide(recorded.layer),
+        Effect.exit,
+      )
       expect(Exit.isInterrupted(interrupted)).toBe(true)
       expect(recorded.exceptions).toHaveLength(1)
       expect(recorded.events.map((sent) => sent.properties['outcome'])).toStrictEqual(['failure', 'interrupted'])
@@ -147,7 +167,12 @@ describe('invocation', () => {
   it.effect('the helpers do nothing outside an invocation, apart from protecting the name', () =>
     Effect.gen(function* () {
       const recorded = recording()
-      yield* Effect.all([bindRepository(repository), emit('feature run', {}), describeOrganization({}), noteOptions(['x'])]).pipe(Effect.provide(recorded.layer))
+      yield* Effect.all([
+        bindRepository(repository),
+        emit('feature run', {}),
+        describeOrganization({}),
+        noteOptions(['x']),
+      ]).pipe(Effect.provide(recorded.layer))
       expect(recorded.events).toStrictEqual([])
       expect(recorded.organisations).toStrictEqual([])
       expect(recorded.protectedValues).toStrictEqual(['Acme-Corp/secret-project'])

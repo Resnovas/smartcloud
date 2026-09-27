@@ -134,7 +134,9 @@ export const planSync = (
     if (byName !== undefined) {
       const wanted = target(label, byName)
       if (differs(wanted, byName)) steps.push({ action: 'update', current: byName.name, label: wanted })
-      for (const alias of existing.filter((found) => !claimed.has(found) && aliases.some((name) => sameName(name, found.name)))) {
+      for (const alias of existing.filter(
+        (found) => !claimed.has(found) && aliases.some((name) => sameName(name, found.name)),
+      )) {
         claimed.add(alias)
       }
       continue

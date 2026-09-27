@@ -63,7 +63,10 @@ export interface SettingsPlan {
 export const planRepositorySettings = (config: SmartcloudConfig) =>
   Effect.map(
     Effect.flatMap(GitHub, (github) => github.getRepository),
-    (repository): SettingsPlan => ({ repository, steps: config.settings === undefined ? [] : planSettings(config.settings, config.roles, repository) }),
+    (repository): SettingsPlan => ({
+      repository,
+      steps: config.settings === undefined ? [] : planSettings(config.settings, config.roles, repository),
+    }),
   )
 
 const stepTarget = (step: SettingsStep) => {
@@ -109,7 +112,10 @@ export const settingsPlanText = (plan: SettingsPlan): string =>
     ? `Nothing to apply to ${plan.repository.fullName}: the config sets no repository settings.`
     : [
         `Settings for ${plan.repository.fullName}, in order:`,
-        ...plan.steps.map((step) => `- \`${step.id}\`: ${step.description}${step.optional ? ' (may fail; reported as a warning)' : ''}\n  ${stepTarget(step)}`),
+        ...plan.steps.map(
+          (step) =>
+            `- \`${step.id}\`: ${step.description}${step.optional ? ' (may fail; reported as a warning)' : ''}\n  ${stepTarget(step)}`,
+        ),
       ].join('\n')
 
 /**
@@ -126,15 +132,20 @@ export const settingsPlanText = (plan: SettingsPlan): string =>
  * @param request - The repository, and a local config file to use instead of its own.
  * @returns The plan.
  */
-export const planSettingsForRepository = (connect: Connect, request: { readonly repository: string; readonly config?: string | undefined }) =>
+export const planSettingsForRepository = (
+  connect: Connect,
+  request: { readonly repository: string; readonly config?: string | undefined },
+) =>
   Effect.gen(function* () {
     const coordinates = yield* targetRepository(request.repository)
     const location = yield* configLocationFor(request.config)
     const service = yield* connect(coordinates)
     const plan = Effect.flatMap(loadConfig(location), (resolved) => planRepositorySettings(resolved.config))
-    return yield* track(plan, { operation: 'settings plan', repository: coordinates, describe: (planned) => ({ steps: planned.steps.length }) }).pipe(
-      Effect.provideService(GitHub, service),
-    )
+    return yield* track(plan, {
+      operation: 'settings plan',
+      repository: coordinates,
+      describe: (planned) => ({ steps: planned.steps.length }),
+    }).pipe(Effect.provideService(GitHub, service))
   })
 
 /** A synced file as it would be after the sync. */
@@ -175,11 +186,21 @@ export const renderRepositorySync = (config: SmartcloudConfig) =>
     const preview = yield* previewSync(config.sync)
     const planned = new Set(preview.plan.files.map((file) => file.path))
     const files: ReadonlyArray<RenderedSyncFile> = [
-      ...preview.plan.files.map((file) => ({ path: file.path, content: file.content, executable: file.executable, status: STATUS[file.reason] })),
+      ...preview.plan.files.map((file) => ({
+        path: file.path,
+        content: file.content,
+        executable: file.executable,
+        status: STATUS[file.reason],
+      })),
       // The current files are only those of synced templates, so any the plan leaves alone are unchanged.
       ...[...preview.current]
         .filter(([path]) => !planned.has(path))
-        .map(([path, file]) => ({ path, content: file.content, executable: file.executable, status: 'unchanged' as const })),
+        .map(([path, file]) => ({
+          path,
+          content: file.content,
+          executable: file.executable,
+          status: 'unchanged' as const,
+        })),
     ]
     const render: SyncRender = {
       source: formatExtendsRef(preview.source),
@@ -203,13 +224,18 @@ export const renderRepositorySync = (config: SmartcloudConfig) =>
  * @param request - The repository, and a local config file to use instead of its own.
  * @returns The rendered files.
  */
-export const renderSyncForRepository = (connect: Connect, request: { readonly repository: string; readonly config?: string | undefined }) =>
+export const renderSyncForRepository = (
+  connect: Connect,
+  request: { readonly repository: string; readonly config?: string | undefined },
+) =>
   Effect.gen(function* () {
     const coordinates = yield* targetRepository(request.repository)
     const location = yield* configLocationFor(request.config)
     const service = yield* connect(coordinates)
     const render = Effect.flatMap(loadConfig(location), (resolved) => renderRepositorySync(resolved.config))
-    return yield* track(render, { operation: 'sync render', repository: coordinates, describe: (rendered) => ({ files: rendered.files.length }) }).pipe(
-      Effect.provideService(GitHub, service),
-    )
+    return yield* track(render, {
+      operation: 'sync render',
+      repository: coordinates,
+      describe: (rendered) => ({ files: rendered.files.length }),
+    }).pipe(Effect.provideService(GitHub, service))
   })

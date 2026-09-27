@@ -99,13 +99,20 @@ describe('labels feature: apply', () => {
   it.effect('warns rather than fails when a read-only token, as on a fork pull request, forbids the writes', () =>
     Effect.gen(function* () {
       const { service, state } = memoryWith(7, ['type: bug'], ['docs/readme.md'])
-      const forbidden = (operation: string) => () => Effect.fail(new Forbidden({ operation, detail: 'Resource not accessible by integration' }))
+      const forbidden = (operation: string) => () =>
+        Effect.fail(new Forbidden({ operation, detail: 'Resource not accessible by integration' }))
       const result = yield* runFeatures({
         config,
         event: 'pull_request',
         payload: pullRequest(['type: bug']),
         features: [labels],
-      }).pipe(Effect.provideService(GitHub, { ...service, addLabels: forbidden('addLabels'), removeLabel: forbidden('removeLabel') }))
+      }).pipe(
+        Effect.provideService(GitHub, {
+          ...service,
+          addLabels: forbidden('addLabels'),
+          removeLabel: forbidden('removeLabel'),
+        }),
+      )
       expect(result.failed).toStrictEqual([])
       expect(result.changes).toStrictEqual([])
       expect(state.issues.get(7)?.labels).toStrictEqual(['type: bug'])
@@ -114,7 +121,8 @@ describe('labels feature: apply', () => {
           feature: 'labels',
           rule: 'labels.add',
           level: 'warning',
-          message: 'could not add "Type: Feature", "docs" to #7 on a read-only token, for example a pull request from a fork',
+          message:
+            'could not add "Type: Feature", "docs" to #7 on a read-only token, for example a pull request from a fork',
         },
         {
           feature: 'labels',
@@ -140,7 +148,9 @@ describe('labels feature: apply', () => {
           addLabels: () => Effect.fail(new Unavailable({ operation: 'addLabels', detail: 'HTTP 502' })),
         }),
       )
-      expect(result.failed).toStrictEqual([{ feature: 'labels', message: expect.stringContaining('addLabels: GitHub unavailable (HTTP 502)') }])
+      expect(result.failed).toStrictEqual([
+        { feature: 'labels', message: expect.stringContaining('addLabels: GitHub unavailable (HTTP 502)') },
+      ])
     }),
   )
 
@@ -165,7 +175,11 @@ describe('labels feature: apply', () => {
       version: 2,
       labelling: {
         big: { label: 'big', on: ['issue'], when: { condition: [{ type: 'filesMatch', condition: '**' }] } },
-        both: { label: 'both', on: ['issue', 'pullRequest'], when: { condition: [{ type: 'commitsSignedOff', condition: true }] } },
+        both: {
+          label: 'both',
+          on: ['issue', 'pullRequest'],
+          when: { condition: [{ type: 'commitsSignedOff', condition: true }] },
+        },
       },
     }
     expect([...labellingFacets(issueOnly)]).toStrictEqual(['commits'])

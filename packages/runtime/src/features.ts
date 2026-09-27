@@ -123,7 +123,9 @@ export const parseFeatureList = (list: string): ReadonlyArray<string> =>
  * @param names - The features asked for; every feature when omitted.
  * @returns The features in reporting order, or the names that do not exist.
  */
-export const selectFeatures = (names: ReadonlyArray<string> | undefined): Effect.Effect<ReadonlyArray<Feature>, UnknownFeatures> => {
+export const selectFeatures = (
+  names: ReadonlyArray<string> | undefined,
+): Effect.Effect<ReadonlyArray<Feature>, UnknownFeatures> => {
   if (names === undefined) return Effect.succeed(FEATURES)
   const unknown = names.filter((name) => !FEATURES.some((feature) => feature.name === name))
   return unknown.length > 0

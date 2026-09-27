@@ -95,7 +95,8 @@ const flatten = (options: ReadonlyArray<JsonSchema>): ReadonlyArray<JsonSchema> 
  */
 const typeOf = (node: JsonSchema): string => {
   if (node.$ref !== undefined) return link(node.$ref)
-  if (node.enum !== undefined) return node.enum.length === 1 ? code(node.enum[0]) : `one of ${node.enum.map(code).join(', ')}`
+  if (node.enum !== undefined)
+    return node.enum.length === 1 ? code(node.enum[0]) : `one of ${node.enum.map(code).join(', ')}`
   if (node.anyOf !== undefined) return `any of ${flatten(node.anyOf).map(typeOf).join(', ')}`
   if (node.type === 'array') {
     if (Array.isArray(node.items)) return `a one-item list of ${node.items.map(typeOf).join(', ')}`
@@ -103,7 +104,8 @@ const typeOf = (node: JsonSchema): string => {
   }
   if (node.type === 'object') {
     const values =
-      Object.values(node.patternProperties ?? {})[0] ?? (typeof node.additionalProperties === 'object' ? node.additionalProperties : undefined)
+      Object.values(node.patternProperties ?? {})[0] ??
+      (typeof node.additionalProperties === 'object' ? node.additionalProperties : undefined)
     if (values !== undefined && Object.keys(node.properties ?? {}).length === 0) {
       const keys = node.propertyNames === undefined ? 'string' : typeOf(node.propertyNames)
       return `map of ${keys} to ${typeOf(values)}`
@@ -144,8 +146,14 @@ interface Row {
 const rowsOf = (node: JsonSchema, prefix = ''): ReadonlyArray<Row> =>
   Object.entries(node.properties ?? {}).flatMap(([key, property]) => {
     const path = `${prefix}${key}`
-    const row: Row = { key: path, type: typeOf(property), required: (node.required ?? []).includes(key), notes: notesOf(property) }
-    const nested = property.$ref === undefined && property.type === 'object' && Object.keys(property.properties ?? {}).length > 0
+    const row: Row = {
+      key: path,
+      type: typeOf(property),
+      required: (node.required ?? []).includes(key),
+      notes: notesOf(property),
+    }
+    const nested =
+      property.$ref === undefined && property.type === 'object' && Object.keys(property.properties ?? {}).length > 0
     return nested ? [row, ...rowsOf(property, `${path}.`)] : [row]
   })
 
@@ -153,7 +161,9 @@ const table = (rows: ReadonlyArray<Row>) =>
   [
     '| Key | Type | Required | Notes |',
     '| --- | --- | --- | --- |',
-    ...rows.map((row) => `| ${cell(code(row.key))} | ${cell(row.type)} | ${row.required ? 'yes' : 'no'} | ${cell(row.notes)} |`),
+    ...rows.map(
+      (row) => `| ${cell(code(row.key))} | ${cell(row.type)} | ${row.required ? 'yes' : 'no'} | ${cell(row.notes)} |`,
+    ),
   ].join('\n')
 
 /**

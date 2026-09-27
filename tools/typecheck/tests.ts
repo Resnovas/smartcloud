@@ -36,10 +36,14 @@ const projects = readdirSync(join(root, 'tests'), { withFileTypes: true })
 
 // The test projects reference the packages' declaration output, so build
 // everything first; Nx serves unchanged projects from its cache.
-const build = spawnSync(join(root, 'node_modules', '.bin', 'nx'), ['run-many', '-t', 'build', '--output-style=static'], {
-  cwd: root,
-  stdio: ['ignore', 'ignore', 'inherit'],
-})
+const build = spawnSync(
+  join(root, 'node_modules', '.bin', 'nx'),
+  ['run-many', '-t', 'build', '--output-style=static'],
+  {
+    cwd: root,
+    stdio: ['ignore', 'ignore', 'inherit'],
+  },
+)
 if (build.status !== 0) {
   console.error('The build failed, so the tests cannot be type-checked.')
   process.exit(1)
@@ -48,10 +52,14 @@ if (build.status !== 0) {
 const failed: string[] = []
 for (const project of projects) {
   // The base config's declaration output does not apply to a project that emits nothing.
-  const result = spawnSync(tsc, ['-p', `${project}/tsconfig.json`, '--noEmit', '--declaration', 'false', '--declarationMap', 'false'], {
-    cwd: root,
-    stdio: 'inherit',
-  })
+  const result = spawnSync(
+    tsc,
+    ['-p', `${project}/tsconfig.json`, '--noEmit', '--declaration', 'false', '--declarationMap', 'false'],
+    {
+      cwd: root,
+      stdio: 'inherit',
+    },
+  )
   if (result.status !== 0) failed.push(project)
 }
 

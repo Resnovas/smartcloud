@@ -67,12 +67,24 @@ describe('in-memory GitHub', () => {
     Effect.gen(function* () {
       const { service } = makeMemoryGitHub({
         openIssues: [
-          { number: 3, title: 't', body: '', author: 'a', open: true, locked: false, labels: [], updatedAt: new Date(0), isPullRequest: false },
+          {
+            number: 3,
+            title: 't',
+            body: '',
+            author: 'a',
+            open: true,
+            locked: false,
+            labels: [],
+            updatedAt: new Date(0),
+            isPullRequest: false,
+          },
         ],
       })
       const comment = yield* service.createComment(3, 'first')
       yield* service.updateComment(comment.id, 'edited')
-      expect(yield* service.listComments(3)).toStrictEqual([{ id: comment.id, body: 'edited', author: 'smartcloud[bot]', bot: true }])
+      expect(yield* service.listComments(3)).toStrictEqual([
+        { id: comment.id, body: 'edited', author: 'smartcloud[bot]', bot: true },
+      ])
       expect((yield* Effect.flip(service.updateComment(999, 'x')))._tag).toBe('NotFound')
       expect(yield* service.listOpenIssues).toHaveLength(1)
       yield* service.closeIssue(3)
@@ -83,21 +95,49 @@ describe('in-memory GitHub', () => {
   it.effect('serves pull request data and records reviews', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub({
-        pulls: new Map([[7, { commits: [], files: ['a.ts'], reviews: [{ author: 'ann', state: 'APPROVED' }], requestedReviewers: ['bo'], submittedReviews: [] }]]),
+        pulls: new Map([
+          [
+            7,
+            {
+              commits: [],
+              files: ['a.ts'],
+              reviews: [{ author: 'ann', state: 'APPROVED' }],
+              requestedReviewers: ['bo'],
+              submittedReviews: [],
+            },
+          ],
+        ]),
       })
       expect(yield* service.listCommits(7)).toStrictEqual([])
       expect(yield* service.listFiles(7)).toStrictEqual(['a.ts'])
       expect(yield* service.listReviews(7)).toHaveLength(1)
       expect(yield* service.countRequestedReviewers(7)).toBe(1)
       expect(yield* service.getMergeable(7)).toBe('MERGEABLE')
-      state.pulls.set(8, { commits: [], files: [], reviews: [], requestedReviewers: [], submittedReviews: [], mergeable: 'CONFLICTING' })
+      state.pulls.set(8, {
+        commits: [],
+        files: [],
+        reviews: [],
+        requestedReviewers: [],
+        submittedReviews: [],
+        mergeable: 'CONFLICTING',
+      })
       expect(yield* service.getMergeable(8)).toBe('CONFLICTING')
       expect(yield* service.listChecks(7)).toStrictEqual([])
-      state.pulls.set(10, { commits: [], files: [], reviews: [], requestedReviewers: [], submittedReviews: [], checks: [{ name: 'test', state: 'failure' }] })
+      state.pulls.set(10, {
+        commits: [],
+        files: [],
+        reviews: [],
+        requestedReviewers: [],
+        submittedReviews: [],
+        checks: [{ name: 'test', state: 'failure' }],
+      })
       expect(yield* service.listChecks(10)).toStrictEqual([{ name: 'test', state: 'failure' }])
       yield* service.requestReviewers(7, ['cy'])
       yield* service.createReview(7, { event: 'APPROVE', body: 'ok' })
-      expect(state.pulls.get(7)).toMatchObject({ requestedReviewers: ['bo', 'cy'], submittedReviews: [{ event: 'APPROVE', body: 'ok' }] })
+      expect(state.pulls.get(7)).toMatchObject({
+        requestedReviewers: ['bo', 'cy'],
+        submittedReviews: [{ event: 'APPROVE', body: 'ok' }],
+      })
       const missing = yield* Effect.flip(service.listFiles(9))
       expect(missing.message).toBe('listFiles: not found (pull request #9)')
     }),
@@ -105,7 +145,9 @@ describe('in-memory GitHub', () => {
 
   it.effect('records check runs, files, requests and GraphQL calls', () =>
     Effect.gen(function* () {
-      const { service, state } = makeMemoryGitHub({ files: new Map([[fileKey('o', 'r', 'p.yml', 'v2'), 'version: 2']]) })
+      const { service, state } = makeMemoryGitHub({
+        files: new Map([[fileKey('o', 'r', 'p.yml', 'v2'), 'version: 2']]),
+      })
       const run = { name: 'n', headSha: 'h', status: 'in_progress' as const, title: 't', summary: 's' }
       const id = yield* service.createCheckRun(run)
       yield* service.updateCheckRun(id, { ...run, status: 'completed', conclusion: 'success' })
@@ -141,17 +183,28 @@ describe('in-memory GitHub: directories and proposals', () => {
         { path: 'b.md', executable: false },
         { path: 'tools/run', executable: true },
       ])
-      expect(yield* service.listDirectory({ owner: 'o', repo: 'r', path: '' })).toStrictEqual([{ path: 'templates/a.md', executable: false }])
+      expect(yield* service.listDirectory({ owner: 'o', repo: 'r', path: '' })).toStrictEqual([
+        { path: 'templates/a.md', executable: false },
+      ])
     }),
   )
 
   it.effect('opens a pull request for a proposal, updates it while open, and opens another once it is closed', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub()
-      const proposal = { branch: 'smartcloud/sync', base: 'main', title: 't', body: 'b', files: [{ path: 'a', content: 'x', executable: false }] }
+      const proposal = {
+        branch: 'smartcloud/sync',
+        base: 'main',
+        title: 't',
+        body: 'b',
+        files: [{ path: 'a', content: 'x', executable: false }],
+      }
       const first = yield* service.proposeChanges(proposal)
       expect(first).toStrictEqual({ number: 1, url: 'https://github.com/Resnovas/example/pull/1', created: true })
-      expect(yield* service.proposeChanges({ ...proposal, title: 'updated' })).toStrictEqual({ ...first, created: false })
+      expect(yield* service.proposeChanges({ ...proposal, title: 'updated' })).toStrictEqual({
+        ...first,
+        created: false,
+      })
       expect(state.proposals).toStrictEqual([{ ...proposal, title: 'updated', number: 1, open: true }])
       const [opened] = state.proposals
       if (opened !== undefined) opened.open = false

@@ -1,6 +1,6 @@
 ---
-title: "Reviews"
-description: "The maintainer review gate, requested reviewers and automatic approval."
+title: 'Reviews'
+description: 'The maintainer review gate, requested reviewers and automatic approval.'
 ---
 
 The reviews feature runs on pull request events, including `pull_request_review`, so it re-evaluates whenever a review is submitted or dismissed. It is enabled by a `reviews` section.
@@ -8,7 +8,7 @@ The reviews feature runs on pull request events, including `pull_request_review`
 ```yaml
 roles:
   maintainers: [octocat, hubot, monalisa]
-  trustedBots: ["dependabot[bot]"]
+  trustedBots: ['dependabot[bot]']
 
 reviews:
   gate:
@@ -16,11 +16,11 @@ reviews:
     maintainer: 1
   requestApprovals:
     docs:
-      reviewers: ["@monalisa"]
+      reviewers: ['@monalisa']
       when:
         condition:
           - type: filesMatch
-            condition: "docs/**"
+            condition: 'docs/**'
   automaticApprove:
     dependabot:
       message: Approved automatically for a dependency update.
@@ -34,10 +34,10 @@ reviews:
 
 `gate` sets how many maintainer approvals a pull request needs before merge:
 
-| Key | Default | Applies when |
-| --- | --- | --- |
-| `outside` | `2` | The author is not a maintainer. |
-| `maintainer` | `1` | The author is a maintainer. |
+| Key          | Default | Applies when                    |
+| ------------ | ------- | ------------------------------- |
+| `outside`    | `2`     | The author is not a maintainer. |
+| `maintainer` | `1`     | The author is a maintainer.     |
 
 Each maintainer's latest decisive review counts: comments and pending reviews are ignored, and a later change request or dismissal withdraws an approval. The author's own review never counts.
 

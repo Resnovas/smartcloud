@@ -35,7 +35,9 @@ const headShaOf = (result: RunResult) =>
   result.envelope.kind === 'pullRequest' || result.envelope.kind === 'repository' ? result.envelope.headSha : undefined
 
 const subjectOf = (result: RunResult) =>
-  result.envelope.kind === 'pullRequest' || result.envelope.kind === 'issue' ? result.envelope.subject.number : undefined
+  result.envelope.kind === 'pullRequest' || result.envelope.kind === 'issue'
+    ? result.envelope.subject.number
+    : undefined
 
 /**
  * Publishes a run to GitHub: check runs on the commit, one updatable comment
@@ -79,15 +81,20 @@ export const publishReport = (
   Effect.gen(function* () {
     const github = yield* GitHub
     const warnings: Array<string> = []
-    const noteFailure = (step: string) => (error: GitHubError) => Effect.sync(() => void warnings.push(`${step}: ${error.message}`))
+    const noteFailure = (step: string) => (error: GitHubError) =>
+      Effect.sync(() => void warnings.push(`${step}: ${error.message}`))
 
     let checkRuns = 0
     const headSha = headShaOf(result)
     if (headSha !== undefined) {
       // Stop at the first failure: on a read-only token every later call fails the same way.
-      yield* Effect.forEach(checkRunsFor(result, headSha), (run) => Effect.map(github.createCheckRun(run), () => void checkRuns++), {
-        discard: true,
-      }).pipe(Effect.catchAll(noteFailure('check runs')))
+      yield* Effect.forEach(
+        checkRunsFor(result, headSha),
+        (run) => Effect.map(github.createCheckRun(run), () => void checkRuns++),
+        {
+          discard: true,
+        },
+      ).pipe(Effect.catchAll(noteFailure('check runs')))
     }
 
     let comment: Published['comment'] = 'skipped'
@@ -96,8 +103,11 @@ export const publishReport = (
       const body = commentBody(result.findings)
       const actionable = result.findings.some((finding) => finding.level !== 'notice')
       yield* Effect.gen(function* () {
-        const comments = (yield* github.listComments(number)).filter((entry) => isTrustedComment(entry, options.trustedAuthors))
-        const existing = comments.find((entry) => entry.body.includes(MARKER)) ?? comments.find((entry) => isLegacyReport(entry.body))
+        const comments = (yield* github.listComments(number)).filter((entry) =>
+          isTrustedComment(entry, options.trustedAuthors),
+        )
+        const existing =
+          comments.find((entry) => entry.body.includes(MARKER)) ?? comments.find((entry) => isLegacyReport(entry.body))
         if (existing !== undefined) {
           if (existing.body === body) comment = 'unchanged'
           else {
@@ -113,11 +123,23 @@ export const publishReport = (
 
     const counts = { check_runs: checkRuns, comment, warnings: warnings.length }
     yield* Effect.annotateCurrentSpan(counts)
-    yield* Effect.logInfo(`reporting: ${checkRuns} check run(s), comment ${comment}, ${warnings.length} warning(s)`).pipe(Effect.annotateLogs(counts))
-    return { checkRuns, comment, summary: summaryMarkdown(result), annotations: annotationLines(result.findings), warnings }
+    yield* Effect.logInfo(
+      `reporting: ${checkRuns} check run(s), comment ${comment}, ${warnings.length} warning(s)`,
+    ).pipe(Effect.annotateLogs(counts))
+    return {
+      checkRuns,
+      comment,
+      summary: summaryMarkdown(result),
+      annotations: annotationLines(result.findings),
+      warnings,
+    }
   }).pipe(
     Effect.withSpan('smartcloud.reporting.publish', {
       captureStackTrace: false,
-      attributes: { 'event.kind': result.envelope.kind, findings: result.findings.length, changes: result.changes.length },
+      attributes: {
+        'event.kind': result.envelope.kind,
+        findings: result.findings.length,
+        changes: result.changes.length,
+      },
     }),
   )

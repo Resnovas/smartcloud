@@ -48,6 +48,9 @@ export const issuePayload = { action: 'labeled', issue: issueFields }
 
 export const commentOnPullRequestPayload = { action: 'created', issue: { ...issueFields, pull_request: { url: 'x' } } }
 
-export const mergeGroupPayload = { action: 'checks_requested', merge_group: { head_sha: 'def456', head_ref: 'gh-readonly-queue/main/pr-7' } }
+export const mergeGroupPayload = {
+  action: 'checks_requested',
+  merge_group: { head_sha: 'def456', head_ref: 'gh-readonly-queue/main/pr-7' },
+}
 
 export const pushPayload = { ref: 'refs/heads/main', after: 'fed789' }

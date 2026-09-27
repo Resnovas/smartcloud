@@ -54,7 +54,10 @@ export const CONFIG_CANDIDATES = ['.github/smartcloud.yml', '.github/smartcloud.
  * new NoConfig({ where: 'Resnovas/example', paths: ['a.yml'] }).message // => 'no smartcloud config in Resnovas/example: looked for a.yml'
  * ```
  */
-export class NoConfig extends Data.TaggedError('NoConfig')<{ readonly where: string; readonly paths: ReadonlyArray<string> }> {
+export class NoConfig extends Data.TaggedError('NoConfig')<{
+  readonly where: string
+  readonly paths: ReadonlyArray<string>
+}> {
   override get message() {
     return `no smartcloud config in ${this.where}: looked for ${this.paths.join(', ')}`
   }
@@ -79,7 +82,6 @@ export interface ConfigLocation {
   readonly path?: string
   readonly ref?: string
 }
-
 
 /**
  * Reads presets named in `extends` through whichever GitHub service is provided.
@@ -164,7 +166,11 @@ export const loadConfig = (location: ConfigLocation, options: ResolveOptions = {
       Effect.provide(ConfigSourceFromGitHub),
     )
     // Only counts: sources name presets, their repositories and paths.
-    const counts = { sources: resolved.sources.length, warnings: resolved.warnings.length, locked: resolved.locked.size }
+    const counts = {
+      sources: resolved.sources.length,
+      warnings: resolved.warnings.length,
+      locked: resolved.locked.size,
+    }
     yield* Effect.annotateCurrentSpan(counts)
     yield* Effect.logDebug(`config: resolved from ${counts.sources} source(s) with ${counts.warnings} warning(s)`).pipe(
       Effect.annotateLogs(counts),
@@ -173,7 +179,12 @@ export const loadConfig = (location: ConfigLocation, options: ResolveOptions = {
     if (resolved.config.telemetry === false) yield* optOut
     yield* recordConfig(resolved, text)
     return resolved
-  }).pipe(Effect.withSpan('smartcloud.config.resolve', { captureStackTrace: false, attributes: { 'config.from': location.text === undefined ? 'repository' : 'text' } }))
+  }).pipe(
+    Effect.withSpan('smartcloud.config.resolve', {
+      captureStackTrace: false,
+      attributes: { 'config.from': location.text === undefined ? 'repository' : 'text' },
+    }),
+  )
 
 /**
  * Reads a config from the local disk.
@@ -195,7 +206,8 @@ export const readLocalConfig = (path: string) =>
   )
 
 // The schema hint lets editors complete and check the file.
-const SCHEMA_HINT = '# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json'
+const SCHEMA_HINT =
+  '# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json'
 
 /**
  * The findings that report config a run ignored: a warning for each unknown
@@ -221,10 +233,18 @@ const SCHEMA_HINT = '# yaml-language-server: $schema=https://raw.githubuserconte
  * @param loosened - Which of those loosened policy, as `ResolvedConfig.loosened` lists them.
  * @returns A finding for each: an error when it loosened policy, a warning otherwise.
  */
-export const configFindings = (ignored: ReadonlyArray<string>, loosened: ReadonlyArray<string> = []): ReadonlyArray<Finding> =>
+export const configFindings = (
+  ignored: ReadonlyArray<string>,
+  loosened: ReadonlyArray<string> = [],
+): ReadonlyArray<Finding> =>
   ignored.map((item) =>
     loosened.includes(item)
-      ? { feature: 'config', rule: 'config.ignored', level: 'error', message: `${item}; this setting only tightens policy, so fix it to pass this check` }
+      ? {
+          feature: 'config',
+          rule: 'config.ignored',
+          level: 'error',
+          message: `${item}; this setting only tightens policy, so fix it to pass this check`,
+        }
       : { feature: 'config', rule: 'config.ignored', level: 'warning', message: item },
   )
 
@@ -257,14 +277,11 @@ export interface Migrated {
  * @returns The migrated config.
  */
 export const migrateConfigText = (text: string, source: string) =>
-  Effect.map(
-    parseConfig(text, source),
-    ({ config, warnings }): Migrated => ({
-      config,
-      yaml: `${SCHEMA_HINT}\n${stringify(Schema.encodeSync(SmartcloudConfig)(config))}`,
-      warnings,
-    }),
-  )
+  Effect.map(parseConfig(text, source), ({ config, warnings }): Migrated => ({
+    config,
+    yaml: `${SCHEMA_HINT}\n${stringify(Schema.encodeSync(SmartcloudConfig)(config))}`,
+    warnings,
+  }))
 
 /** One feature, as a resolved config sets it up. */
 export interface FeatureExplanation {
@@ -302,7 +319,10 @@ export interface ConfigExplanation {
  * @param features - The features to explain; every feature by default.
  * @returns The explanation, in the order the features are given.
  */
-export const explainConfig = (resolved: ResolvedConfig, features: ReadonlyArray<Feature> = FEATURES): ConfigExplanation => {
+export const explainConfig = (
+  resolved: ResolvedConfig,
+  features: ReadonlyArray<Feature> = FEATURES,
+): ConfigExplanation => {
   const encoded = Schema.encodeSync(SmartcloudConfig)(resolved.config)
   return {
     sources: resolved.sources,

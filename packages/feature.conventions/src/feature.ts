@@ -14,7 +14,14 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { type ConditionResult, evaluate, type Evaluation, type MissingFacet, requiredFacets, type Subject } from '@resnovas/conditions'
+import {
+  type ConditionResult,
+  evaluate,
+  type Evaluation,
+  type MissingFacet,
+  requiredFacets,
+  type Subject,
+} from '@resnovas/conditions'
 import type { ConventionRule, SmartcloudConfig } from '@resnovas/config'
 import { type Feature, Report } from '@resnovas/engine'
 import { Effect } from 'effect'
@@ -44,10 +51,14 @@ const rulesOf = (config: SmartcloudConfig): ReadonlyArray<readonly [string, Conv
 // `$only` keeps its count: it can fail because too many groups passed.
 const explain = (result: ConditionResult): ReadonlyArray<string> => {
   if (result.type === '$not') {
-    return (result.groups ?? []).flatMap((group) => group.results.filter((inner) => inner.passed).map((inner) => `not expected: ${inner.detail}`))
+    return (result.groups ?? []).flatMap((group) =>
+      group.results.filter((inner) => inner.passed).map((inner) => `not expected: ${inner.detail}`),
+    )
   }
   if (result.type !== '$and' && result.type !== '$or') return [result.detail]
-  const inner = (result.groups ?? []).flatMap((group) => group.results.filter((entry) => !entry.passed).flatMap(explain))
+  const inner = (result.groups ?? []).flatMap((group) =>
+    group.results.filter((entry) => !entry.passed).flatMap(explain),
+  )
   return [inner.length === 0 ? result.detail : `${result.detail} (${inner.join('; ')})`]
 }
 
@@ -131,7 +142,13 @@ const run: Feature['run'] = ({ config, subject }) =>
       })
     }
     yield* Effect.logInfo(`conventions: ${failed.length} of ${applicable.length} rule(s) failed`).pipe(
-      Effect.annotateLogs({ feature: FEATURE, 'subject.kind': subject.kind, checked: applicable.length, failed: failed.length, rules: failed }),
+      Effect.annotateLogs({
+        feature: FEATURE,
+        'subject.kind': subject.kind,
+        checked: applicable.length,
+        failed: failed.length,
+        rules: failed,
+      }),
     )
   })
 

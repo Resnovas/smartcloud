@@ -1,6 +1,6 @@
 ---
-title: "Labels"
-description: "Keep repository labels in line with the config, and apply them by condition."
+title: 'Labels'
+description: 'Keep repository labels in line with the config, and apply them by condition.'
 ---
 
 The labels feature does two jobs:
@@ -14,15 +14,15 @@ It is enabled when the config has a `labels`, `labelling` or `sizeLabels` sectio
 ```yaml
 labels:
   bug:
-    name: "Type: Bug"
+    name: 'Type: Bug'
     color: D73A4A
     description: Something is not working
     aliases: [bug, defect]
   docs:
-    name: "Type: Documentation"
-    color: "#0075CA"
+    name: 'Type: Documentation'
+    color: '#0075CA'
   xs:
-    name: "Size: XS"
+    name: 'Size: XS'
     color: C2E0C6
 
 labelSync:
@@ -34,7 +34,7 @@ labelling:
     when:
       condition:
         - type: filesMatch
-          condition: "docs/**"
+          condition: 'docs/**'
   xs:
     label: xs
     on: [pullRequest]
@@ -67,7 +67,8 @@ Each entry in `labels` is keyed by an id you choose, and has a `name`, a `color`
 Label sync never runs on pull request events: those from forks carry a read-only token.
 
 <Note>
-  v1's `skipDelete` input deleted unconfigured labels unless it was set. v2 never deletes a label unless `labelSync.prune` is `true`.
+  v1's `skipDelete` input deleted unconfigured labels unless it was set. v2 never deletes a label unless
+  `labelSync.prune` is `true`.
 </Note>
 
 ## Labelling

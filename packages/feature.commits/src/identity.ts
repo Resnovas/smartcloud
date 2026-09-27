@@ -97,4 +97,5 @@ export const makeAiIdentityMatcher = (extra: AiIdentityPatterns = {}): ((identit
  * @param extra - Extra patterns from `commits.aiIdentities`.
  * @returns True when the identity is an AI tool.
  */
-export const isAiIdentity = (identity: Identity, extra?: AiIdentityPatterns): boolean => makeAiIdentityMatcher(extra)(identity)
+export const isAiIdentity = (identity: Identity, extra?: AiIdentityPatterns): boolean =>
+  makeAiIdentityMatcher(extra)(identity)

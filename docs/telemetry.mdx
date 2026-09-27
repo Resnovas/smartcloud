@@ -1,6 +1,6 @@
 ---
-title: "Telemetry"
-description: "What smartcloud sends to PostHog, what it never sends, how to turn it off, and how feature flags work."
+title: 'Telemetry'
+description: 'What smartcloud sends to PostHog, what it never sends, how to turn it off, and how feature flags work.'
 ---
 
 smartcloud sends anonymous telemetry to [PostHog](https://posthog.com): usage events, logs, traces, metrics and errors. It is how problems are noticed and fixed, how we learn which features are used, and how a broken feature can be switched off quickly with a [feature flag](#feature-flags). The action, the CLI and the MCP server all send it the same way.
@@ -13,13 +13,13 @@ Every run of the action, every CLI command (`validate`, `migrate`, `check-commit
 
 Each event also carries `surface` (`action`, `cli` or `mcp`) and `smartcloud_version`. The events and their properties are defined, with a schema for each, in one module, `packages/runtime/src/analytics.ts`, so nothing else can send an event under another name or with another shape.
 
-| Event | When | Properties |
-| --- | --- | --- |
-| `command run` | Once, when an invocation ends. | `command` (the CLI command, such as `dry-run` or `plan settings`; the MCP tool, such as `dry_run`; or `run` for the action), `options` (the names of the options or inputs given, never their values), `outcome` (`success`, `failure` or `interrupted`), `duration_ms`, and on failure `error_tag` (the error's type, such as `NotFound`) and `expected` (true for an expected failure, such as an invalid config or a missing repository; false for a bug). |
-| `config resolved` | Each time a config is read. | `config_version` (1 or 2, as the repository's file is written), `migrated_from_v1`, `extends_count` (presets included, directly or through other presets), `presets` (each one only as `house`, for `Resnovas/.github/smartcloud/house.yml`, or `other`), `features_enabled` and `rule_counts` (the number of entries in each enabled feature's sections). The event is only sent while telemetry is on, so a config that says `telemetry: false` never sends it. |
-| `feature run` | For each feature a run considered. | `feature`, `outcome` (`success`, `failure` or `skipped`), `skip_reason` (`flag`, `not configured` or `unsupported event`), `event_kind` (`pullRequest`, `issue`, `repository` or `unsupported`), `github_event` (such as `push`), `findings`, `findings_error`, `findings_warning`, `findings_notice`, `findings_by_rule` (counts by rule id), `rules`, `changes` (a count) and `duration_ms`. |
-| `sync proposed` | When the sync feature plans a proposal. | `created`, `updated` and `mode` (files to add, update or make executable), `conflicts`, and `pull_request` (`created`, `updated`, `none` when there is nothing to propose, or `dry-run`). |
-| `settings applied` | When the settings feature applies a config's settings. | `applied`, `failed` and `skipped` (settings GitHub does not offer on a private repository), and `project_type` (`saas`, `desktop`, `library` or `none`). |
+| Event              | When                                                   | Properties                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------ | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `command run`      | Once, when an invocation ends.                         | `command` (the CLI command, such as `dry-run` or `plan settings`; the MCP tool, such as `dry_run`; or `run` for the action), `options` (the names of the options or inputs given, never their values), `outcome` (`success`, `failure` or `interrupted`), `duration_ms`, and on failure `error_tag` (the error's type, such as `NotFound`) and `expected` (true for an expected failure, such as an invalid config or a missing repository; false for a bug).     |
+| `config resolved`  | Each time a config is read.                            | `config_version` (1 or 2, as the repository's file is written), `migrated_from_v1`, `extends_count` (presets included, directly or through other presets), `presets` (each one only as `house`, for `Resnovas/.github/smartcloud/house.yml`, or `other`), `features_enabled` and `rule_counts` (the number of entries in each enabled feature's sections). The event is only sent while telemetry is on, so a config that says `telemetry: false` never sends it. |
+| `feature run`      | For each feature a run considered.                     | `feature`, `outcome` (`success`, `failure` or `skipped`), `skip_reason` (`flag`, `not configured` or `unsupported event`), `event_kind` (`pullRequest`, `issue`, `repository` or `unsupported`), `github_event` (such as `push`), `findings`, `findings_error`, `findings_warning`, `findings_notice`, `findings_by_rule` (counts by rule id), `rules`, `changes` (a count) and `duration_ms`.                                                                    |
+| `sync proposed`    | When the sync feature plans a proposal.                | `created`, `updated` and `mode` (files to add, update or make executable), `conflicts`, and `pull_request` (`created`, `updated`, `none` when there is nothing to propose, or `dry-run`).                                                                                                                                                                                                                                                                         |
+| `settings applied` | When the settings feature applies a config's settings. | `applied`, `failed` and `skipped` (settings GitHub does not offer on a private repository), and `project_type` (`saas`, `desktop`, `library` or `none`).                                                                                                                                                                                                                                                                                                          |
 
 Evaluating a [feature flag](#feature-flags) also records PostHog's standard `$feature_flag_called` event.
 
@@ -58,11 +58,11 @@ Telemetry never slows down or fails a run. Requests time out after five seconds,
 
 We ask you not to: telemetry holds no repository data, and without it we cannot see when smartcloud breaks for you. If you must, any one of these turns it off.
 
-| Where | Setting |
-| --- | --- |
-| The config | `telemetry: false` at the top level of `.github/smartcloud.yml` |
-| The action | the `telemetry` input set to `false` |
-| The environment | `SMARTCLOUD_TELEMETRY=false`, or `DO_NOT_TRACK=1` |
+| Where           | Setting                                                         |
+| --------------- | --------------------------------------------------------------- |
+| The config      | `telemetry: false` at the top level of `.github/smartcloud.yml` |
+| The action      | the `telemetry` input set to `false`                            |
+| The environment | `SMARTCLOUD_TELEMETRY=false`, or `DO_NOT_TRACK=1`               |
 
 ```yaml
 version: 2
@@ -77,16 +77,16 @@ The action input and the environment variables stop telemetry before anything is
 
 Each feature has a flag in PostHog, named `smartcloud-<feature>`, that can turn it off for every repository, or for some, without a release:
 
-| Flag | Feature | Default |
-| --- | --- | --- |
-| `smartcloud-conventions` | [Conventions](features/conventions) | on |
-| `smartcloud-commits` | [Commits](features/commits) | on |
-| `smartcloud-disclosure` | [Disclosure](features/disclosure) | on |
-| `smartcloud-reviews` | [Reviews](features/reviews) | on |
-| `smartcloud-labels` | [Labels](features/labels) | on |
-| `smartcloud-stale` | [Stale](features/stale) | on |
-| `smartcloud-settings` | [Settings](features/settings) | on |
-| `smartcloud-sync` | [Sync](features/sync) | on |
+| Flag                     | Feature                             | Default |
+| ------------------------ | ----------------------------------- | ------- |
+| `smartcloud-conventions` | [Conventions](features/conventions) | on      |
+| `smartcloud-commits`     | [Commits](features/commits)         | on      |
+| `smartcloud-disclosure`  | [Disclosure](features/disclosure)   | on      |
+| `smartcloud-reviews`     | [Reviews](features/reviews)         | on      |
+| `smartcloud-labels`      | [Labels](features/labels)           | on      |
+| `smartcloud-stale`       | [Stale](features/stale)             | on      |
+| `smartcloud-settings`    | [Settings](features/settings)       | on      |
+| `smartcloud-sync`        | [Sync](features/sync)               | on      |
 
 Flags are evaluated through [OpenFeature](https://openfeature.dev), with PostHog as the provider, for the repository's hashed identity and its organisation group. A feature whose flag is off is listed as skipped, with the reason `turned off by feature flag smartcloud-<feature>`.
 

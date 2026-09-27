@@ -40,11 +40,16 @@ const TOKEN = 'ghp_abcdefghijklmnopqrstuvwxyz0123'
 const repository = { owner: 'Acme-Corp', repo: 'secret-project' }
 const identity = identify(repository)
 
-const withEnv = (env: Record<string, string>) => Effect.withConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))
+const withEnv = (env: Record<string, string>) =>
+  Effect.withConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))
 
 // Runs an effect with the telemetry layer over a fake network, closing the
 // layer (and so flushing) before returning what was sent.
-const run = <A, E>(effect: Effect.Effect<A, E, Telemetry>, env: Record<string, string> = {}, routes: Readonly<Record<string, Reply>> = {}) =>
+const run = <A, E>(
+  effect: Effect.Effect<A, E, Telemetry>,
+  env: Record<string, string> = {},
+  routes: Readonly<Record<string, Reply>> = {},
+) =>
   Effect.gen(function* () {
     const fake = fakeFetch(routes)
     const exit = yield* effect.pipe(
@@ -87,7 +92,9 @@ describe('telemetryLayer, when turned off', () => {
   it.live('prints no diagnostic logs either', () =>
     Effect.gen(function* () {
       const printed: Array<string> = []
-      vi.spyOn(console, 'log').mockImplementation((...args: Array<unknown>) => void printed.push(args.map(String).join(' ')))
+      vi.spyOn(console, 'log').mockImplementation(
+        (...args: Array<unknown>) => void printed.push(args.map(String).join(' ')),
+      )
       const { fake } = yield* run(Effect.logInfo('labels: 3 to create'), { SMARTCLOUD_TELEMETRY: 'false' })
       expect(fake.sent).toStrictEqual([])
       expect(printed).toStrictEqual([])
@@ -118,10 +125,22 @@ describe('telemetryLayer, when on', () => {
   it.live('sends the event, logs, spans and metrics, hashed and redacted, when it closes', () =>
     Effect.gen(function* () {
       const printed: Array<string> = []
-      vi.spyOn(console, 'log').mockImplementation((...args: Array<unknown>) => void printed.push(args.map(String).join(' ')))
-      const { exit, fake } = yield* run(invoked(track(work, { operation: 'run', repository, properties: { github_event: 'push' }, describe: (value) => ({ answer: value }) })), {
-        GITHUB_TOKEN: 'plain-env-token-value',
-      })
+      vi.spyOn(console, 'log').mockImplementation(
+        (...args: Array<unknown>) => void printed.push(args.map(String).join(' ')),
+      )
+      const { exit, fake } = yield* run(
+        invoked(
+          track(work, {
+            operation: 'run',
+            repository,
+            properties: { github_event: 'push' },
+            describe: (value) => ({ answer: value }),
+          }),
+        ),
+        {
+          GITHUB_TOKEN: 'plain-env-token-value',
+        },
+      )
       expect(exit).toStrictEqual(Exit.succeed(42))
       const paths = new Set(fake.sent.map((request) => request.path))
       expect(paths).toStrictEqual(new Set(['/batch/', '/i/v1/logs', '/i/v1/traces', '/i/v1/metrics']))
@@ -154,9 +173,14 @@ describe('telemetryLayer, when on', () => {
   it.live('sends diagnostic logs from debug level up to PostHog, and never prints them', () =>
     Effect.gen(function* () {
       const printed: Array<string> = []
-      vi.spyOn(console, 'log').mockImplementation((...args: Array<unknown>) => void printed.push(args.map(String).join(' ')))
+      vi.spyOn(console, 'log').mockImplementation(
+        (...args: Array<unknown>) => void printed.push(args.map(String).join(' ')),
+      )
       const { exit, fake } = yield* run(
-        Effect.zipRight(Effect.logDebug('labels: 3 to create'), Effect.logWarning('labels: failed').pipe(Effect.annotateLogs({ feature: 'labels' }))),
+        Effect.zipRight(
+          Effect.logDebug('labels: 3 to create'),
+          Effect.logWarning('labels: failed').pipe(Effect.annotateLogs({ feature: 'labels' })),
+        ),
       )
       expect(Exit.isSuccess(exit)).toBe(true)
       const logs = fake.sent.find((request) => request.path === '/i/v1/logs')?.body ?? ''
@@ -171,7 +195,12 @@ describe('telemetryLayer, when on', () => {
     Effect.gen(function* () {
       const { exit, fake } = yield* run(
         // @effect-diagnostics-next-line globalErrorInEffectFailure:off - a plain Error on purpose: any failure must be handled
-        invoked(track(Effect.fail(new Error(`cannot read Acme-Corp/secret-project with ${TOKEN}`)), { operation: 'run', repository })),
+        invoked(
+          track(Effect.fail(new Error(`cannot read Acme-Corp/secret-project with ${TOKEN}`)), {
+            operation: 'run',
+            repository,
+          }),
+        ),
       )
       expect(Exit.isFailure(exit)).toBe(true)
       const batch = fake.sent.find((request) => request.path === '/batch/')?.body ?? ''
@@ -204,7 +233,9 @@ describe('telemetryLayer, when on', () => {
 
   it.live('reports an error on its own, for a failed feature', () =>
     Effect.gen(function* () {
-      const { fake } = yield* run(reportError(repository, new Error('labels failed for Acme-Corp/secret-project'), { feature: 'labels' }))
+      const { fake } = yield* run(
+        reportError(repository, new Error('labels failed for Acme-Corp/secret-project'), { feature: 'labels' }),
+      )
       const batch = fake.sent.find((request) => request.path === '/batch/')?.body ?? ''
       expect(batch).toContain('"$exception"')
       expect(batch).toContain('"feature":"labels"')
@@ -213,7 +244,12 @@ describe('telemetryLayer, when on', () => {
 
   it.live('identifies each organisation once', () =>
     Effect.gen(function* () {
-      const { fake } = yield* run(Effect.zipRight(invoked(track(work, { operation: 'run', repository })), invoked(track(work, { operation: 'run', repository }))))
+      const { fake } = yield* run(
+        Effect.zipRight(
+          invoked(track(work, { operation: 'run', repository })),
+          invoked(track(work, { operation: 'run', repository })),
+        ),
+      )
       expect(fake.text().split('"$groupidentify"')).toHaveLength(2)
     }),
   )
@@ -241,10 +277,14 @@ describe('telemetryLayer, when on', () => {
 
   it.live('keeps going when PostHog fails', () =>
     Effect.gen(function* () {
-      const { exit, fake } = yield* run(invoked(track(work, { operation: 'run', repository })), {}, {
-        '/batch/': { status: 500 },
-        '/i/v1/logs': { networkError: 'offline' },
-      })
+      const { exit, fake } = yield* run(
+        invoked(track(work, { operation: 'run', repository })),
+        {},
+        {
+          '/batch/': { status: 500 },
+          '/i/v1/logs': { networkError: 'offline' },
+        },
+      )
       expect(exit).toStrictEqual(Exit.succeed(42))
       expect(fake.sent.some((request) => request.path === '/batch/')).toBe(true)
     }),
@@ -277,7 +317,11 @@ describe('telemetryLayer, anonymous and organisation data', () => {
 
   it.live("sets an organisation's properties", () =>
     Effect.gen(function* () {
-      const { fake } = yield* run(Effect.flatMap(Telemetry, (telemetry) => telemetry.describeOrganization(identity, { features_enabled: ['labels'], uses_house_preset: true })))
+      const { fake } = yield* run(
+        Effect.flatMap(Telemetry, (telemetry) =>
+          telemetry.describeOrganization(identity, { features_enabled: ['labels'], uses_house_preset: true }),
+        ),
+      )
       const batch = fake.sent.find((request) => request.path === '/batch/')?.body ?? ''
       expect(batch).toContain('"$groupidentify"')
       expect(batch).toContain('"uses_house_preset":true')
@@ -290,7 +334,8 @@ describe('telemetryLayer, anonymous and organisation data', () => {
       const record = (...args: Array<unknown>) => void printed.push(args.map(String).join(' '))
       vi.spyOn(console, 'log').mockImplementation(record)
       vi.spyOn(console, 'error').mockImplementation(record)
-      const pretty = <A, E, R>(effect: Effect.Effect<A, E, R>) => effect.pipe(Effect.provide(Logger.add(Logger.prettyLoggerDefault)))
+      const pretty = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+        effect.pipe(Effect.provide(Logger.add(Logger.prettyLoggerDefault)))
       for (const env of [{}, { SMARTCLOUD_TELEMETRY: 'false' }]) {
         const fake = fakeFetch()
         yield* Effect.logDebug('github getRepository: NotFound (404)').pipe(
@@ -309,7 +354,10 @@ describe('evaluateFlag', () => {
   it.live('reads a flag through OpenFeature, for the hashed repository and its organisation', () =>
     Effect.gen(function* () {
       const { exit, fake } = yield* run(
-        Effect.all([evaluateFlag(repository, 'smartcloud-labels', true), evaluateFlag(repository, 'smartcloud-missing', true)]),
+        Effect.all([
+          evaluateFlag(repository, 'smartcloud-labels', true),
+          evaluateFlag(repository, 'smartcloud-missing', true),
+        ]),
         {},
         { '/flags/': { body: { featureFlags: { 'smartcloud-labels': false } } } },
       )
@@ -322,7 +370,11 @@ describe('evaluateFlag', () => {
 
   it.live('falls back when PostHog cannot be reached', () =>
     Effect.gen(function* () {
-      const { exit } = yield* run(evaluateFlag(repository, 'smartcloud-labels', true), {}, { '/flags/': { networkError: 'offline' } })
+      const { exit } = yield* run(
+        evaluateFlag(repository, 'smartcloud-labels', true),
+        {},
+        { '/flags/': { networkError: 'offline' } },
+      )
       expect(exit).toStrictEqual(Exit.succeed(true))
     }),
   )
@@ -347,7 +399,9 @@ describe('without the Telemetry service', () => {
     Effect.gen(function* () {
       yield* reportError(repository, new Error('ignored'))
       expect(yield* track(Effect.succeed(1), { operation: 'run', repository })).toBe(1)
-      expect(yield* Effect.either(track(Effect.fail('no'), { operation: 'run', repository }))).toStrictEqual(Either.left('no'))
+      expect(yield* Effect.either(track(Effect.fail('no'), { operation: 'run', repository }))).toStrictEqual(
+        Either.left('no'),
+      )
       expect(yield* evaluateFlag(repository, 'smartcloud-labels', true)).toBe(true)
       yield* optOut
     }),

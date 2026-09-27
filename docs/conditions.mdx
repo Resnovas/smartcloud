@@ -1,6 +1,6 @@
 ---
-title: "Conditions"
-description: "The condition language used by labelling, conventions, reviews and stale exemptions."
+title: 'Conditions'
+description: 'The condition language used by labelling, conventions, reviews and stale exemptions.'
 ---
 
 A condition group is a list of conditions and the number of them that must pass. It appears wherever a rule has a `when`: labelling rules, convention rules, requested and automatic approvals, and `stale.exempt.when`.
@@ -10,9 +10,9 @@ when:
   requires: 1
   condition:
     - type: titleMatches
-      condition: "/^fix/i"
+      condition: '/^fix/i'
     - type: branchMatches
-      condition: "^hotfix/"
+      condition: '^hotfix/'
 ```
 
 `requires` defaults to the number of conditions, so without it every condition must pass. With `requires: 1` any one is enough.
@@ -27,30 +27,30 @@ Conditions that match text take a pattern: a regular expression written either b
 
 ## Conditions
 
-| Type | Fields | Passes when |
-| --- | --- | --- |
-| `titleMatches` | `condition`: pattern | The title matches. |
-| `descriptionMatches` | `condition`: pattern | The description matches. An empty description never matches. |
-| `creatorMatches` | `condition`: pattern | The author's login matches. |
-| `branchMatches` | `condition`: pattern | The pull request's head branch matches. |
-| `baseBranchMatches` | `condition`: pattern | The pull request's base branch, the one it merges into, matches. |
-| `isOpen` | `condition`: boolean | The subject is open (`true`) or closed (`false`). |
-| `isLocked` | `condition`: boolean | The conversation is locked (`true`) or unlocked (`false`). |
-| `isDraft` | `condition`: boolean | The pull request is a draft (`true`) or ready for review (`false`). |
-| `hasLabel` | `label`: name, `condition`: boolean | The subject has the label (`true`) or lacks it (`false`). Names compare ignoring case. |
-| `isStale` | `condition`: days | There has been no activity for at least this many days. |
-| `isAbandoned` | `condition`: days, `label`: name | The subject carries `label` and has had no activity for at least this many days. |
-| `filesMatch` | `condition`: glob | At least one changed file matches. |
-| `changesSize` | `min`, optional `max`: lines | Lines added plus deleted are at least `min` and below `max`. |
-| `pendingReview` | `condition`: boolean | Some requested reviewers have not reviewed yet (`true`), or none are pending (`false`). |
-| `requestedChanges` | `condition`: boolean | A reviewer's latest review requests changes (`true`), or none does (`false`). |
-| `isApproved` | `condition`: count, optional `allowPending`: boolean | No reviewer is requesting changes, at least this many approved, and no reviewer is pending. With `allowPending: true`, pending reviewers do not block. |
-| `commitMessagesMatch` | `condition`: pattern, optional `scope` | Commit messages match. |
-| `commitsSignedOff` | `condition`: boolean | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`). |
-| `hasTrailer` | `trailer`: key, optional `condition`: pattern, optional `scope` | Commits carry the trailer, with a value matching the pattern when one is given. |
-| `hasConflict` | `condition`: boolean | The pull request conflicts with its base branch (`true`), or does not (`false`). |
-| `checksPass` | `checks`: list of check names, `condition`: boolean | Every named check succeeded (`true`), or at least one has not (`false`). |
-| `checkStatus` | `check`: check name, `condition`: `success`, `failure` or `pending` | The named check is in that state. |
+| Type                  | Fields                                                              | Passes when                                                                                                                                            |
+| --------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `titleMatches`        | `condition`: pattern                                                | The title matches.                                                                                                                                     |
+| `descriptionMatches`  | `condition`: pattern                                                | The description matches. An empty description never matches.                                                                                           |
+| `creatorMatches`      | `condition`: pattern                                                | The author's login matches.                                                                                                                            |
+| `branchMatches`       | `condition`: pattern                                                | The pull request's head branch matches.                                                                                                                |
+| `baseBranchMatches`   | `condition`: pattern                                                | The pull request's base branch, the one it merges into, matches.                                                                                       |
+| `isOpen`              | `condition`: boolean                                                | The subject is open (`true`) or closed (`false`).                                                                                                      |
+| `isLocked`            | `condition`: boolean                                                | The conversation is locked (`true`) or unlocked (`false`).                                                                                             |
+| `isDraft`             | `condition`: boolean                                                | The pull request is a draft (`true`) or ready for review (`false`).                                                                                    |
+| `hasLabel`            | `label`: name, `condition`: boolean                                 | The subject has the label (`true`) or lacks it (`false`). Names compare ignoring case.                                                                 |
+| `isStale`             | `condition`: days                                                   | There has been no activity for at least this many days.                                                                                                |
+| `isAbandoned`         | `condition`: days, `label`: name                                    | The subject carries `label` and has had no activity for at least this many days.                                                                       |
+| `filesMatch`          | `condition`: glob                                                   | At least one changed file matches.                                                                                                                     |
+| `changesSize`         | `min`, optional `max`: lines                                        | Lines added plus deleted are at least `min` and below `max`.                                                                                           |
+| `pendingReview`       | `condition`: boolean                                                | Some requested reviewers have not reviewed yet (`true`), or none are pending (`false`).                                                                |
+| `requestedChanges`    | `condition`: boolean                                                | A reviewer's latest review requests changes (`true`), or none does (`false`).                                                                          |
+| `isApproved`          | `condition`: count, optional `allowPending`: boolean                | No reviewer is requesting changes, at least this many approved, and no reviewer is pending. With `allowPending: true`, pending reviewers do not block. |
+| `commitMessagesMatch` | `condition`: pattern, optional `scope`                              | Commit messages match.                                                                                                                                 |
+| `commitsSignedOff`    | `condition`: boolean                                                | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`).                                           |
+| `hasTrailer`          | `trailer`: key, optional `condition`: pattern, optional `scope`     | Commits carry the trailer, with a value matching the pattern when one is given.                                                                        |
+| `hasConflict`         | `condition`: boolean                                                | The pull request conflicts with its base branch (`true`), or does not (`false`).                                                                       |
+| `checksPass`          | `checks`: list of check names, `condition`: boolean                 | Every named check succeeded (`true`), or at least one has not (`false`).                                                                               |
+| `checkStatus`         | `check`: check name, `condition`: `success`, `failure` or `pending` | The named check is in that state.                                                                                                                      |
 
 Activity is GitHub's `updated_at` time for the issue or pull request.
 
@@ -68,7 +68,7 @@ Reviews count each reviewer's latest decisive review: comments and pending revie
 
 ```yaml
 - type: baseBranchMatches
-  condition: "^release/"
+  condition: '^release/'
 ```
 
 ### Pull request only conditions
@@ -97,7 +97,7 @@ Trailers are read the way git reads them: only from the final paragraph of the m
 ```yaml
 labelling:
   conflict:
-    label: "Status: Conflict"
+    label: 'Status: Conflict'
     on: [pullRequest]
     when:
       condition:
@@ -118,7 +118,7 @@ Like every labelling rule, it is evaluated when the pull request gets one of the
 ```yaml
 labelling:
   ready:
-    label: "Status: Ready to merge"
+    label: 'Status: Ready to merge'
     on: [pullRequest]
     when:
       condition:
@@ -128,7 +128,7 @@ labelling:
         - type: isApproved
           condition: 1
   failing:
-    label: "Status: CI failing"
+    label: 'Status: CI failing'
     on: [pullRequest]
     when:
       condition:
@@ -147,12 +147,12 @@ Conditions that need a pull request's files, reviews, commits, mergeability or c
 
 Combinators nest condition groups.
 
-| Type | Fields | Passes when |
-| --- | --- | --- |
-| `$and` | `condition`: list of groups | Every group passes. |
-| `$or` | `condition`: list of groups | At least one group passes. |
+| Type    | Fields                                         | Passes when                            |
+| ------- | ---------------------------------------------- | -------------------------------------- |
+| `$and`  | `condition`: list of groups                    | Every group passes.                    |
+| `$or`   | `condition`: list of groups                    | At least one group passes.             |
 | `$only` | `requires`: count, `condition`: list of groups | Exactly `requires` of the groups pass. |
-| `$not` | `condition`: a group | The group fails. |
+| `$not`  | `condition`: a group                           | The group fails.                       |
 
 ```yaml
 when:
@@ -161,15 +161,15 @@ when:
       condition:
         - condition:
             - type: filesMatch
-              condition: "docs/**"
+              condition: 'docs/**'
         - condition:
             - type: titleMatches
-              condition: "^docs"
+              condition: '^docs'
     - type: $not
       condition:
         condition:
           - type: creatorMatches
-            condition: "^dependabot"
+            condition: '^dependabot'
 ```
 
 `$not` also accepts the two forms v1 wrote: a one-item list holding the group, or the conditions inline with `requires` on the `$not` itself.
@@ -179,7 +179,7 @@ when:
   requires: 1
   condition:
     - type: creatorMatches
-      condition: "/^dependabot/i"
+      condition: '/^dependabot/i'
 ```
 
 ## Explanations

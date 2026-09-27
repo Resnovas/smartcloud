@@ -1,6 +1,6 @@
 ---
-title: "CLI"
-description: "Validate and migrate smartcloud configs from the command line."
+title: 'CLI'
+description: 'Validate and migrate smartcloud configs from the command line.'
 ---
 
 The `smartcloud` command checks configs and converts v1 configs, without running the action.
@@ -41,8 +41,8 @@ smartcloud migrate [input] [--out <file>]
 
 Converts a v1 JSON config (default `.github/config.json`) to v2 YAML, and prints a warning for every v1 key it does not carry over. The output starts with a schema hint for editors, and is proven to decode before it is written.
 
-| Option | Meaning |
-| --- | --- |
+| Option        | Meaning                                             |
+| ------------- | --------------------------------------------------- |
 | `--out`, `-o` | Write the YAML to this file instead of printing it. |
 
 A v2 file given to `migrate` is rewritten unchanged. See [Migrating from v1](/migration) for worked examples.
@@ -70,13 +70,13 @@ smartcloud dry-run --repo <owner/name> (--pr <n> | --issue <n> | --event <event>
 
 Runs every feature against a real pull request, issue or repository event, through the dry-run layer. It reads GitHub as the action would, then prints the job summary and every write the run would make. It never writes.
 
-| Option | Meaning |
-| --- | --- |
-| `--repo` | The repository, as `owner/name`. |
-| `--pr`, `--issue` | Simulate this pull request or issue, built from its current state on GitHub. |
-| `--event` | Simulate `schedule`, `push` or `workflow_dispatch`. |
-| `--config` | Use this local config file instead of the repository's own config on its default branch. |
-| `--features` | Only these features, comma separated. An empty list, such as `--features ,`, runs every feature. |
+| Option            | Meaning                                                                                          |
+| ----------------- | ------------------------------------------------------------------------------------------------ |
+| `--repo`          | The repository, as `owner/name`.                                                                 |
+| `--pr`, `--issue` | Simulate this pull request or issue, built from its current state on GitHub.                     |
+| `--event`         | Simulate `schedule`, `push` or `workflow_dispatch`.                                              |
+| `--config`        | Use this local config file instead of the repository's own config on its default branch.         |
+| `--features`      | Only these features, comma separated. An empty list, such as `--features ,`, runs every feature. |
 
 Give exactly one of `--pr`, `--issue` or `--event`.
 

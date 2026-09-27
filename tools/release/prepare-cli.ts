@@ -32,12 +32,16 @@ const bundles = ['smartcloud.js', 'smartcloud-mcp.js']
 
 for (const bundle of bundles) {
   if (!existsSync(join(release, bundle))) {
-    console.error(`apps/cli/release/${bundle} is missing: run \`pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp\` first.`)
+    console.error(
+      `apps/cli/release/${bundle} is missing: run \`pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp\` first.`,
+    )
     process.exit(1)
   }
 }
 
-const workspace: { version: string; description: string } = JSON.parse(readFileSync(join(root, 'apps/cli/package.json'), 'utf8'))
+const workspace: { version: string; description: string } = JSON.parse(
+  readFileSync(join(root, 'apps/cli/package.json'), 'utf8'),
+)
 
 const manifest = {
   name: '@resnovas/smartcloud',

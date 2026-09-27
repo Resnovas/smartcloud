@@ -1,6 +1,6 @@
 ---
-title: "Reporting"
-description: "Where findings and changes appear: check runs, one comment, the job summary and annotations."
+title: 'Reporting'
+description: 'Where findings and changes appear: check runs, one comment, the job summary and annotations.'
 ---
 
 Every feature records two things while it runs:
@@ -14,11 +14,11 @@ After the run, smartcloud publishes them in four places.
 
 Each feature that ran gets one completed check run on the commit, named `smartcloud / <feature>`, for example `smartcloud / reviews`.
 
-| Findings | Conclusion |
-| --- | --- |
-| Any error | failure |
-| Warnings, no errors | neutral |
-| Notices only, or none | success |
+| Findings              | Conclusion |
+| --------------------- | ---------- |
+| Any error             | failure    |
+| Warnings, no errors   | neutral    |
+| Notices only, or none | success    |
 
 A feature that failed to run concludes as failure with the error as its summary, so a broken feature can never pass a required check. Findings with a file and line appear as annotations on the diff.
 

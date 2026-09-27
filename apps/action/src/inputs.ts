@@ -41,7 +41,6 @@ export interface Inputs {
   readonly given: ReadonlyArray<string>
 }
 
-
 // Actions sets every declared input, empty when not given, so empty means absent.
 const input = (name: string) =>
   Config.string(`INPUT_${name.toUpperCase()}`).pipe(
@@ -105,7 +104,12 @@ export const readInputs = Effect.gen(function* () {
   }
   for (const [name, value] of Object.entries(optional)) if (Option.isSome(value)) given.push(name)
   if (Option.exists(optional.checkRunId, (value) => !/^[1-9]\d*$/.test(value))) {
-    return yield* Effect.fail(ConfigError.InvalidData(['INPUT_CHECKRUNID'], 'must be the job\'s check run id, as ${{ job.check_run_id }} gives it'))
+    return yield* Effect.fail(
+      ConfigError.InvalidData(
+        ['INPUT_CHECKRUNID'],
+        "must be the job's check run id, as ${{ job.check_run_id }} gives it",
+      ),
+    )
   }
   const inputs: Inputs = {
     token,

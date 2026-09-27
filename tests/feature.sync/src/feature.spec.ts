@@ -19,7 +19,15 @@ import { Effect } from 'effect'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { decodeEvent, makeReport, Report, runFeatures } from '@resnovas/engine'
 import { DEFAULT_POLICY_BASE, parseSource, previewSync, syncFeature } from '@resnovas/feature.sync'
-import { DryRun, DryRunLog, fileKey, GitHub, type GitHubService, makeMemoryGitHub, NotFound } from '@resnovas/integrations.github'
+import {
+  DryRun,
+  DryRunLog,
+  fileKey,
+  GitHub,
+  type GitHubService,
+  makeMemoryGitHub,
+  NotFound,
+} from '@resnovas/integrations.github'
 
 const SOURCE = 'Resnovas/.github/templates@main'
 const LINK = `${DEFAULT_POLICY_BASE}/GOVERNANCE.md#synced-files`
@@ -27,7 +35,10 @@ const LINK = `${DEFAULT_POLICY_BASE}/GOVERNANCE.md#synced-files`
 const dependabot = (ecosystem: string) =>
   `# house:managed:begin\nversion: 2\nupdates:\n  - package-ecosystem: ${ecosystem}\n    directory: /\n# house:managed:end\n# house:local\n`
 
-const config = (sync: Partial<NonNullable<SmartcloudConfig['sync']>> = {}, extra: Partial<SmartcloudConfig> = {}): SmartcloudConfig => ({
+const config = (
+  sync: Partial<NonNullable<SmartcloudConfig['sync']>> = {},
+  extra: Partial<SmartcloudConfig> = {},
+): SmartcloudConfig => ({
   version: 2,
   ...extra,
   sync: { source: SOURCE, values: { HOLDER: 'Resnovas' }, exclude: ['KEEP.md'], ...sync },
@@ -54,7 +65,9 @@ const seed = () =>
   })
 
 const run = (github: GitHubService, smartcloud: SmartcloudConfig, event: string, payload: unknown = {}) =>
-  runFeatures({ config: smartcloud, event, payload, features: [syncFeature] }).pipe(Effect.provideService(GitHub, github))
+  runFeatures({ config: smartcloud, event, payload, features: [syncFeature] }).pipe(
+    Effect.provideService(GitHub, github),
+  )
 
 const pullRequest = {
   action: 'synchronize',
@@ -79,7 +92,12 @@ describe('sync run', () => {
       expect(result.failed).toStrictEqual([])
       expect(state.proposals).toHaveLength(1)
       const [proposal] = state.proposals
-      expect(proposal).toMatchObject({ branch: 'smartcloud/sync', base: 'main', title: 'chore(sync): sync files from Resnovas/.github', open: true })
+      expect(proposal).toMatchObject({
+        branch: 'smartcloud/sync',
+        base: 'main',
+        title: 'chore(sync): sync files from Resnovas/.github',
+        open: true,
+      })
       expect(proposal?.files).toStrictEqual([
         {
           path: '.github/dependabot.yml',
@@ -98,7 +116,11 @@ describe('sync run', () => {
         'Proposed 3 synced file(s) on smartcloud/sync in new pull request #1',
       ])
       expect(result.facts).toStrictEqual([
-        { feature: 'sync', name: 'sync proposed', values: { created: 0, updated: 2, mode: 1, conflicts: 1, pull_request: 'created' } },
+        {
+          feature: 'sync',
+          name: 'sync proposed',
+          values: { created: 0, updated: 2, mode: 1, conflicts: 1, pull_request: 'created' },
+        },
       ])
       expect(result.findings).toStrictEqual([
         {
@@ -140,7 +162,13 @@ describe('sync run', () => {
       expect(state.proposals).toStrictEqual([])
       expect(result.changes).toStrictEqual([])
       expect(result.findings).toStrictEqual([])
-      expect(result.facts[0]?.values).toStrictEqual({ created: 0, updated: 0, mode: 0, conflicts: 0, pull_request: 'none' })
+      expect(result.facts[0]?.values).toStrictEqual({
+        created: 0,
+        updated: 0,
+        mode: 0,
+        conflicts: 0,
+        pull_request: 'none',
+      })
     }),
   )
 
@@ -184,10 +212,19 @@ describe('sync run', () => {
       })
       const result = yield* run(service, { version: 2, sync: { source: 'Resnovas/.github/templates' } }, 'schedule')
       expect(result.failed).toStrictEqual([])
-      expect(state.proposals[0]?.files).toStrictEqual([{ path: 'LICENSE', content: '(c) Resnovas/example\n', executable: false }])
+      expect(state.proposals[0]?.files).toStrictEqual([
+        { path: 'LICENSE', content: '(c) Resnovas/example\n', executable: false },
+      ])
       state.files.set(repo('LICENSE', 'head-sha'), 'edited\n')
-      const check = yield* run(service, { version: 2, sync: { source: 'Resnovas/.github/templates' } }, 'pull_request', pullRequest)
-      expect(check.findings.map((finding) => finding.message)).toStrictEqual(['LICENSE edits a synced file. Change it in Resnovas/.github instead.'])
+      const check = yield* run(
+        service,
+        { version: 2, sync: { source: 'Resnovas/.github/templates' } },
+        'pull_request',
+        pullRequest,
+      )
+      expect(check.findings.map((finding) => finding.message)).toStrictEqual([
+        'LICENSE edits a synced file. Change it in Resnovas/.github instead.',
+      ])
     }),
   )
 
@@ -245,7 +282,8 @@ describe('synced files check', () => {
           feature: 'sync',
           rule: 'SYNC',
           level: 'error',
-          message: '.github/dependabot.yml edits the managed block; add local rules outside it. Change it in Resnovas/.github instead.',
+          message:
+            '.github/dependabot.yml edits the managed block; add local rules outside it. Change it in Resnovas/.github instead.',
           path: '.github/dependabot.yml',
           link: LINK,
         },
@@ -271,11 +309,23 @@ describe('synced files check', () => {
 
   it.effect('warns a maintainer or the owner instead of failing them, unless sync.maintainerLevel says error', () =>
     Effect.gen(function* () {
-      const levels = (result: { readonly findings: ReadonlyArray<{ readonly level: string }> }) => [...new Set(result.findings.map((finding) => finding.level))]
+      const levels = (result: { readonly findings: ReadonlyArray<{ readonly level: string }> }) => [
+        ...new Set(result.findings.map((finding) => finding.level)),
+      ]
       const { service } = withHead()
-      const maintainer = yield* run(service, config({}, { roles: { maintainers: ['@Jane'] } }), 'pull_request', pullRequest)
+      const maintainer = yield* run(
+        service,
+        config({}, { roles: { maintainers: ['@Jane'] } }),
+        'pull_request',
+        pullRequest,
+      )
       expect(levels(maintainer)).toStrictEqual(['warning'])
-      const strict = yield* run(service, config({ maintainerLevel: 'error' }, { roles: { maintainers: ['jane'] } }), 'pull_request', pullRequest)
+      const strict = yield* run(
+        service,
+        config({ maintainerLevel: 'error' }, { roles: { maintainers: ['jane'] } }),
+        'pull_request',
+        pullRequest,
+      )
       expect(levels(strict)).toStrictEqual(['error'])
       const owner = { ...pullRequest, pull_request: { ...pullRequest.pull_request, user: { login: 'Resnovas' } } }
       expect(levels(yield* run(service, config(), 'pull_request', owner))).toStrictEqual(['warning'])
@@ -286,7 +336,10 @@ describe('synced files check', () => {
     Effect.gen(function* () {
       const { service, state } = seed()
       state.files.set(repo('.github/dependabot.yml'), dependabot('npm'))
-      state.files.set(repo('.github/dependabot.yml', 'head-sha'), `${dependabot('npm')}  - package-ecosystem: npm\n    directory: /\n`)
+      state.files.set(
+        repo('.github/dependabot.yml', 'head-sha'),
+        `${dependabot('npm')}  - package-ecosystem: npm\n    directory: /\n`,
+      )
       state.files.set(repo('LICENSE', 'head-sha'), 'MIT\n')
       state.files.set(repo('tools/run', 'head-sha'), '#!/bin/sh\n')
       const result = yield* run(service, config(), 'pull_request', pullRequest)
@@ -333,11 +386,16 @@ describe('syncFeature', () => {
     const { service, state } = seed()
     return Effect.gen(function* () {
       const report = yield* makeReport
-      const issue = yield* decodeEvent('issues', { action: 'opened', issue: { ...pullRequest.pull_request, number: 3 } })
+      const issue = yield* decodeEvent('issues', {
+        action: 'opened',
+        issue: { ...pullRequest.pull_request, number: 3 },
+      })
       const repository = yield* decodeEvent('schedule', {})
       if (issue.kind === 'unsupported' || repository.kind === 'unsupported') return expect.unreachable()
       yield* syncFeature.run({ config: config(), envelope: issue }).pipe(Effect.provideService(Report, report))
-      yield* syncFeature.run({ config: { version: 2 }, envelope: repository }).pipe(Effect.provideService(Report, report))
+      yield* syncFeature
+        .run({ config: { version: 2 }, envelope: repository })
+        .pipe(Effect.provideService(Report, report))
       expect(yield* report.snapshot).toStrictEqual({ findings: [], changes: [], facts: [] })
       expect(state.proposals).toStrictEqual([])
     }).pipe(Effect.provideService(GitHub, service))
@@ -345,7 +403,12 @@ describe('syncFeature', () => {
 
   it.effect('parses the source as owner/repo/path@ref', () =>
     Effect.gen(function* () {
-      expect(yield* parseSource(SOURCE)).toStrictEqual({ owner: 'Resnovas', repo: '.github', path: 'templates', ref: 'main' })
+      expect(yield* parseSource(SOURCE)).toStrictEqual({
+        owner: 'Resnovas',
+        repo: '.github',
+        path: 'templates',
+        ref: 'main',
+      })
       expect((yield* Effect.flip(parseSource('x'))).message).toBe('sync.source must be owner/repo/path@ref, got "x"')
     }),
   )
@@ -357,7 +420,11 @@ describe('previewSync', () => {
     return Effect.gen(function* () {
       const preview = yield* previewSync(config().sync ?? { source: SOURCE })
       expect(preview.source).toStrictEqual({ owner: 'Resnovas', repo: '.github', path: 'templates', ref: 'main' })
-      expect(preview.templates.map((file) => file.path).sort()).toStrictEqual(['.github/dependabot.yml', 'LICENSE', 'tools/run'])
+      expect(preview.templates.map((file) => file.path).sort()).toStrictEqual([
+        '.github/dependabot.yml',
+        'LICENSE',
+        'tools/run',
+      ])
       expect([...preview.current.keys()].sort()).toStrictEqual(['.github/dependabot.yml', 'LICENSE', 'tools/run'])
       expect(preview.plan.files.map((file) => file.path)).toContain('LICENSE')
       expect(state.proposals).toStrictEqual([])

@@ -23,7 +23,10 @@ describe('features', () => {
     Effect.gen(function* () {
       expect(parseFeatureList(' labels, stale,,')).toStrictEqual(['labels', 'stale'])
       expect(yield* selectFeatures(undefined)).toBe(FEATURES)
-      expect((yield* selectFeatures(['stale', 'labels'])).map((feature) => feature.name)).toStrictEqual(['labels', 'stale'])
+      expect((yield* selectFeatures(['stale', 'labels'])).map((feature) => feature.name)).toStrictEqual([
+        'labels',
+        'stale',
+      ])
       const unknown = yield* Effect.flip(selectFeatures(['labels', 'nope']))
       expect(unknown).toBeInstanceOf(UnknownFeatures)
       expect(unknown.message).toMatch(/^unknown feature\(s\): nope; expected some of conventions, /)

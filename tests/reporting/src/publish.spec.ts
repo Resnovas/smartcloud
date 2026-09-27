@@ -26,7 +26,11 @@ describe('publishReport', () => {
       const { service, state } = makeMemoryGitHub()
       const first = yield* publishReport(run()).pipe(Effect.provideService(GitHub, service))
       expect(first).toMatchObject({ checkRuns: 3, comment: 'created', warnings: [] })
-      expect(state.checkRuns.map((entry) => entry.name)).toStrictEqual(['smartcloud / commits', 'smartcloud / sync', 'smartcloud / reviews'])
+      expect(state.checkRuns.map((entry) => entry.name)).toStrictEqual([
+        'smartcloud / commits',
+        'smartcloud / sync',
+        'smartcloud / reviews',
+      ])
       const again = yield* publishReport(run()).pipe(Effect.provideService(GitHub, service))
       expect(again.comment).toBe('unchanged')
       const fixed = yield* publishReport(run({ findings: [notice] })).pipe(Effect.provideService(GitHub, service))
@@ -40,7 +44,19 @@ describe('publishReport', () => {
     Effect.gen(function* () {
       for (const legacy of ['<!--undefined: Conventions-->\n\r\n\rTitle check failed', '<!--smartcloud: Labels-->']) {
         const { service, state } = makeMemoryGitHub({
-          issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: 'a person quoting <!--smartcloud: x-->', author: 'jane', bot: false }, { id: 2, body: legacy, author: 'bot', bot: true }] }]]),
+          issues: new Map([
+            [
+              7,
+              {
+                labels: [],
+                open: true,
+                comments: [
+                  { id: 1, body: 'a person quoting <!--smartcloud: x-->', author: 'jane', bot: false },
+                  { id: 2, body: legacy, author: 'bot', bot: true },
+                ],
+              },
+            ],
+          ]),
         })
         const published = yield* publishReport(run()).pipe(Effect.provideService(GitHub, service))
         expect(published.comment).toBe('updated')
@@ -58,7 +74,9 @@ describe('publishReport', () => {
         { id: 1, body: `${MARKER}\nplease edit me`, author: 'mallory', bot: false },
         { id: 2, body: '<!--smartcloud: Labels-->', author: 'mallory', bot: false },
       ]
-      const { service, state } = makeMemoryGitHub({ issues: new Map([[7, { labels: [], open: true, comments: [...forged] }]]) })
+      const { service, state } = makeMemoryGitHub({
+        issues: new Map([[7, { labels: [], open: true, comments: [...forged] }]]),
+      })
       const published = yield* publishReport(run()).pipe(Effect.provideService(GitHub, service))
       expect(published.comment).toBe('created')
       const comments = state.issues.get(7)?.comments ?? []
@@ -70,9 +88,20 @@ describe('publishReport', () => {
   it.effect('updates a marker comment from a trusted login that is not a bot account', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub({
-        issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: `${MARKER}\nold`, author: 'Release-Robot', bot: false }] }]]),
+        issues: new Map([
+          [
+            7,
+            {
+              labels: [],
+              open: true,
+              comments: [{ id: 1, body: `${MARKER}\nold`, author: 'Release-Robot', bot: false }],
+            },
+          ],
+        ]),
       })
-      const published = yield* publishReport(run(), { trustedAuthors: ['@release-robot'] }).pipe(Effect.provideService(GitHub, service))
+      const published = yield* publishReport(run(), { trustedAuthors: ['@release-robot'] }).pipe(
+        Effect.provideService(GitHub, service),
+      )
       expect(published.comment).toBe('updated')
       expect(state.issues.get(7)?.comments).toHaveLength(1)
       expect(state.issues.get(7)?.comments[0]?.body).not.toContain('old')
@@ -82,15 +111,25 @@ describe('publishReport', () => {
   it.effect('under the dry-run layer records every check run and comment write, and changes nothing', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub({
-        issues: new Map([[7, { labels: [], open: true, comments: [{ id: 1, body: `${MARKER}\nold`, author: 'bot', bot: true }] }]]),
+        issues: new Map([
+          [7, { labels: [], open: true, comments: [{ id: 1, body: `${MARKER}\nold`, author: 'bot', bot: true }] }],
+        ]),
       })
       const { published, writes } = yield* Effect.gen(function* () {
         const published = yield* publishReport(run())
         return { published, writes: yield* Effect.flatMap(DryRunLog, (log) => log.writes) }
       }).pipe(Effect.provide(DryRun), Effect.provideService(GitHub, service))
       expect(published).toMatchObject({ checkRuns: 3, comment: 'updated', warnings: [] })
-      expect(writes.map((write) => write.operation)).toStrictEqual(['createCheckRun', 'createCheckRun', 'createCheckRun', 'updateComment'])
-      expect(writes[3]?.details).toMatchObject({ id: 1, body: expect.stringContaining('found 1 error(s), 1 warning(s)') })
+      expect(writes.map((write) => write.operation)).toStrictEqual([
+        'createCheckRun',
+        'createCheckRun',
+        'createCheckRun',
+        'updateComment',
+      ])
+      expect(writes[3]?.details).toMatchObject({
+        id: 1,
+        body: expect.stringContaining('found 1 error(s), 1 warning(s)'),
+      })
       expect(state.checkRuns).toHaveLength(0)
       expect(state.issues.get(7)?.comments).toStrictEqual([{ id: 1, body: `${MARKER}\nold`, author: 'bot', bot: true }])
 
@@ -108,8 +147,12 @@ describe('publishReport', () => {
   it.effect('does not comment when there is nothing to act on, or when told not to', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub()
-      expect((yield* publishReport(run({ findings: [notice] })).pipe(Effect.provideService(GitHub, service))).comment).toBe('skipped')
-      expect((yield* publishReport(run(), { comment: false }).pipe(Effect.provideService(GitHub, service))).comment).toBe('skipped')
+      expect(
+        (yield* publishReport(run({ findings: [notice] })).pipe(Effect.provideService(GitHub, service))).comment,
+      ).toBe('skipped')
+      expect(
+        (yield* publishReport(run(), { comment: false }).pipe(Effect.provideService(GitHub, service))).comment,
+      ).toBe('skipped')
       expect(state.issues.get(7)?.comments ?? []).toHaveLength(0)
     }),
   )
@@ -136,7 +179,8 @@ describe('publishReport', () => {
       const readOnly = {
         ...service,
         createCheckRun: () => Effect.fail(denied),
-        listComments: () => Effect.fail(new Forbidden({ operation: 'listComments', detail: 'Resource not accessible by integration' })),
+        listComments: () =>
+          Effect.fail(new Forbidden({ operation: 'listComments', detail: 'Resource not accessible by integration' })),
       }
       const published = yield* publishReport(run()).pipe(Effect.provideService(GitHub, readOnly))
       expect(published.checkRuns).toBe(0)

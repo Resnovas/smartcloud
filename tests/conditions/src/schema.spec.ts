@@ -29,7 +29,11 @@ describe('ConditionGroup', () => {
         { type: '$or', condition: [{ requires: 1, condition: [{ type: 'isOpen', condition: true }] }] },
         { type: '$not', condition: { requires: 1, condition: [{ type: 'isDraft', condition: true }] } },
         { type: '$not', requires: 1, condition: [{ requires: 1, condition: [{ type: 'isDraft', condition: true }] }] },
-        { type: '$only', requires: 1, condition: [{ requires: 1, condition: [{ type: 'isLocked', condition: false }] }] },
+        {
+          type: '$only',
+          requires: 1,
+          condition: [{ requires: 1, condition: [{ type: 'isLocked', condition: false }] }],
+        },
         { type: '$not', requires: 1, condition: [{ type: 'creatorMatches', condition: '/^dependabot/i' }] },
       ],
     }
@@ -75,7 +79,10 @@ describe('ConditionGroup', () => {
 
   it('round-trips: encoding then decoding returns the original', () => {
     const group = Either.getOrThrow(
-      decode({ requires: 1, condition: [{ type: '$not', condition: { condition: [{ type: 'isDraft', condition: true }] } }] }),
+      decode({
+        requires: 1,
+        condition: [{ type: '$not', condition: { condition: [{ type: 'isDraft', condition: true }] } }],
+      }),
     )
     expect(Schema.decodeUnknownSync(ConditionGroup)(Schema.encodeSync(ConditionGroup)(group))).toStrictEqual(group)
   })

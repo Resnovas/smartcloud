@@ -16,7 +16,15 @@
 
 import type { Facet, Subject } from '@resnovas/conditions'
 import { type Feature, type Finding, Report } from '@resnovas/engine'
-import { authorRole, classifyAttribution, levelFor, makeAiIdentityMatcher, policyBase, pullRequestCommits, sameLogin } from '@resnovas/feature.commits'
+import {
+  authorRole,
+  classifyAttribution,
+  levelFor,
+  makeAiIdentityMatcher,
+  policyBase,
+  pullRequestCommits,
+  sameLogin,
+} from '@resnovas/feature.commits'
 import { GitHub } from '@resnovas/integrations.github'
 import { Effect } from 'effect'
 import { type Disclosure, type DisclosureLabels, disclosureLabels, isLevel, LEVELS, parseDisclosure } from './parse.js'
@@ -56,34 +64,75 @@ const checkDisclosure = (evidence: Evidence): ReadonlyArray<Draft> => {
   const ai02 = `${base}/AI_POLICY.md#ai-02`
   const levels = LEVELS.join(', ')
   if (disclosure.level === undefined) {
-    return [{ rule: 'AI-01', message: `The AI disclosure is missing. Fill in "${labels.level}:" with one of: ${levels}.`, link: ai01 }]
+    return [
+      {
+        rule: 'AI-01',
+        message: `The AI disclosure is missing. Fill in "${labels.level}:" with one of: ${levels}.`,
+        link: ai01,
+      },
+    ]
   }
   if (!isLevel(disclosure.level)) {
-    return [{ rule: 'AI-01', message: `"${labels.level}: ${disclosure.level}" is not a level. Use one of: ${levels}.`, link: ai01 }]
+    return [
+      {
+        rule: 'AI-01',
+        message: `"${labels.level}: ${disclosure.level}" is not a level. Use one of: ${levels}.`,
+        link: ai01,
+      },
+    ]
   }
   if (disclosure.level === 'none') {
     return [
-      ...(listsNoTools(disclosure.tools) ? [] : [{ rule: 'AI-01', message: `${labels.level} is none but ${labels.tools} lists "${disclosure.tools}".`, link: ai01 }]),
-      ...evidence.aiAttributed.map((sha) => ({ rule: 'AI-01', message: `${labels.level} is none but this commit credits an AI tool.`, link: ai01, commit: sha })),
+      ...(listsNoTools(disclosure.tools)
+        ? []
+        : [
+            {
+              rule: 'AI-01',
+              message: `${labels.level} is none but ${labels.tools} lists "${disclosure.tools}".`,
+              link: ai01,
+            },
+          ]),
+      ...evidence.aiAttributed.map((sha) => ({
+        rule: 'AI-01',
+        message: `${labels.level} is none but this commit credits an AI tool.`,
+        link: ai01,
+        commit: sha,
+      })),
     ]
   }
 
   const found: Array<Draft> = []
   if (listsNoTools(disclosure.tools)) {
-    found.push({ rule: 'AI-01', message: `${labels.level} is ${disclosure.level}; name every tool and model in "${labels.tools}:".`, link: ai01 })
+    found.push({
+      rule: 'AI-01',
+      message: `${labels.level} is ${disclosure.level}; name every tool and model in "${labels.tools}:".`,
+      link: ai01,
+    })
   }
   if (!evidence.aiCoAuthored) {
-    found.push({ rule: 'AI-02', message: `${labels.level} is ${disclosure.level} but no commit has a Co-authored-by trailer for the AI tool.`, link: ai02 })
+    found.push({
+      rule: 'AI-02',
+      message: `${labels.level} is ${disclosure.level} but no commit has a Co-authored-by trailer for the AI tool.`,
+      link: ai02,
+    })
   }
   // AI-assisted pull requests start as drafts and leave draft only once the
   // accountable human has reviewed them.
   if (subject.draft !== true) {
     if (evidence.requireDraft && evidence.action === 'opened') {
-      found.push({ rule: 'AI-20', message: 'AI-assisted pull requests must be opened as drafts. Convert this one to a draft.', link: `${base}/AI_POLICY.md#ai-20` })
+      found.push({
+        rule: 'AI-20',
+        message: 'AI-assisted pull requests must be opened as drafts. Convert this one to a draft.',
+        link: `${base}/AI_POLICY.md#ai-20`,
+      })
     }
     const ai21 = `${base}/AI_POLICY.md#ai-21`
     if (disclosure.accountable === undefined || !sameLogin(disclosure.accountable, subject.author)) {
-      found.push({ rule: 'AI-21', message: `"${labels.accountable}:" must be the pull request author, @${subject.author}.`, link: ai21 })
+      found.push({
+        rule: 'AI-21',
+        message: `"${labels.accountable}:" must be the pull request author, @${subject.author}.`,
+        link: ai21,
+      })
     }
     if (disclosure.review === undefined) {
       found.push({
@@ -140,7 +189,10 @@ export const disclosureFeature: Feature = {
       const { subject, commits } = yield* pullRequestCommits(context, NAME)
       const github = yield* GitHub
       const role = authorRole(subject.author, context.config.roles, github.coordinates.owner)
-      if (role === 'bot') return yield* Effect.logInfo('disclosure: skipped, the author is a trusted bot').pipe(Effect.annotateLogs({ feature: NAME, role }))
+      if (role === 'bot')
+        return yield* Effect.logInfo('disclosure: skipped, the author is a trusted bot').pipe(
+          Effect.annotateLogs({ feature: NAME, role }),
+        )
 
       const isAi = makeAiIdentityMatcher(context.config.commits?.aiIdentities)
       const attributions = commits.map((commit) => ({ sha: commit.sha, ...classifyAttribution(commit.message, isAi) }))
@@ -149,7 +201,9 @@ export const disclosureFeature: Feature = {
         subject,
         disclosure: parseDisclosure(subject.body, labels),
         labels,
-        aiAttributed: attributions.filter((attribution) => attribution.aiAttributed).map((attribution) => attribution.sha),
+        aiAttributed: attributions
+          .filter((attribution) => attribution.aiAttributed)
+          .map((attribution) => attribution.sha),
         aiCoAuthored: attributions.some((attribution) => attribution.aiCoAuthored),
         action: context.envelope.action,
         requireDraft: section.requireDraft !== false,
@@ -160,7 +214,13 @@ export const disclosureFeature: Feature = {
         yield* report.add({ feature: NAME, level: levelFor(role, draft.rule, section.maintainerLevel), ...draft })
       }
       yield* Effect.logInfo(`disclosure: ${found.length} problem(s) across ${commits.length} commit(s)`).pipe(
-        Effect.annotateLogs({ feature: NAME, role, commits: commits.length, problems: found.length, rules: [...new Set(found.map((draft) => draft.rule))] }),
+        Effect.annotateLogs({
+          feature: NAME,
+          role,
+          commits: commits.length,
+          problems: found.length,
+          rules: [...new Set(found.map((draft) => draft.rule))],
+        }),
       )
     }),
 }

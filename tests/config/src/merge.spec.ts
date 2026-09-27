@@ -45,16 +45,18 @@ describe('mergeLocked', () => {
     expect(JSON.stringify(Either.getOrThrow(merged).value)).toBe(
       JSON.stringify({ labels: { bug: { name: 'bug' }, constructor: { name: 'c' }, toString: { name: 't' } } }),
     )
-    const restated = mergeLocked(Either.getOrThrow(merged), { labels: { constructor: { name: 'c', hasOwnProperty: 1 } } }, 'x')
+    const restated = mergeLocked(
+      Either.getOrThrow(merged),
+      { labels: { constructor: { name: 'c', hasOwnProperty: 1 } } },
+      'x',
+    )
     expect(Either.isRight(restated)).toBe(true)
   })
 
   it('keeps a __proto__ key as data rather than a prototype', () => {
     const next: Parameters<typeof mergeLocked>[1] = JSON.parse('{"labels": {"__proto__": {"name": "p"}}}')
     const merged = Either.getOrThrow(mergeLocked(empty, { labels: {} }, 'house'))
-    const result = Either.getOrThrow(
-      mergeLocked(merged, next, 'repo'),
-    )
+    const result = Either.getOrThrow(mergeLocked(merged, next, 'repo'))
     const labels = result.value['labels']
     expect(typeof labels === 'object' && labels !== null && Object.hasOwn(labels, '__proto__')).toBe(true)
   })
@@ -65,12 +67,18 @@ describe('mergeLocked', () => {
     expect(merged.origins.get('rules.x.preset')).toBe('house')
     expect(merged.origins.get('rules.x\\.preset')).toBe('repo')
     const error = mergeLocked(merged, { rules: { x: { preset: 'c' } } }, 'late')
-    expect(Either.isLeft(error) && error.left).toStrictEqual(new LockedRule({ path: 'rules.x.preset', preset: 'house', source: 'late' }))
+    expect(Either.isLeft(error) && error.left).toStrictEqual(
+      new LockedRule({ path: 'rules.x.preset', preset: 'house', source: 'late' }),
+    )
   })
 
   it('cannot add requires or other fields to an inherited condition group', () => {
     const base = Either.getOrThrow(
-      mergeLocked(empty, { labelling: { bug: { label: 'bug', when: { condition: [{ type: 'isOpen', condition: true }] } } } }, 'house'),
+      mergeLocked(
+        empty,
+        { labelling: { bug: { label: 'bug', when: { condition: [{ type: 'isOpen', condition: true }] } } } },
+        'house',
+      ),
     )
     const weakened = mergeLocked(
       base,

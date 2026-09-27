@@ -47,7 +47,10 @@ describe('evaluateGate', () => {
 
   it('counts each maintainer account once, however it is listed', () => {
     const aliases = ['ann', '@Ann', 'ANN', 'ann']
-    expect(evaluateGate(input({ maintainers: aliases }))).toStrictEqual({ status: 'open', reason: 'fewerThanTwoMaintainers' })
+    expect(evaluateGate(input({ maintainers: aliases }))).toStrictEqual({
+      status: 'open',
+      reason: 'fewerThanTwoMaintainers',
+    })
     const one = evaluateGate(input({ maintainers: [...aliases, 'bob'], reviews: [approved('ann')] }))
     expect(one).toMatchObject({ status: 'failed', required: 2, approvedBy: ['ann'] })
   })

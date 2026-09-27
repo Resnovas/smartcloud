@@ -31,7 +31,9 @@ describe('SmartcloudConfig', () => {
       labels: { bug: { name: 'bug', color: '#d73a4a', aliases: ['defect'] } },
       conventions: { comment: { header: 'h' }, rules: { title: { preset: 'conventionalCommits', level: 'error' } } },
     })
-    expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(config)
+    expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(
+      config,
+    )
   })
 })
 

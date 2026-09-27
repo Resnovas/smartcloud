@@ -19,7 +19,10 @@ import { Effect, Metric } from 'effect'
 import { findingsCounter, makeReport } from '@resnovas/engine'
 
 const count = (level: string, feature: string) =>
-  Effect.map(Metric.value(Metric.tagged(Metric.tagged(findingsCounter, 'level', level), 'feature', feature)), (state) => state.count)
+  Effect.map(
+    Metric.value(Metric.tagged(Metric.tagged(findingsCounter, 'level', level), 'feature', feature)),
+    (state) => state.count,
+  )
 
 describe('makeReport', () => {
   it.effect('starts empty and keeps findings and changes in the order they were recorded', () =>
@@ -41,7 +44,9 @@ describe('makeReport', () => {
       yield* report.measure({ feature: 'sync', name: 'sync proposed', values: { created: 1, pull_request: 'created' } })
       yield* report.add({ feature: 'sync', rule: 'SYNC', level: 'warning', message: 'edited' })
       const snapshot = yield* report.snapshot
-      expect(snapshot.facts).toStrictEqual([{ feature: 'sync', name: 'sync proposed', values: { created: 1, pull_request: 'created' } }])
+      expect(snapshot.facts).toStrictEqual([
+        { feature: 'sync', name: 'sync proposed', values: { created: 1, pull_request: 'created' } },
+      ])
       expect(snapshot.findings).toHaveLength(1)
     }),
   )

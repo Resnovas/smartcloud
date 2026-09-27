@@ -26,7 +26,7 @@ labelling:
     when:
       condition:
         - type: filesMatch
-          condition: "docs/**"
+          condition: 'docs/**'
 
 conventions:
   rules:
@@ -47,7 +47,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: "0 6 * * *"
+    - cron: '0 6 * * *'
   workflow_dispatch:
 
 permissions:

@@ -68,8 +68,9 @@ export const settingsFeature: Feature = {
       const { applied, failed } = yield* applySettings(planSettings(settings, config.roles, repository))
       // Settings GitHub does not offer on a private repository are left alone, and counted as skipped.
       const skipped =
-        [settings.security?.secretScanning, settings.security?.privateVulnerabilityReporting].filter((value) => value !== undefined && repository.private).length +
-        (settings.actions?.accessLevel !== undefined && !repository.private ? 1 : 0)
+        [settings.security?.secretScanning, settings.security?.privateVulnerabilityReporting].filter(
+          (value) => value !== undefined && repository.private,
+        ).length + (settings.actions?.accessLevel !== undefined && !repository.private ? 1 : 0)
       yield* report.measure({
         feature: FEATURE,
         name: 'settings applied',
@@ -80,7 +81,8 @@ export const settingsFeature: Feature = {
           feature: FEATURE,
           rule: 'settings.secret-scanning',
           level: 'notice',
-          message: 'Secret scanning was not changed: on a private repository it needs a paid Advanced Security licence, so it is left to the organisation.',
+          message:
+            'Secret scanning was not changed: on a private repository it needs a paid Advanced Security licence, so it is left to the organisation.',
         })
       }
       if (settings.security?.privateVulnerabilityReporting !== undefined && repository.private) {
@@ -96,14 +98,16 @@ export const settingsFeature: Feature = {
           feature: FEATURE,
           rule: 'settings.actions-access',
           level: 'notice',
-          message: 'The Actions access level was not changed: GitHub only has one for private and internal repositories, and every repository can use the actions and reusable workflows of a public one.',
+          message:
+            'The Actions access level was not changed: GitHub only has one for private and internal repositories, and every repository can use the actions and reusable workflows of a public one.',
         })
       }
       yield* report.add({
         feature: FEATURE,
         rule: 'settings.push-limit',
         level: 'notice',
-        message: 'The push limit has no API, so set it by hand: Settings > General > Pushes > limit branch and tag updates per push.',
+        message:
+          'The push limit has no API, so set it by hand: Settings > General > Pushes > limit branch and tag updates per push.',
       })
     }),
 }

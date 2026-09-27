@@ -1,6 +1,6 @@
 ---
-title: "Stale"
-description: "Mark inactive issues and pull requests stale, then abandon or close them."
+title: 'Stale'
+description: 'Mark inactive issues and pull requests stale, then abandon or close them.'
 ---
 
 The stale feature sweeps every open issue and pull request. It runs on `schedule` and `workflow_dispatch` events only, and is enabled by a `stale` section.
@@ -20,21 +20,21 @@ stale:
     when:
       condition:
         - type: titleMatches
-          condition: "^RFC"
+          condition: '^RFC'
 ```
 
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `on` | both | `issue`, `pullRequest`, or both. |
-| `staleAfterDays` | required | Days without activity before an item is marked stale. |
-| `staleLabel` | required | The label that marks an item stale. |
-| `staleComment` | none | Posted when an item is marked stale. |
-| `abandonedAfterDays` | none | Days after the stale mark before an item is abandoned. Without it, items are never abandoned. |
-| `abandonedLabel` | `abandoned` | The label that marks an item abandoned. |
-| `abandonedComment` | none | Posted when an item is abandoned. |
-| `close` | `false` | Close abandoned items. |
-| `exempt.labels` | none | Items with any of these labels are skipped. |
-| `exempt.when` | none | Items passing this [condition group](/conditions) are skipped. |
+| Key                  | Default     | Meaning                                                                                       |
+| -------------------- | ----------- | --------------------------------------------------------------------------------------------- |
+| `on`                 | both        | `issue`, `pullRequest`, or both.                                                              |
+| `staleAfterDays`     | required    | Days without activity before an item is marked stale.                                         |
+| `staleLabel`         | required    | The label that marks an item stale.                                                           |
+| `staleComment`       | none        | Posted when an item is marked stale.                                                          |
+| `abandonedAfterDays` | none        | Days after the stale mark before an item is abandoned. Without it, items are never abandoned. |
+| `abandonedLabel`     | `abandoned` | The label that marks an item abandoned.                                                       |
+| `abandonedComment`   | none        | Posted when an item is abandoned.                                                             |
+| `close`              | `false`     | Close abandoned items.                                                                        |
+| `exempt.labels`      | none        | Items with any of these labels are skipped.                                                   |
+| `exempt.when`        | none        | Items passing this [condition group](/conditions) are skipped.                                |
 
 `staleLabel` and `abandonedLabel` are label names as GitHub shows them, not keys of the `labels` section. They must differ, ignoring case: if they do not, the sweep records an error and changes nothing.
 

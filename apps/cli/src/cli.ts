@@ -15,25 +15,56 @@
  */
 
 import { Args, Command, Options, ValidationError } from '@effect/cli'
-import { command, gitHubConfigSource, liveConnect, optionNames, parseFeatureList, REPOSITORY_EVENTS, type Connect } from '@resnovas/runtime'
+import {
+  command,
+  gitHubConfigSource,
+  liveConnect,
+  optionNames,
+  parseFeatureList,
+  REPOSITORY_EVENTS,
+  type Connect,
+} from '@resnovas/runtime'
 import { Console, Effect, Option } from 'effect'
-import { checkCommitCommand, dryRunCommand, locateConfig, migrate, planSettingsCommand, syncCommand, validate } from './commands.js'
+import {
+  checkCommitCommand,
+  dryRunCommand,
+  locateConfig,
+  migrate,
+  planSettingsCommand,
+  syncCommand,
+  validate,
+} from './commands.js'
 import { VERSION } from './version.js'
 
 const path = Args.text({ name: 'path' }).pipe(
-  Args.withDescription('The config file. Defaults to the first of .github/smartcloud.yml, .github/smartcloud.yaml or .github/config.json.'),
+  Args.withDescription(
+    'The config file. Defaults to the first of .github/smartcloud.yml, .github/smartcloud.yaml or .github/config.json.',
+  ),
   Args.optional,
 )
 
 const validateCommand = Command.make('validate', { path }, ({ path }) =>
-  command(Option.match(path, { onNone: () => locateConfig('.'), onSome: Effect.succeed }).pipe(Effect.flatMap(validate), Effect.provide(gitHubConfigSource())), {
-    command: 'validate',
-    options: optionNames({ path }),
-  }),
+  command(
+    Option.match(path, { onNone: () => locateConfig('.'), onSome: Effect.succeed }).pipe(
+      Effect.flatMap(validate),
+      Effect.provide(gitHubConfigSource()),
+    ),
+    {
+      command: 'validate',
+      options: optionNames({ path }),
+    },
+  ),
 ).pipe(Command.withDescription('Check a config and everything it extends.'))
 
-const input = Args.text({ name: 'input' }).pipe(Args.withDescription('The v1 JSON config.'), Args.withDefault('.github/config.json'))
-const out = Options.text('out').pipe(Options.withAlias('o'), Options.withDescription('Write the YAML here instead of printing it.'), Options.optional)
+const input = Args.text({ name: 'input' }).pipe(
+  Args.withDescription('The v1 JSON config.'),
+  Args.withDefault('.github/config.json'),
+)
+const out = Options.text('out').pipe(
+  Options.withAlias('o'),
+  Options.withDescription('Write the YAML here instead of printing it.'),
+  Options.optional,
+)
 
 const migrateCommand = Command.make('migrate', { input, out }, ({ input, out }) =>
   command(migrate(input, Option.getOrUndefined(out)), { command: 'migrate', options: optionNames({ input, out }) }),
@@ -42,10 +73,21 @@ const migrateCommand = Command.make('migrate', { input, out }, ({ input, out }) 
 const checkCommit = Command.make(
   'check-commit',
   {
-    file: Args.text({ name: 'file' }).pipe(Args.withDescription('The file holding the message, such as .git/COMMIT_EDITMSG.')),
-    authorName: Options.text('author-name').pipe(Options.withDescription("The author's name; git's own by default."), Options.optional),
-    authorEmail: Options.text('author-email').pipe(Options.withDescription("The author's email; git's own by default."), Options.optional),
-    config: Options.text('config').pipe(Options.withDescription("A config file; the repository's own, or the defaults, when omitted."), Options.optional),
+    file: Args.text({ name: 'file' }).pipe(
+      Args.withDescription('The file holding the message, such as .git/COMMIT_EDITMSG.'),
+    ),
+    authorName: Options.text('author-name').pipe(
+      Options.withDescription("The author's name; git's own by default."),
+      Options.optional,
+    ),
+    authorEmail: Options.text('author-email').pipe(
+      Options.withDescription("The author's email; git's own by default."),
+      Options.optional,
+    ),
+    config: Options.text('config').pipe(
+      Options.withDescription("A config file; the repository's own, or the defaults, when omitted."),
+      Options.optional,
+    ),
   },
   (options) =>
     command(
@@ -56,7 +98,11 @@ const checkCommit = Command.make(
       }).pipe(Effect.provide(gitHubConfigSource())),
       { command: 'check-commit', options: optionNames(options) },
     ),
-).pipe(Command.withDescription('Check a commit message for DCO sign-off and AI attribution before committing; usable as a commit-msg hook.'))
+).pipe(
+  Command.withDescription(
+    'Check a commit message for DCO sign-off and AI attribution before committing; usable as a commit-msg hook.',
+  ),
+)
 
 const repo = Options.text('repo').pipe(Options.withDescription('The repository, as owner/name.'))
 const config = Options.text('config').pipe(
@@ -86,8 +132,14 @@ export const makeSmartcloud = (connect: Connect) => {
       config,
       pr: Options.integer('pr').pipe(Options.withDescription('Simulate this pull request.'), Options.optional),
       issue: Options.integer('issue').pipe(Options.withDescription('Simulate this issue.'), Options.optional),
-      event: Options.choice('event', REPOSITORY_EVENTS).pipe(Options.withDescription('Simulate this repository event.'), Options.optional),
-      features: Options.text('features').pipe(Options.withDescription('Only these features, comma-separated; every feature when empty.'), Options.optional),
+      event: Options.choice('event', REPOSITORY_EVENTS).pipe(
+        Options.withDescription('Simulate this repository event.'),
+        Options.optional,
+      ),
+      features: Options.text('features').pipe(
+        Options.withDescription('Only these features, comma-separated; every feature when empty.'),
+        Options.optional,
+      ),
     },
     (options) =>
       command(
@@ -98,11 +150,17 @@ export const makeSmartcloud = (connect: Connect) => {
           issue: Option.getOrUndefined(options.issue),
           event: Option.getOrUndefined(options.event),
           // An empty list, such as `--features ,`, means every feature, as the action reads it.
-          features: Option.getOrUndefined(Option.filter(Option.map(options.features, parseFeatureList), (names) => names.length > 0)),
+          features: Option.getOrUndefined(
+            Option.filter(Option.map(options.features, parseFeatureList), (names) => names.length > 0),
+          ),
         }),
         { command: 'dry-run', options: optionNames(options) },
       ),
-  ).pipe(Command.withDescription('Run every feature against a pull request, an issue or an event, recording writes instead of making them.'))
+  ).pipe(
+    Command.withDescription(
+      'Run every feature against a pull request, an issue or an event, recording writes instead of making them.',
+    ),
+  )
 
   const planSettings = Command.make('settings', { repo, config }, (options) =>
     command(planSettingsCommand(connect, { repository: options.repo, config: Option.getOrUndefined(options.config) }), {
@@ -118,13 +176,31 @@ export const makeSmartcloud = (connect: Connect) => {
 
   const sync = Command.make(
     'sync',
-    { repo, config, out: Options.text('out').pipe(Options.withAlias('o'), Options.withDescription('The directory to render the files into.')) },
+    {
+      repo,
+      config,
+      out: Options.text('out').pipe(
+        Options.withAlias('o'),
+        Options.withDescription('The directory to render the files into.'),
+      ),
+    },
     (options) =>
-      command(syncCommand(connect, { repository: options.repo, out: options.out, config: Option.getOrUndefined(options.config) }), {
-        command: 'sync',
-        options: optionNames(options),
-      }),
-  ).pipe(Command.withDescription('Render the synced files for a repository into a local directory, and list conflicting local rules.'))
+      command(
+        syncCommand(connect, {
+          repository: options.repo,
+          out: options.out,
+          config: Option.getOrUndefined(options.config),
+        }),
+        {
+          command: 'sync',
+          options: optionNames(options),
+        },
+      ),
+  ).pipe(
+    Command.withDescription(
+      'Render the synced files for a repository into a local directory, and list conflicting local rules.',
+    ),
+  )
 
   return Command.make('smartcloud').pipe(
     Command.withDescription('Repository automation and policy for GitHub.'),
@@ -146,7 +222,8 @@ export const makeSmartcloud = (connect: Connect) => {
  * @param connect - Opens the GitHub service; the real API by default.
  * @returns A function taking the node binary, the script, then the arguments.
  */
-export const runWith = (connect: Connect = liveConnect()) => Command.run(makeSmartcloud(connect), { name: 'smartcloud', version: VERSION })
+export const runWith = (connect: Connect = liveConnect()) =>
+  Command.run(makeSmartcloud(connect), { name: 'smartcloud', version: VERSION })
 
 /**
  * Runs the CLI against the real GitHub API.
@@ -207,7 +284,9 @@ export const main = (argv: ReadonlyArray<string>, connect?: Connect) =>
     // A defect is reported to error tracking by the command; the user gets one line, not a trace.
     Effect.catchAllDefect((defect) =>
       Effect.zipRight(
-        Console.error(`smartcloud: unexpected failure: ${oneLine(defect instanceof Error ? defect.message : String(defect))}`),
+        Console.error(
+          `smartcloud: unexpected failure: ${oneLine(defect instanceof Error ? defect.message : String(defect))}`,
+        ),
         Effect.sync(() => {
           process.exitCode = 1
         }),

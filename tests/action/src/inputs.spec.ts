@@ -22,7 +22,9 @@ import { withEnv } from './fixtures.js'
 describe('readInputs', () => {
   it.effect('reads empty inputs as absent, and booleans strictly', () =>
     Effect.gen(function* () {
-      const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_CONFIG: '  ', INPUT_DRYRUN: 'false' }))
+      const read = yield* readInputs.pipe(
+        withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_CONFIG: '  ', INPUT_DRYRUN: 'false' }),
+      )
       expect(Redacted.value(read.token)).toBe('abc')
       expect(read.config).toStrictEqual(Option.none())
       expect(read.dryRun).toBe(false)
@@ -38,7 +40,12 @@ describe('readInputs', () => {
       const on = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_TELEMETRY: 'true' }))
       expect(on.telemetry).toBe(true)
       const dry = yield* readInputs.pipe(
-        withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_DRYRUN: 'TRUE', INPUT_FEATURES: 'labels, stale,', INPUT_CONFIGREF: 'v2' }),
+        withEnv({
+          INPUT_GITHUB_TOKEN: 'abc',
+          INPUT_DRYRUN: 'TRUE',
+          INPUT_FEATURES: 'labels, stale,',
+          INPUT_CONFIGREF: 'v2',
+        }),
       )
       expect(dry.dryRun).toBe(true)
       expect(dry.features).toStrictEqual(Option.some(['labels', 'stale']))
@@ -74,7 +81,9 @@ describe('readInputs', () => {
 
   it.effect('falls back to GITHUB_TOKEN, fails with no token, and flags v1 inputs', () =>
     Effect.gen(function* () {
-      const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: '', GITHUB_TOKEN: 'env', INPUT_FILLEMPTY: 'true', INPUT_SKIPDELETE: 'false' }))
+      const read = yield* readInputs.pipe(
+        withEnv({ INPUT_GITHUB_TOKEN: '', GITHUB_TOKEN: 'env', INPUT_FILLEMPTY: 'true', INPUT_SKIPDELETE: 'false' }),
+      )
       expect(Redacted.value(read.token)).toBe('env')
       expect(read.deprecations).toHaveLength(2)
       expect(read.deprecations[1]).toContain('labelSync.prune')

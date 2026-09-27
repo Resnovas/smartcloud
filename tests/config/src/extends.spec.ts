@@ -36,7 +36,12 @@ describe('extends entries', () => {
     expect(parseExtendsRef('../../repos/x.yml')).toBeUndefined()
     expect(parseExtendsRef('o/./p.yml')).toBeUndefined()
     expect(parseExtendsRef('o/r/a//b.yml')).toBeUndefined()
-    expect(parseExtendsRef('o/r/.github/..x.yml@v1')).toStrictEqual({ owner: 'o', repo: 'r', path: '.github/..x.yml', ref: 'v1' })
+    expect(parseExtendsRef('o/r/.github/..x.yml@v1')).toStrictEqual({
+      owner: 'o',
+      repo: 'r',
+      path: '.github/..x.yml',
+      ref: 'v1',
+    })
   })
 
   it('are validated when the config is decoded', () => {

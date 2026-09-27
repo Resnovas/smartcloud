@@ -58,7 +58,10 @@ export class Forbidden extends Data.TaggedError('Forbidden')<{ readonly operatio
  * new RateLimited({ operation: 'listLabels', detail: 'API rate limit exceeded' }).message // => 'listLabels: rate limited (API rate limit exceeded)'
  * ```
  */
-export class RateLimited extends Data.TaggedError('RateLimited')<{ readonly operation: string; readonly detail: string }> {
+export class RateLimited extends Data.TaggedError('RateLimited')<{
+  readonly operation: string
+  readonly detail: string
+}> {
   override get message() {
     return `${this.operation}: rate limited (${this.detail})`
   }
@@ -93,7 +96,10 @@ export class ValidationFailed extends Data.TaggedError('ValidationFailed')<{
  * new Unavailable({ operation: 'listLabels', detail: 'Bad Gateway' }).message // => 'listLabels: GitHub unavailable (Bad Gateway)'
  * ```
  */
-export class Unavailable extends Data.TaggedError('Unavailable')<{ readonly operation: string; readonly detail: string }> {
+export class Unavailable extends Data.TaggedError('Unavailable')<{
+  readonly operation: string
+  readonly detail: string
+}> {
   override get message() {
     return `${this.operation}: GitHub unavailable (${this.detail})`
   }
@@ -133,7 +139,8 @@ export const fromStatus = (operation: string, status: number | undefined, detail
     return new RateLimited({ operation, detail })
   }
   if (status === 401 || status === 403) return new Forbidden({ operation, detail })
-  if (status !== undefined && status >= 400 && status < 500 && status !== 408) return new ValidationFailed({ operation, detail })
+  if (status !== undefined && status >= 400 && status < 500 && status !== 408)
+    return new ValidationFailed({ operation, detail })
   return new Unavailable({ operation, detail })
 }
 

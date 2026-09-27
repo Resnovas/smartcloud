@@ -15,7 +15,15 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { annotationLines, checkRunsFor, commentBody, conclusionOf, findingsTable, MARKER, summaryMarkdown } from '@resnovas/reporting'
+import {
+  annotationLines,
+  checkRunsFor,
+  commentBody,
+  conclusionOf,
+  findingsTable,
+  MARKER,
+  summaryMarkdown,
+} from '@resnovas/reporting'
 import { error, notice, run, warning } from './fixtures.js'
 
 describe('formatting', () => {
@@ -27,7 +35,9 @@ describe('formatting', () => {
 
   it('renders findings as a table, escaping pipes and newlines from pull request text', () => {
     const table = findingsTable([error, warning])
-    expect(table).toContain('| error | [`DCO`](https://x/CONTRIBUTING.md#dco) | abcdef123456 | No Signed-off-by \\| for <a@b> |')
+    expect(table).toContain(
+      '| error | [`DCO`](https://x/CONTRIBUTING.md#dco) | abcdef123456 | No Signed-off-by \\| for <a@b> |',
+    )
     expect(table).toContain('| warning | `SYNC` | LICENSE:3 | edits a synced file |')
     expect(findingsTable([])).toBe('')
     const { line: _line, ...unlocated } = warning
@@ -58,7 +68,9 @@ describe('formatting', () => {
     expect(summary).toContain('**broken** failed to run:')
     expect(summary).toContain('- stale: does not handle pullRequest events')
     expect(summary).toContain('- labels: added label bug to #7')
-    const quiet = summaryMarkdown(run({ envelope: { kind: 'repository', event: 'schedule' }, ran: [], skipped: [], findings: [], changes: [] }))
+    const quiet = summaryMarkdown(
+      run({ envelope: { kind: 'repository', event: 'schedule' }, ran: [], skipped: [], findings: [], changes: [] }),
+    )
     expect(quiet).toBe('## smartcloud\n\nEvent: `schedule`\n')
   })
 
@@ -68,7 +80,9 @@ describe('formatting', () => {
       '::warning title=SYNC,file=LICENSE,line=3::edits%0Aa synced file',
       '::notice title=REVIEW::gate open',
     ])
-    expect(annotationLines([{ ...notice, rule: 'a:b,c', message: '100%\r' }])).toStrictEqual(['::notice title=a%3Ab%2Cc::100%25%0D'])
+    expect(annotationLines([{ ...notice, rule: 'a:b,c', message: '100%\r' }])).toStrictEqual([
+      '::notice title=a%3Ab%2Cc::100%25%0D',
+    ])
   })
 
   it('builds one check run per feature, failing features that broke, with annotations for located findings', () => {
@@ -79,16 +93,24 @@ describe('formatting', () => {
       ['smartcloud / reviews', 'success', 'passed'],
       ['smartcloud / broken', 'failure', 'failed to run'],
     ])
-    expect(runs[1]?.annotations).toStrictEqual([{ path: 'LICENSE', line: 3, level: 'warning', message: 'edits\na synced file', title: 'SYNC' }])
+    expect(runs[1]?.annotations).toStrictEqual([
+      { path: 'LICENSE', line: 3, level: 'warning', message: 'edits\na synced file', title: 'SYNC' },
+    ])
     expect(runs[0]?.annotations).toStrictEqual([])
     expect(checkRunsFor(run({ ran: ['quiet'], findings: [] }), 'x')[0]?.summary).toBe('No findings.')
-    expect(checkRunsFor(run({ ran: ['r'], findings: [{ ...notice, feature: 'r', path: 'a.ts', line: 1 }] }), 'x')[0]?.annotations).toStrictEqual([
-      { path: 'a.ts', line: 1, level: 'notice', message: 'gate open', title: 'REVIEW' },
-    ])
+    expect(
+      checkRunsFor(run({ ran: ['r'], findings: [{ ...notice, feature: 'r', path: 'a.ts', line: 1 }] }), 'x')[0]
+        ?.annotations,
+    ).toStrictEqual([{ path: 'a.ts', line: 1, level: 'notice', message: 'gate open', title: 'REVIEW' }])
   })
 
   it('gives findings from outside the features, such as access, their own check run', () => {
-    const access = { feature: 'access', rule: 'access.config-skipped', level: 'warning' as const, message: 'left out the sync section' }
+    const access = {
+      feature: 'access',
+      rule: 'access.config-skipped',
+      level: 'warning' as const,
+      message: 'left out the sync section',
+    }
     const runs = checkRunsFor(run({ ran: ['reviews'], findings: [access, { ...access, message: 'again' }] }), 'x')
     expect(runs.map((entry) => [entry.name, entry.conclusion])).toStrictEqual([
       ['smartcloud / reviews', 'success'],

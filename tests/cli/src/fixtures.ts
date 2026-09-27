@@ -54,7 +54,9 @@ export const repository = (files: Record<string, string>) => {
   const service: GitHubService = {
     ...github.service,
     repositoryRequest: (request) =>
-      request.method === 'GET' && request.path === '/pulls/7' ? Effect.succeed(pull) : github.service.repositoryRequest(request),
+      request.method === 'GET' && request.path === '/pulls/7'
+        ? Effect.succeed(pull)
+        : github.service.repositoryRequest(request),
   }
   const connect: Connect = () => Effect.succeed(service)
   return { connect, state: github.state }
@@ -75,8 +77,16 @@ export const liveTelemetry = () => {
       Effect.provide(Layer.provideMerge(telemetry('cli', '9.9.9', { fetch }), Logger.add(Logger.prettyLoggerDefault))),
       Effect.withConfigProvider(ConfigProvider.fromMap(new Map())),
     )
-  const batch = () => sent.filter((request) => request.path === '/batch/').map((request) => request.body).join('\n')
-  const logs = () => sent.filter((request) => request.path === '/i/v1/logs').map((request) => request.body).join('\n')
+  const batch = () =>
+    sent
+      .filter((request) => request.path === '/batch/')
+      .map((request) => request.body)
+      .join('\n')
+  const logs = () =>
+    sent
+      .filter((request) => request.path === '/i/v1/logs')
+      .map((request) => request.body)
+      .join('\n')
   return { run, sent, batch, logs }
 }
 
@@ -84,7 +94,9 @@ export const liveTelemetry = () => {
 export const captureConsole = () => {
   const lines: Array<string> = []
   for (const method of ['log', 'error', 'warn', 'info', 'debug'] as const)
-    vi.spyOn(console, method).mockImplementation((...args: Array<unknown>) => void lines.push(args.map(String).join(' ')))
+    vi.spyOn(console, method).mockImplementation(
+      (...args: Array<unknown>) => void lines.push(args.map(String).join(' ')),
+    )
   return lines
 }
 
@@ -93,5 +105,8 @@ export const missingRepository: Connect = (coordinates) =>
   Effect.succeed({
     ...makeMemoryGitHub().service,
     coordinates,
-    getRepository: Effect.zipRight(Effect.logDebug('github getRepository: NotFound (404)'), Effect.fail(new NotFound({ operation: 'getRepository', detail: '404' }))),
+    getRepository: Effect.zipRight(
+      Effect.logDebug('github getRepository: NotFound (404)'),
+      Effect.fail(new NotFound({ operation: 'getRepository', detail: '404' })),
+    ),
   })

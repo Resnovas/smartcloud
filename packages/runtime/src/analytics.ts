@@ -266,7 +266,10 @@ export const sanitiseRule = (rule: string): string => {
   if (owner === 'conventions') return 'conventions.custom'
   if (dot < 0) return owner
   // Only the first segment after the feature, up to a dot or a colon, is smartcloud's own.
-  const segment = rule.slice(dot + 1).split(/[.:]/, 1).join('')
+  const segment = rule
+    .slice(dot + 1)
+    .split(/[.:]/, 1)
+    .join('')
   return SEGMENT.test(segment) ? `${owner}.${segment}` : `${owner}.other`
 }
 

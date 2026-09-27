@@ -112,7 +112,8 @@ const check = (file: ts.SourceFile, node: ts.Node, name: string, callable: ts.Si
     if (ts.isIdentifier(param.name) && !documented.has(param.name.text))
       problems.push(`${where} has no @param for ${param.name.text}`)
   }
-  if (params.length < declared.length) problems.push(`${where} documents ${params.length} of ${declared.length} parameters`)
+  if (params.length < declared.length)
+    problems.push(`${where} documents ${params.length} of ${declared.length} parameters`)
   const returns = checker.getReturnTypeOfSignature(callable)
   if ((returns.flags & ts.TypeFlags.Void) === 0 && !has('returns')) problems.push(`${where} has no @returns`)
 }

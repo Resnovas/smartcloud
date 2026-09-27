@@ -3,18 +3,12 @@
   "compilerOptions": {
     "outDir": "out-tsc",
     "rootDir": "../..",
-    "types": [
-      "node",
-      "vitest"
-    ],
+    "types": ["node", "vitest"],
     "noEmit": true,
     "composite": false,
     "emitDeclarationOnly": false
   },
-  "include": [
-    "src/**/*.ts",
-    "vitest.config.mts"
-  ],
+  "include": ["src/**/*.ts", "vitest.config.mts"],
   "references": [
     {
       "path": "../../apps/cli"

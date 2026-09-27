@@ -18,7 +18,17 @@ import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { ConfigSource, parseConfig } from '@resnovas/config'
 import { fileKey, GitHub } from '@resnovas/integrations.github'
-import { CONFIG_CANDIDATES, configLocationFor, ConfigSourceFromGitHub, explainConfig, loadConfig, loadConfigText, migrateConfigText, NoConfig, readLocalConfig } from '@resnovas/runtime'
+import {
+  CONFIG_CANDIDATES,
+  configLocationFor,
+  ConfigSourceFromGitHub,
+  explainConfig,
+  loadConfig,
+  loadConfigText,
+  migrateConfigText,
+  NoConfig,
+  readLocalConfig,
+} from '@resnovas/runtime'
 import { Effect } from 'effect'
 import { CONVENTIONS, fixture, memory } from './fixtures.js'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
@@ -37,29 +47,38 @@ describe('loading config', () => {
       const { service, state } = memory({ '.github/smartcloud.yaml': CONVENTIONS })
       state.files.set(fileKey('Resnovas', 'example', 'custom.yml', 'v2'), 'version: 2\n')
       const run = <A, E>(effect: Effect.Effect<A, E, GitHub>) => Effect.provideService(effect, GitHub, service)
-      expect(yield* run(loadConfigText({ text: { text: 'x', source: 'given' } }))).toStrictEqual({ text: 'x', source: 'given' })
-      expect(yield* run(loadConfigText({ path: 'custom.yml', ref: 'v2' }))).toStrictEqual({ text: 'version: 2\n', source: 'custom.yml' })
+      expect(yield* run(loadConfigText({ text: { text: 'x', source: 'given' } }))).toStrictEqual({
+        text: 'x',
+        source: 'given',
+      })
+      expect(yield* run(loadConfigText({ path: 'custom.yml', ref: 'v2' }))).toStrictEqual({
+        text: 'version: 2\n',
+        source: 'custom.yml',
+      })
       expect((yield* run(loadConfigText({}))).source).toBe('.github/smartcloud.yaml')
       const none = yield* Effect.flip(run(loadConfigText({ path: 'missing.yml', ref: 'v3' })))
       expect(none).toBeInstanceOf(NoConfig)
       expect(none.message).toBe('no smartcloud config in Resnovas/example@v3: looked for missing.yml')
       const empty = memory()
       const nothing = yield* Effect.flip(Effect.provideService(loadConfigText({}), GitHub, empty.service))
-      expect(nothing.message).toBe(`no smartcloud config in Resnovas/example: looked for ${CONFIG_CANDIDATES.join(', ')}`)
+      expect(nothing.message).toBe(
+        `no smartcloud config in Resnovas/example: looked for ${CONFIG_CANDIDATES.join(', ')}`,
+      )
     }),
   )
 
   it.effect('resolves presets through GitHub, and names a missing one', () =>
     Effect.gen(function* () {
-      const { service, state } = memory({ '.github/smartcloud.yml': 'version: 2\nextends: [Resnovas/.github/house.yml]\n' })
+      const { service, state } = memory({
+        '.github/smartcloud.yml': 'version: 2\nextends: [Resnovas/.github/house.yml]\n',
+      })
       state.files.set(fileKey('Resnovas', '.github', 'house.yml'), CONVENTIONS)
       const resolved = yield* loadConfig({}).pipe(Effect.provideService(GitHub, service))
       expect(resolved.sources).toStrictEqual(['Resnovas/.github/house.yml', '.github/smartcloud.yml'])
       const read = yield* Effect.flip(
-        Effect.flatMap(ConfigSource, (source) => source.read({ owner: 'Resnovas', repo: '.github', path: 'gone.yml' })).pipe(
-          Effect.provide(ConfigSourceFromGitHub),
-          Effect.provideService(GitHub, service),
-        ),
+        Effect.flatMap(ConfigSource, (source) =>
+          source.read({ owner: 'Resnovas', repo: '.github', path: 'gone.yml' }),
+        ).pipe(Effect.provide(ConfigSourceFromGitHub), Effect.provideService(GitHub, service)),
       )
       expect(read).toMatchObject({ _tag: 'ConfigNotFound', source: 'Resnovas/.github/gone.yml' })
     }),
@@ -96,7 +115,12 @@ describe('explainConfig', () => {
         'version: 2\nlabels:\n  bug: { name: bug, color: d73a4a }\nroles: { maintainers: [a] }\nstale: { staleAfterDays: 30, staleLabel: stale }\n',
         'x.yml',
       )
-      const explained = explainConfig({ config, sources: ['b.yml', 'a.yml'], locked: new Set(['z', 'roles.maintainers']), warnings: ['w'] })
+      const explained = explainConfig({
+        config,
+        sources: ['b.yml', 'a.yml'],
+        locked: new Set(['z', 'roles.maintainers']),
+        warnings: ['w'],
+      })
       expect(explained.sources).toStrictEqual(['b.yml', 'a.yml'])
       expect(explained.locked).toStrictEqual(['roles.maintainers', 'z'])
       expect(explained.warnings).toStrictEqual(['w'])
@@ -114,7 +138,9 @@ describe('explainConfig', () => {
       expect(explained.features[4]?.rules).toStrictEqual({ labels: { bug: { name: 'bug', color: 'd73a4a' } } })
       expect(explained.features[3]?.rules).toStrictEqual({ roles: { maintainers: ['a'] } })
       expect(explained.features[4]?.handles).toContain('pullRequest')
-      const custom = explainConfig({ config, sources: [], locked: new Set(), warnings: [] }, [{ name: 'custom', handles: ['issue'], run: () => Effect.void }])
+      const custom = explainConfig({ config, sources: [], locked: new Set(), warnings: [] }, [
+        { name: 'custom', handles: ['issue'], run: () => Effect.void },
+      ])
       expect(custom.features).toStrictEqual([{ name: 'custom', enabled: true, handles: ['issue'], rules: {} }])
     }),
   )

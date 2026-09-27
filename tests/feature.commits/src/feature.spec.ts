@@ -52,7 +52,10 @@ describe('commitsFeature', () => {
     Effect.gen(function* () {
       const result = yield* runOn(commitsFeature, {
         config,
-        commits: [commit(`x\n\n${coAuthor}\nSigned-off-by: Someone Else <else@example.com>`), commit('Merge main', { sha: 'm', parents: 2 })],
+        commits: [
+          commit(`x\n\n${coAuthor}\nSigned-off-by: Someone Else <else@example.com>`),
+          commit('Merge main', { sha: 'm', parents: 2 }),
+        ],
       })
       expect(result.findings).toStrictEqual([
         {
@@ -74,7 +77,10 @@ describe('commitsFeature', () => {
         commits: [
           commit('x', { sha: 'one' }),
           commit('y', { sha: 'two' }),
-          commit(`z\n\nSigned-off-by: A Contributor <Contrib@Example.com>`, { sha: 'three', authorEmail: 'CONTRIB@example.com' }),
+          commit(`z\n\nSigned-off-by: A Contributor <Contrib@Example.com>`, {
+            sha: 'three',
+            authorEmail: 'CONTRIB@example.com',
+          }),
         ],
       })
       expect(result.findings.map((finding) => [finding.rule, finding.commit])).toStrictEqual([
@@ -104,7 +110,9 @@ describe('commitsFeature', () => {
     Effect.gen(function* () {
       const result = yield* runOn(commitsFeature, {
         config,
-        commits: [commit(`x\n\nSigned-off-by: Claude <noreply@anthropic.com>`, { authorEmail: 'noreply@anthropic.com' })],
+        commits: [
+          commit(`x\n\nSigned-off-by: Claude <noreply@anthropic.com>`, { authorEmail: 'noreply@anthropic.com' }),
+        ],
       })
       expect(rules(result.findings)).toStrictEqual(['AI-03', 'DCO'])
     }),
@@ -125,18 +133,29 @@ describe('commitsFeature', () => {
       for (const value of ['unknown', 'aider:', ':gpt-5', 'aider gpt-5:x']) {
         const malformed = yield* runOn(commitsFeature, {
           config,
-          commits: [commit(`x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: ${value}\n${signed}`)],
+          commits: [
+            commit(`x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: ${value}\n${signed}`),
+          ],
         })
         expect(rules(malformed.findings, 'error')).toStrictEqual(['AI-02'])
       }
       const withTools = yield* runOn(commitsFeature, {
         config,
-        commits: [commit(`x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: claude-code:claude-opus-5-5 ripgrep\n${signed}`)],
+        commits: [
+          commit(
+            `x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: claude-code:claude-opus-5-5 ripgrep\n${signed}`,
+          ),
+        ],
       })
       expect(withTools.findings).toStrictEqual([])
-      const assistedOnly = yield* runOn(commitsFeature, { config, commits: [commit(`x\n\nAssisted-by: aider:gpt-5\n${signed}`)] })
+      const assistedOnly = yield* runOn(commitsFeature, {
+        config,
+        commits: [commit(`x\n\nAssisted-by: aider:gpt-5\n${signed}`)],
+      })
       expect(rules(assistedOnly.findings, 'error')).toStrictEqual(['AI-02'])
-      expect(assistedOnly.findings[0]?.message).toBe('This commit has Assisted-by but no Co-authored-by trailer for the AI tool.')
+      expect(assistedOnly.findings[0]?.message).toBe(
+        'This commit has Assisted-by but no Co-authored-by trailer for the AI tool.',
+      )
     }),
   )
 
@@ -154,7 +173,9 @@ describe('commitsFeature', () => {
     Effect.gen(function* () {
       const result = yield* runOn(commitsFeature, {
         config,
-        commits: [commit(`Merge\n\nAssisted-by: aider:gpt-5\nSigned-off-by: Claude <noreply@anthropic.com>`, { parents: 2 })],
+        commits: [
+          commit(`Merge\n\nAssisted-by: aider:gpt-5\nSigned-off-by: Claude <noreply@anthropic.com>`, { parents: 2 }),
+        ],
       })
       expect(rules(result.findings)).toStrictEqual(['AI-02'])
     }),
@@ -162,19 +183,31 @@ describe('commitsFeature', () => {
 
   it.effect('maintainer pull requests report errors as warnings, or at the configured level', () =>
     Effect.gen(function* () {
-      const commits = [commit('x', { authorEmail: 'owner@example.com' }), commit(`y\n\nAssisted-by: aider:gpt-5\n${signed}`)]
+      const commits = [
+        commit('x', { authorEmail: 'owner@example.com' }),
+        commit(`y\n\nAssisted-by: aider:gpt-5\n${signed}`),
+      ]
       const warned = yield* runOn(commitsFeature, { config, author: 'Owner-One', commits })
       expect(warned.findings.length).toBeGreaterThan(0)
       expect(rules(warned.findings, 'error')).toStrictEqual([])
       expect(rules(warned.findings, 'warning')).toStrictEqual(['DCO', 'AI-02'])
-      const strict = yield* runOn(commitsFeature, { config: { ...config, commits: { maintainerLevel: 'error' } }, author: 'owner-one', commits })
+      const strict = yield* runOn(commitsFeature, {
+        config: { ...config, commits: { maintainerLevel: 'error' } },
+        author: 'owner-one',
+        commits,
+      })
       expect(rules(strict.findings, 'error')).toStrictEqual(['DCO', 'AI-02'])
     }),
   )
 
   it.effect('the repository owner is a maintainer even when not listed', () =>
     Effect.gen(function* () {
-      const result = yield* runOn(commitsFeature, { config: { version: 2, commits: {} }, author: 'jane', owner: 'Jane', commits: [commit('x')] })
+      const result = yield* runOn(commitsFeature, {
+        config: { version: 2, commits: {} },
+        author: 'jane',
+        owner: 'Jane',
+        commits: [commit('x')],
+      })
       expect(rules(result.findings, 'warning')).toStrictEqual(['DCO'])
     }),
   )
@@ -201,7 +234,11 @@ describe('commitsFeature', () => {
     Effect.gen(function* () {
       const result = yield* runOn(commitsFeature, {
         config,
-        commits: [commit('x\n\nco-authored-by: Bot <A@Anthropic.com>\nASSISTED-BY: claude-code:claude-opus-5-5\nSIGNED-OFF-BY: Me <contrib@example.com>')],
+        commits: [
+          commit(
+            'x\n\nco-authored-by: Bot <A@Anthropic.com>\nASSISTED-BY: claude-code:claude-opus-5-5\nSIGNED-OFF-BY: Me <contrib@example.com>',
+          ),
+        ],
       })
       expect(result.findings).toStrictEqual([])
     }),
@@ -246,7 +283,9 @@ describe('checkCommitMessage', () => {
   const config: SmartcloudConfig = { version: 2, links: { policyBase: 'https://x/' } }
 
   it('passes a signed-off message and flags a missing sign-off as an error, without a commit id', () => {
-    expect(checkCommitMessage({ ...author, message: 'fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>' }, config)).toStrictEqual([])
+    expect(
+      checkCommitMessage({ ...author, message: 'fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>' }, config),
+    ).toStrictEqual([])
     expect(checkCommitMessage({ ...author, message: 'fix: x' }, config)).toStrictEqual([
       {
         feature: 'commits',
@@ -259,8 +298,11 @@ describe('checkCommitMessage', () => {
   })
 
   it('checks AI attribution with the config, and the defaults without a commits section', () => {
-    const message = 'fix: x\n\nCo-authored-by: Claude <noreply@anthropic.com>\nSigned-off-by: Jane Doe <jane@example.com>'
+    const message =
+      'fix: x\n\nCo-authored-by: Claude <noreply@anthropic.com>\nSigned-off-by: Jane Doe <jane@example.com>'
     expect(checkCommitMessage({ ...author, message }, config).map((finding) => finding.rule)).toStrictEqual(['AI-02'])
-    expect(checkCommitMessage({ ...author, message }, { ...config, commits: { aiAttribution: false } })).toStrictEqual([])
+    expect(checkCommitMessage({ ...author, message }, { ...config, commits: { aiAttribution: false } })).toStrictEqual(
+      [],
+    )
   })
 })

@@ -22,4 +22,7 @@ import { program } from './program.js'
 import { VERSION } from './version.js'
 
 // Closing the telemetry layer flushes it, so the run's data is delivered before the step ends.
-program((options) => makeLiveGitHub(options)).pipe(Effect.provide(Layer.merge(NodeContext.layer, telemetry('action', VERSION))), NodeRuntime.runMain)
+program((options) => makeLiveGitHub(options)).pipe(
+  Effect.provide(Layer.merge(NodeContext.layer, telemetry('action', VERSION))),
+  NodeRuntime.runMain,
+)

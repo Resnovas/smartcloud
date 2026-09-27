@@ -24,7 +24,8 @@ import { ConfigProvider, Effect, Layer } from 'effect'
 import { join } from 'node:path'
 
 export const fixture = (name: string) => join(import.meta.dirname, '../../config/src/fixtures', name)
-export const withEnv = (env: Record<string, string>) => Effect.withConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))
+export const withEnv = (env: Record<string, string>) =>
+  Effect.withConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))
 
 export const CONVENTIONS = 'version: 2\nconventions:\n  rules:\n    title:\n      preset: conventionalCommits\n'
 
@@ -45,15 +46,23 @@ export const pull = {
 export const issue = { ...pull, number: 9, title: 'A bug' }
 
 // The in-memory GitHub, answering the REST reads a dry run makes.
-export const memory = (files: Record<string, string> = {}, seed: Partial<MemoryState> = {}, routes: Record<string, unknown> = {}) => {
+export const memory = (
+  files: Record<string, string> = {},
+  seed: Partial<MemoryState> = {},
+  routes: Record<string, unknown> = {},
+) => {
   const github = makeMemoryGitHub(seed)
   for (const [path, text] of Object.entries(files)) github.state.files.set(fileKey('Resnovas', 'example', path), text)
   github.state.pulls.set(7, { commits: [], files: [], reviews: [], requestedReviewers: [], submittedReviews: [] })
-  const answers = new Map(Object.entries({ '/pulls/7': pull, '/issues/9': issue, '/commits/main': { sha: 'def456' }, ...routes }))
+  const answers = new Map(
+    Object.entries({ '/pulls/7': pull, '/issues/9': issue, '/commits/main': { sha: 'def456' }, ...routes }),
+  )
   const service: GitHubService = {
     ...github.service,
     repositoryRequest: (request) =>
-      request.method === 'GET' && answers.has(request.path) ? Effect.succeed(answers.get(request.path)) : github.service.repositoryRequest(request),
+      request.method === 'GET' && answers.has(request.path)
+        ? Effect.succeed(answers.get(request.path))
+        : github.service.repositoryRequest(request),
   }
   return { service, state: github.state }
 }
@@ -64,9 +73,17 @@ export const PUSH = { name: 'push', payload: { ref: 'refs/heads/main', after: 'a
 
 // A Telemetry service that records what it is asked to send, answering flags from a map.
 export const recording = (flags: Readonly<Record<string, boolean>> = {}) => {
-  const events: Array<{ readonly event: string; readonly properties: Readonly<Record<string, unknown>>; readonly identity: Identity }> = []
+  const events: Array<{
+    readonly event: string
+    readonly properties: Readonly<Record<string, unknown>>
+    readonly identity: Identity
+  }> = []
   const errors: Array<unknown> = []
-  const exceptions: Array<{ readonly error: unknown; readonly properties: Readonly<Record<string, unknown>>; readonly identity: Identity }> = []
+  const exceptions: Array<{
+    readonly error: unknown
+    readonly properties: Readonly<Record<string, unknown>>
+    readonly identity: Identity
+  }> = []
   const organisations: Array<Readonly<Record<string, unknown>>> = []
   const protectedValues: Array<string> = []
   let enabled = true
@@ -77,18 +94,29 @@ export const recording = (flags: Readonly<Record<string, boolean>> = {}) => {
       enabled = false
     }),
     protect: (value) => Effect.sync(() => void protectedValues.push(value)),
-    capture: (identity, event, properties = {}) => Effect.sync(() => void (enabled && events.push({ event, properties, identity }))),
+    capture: (identity, event, properties = {}) =>
+      Effect.sync(() => void (enabled && events.push({ event, properties, identity }))),
     captureException: (identity, error, properties = {}) =>
       Effect.sync(() => {
         if (!enabled) return
         errors.push(error)
         exceptions.push({ error, properties, identity })
       }),
-    describeOrganization: (_identity, properties) => Effect.sync(() => void (enabled && organisations.push(properties))),
+    describeOrganization: (_identity, properties) =>
+      Effect.sync(() => void (enabled && organisations.push(properties))),
     evaluateFlag: (_identity, key, fallback) => Effect.sync(() => (enabled ? (flags[key] ?? fallback) : fallback)),
   }
   const named = (name: string) => events.filter((event) => event.event === name)
-  return { layer: Layer.succeed(Telemetry, service), events, errors, exceptions, organisations, protectedValues, named, enabled: () => enabled }
+  return {
+    layer: Layer.succeed(Telemetry, service),
+    events,
+    errors,
+    exceptions,
+    organisations,
+    protectedValues,
+    named,
+    enabled: () => enabled,
+  }
 }
 
 export const withConfig = (text: string, overrides: Partial<GitHubService> = {}) => {

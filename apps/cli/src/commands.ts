@@ -155,8 +155,10 @@ export const dryRunCommand = (connect: Connect, request: DryRunRequest) =>
  * @param request - The repository, and a local config file to use instead of its own.
  * @returns The plan.
  */
-export const planSettingsCommand = (connect: Connect, request: { readonly repository: string; readonly config?: string | undefined }) =>
-  Effect.tap(planSettingsForRepository(connect, request), (plan) => Console.log(settingsPlanText(plan)))
+export const planSettingsCommand = (
+  connect: Connect,
+  request: { readonly repository: string; readonly config?: string | undefined },
+) => Effect.tap(planSettingsForRepository(connect, request), (plan) => Console.log(settingsPlanText(plan)))
 
 /**
  * A synced file would be written outside the output directory, or through a symlink.
@@ -168,7 +170,10 @@ export const planSettingsCommand = (connect: Connect, request: { readonly reposi
  * new UnsafePath({ path: '../x' }).message // => 'refusing to write ../x: it is outside the output directory'
  * ```
  */
-export class UnsafePath extends Data.TaggedError('UnsafePath')<{ readonly path: string; readonly reason?: string | undefined }> {
+export class UnsafePath extends Data.TaggedError('UnsafePath')<{
+  readonly path: string
+  readonly reason?: string | undefined
+}> {
   override get message() {
     return `refusing to write ${this.path}: ${this.reason ?? 'it is outside the output directory'}`
   }
@@ -220,7 +225,10 @@ const checkTarget = (root: string, realRoot: string, file: string) =>
         return yield* new UnsafePath({ path: file, reason: `${current} resolves outside the output directory` })
       // readLink succeeds only on a symlink.
       if (yield* Effect.isSuccess(fs.readLink(current)))
-        return yield* new UnsafePath({ path: file, reason: `${current} is a symlink, and smartcloud does not write through symlinks` })
+        return yield* new UnsafePath({
+          path: file,
+          reason: `${current} is a symlink, and smartcloud does not write through symlinks`,
+        })
       if (!exists) break
     }
     return target
@@ -256,7 +264,9 @@ export const syncCommand = (
     yield* fs.makeDirectory(root, { recursive: true })
     const realRoot = yield* fs.realPath(root)
     // Every target is checked before anything is written, so a refusal leaves the output untouched.
-    const targets = yield* Effect.forEach(render.files, (file) => Effect.map(checkTarget(root, realRoot, file.path), (target) => ({ file, target })))
+    const targets = yield* Effect.forEach(render.files, (file) =>
+      Effect.map(checkTarget(root, realRoot, file.path), (target) => ({ file, target })),
+    )
     for (const { file, target } of targets) {
       yield* fs.makeDirectory(path.dirname(target), { recursive: true })
       yield* fs.writeFileString(target, file.content)
@@ -341,7 +351,11 @@ const withoutComments = (message: string) =>
  */
 export const checkCommitCommand = (
   file: string,
-  options: { readonly authorName?: string | undefined; readonly authorEmail?: string | undefined; readonly config?: string | undefined },
+  options: {
+    readonly authorName?: string | undefined
+    readonly authorEmail?: string | undefined
+    readonly config?: string | undefined
+  },
 ) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
@@ -352,9 +366,14 @@ export const checkCommitCommand = (
         : yield* Effect.flatMap(Process.string(Process.make('git', 'var', 'GIT_AUTHOR_IDENT')), parseIdent)
     const configFile = options.config ?? Option.getOrUndefined(yield* Effect.option(locateConfig('.')))
     const config: SmartcloudConfig =
-      configFile === undefined ? { version: 2 } : (yield* resolveConfig(yield* fs.readFileString(configFile), configFile)).config
+      configFile === undefined
+        ? { version: 2 }
+        : (yield* resolveConfig(yield* fs.readFileString(configFile), configFile)).config
     const findings = checkCommitMessage({ message, ...author }, config)
-    for (const finding of findings) yield* Console.error(`${finding.rule}: ${finding.message}${finding.link === undefined ? '' : ` See ${finding.link}`}`)
+    for (const finding of findings)
+      yield* Console.error(
+        `${finding.rule}: ${finding.message}${finding.link === undefined ? '' : ` See ${finding.link}`}`,
+      )
     if (findings.length > 0) return yield* new CommitCheckFailed({ count: findings.length })
     yield* Console.log('The commit message passes.')
     return findings
