@@ -21,9 +21,10 @@
 //
 // tools/release/bundle.ts writes each bundle with a linked map beside it
 // (<bundle>.js.map). With POSTHOG_CLI_API_KEY set (a personal API key with the
-// error tracking write and organization read scopes, from the POSTHOG_CLI_TOKEN
-// secret), PostHog's CLI injects a chunk id into each bundle, uploads its map
-// for the release `smartcloud@<version>`, then deletes the map and strips the
+// error tracking write and organization read scopes, from the organization
+// secret of the same name), PostHog's CLI injects a chunk id into each bundle,
+// uploads its map to the Smartcloud project (PROJECT_ID) for the release
+// `smartcloud@<version>`, then deletes the map and strips the
 // sourceMappingURL comment. Exceptions from that bundle carry the chunk id, so
 // PostHog resolves their frames to the TypeScript sources.
 //
