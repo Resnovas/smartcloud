@@ -78,7 +78,7 @@ The documentation lives in [`docs/`](docs/introduction.mdx) and is built with Mi
 
 ## Development
 
-This is an Nx and pnpm workspace on Node 24 or later.
+This is an Nx and pnpm workspace on Node 24 or later. CI runs the tests on Linux, macOS and Windows, with Node 24 and the current release.
 
 ```sh
 pnpm install

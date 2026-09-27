@@ -205,10 +205,15 @@ export const readConfinedConfig = (root: string, file: string) =>
     const unreadable = () => refuse('it does not exist or cannot be read')
     if (path.isAbsolute(file)) return yield* refuse('it is an absolute path')
     const realRoot = yield* Effect.mapError(fs.realPath(root), unreadable)
-    const real = yield* Effect.mapError(fs.realPath(path.resolve(realRoot, file)), unreadable)
-    const relative = path.relative(realRoot, real)
-    if (relative === '' || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative))
+    const outside = (relative: string) =>
+      relative === '' || relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)
+    // The path as written is checked before the file system is touched, so a
+    // path that climbs out is refused as such whether or not its target exists.
+    if (outside(path.relative(realRoot, path.resolve(realRoot, file))))
       return yield* refuse('it resolves outside the working directory')
+    const real = yield* Effect.mapError(fs.realPath(path.resolve(realRoot, file)), unreadable)
+    // And again once links are resolved, so a symlink inside cannot point out.
+    if (outside(path.relative(realRoot, real))) return yield* refuse('it resolves outside the working directory')
     const info = yield* Effect.mapError(fs.stat(real), unreadable)
     if (info.type !== 'File') return yield* refuse('it is not a regular file')
     const text = yield* Effect.mapError(fs.readFileString(real), unreadable)

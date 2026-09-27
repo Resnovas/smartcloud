@@ -29,8 +29,8 @@ import {
   resolveToken,
 } from '@resnovas/runtime'
 import { Effect, Either, Redacted } from 'effect'
-import { withEnv } from './fixtures.js'
-import { chmod, mkdtemp, writeFile } from 'node:fs/promises'
+import { fakeCommand, withEnv } from './fixtures.js'
+import { mkdtemp } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, vi } from 'vitest'
@@ -45,12 +45,7 @@ afterEach(() => {
 })
 
 // A fake `gh` on PATH, so the fallback is tested without the real CLI.
-const withFakeGh = async (output: string) => {
-  const bin = await mkdtemp(join(dir, 'bin-'))
-  await writeFile(join(bin, 'gh'), `#!/bin/sh\nprintf '%s\\n' '${output}'\n`)
-  await chmod(join(bin, 'gh'), 0o755)
-  vi.stubEnv('PATH', `${bin}:${process.env['PATH'] ?? ''}`)
-}
+const withFakeGh = async (output: string) => fakeCommand(await mkdtemp(join(dir, 'bin-')), 'gh', output)
 
 describe('tokens and connections', () => {
   it.effect('prefers GITHUB_TOKEN and keeps it redacted', () =>

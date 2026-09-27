@@ -21,11 +21,27 @@ import { fileKey, type GitHubService, makeMemoryGitHub, type MemoryState } from 
 import { disabledTelemetry, type Identity, type TelemetryService } from '@resnovas/integrations.posthog'
 import { Telemetry } from '@resnovas/runtime'
 import { ConfigProvider, Effect, Layer } from 'effect'
-import { join } from 'node:path'
+import { mkdir, symlink, writeFile } from 'node:fs/promises'
+import { delimiter, join } from 'node:path'
+import { vi } from 'vitest'
 
 export const fixture = (name: string) => join(import.meta.dirname, '../../config/src/fixtures', name)
 export const withEnv = (env: Record<string, string>) =>
   Effect.withConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))
+
+// A fake command on PATH that prints `output` and exits, so code that spawns it
+// runs without the real tool. The command is a link to this Node binary that a
+// preloaded script turns into the fake, because without a shell Windows spawns
+// only executables, never shell scripts. NODE_OPTIONS reads a backslash as an
+// escape, so the preload's path uses forward slashes, which Windows accepts.
+export const fakeCommand = async (bin: string, name: string, output: string) => {
+  await mkdir(bin, { recursive: true })
+  const preload = join(bin, `${name}.cjs`)
+  await writeFile(preload, `process.stdout.write(${JSON.stringify(`${output}\n`)})\nprocess.exit(0)\n`)
+  await symlink(process.execPath, join(bin, process.platform === 'win32' ? `${name}.exe` : name))
+  vi.stubEnv('NODE_OPTIONS', `--require "${preload.replaceAll('\\', '/')}"`)
+  vi.stubEnv('PATH', `${bin}${delimiter}${process.env['PATH'] ?? ''}`)
+}
 
 export const CONVENTIONS = 'version: 2\nconventions:\n  rules:\n    title:\n      preset: conventionalCommits\n'
 
