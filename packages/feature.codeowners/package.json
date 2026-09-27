@@ -1,0 +1,23 @@
+{
+  "name": "@resnovas/feature.codeowners",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The codeowners feature: validate CODEOWNERS and generate it from config.",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1"
+  }
+}

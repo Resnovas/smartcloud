@@ -32,6 +32,7 @@
               "features/required",
               "features/freeze",
               "features/branches",
+              "features/codeowners",
               "features/labels",
               "features/stale",
               "features/settings",

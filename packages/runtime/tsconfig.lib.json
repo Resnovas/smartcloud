@@ -43,6 +43,9 @@
       "path": "../feature.branches/tsconfig.lib.json"
     },
     {
+      "path": "../feature.codeowners/tsconfig.lib.json"
+    },
+    {
       "path": "../feature.disclosure/tsconfig.lib.json"
     },
     {

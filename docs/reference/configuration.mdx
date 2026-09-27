@@ -31,6 +31,7 @@ Declarative repository automation: labels, conventions and policy.
 | `required` | [Required](#required) | no |  |
 | `freeze` | [Freeze](#freeze) | no |  |
 | `branches` | [Branches](#branches) | no |  |
+| `codeowners` | [CodeOwners](#codeowners) | no |  |
 | `stale` | [Stale](#stale) | no |  |
 | `settings` | [Settings](#settings) | no |  |
 | `sync` | [Sync](#sync) | no |  |
@@ -335,6 +336,52 @@ One accepted form of branch name: a preset, a pattern, or both, when the name mu
 | `pattern` | [Pattern](#pattern) | no |  |
 
 Other keys are an error.
+
+### CodeOwners
+
+CODEOWNERS: check the file on pull requests that change it, and generate a block of it from rules in the config.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `path` | one of `.github/CODEOWNERS`, `CODEOWNERS`, `docs/CODEOWNERS` | no | Where the file lives, one of the locations GitHub reads. By default, the first that exists, or .github/CODEOWNERS. |
+| `rules` | map of any to [CodeOwnersRule](#codeownersrule) | no | Rules to generate, by key, so presets and repositories merge them. They are written in order, and the last matching rule wins. A key must not be a whole number such as 2, which would be moved first. |
+| `check` | boolean | no | Check pull requests that change CODEOWNERS. On by default. |
+| `level` | one of `error`, `warning` | no | error fails the check; warning only reports. Defaults to error. |
+| `branch` | [Trimmed](#trimmed) | no | The branch generated changes are proposed from. Defaults to smartcloud/codeowners. At least 1 character(s). |
+
+Other keys are an error.
+
+### CodeOwnersRule
+
+Paths and their owners, written to the generated block of CODEOWNERS.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `paths` | list of [CodeOwnersPath](#codeownerspath) | yes | The path patterns these owners own, each written as its own CODEOWNERS line. At least 1 item(s). |
+| `owners` | list of [CodeOwner](#codeowner) | yes | The owners of the paths. An empty list leaves them without an owner, overriding an earlier rule. |
+| `comment` | string | no | A comment written above the lines, such as Documentation. |
+
+Other keys are an error.
+
+### CodeOwnersPath
+
+A path pattern such as *.md, /docs/ or apps/**/*.ts. GitHub does not support ! or [ ] in CODEOWNERS patterns; write a space as \ followed by a space, as in docs/My\ Files/. Pattern: `^(?:\\ |\\[^\s[\]#]|[^!#\s[\]\\])(?:\\ |\\[^\s[\]]|[^\s[\]\\])*$`.
+
+Type: string.
+
+### CodeOwner
+
+A user as @login, a team as @org/team, or an email address. Pattern: `^(@[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?(?:\/[A-Za-z0-9][A-Za-z0-9._-]*)?|[^@\s]+@[^@\s]+\.[^@\s]+)$`.
+
+Type: string.
+
+### Trimmed
+
+**trimmed**
+
+a string with no leading or trailing whitespace Pattern: `^\S[\s\S]*\S$|^\S$|^$`.
+
+Type: string.
 
 ### Stale
 

@@ -393,6 +393,24 @@ importers:
         specifier: ^2.8.1
         version: 2.8.1
 
+  packages/feature.codeowners:
+    dependencies:
+      '@resnovas/config':
+        specifier: workspace:*
+        version: link:../config
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../integrations.github
+      effect:
+        specifier: 'catalog:'
+        version: 3.22.2
+      tslib:
+        specifier: ^2.8.1
+        version: 2.8.1
+
   packages/feature.commits:
     dependencies:
       '@resnovas/conditions':
@@ -677,6 +695,9 @@ importers:
       '@resnovas/feature.branches':
         specifier: workspace:*
         version: link:../feature.branches
+      '@resnovas/feature.codeowners':
+        specifier: workspace:*
+        version: link:../feature.codeowners
       '@resnovas/feature.commits':
         specifier: workspace:*
         version: link:../feature.commits
@@ -809,6 +830,21 @@ importers:
       '@resnovas/feature.branches':
         specifier: workspace:*
         version: link:../../packages/feature.branches
+      '@resnovas/integrations.github':
+        specifier: workspace:*
+        version: link:../../packages/integrations.github
+
+  tests/feature.codeowners:
+    devDependencies:
+      '@resnovas/config':
+        specifier: workspace:*
+        version: link:../../packages/config
+      '@resnovas/engine':
+        specifier: workspace:*
+        version: link:../../packages/engine
+      '@resnovas/feature.codeowners':
+        specifier: workspace:*
+        version: link:../../packages/feature.codeowners
       '@resnovas/integrations.github':
         specifier: workspace:*
         version: link:../../packages/integrations.github

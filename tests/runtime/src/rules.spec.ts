@@ -70,6 +70,17 @@ describe('explainRule', () => {
     }),
   )
 
+  it.effect('explains the codeowners rules, and calls codeowners.generate a notice', () =>
+    Effect.gen(function* () {
+      const syntax = yield* explainRule('codeowners.syntax', config)
+      expect(syntax.summary).toContain('GitHub rejects or ignores')
+      expect(syntax.fix).toContain('@org/team')
+      expect((yield* explainRule('codeowners.shadowed', config)).summary).toContain('the last matching rule wins')
+      expect((yield* explainRule('codeowners.generated', config)).fix).toContain('codeowners.rules')
+      expect((yield* explainRule('codeowners.generate', config)).summary).toContain('notice')
+    }),
+  )
+
   it.effect('calls feature notices notices, and rejects anything else by name', () =>
     Effect.gen(function* () {
       const notice = yield* explainRule('stale.sweep', config)
