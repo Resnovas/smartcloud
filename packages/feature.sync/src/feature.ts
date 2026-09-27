@@ -133,9 +133,52 @@ const readTemplate = (github: GitHubService, source: ExtendsRef, entry: Director
     (content): Template => ({ path: entry.path, content, executable: entry.executable }),
   )
 
-const readTemplates = (github: GitHubService, source: ExtendsRef) =>
+// Reads the templates the listing names, or only those `wanted` keeps.
+const readTemplates = (
+  github: GitHubService,
+  source: ExtendsRef,
+  wanted: (entry: DirectoryEntry) => boolean = () => true,
+) =>
   Effect.flatMap(github.listDirectory(source), (entries) =>
-    Effect.forEach(entries, (entry) => readTemplate(github, source, entry), { concurrency: CONCURRENCY }),
+    Effect.forEach(entries.filter(wanted), (entry) => readTemplate(github, source, entry), {
+      concurrency: CONCURRENCY,
+    }),
+  )
+
+// Every path in a tree, or undefined when it has too many files to list.
+const pathsAt = (github: GitHubService, location: FileLocation) =>
+  github.listDirectory(location).pipe(
+    Effect.map((entries): ReadonlySet<string> | undefined => new Set(entries.map((entry) => entry.path))),
+    Effect.catchTag('ValidationFailed', () => Effect.succeed(undefined)),
+  )
+
+// GitHub lists at most this many of a pull request's files.
+const FILE_LISTING_LIMIT = 3_000
+
+// Which synced paths a pull request may touch: those it lists as changed,
+// and those on the base but missing at its head, since GitHub lists a
+// renamed file by its new path alone. A tree too large to list, or a file
+// listing GitHub may have cut short, leaves every path in question.
+const touchedBy = (
+  github: GitHubService,
+  location: { readonly owner: string; readonly repo: string },
+  envelope: PullRequestEnvelope,
+) =>
+  Effect.map(
+    Effect.all([
+      github.listFiles(envelope.subject.number),
+      pathsAt(github, { ...location, path: '' }),
+      pathsAt(github, { ...location, path: '', ref: envelope.headSha }),
+    ]),
+    ([files, base, head]) => {
+      const changed = files.length >= FILE_LISTING_LIMIT ? undefined : new Set(files)
+      return (path: string) =>
+        base === undefined ||
+        head === undefined ||
+        changed === undefined ||
+        changed.has(path) ||
+        (base.has(path) && !head.has(path))
+    },
   )
 
 // A file that is not there reads as null, which the sync rules treat as absent.
@@ -304,12 +347,17 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
     // changing, so its pull requests legitimately edit synced content.
     if (isSourceRepository(repository, source)) return
     const exclude = sync.exclude ?? []
-    const templates = yield* readTemplates(github, source)
-    const rendered = yield* renderAll(
-      templates.filter((template) => !exclude.includes(template.path)),
-      valuesFor(sync, repository),
-    )
     const location = { owner: repository.owner, repo: repository.name }
+    // A synced file the pull request leaves alone reads the same at its head
+    // as on the base, which never makes a finding, so only the files it may
+    // touch are read: two reads each, rather than two for every template.
+    const touched = yield* touchedBy(github, location, envelope)
+    const templates = yield* readTemplates(
+      github,
+      source,
+      (entry) => !exclude.includes(entry.path) && touched(entry.path),
+    )
+    const rendered = yield* renderAll(templates, valuesFor(sync, repository))
     const files = yield* Effect.forEach(
       rendered,
       (file) =>
@@ -359,7 +407,9 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
  * On a pull request, unless `sync.check` is false, it fails edits to synced
  * content: a changed document, a changed managed block, removed markers, a
  * deleted synced file, or a local rule that redefines a synced one. Bringing
- * content in line with the templates is always allowed.
+ * content in line with the templates is always allowed. Only the synced
+ * files the pull request changes, or that the base has and its head lacks
+ * (a rename is listed by its new path alone), are read.
  *
  * @example
  * ```ts import.meta.vitest name="syncFeature"
