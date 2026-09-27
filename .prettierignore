@@ -4,6 +4,7 @@
 # formatter rewriting them would edit the managed block and fail the check.
 AGENTS.md
 AI_POLICY.md
+APPROVAL_POLICY.md
 CLAUDE.md
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
