@@ -65,6 +65,12 @@ sync:
     }),
   )
 
+  it.effect('reject a pull request rule with no merge methods, which GitHub refuses', () =>
+    Effect.map(Effect.flip(parseConfig('version: 2\nsettings: { ruleset: { pullRequest: { mergeMethods: [] } } }\n', 'x.yml')), (error) =>
+      expect(error._tag).toBe('ConfigDecodeError'),
+    ),
+  )
+
   it.effect('reject sync values whose keys are not SCREAMING_SNAKE_CASE', () =>
     Effect.map(
       Effect.flip(parseConfig('version: 2\nsync: { source: o/r/t, values: { orgName: x } }\n', 'x.yml')),

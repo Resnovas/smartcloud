@@ -291,9 +291,38 @@ Type: number.
 | `ruleset.linearHistory` | boolean | no |  |
 | `ruleset.blockDeletion` | boolean | no |  |
 | `ruleset.blockForcePush` | boolean | no |  |
-| `ruleset.copilotReview` | boolean | no |  |
-| `ruleset.codeScanningGate` | boolean | no |  |
+| `ruleset.mergeQueue` | object | no |  |
+| `ruleset.mergeQueue.method` | one of `squash`, `rebase`, `merge` | no |  |
+| `ruleset.mergeQueue.grouping` | one of `allGreen`, `headGreen` | no |  |
+| `ruleset.mergeQueue.checkTimeoutMinutes` | [Int](#int) | no | a number between 1 and 360 Minimum: 1. |
+| `ruleset.mergeQueue.maxEntriesToBuild` | [Int](#int) | no | a number between 0 and 100 Minimum: 0. |
+| `ruleset.mergeQueue.minEntriesToMerge` | [Int](#int) | no | a number between 0 and 100 Minimum: 0. |
+| `ruleset.mergeQueue.maxEntriesToMerge` | [Int](#int) | no | a number between 0 and 100 Minimum: 0. |
+| `ruleset.mergeQueue.minEntriesToMergeWaitMinutes` | [Int](#int) | no | a number between 0 and 360 Minimum: 0. |
+| `ruleset.requiredDeployments` | list of string | no |  |
+| `ruleset.signedCommits` | boolean | no |  |
+| `ruleset.pullRequest` | object | no |  |
+| `ruleset.pullRequest.requiredApprovals` | [NonNegativeInt](#nonnegativeint) | no | a number less than or equal to 10 |
+| `ruleset.pullRequest.dismissStaleReviews` | boolean | no |  |
+| `ruleset.pullRequest.codeOwnerReview` | boolean | no |  |
+| `ruleset.pullRequest.lastPushApproval` | boolean | no |  |
+| `ruleset.pullRequest.conversationResolution` | boolean | no |  |
+| `ruleset.pullRequest.extraApprovalForUnattributedCopilot` | boolean | no |  |
+| `ruleset.pullRequest.mergeMethods` | list of one of `squash`, `rebase`, `merge` | no | At least 1 item(s). |
+| `ruleset.statusChecks` | object | no |  |
+| `ruleset.statusChecks.checks` | map of string to boolean | no |  |
+| `ruleset.statusChecks.strict` | boolean | no |  |
+| `ruleset.statusChecks.skipOnCreation` | boolean | no |  |
 | `ruleset.requiredChecks` | list of string | no |  |
+| `ruleset.codeScanningGate` | boolean | no |  |
+| `ruleset.codeScanning` | map of string to object | no |  |
+| `ruleset.codeQuality` | one of `errors`, `warnings`, `notes`, `all` | no |  |
+| `ruleset.codeCoverage` | object | no |  |
+| `ruleset.codeCoverage.enabled` | boolean | no |  |
+| `ruleset.codeCoverage.minimum` | number | no | a number between 0 and 100 Minimum: 0. |
+| `ruleset.codeCoverage.maxDrop` | number | no | a number between 0 and 100 Minimum: 0. |
+| `ruleset.secretScanningAlerts` | list of string | no | At least 1 item(s). |
+| `ruleset.copilotReview` | boolean | no |  |
 | `ruleset.adminBypass` | boolean | no |  |
 | `environments` | object | no |  |
 | `environments.projectType` | one of `saas`, `desktop`, `library`, `none` | no |  |

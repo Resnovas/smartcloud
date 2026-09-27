@@ -283,6 +283,7 @@ export const Required = Schema.Struct({
  * import { Schema } from 'effect'
  *
  * Schema.is(Settings)({ merging: { squash: true }, security: { codeScanning: 'extended' } }) // => true
+ * Schema.is(Settings)({ ruleset: { mergeQueue: { grouping: 'allGreen' }, statusChecks: { checks: { check: true } } } }) // => true
  * Schema.is(Settings)({ security: { codeScanning: 'maximum' } }) // => false
  * Schema.is(Settings)({ actions: { workflowPermissions: 'read' }, collaborators: { octocat: 'write' } }) // => true
  * Schema.is(Settings)({ collaborators: { octocat: 'owner' } }) // => false
@@ -325,10 +326,76 @@ export const Settings = Schema.Struct({
       linearHistory: opt(Schema.Boolean),
       blockDeletion: opt(Schema.Boolean),
       blockForcePush: opt(Schema.Boolean),
-      copilotReview: opt(Schema.Boolean),
-      codeScanningGate: opt(Schema.Boolean),
-      /** Status checks required once two or more maintainers are configured. */
+      /** Pull requests merge through a merge queue. Omitted fields take GitHub's defaults, except the method, which squashes. */
+      mergeQueue: opt(
+        Schema.Struct({
+          method: opt(Schema.Literal('squash', 'rebase', 'merge')),
+          /** `allGreen`: every queued entry must pass the required checks; `headGreen`: only the group's head. */
+          grouping: opt(Schema.Literal('allGreen', 'headGreen')),
+          checkTimeoutMinutes: opt(Schema.Int.pipe(Schema.between(1, 360))),
+          maxEntriesToBuild: opt(Schema.Int.pipe(Schema.between(0, 100))),
+          minEntriesToMerge: opt(Schema.Int.pipe(Schema.between(0, 100))),
+          maxEntriesToMerge: opt(Schema.Int.pipe(Schema.between(0, 100))),
+          minEntriesToMergeWaitMinutes: opt(Schema.Int.pipe(Schema.between(0, 360))),
+        }),
+      ),
+      /** Environments a branch must deploy to successfully before it merges. */
+      requiredDeployments: opt(Schema.Array(Schema.String)),
+      /** Every commit pushed to the branch is signed and verified. */
+      signedCommits: opt(Schema.Boolean),
+      /** Changes reach the branch only through a pull request. */
+      pullRequest: opt(
+        Schema.Struct({
+          /** Approvals required once two or more maintainers are configured; none before that. */
+          requiredApprovals: opt(Schema.NonNegativeInt.pipe(Schema.lessThanOrEqualTo(10))),
+          dismissStaleReviews: opt(Schema.Boolean),
+          codeOwnerReview: opt(Schema.Boolean),
+          lastPushApproval: opt(Schema.Boolean),
+          conversationResolution: opt(Schema.Boolean),
+          /** One more approval when Copilot opens a pull request on no one's behalf. */
+          extraApprovalForUnattributedCopilot: opt(Schema.Boolean),
+          mergeMethods: opt(Schema.NonEmptyArray(Schema.Literal('squash', 'rebase', 'merge'))),
+        }),
+      ),
+      /** Required status checks, keyed by check context so presets and repositories merge them. */
+      statusChecks: opt(
+        Schema.Struct({
+          checks: opt(Schema.Record({ key: Schema.String, value: Schema.Boolean })),
+          /** Branches must be up to date with the base before merging. */
+          strict: opt(Schema.Boolean),
+          /** New branches may be created even if a check would block them. */
+          skipOnCreation: opt(Schema.Boolean),
+        }),
+      ),
+      /** Status checks required once two or more maintainers are configured. Prefer `statusChecks`. */
       requiredChecks: opt(Schema.Array(Schema.String)),
+      /** CodeQL blocks merging at high or higher security alerts and at errors. Prefer `codeScanning`. */
+      codeScanningGate: opt(Schema.Boolean),
+      /** Code scanning tools whose results gate merging, keyed by tool name. */
+      codeScanning: opt(
+        Schema.Record({
+          key: Schema.String,
+          value: Schema.Struct({
+            securityAlerts: Schema.Literal('none', 'critical', 'high_or_higher', 'medium_or_higher', 'all'),
+            alerts: Schema.Literal('none', 'errors', 'errors_and_warnings', 'all'),
+          }),
+        }),
+      ),
+      /** The lowest code quality severity that blocks merging. */
+      codeQuality: opt(Schema.Literal('errors', 'warnings', 'notes', 'all')),
+      /** Line coverage limits. Enforced only when `enabled`, because they need coverage uploaded to GitHub. */
+      codeCoverage: opt(
+        Schema.Struct({
+          enabled: opt(Schema.Boolean),
+          /** Minimum line coverage, in percent. */
+          minimum: opt(Schema.Number.pipe(Schema.between(0, 100))),
+          /** Maximum drop in line coverage from the default branch, in percentage points. */
+          maxDrop: opt(Schema.Number.pipe(Schema.between(0, 100))),
+        }),
+      ),
+      /** Secret types whose open alerts block merging, for example `provider_patterns`. */
+      secretScanningAlerts: opt(Schema.NonEmptyArray(Schema.String)),
+      copilotReview: opt(Schema.Boolean),
       /** Repository admins may bypass the ruleset. On by default. */
       adminBypass: opt(Schema.Boolean),
     }),

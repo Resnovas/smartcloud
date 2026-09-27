@@ -39,9 +39,32 @@ settings:
     linearHistory: true
     blockDeletion: true
     blockForcePush: true
+    mergeQueue:
+      method: squash
+      grouping: allGreen
+    requiredDeployments: [Staging]
+    signedCommits: true
+    pullRequest:
+      requiredApprovals: 1
+      dismissStaleReviews: true
+      conversationResolution: true
+      extraApprovalForUnattributedCopilot: true
+      mergeMethods: [squash, rebase]
+    statusChecks:
+      checks:
+        smartcloud: true
+        check: true
+      strict: true
+      skipOnCreation: true
+    codeScanning:
+      CodeQL: { securityAlerts: high_or_higher, alerts: errors }
+    codeQuality: errors
+    codeCoverage:
+      enabled: true
+      minimum: 80
+      maxDrop: 5
+    secretScanningAlerts: [provider_patterns]
     copilotReview: true
-    codeScanningGate: true
-    requiredChecks: ["smartcloud / reviews", "check"]
   environments:
     projectType: saas
   actions:
@@ -89,16 +112,25 @@ Secret scanning is only changed on public repositories; on a private one it need
 
 `ruleset` manages one ruleset on the default branch, matched by `name` (default `house: default branch`), so each run updates it in place.
 
-The ruleset is written whole: a switch left out, or `false`, means that rule is not enforced.
+The ruleset is written whole: a rule left out, or switched off, is not enforced. Rules are written in the order GitHub shows them.
 
 | Key | Rule |
 | --- | --- |
 | `blockDeletion` | The branch cannot be deleted. |
 | `blockForcePush` | No force pushes. |
 | `linearHistory` | No merge commits on the branch. |
+| `mergeQueue` | Pull requests merge through a merge queue. `method` is `squash` (the default), `rebase` or `merge`; `grouping` is `allGreen` (the default: every queued entry must pass the required checks) or `headGreen`. `checkTimeoutMinutes` (60), `maxEntriesToBuild` (5), `minEntriesToMerge` (1), `maxEntriesToMerge` (5) and `minEntriesToMergeWaitMinutes` (5) default to GitHub's values. Every workflow behind a required check must also run on `merge_group`. |
+| `requiredDeployments` | The branch must deploy to these environments successfully before it merges, for example `[Staging]`. Leave it out on a repository that does not deploy. |
+| `signedCommits` | Every commit pushed to the branch is signed and verified. |
+| `pullRequest` | Changes arrive only through a pull request. `requiredApprovals` applies only once two or more distinct maintainers are configured, like the review gate; before that no approval is required. `dismissStaleReviews`, `codeOwnerReview`, `lastPushApproval`, `conversationResolution` and `extraApprovalForUnattributedCopilot` (one more approval when Copilot opens a pull request on no one's behalf, which has no effect with zero approvals) default to `false`. `mergeMethods` lists the allowed methods; all three by default. |
+| `statusChecks` | `checks` maps each required check context to `true`, so a preset and a repository can each add checks. `strict` requires branches to be up to date before merging; `skipOnCreation` lets a branch be created even if a check would block it. |
+| `requiredChecks` | An older list of required checks that applies only once two or more distinct maintainers are configured (logins compare ignoring case and a leading `@`). Prefer `statusChecks`; a context in both is required once. |
+| `codeScanning` | Code scanning tools that must report, keyed by tool name (`CodeQL`, `ESLint`), each with `securityAlerts` (`none`, `critical`, `high_or_higher`, `medium_or_higher`, `all`) and `alerts` (`none`, `errors`, `errors_and_warnings`, `all`) thresholds. Only list a tool that uploads results for every pull request, or nothing can merge. |
+| `codeScanningGate` | Shorthand for CodeQL at `high_or_higher` and `errors`. It wins over an entry for CodeQL under `codeScanning`, so a repository cannot weaken a gate its preset turns on. |
+| `codeQuality` | GitHub Code Quality results block merging at this severity or above: `errors`, `warnings`, `notes` or `all`. Code Quality must be enabled on the repository. |
+| `codeCoverage` | Line coverage limits: `minimum` (percent) and `maxDrop` (percentage points below the default branch). Enforced only when `enabled` is `true`, because they need coverage uploaded to GitHub with `actions/upload-code-coverage`, so a preset can set the limits and each repository switch them on. |
+| `secretScanningAlerts` | Open secret scanning alerts of these types block merging, for example `[provider_patterns]`. A public preview rule. |
 | `copilotReview` | Copilot reviews every pull request, drafts included, and on every push. |
-| `codeScanningGate` | CodeQL results block merging at high or higher security alerts and at errors. |
-| `requiredChecks` | These status checks must pass. They apply only once two or more distinct maintainers are configured (logins compare ignoring case and a leading `@`), so a sole maintainer is never blocked by the review gate. With the [required](/features/required) feature, list only the smartcloud job's check, which passes when every other check has. |
 | `adminBypass` | Repository admins may bypass the ruleset. On by default; set `false` to remove the bypass. |
 
 On a private repository, rulesets need a paid plan, so a failure there is a warning.

@@ -28,6 +28,10 @@ on:
     types: [opened, edited, reopened, labeled, unlabeled]
   push:
     branches: [main]
+  # The required "smartcloud" check must also report on merge queue groups.
+  # The job is skipped there, which GitHub reports as a success: the queued
+  # code may come from a fork, and must never run with ACCESS_TOKEN.
+  merge_group:
   schedule:
     - cron: '0 6 * * *'
   workflow_dispatch:
@@ -46,6 +50,7 @@ concurrency:
 jobs:
   smartcloud:
     name: smartcloud
+    if: github.event_name != 'merge_group'
     runs-on: ubuntu-latest
     # Without the app's credentials, as in a repository outside the
     # organisation, the mint is skipped rather than attempted with empty inputs.
