@@ -5,6 +5,8 @@ description: 'The maintainer review gate, requested reviewers and automatic appr
 
 The reviews feature runs on pull request events, including `pull_request_review`, so it re-evaluates whenever a review is submitted or dismissed. It is enabled by a `reviews` section.
 
+When a ruleset requires smartcloud's check, don't run smartcloud on `pull_request_review`: a second run adds a second check of the same name to the commit, and a run whose smartcloud job is skipped adds one that GitHub counts as passed. Instead, re-run the pull request's own smartcloud run from a separate workflow when a review is submitted or dismissed, as smartcloud's `.github/workflows/smartcloud-review.yml` and the Resnovas house workflows do, so the one required check reads the reviews again.
+
 ```yaml
 roles:
   maintainers: [octocat, hubot, monalisa]

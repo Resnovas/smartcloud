@@ -1,0 +1,68 @@
+# Re-evaluates the required "smartcloud" check when a pull request is reviewed.
+#
+# A review can change whether a pull request may merge, so the check must read
+# the reviews again. This workflow re-runs the pull request's own smartcloud
+# run instead of running smartcloud itself: a second run would put a second
+# required "smartcloud" check on the commit. It lives apart from smartcloud.yml
+# on purpose, because a review run of that workflow, even with its job
+# skipped, would add a "smartcloud" check that GitHub counts as passed.
+#
+# The run is found by its pull request number, since a pull request's runs are
+# recorded against its merge commit rather than its head. A review of a pull
+# request from a fork gets a read-only token that cannot re-run anything, so
+# there the check refreshes on the next push or a manual re-run.
+name: smartcloud review
+
+on:
+  pull_request_review:
+    types: [submitted, dismissed]
+
+permissions: {}
+
+# Reviews of one pull request queue rather than cancel, so each is seen.
+concurrency:
+  group: smartcloud-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  rerun:
+    name: re-run smartcloud for the review
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      actions: write
+    steps:
+      - name: Re-run the pull request's smartcloud run
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          BRANCH: ${{ github.event.pull_request.head.ref }}
+          NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          set -euo pipefail
+          # The single quotes are deliberate: $ENV and \( ) inside are jq's, not the shell's.
+          # shellcheck disable=SC2016
+          run=$(gh api "repos/$REPOSITORY/actions/workflows/smartcloud.yml/runs?event=pull_request&branch=$BRANCH&per_page=30" \
+            --jq '[.workflow_runs[] | select(any(.pull_requests[]; .number == ($ENV.NUMBER | tonumber)))][0] | select(.) | "\(.id) \(.status) \(.run_attempt)"')
+          if [ -z "$run" ]; then
+            echo "::warning::No smartcloud run of pull request #$NUMBER to re-run; push a commit or re-run it by hand to refresh the check."
+            exit 0
+          fi
+          read -r id status attempt <<<"$run"
+          if [ "$status" != completed ]; then
+            gh run cancel "$id" --repo "$REPOSITORY" || true
+            for _ in $(seq 1 60); do
+              status=$(gh run view "$id" --repo "$REPOSITORY" --json status --jq .status)
+              [ "$status" = completed ] && break
+              sleep 5
+            done
+            if [ "$status" != completed ]; then
+              echo "::error::smartcloud run $id is still $status; re-run it once it finishes to refresh the check."
+              exit 1
+            fi
+          fi
+          if ! gh run rerun "$id" --repo "$REPOSITORY"; then
+            echo "::error::Could not re-run smartcloud run $id (attempt $attempt; GitHub allows 50 re-runs of a run). Push a commit to start a new run."
+            exit 1
+          fi

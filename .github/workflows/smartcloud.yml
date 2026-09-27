@@ -22,8 +22,6 @@ name: smartcloud
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened, ready_for_review]
-  pull_request_review:
-    types: [submitted, dismissed]
   issues:
     types: [opened, edited, reopened, labeled, unlabeled]
   push:
@@ -36,12 +34,8 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch:
 
-permissions:
-  contents: read
-  checks: write
-  issues: write
-  pull-requests: write
-  statuses: read
+# Each job asks for the access it needs; the workflow grants none.
+permissions: {}
 
 concurrency:
   group: smartcloud-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
@@ -56,6 +50,12 @@ jobs:
     # organisation, the mint is skipped rather than attempted with empty inputs.
     env:
       HAS_APP_KEY: ${{ vars.RESNOVAS_BOT_APP_ID != '' && secrets.RESNOVAS_BOT_PRIVATE_KEY != '' }}
+    permissions:
+      contents: read
+      checks: write
+      issues: write
+      pull-requests: write
+      statuses: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
