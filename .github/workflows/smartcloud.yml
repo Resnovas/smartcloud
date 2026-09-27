@@ -27,7 +27,9 @@ name: smartcloud
 
 on:
   pull_request:
-    types: [opened, edited, synchronize, reopened, ready_for_review]
+    # closed starts the backports a merged pull request's labels ask for. Its
+    # check lands on a merged pull request, so it gates nothing.
+    types: [opened, edited, synchronize, reopened, ready_for_review, closed]
   issues:
     types: [opened, edited, reopened, labeled, unlabeled]
   issue_comment:
