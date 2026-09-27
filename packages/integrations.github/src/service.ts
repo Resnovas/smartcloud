@@ -77,6 +77,8 @@ export interface IssueSummary {
   /** The title of the milestone the item is in; omitted when it is in none. */
   readonly milestone?: string
   readonly updatedAt: Date
+  /** When the item was opened, when the listing reports it. */
+  readonly createdAt?: Date
   readonly isPullRequest: boolean
   /** The reactions on the item itself, when the listing reports them. */
   readonly reactions?: Reactions

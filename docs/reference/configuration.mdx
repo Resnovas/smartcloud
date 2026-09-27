@@ -99,9 +99,27 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [lockfileChanged](#lockfilechanged), [fileCount](#filecount), [binaryFilesAdded](#binaryfilesadded), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [commentMatches](#commentmatches), [reactionCount](#reactioncount), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [lockfileChanged](#lockfilechanged), [fileCount](#filecount), [binaryFilesAdded](#binaryfilesadded), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [commentMatches](#commentmatches), [reactionCount](#reactioncount), [createdBefore](#createdbefore), [timeWindow](#timewindow), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
+
+Type: string.
+
+### Instant
+
+An ISO 8601 date (2026-01-31, midnight UTC) or date and time with an offset (2026-01-31T09:00:00Z). Pattern: `^\d{4}-\d{2}-\d{2}(?:T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2}))?$`.
+
+Type: string.
+
+### Weekday
+
+A day of the week: mon, tue, wed, thu, fri, sat or sun.
+
+Type: one of `mon`, `tue`, `wed`, `thu`, `fri`, `sat`, `sun`.
+
+### TimeZone
+
+An IANA time zone name, such as Europe/London, or UTC.
 
 Type: string.
 
@@ -776,6 +794,32 @@ The number of reactions (of one kind, when reaction is set) is at least min and 
 | `reaction` | one of `+1`, `-1`, `laugh`, `hooray`, `confused`, `heart`, `rocket`, `eyes` | no | The reaction to count: +1, -1, laugh, hooray, confused, heart, rocket or eyes. Every reaction when omitted. |
 | `min` | [NonNegativeInt](#nonnegativeint) | yes |  |
 | `max` | [NonNegativeInt](#nonnegativeint) | no |  |
+
+Other keys are an error.
+
+### createdBefore
+
+The subject was created at least this many days ago, or before this ISO 8601 date.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `createdBefore` | yes |  |
+| `condition` | any of number, [Instant](#instant) | yes |  |
+
+Other keys are an error.
+
+### timeWindow
+
+Now is inside the weekly window of days and hours, or outside it when false.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `timeWindow` | yes |  |
+| `condition` | boolean | yes |  |
+| `days` | list of [Weekday](#weekday) | no | The days the window opens on; every day when omitted. At least 1 item(s). |
+| `from` | string | no | When the window opens, as HH:MM (inclusive); midnight when omitted. Pattern: `^(?:[01]\d\|2[0-3]):[0-5]\d$`. |
+| `to` | string | no | When the window closes, as HH:MM (exclusive); midnight when omitted. Pattern: `^(?:[01]\d\|2[0-3]):[0-5]\d$`. |
+| `timeZone` | [TimeZone](#timezone) | no |  |
 
 Other keys are an error.
 

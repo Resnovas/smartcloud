@@ -39,6 +39,7 @@ const IssueFields = {
   reactions: Schema.optional(Reactions),
   // An ISO 8601 timestamp, decoded to a valid Date: a malformed one is a decode error, not NaN ages later.
   updated_at: Schema.Date,
+  created_at: Schema.optional(Schema.Date),
 }
 
 const PullRequestPayload = Schema.Struct({
@@ -144,6 +145,7 @@ const subjectOf = (kind: Subject['kind'], item: IssueLike): Subject => ({
   assignees: (item.assignees ?? []).map((user) => user.login),
   ...(item.milestone?.title === undefined ? {} : { milestone: item.milestone.title }),
   updatedAt: item.updated_at,
+  ...(item.created_at === undefined ? {} : { createdAt: item.created_at }),
   ...(item.reactions === undefined ? {} : { reactions: item.reactions }),
 })
 

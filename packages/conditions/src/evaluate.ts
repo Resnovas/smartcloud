@@ -20,6 +20,7 @@ import { codeownersOf, parseCodeowners } from './codeowners.js'
 import { compilePattern } from './pattern.js'
 import type { AuthorAssociation, Condition, ConditionGroup, Not } from './schema.js'
 import type { Association, Check, CheckState, Commit, Facet, Review, Subject } from './subject.js'
+import { inWindow, localTime } from './time.js'
 import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 
 /**
@@ -154,6 +155,25 @@ const scoped = (scope: 'all' | 'any' | undefined, commits: ReadonlyArray<Commit>
 
 const ageInDays = (subject: Subject) =>
   Effect.map(Clock.currentTimeMillis, (now) => (now - subject.updatedAt.getTime()) / DAY)
+
+const isoDate = (millis: number) => new Date(millis).toISOString().slice(0, 10)
+
+// A number is an age in days; a string is an ISO 8601 date the schema checked.
+const createdBefore = (subject: Subject, condition: number | string) =>
+  Effect.map(Clock.currentTimeMillis, (now) => {
+    if (subject.createdAt === undefined) return result('createdBefore', false, 'creation time unknown')
+    const created = subject.createdAt.getTime()
+    if (typeof condition === 'number') {
+      const days = (now - created) / DAY
+      return result('createdBefore', days >= condition, `created ${Math.floor(days)} day(s) ago`)
+    }
+    const passed = created < Date.parse(condition)
+    return result(
+      'createdBefore',
+      passed,
+      `created ${isoDate(created)}, ${passed ? 'before' : 'not before'} ${condition}`,
+    )
+  })
 
 const hasLabel = (subject: Subject, label: string) =>
   subject.labels.some((name) => name.toLowerCase() === label.toLowerCase())
@@ -396,6 +416,20 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
           condition.type,
           labelled && days >= condition.condition,
           labelled ? `${Math.floor(days)} day(s) since the last activity` : `not labelled "${condition.label}"`,
+        )
+      })
+    case 'createdBefore':
+      return createdBefore(subject, condition.condition)
+    case 'timeWindow':
+      return Effect.map(Clock.currentTimeMillis, (now) => {
+        const timeZone = condition.timeZone ?? 'UTC'
+        const time = localTime(new Date(now), timeZone)
+        const inside = inWindow(condition, time)
+        const clock = `${String(Math.floor(time.minutes / 60)).padStart(2, '0')}:${String(time.minutes % 60).padStart(2, '0')}`
+        return result(
+          condition.type,
+          inside === condition.condition,
+          `${time.weekday} ${clock} ${timeZone} is ${inside ? 'inside' : 'outside'} the window`,
         )
       })
     case 'filesMatch':

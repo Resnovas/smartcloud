@@ -84,6 +84,19 @@ describe('ConditionGroup', () => {
       { type: 'commentMatches', condition: 'x', bots: true },
       { type: 'reactionCount', min: 5 },
       { type: 'reactionCount', reaction: '+1', min: 10, max: 100 },
+      { type: 'createdBefore', condition: 30 },
+      { type: 'createdBefore', condition: '2028-02-29' },
+      { type: 'createdBefore', condition: '2026-01-01' },
+      { type: 'createdBefore', condition: '2026-01-01T09:30:00.5+01:00' },
+      { type: 'timeWindow', condition: true },
+      {
+        type: 'timeWindow',
+        condition: false,
+        days: ['sat', 'sun'],
+        from: '22:00',
+        to: '06:00',
+        timeZone: 'Asia/Tokyo',
+      },
     ]
     for (const leaf of leaves) {
       expect(Either.isRight(Schema.decodeUnknownEither(Condition)(leaf)), leaf.type).toBe(true)
@@ -100,6 +113,27 @@ describe('ConditionGroup', () => {
     expect(Either.isLeft(decode({ condition: [{ type: 'commentMatches', condition: '(' }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'reactionCount', reaction: 'thumbsup', min: 1 }] }))).toBe(true)
     expect(Either.isLeft(decode({ condition: [{ type: 'reactionCount', min: -1 }] }))).toBe(true)
+    for (const bad of [
+      -1,
+      'yesterday',
+      '2026-1-1',
+      '2026-13-01',
+      '2026-01-01T09:00',
+      '2026-02-29',
+      '2025-02-29',
+      '2026-04-31T09:00:00Z',
+    ]) {
+      expect(Either.isLeft(decode({ condition: [{ type: 'createdBefore', condition: bad }] })), String(bad)).toBe(true)
+    }
+    for (const bad of [
+      { days: [] },
+      { days: ['monday'] },
+      { from: '9:00' },
+      { to: '24:00' },
+      { timeZone: 'Nowhere' },
+    ]) {
+      expect(Either.isLeft(decode({ condition: [{ type: 'timeWindow', condition: true, ...bad }] }))).toBe(true)
+    }
     expect(Either.isLeft(decode({ condition: [{ type: 'codeownersTouched', condition: '@org/core team' }] }))).toBe(
       true,
     )
