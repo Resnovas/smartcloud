@@ -114,7 +114,7 @@ The settings feature changes repository administration settings, and the sync fe
 ```yaml
 steps:
   - id: app
-    if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
+    if: github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
     continue-on-error: true
     uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
     with:
@@ -133,7 +133,7 @@ steps:
 Never mint the token in a job that runs pull request code; smartcloud's own job runs a release, not the pull request.
 
 <Note>
-  A run with only the workflow token is restricted rather than failed: smartcloud skips settings, sync, private presets in other repositories and every write GitHub refuses, and lists them in the job summary. Pull requests from forks and runs started by Dependabot are always restricted, whatever token the workflow passes; see [Restricted runs](/reporting#restricted-runs).
+  A run with only the workflow token is restricted rather than failed: smartcloud skips settings, sync, private presets in other repositories and every write GitHub refuses, and lists them in the job summary. Pull requests from forks, and Dependabot's runs and pull requests (even when a person reviews them), are always restricted, whatever token the workflow passes; see [Restricted runs](/reporting#restricted-runs).
 </Note>
 
 ## Action inputs

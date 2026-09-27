@@ -58,6 +58,18 @@ describe('externalRun', () => {
     )
     expect(externalRun({ name: 'issues', payload: { issue: {} } }, 'Resnovas/example', undefined)).toBeUndefined()
   })
+
+  it("names Dependabot's pull request whoever started the run, such as a reviewer", () => {
+    const review = (user: { readonly login: string } | null) => ({
+      name: 'pull_request_review',
+      payload: { pull_request: { head: { repo: { full_name: 'Resnovas/example' } }, user } },
+    })
+    expect(externalRun(review({ login: 'dependabot[bot]' }), 'Resnovas/example', 'TGTGamer')).toBe(
+      'a pull request from Dependabot',
+    )
+    expect(externalRun(review({ login: 'TGTGamer' }), 'Resnovas/example', 'someone')).toBeUndefined()
+    expect(externalRun(review(null), 'Resnovas/example', 'someone')).toBeUndefined()
+  })
 })
 
 describe('accessFor', () => {

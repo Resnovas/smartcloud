@@ -59,18 +59,20 @@ export const PAT_ONLY_FEATURES: ReadonlyMap<string, string> = new Map([
 const PullRequestOrigin = Schema.Struct({
   pull_request: Schema.Struct({
     head: Schema.Struct({ repo: Schema.NullOr(Schema.Struct({ full_name: Schema.String })) }),
+    user: Schema.optional(Schema.NullOr(Schema.Struct({ login: Schema.String }))),
   }),
 })
 const decodeOrigin = Schema.decodeUnknownOption(PullRequestOrigin)
 
 /**
  * Why a run was started from outside the repository, if it was: a pull
- * request from a fork, or a run Dependabot started.
+ * request from a fork, or a run Dependabot started or on its pull request.
  *
  * @remarks
  * Such a run never acts with more than the workflow token, whatever the
  * workflow passes in. A pull request whose head repository has been deleted
- * counts as a fork.
+ * counts as a fork. A pull request Dependabot opened counts as Dependabot's
+ * whoever started the run, such as a reviewer on `pull_request_review`.
  *
  * @example
  * ```ts import.meta.vitest name="externalRun"
@@ -95,6 +97,7 @@ export const externalRun = (
   if (actor === 'dependabot[bot]') return 'a run started by Dependabot'
   const origin = decodeOrigin(event.payload)
   if (Option.isNone(origin)) return undefined
+  if (origin.value.pull_request.user?.login === 'dependabot[bot]') return 'a pull request from Dependabot'
   const head = origin.value.pull_request.head.repo?.full_name
   return head?.toLowerCase() === repository.toLowerCase() ? undefined : 'a pull request from a fork'
 }

@@ -70,7 +70,7 @@ jobs:
       # mint falls back to the workflow token rather than failing the run.
       - name: Mint the Resnovas Bot token
         id: app
-        if: env.HAS_APP_KEY == 'true' && github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]'
+        if: env.HAS_APP_KEY == 'true' && github.event.pull_request.head.repo.fork != true && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
         continue-on-error: true
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
