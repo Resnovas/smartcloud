@@ -133,15 +133,53 @@ describe('resolveConfig: extends and locked presets', () => {
     }),
   )
 
-  it.effect('still rejects a merged config that is incomplete or wrong, naming the file and its presets', () =>
+  it.effect('strictly, still rejects a merged config that is incomplete or wrong, naming the file and its presets', () =>
     Effect.gen(function* () {
-      const incomplete = yield* Effect.flip(resolveConfig(local('sync:\n  exclude: [LICENSE]\n'), 'repo'))
+      const strict = { strict: true }
+      const incomplete = yield* Effect.flip(resolveConfig(local('sync:\n  exclude: [LICENSE]\n'), 'repo', strict))
       expect(incomplete).toMatchObject({ _tag: 'ConfigDecodeError', source: `repo with ${HOUSE}` })
       expect(incomplete.message).toContain('source')
-      const alone = yield* Effect.flip(resolveConfig('version: 2\nsync:\n  exclude: [LICENSE]\n', 'repo'))
+      const alone = yield* Effect.flip(resolveConfig('version: 2\nsync:\n  exclude: [LICENSE]\n', 'repo', strict))
       expect(alone).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
-      const typo = yield* Effect.flip(resolveConfig(local('lables: {}\n'), 'repo'))
+      const typo = yield* Effect.flip(resolveConfig(local('lables: {}\n'), 'repo', strict))
       expect(typo.message).toContain('lables')
+      const presetTypo = yield* Effect.flip(
+        resolveConfig(local(''), 'repo', strict).pipe(Effect.provide(presets({ [HOUSE]: 'version: 2\nsettings: { actions: {} }\n' }))),
+      )
+      expect(presetTypo.message).toContain('actions')
+    }).pipe(Effect.provide(presets({ [HOUSE]: house }))),
+  )
+
+  it.effect('by default, drops what is incomplete or unknown with a warning naming the file and its presets', () =>
+    Effect.gen(function* () {
+      const incomplete = yield* resolveConfig(local('sync:\n  exclude: [LICENSE]\n'), 'repo')
+      expect(incomplete.config.sync).toBeUndefined()
+      expect(incomplete.warnings).toStrictEqual([`repo with ${HOUSE}: ignored sync, because sync.source is missing`])
+      const typo = yield* resolveConfig(local('lables: {}\n'), 'repo')
+      expect(typo.config.labels?.['bug']?.color).toBe('d73a4a')
+      expect(typo.warnings).toStrictEqual([expect.stringMatching(/^repo: ignored lables, because lables is unexpected/)])
+    }).pipe(Effect.provide(presets({ [HOUSE]: house }))),
+  )
+
+  it.effect('runs a preset written for a newer smartcloud, warning about the settings section it does not know', () =>
+    Effect.gen(function* () {
+      // The house preset gained settings.actions before this build knew it.
+      const newer = `${house}settings:\n  merging: { squash: true }\n  actions: { enabled: true, allowed: selected }\n`
+      const resolved = yield* resolveConfig(local('labelSync: { prune: true }\n'), '.github/smartcloud.yml').pipe(
+        Effect.provide(presets({ [HOUSE]: newer })),
+      )
+      expect(resolved.config.settings).toStrictEqual({ merging: { squash: true } })
+      expect(resolved.config.labels?.['bug']?.color).toBe('d73a4a')
+      expect(resolved.config.labelSync).toStrictEqual({ prune: true })
+      expect(resolved.warnings).toStrictEqual([
+        `${HOUSE}: ignored settings.actions, because settings.actions is unexpected, expected: "merging" | "features" | "security" | "ruleset" | "environments"`,
+      ])
+      expect(resolved.locked.has('settings.merging.squash')).toBe(true)
+    }),
+  )
+
+  it.effect('still fails a config that is unusable as a whole', () =>
+    Effect.gen(function* () {
       const badExtends = yield* Effect.flip(resolveConfig('version: 2\nextends: [nope]\n', 'repo'))
       expect(badExtends).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
       const notMapping = yield* Effect.flip(

@@ -17,6 +17,7 @@
 import { Context, Data, Effect, Either, Option, ParseResult, Schema, SchemaAST } from 'effect'
 import { parse as parseYaml } from 'yaml'
 import { ExtendsEntry, type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
+import { dropInvalid } from './lenient.js'
 import { empty, type Merged, mergeLocked } from './merge.js'
 import { conventionNeedsPresetOrWhen, SmartcloudConfig } from './schema.js'
 import { migrateV1 } from './v1.js'
@@ -132,13 +133,18 @@ export interface ResolvedConfig {
   readonly skipped?: ReadonlyArray<string>
 }
 
-/** How {@link resolveConfig} treats presets it cannot read. */
+/** How {@link resolveConfig} treats presets it cannot read and config that does not match the schema. */
 export interface ResolveOptions {
   /**
    * Decides whether a preset that could not be read is left out instead of
    * failing the whole config. Absent, every unreadable preset fails.
    */
   readonly skipUnreadable?: (ref: ExtendsRef, error: ConfigNotFound) => boolean
+  /**
+   * Fail on every unknown key and invalid value, as `smartcloud validate`
+   * does for authors. Off by default: a run drops them with a warning.
+   */
+  readonly strict?: boolean
 }
 
 type ConfigError =
@@ -213,7 +219,7 @@ const decodeExtends = Schema.decodeUnknownEither(Schema.Array(ExtendsEntry))
  * not rejected for being incomplete here; resolveConfig checks the merged
  * result. Its extends entries are always checked.
  */
-const parseLayer = (text: string, source: string) =>
+const parseLayer = (text: string, source: string, strict: boolean) =>
   Effect.gen(function* () {
     const raw = yield* Effect.try({
       try: (): unknown => parseYaml(text),
@@ -227,11 +233,15 @@ const parseLayer = (text: string, source: string) =>
     if (Either.isLeft(entries)) {
       return yield* new ConfigDecodeError({ source, reason: ParseResult.TreeFormatter.formatErrorSync(entries.left) })
     }
+    // Unknown keys and invalid values are dropped, file by file, so each
+    // warning names the file that has them. What a preset may still complete,
+    // such as a missing key, is left for the merged config.
+    const lenient = strict ? { value: migrated.config, warnings: [] } : dropInvalid(migrated.config, source, true)
     // A complete file is normalised through the schema; an incomplete one is
     // merged as written and checked once merged.
-    const decoded = decodeV2(migrated.config)
-    const json = Either.isRight(decoded) ? toJson(decoded.right) : migrated.config
-    return { json, extends: entries.right, warnings }
+    const decoded = decodeV2(lenient.value)
+    const json = Either.isRight(decoded) ? toJson(decoded.right) : lenient.value
+    return { json, extends: entries.right, warnings: [...warnings, ...lenient.warnings] }
   })
 
 // Whether a path runs only through fields the schema names, such as
@@ -254,8 +264,9 @@ const completableIssue = (issue: ParseResult.ArrayFormatterIssue): boolean =>
 // For a config whose presets were partly left out: keeps each top-level
 // section that decodes on its own or has a problem of its own, and drops, by
 // name, each section that fails only for what a skipped preset could have set.
-// A kept section that fails still fails the merged config. Kept sections are
-// collected in a Map, so a key such as `__proto__` stays data and still fails.
+// A kept section that fails is dropped with a warning like in any run, or
+// fails a strict config. Kept sections are collected in a Map, so a key such
+// as `__proto__` stays data.
 const decodeSections = (value: Readonly<Record<string, Json>>) => {
   const kept = new Map<string, Json>()
   const dropped: Array<string> = []
@@ -286,8 +297,18 @@ const decodeSections = (value: Readonly<Record<string, Json>>) => {
  * preset's rule, is dropped rather than
  * failing; both are listed in `skipped`. A missing key inside an entry the
  * config names, such as a label without a `color`, and every other problem
- * still fail the config: the skipped preset cannot have completed an entry
- * the repository added.
+ * are not left out as skipped: the skipped preset cannot have completed an
+ * entry the repository added. They are dropped with a warning as below.
+ *
+ * Unknown keys and invalid values, in the repository's config or any preset,
+ * are dropped with a warning naming the key and the file, so a preset written
+ * for a newer smartcloud still runs with everything this build knows. A value
+ * inside a rule's `when` drops the whole `when`, never part of its
+ * conditions, and a rule or section left incomplete once every file is
+ * merged, such as `sync` without `source`, is dropped too. Only a config that
+ * is unusable as a whole still fails: one that is not YAML or JSON, is not a
+ * mapping, or has a malformed `extends`. `options.strict` fails on every
+ * problem instead, for authors checking a config.
  *
  * @example
  * ```ts import.meta.vitest name="resolveConfig"
@@ -304,7 +325,7 @@ const decodeSections = (value: Readonly<Record<string, Json>>) => {
  *
  * @param text - The repository's config file.
  * @param source - Its name, for errors.
- * @param options - Which unreadable presets may be left out.
+ * @param options - Which unreadable presets may be left out, and whether to fail on unknown keys and invalid values.
  * @returns The merged config.
  */
 export const resolveConfig = (
@@ -318,6 +339,7 @@ export const resolveConfig = (
     const warnings: Array<string> = []
     const skipped: Array<string> = []
     const skipUnreadable = options.skipUnreadable ?? (() => false)
+    const strict = options.strict ?? false
 
     const include = (
       merged: Merged,
@@ -330,7 +352,7 @@ export const resolveConfig = (
         if (chain.length > MAX_DEPTH) {
           return yield* new ConfigDecodeError({ source: name, reason: `extends is nested more than ${MAX_DEPTH} deep` })
         }
-        const layer = yield* parseLayer(contents, name)
+        const layer = yield* parseLayer(contents, name, strict)
         warnings.push(...layer.warnings)
         let next = merged
         for (const entry of layer.extends) {
@@ -367,12 +389,15 @@ export const resolveConfig = (
       value = kept
       skipped.push(...dropped.map((key) => `the ${key} section: incomplete without the skipped preset(s)`))
     }
+    const presets = sources.slice(0, -1)
+    const from = presets.length === 0 ? source : `${source} with ${presets.join(', ')}`
     // A file may rely on its presets for required keys, such as sync.source,
-    // so the whole config is only checked once everything is merged.
-    const decoded = decodeV2({ ...value, version: 2 })
+    // so the whole config is only checked once everything is merged; what is
+    // still incomplete or invalid then is dropped, unless the config is strict.
+    const lenient = strict ? { value, warnings: [] } : dropInvalid(value, from)
+    warnings.push(...lenient.warnings)
+    const decoded = decodeV2({ ...lenient.value, version: 2 })
     if (Either.isLeft(decoded)) {
-      const presets = sources.slice(0, -1)
-      const from = presets.length === 0 ? source : `${source} with ${presets.join(', ')}`
       return yield* new ConfigDecodeError({
         source: from,
         reason: ParseResult.TreeFormatter.formatErrorSync(decoded.left),

@@ -83,6 +83,10 @@ export interface ConfigInput {
 /**
  * Checks a config and everything it extends.
  *
+ * @remarks
+ * The check is strict: an unknown key or invalid value is an error, where a
+ * run drops it with a warning.
+ *
  * @example
  * ```ts
  * import { validateConfigTool } from '@resnovas/smartcloud-mcp'
@@ -98,7 +102,7 @@ export const validateConfigTool = (input: ConfigInput) =>
   handle(
     'validate_config',
     input,
-    Effect.flatMap(resolveConfig(input.config, input.source ?? 'smartcloud.yml'), (resolved) =>
+    Effect.flatMap(resolveConfig(input.config, input.source ?? 'smartcloud.yml', { strict: true }), (resolved) =>
       Effect.as(recordConfig(resolved, input.config), [
         json({ valid: true, sources: resolved.sources, warnings: resolved.warnings }),
       ]),

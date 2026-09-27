@@ -85,7 +85,8 @@ export const makeServer = (options: { readonly connect: Connect; readonly run: R
     'validate_config',
     {
       title: 'Validate a smartcloud config',
-      description: 'Check a smartcloud config and every preset it extends. Returns the sources it was built from and any migration warnings.',
+      description:
+        'Check a smartcloud config and every preset it extends, strictly: unknown keys and invalid values are errors, though a run only warns about them. Returns the sources it was built from and any migration warnings.',
       inputSchema: configInput,
       annotations: readOnly,
     },

@@ -46,6 +46,10 @@ describe('tool handlers', () => {
       const broken = yield* validateConfigTool({ config: 'version: 2\nextends: [Resnovas/.github/missing.yml]\n', source: 'mine.yml' })
       expect(broken.isError).toBe(true)
       expect(textOf(broken)).toContain('Resnovas/.github/missing.yml')
+      // Strict for authors: an unknown key is an error, where a run only warns.
+      const unknown = yield* validateConfigTool({ config: 'version: 2\nlables: {}\n' })
+      expect(unknown.isError).toBe(true)
+      expect(textOf(unknown)).toContain('lables')
     }).pipe(Effect.provide(layer)),
   )
 

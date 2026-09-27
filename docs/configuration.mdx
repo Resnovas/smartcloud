@@ -21,7 +21,25 @@ links:
 
 `version: 2` is required. A file without it is treated as a v1 config and migrated on the fly, with a warning for everything the migration drops; see [Migrating from v1](/migration).
 
-Unknown keys are an error, so a typo in a section name fails at startup instead of silently turning a feature off. The [configuration reference](/reference/configuration) lists every key.
+The [configuration reference](/reference/configuration) lists every key.
+
+### Unknown keys and invalid values
+
+A run never fails because a key is unknown or a value is invalid, in your config or in any preset it extends. smartcloud drops it, warns, and runs with the rest, so a preset written for a newer smartcloud, such as one with a `settings` section this version does not know yet, keeps working with an older action. Each warning names the file and the key, for example:
+
+```text
+Resnovas/.github/smartcloud/house.yml@main: ignored settings.actions, because settings.actions is unexpected, expected: "merging" | "features" | "security" | "ruleset" | "environments"
+```
+
+What is dropped:
+
+- An unknown key, or a value of the wrong type or outside its allowed values, is dropped on its own; the rest of its section still applies.
+- A problem anywhere in a rule's `when` drops the whole `when`, so a rule never runs with some of its conditions missing. A rule that cannot work without its `when`, such as a labelling rule or an automatic approval, is then dropped too; a convention that also names a `preset` keeps the preset. A problem inside any other list drops the whole list, never one item.
+- A section or rule still incomplete once every file is merged, such as `sync` without `source`, a label without `color`, or a convention with neither `preset` nor `when`, is dropped. A repository can still complete a rule its preset starts, or restate one to add a field, as [Add, never change](#add-never-change) describes.
+
+Only a config that cannot be used at all still fails the run: a file that is not YAML or JSON, is not a mapping, or has a malformed `extends` entry, or a preset that cannot be read.
+
+The warnings appear as annotations on the workflow run; see [Reporting](/reporting#config-warnings). To catch mistakes before they reach a run, check the config with [`smartcloud validate`](/cli#validate) or the MCP server's `validate_config`, which are strict and report every unknown key and invalid value as an error, or let your editor check it against the JSON Schema named in the first line of the example above, which is strict too.
 
 ## Sections
 
