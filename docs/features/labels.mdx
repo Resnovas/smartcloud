@@ -64,23 +64,23 @@ It is turned on when the config has a `labels`, `labelling` or `sizeLabels` sect
 
 ## Options
 
-| Key                        | Default                 | What it does                                                                                                                           |
-| -------------------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `labels.<key>`             | none                    | One label. The key is an id you choose; rules refer to the label by it.                                                                |
-| `labels.<key>.name`        | required                | The label's name as GitHub shows it.                                                                                                   |
-| `labels.<key>.color`       | required                | Six hexadecimal digits, with or without a leading `#`, for example `0E8A16` or `'#0E8A16'`.                                            |
-| `labels.<key>.description` | left as it is on GitHub | The label's description. At most 100 characters, which is GitHub's limit.                                                              |
-| `labels.<key>.aliases`     | none                    | Earlier names of this label. A repository label with one of these names is renamed, so issues and pull requests that carry it keep it. |
-| `labelSync.prune`          | `false`                 | Delete repository labels the config does not define.                                                                                   |
-| `labelling.<key>`          | none                    | One labelling rule. The key is an id you choose.                                                                                       |
-| `labelling.<key>.label`    | required                | The label to apply: a key of `labels`, whose `name` is applied. Any other value is used as the label's name itself.                    |
-| `labelling.<key>.on`       | `[pullRequest, issue]`  | The [subjects](/glossary#subject) the rule applies to: `pullRequest`, `issue`, or both.                                                |
-| `labelling.<key>.when`     | required                | The [condition group](/conditions) that must pass for the label to be on.                                                              |
-| `sizeLabels`               | none                    | Turns on the built-in size labels. `sizeLabels: {}` uses the default thresholds.                                                       |
-| `sizeLabels.thresholds.s`  | `10`                    | The fewest changed lines (added plus deleted) that make a pull request `Size: S`.                                                      |
-| `sizeLabels.thresholds.m`  | `100`                   | The fewest changed lines that make it `Size: M`.                                                                                       |
-| `sizeLabels.thresholds.l`  | `500`                   | The fewest changed lines that make it `Size: L`.                                                                                       |
-| `sizeLabels.thresholds.xl` | `1000`                  | The fewest changed lines that make it `Size: XL`.                                                                                      |
+| Key                        | Default                 | What it does                                                                                                                                                                            |
+| -------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `labels.<key>`             | none                    | One label. The key is an id you choose; rules refer to the label by it.                                                                                                                 |
+| `labels.<key>.name`        | required                | The label's name as GitHub shows it.                                                                                                                                                    |
+| `labels.<key>.color`       | required                | Six hexadecimal digits, with or without a leading `#`, for example `0E8A16` or `'#0E8A16'`.                                                                                             |
+| `labels.<key>.description` | left as it is on GitHub | The label's description. At most 100 characters, which is GitHub's limit.                                                                                                               |
+| `labels.<key>.aliases`     | none                    | Earlier names of this label. A repository label with one of these names is renamed, so issues and pull requests that carry it keep it. Labelling treats the old name as this label too. |
+| `labelSync.prune`          | `false`                 | Delete repository labels the config does not define.                                                                                                                                    |
+| `labelling.<key>`          | none                    | One labelling rule. The key is an id you choose.                                                                                                                                        |
+| `labelling.<key>.label`    | required                | The label to apply: a key of `labels`, whose `name` is applied. Any other value is used as the label's name itself.                                                                     |
+| `labelling.<key>.on`       | `[pullRequest, issue]`  | The [subjects](/glossary#subject) the rule applies to: `pullRequest`, `issue`, or both.                                                                                                 |
+| `labelling.<key>.when`     | required                | The [condition group](/conditions) that must pass for the label to be on.                                                                                                               |
+| `sizeLabels`               | none                    | Turns on the built-in size labels. `sizeLabels: {}` uses the default thresholds.                                                                                                        |
+| `sizeLabels.thresholds.s`  | `10`                    | The fewest changed lines (added plus deleted) that make a pull request `Size: S`.                                                                                                       |
+| `sizeLabels.thresholds.m`  | `100`                   | The fewest changed lines that make it `Size: M`.                                                                                                                                        |
+| `sizeLabels.thresholds.l`  | `500`                   | The fewest changed lines that make it `Size: L`.                                                                                                                                        |
+| `sizeLabels.thresholds.xl` | `1000`                  | The fewest changed lines that make it `Size: XL`.                                                                                                                                       |
 
 Keys of `labels` and `labelling` are any non-empty text without leading or trailing spaces, except `__proto__`.
 
@@ -97,6 +97,19 @@ labels:
 ```
 
 The next sync renames the repository's `bug` label in place. Every issue that had `bug` now shows `Type: Bug`.
+
+An alias is simply an old name. You keep it in the config so smartcloud still recognises the label wherever the old name is still in use.
+
+**Before the sync has run.** Label sync only runs on pushes and scheduled or manual runs, so a pull request can be labelled before the rename reaches the repository (always the case for a pull request from a fork, whose token cannot rename labels). Labelling knows about aliases, so it never leaves the label on twice:
+
+- If the rule for `bug` passes and the pull request still has `defect`, smartcloud adds `Type: Bug` and removes `defect`. The job summary shows `added label "Type: Bug" to #7, replacing its old name "defect"` and `removed label "defect" (an old name of "Type: Bug") from #7`.
+- If the pull request already has both `Type: Bug` and `defect`, smartcloud removes `defect`, so the label is on once.
+- If the rule for `bug` fails, smartcloud removes `Type: Bug` and `defect`, whichever are there.
+- If GitHub refuses to add `Type: Bug` (a read-only token), `defect` stays, so the pull request never loses the label. You get the usual `labels.add` warning.
+
+For example, renaming the built-in `Size: M` to `medium` keeps `Size: M` as an alias for you (see [Size labels](#size-labels)), so a pull request that had `Size: M` ends up with `medium` only.
+
+**When an alias is another label's name.** Current names win. If `bug` lists `Type: Feature` as an alias but another entry is called `Type: Feature`, labelling treats `Type: Feature` as that other label and never removes it as an old name of `bug`. The same holds for a name a labelling rule applies directly. When two entries list the same alias, the first entry in the config keeps it.
 
 ### Several rules for one label
 
@@ -205,6 +218,7 @@ Labelling runs on pull request events (`pull_request`, `pull_request_target`, `p
 - `label` is a key of `labels`, and that label's `name` is applied. A value that is not a key is used as the name itself.
 - For each label, smartcloud checks every rule that names it and applies to the subject's kind. The label is added when any of them passes, and removed when all of them fail.
 - Names compare ignoring case, as GitHub does.
+- A label still on the item under one of its `aliases` counts as present. When the label is wanted the old name is swapped for the current one, and when it is not the old name is removed. See [Renaming a label with `aliases`](#renaming-a-label-with-aliases).
 - A label that has already gone when smartcloud removes it is a warning, not a failure.
 - A label GitHub forbids adding or removing, as on the read-only token of a fork's pull request, is a warning (`labels.add` or `labels.remove`), and the run carries on.
 
@@ -266,6 +280,9 @@ A Resnovas repository adds its own labels and rules below `house:local` under ne
   </Accordion>
   <Accordion title="The old label is still there after a rename">
     Add the old name to the entry's `aliases`. Without it, sync creates a new label and leaves the old one (and deletes it only with `labelSync.prune: true`, which drops it from every issue).
+  </Accordion>
+  <Accordion title="A pull request shows both the old and the new name of a renamed label">
+    List the old name in the entry's `aliases`. Labelling then removes the old name the next time it runs on that pull request (any new commit or edit), and the next label sync renames the repository label.
   </Accordion>
   <Accordion title="size thresholds must rise from s to xl">
     Each threshold must be larger than the one before it, counting the defaults for sizes you left out. For example, `m: 5` fails because `s` is still 10.

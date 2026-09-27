@@ -60,6 +60,24 @@ Keep writes idempotent: find your own marker comment (`<!-- smartcloud:<name> --
 and update it, and trust it only when `isTrustedComment` says a bot account or
 a `roles.trustedBots` login wrote it, because the marker is public.
 
+### Renamed labels: aliases in labelling
+
+A `labels` entry's `aliases` are its old names. Label sync renames a repository
+label found under an alias; `applyLabels` also treats an item's label that is
+an alias of a decided label as that label, because a pull request run (a fork
+above all) can happen before sync has renamed anything:
+
+- Wanted: the current name is added and the old name removed (a label under
+  both names loses the old one). The old name is removed only when the add
+  succeeded, so a `Forbidden` add never strips the label.
+- Unwanted: the old name is removed as well as the current one.
+- Current names win: `aliasesOf(config, decidedNames)` drops an alias that is
+  the current name of any configured or decided label, and aliases of labels
+  no rule decided are ignored. The first entry claiming an alias keeps it.
+- Change descriptions say `replacing its old name "..."` and
+  `(an old name of "...")`. `withSizeLabels` adds the preset name as an alias
+  of a renamed size, so this also keeps one size label on a pull request.
+
 ### Adding a feature
 
 1. Scaffold `packages/feature.<name>` and `tests/feature.<name>` as in
