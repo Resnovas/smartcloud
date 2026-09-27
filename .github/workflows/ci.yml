@@ -6,9 +6,10 @@
 # contracts and the check that docs/reference/configuration.mdx matches the
 # JSON Schema). The changes job first works out which of the last five the
 # change needs (tools/ci/changes.ts), so a documentation-only pull request runs
-# only lint and docs. The check job waits for all of them and is the one
-# context the ruleset and the merge queue require, so adding or renaming a job
-# never touches the ruleset.
+# only lint and docs. Every night, and when run by hand, every job runs on every
+# project (run-many instead of affected) without the Nx cache. The check job
+# waits for all of them and is the one context the ruleset and the merge queue
+# require, so adding or renaming a job never touches the ruleset.
 name: CI
 
 on:
@@ -19,20 +20,34 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
+  # The nightly full run, at an off-peak minute.
+  schedule:
+    - cron: '23 2 * * *'
 
 # Each job asks for the access it needs; the workflow grants none.
 permissions: {}
 
+# Separate groups per event, so a push to main never cancels the nightly run.
 concurrency:
-  group: ci-${{ github.ref }}
+  group: ci-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: true
+
+# A pull request, merge queue group or push checks only the projects its
+# change affects, replaying unchanged tasks from the Nx cache. The nightly and
+# manual runs check every project and rerun every task (NX_SKIP_NX_CACHE), so a
+# failure that no change set off, such as a new Node release, runner image or
+# dependency behaviour, or a stale cache entry, shows up by the next morning
+# instead of on an unrelated pull request.
+env:
+  NX_RUN: ${{ (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch') && 'run-many' || 'affected' }}
+  NX_SKIP_NX_CACHE: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
 
 jobs:
   # Classifies the changed files with the committed Graphify graph and the Nx
   # project graph: documents need only lint and docs, project files need the
   # jobs whose targets Nx finds affected, and anything else (workflows, root
-  # configuration, tools/) needs every job. Pushes to main and manual runs
-  # always run every job.
+  # configuration, tools/) needs every job. Pushes to main, nightly and manual
+  # runs always run every job.
   changes:
     name: changes
     runs-on: ubuntu-latest
@@ -64,9 +79,10 @@ jobs:
       # Nx compares a pull request with its merge base, and a push with the last
       # commit on main whose CI passed. A merge queue group is compared with the
       # commit it lands on, so it checks every queued pull request ahead of it
-      # as well as its own, whichever grouping the queue uses.
+      # as well as its own, whichever grouping the queue uses. A full run
+      # compares nothing.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-        if: github.event_name != 'merge_group'
+        if: github.event_name != 'merge_group' && env.NX_RUN == 'affected'
 
       - name: Compare the merge queue group with its base
         if: github.event_name == 'merge_group'
@@ -107,8 +123,9 @@ jobs:
       # entry under its commit, workflow and job, and restores the latest
       # earlier one, which may come from another job or the smartcloud
       # workflow. A pull request's entries are scoped to its own ref, so they
-      # never reach main.
+      # never reach main. A full run neither restores nor saves one.
       - name: Restore the Nx cache
+        if: env.NX_RUN == 'affected'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx/cache
@@ -119,7 +136,7 @@ jobs:
 
       # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-        if: github.event_name != 'merge_group'
+        if: github.event_name != 'merge_group' && env.NX_RUN == 'affected'
 
       - name: Compare the merge queue group with its base
         if: github.event_name == 'merge_group'
@@ -130,8 +147,8 @@ jobs:
           echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
           echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
-      - name: Lint affected projects
-        run: pnpm nx affected -t lint
+      - name: Lint the projects
+        run: pnpm nx "$NX_RUN" -t lint
 
       - name: Licence headers
         run: pnpm headers
@@ -164,6 +181,7 @@ jobs:
 
       # Restores and saves the Nx cache as in the lint job.
       - name: Restore the Nx cache
+        if: env.NX_RUN == 'affected'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx/cache
@@ -174,7 +192,7 @@ jobs:
 
       # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-        if: github.event_name != 'merge_group'
+        if: github.event_name != 'merge_group' && env.NX_RUN == 'affected'
 
       - name: Compare the merge queue group with its base
         if: github.event_name == 'merge_group'
@@ -185,8 +203,8 @@ jobs:
           echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
           echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
-      - name: Type-check affected projects
-        run: pnpm nx affected -t typecheck
+      - name: Type-check the projects
+        run: pnpm nx "$NX_RUN" -t typecheck
 
       - name: Type-check the tests
         run: pnpm typecheck:tests
@@ -237,6 +255,7 @@ jobs:
       # Restores and saves the Nx cache as in the lint job, one entry per
       # combination.
       - name: Restore the Nx cache
+        if: env.NX_RUN == 'affected'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx/cache
@@ -247,7 +266,7 @@ jobs:
 
       # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-        if: github.event_name != 'merge_group'
+        if: github.event_name != 'merge_group' && env.NX_RUN == 'affected'
 
       - name: Compare the merge queue group with its base
         if: github.event_name == 'merge_group'
@@ -258,8 +277,8 @@ jobs:
           echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
           echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
-      - name: Test affected projects
-        run: pnpm nx affected -t test
+      - name: Test the projects
+        run: pnpm nx "$NX_RUN" -t test
 
   build:
     name: build
@@ -286,6 +305,7 @@ jobs:
 
       # Restores and saves the Nx cache as in the lint job.
       - name: Restore the Nx cache
+        if: env.NX_RUN == 'affected'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx/cache
@@ -296,7 +316,7 @@ jobs:
 
       # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-        if: github.event_name != 'merge_group'
+        if: github.event_name != 'merge_group' && env.NX_RUN == 'affected'
 
       - name: Compare the merge queue group with its base
         if: github.event_name == 'merge_group'
@@ -307,8 +327,8 @@ jobs:
           echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
           echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
-      - name: Build affected projects
-        run: pnpm nx affected -t build
+      - name: Build the projects
+        run: pnpm nx "$NX_RUN" -t build
 
       - name: Check the action bundle size
         run: pnpm bundle:check
@@ -350,6 +370,7 @@ jobs:
 
       # Restores and saves the Nx cache as in the lint job, one entry per event.
       - name: Restore the Nx cache
+        if: env.NX_RUN == 'affected'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx/cache
@@ -416,6 +437,7 @@ jobs:
 
       # Restores and saves the Nx cache as in the lint job.
       - name: Restore the Nx cache
+        if: env.NX_RUN == 'affected'
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx/cache
@@ -426,7 +448,7 @@ jobs:
 
       # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
-        if: github.event_name != 'merge_group'
+        if: github.event_name != 'merge_group' && env.NX_RUN == 'affected'
 
       - name: Compare the merge queue group with its base
         if: github.event_name == 'merge_group'
@@ -440,8 +462,8 @@ jobs:
       # docgen type-checks every @example and fails on an export without a
       # description; contracts checks the built declarations for @example,
       # @param and @returns. The examples themselves run as doctests in `test`.
-      - name: API docs and contracts of affected projects
-        run: pnpm nx affected -t docgen contracts
+      - name: API docs and contracts
+        run: pnpm nx "$NX_RUN" -t docgen contracts
 
       - name: Configuration reference is up to date
         run: pnpm docs:reference:check
