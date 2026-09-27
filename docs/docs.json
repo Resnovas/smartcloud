@@ -23,6 +23,10 @@
             "pages": ["introduction", "getting-started", "configuration", "presets", "conditions"]
           },
           {
+            "group": "Setup guides",
+            "pages": ["guides/settings-file", "guides/recommended-setups", "guides/organisation-hub"]
+          },
+          {
             "group": "Features",
             "pages": [
               "features/conventions",

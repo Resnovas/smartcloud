@@ -1,0 +1,647 @@
+---
+title: 'Recommended setups'
+description: 'Complete, copy-and-paste settings files for a small repository, a monorepo, an open-source project and an organisation with a shared preset, with why each part is there.'
+---
+
+Starting from an empty file is hard when you do not yet know which of smartcloud's sixteen features you want. This page gives you four complete settings files for common situations. Pick the one closest to yours, copy it into `.github/smartcloud.yml`, change the names, and delete what you do not need.
+
+Each file has been checked with [`smartcloud validate`](/cli#validate), so it works as written. After each one, a table explains why every section is there, and what it does when a run starts.
+
+| Your situation                                        | Start from                                                                    | Token it needs                                               |
+| ----------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| One small repository, one or two people               | [A single small repository](#a-single-small-repository)                       | The workflow token                                           |
+| Several apps and packages in one repository           | [A monorepo](#a-monorepo)                                                     | The workflow token                                           |
+| A public project that takes pull requests from anyone | [An open-source project](#an-open-source-project)                             | A GitHub App for `settings`; the workflow token for the rest |
+| Many repositories in one organisation                 | [An organisation with a shared preset](#an-organisation-with-a-shared-preset) | A GitHub App                                                 |
+
+Every setup assumes the workflow from [Getting started](/getting-started#2-add-the-workflow). Want to understand each section before copying? [Build your settings file](/guides/settings-file) adds them one at a time.
+
+<Tip>
+  Whichever you pick, add the schema line at the top (every example has it). Your editor then completes keys and
+  underlines mistakes as you change the file.
+</Tip>
+
+## A single small repository
+
+**Good for:** a personal project, a small library, an internal tool. One or two people merge everything, and you want tidy labels, readable history and no pile of forgotten issues, without anyone being blocked.
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+
+# Who runs the project, and which bots to trust.
+roles:
+  maintainers: [octocat]
+  trustedBots: ['dependabot[bot]']
+
+# The labels the repository should have.
+labels:
+  bug:
+    name: bug
+    color: 'D73A4A'
+    description: Something is not working
+  feature:
+    name: enhancement
+    color: 'A2EEEF'
+    description: New feature or request
+  docs:
+    name: documentation
+    color: '0075CA'
+    description: Improvements or additions to documentation
+  dependencies:
+    name: dependencies
+    color: '0366D6'
+    description: Updates a dependency
+  stale:
+    name: stale
+    color: 'CFD3D7'
+    description: No activity for a while
+
+# Label pull requests by what they change.
+labelling:
+  docs:
+    label: docs
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'docs/**'
+  dependencies:
+    label: dependencies
+    on: [pullRequest]
+    when:
+      condition:
+        - type: lockfileChanged
+          condition: true
+  fix:
+    label: bug
+    on: [pullRequest]
+    when:
+      condition:
+        - type: titleMatches
+          condition: '^fix(\(.+\))?!?: '
+
+# Size: XS to Size: XL on every pull request.
+sizeLabels: {}
+
+# Pull request titles are Conventional Commits.
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+
+# One check, smartcloud, that waits for every other check.
+required: {}
+
+# Quiet issues get a nudge, then close.
+stale:
+  on: [issue]
+  staleAfterDays: 60
+  staleLabel: stale
+  staleComment: This issue has had no activity for 60 days. Comment to keep it open.
+  abandonedAfterDays: 14
+  close: true
+  exempt:
+    labels: [pinned, security]
+
+# Old conversations lock so nobody revives them by accident.
+lock:
+  afterDays: 30
+  reason: resolved
+  comment: This has been closed for 30 days, so it is now locked. Open a new issue for anything new.
+
+# /label, /assign, /rebase and the rest, in comments.
+commands: {}
+```
+
+| Section       | Why it is there                                                                                                           | What happens when it runs                                                                                |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| `roles`       | Names you as the maintainer, so the few checks that care go easier on your own pull requests. Dependabot is trusted.      | Nothing on its own; other features read it.                                                              |
+| `labels`      | One place to define the labels, so every clone of the repository has the same ones with the same colours.                 | On a push to `main` and daily, missing labels are created and changed ones corrected.                    |
+| `labelling`   | Labels that apply themselves: `documentation` for docs changes, `dependencies` when a lockfile changes, `bug` for `fix:`. | On every pull request event, labels are added while their rule passes and removed when it stops passing. |
+| `sizeLabels`  | A `Size: XS` to `Size: XL` label tells you at a glance how long a review will take.                                       | Every pull request carries one size label, updated as it grows.                                          |
+| `conventions` | Conventional titles make a readable history and let release tools work out the next version.                              | A title like `Update readme` fails `smartcloud / conventions` with an example of a good one.             |
+| `required`    | One `smartcloud` check to require in branch protection, however many CI jobs you add later.                               | On pull requests, the `smartcloud` job waits for every other check and passes only if they all do.       |
+| `stale`       | Issues nobody touches for two months get a nudge, then close, so the list stays meaningful. `pinned` and `security` stay. | Daily: quiet issues get the `stale` label and a comment, and close 14 days later unless someone replies. |
+| `lock`        | Stops people commenting on long-closed issues instead of opening new ones.                                                | Daily: items closed for 30 days are locked with a short explanation.                                     |
+| `commands`    | `/label`, `/assign`, `/rebase` and friends in comments, handy from a phone.                                               | On a comment, smartcloud reacts, runs the command if the person's role allows it, and replies.           |
+
+Left out on purpose: `commits`, `disclosure` and `reviews.gate` would only slow a one-person project down, and `settings` needs a GitHub App. Add `settings` later if you want the repository's merge buttons and branch rules kept as code; see [Settings](/features/settings).
+
+## A monorepo
+
+**Good for:** one repository holding several apps and shared packages, with different people owning different parts. The problem to solve is routing: every pull request should say which parts it touches and reach the people who own them.
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+
+roles:
+  maintainers: [octocat, hubot]
+  trustedBots: ['dependabot[bot]', 'renovate[bot]']
+
+# One label per package, so a reviewer sees at a glance what a pull request touches.
+labels:
+  web:
+    name: 'pkg: web'
+    color: '1D76DB'
+  api:
+    name: 'pkg: api'
+    color: '5319E7'
+  shared:
+    name: 'pkg: shared'
+    color: 'FBCA04'
+  ci:
+    name: ci
+    color: 'EDEDED'
+    description: Changes the build or CI
+  stale:
+    name: stale
+    color: 'CFD3D7'
+
+labelling:
+  web:
+    label: web
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'apps/web/**'
+  api:
+    label: api
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'apps/api/**'
+  shared:
+    label: shared
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'packages/**'
+  ci:
+    label: ci
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: '.github/workflows/**'
+
+sizeLabels: {}
+
+# The scope in "feat(web): ..." must name a package, so the changelog groups by package.
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+      contexts: [web, api, shared, ci, deps, release]
+
+# Branch names carry the author and the issue, such as ann/app-142-login-form.
+branches:
+  names:
+    tracked:
+      preset: prefixed
+      pattern: '/[a-z]+-\d+/i'
+  exempt:
+    branches: ['^dependabot/', '^renovate/', '^smartcloud/']
+
+# Owners per package, written into CODEOWNERS for you.
+codeowners:
+  rules:
+    everything:
+      paths: ['*']
+      owners: ['@my-org/maintainers']
+    web:
+      comment: The web app
+      paths: [/apps/web/]
+      owners: ['@my-org/frontend']
+    api:
+      comment: The API
+      paths: [/apps/api/]
+      owners: ['@my-org/backend']
+
+# Ask one owner of the changed package for a review, in turn.
+reviews:
+  requestApprovals:
+    owners:
+      reviewers: []
+      strategy: codeowners
+      count: 1
+      when:
+        condition:
+          - type: isDraft
+            condition: false
+
+# The aggregate waits for the CI job and gives a long test suite time.
+required:
+  expect: ['^ci$']
+  timeout: 90
+
+stale:
+  on: [pullRequest]
+  staleAfterDays: 21
+  staleLabel: stale
+  staleComment: No activity for three weeks. Push, comment or /stale-snooze to keep this open.
+  abandonedAfterDays: 14
+  close: true
+
+commands: {}
+```
+
+| Section                    | Why it is there                                                                                                                            | What happens when it runs                                                                                               |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| `labels` and `labelling`   | One `pkg:` label per app or package, applied by the paths a pull request changes, so the list of pull requests can be filtered by package. | A pull request that changes `apps/web/` and `packages/` gets `pkg: web` and `pkg: shared`.                              |
+| `conventions` `contexts`   | The scope in `feat(web): ...` must name a real package, so release notes and changelogs group changes correctly.                           | `feat(frontend): ...` fails, because `frontend` is not in `contexts`; `feat(web): ...` passes.                          |
+| `branches`                 | Branch names carry the author and an issue key (`ann/app-142-login-form`), so every branch leads back to its issue.                        | A branch called `patch-1` fails `smartcloud / branches`. Dependabot, Renovate and smartcloud's own branches are exempt. |
+| `codeowners`               | The owners of each package are written into CODEOWNERS from the config, and CODEOWNERS is checked for lines GitHub would silently ignore.  | On a push, if CODEOWNERS is out of date, a pull request from `smartcloud/codeowners` updates its marked block.          |
+| `reviews.requestApprovals` | One owner of the changed package is asked to review, rather than every owner of every package.                                             | When a pull request is ready for review, one owner from CODEOWNERS is requested; drafts wait.                           |
+| `required`                 | Monorepo CI often runs many jobs; the ruleset requires `smartcloud` alone, and `expect` makes sure the `ci` job ran at all.                | The `smartcloud` check waits up to 90 minutes for every other check, and fails if `ci` never appeared.                  |
+| `stale`                    | Pull requests that stall block others in a busy repository; three weeks is a nudge, five a close.                                          | Daily: quiet pull requests get `stale`, then close two weeks later unless someone pushes or comments `/stale-snooze`.   |
+
+Change the package names, the team names (`@my-org/frontend`) and the `^ci$` pattern to your CI job's name. `strategy: codeowners` needs a CODEOWNERS file on the base branch, which the `codeowners` section writes for you.
+
+## An open-source project
+
+**Good for:** a public project where anyone can open a pull request. You want a clear, fair bar for contributions (sign-off, disclosure of AI help, maintainer review), a welcoming first experience, and settings nobody can quietly change.
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+
+# Two or more maintainers turn the review gate and ruleset approvals on.
+roles:
+  maintainers: [octocat, hubot]
+  trustedBots: ['dependabot[bot]', 'renovate[bot]', 'github-actions[bot]']
+
+# Findings link to your own CONTRIBUTING.md, GOVERNANCE.md and AI_POLICY.md.
+links:
+  policyBase: https://github.com/my-org/my-project/blob/main
+
+labels:
+  bug:
+    name: bug
+    color: 'D73A4A'
+  feature:
+    name: enhancement
+    color: 'A2EEEF'
+  good-first-issue:
+    name: good first issue
+    color: '7057FF'
+    description: A small, well-described task for a newcomer
+  first-contribution:
+    name: first contribution
+    color: 'C2E0C6'
+    description: The author's first pull request here; be welcoming
+  needs-triage:
+    name: needs triage
+    color: 'FBCA04'
+    description: A maintainer has not looked at this yet
+  stale:
+    name: stale
+    color: 'CFD3D7'
+  pinned:
+    name: pinned
+    color: '0E8A16'
+    description: Never marked stale
+
+labelling:
+  first-contribution:
+    label: first-contribution
+    on: [pullRequest]
+    when:
+      condition:
+        - type: authorAssociation
+          condition: [firstTimeContributor, firstTimer]
+  needs-triage:
+    label: needs-triage
+    on: [issue]
+    when:
+      condition:
+        - type: hasAssignee
+          condition: false
+        - type: hasMilestone
+          condition: false
+
+sizeLabels: {}
+
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+    linked-issue:
+      on: [pullRequest]
+      level: warning
+      message: Link the issue this pull request fixes, for example "Fixes #123".
+      when:
+        condition:
+          - type: linksIssue
+            condition: true
+
+# Every commit is signed off (DCO), and AI help is credited.
+commits:
+  dco: true
+  aiAttribution: true
+
+# The pull request template asks how AI was used; this checks the answer.
+disclosure:
+  requireDraft: true
+
+# Two maintainer approvals for an outside pull request, one for a maintainer's own.
+reviews:
+  gate:
+    outside: 2
+    maintainer: 1
+  # Ask one maintainer, in turn, to review each pull request once it is ready.
+  requestApprovals:
+    triage:
+      reviewers: [octocat, hubot]
+      strategy: round-robin
+      when:
+        condition:
+          - type: isDraft
+            condition: false
+
+required:
+  expect: ['^test$']
+
+stale:
+  staleAfterDays: 60
+  staleLabel: stale
+  staleComment: This has had no activity for 60 days. Comment, or ask a maintainer to add "pinned", to keep it open.
+  abandonedAfterDays: 30
+  close: true
+  exempt:
+    labels: [pinned, good first issue, security]
+
+lock:
+  afterDays: 60
+  reason: resolved
+  comment: Closed for 60 days, so this conversation is now locked. Please open a new issue and link this one.
+
+commands:
+  overrides:
+    merge: { enabled: false }
+
+# Needs a GitHub App token: see the note below this example.
+settings:
+  merging:
+    mergeCommit: false
+    squash: true
+    rebase: false
+    autoMerge: true
+    deleteBranchOnMerge: true
+    squashTitle: PR_TITLE
+    squashMessage: COMMIT_MESSAGES
+  features:
+    wiki: false
+    discussions: true
+  security:
+    privateVulnerabilityReporting: true
+    dependabotAlerts: true
+    dependabotSecurityUpdates: true
+    secretScanning: true
+  ruleset:
+    blockDeletion: true
+    blockForcePush: true
+    pullRequest:
+      requiredApprovals: 1
+      dismissStaleReviews: true
+      conversationResolution: true
+      mergeMethods: [squash]
+    statusChecks:
+      checks:
+        smartcloud: true
+        test: true
+  actions:
+    workflowPermissions: read
+```
+
+| Section            | Why it is there                                                                                                                                          | What happens when it runs                                                                                                  |
+| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `roles`            | With two maintainers listed, the review gate and ruleset approvals switch on. Bots that open routine pull requests are trusted.                          | Nothing on its own; the gate and the ruleset read it.                                                                      |
+| `links`            | Findings link to **your** contributing guide and policies rather than the default ones.                                                                  | Every finding in the report comment links to a page under this URL, such as `CONTRIBUTING.md#dco`.                         |
+| `labelling`        | `first contribution` reminds reviewers to be welcoming; `needs triage` marks issues nobody has picked up.                                                | A newcomer's pull request is labelled on opening; a new issue with no assignee and no milestone gets `needs triage`.       |
+| `conventions`      | Conventional titles, plus a gentle warning when a pull request does not link the issue it fixes.                                                         | A missing `Fixes #123` shows as a warning, which does not block merging.                                                   |
+| `commits`          | The [DCO](/glossary#dco) sign-off records that each contributor may submit their change; AI attribution keeps AI help visible in history.                | A commit without `Signed-off-by:` fails `smartcloud / commits` with the command to fix it.                                 |
+| `disclosure`       | Reviewers know how a change was made before reading it, and AI-assisted pull requests start as drafts. Add the fields to your pull request template.     | A pull request without the disclosure fields fails `smartcloud / disclosure`, listing what is missing.                     |
+| `reviews`          | Two maintainer approvals for an outside pull request, one for a maintainer's own; each ready pull request goes to one maintainer in turn.                | `smartcloud / reviews` fails until enough maintainers approve; a reviewer is requested when the pull request leaves draft. |
+| `required`         | The ruleset requires `smartcloud` and `test`, and `smartcloud` waits for everything else.                                                                | The `smartcloud` check passes only when every check, including `test`, has passed.                                         |
+| `stale` and `lock` | Keeps the issue list honest without closing things people care about: `pinned` and `good first issue` are exempt.                                        | Daily sweeps, with a comment each time so nobody is surprised.                                                             |
+| `commands`         | Maintainers and triagers work from comments; `/merge` is off so everything goes through the review gate and the ruleset.                                 | `/merge` replies that it is turned off; the other commands work for the right roles.                                       |
+| `settings`         | Merge buttons, security features and the default branch [ruleset](/glossary#ruleset) are kept as code, so a changed setting is put back on the next run. | On a push to `main` and daily, smartcloud changes only what differs and lists each change in the job summary.              |
+
+Things to know for an open-source project:
+
+- **Pull requests from forks run [restricted](/glossary#restricted-run).** GitHub gives them a read-only token, so smartcloud cannot request reviewers or post some comments there. It records a warning instead of failing, and the checks still run. The review gate and required checks still protect the merge.
+- **`settings` needs a [GitHub App](/getting-started#optional-create-a-github-app).** Until you add one, the section is skipped with a notice, and everything else works. Preview the changes with [`smartcloud plan settings`](/cli#plan-settings).
+- **`secretScanning` and `privateVulnerabilityReporting` only apply to public repositories.** On a private one smartcloud leaves them and records a notice.
+- **Write the pull request template first.** `disclosure` expects the `AI level:`, `AI tools:`, `Accountable human:` and `Human review:` fields; see [Disclosure](/features/disclosure).
+
+## An organisation with a shared preset
+
+**Good for:** an organisation with many repositories that should all follow the same rules. The shared rules live once, in a [preset](/presets) in the organisation's `.github` repository, and each repository's own file holds only what makes it different.
+
+The preset, in `my-org/.github`:
+
+```yaml my-org/.github/smartcloud/base.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+# my-org/.github/smartcloud/base.yml: the rules every my-org repository shares.
+version: 2
+
+roles:
+  maintainers: [octocat, hubot]
+  trustedBots: ['dependabot[bot]', 'renovate[bot]', 'github-actions[bot]', 'my-org-bot[bot]']
+
+links:
+  policyBase: https://github.com/my-org/.github/blob/main
+
+labels:
+  bug:
+    name: bug
+    color: 'D73A4A'
+    description: Something is not working
+  feature:
+    name: enhancement
+    color: 'A2EEEF'
+    description: New feature or request
+  docs:
+    name: documentation
+    color: '0075CA'
+  dependencies:
+    name: dependencies
+    color: '0366D6'
+  org-sync:
+    name: org-sync
+    color: 'EDEDED'
+    description: Automated update from my-org/.github
+
+labelling:
+  docs:
+    label: docs
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: '**/*.md'
+  dependencies:
+    label: dependencies
+    on: [pullRequest]
+    when:
+      condition:
+        - type: lockfileChanged
+          condition: true
+
+  # smartcloud's sync pull requests come from the org/sync branch (sync.branch below).
+  org-sync:
+    label: org-sync
+    on: [pullRequest]
+    when:
+      condition:
+        - type: branchMatches
+          condition: '^org/sync$'
+
+sizeLabels: {}
+
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+
+commits:
+  dco: true
+
+reviews:
+  gate:
+    outside: 2
+    maintainer: 1
+
+required: {}
+
+settings:
+  merging:
+    mergeCommit: false
+    squash: true
+    rebase: true
+    autoMerge: true
+    deleteBranchOnMerge: true
+    webCommitSignoff: true
+  features:
+    wiki: false
+  security:
+    dependabotAlerts: true
+    dependabotSecurityUpdates: true
+  ruleset:
+    name: 'my-org: default branch'
+    blockDeletion: true
+    blockForcePush: true
+    pullRequest:
+      requiredApprovals: 1
+      dismissStaleReviews: true
+    statusChecks:
+      checks:
+        smartcloud: true
+  actions:
+    workflowPermissions: read
+
+sync:
+  source: my-org/.github/templates@main
+  branch: org/sync
+  check: true
+  values:
+    ORG_NAME: My Org
+    COPYRIGHT_HOLDER: My Org Ltd
+    SECURITY_EMAIL: security@my-org.example
+```
+
+Each repository's own file:
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+
+# Everything in the organisation's preset applies here, locked.
+extends:
+  - my-org/.github/smartcloud/base.yml@main
+
+# The preset leaves these open: this repository deploys, and has its own CI job.
+settings:
+  environments:
+    projectType: saas
+  ruleset:
+    requiredDeployments: [Staging]
+    statusChecks:
+      checks:
+        ci: true
+
+# The aggregate smartcloud check must see the ci job.
+required:
+  expect: ['^ci$']
+
+# A label only this repository needs, next to the preset's.
+labels:
+  api:
+    name: 'area: api'
+    color: '5319E7'
+
+labelling:
+  api:
+    label: api
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'src/api/**'
+
+# Keep our own LICENSE, and fill in a value the templates ask each repository for.
+sync:
+  exclude:
+    - LICENSE
+  values:
+    PROJECT_TYPE: saas
+
+# The preset has no stale section, so this repository chooses its own.
+stale:
+  on: [pullRequest]
+  staleAfterDays: 30
+  staleLabel: stale
+```
+
+| Where      | Section                                     | Why it is there                                                                                                                                            |
+| ---------- | ------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Preset     | `roles`, `links`                            | The same maintainers, bots and policy documents everywhere. A repository cannot change them.                                                               |
+| Preset     | `labels`, `labelling`, `sizeLabels`         | The same labels and automatic labelling in every repository, so organisation-wide searches such as `label:bug` work.                                       |
+| Preset     | `conventions`, `commits`, `reviews`         | The contribution bar, set once. Because presets are locked, no repository can quietly weaken it.                                                           |
+| Preset     | `required`, `settings`                      | Every repository gets the same merge buttons and default branch ruleset, requiring the `smartcloud` aggregate check.                                       |
+| Preset     | `sync`                                      | Shared files come from `my-org/.github/templates`; `org-sync` labels the sync pull requests. See [Your organisation's sync hub](/guides/organisation-hub). |
+| Repository | `extends`                                   | Pulls in the preset. `@main` means a change to the preset reaches every repository on its next run.                                                        |
+| Repository | `settings.environments`, `settings.ruleset` | What the preset leaves open on purpose: this repository deploys, so it has environments, and its `ci` job is required too.                                 |
+| Repository | `required.expect`                           | The aggregate check must see this repository's own CI job.                                                                                                 |
+| Repository | `labels`, `labelling`                       | An extra label only this repository needs, next to the preset's.                                                                                           |
+| Repository | `sync.exclude`, `sync.values`               | This repository keeps its own `LICENSE`, and fills in a value the templates ask for but the preset leaves to each repository.                              |
+| Repository | `stale`                                     | A section the preset does not set at all, so the repository chooses it freely.                                                                             |
+
+How the two files combine, and what you may and may not do in the repository's file:
+
+- **The preset is read first**, then the repository's file is laid on top ([How files are merged](/presets#how-files-are-merged)).
+- **Adding is fine**: a new label, a new rule, a key the preset left unset (such as `settings.environments`), a new entry in a map (such as `settings.ruleset.statusChecks.checks.ci`).
+- **Changing is not**: giving `labels.bug.color` another value, or a different `roles.maintainers` list, fails the run with `cannot change "...": it is set by ...`. Change the preset instead, and every repository follows.
+- **Leave keys unset in the preset on purpose** when each repository must decide them, and say so in a comment at the top of the preset.
+
+The preset needs a token that can read it. Make the `.github` repository public, or use a [GitHub App](/getting-started#optional-create-a-github-app) installed on every repository; `settings` and `sync` need the app either way. [Your organisation's sync hub](/guides/organisation-hub) sets all of this up step by step.
+
+## Next steps
+
+<CardGroup cols={2}>
+  <Card title="Build your settings file" icon="list-ol" href="/guides/settings-file">
+    Every section in the order to add it, and what each does when it runs.
+  </Card>
+  <Card title="Your organisation's sync hub" icon="building" href="/guides/organisation-hub">
+    Make your own .github repository the source of presets and shared files.
+  </Card>
+</CardGroup>

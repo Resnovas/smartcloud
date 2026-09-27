@@ -881,6 +881,13 @@ and `dry-run.ts` and `restricted.ts` (writes); `repositoryRequest` and
 `graphql` are escape hatches for the settings feature's many endpoints, not a
 shortcut around that.
 
+Small helpers built on those escape hatches may live in the package itself,
+next to the service, when more than one feature needs them: `reviewers.ts`
+(review requests) and `auto-merge.ts` (`readAutoMerge`, `enableAutoMerge`,
+`disableAutoMerge`, `autoMergeRefusal`, `MERGE_METHODS`, shared by the
+`/automerge` command and the auto-merge feature). Reuse them rather than
+writing the query or mutation again in a feature.
+
 ### Layers
 
 | Layer                                           | Use                                                                                                                                                                                                                       |
