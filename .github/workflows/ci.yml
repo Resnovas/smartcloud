@@ -2,8 +2,11 @@
 # affects: lint (with the licence header and Prettier checks), typecheck (with
 # the test projects), test with coverage, build, and docs (API docs, contracts
 # and the check that docs/reference/configuration.mdx matches the JSON Schema).
-# The check job waits for all five and is the one context the ruleset and the
-# merge queue require, so adding or renaming a job never touches the ruleset.
+# The changes job first works out which of the last four the change needs
+# (tools/ci/changes.ts), so a documentation-only pull request runs only lint and
+# docs. The check job waits for all of them and is the one context the ruleset
+# and the merge queue require, so adding or renaming a job never touches the
+# ruleset.
 name: CI
 
 on:
@@ -23,6 +26,43 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Classifies the changed files with the committed Graphify graph and the Nx
+  # project graph: documents need only lint and docs, project files need the
+  # jobs whose targets Nx finds affected, and anything else (workflows, root
+  # configuration, tools/) needs every job. Pushes to main and manual runs
+  # always run every job.
+  changes:
+    name: changes
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      typecheck: ${{ steps.classify.outputs.typecheck }}
+      test: ${{ steps.classify.outputs.test }}
+      build: ${{ steps.classify.outputs.build }}
+      docs: ${{ steps.classify.outputs.docs }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Classify the change
+        id: classify
+        run: node tools/ci/changes.ts "$NX_BASE" "$NX_HEAD"
+
   lint:
     name: lint
     runs-on: ubuntu-latest
@@ -72,6 +112,8 @@ jobs:
 
   typecheck:
     name: typecheck
+    needs: changes
+    if: needs.changes.outputs.typecheck == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -111,6 +153,8 @@ jobs:
 
   test:
     name: test
+    needs: changes
+    if: needs.changes.outputs.test == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     permissions:
@@ -147,6 +191,8 @@ jobs:
 
   build:
     name: build
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -183,6 +229,8 @@ jobs:
 
   docs:
     name: docs
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
@@ -224,11 +272,13 @@ jobs:
         run: pnpm docs:reference:check
 
   # The required context. It runs even when a job above fails or is cancelled,
-  # and passes only when every one of them succeeded, so a skipped or failed
-  # job can never let a pull request through.
+  # and passes only when every job succeeded or was skipped because the changes
+  # job found the change does not need it. A job skipped for any other reason,
+  # such as a failed changes job, fails the check, so it can never let a pull
+  # request through.
   check:
     name: check
-    needs: [lint, typecheck, test, build, docs]
+    needs: [changes, lint, typecheck, test, build, docs]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -238,10 +288,16 @@ jobs:
         env:
           RESULTS: ${{ toJSON(needs) }}
         run: |
-          failed=$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<<"$RESULTS")
+          failed=$(jq -r '
+            .changes.outputs as $needed
+            | to_entries[]
+            | select(.value.result != "success")
+            | select(.value.result != "skipped" or ($needed[.key] // "") != "false")
+            | "\(.key): \(.value.result)"' <<<"$RESULTS")
           if [ -n "$failed" ]; then
             echo "::error::Not every CI job passed:"
             echo "$failed"
             exit 1
           fi
-          echo "lint, typecheck, test, build and docs passed."
+          echo "Every job the change needs passed."
+          jq -r 'to_entries[] | "\(.key): \(.value.result)"' <<<"$RESULTS"
