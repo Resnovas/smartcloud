@@ -49,7 +49,7 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
   ['branchMatches, missing branch', { type: 'branchMatches', condition: '^feat/' }, withoutBranch, false],
   ['baseBranchMatches', { type: 'baseBranchMatches', condition: '^main$' }, pullRequest(), true],
   ['baseBranchMatches, other base', { type: 'baseBranchMatches', condition: '^release/' }, pullRequest(), false],
-  ['baseBranchMatches, missing base', { type: 'baseBranchMatches', condition: '.*' }, withoutBase, true],
+  ['baseBranchMatches, missing base', { type: 'baseBranchMatches', condition: '.*' }, withoutBase, false],
   ['baseBranchMatches, missing base, anchored', { type: 'baseBranchMatches', condition: '^main$' }, withoutBase, false],
   ['baseBranchMatches, on an issue', { type: 'baseBranchMatches', condition: '.*' }, issue(), false],
   ['isOpen', { type: 'isOpen', condition: true }, pullRequest(), true],

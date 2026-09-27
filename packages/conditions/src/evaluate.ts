@@ -177,7 +177,9 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
       return Effect.succeed(result(condition.type, passed, `branch ${branch} ${passed ? 'matches' : 'does not match'}`))
     }
     case 'baseBranchMatches': {
-      const branch = subject.baseBranch ?? ''
+      // No target branch never matches, so a pattern like ^$ or .* cannot pass on its absence.
+      if (subject.baseBranch === undefined) return Effect.succeed(result(condition.type, false, 'no base branch'))
+      const branch = subject.baseBranch
       const passed = compilePattern(condition.condition).test(branch)
       return Effect.succeed(
         result(condition.type, passed, `base branch ${branch} ${passed ? 'matches' : 'does not match'}`),
