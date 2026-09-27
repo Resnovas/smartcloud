@@ -19,7 +19,7 @@
     { "label": "graph: open viewer", "detail": "Open graphify-out/graph.html", "type": "shell", "command": "node tools/dev/open.mjs graphify-out/graph.html", "problemMatcher": [] },
     { "label": "graph: update", "detail": "Refresh the code graph", "type": "shell", "command": "sh tools/graphify/graphify update", "problemMatcher": [] },
     { "label": "graph: check", "detail": "Fail if the committed graph is stale", "type": "shell", "command": "sh tools/graphify/graphify check", "problemMatcher": [] },
-    { "label": "agents: sync prompt commands", "detail": "Write .agents/prompts to the agent command folders", "type": "shell", "command": "node tools/dev/surfaces.mjs sync", "problemMatcher": [] },
+    { "label": "agents: sync prompt commands", "detail": "Write .agents/prompts and .agents/mcp.jsonc to the agent command folders and MCP configs", "type": "shell", "command": "node tools/dev/surfaces.mjs sync", "problemMatcher": [] },
     { "label": "agents: install Orca and OpenChamber actions", "detail": "Register quick commands, agent prompts and project actions", "type": "shell", "command": "node tools/dev/surfaces.mjs install", "problemMatcher": [] },
     // house:managed:end
     // house:local - add this repository's own tasks below this line.

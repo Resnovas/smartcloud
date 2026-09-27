@@ -2,7 +2,7 @@
 #
 # Orca worktree settings (house standard project-dev-surfaces). Quick commands
 # and agent prompts are Orca app settings, so they come from
-# .agents/surfaces.json through tools/dev/surfaces.mjs, which setup runs.
+# .agents/surfaces.jsonc through tools/dev/surfaces.mjs, which setup runs.
 scripts:
   # Runs after each worktree is created. node, not a shell launcher, so the
   # same line works on Windows.
