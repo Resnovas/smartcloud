@@ -83,7 +83,8 @@
     },
     "releaseTag": {
       "pattern": "v{version}",
-      "checkAllBranchesWhen": true
+      "checkAllBranchesWhen": true,
+      "strictPreid": true
     },
     "git": {
       "commit": false,

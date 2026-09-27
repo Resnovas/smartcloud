@@ -17,4 +17,8 @@
 import { testProject } from '../../vitest.shared.js'
 
 // The release tooling that can run without cutting a release.
-export default testProject('tools', ['tools/release/changelog-renderer.ts', 'tools/release/changelogs.ts'])
+export default testProject('tools', [
+  'tools/release/changelog-renderer.ts',
+  'tools/release/changelogs.ts',
+  'tools/release/nightly-version.ts',
+])

@@ -74,3 +74,13 @@ pnpm release:dry-run --first-release --specifier 2.0.0
 - The `changelogs` job authenticates as the Resnovas Bot GitHub app (`resnovas-smartcloud`), from the organisation variable `RESNOVAS_BOT_APP_ID` and secret `RESNOVAS_BOT_PRIVATE_KEY`. The app must be installed on this repository with contents and pull requests write access. A real release stops before tagging when either is missing.
 - The workflow pushes tags with its own token. If a tag ruleset protects `v*`, let GitHub Actions bypass it for tag creation and updates.
 - Trusted publishing needs `@resnovas/smartcloud` on npm to trust this repository's `release.yml` workflow.
+
+## Nightly pre-releases
+
+The `nightly` workflow (`.github/workflows/nightly.yml`, running `tools/release/nightly.ts`) cuts a pre-release from `main` every night at 02:30 UTC, and can be started by hand from the Actions tab (tick `dry-run` to see the version only). It cuts nothing on a night when `main` has not moved: every release commit, nightly or stable, has the `main` commit it was cut from as its parent, so a commit that already has one is skipped.
+
+A nightly is named `v<version>-nightly.<yyyymmdd>`, with `.1`, `.2` for a second or third that day. Before the first stable `2.x` release the version is `2.0.0`; after it, the next patch of the newest stable release, so a nightly always sorts before the release it previews. It is built like a release, a commit on no branch holding the bundled action with the version stamped in, and gets a GitHub pre-release with generated notes that is never marked latest. Nothing is published to npm and no changelog is written.
+
+Until the first stable `2.x` release exists, `v2` moves to each nightly, so workflows pinned to `resnovas/smartcloud@v2` run the newest nightly. From then on only stable releases move it.
+
+Nightlies never decide a stable release's version or notes: `releaseTag.strictPreid` in `nx.json` makes `nx release` without a preid resolve only stable `v*` tags, so the next release still counts, and writes its notes, from the last stable release, and its own tag never clashes with a nightly's.

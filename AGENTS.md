@@ -61,6 +61,7 @@ The GitHub release holds the main notes. Nx writes the same notes, through `tool
 - Never run `nx release` without `--dry-run`: the workflow is the only release path, and a local run pushes and creates a GitHub release.
 - The first v2 release has no `v*` tag to count from (v1's tags have no `v`): run the workflow once with `specifier` `2.0.0` and `first-release` ticked. Every later release leaves both empty.
 - Preview a release, with its notes and the change to each changelog file, with `pnpm release:dry-run` (add `--first-release --specifier 2.0.0` before the first release), or run the workflow with `dry-run` ticked (the default).
+- The `nightly` workflow cuts a `v<version>-nightly.<date>` pre-release from `main` each night when `main` has moved, and moves `v2` to it until the first stable 2.x release. `releaseTag.strictPreid` in `nx.json` keeps nightly tags out of a stable release's version and notes; never turn it off.
 
 ## Commits and pull requests
 
