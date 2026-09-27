@@ -21,6 +21,7 @@
     "@resnovas/feature.commits": "workspace:*",
     "@resnovas/feature.conventions": "workspace:*",
     "@resnovas/feature.disclosure": "workspace:*",
+    "@resnovas/feature.freeze": "workspace:*",
     "@resnovas/feature.labels": "workspace:*",
     "@resnovas/feature.required": "workspace:*",
     "@resnovas/feature.reviews": "workspace:*",

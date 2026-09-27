@@ -1,0 +1,12 @@
+{
+  "name": "@resnovas/feature.freeze-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@resnovas/feature.freeze": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "@resnovas/config": "workspace:*"
+  }
+}

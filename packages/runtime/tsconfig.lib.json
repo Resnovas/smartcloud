@@ -37,6 +37,9 @@
       "path": "../feature.labels/tsconfig.lib.json"
     },
     {
+      "path": "../feature.freeze/tsconfig.lib.json"
+    },
+    {
       "path": "../feature.disclosure/tsconfig.lib.json"
     },
     {

@@ -86,6 +86,9 @@
         "required": {
           "$ref": "#/$defs/Required"
         },
+        "freeze": {
+          "$ref": "#/$defs/Freeze"
+        },
         "stale": {
           "$ref": "#/$defs/Stale"
         },
@@ -1768,6 +1771,106 @@
       },
       "additionalProperties": false,
       "description": "One aggregate check that passes only when every other check on the pull request has passed, so a ruleset requires that one check instead of a list of names."
+    },
+    "Freeze": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "description": "Freeze merges now, until this is set back to false. Off by default."
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why merges are frozen while active is true."
+        },
+        "windows": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": {
+            "$ref": "#/$defs/FreezeWindow"
+          },
+          "description": "Scheduled freezes, by key: dated (start and end) or recurring (from and to, every day or every week)."
+        },
+        "exempt": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Pull requests with any of these labels may merge during a freeze."
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false,
+      "description": "A merge freeze, manual or scheduled: while one is in effect the freeze check fails on open pull requests and merge queue entries fail."
+    },
+    "FreezeWindow": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/FreezeDates"
+        },
+        {
+          "$ref": "#/$defs/FreezeRecurring"
+        }
+      ]
+    },
+    "FreezeDates": {
+      "type": "object",
+      "required": [
+        "start",
+        "end"
+      ],
+      "properties": {
+        "start": {
+          "type": "string",
+          "description": "a string matching the pattern ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2})$",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "end": {
+          "type": "string",
+          "description": "a string matching the pattern ^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2})$",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(?::\\d{2}(?:\\.\\d+)?)?(?:Z|[+-]\\d{2}:\\d{2})$"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why merges are frozen, shown on the check and in the report."
+        }
+      },
+      "additionalProperties": false
+    },
+    "FreezeRecurring": {
+      "type": "object",
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "type": "string",
+          "description": "HH:MM for a time every day, or a three-letter day and HH:MM, such as Fri 16:00, for a time every week.",
+          "pattern": "^(?:(Sun|Mon|Tue|Wed|Thu|Fri|Sat) )?([01]\\d|2[0-3]):([0-5]\\d)$"
+        },
+        "to": {
+          "type": "string",
+          "description": "HH:MM for a time every day, or a three-letter day and HH:MM, such as Fri 16:00, for a time every week.",
+          "pattern": "^(?:(Sun|Mon|Tue|Wed|Thu|Fri|Sat) )?([01]\\d|2[0-3]):([0-5]\\d)$"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Why merges are frozen, shown on the check and in the report."
+        }
+      },
+      "additionalProperties": false
     },
     "Stale": {
       "type": "object",

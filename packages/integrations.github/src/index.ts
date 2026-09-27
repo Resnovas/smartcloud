@@ -42,6 +42,7 @@ export type {
   Label,
   NewReview,
   ProposalResult,
+  PullRequestSummary,
   Repository,
   RepositoryCoordinates,
   RepositoryRequest,

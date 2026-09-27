@@ -15,7 +15,7 @@
  */
 
 import { ConditionGroup, Pattern } from '@resnovas/conditions'
-import { Schema } from 'effect'
+import { DateTime, Option, Schema } from 'effect'
 
 // The configuration sections of the policy, review, stale, settings and sync
 // features. Each is optional: a feature whose section is absent does not run.
@@ -273,6 +273,174 @@ export const Required = Schema.Struct({
   description:
     'One aggregate check that passes only when every other check on the pull request has passed, so a ruleset requires that one check instead of a list of names.',
 })
+
+const FREEZE_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const
+const FREEZE_TIME = /^(?:(Sun|Mon|Tue|Wed|Thu|Fri|Sat) )?([01]\d|2[0-3]):([0-5]\d)$/
+
+/**
+ * Reads a recurring freeze window's `from` or `to`: `HH:MM` for a time every
+ * day, or `Ddd HH:MM` for a time every week.
+ *
+ * @example
+ * ```ts import.meta.vitest name="parseFreezeTime"
+ * import { parseFreezeTime } from '@resnovas/config'
+ *
+ * parseFreezeTime('Fri 16:30')?.day // => 5
+ * parseFreezeTime('Fri 16:30')?.minutes // => 990
+ * parseFreezeTime('08:00')?.day // => undefined
+ * parseFreezeTime('24:00') // => undefined
+ * ```
+ *
+ * @param text - For example `Fri 16:00` or `22:30`.
+ * @returns The day of the week (0 for Sunday), when the time names one, and the minutes into the day; undefined when the text is not a time.
+ */
+export const parseFreezeTime = (
+  text: string,
+): { readonly day: number | undefined; readonly minutes: number } | undefined => {
+  const match = FREEZE_TIME.exec(text)
+  if (match === null) return undefined
+  const [, day, hours = '', minutes = ''] = match
+  return {
+    day: day === undefined ? undefined : FREEZE_DAYS.indexOf(day as (typeof FREEZE_DAYS)[number]),
+    minutes: Number(hours) * 60 + Number(minutes),
+  }
+}
+
+const FreezeTime = Schema.String.pipe(
+  Schema.pattern(FREEZE_TIME),
+  Schema.annotations({
+    description:
+      'HH:MM for a time every day, or a three-letter day and HH:MM, such as Fri 16:00, for a time every week.',
+  }),
+)
+
+// Date.parse rolls an impossible day over, 2026-02-30 to March 2, so the day
+// must also survive a round trip through the calendar.
+const isCalendarDate = (text: string) => {
+  const month = Number(text.slice(5, 7)) - 1
+  const day = Number(text.slice(8, 10))
+  const date = new Date(Date.UTC(Number(text.slice(0, 4)), month, day))
+  return date.getUTCMonth() === month && date.getUTCDate() === day
+}
+
+const Instant = Schema.String.pipe(
+  Schema.pattern(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/),
+  Schema.filter((text) => !Number.isNaN(Date.parse(text)) && isCalendarDate(text), {
+    message: () => 'not a valid date and time',
+  }),
+  Schema.annotations({ description: 'An ISO 8601 date and time with its offset, such as 2026-12-24T00:00:00Z.' }),
+)
+
+const TimeZone = Schema.String.pipe(
+  Schema.filter((zone) => Option.isSome(DateTime.zoneMakeNamed(zone)), {
+    message: (issue) => `unknown time zone ${String(issue.actual)}`,
+  }),
+  Schema.annotations({ description: 'An IANA time zone, such as Europe/London. Defaults to UTC.' }),
+)
+
+const reason = opt(
+  Schema.String.annotations({ description: 'Why merges are frozen, shown on the check and in the report.' }),
+)
+
+const DatedWindow = Schema.Struct({
+  start: Instant,
+  end: Instant,
+  reason,
+}).pipe(
+  Schema.filter((window) => Date.parse(window.end) > Date.parse(window.start), {
+    message: () => 'end must be after start',
+  }),
+  Schema.annotations({ identifier: 'FreezeDates', description: 'A freeze from one date and time to another.' }),
+)
+
+const RecurringWindow = Schema.Struct({
+  from: FreezeTime,
+  to: FreezeTime,
+  timezone: opt(TimeZone),
+  reason,
+}).pipe(
+  Schema.filter(
+    (window) => {
+      const from = parseFreezeTime(window.from)
+      const to = parseFreezeTime(window.to)
+      // Both name a day, or neither does; a window that starts where it ends is empty.
+      return (
+        (from?.day === undefined) === (to?.day === undefined) &&
+        (from?.day !== to?.day || from?.minutes !== to?.minutes)
+      )
+    },
+    { message: () => 'from and to must both name a day or both leave it out, and must differ' },
+  ),
+  Schema.annotations({
+    identifier: 'FreezeRecurring',
+    description:
+      'A freeze every day or every week, from one time to the next; a window whose to comes before its from runs over midnight or the weekend.',
+  }),
+)
+
+/**
+ * A merge freeze window: dated, from `start` to `end`, or recurring, from
+ * `from` to `to` every day or every week in `timezone`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="FreezeWindow"
+ * import { FreezeWindow } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(FreezeWindow)({ from: 'Fri 16:00', to: 'Mon 08:00', timezone: 'Europe/London' }) // => true
+ * Schema.is(FreezeWindow)({ start: '2026-12-24T00:00:00Z', end: '2027-01-02T00:00:00Z' }) // => true
+ * Schema.is(FreezeWindow)({ from: 'Fri 16:00', to: '08:00' }) // => false
+ * ```
+ */
+export const FreezeWindow = Schema.Union(DatedWindow, RecurringWindow).annotations({ identifier: 'FreezeWindow' })
+/** A decoded {@link FreezeWindow}. */
+export type FreezeWindow = typeof FreezeWindow.Type
+
+/**
+ * A merge freeze: while one is in effect, the freeze check fails on every
+ * open pull request and merge queue entries fail.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Freeze"
+ * import { Freeze } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Freeze)({ active: true, reason: 'Release 2.0', exempt: { labels: ['hotfix'] } }) // => true
+ * Schema.is(Freeze)({ windows: { weekend: { from: 'Fri 16:00', to: 'Mon 08:00' } } }) // => true
+ * Schema.is(Freeze)({ active: 'yes' }) // => false
+ * ```
+ */
+export const Freeze = Schema.Struct({
+  /** Freeze merges now, until this is set back to false. */
+  active: opt(
+    Schema.Boolean.annotations({ description: 'Freeze merges now, until this is set back to false. Off by default.' }),
+  ),
+  /** Why the manual freeze is on. */
+  reason: opt(Schema.String.annotations({ description: 'Why merges are frozen while active is true.' })),
+  /** Scheduled freezes, by key, so presets and repositories merge them. */
+  windows: opt(
+    Schema.Record({ key: Schema.String, value: FreezeWindow }).annotations({
+      description:
+        'Scheduled freezes, by key: dated (start and end) or recurring (from and to, every day or every week).',
+    }),
+  ),
+  /** Pull requests that may merge during a freeze. */
+  exempt: opt(
+    Schema.Struct({
+      labels: opt(
+        Schema.Array(Schema.String).annotations({
+          description: 'Pull requests with any of these labels may merge during a freeze.',
+        }),
+      ),
+    }),
+  ),
+}).annotations({
+  identifier: 'Freeze',
+  description:
+    'A merge freeze, manual or scheduled: while one is in effect the freeze check fails on open pull requests and merge queue entries fail.',
+})
+/** A decoded {@link Freeze}. */
+export type Freeze = typeof Freeze.Type
 
 /**
  * The repository settings baseline. Anything omitted is left as it is.

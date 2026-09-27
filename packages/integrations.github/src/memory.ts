@@ -27,6 +27,7 @@ import {
   type IssueSummary,
   type Label,
   type NewReview,
+  type PullRequestSummary,
   type Repository,
   type RepositoryRequest,
 } from './service.js'
@@ -72,6 +73,8 @@ export interface MemoryState {
   /** Labels, comments and reactions on each issue or pull request, by number. */
   issues: Map<number, MemoryIssue>
   openIssues: Array<IssueSummary>
+  /** The open pull requests `listOpenPullRequests` returns. */
+  openPullRequests: Array<PullRequestSummary>
   pulls: Map<number, MemoryPullRequest>
   /** File contents keyed by `owner/repo/path@ref`, with an empty ref for the default branch. */
   files: Map<string, string>
@@ -121,6 +124,7 @@ const defaults = (): MemoryState => ({
   labels: [],
   issues: new Map(),
   openIssues: [],
+  openPullRequests: [],
   pulls: new Map(),
   files: new Map(),
   executables: new Set(),
@@ -239,6 +243,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
       }),
     listOpenIssues: Effect.sync(() => state.openIssues.filter((summary) => issue(summary.number).open)),
     getReactions: (number) => Effect.sync(() => ({ ...(issue(number).reactions ?? NO_REACTIONS) })),
+    listOpenPullRequests: Effect.sync(() => [...state.openPullRequests]),
     closeIssue: (number) => Effect.sync(() => void (issue(number).open = false)),
     listCommits: (number) => Effect.map(pull('listCommits', number), (entry) => [...entry.commits]),
     listFiles: (number) => Effect.map(pull('listFiles', number), (entry) => [...entry.files]),

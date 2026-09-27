@@ -19,6 +19,7 @@ import type { Feature } from '@resnovas/engine'
 import { commitsFeature } from '@resnovas/feature.commits'
 import { conventions } from '@resnovas/feature.conventions'
 import { disclosureFeature } from '@resnovas/feature.disclosure'
+import { freezeFeature } from '@resnovas/feature.freeze'
 import { labels } from '@resnovas/feature.labels'
 import { requiredFeature } from '@resnovas/feature.required'
 import { reviewsFeature } from '@resnovas/feature.reviews'
@@ -47,6 +48,7 @@ export const FEATURES: ReadonlyArray<Feature> = [
   settingsFeature,
   syncFeature,
   requiredFeature,
+  freezeFeature,
 ]
 
 /** A top-level config section a feature can read. */
@@ -70,6 +72,7 @@ export const FEATURE_SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = 
   ['settings', ['settings', 'roles']],
   ['sync', ['sync']],
   ['required', ['required']],
+  ['freeze', ['freeze']],
 ])
 
 /**

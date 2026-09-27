@@ -322,6 +322,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       updateComment: (id, body) => writing(inner.updateComment(id, body), [caches.comments.invalidateAll]),
       listOpenIssues: listOpenIssues(ListOpenIssues({})),
       getReactions: (issue) => getReactions(GetReactions({ issue })),
+      listOpenPullRequests: inner.listOpenPullRequests,
       closeIssue: (issue) => writing(inner.closeIssue(issue), [caches.issues.invalidateAll]),
 
       listCommits: (pullRequest) => listCommits(ListCommits({ pullRequest })),

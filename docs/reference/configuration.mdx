@@ -29,6 +29,7 @@ Declarative repository automation: labels, conventions and policy.
 | `disclosure` | [Disclosure](#disclosure) | no |  |
 | `reviews` | [Reviews](#reviews) | no |  |
 | `required` | [Required](#required) | no |  |
+| `freeze` | [Freeze](#freeze) | no |  |
 | `stale` | [Stale](#stale) | no |  |
 | `settings` | [Settings](#settings) | no |  |
 | `sync` | [Sync](#sync) | no |  |
@@ -264,6 +265,45 @@ One aggregate check that passes only when every other check on the pull request 
 | `ignore` | list of [Pattern](#pattern) | no | Checks that do not count towards the aggregate, as patterns matched against each check run name or status context, for example ^codecov/. |
 | `expect` | list of [Pattern](#pattern) | no | Checks that must appear on the head commit and pass, as patterns matched against each check run name or status context, for example ^check$. One that has not appeared by the timeout fails the aggregate, so a deleted or renamed CI job cannot pass unnoticed. |
 | `timeout` | [Int](#int) | no | Minutes to wait for the other checks to finish before failing, from 1 to 360 (the longest an Actions job may run). Defaults to 60. Minimum: 1. |
+
+Other keys are an error.
+
+### Freeze
+
+A merge freeze, manual or scheduled: while one is in effect the freeze check fails on open pull requests and merge queue entries fail.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `active` | boolean | no | Freeze merges now, until this is set back to false. Off by default. |
+| `reason` | string | no | Why merges are frozen while active is true. |
+| `windows` | map of string to [FreezeWindow](#freezewindow) | no | Scheduled freezes, by key: dated (start and end) or recurring (from and to, every day or every week). |
+| `exempt` | object | no |  |
+| `exempt.labels` | list of string | no | Pull requests with any of these labels may merge during a freeze. |
+
+Other keys are an error.
+
+### FreezeWindow
+
+Type: any of [FreezeDates](#freezedates), [FreezeRecurring](#freezerecurring).
+
+### FreezeDates
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `start` | string | yes | a string matching the pattern ^\d\{4\}-\d\{2\}-\d\{2\}T\d\{2\}:\d\{2\}(?::\d\{2\}(?:\.\d+)?)?(?:Z\|[+-]\d\{2\}:\d\{2\})$ Pattern: `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z\|[+-]\d{2}:\d{2})$`. |
+| `end` | string | yes | a string matching the pattern ^\d\{4\}-\d\{2\}-\d\{2\}T\d\{2\}:\d\{2\}(?::\d\{2\}(?:\.\d+)?)?(?:Z\|[+-]\d\{2\}:\d\{2\})$ Pattern: `^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z\|[+-]\d{2}:\d{2})$`. |
+| `reason` | string | no | Why merges are frozen, shown on the check and in the report. |
+
+Other keys are an error.
+
+### FreezeRecurring
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `from` | string | yes | HH:MM for a time every day, or a three-letter day and HH:MM, such as Fri 16:00, for a time every week. Pattern: `^(?:(Sun\|Mon\|Tue\|Wed\|Thu\|Fri\|Sat) )?([01]\d\|2[0-3]):([0-5]\d)$`. |
+| `to` | string | yes | HH:MM for a time every day, or a three-letter day and HH:MM, such as Fri 16:00, for a time every week. Pattern: `^(?:(Sun\|Mon\|Tue\|Wed\|Thu\|Fri\|Sat) )?([01]\d\|2[0-3]):([0-5]\d)$`. |
+| `timezone` | string | no |  |
+| `reason` | string | no | Why merges are frozen, shown on the check and in the report. |
 
 Other keys are an error.
 

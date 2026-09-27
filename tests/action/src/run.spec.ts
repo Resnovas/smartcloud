@@ -171,6 +171,7 @@ describe('runAction', () => {
         'settings',
         'sync',
         'required',
+        'freeze',
       ])
     }),
   )

@@ -84,6 +84,14 @@ export interface IssueSummary {
   readonly reactions?: Reactions
 }
 
+/** An open pull request, as listed for scheduled sweeps that act on its head commit. */
+export interface PullRequestSummary {
+  readonly number: number
+  readonly headSha: string
+  readonly labels: ReadonlyArray<string>
+  readonly draft: boolean
+}
+
 /** A file in some repository, for presets and synced templates. */
 export interface FileLocation {
   readonly owner: string
@@ -229,6 +237,8 @@ export interface GitHubService {
   /** The reactions on an issue or pull request itself, not on its comments. */
   readonly getReactions: (issue: number) => Effect.Effect<Reactions, GitHubError>
   readonly closeIssue: (issue: number) => Effect.Effect<void, GitHubError>
+  /** Lists the open pull requests with their head commits. Never cached, because a sweep acts on the latest heads. */
+  readonly listOpenPullRequests: Effect.Effect<ReadonlyArray<PullRequestSummary>, GitHubError>
 
   readonly listCommits: (pullRequest: number) => Effect.Effect<ReadonlyArray<Commit>, GitHubError>
   readonly listFiles: (pullRequest: number) => Effect.Effect<ReadonlyArray<string>, GitHubError>

@@ -1,0 +1,67 @@
+---
+title: 'Freeze'
+description: 'A merge freeze, manual or scheduled, that blocks merges while it is in effect.'
+---
+
+A merge freeze stops pull requests merging for a while: over a release, a weekend, or the holidays. The freeze feature keeps a `smartcloud / merge freeze` check on every open pull request's head commit, failed while a freeze is in effect and passed otherwise. Require that check in the ruleset, and nothing merges during a freeze.
+
+It is enabled by a `freeze` section:
+
+```yaml
+freeze:
+  active: false
+  reason: Release 2.0 is going out
+  windows:
+    weekend:
+      from: Fri 16:00
+      to: Mon 08:00
+      timezone: Europe/London
+      reason: No weekend deploys
+    holidays:
+      start: '2026-12-24T00:00:00Z'
+      end: '2027-01-04T09:00:00Z'
+  exempt:
+    labels: [hotfix]
+```
+
+| Key             | Default | Meaning                                                                               |
+| --------------- | ------- | ------------------------------------------------------------------------------------- |
+| `active`        | `false` | A manual freeze: merges are frozen until it is set back to `false`.                   |
+| `reason`        | none    | Why the manual freeze is on, shown on the check and in the report.                    |
+| `windows`       | none    | Scheduled freezes, by key, so a preset's windows and a repository's merge. See below. |
+| `exempt.labels` | none    | Pull requests with any of these labels may merge during a freeze, such as a `hotfix`. |
+
+## Windows
+
+A window is dated or recurring, and either can carry a `reason`.
+
+- **Dated**: `start` and `end`, ISO 8601 dates and times with their offset (`Z` or `+01:00`). The freeze runs from `start` up to `end`.
+- **Recurring**: `from` and `to`, both `HH:MM` for a freeze every day, or both a day and a time, such as `Fri 16:00`, for a freeze every week. Days are `Mon`, `Tue`, `Wed`, `Thu`, `Fri`, `Sat` and `Sun`. When `to` comes before `from` the window runs over midnight, or over the weekend: `from: Fri 16:00` and `to: Mon 08:00` is the whole weekend, and `from: '22:00'` and `to: '06:00'` every night. The times are read on the clock of `timezone`, an IANA time zone such as `Europe/London`, or UTC when it is left out, so they follow daylight saving.
+
+Quote a time that YAML could read as something else, such as `'22:00'`.
+
+When more than one freeze is in effect, the check names the manual freeze first, then the first open window in the order the config lists them.
+
+## When the check changes
+
+The freeze check is brought up to date on three kinds of event:
+
+- **Pull request events.** On every pull request event, the feature publishes the check on the head commit. During a freeze it also leaves a warning in the report, but it does not fail the smartcloud job: the job's own check would stay failed after the freeze ends, while the freeze check is updated. Add `labeled` and `unlabeled` to the workflow's `pull_request` types, so adding an exempt label takes effect straight away.
+- **Scheduled runs.** On `schedule` and `workflow_dispatch` events it updates the check on every open pull request, publishing a new one only where the conclusion changes. A freeze window starts and ends between events, so run the workflow on a schedule at least as often as the windows need, for example hourly, or at the windows' edges. After switching `active` on or off, run the workflow by hand to update the open pull requests at once.
+- **Merge queue.** On a `merge_group` event a freeze is an error, which fails the smartcloud job and so the queue entry, whatever the pull request's labels. With a merge queue, the freeze is checked at the moment of merging, so the schedule matters less.
+
+```yaml
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, labeled, unlabeled]
+  merge_group:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+```
+
+Like every feature, freeze also gets a `smartcloud / freeze` check with its findings, which is neutral during a freeze; the one that blocks is `smartcloud / merge freeze`. Then require the `smartcloud / merge freeze` check in the ruleset; with the [settings](/features/settings#ruleset) feature, add it to `requiredChecks`. The [required](/features/required) aggregate leaves smartcloud's own `smartcloud / …` checks out, so the freeze check is required on its own, beside the aggregate.
+
+## Tokens
+
+The feature writes the check with `GITHUB_TOKEN` and reads the commit's checks with the workflow token, as the required feature does, so the job needs `checks: write`, `statuses: read` and `pull-requests: read`. On a pull request from a fork the token is read-only: the feature cannot write the check, and records a warning instead of failing the run. The next scheduled run, which acts with the repository's own token, publishes the check on the fork's head commit.
