@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { describe, expect, it } from '@effect/vitest'
+import { describe, expect, it, vi } from '@effect/vitest'
 import { ConfigProvider, Effect, Exit, Layer, Redacted, Schedule } from 'effect'
 import { DEFAULT_COMMITTER, GitHub, GitHubLive, makeLiveGitHub, signOff } from '@resnovas/integrations.github'
 import { fakeFetch, type Routes } from './fake-fetch.js'
@@ -629,11 +629,37 @@ describe('GitHubLive', () => {
     ),
   )
 
-  it.effect('reads a committer to name instead of the token', () =>
+  it.effect('commits as a named committer, filling in the half not set from the default', () =>
     Effect.gen(function* () {
-      for (const env of [{ SMARTCLOUD_COMMITTER_NAME: 'Ann' }, { SMARTCLOUD_COMMITTER_EMAIL: 'ann@example.com' }]) {
+      const cases = [
+        [{ SMARTCLOUD_COMMITTER_NAME: 'Ann' }, { name: 'Ann', email: DEFAULT_COMMITTER.email }],
+        [{ SMARTCLOUD_COMMITTER_EMAIL: 'ann@example.com' }, { name: DEFAULT_COMMITTER.name, email: 'ann@example.com' }],
+      ] as const
+      for (const [env, identity] of cases) {
+        const own = '/repos/Resnovas/smartcloud'
+        const fake = fakeFetch({
+          [`GET ${own}/git/ref/heads/main`]: { body: { object: { sha: 'base' } } },
+          [`GET ${own}/git/commits/base`]: { body: { sha: 'base', tree: { sha: 'base-tree' }, parents: [] } },
+          [`POST ${own}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
+          [`POST ${own}/git/trees`]: { status: 201, body: { sha: 'tree' } },
+          [`GET ${own}/git/ref/heads/smartcloud/sync`]: { status: 404, body: { message: 'Not Found' } },
+          [`POST ${own}/git/commits`]: { status: 201, body: { sha: 'commit', author: identity, verification: { verified: false } } },
+          [`POST ${own}/git/refs`]: { status: 201, body: {} },
+          [`GET ${own}/pulls`]: { body: [] },
+          [`POST ${own}/pulls`]: { status: 201, body: { number: 1, html_url: 'u' } },
+        })
+        vi.stubGlobal('fetch', fake.fetch)
         const github = yield* GitHub.pipe(provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud', ...env }))
-        expect(github.coordinates.repo).toBe('smartcloud')
+        yield* github.proposeChanges({
+          branch: 'smartcloud/sync',
+          base: 'main',
+          title: 'chore(sync): sync files',
+          body: 'Synced.',
+          files: [{ path: 'LICENSE', content: 'MIT', executable: false }],
+        })
+        vi.unstubAllGlobals()
+        const commit = fake.requests.find((request) => request.method === 'POST' && request.path === `${own}/git/commits`)
+        expect(commit?.body).toMatchObject({ message: signOff('chore(sync): sync files', identity), author: identity, committer: identity })
       }
     }),
   )
