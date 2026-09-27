@@ -361,6 +361,12 @@ type Merging = NonNullable<SettingsConfig['merging']>
 type Features = NonNullable<SettingsConfig['features']>
 type Security = NonNullable<SettingsConfig['security']>
 
+// Leaves out every value the repository already has. GitHub refuses some
+// writes even of an unchanged value (sign-off an organisation enforces, or a
+// wiki toggle the token may not make), and an unchanged value needs no write.
+const changed = (body: Record<string, unknown>, repository: Repository): Record<string, unknown> =>
+  Object.fromEntries(Object.entries(body).filter(([name, value]) => repository.current?.[name] !== value))
+
 const mergingBody = (settings: SettingsConfig): Record<string, unknown> => ({
   ...pick<Merging>(settings.merging, [
     ['mergeCommit', 'allow_merge_commit'],
@@ -383,14 +389,26 @@ const mergingBody = (settings: SettingsConfig): Record<string, unknown> => ({
 // Discussions and sponsorships have no REST field, so they go through the
 // GraphQL updateRepository mutation. The values are booleans from a decoded
 // schema, so writing them into the query cannot inject anything.
-const featuresInput = (features: SettingsConfig['features']): ReadonlyArray<string> =>
+// The REST field each GraphQL feature flag mirrors, to compare against the
+// repository's current value. Sponsorships have no REST field.
+const featureFields: Readonly<Record<string, string>> = {
+  hasDiscussionsEnabled: 'has_discussions',
+  hasWikiEnabled: 'has_wiki',
+}
+
+const featuresInput = (features: SettingsConfig['features'], repository: Repository): ReadonlyArray<string> =>
   Object.entries(
     pick<Features>(features, [
       ['discussions', 'hasDiscussionsEnabled'],
       ['sponsorships', 'hasSponsorshipsEnabled'],
       ['wiki', 'hasWikiEnabled'],
     ]),
-  ).map(([name, value]) => `${name}: ${String(value)}`)
+  )
+    .filter(([name, value]) => {
+      const field = featureFields[name]
+      return field === undefined || repository.current?.[field] !== value
+    })
+    .map(([name, value]) => `${name}: ${String(value)}`)
 
 // Each of these endpoints turns a feature on with PUT and off with DELETE.
 const toggles: ReadonlyArray<readonly [keyof Security, string, string, string]> = [
@@ -649,7 +667,7 @@ export const pagesStep = (pages: Pages, repository: Repository): PagesStep => {
  *
  * @param settings - The `settings` section.
  * @param roles - The `roles` section, for the review gate's maintainer count.
- * @param repository - The repository, for its node id and visibility.
+ * @param repository - The repository, for its node id, visibility and current settings; a setting it already has is left out.
  * @returns The ordered steps.
  */
 export const planSettings = (
@@ -658,7 +676,7 @@ export const planSettings = (
   repository: Repository,
 ): ReadonlyArray<SettingsStep> => {
   const steps: Array<SettingsStep> = []
-  const merging = mergingBody(settings)
+  const merging = changed(mergingBody(settings), repository)
   if (Object.keys(merging).length > 0) {
     steps.push({
       kind: 'rest',
@@ -668,7 +686,7 @@ export const planSettings = (
       request: { method: 'PATCH', path: '', body: merging },
     })
   }
-  const input = featuresInput(settings.features)
+  const input = featuresInput(settings.features, repository)
   if (input.length > 0) {
     steps.push({
       kind: 'graphql',

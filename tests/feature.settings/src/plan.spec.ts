@@ -86,6 +86,26 @@ describe('environments', () => {
 })
 
 describe('planSettings', () => {
+  it('leaves out every setting the repository already has, and plans no step when nothing changes', () => {
+    const current = {
+      ...publicRepository,
+      current: { web_commit_signoff_required: true, has_wiki: false, has_discussions: true, allow_squash_merge: true },
+    }
+    const merging = find(planSettings(houseSettings, soleMaintainer, current), 'merging')
+    const body = merging?.kind === 'rest' ? merging.request.body : undefined
+    expect(body).not.toHaveProperty('web_commit_signoff_required')
+    expect(body).not.toHaveProperty('has_wiki')
+    expect(body).not.toHaveProperty('allow_squash_merge')
+    expect(
+      planSettings({ merging: { webCommitSignoff: true }, features: { wiki: false, discussions: true } }, undefined, current),
+    ).toStrictEqual([])
+    const features = find(
+      planSettings({ features: { wiki: false, discussions: false, sponsorships: true } }, undefined, current),
+      'features',
+    )
+    expect(features?.description).toBe('Repository features: hasDiscussionsEnabled: false, hasSponsorshipsEnabled: true')
+  })
+
   it('the merge settings enforce squash or rebase, sign-off, and trailer-preserving squashes', () => {
     const merging = find(planSettings(houseSettings, soleMaintainer, publicRepository), 'merging')
     expect(merging).toStrictEqual({

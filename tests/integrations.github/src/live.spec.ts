@@ -48,6 +48,33 @@ describe('live GitHub: repository and labels', () => {
         nodeId: 'R_1',
         private: true,
         defaultBranch: 'main',
+        current: {},
+      })
+    }),
+  )
+
+  it.effect('reads the current settings it can compare, and skips any value of another type', () =>
+    Effect.gen(function* () {
+      const { service } = live({
+        [`GET ${REPO}`]: {
+          body: {
+            owner: { login: 'Resnovas' },
+            name: 'example',
+            full_name: 'Resnovas/example',
+            node_id: 'R_1',
+            private: false,
+            default_branch: 'main',
+            has_wiki: false,
+            web_commit_signoff_required: true,
+            squash_merge_commit_title: 'PR_TITLE',
+            allow_auto_merge: null,
+          },
+        },
+      })
+      expect((yield* (yield* service).getRepository).current).toStrictEqual({
+        has_wiki: false,
+        web_commit_signoff_required: true,
+        squash_merge_commit_title: 'PR_TITLE',
       })
     }),
   )
