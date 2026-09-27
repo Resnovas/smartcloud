@@ -27,6 +27,7 @@ import {
   FreezeWindow,
   parseConfig,
   parseFreezeTime,
+  RequestApproval,
   Required,
   REQUIRED_TIMEOUT,
   SmartcloudConfig,
@@ -333,5 +334,17 @@ describe('CodeOwners', () => {
       onRight: () => '',
     })
     expect(message).toContain('must not be a whole number')
+  })
+})
+
+describe('reviewer strategies', () => {
+  it('accepts each opt-in strategy and rejects invalid strategies and counts', () => {
+    const valid = Schema.is(RequestApproval)
+    const base = { reviewers: [], when: { condition: [] } }
+    for (const strategy of ['round-robin', 'load-balanced', 'codeowners'])
+      expect(valid({ ...base, strategy, count: 2 })).toBe(true)
+    for (const count of [0, -1, 1.5]) expect(valid({ ...base, count })).toBe(false)
+    expect(valid({ ...base, strategy: 'random' })).toBe(false)
+    expect(valid(base)).toBe(true)
   })
 })

@@ -1728,6 +1728,20 @@
             "type": "string"
           }
         },
+        "strategy": {
+          "type": "string",
+          "enum": [
+            "round-robin",
+            "load-balanced",
+            "codeowners"
+          ]
+        },
+        "count": {
+          "$ref": "#/$defs/Int",
+          "description": "a positive number",
+          "title": "positive",
+          "exclusiveMinimum": 0
+        },
         "when": {
           "$ref": "#/$defs/ConditionGroup"
         }

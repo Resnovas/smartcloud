@@ -17,3 +17,4 @@
 export { FEATURE, reviewsFeature } from './feature.js'
 export { DEFAULT_POLICY_BASE, evaluateGate, gateMessage, latestDecisive, normaliseLogin, sameLogin } from './gate.js'
 export type { GateApplied, GateInput, GateOpen, GateResult } from './gate.js'
+export { ownersForFiles } from './assignment.js'
