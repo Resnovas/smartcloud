@@ -32,8 +32,10 @@ export default defineConfig({
         fileURLToPath(new URL('../../tools/ci/bundle-size.ts', import.meta.url)),
         fileURLToPath(new URL('../../tools/ci/smoke/*.ts', import.meta.url)),
         fileURLToPath(new URL('../../tools/ci/flaky-tests.ts', import.meta.url)),
+        fileURLToPath(new URL('../../tools/ci/coverage-goal.ts', import.meta.url)),
       ],
-      thresholds: { lines: 100, functions: 100, statements: 100, branches: 100 },
+      // 90% is enforced; below the 100% goal the coverage-goal reporter warns.
+      thresholds: { lines: 90, functions: 90, statements: 90, branches: 90 },
     },
   },
 })

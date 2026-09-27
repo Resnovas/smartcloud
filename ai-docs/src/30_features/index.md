@@ -71,5 +71,5 @@ a `roles.trustedBots` login wrote it, because the marker is public.
    `FEATURE_FLAGS` (a test fails when a feature has no flag).
 4. If it needs more than the workflow token can do, add it to
    `PAT_ONLY_FEATURES` in `packages/runtime/src/access.ts` with the reason.
-5. Test it through `runFeatures` against the in-memory GitHub, at 100%
-   coverage, and document it in `docs/features/` and here.
+5. Test it through `runFeatures` against the in-memory GitHub, aiming for
+   100% coverage (90% is enforced), and document it in `docs/features/` and here.

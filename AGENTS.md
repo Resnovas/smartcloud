@@ -660,7 +660,7 @@ CodeRabbit, Copilot code review, Qodo, Cursor Bugbot and Graphify each have one 
 5. `tests/<name>/`: a `package.json` depending on `@resnovas/<name>` with `workspace:*`, a `project.json` tagged `type_test` and the package's layer, `vitest.config.mts` calling `testProject('<name>', ['packages/<name>/src/**'])` from `vitest.shared.ts`, a `tsconfig.json` with `noEmit`, and `src/**/*.spec.ts` using `@effect/vitest`.
 6. `pnpm install`, then `pnpm headers:fix`.
 
-Coverage runs on every test and fails below 100% of lines, functions and statements. Never delete a test to make a build pass.
+Coverage runs on every test. Below 90% of lines, functions, statements or branches the run fails; 100% is the goal, and below it `tools/ci/coverage-goal.ts` warns without failing. The GitHub ruleset blocks a pull request only below 80%. Never delete a test to make a build pass.
 
 Tests mirror sources file for file: `packages/<name>/src/<path>.ts` is tested by `tests/<name>/src/<path>.spec.ts` (apps map the same way). Barrels and type-only files need no spec; shared fixtures stay as non-spec helper files.
 

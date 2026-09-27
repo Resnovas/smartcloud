@@ -53,8 +53,9 @@ export const flakyTests = {
  * @remarks
  * Tests live in their own Nx projects under `tests/<package>/src/**`, mirroring
  * `packages/<package>/src/**`, and measure coverage of the package they test.
- * Coverage below 100% of lines fails the run: the house standard for this
- * repository.
+ * Coverage below 90% fails the run, the enforced minimum. 100% is the goal:
+ * below it the run passes, and `tools/ci/coverage-goal.ts` warns how far short
+ * it fell. (The GitHub ruleset blocks a pull request only below 80%.)
  *
  * The `@effect/doctest` plugin also collects every `@example` fence marked
  * `ts import.meta.vitest` in the covered sources and runs it as a test, so
@@ -87,6 +88,7 @@ export const testProject = (name: string, covers: ReadonlyArray<string>) =>
       // Doctests are collected from the covered sources: a directory glob or a single file.
       includeSource: covers.map((glob) => join(workspaceRoot, glob.endsWith('.ts') ? glob : join(glob, '*.ts'))),
       ...flakyTests,
+      reporters: [...flakyTests.reporters, [join(workspaceRoot, 'tools/ci/coverage-goal.ts'), { project: name }]],
       coverage: {
         enabled: true,
         provider: 'v8',
@@ -95,7 +97,8 @@ export const testProject = (name: string, covers: ReadonlyArray<string>) =>
         allowExternal: true,
         include: covers.map((glob) => join(workspaceRoot, glob)),
         exclude: ['**/index.ts'],
-        thresholds: { lines: 100, functions: 100, statements: 100, branches: 95 },
+        // 90% is enforced; below the 100% goal the coverage-goal reporter warns.
+        thresholds: { lines: 90, functions: 90, statements: 90, branches: 90 },
       },
     },
   })

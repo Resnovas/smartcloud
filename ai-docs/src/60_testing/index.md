@@ -12,12 +12,14 @@
 <path>` one file without it, and `pnpm typecheck:tests` type-checks every
   test project (Nx's inferred typecheck skips them, because they set `noEmit`).
 
-### Coverage is 100%
+### Coverage: 90% enforced, 100% the goal
 
-`testProject` in `vitest.shared.ts` fails a project below 100% of lines,
-functions and statements (95% of branches) of the package it covers. Never
-lower a threshold, skip a test or delete one to make a build pass; add the
-missing case. On CI a failed test is retried twice and each test that passed
+`testProject` in `vitest.shared.ts` fails a project below 90% of lines,
+functions, statements or branches of the package it covers. 100% is the goal:
+below it the run passes, and `tools/ci/coverage-goal.ts` warns (an annotation
+on CI) with each metric that falls short. The GitHub ruleset blocks a pull
+request only below 80%. Aim for 100% in every change; never lower a threshold,
+skip a test or delete one to make a build pass; add the missing case. On CI a failed test is retried twice and each test that passed
 only on a retry is reported as flaky: that is a bug to fix, not a reason to
 raise the retry count. Keep tests portable across Linux, macOS and Windows:
 build paths with `node:path`, and never assume a shell, a line ending or a

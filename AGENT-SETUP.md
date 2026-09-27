@@ -43,7 +43,7 @@ Never write values into repo files.
 | ----------------- | ------------------------------------------------------------------- |
 | dev (watch build) | `pnpm run dev`                                                      |
 | build             | `pnpm run build`                                                    |
-| test              | `pnpm run test` (100% line coverage gate)                           |
+| test              | `pnpm run test` (fails below 90% coverage, warns below 100%)        |
 | one file          | `pnpm run test:file <path>` (coverage off)                          |
 | lint              | `pnpm run lint`                                                     |
 | types             | `pnpm run typecheck`, then `pnpm run typecheck:tests`               |
