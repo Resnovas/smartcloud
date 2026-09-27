@@ -21,6 +21,7 @@ LICENSE
 .github/workflows/house-dependency-review.yml
 .github/zizmor.yml
 .github/workflows/house-graphify.yml
+.github/workflows/house-scorecard.yml
 .github/workflows/house-workflow-lint.yml
 .github/workflows/smartcloud.yml
 .graphifyignore
