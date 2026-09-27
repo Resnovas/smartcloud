@@ -207,10 +207,12 @@ const Login = /^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$/
 const Slug = /^[a-z0-9][a-z0-9_-]*$/
 
 // The pattern documents the shape; the filter rejects what only looks like a
-// URL, such as `http://[`, before GitHub does.
+// URL, such as `http://[`, before GitHub does. A webhook URL can carry a
+// token, so neither error repeats it.
+const WEBHOOK_URL_MESSAGE = 'expected an http or https URL'
 const WebhookUrl = Schema.String.pipe(
-  Schema.pattern(/^https?:\/\/\S+$/),
-  Schema.filter((url) => URL.canParse(url) || `expected an http or https URL, got "${url}"`, { jsonSchema: {} }),
+  Schema.pattern(/^https?:\/\/\S+$/, { message: () => WEBHOOK_URL_MESSAGE }),
+  Schema.filter((url) => URL.canParse(url) || WEBHOOK_URL_MESSAGE, { jsonSchema: {} }),
 )
 const VariableName = /^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$/
 const REPOSITORY_ROLES = ['read', 'triage', 'write', 'maintain', 'admin'] as const
