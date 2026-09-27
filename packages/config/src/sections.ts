@@ -996,3 +996,117 @@ export const Sync = Schema.Struct({
   /** Level for maintainers' own pull requests that edit synced content; a warning by default. */
   maintainerLevel: opt(Level),
 }).annotations({ identifier: 'Sync' })
+
+// The environment variable a channel's secret is read from. Secrets never go
+// in the config file, which is committed and readable by anyone with the repo.
+const SecretName = Schema.String.pipe(
+  Schema.pattern(/^[A-Za-z_][A-Za-z0-9_]*$/),
+  Schema.annotations({ identifier: 'SecretName', description: 'The name of the environment variable holding the secret.' }),
+)
+
+// What every channel shares: where its secret is, what it is sent, and from
+// which level policy failures count.
+const channelFields = {
+  /** The environment variable holding the channel's secret; each channel has a default. */
+  secret: opt(SecretName),
+  /** What to send: `failures` (policy findings) and `stale` (items the stale feature marked, abandoned or closed). Both by default. */
+  on: opt(Schema.Array(Schema.Literal('failures', 'stale'))),
+  /** The lowest finding level sent as a failure; `error` by default. */
+  level: opt(Level),
+}
+
+/**
+ * A Slack channel, reached through an incoming webhook whose URL is the secret.
+ *
+ * @example
+ * ```ts import.meta.vitest name="SlackChannel"
+ * import { SlackChannel } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(SlackChannel)({ type: 'slack', secret: 'SLACK_WEBHOOK_URL' }) // => true
+ * Schema.is(SlackChannel)({ type: 'slack', secret: 'https://hooks.slack.com/services/x' }) // => false
+ * ```
+ */
+export const SlackChannel = Schema.Struct({
+  type: Schema.Literal('slack'),
+  ...channelFields,
+}).annotations({ identifier: 'SlackChannel' })
+
+/**
+ * A Discord channel, reached through a webhook whose URL is the secret.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DiscordChannel"
+ * import { DiscordChannel } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(DiscordChannel)({ type: 'discord', username: 'smartcloud', level: 'warning' }) // => true
+ * Schema.is(DiscordChannel)({ type: 'discord', level: 'notice' }) // => false
+ * ```
+ */
+export const DiscordChannel = Schema.Struct({
+  type: Schema.Literal('discord'),
+  ...channelFields,
+  /** The name the messages are posted under; the webhook's own name by default. */
+  username: opt(Schema.String),
+}).annotations({ identifier: 'DiscordChannel' })
+
+/**
+ * A Linear team, where each notification opens an issue. The secret is a
+ * Linear API key.
+ *
+ * @example
+ * ```ts import.meta.vitest name="LinearChannel"
+ * import { LinearChannel } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(LinearChannel)({ type: 'linear', team: '476cd006-7f53-41a0-8743-44dc922b42a0', on: ['stale'] }) // => true
+ * Schema.is(LinearChannel)({ type: 'linear' }) // => false
+ * ```
+ */
+export const LinearChannel = Schema.Struct({
+  type: Schema.Literal('linear'),
+  ...channelFields,
+  /** The id of the team the issues are opened in. */
+  team: Schema.NonEmptyTrimmedString,
+  /** Ids of labels to put on the issues. */
+  labels: opt(Schema.Array(Schema.String)),
+}).annotations({ identifier: 'LinearChannel' })
+
+/**
+ * One place notifications are sent, told apart by its `type`.
+ *
+ * @remarks
+ * A new kind of channel adds its schema to this union; the notifications
+ * package's registry then requires an implementation for its `type`.
+ *
+ * @example
+ * ```ts import.meta.vitest name="NotificationChannel"
+ * import { NotificationChannel } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(NotificationChannel)({ type: 'discord' }) // => true
+ * Schema.is(NotificationChannel)({ type: 'email' }) // => false
+ * ```
+ */
+export const NotificationChannel = Schema.Union(SlackChannel, DiscordChannel, LinearChannel).annotations({
+  identifier: 'NotificationChannel',
+})
+/** A decoded {@link NotificationChannel}. */
+export type NotificationChannel = typeof NotificationChannel.Type
+
+/**
+ * Where policy failures and stale items are sent, as named channels.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Notifications"
+ * import { Notifications } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Notifications)({ channels: { team: { type: 'slack' } } }) // => true
+ * Schema.is(Notifications)({ channels: [{ type: 'slack' }] }) // => false
+ * ```
+ */
+export const Notifications = Schema.Struct({
+  channels: Schema.Record({ key: Schema.NonEmptyTrimmedString, value: NotificationChannel }),
+}).annotations({ identifier: 'Notifications' })

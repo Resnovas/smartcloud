@@ -104,6 +104,7 @@ export {
   dryRunText,
   FeatureFailed,
   InvalidTrigger,
+  plannedNotifications,
   REPOSITORY_EVENTS,
   runEvent,
   syntheticEvent,

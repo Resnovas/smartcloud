@@ -38,7 +38,8 @@
               "features/lock",
               "features/backport",
               "features/settings",
-              "features/sync"
+              "features/sync",
+              "features/notifications"
             ]
           },
           {

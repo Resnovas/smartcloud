@@ -14,12 +14,14 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
+import { FetchHttpClient } from '@effect/platform'
 import { runFeatures, type RunResult } from '@resnovas/engine'
 import { DryRun, DryRunLog, GitHub, type RecordedWrite } from '@resnovas/integrations.github'
 import { reportError, track } from '@resnovas/integrations.posthog'
+import { notify, type Delivery, type Notified } from '@resnovas/notifications'
 import { publishReport, type Published } from '@resnovas/reporting'
-import { Data, Effect, Either, Schema } from 'effect'
-import { configFindings, loadConfig, readLocalConfig, type ConfigLocation } from './config.js'
+import { Data, Effect, Either, Option, Schema } from 'effect'
+import { configFindings, type ConfigLocation, loadConfig, readLocalConfig } from './config.js'
 import { selectFeatures } from './features.js'
 import { turnedOffFeatures } from './flags.js'
 import { recordRun } from './analytics.js'
@@ -55,18 +57,22 @@ export class FeatureFailed extends Data.TaggedError('FeatureFailed')<{
 export interface RunOutcome {
   readonly result: RunResult
   readonly published: Published
-  /** Config migration notes and reporting steps that could not complete. */
+  /** What was sent to the configured notification channels. */
+  readonly notified: Notified
+  /** Config migration notes, and reporting and notification steps that could not complete. */
   readonly warnings: ReadonlyArray<string>
 }
 
 /**
  * Runs smartcloud for one event: loads and resolves the config, runs the
- * selected features that their feature flags leave on, and publishes the
- * report.
+ * selected features that their feature flags leave on, publishes the report
+ * and sends the configured notifications.
  *
  * @remarks
  * Everything goes through the provided GitHub service, so the same run is a
- * dry run under the dry-run layer. The run is recorded in telemetry when the
+ * dry run under the dry-run layer; a dry run plans notifications without
+ * sending them. Failures are not notified again while the report comment on
+ * the pull request or issue is unchanged. The run is recorded in telemetry when the
  * `Telemetry` service is provided: a span, a `feature run` event for each
  * feature, `sync proposed` and `settings applied` when those features
  * measured something, and each failed feature for error tracking. A
@@ -132,7 +138,17 @@ export const runEvent = (options: {
       // Ignored config is reported as findings, so it is not repeated as a warning.
       const ignored = new Set(resolved.ignored)
       const warnings = resolved.warnings.filter((warning) => !ignored.has(warning))
-      const outcome: RunOutcome = { result, published, warnings: [...warnings, ...published.warnings] }
+      const notified = yield* notify(result, resolved.config.notifications, {
+        repository: `${repository.owner}/${repository.repo}`,
+        dryRun: Option.isSome(yield* Effect.serviceOption(DryRunLog)),
+        unchanged: published.comment === 'unchanged',
+      }).pipe(Effect.provide(FetchHttpClient.layer))
+      const outcome: RunOutcome = {
+        result,
+        published,
+        notified,
+        warnings: [...warnings, ...published.warnings, ...notified.warnings],
+      }
       return outcome
     })
     return track(run, {
@@ -371,7 +387,32 @@ export const dryRunText = (outcome: DryRunOutcome): string =>
           '**Dry run:** these writes were recorded, not made:',
           ...outcome.writes.map((write) => `- ${describeWrite(write)}`),
         ]),
+    ...plannedNotifications(outcome.notified.deliveries),
   ].join('\n')
+
+/**
+ * The notifications a dry run would have sent, as Markdown lines; none when
+ * it would have sent nothing.
+ *
+ * @example
+ * ```ts import.meta.vitest name="plannedNotifications"
+ * import { plannedNotifications } from '@resnovas/runtime'
+ *
+ * plannedNotifications([{ channel: 'team', type: 'slack', kind: 'stale', title: '1 stale change in o/r', outcome: 'planned' }])[1] // => '- team (slack): 1 stale change in o/r'
+ * ```
+ *
+ * @param deliveries - The run's deliveries.
+ * @returns The lines.
+ */
+export const plannedNotifications = (deliveries: ReadonlyArray<Delivery>): ReadonlyArray<string> => {
+  const planned = deliveries.filter((delivery) => delivery.outcome === 'planned')
+  return planned.length === 0
+    ? []
+    : [
+        '**Dry run:** these notifications were not sent:',
+        ...planned.map((delivery) => `- ${delivery.channel} (${delivery.type}): ${delivery.title}`),
+      ]
+}
 
 /** A dry run of one repository, as the CLI and the MCP server take it. */
 export interface DryRunRequest {

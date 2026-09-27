@@ -109,6 +109,9 @@
         },
         "sync": {
           "$ref": "#/$defs/Sync"
+        },
+        "notifications": {
+          "$ref": "#/$defs/Notifications"
         }
       },
       "additionalProperties": false,
@@ -2850,6 +2853,159 @@
         }
       },
       "additionalProperties": false
+    },
+    "Notifications": {
+      "type": "object",
+      "required": [
+        "channels"
+      ],
+      "properties": {
+        "channels": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "$ref": "#/$defs/NotificationChannel"
+            }
+          },
+          "propertyNames": {
+            "$ref": "#/$defs/NonEmptyTrimmedString"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "NotificationChannel": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/SlackChannel"
+        },
+        {
+          "$ref": "#/$defs/DiscordChannel"
+        },
+        {
+          "$ref": "#/$defs/LinearChannel"
+        }
+      ]
+    },
+    "SlackChannel": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "slack"
+          ]
+        },
+        "secret": {
+          "$ref": "#/$defs/SecretName"
+        },
+        "on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "failures",
+              "stale"
+            ]
+          }
+        },
+        "level": {
+          "$ref": "#/$defs/Level"
+        }
+      },
+      "additionalProperties": false
+    },
+    "SecretName": {
+      "type": "string",
+      "description": "The name of the environment variable holding the secret.",
+      "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+    },
+    "DiscordChannel": {
+      "type": "object",
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "discord"
+          ]
+        },
+        "secret": {
+          "$ref": "#/$defs/SecretName"
+        },
+        "on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "failures",
+              "stale"
+            ]
+          }
+        },
+        "level": {
+          "$ref": "#/$defs/Level"
+        },
+        "username": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "LinearChannel": {
+      "type": "object",
+      "required": [
+        "type",
+        "team"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "linear"
+          ]
+        },
+        "secret": {
+          "$ref": "#/$defs/SecretName"
+        },
+        "on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "failures",
+              "stale"
+            ]
+          }
+        },
+        "level": {
+          "$ref": "#/$defs/Level"
+        },
+        "team": {
+          "$ref": "#/$defs/NonEmptyTrimmedString"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "NonEmptyTrimmedString": {
+      "type": "string",
+      "description": "a non empty string",
+      "title": "nonEmptyString",
+      "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
+      "minLength": 1
     }
   },
   "$ref": "#/$defs/SmartcloudConfig"

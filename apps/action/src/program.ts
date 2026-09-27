@@ -33,6 +33,7 @@ import {
   externalRun,
   noteOptions,
   optOut,
+  plannedNotifications,
   targetRepository,
 } from '@resnovas/runtime'
 import { Config, Console, Data, Effect, Layer, Option, Redacted } from 'effect'
@@ -91,15 +92,15 @@ const readPayload = (path: string) =>
     })
   })
 
-const dryRunSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
-  writes.length === 0
-    ? '\n**Dry run:** nothing would have been written.\n'
-    : [
-        '',
-        '**Dry run:** these writes were recorded, not made:',
-        ...writes.map((write) => `- ${write.operation}`),
-        '',
-      ].join('\n')
+const dryRunSummary = (writes: ReadonlyArray<{ readonly operation: string }>, notifications: ReadonlyArray<string>) =>
+  [
+    '',
+    ...(writes.length === 0
+      ? ['**Dry run:** nothing would have been written.']
+      : ['**Dry run:** these writes were recorded, not made:', ...writes.map((write) => `- ${write.operation}`)]),
+    ...notifications,
+    '',
+  ].join('\n')
 
 const skippedSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
   writes.length === 0
@@ -191,7 +192,7 @@ export const program = (connect: Connect) =>
       ? yield* Effect.gen(function* () {
           const done = yield* run
           const writes = yield* Effect.flatMap(DryRunLog, (log) => log.writes)
-          return { ...done, dryRun: dryRunSummary(writes) }
+          return { ...done, dryRun: dryRunSummary(writes, plannedNotifications(done.outcome.notified.deliveries)) }
         }).pipe(Effect.provide(Layer.provideMerge(DryRun, base)))
       : { ...(yield* run.pipe(Effect.provide(base))), dryRun: '' }
 

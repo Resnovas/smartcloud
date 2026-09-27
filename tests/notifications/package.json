@@ -1,0 +1,12 @@
+{
+  "name": "@resnovas/notifications-tests",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "devDependencies": {
+    "@effect/platform": "^0.97.2",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/notifications": "workspace:*"
+  }
+}

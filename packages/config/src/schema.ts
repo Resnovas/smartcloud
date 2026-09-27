@@ -26,6 +26,7 @@ import {
   Freeze,
   Links,
   Lock,
+  Notifications,
   Required,
   Reviews,
   Roles,
@@ -375,6 +376,7 @@ export const SmartcloudConfig = Schema.Struct({
   backport: Schema.optionalWith(Backport, { exact: true }),
   settings: Schema.optionalWith(Settings, { exact: true }),
   sync: Schema.optionalWith(Sync, { exact: true }),
+  notifications: Schema.optionalWith(Notifications, { exact: true }),
 }).annotations({
   identifier: 'SmartcloudConfig',
   title: 'smartcloud configuration',

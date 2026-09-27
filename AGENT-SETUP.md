@@ -28,6 +28,7 @@ Never write values into repo files.
 - `registry.npmjs.org` (deps, pnpm via corepack or npx)
 - `nodejs.org` (only when nvm or fnm installs Node)
 - `github.com`, `api.github.com` (only CLI `dry-run`, `plan`, `sync`, MCP server, action)
+- `hooks.slack.com`, `discord.com`, `api.linear.app` (only action runs with `notifications` configured; dry runs send nothing)
 
 ## Setup
 
