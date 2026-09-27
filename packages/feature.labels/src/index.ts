@@ -16,5 +16,6 @@
 
 export { labels } from './feature.js'
 export { applyLabels, labellingFacets, labelName } from './apply.js'
+export { sizePreset, withSizeLabels } from './size.js'
 export { normaliseColor, planSync, sameName, syncLabels } from './sync.js'
 export type { SyncStep } from './sync.js'

@@ -63,7 +63,7 @@ export const FEATURE_SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = 
   ['commits', ['commits']],
   ['disclosure', ['disclosure']],
   ['reviews', ['reviews', 'roles']],
-  ['labels', ['labels', 'labelSync', 'labelling']],
+  ['labels', ['labels', 'labelSync', 'labelling', 'sizeLabels']],
   ['stale', ['stale']],
   ['settings', ['settings', 'roles']],
   ['sync', ['sync']],

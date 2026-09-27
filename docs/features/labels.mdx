@@ -7,8 +7,9 @@ The labels feature does two jobs:
 
 - **Label sync.** On repository events (push, schedule, manual dispatch, repository dispatch and merge queue), it makes the repository's labels match the `labels` section.
 - **Labelling.** On pull request and issue events, it adds and removes labels on the subject as its `labelling` rules pass and fail.
+- **Size labels.** A `sizeLabels` section adds built-in `Size: XS` to `Size: XL` labels, applied to pull requests by how many lines they change.
 
-It is enabled when the config has a `labels` or a `labelling` section.
+It is enabled when the config has a `labels`, `labelling` or `sizeLabels` section.
 
 ```yaml
 labels:
@@ -78,3 +79,32 @@ Each rule in `labelling` names a `label`, an optional `on` (`pullRequest`, `issu
 - Names compare ignoring case, as GitHub does.
 - If a label has already gone when smartcloud removes it, that is a warning, not a failure.
 - If GitHub forbids adding or removing a label, as it does on the read-only token of a pull request from a fork, that is a warning (`labels.add` or `labels.remove`), not a failure, and the rest of the run carries on.
+
+## Size labels
+
+`sizeLabels` adds five labels and a labelling rule for each, so every pull request carries one size label that moves as the pull request grows or shrinks:
+
+```yaml
+sizeLabels: {}
+```
+
+| Key       | Label      | Lines added plus deleted |
+| --------- | ---------- | ------------------------ |
+| `size-xs` | `Size: XS` | 0 to 9                   |
+| `size-s`  | `Size: S`  | 10 to 99                 |
+| `size-m`  | `Size: M`  | 100 to 499               |
+| `size-l`  | `Size: L`  | 500 to 999               |
+| `size-xl` | `Size: XL` | 1000 or more             |
+
+Each size's band starts at its threshold and stops just before the next size's. Change any threshold under `thresholds`. Any size you leave out keeps its default, and the thresholds must rise from `s` to `xl`:
+
+```yaml
+sizeLabels:
+  thresholds:
+    s: 20
+    xl: 2000
+```
+
+- The preset's labels and rules are ordinary `labels` and `labelling` entries, so label sync creates the labels, and `labelSync.prune` counts them as defined.
+- A `labels` or `labelling` entry you write with the same key replaces the preset's. For example, define `labels.size-xl` to rename or recolour XL, or `labelling.size-xl` to change when it applies. A renamed size keeps its built-in name among its `aliases`, so label sync renames the existing label instead of leaving the old one on pull requests.
+- The rules use the [`changesSize`](/conditions) condition and apply to pull requests only.
