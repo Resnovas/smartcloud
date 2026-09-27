@@ -373,6 +373,24 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
     }),
   )
 
+  it.effect('reads a pull request’s checks for conditions with the checks token too', () =>
+    Effect.gen(function* () {
+      const fake = fakeFetch({
+        [`GET ${REPO}/pulls/7`]: { body: { head: { sha: 'abc' } } },
+        [`GET ${REPO}/commits/abc/check-runs`]: { body: { total_count: 0, check_runs: [] } },
+        [`GET ${REPO}/commits/abc/statuses`]: { body: [] },
+      })
+      const github = yield* makeLiveGitHub({
+        token: Redacted.make('access-token'),
+        checksToken: Redacted.make('workflow-token'),
+        coordinates: { owner: 'Resnovas', repo: 'example' },
+        fetch: fake.fetch,
+      })
+      expect(yield* github.listChecks(7)).toStrictEqual([])
+      expect(fake.tokens).toStrictEqual(['access-token', 'workflow-token', 'workflow-token'])
+    }),
+  )
+
   it.effect('reads the checks on a commit with the main token when no checks token is given', () =>
     Effect.gen(function* () {
       const fake = fakeFetch({

@@ -419,6 +419,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       )
 
     // Check runs (GitHub Actions and apps) and commit statuses (older CI) both report on the head commit.
+    // They are read with the checks token, which has checks and statuses read when the main token may not.
     // GitHub's default `latest` filter is deliberate: a re-run replaces the run it repeats, as on the checks tab.
     const listChecks: GitHubService['listChecks'] = (pull_number) =>
       Effect.gen(function* () {
@@ -426,9 +427,9 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         const ref = data.head.sha
         const [runs, statuses] = yield* Effect.all(
           [
-            call('listChecks: check runs', () => octokit.paginate(octokit.rest.checks.listForRef, { owner, repo, ref, per_page: 100 })),
+            call('listChecks: check runs', () => checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, per_page: 100 })),
             call('listChecks: commit statuses', () =>
-              octokit.paginate(octokit.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),
+              checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),
             ),
           ],
           { concurrency: 'unbounded' },
