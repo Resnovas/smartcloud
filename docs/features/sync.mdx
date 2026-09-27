@@ -85,7 +85,7 @@ sync:
 On `schedule`, `workflow_dispatch` and `push` events, smartcloud:
 
 1. Reads every template in `source`, leaving out `exclude`d paths.
-2. Renders each one: `{{KEY}}` placeholders are replaced from `values`, and `{{REPOSITORY}}` is always the repository's `owner/name`. A placeholder with no value fails the sync (`<file>: no value for {{KEY}}`) rather than leaving a blank. Excluded templates are not rendered, so a repository that keeps its own copy need not supply that template's values.
+2. Renders each one: `{{KEY}}` placeholders are replaced from `values`, and `{{REPOSITORY}}` is always the repository's `owner/name`. A placeholder with no value fails the sync (`<file>: no value for {{KEY}}`) rather than leaving a blank. To make a value optional, give the placeholder a default: `{{PROJECT_TYPE:-none}}` becomes `none` when no `PROJECT_TYPE` is set, and the value when one is. This suits a value each repository may set for itself, in its own `sync.values`, but need not. Excluded templates are not rendered, so a repository that keeps its own copy need not supply that template's values.
 3. Merges each rendered template into the matching file on the default branch: a file without a managed block is replaced whole, and a file with one has only its block replaced.
 4. Opens, or updates, one pull request from `branch` into the default branch with every file that changed, titled `chore(sync): sync files from owner/repo`. Its body lists each file as added, updated or made executable. An executable template makes its file executable.
 

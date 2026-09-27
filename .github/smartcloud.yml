@@ -18,6 +18,9 @@ sync:
   exclude:
     - LICENSE
     - .github/workflows/smartcloud.yml
+  # smartcloud is a library: the synced documents say so.
+  values:
+    PROJECT_TYPE: library
 
 # smartcloud publishes the action and the @resnovas/smartcloud package.
 settings:

@@ -47,16 +47,20 @@ export class MissingValue extends Data.TaggedError('MissingValue')<{ readonly so
   }
 }
 
-// Keys are upper snake case, as `sync.values` requires. The pattern has no
-// nested or overlapping quantifiers, so it runs in linear time.
-const PLACEHOLDER = /\{\{([A-Z][A-Z0-9_]*)\}\}/g
+// Keys are upper snake case, as `sync.values` requires, optionally followed by
+// `:-` and a default used when the key has no value. The pattern has no nested
+// or overlapping quantifiers, so it runs in linear time.
+const PLACEHOLDER = /\{\{([A-Z][A-Z0-9_]*)(?::-([^{}\n]*))?\}\}/g
 
 /**
  * Replaces every `{{KEY}}` in a template with its value.
  *
  * @remarks
  * An unknown key is an error rather than a blank, because a silently empty
- * copyright holder or contact address is worse than a failed render.
+ * copyright holder or contact address is worse than a failed render. A
+ * placeholder written `{{KEY:-default}}` takes the default instead when the key
+ * has no value, for a value each repository may set but need not, such as its
+ * project type.
  *
  * @example
  * ```ts import.meta.vitest name="renderText"
@@ -64,6 +68,7 @@ const PLACEHOLDER = /\{\{([A-Z][A-Z0-9_]*)\}\}/g
  * import { Either } from 'effect'
  *
  * Either.getOrThrow(renderText('(c) {{YEAR}}', { YEAR: '2026' })) // => '(c) 2026'
+ * Either.getOrThrow(renderText('{{TYPE:-none}}', {})) // => 'none'
  * ```
  *
  * @param text - The template.
@@ -75,8 +80,8 @@ export const renderText = (text: string, values: Values, source = 'template'): E
   // A Map ignores inherited keys, so a template cannot reach Object.prototype.
   const lookup = new Map(Object.entries(values))
   const missing: Array<string> = []
-  const rendered = text.replace(PLACEHOLDER, (placeholder, key: string) => {
-    const value = lookup.get(key)
+  const rendered = text.replace(PLACEHOLDER, (placeholder, key: string, fallback: string | undefined) => {
+    const value = lookup.get(key) ?? fallback
     if (value === undefined) missing.push(key)
     return value ?? placeholder
   })

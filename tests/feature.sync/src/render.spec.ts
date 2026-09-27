@@ -19,6 +19,12 @@ import { Either } from 'effect'
 import { renderAll, renderText } from '@resnovas/feature.sync'
 
 describe('renderText', () => {
+  it("uses a placeholder's default only when the key has no value", () => {
+    expect(renderText('{{TYPE:-none}} {{NAMES:-}}', {})).toStrictEqual(Either.right('none '))
+    expect(renderText('{{TYPE:-none}}', { TYPE: 'library' })).toStrictEqual(Either.right('library'))
+    expect(renderText('{{TYPE:-none}}', { TYPE: '' })).toStrictEqual(Either.right(''))
+  })
+
   it('replaces placeholders, and an unknown key is an error', () => {
     expect(renderText('(c) {{YEAR}} {{WHO}}', { YEAR: '2026', WHO: 'R' })).toStrictEqual(Either.right('(c) 2026 R'))
     const missing = renderText('{{MISSING}}', {}, 'LICENSE')
