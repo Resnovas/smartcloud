@@ -220,9 +220,10 @@ Code owners for the files you changed are asked to review as well.
 
 A human reviewer's comment gets a reply from you, in your own words, even if the fix itself was produced with an AI tool.
 
-When every required review is in, the pull request is merged with a linear history; merge commits are disabled.
-See [merging](GOVERNANCE.md#merging) for when a maintainer squashes and when they rebase.
-Maintainers may turn on auto-merge so it merges as soon as the last check passes, and the head branch is deleted automatically afterwards.
+When every required review is in, a maintainer adds the pull request to the merge queue, which runs the required checks once more with the latest default branch and the pull requests queued ahead of it, then squashes it; merge commits are disabled.
+A maintainer may queue it before the last check passes, and it joins the queue as soon as they do.
+If it fails in the queue it is removed, and it can be queued again once fixed.
+See [merging](GOVERNANCE.md#merging) for how the queue works; the head branch is deleted automatically after the merge.
 
 ### <a id="ReviewTools"></a>Known review tools
 

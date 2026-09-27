@@ -57,7 +57,21 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Nx compares a pull request with its merge base, and a push with the last
+      # commit on main whose CI passed. A merge queue group is compared with the
+      # commit it lands on, so it checks every queued pull request ahead of it
+      # as well as its own, whichever grouping the queue uses.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        if: github.event_name != 'merge_group'
+
+      - name: Compare the merge queue group with its base
+        if: github.event_name == 'merge_group'
+        env:
+          GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+          GROUP_HEAD: ${{ github.event.merge_group.head_sha }}
+        run: |
+          echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
+          echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
       - name: Classify the change
         id: classify
@@ -99,7 +113,18 @@ jobs:
             nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nx-${{ runner.os }}-
 
+      # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        if: github.event_name != 'merge_group'
+
+      - name: Compare the merge queue group with its base
+        if: github.event_name == 'merge_group'
+        env:
+          GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+          GROUP_HEAD: ${{ github.event.merge_group.head_sha }}
+        run: |
+          echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
+          echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
       - name: Lint affected projects
         run: pnpm nx affected -t lint
@@ -143,7 +168,18 @@ jobs:
             nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nx-${{ runner.os }}-
 
+      # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        if: github.event_name != 'merge_group'
+
+      - name: Compare the merge queue group with its base
+        if: github.event_name == 'merge_group'
+        env:
+          GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+          GROUP_HEAD: ${{ github.event.merge_group.head_sha }}
+        run: |
+          echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
+          echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
       - name: Type-check affected projects
         run: pnpm nx affected -t typecheck
@@ -184,7 +220,18 @@ jobs:
             nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nx-${{ runner.os }}-
 
+      # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        if: github.event_name != 'merge_group'
+
+      - name: Compare the merge queue group with its base
+        if: github.event_name == 'merge_group'
+        env:
+          GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+          GROUP_HEAD: ${{ github.event.merge_group.head_sha }}
+        run: |
+          echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
+          echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
       - name: Test affected projects
         run: pnpm nx affected -t test
@@ -222,7 +269,18 @@ jobs:
             nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nx-${{ runner.os }}-
 
+      # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        if: github.event_name != 'merge_group'
+
+      - name: Compare the merge queue group with its base
+        if: github.event_name == 'merge_group'
+        env:
+          GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+          GROUP_HEAD: ${{ github.event.merge_group.head_sha }}
+        run: |
+          echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
+          echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
       - name: Build affected projects
         run: pnpm nx affected -t build
@@ -260,7 +318,18 @@ jobs:
             nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nx-${{ runner.os }}-
 
+      # Picks the commits to compare as in the changes job.
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+        if: github.event_name != 'merge_group'
+
+      - name: Compare the merge queue group with its base
+        if: github.event_name == 'merge_group'
+        env:
+          GROUP_BASE: ${{ github.event.merge_group.base_sha }}
+          GROUP_HEAD: ${{ github.event.merge_group.head_sha }}
+        run: |
+          echo "NX_BASE=$GROUP_BASE" >> "$GITHUB_ENV"
+          echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
       # docgen type-checks every @example and fails on an export without a
       # description; contracts checks the built declarations for @example,

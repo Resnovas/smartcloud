@@ -97,11 +97,11 @@ History on the default branch is linear and every commit on it is signed.
 Merge commits are disabled; a pull request is either squashed or rebased.
 Pull requests merge through a merge queue, which tests every queued pull request against the required checks and squashes it as it lands.
 
-- **Squash** when the pull request has a noisy history: fix-ups, review responses, work in progress.
+The queue squashes every pull request.
 The squash keeps every commit message in its body, so each `Signed-off-by`, `Co-authored-by` and `Assisted-by` trailer survives.
-- **Rebase** when the pull request is small and every commit already stands on its own.
+Rebase merging stays allowed for the owner's bypass of the ruleset.
 
-Branches are kept up to date from the pull request page, auto-merge is available, and head branches are deleted once merged.
+Branches can be updated from the pull request page, and head branches are deleted once merged.
 
 ## <a id="settings"></a>Repository settings
 
