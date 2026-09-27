@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { Context, Data, Effect, Either, Option, ParseResult, Schema } from 'effect'
+import { Context, Data, Effect, Either, Option, ParseResult, Schema, SchemaAST } from 'effect'
 import { parse as parseYaml } from 'yaml'
 import { ExtendsEntry, type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
 import { empty, type Merged, mergeLocked } from './merge.js'
@@ -234,24 +234,36 @@ const parseLayer = (text: string, source: string) =>
     return { json, extends: entries.right, warnings }
   })
 
-// For a config whose presets were partly left out, drops each top-level
-// section that fails only for keys it is missing, which a skipped preset may
-// have set, and names them. A convention rule with neither preset nor when is
-// missing keys too: it tweaks a rule the skipped preset defined. Any other failure, such as an unknown key or a
-// malformed value, is kept, so it still fails the config. Kept sections are
+// Whether a path runs only through fields the schema names, such as
+// sync.source, and never into an entry the config names, such as labels.docs
+// or an array item. A preset can supply a named field of a section the
+// repository also sets, but an entry the repository names is its own.
+const inNamedFields = (ast: SchemaAST.AST, path: ReadonlyArray<PropertyKey>): boolean => {
+  const [head, ...rest] = path
+  if (head === undefined) return true
+  const field = SchemaAST.getPropertySignatures(ast).find((signature) => signature.name === head)
+  return field !== undefined && inNamedFields(field.type, rest)
+}
+
+// A convention rule with neither preset nor when tweaks a rule a preset
+// defined, so a skipped preset could have completed it too.
+const completableIssue = (issue: ParseResult.ArrayFormatterIssue): boolean =>
+  (issue._tag === 'Missing' && inNamedFields(SmartcloudConfig.ast, issue.path)) ||
+  (issue._tag === 'Refinement' && issue.message === conventionNeedsPresetOrWhen)
+
+// For a config whose presets were partly left out: keeps each top-level
+// section that decodes on its own or has a problem of its own, and drops, by
+// name, each section that fails only for what a skipped preset could have set.
+// A kept section that fails still fails the merged config. Kept sections are
 // collected in a Map, so a key such as `__proto__` stays data and still fails.
 const decodeSections = (value: Readonly<Record<string, Json>>) => {
   const kept = new Map<string, Json>()
   const dropped: Array<string> = []
   for (const [key, section] of Object.entries(value)) {
     const decoded = decodeV2({ version: 2, [key]: section })
-    const incomplete =
-      Either.isLeft(decoded) &&
-      ParseResult.ArrayFormatter.formatErrorSync(decoded.left).every(
-        (issue) =>
-          issue._tag === 'Missing' || (issue._tag === 'Refinement' && issue.message === conventionNeedsPresetOrWhen),
-      )
-    if (incomplete) dropped.push(key)
+    const completable =
+      Either.isLeft(decoded) && ParseResult.ArrayFormatter.formatErrorSync(decoded.left).every(completableIssue)
+    if (completable) dropped.push(key)
     else kept.set(key, section)
   }
   return { kept: Object.fromEntries(kept), dropped }
@@ -269,9 +281,13 @@ const decodeSections = (value: Readonly<Record<string, Json>>) => {
  * A preset that cannot be read fails the config, unless
  * `options.skipUnreadable` says to leave it out, as a run with a restricted
  * token does for a private preset. The rest of the config is then merged
- * without it, and any top-level section that is incomplete without the
- * preset is dropped rather than failing; both are listed in `skipped`.
- * Unknown keys and malformed values still fail the config.
+ * without it, and a top-level section that fails only for missing keys a
+ * preset could have set, such as `sync.source`, or a convention rule that only tweaks a
+ * preset's rule, is dropped rather than
+ * failing; both are listed in `skipped`. A missing key inside an entry the
+ * config names, such as a label without a `color`, and every other problem
+ * still fail the config: the skipped preset cannot have completed an entry
+ * the repository added.
  *
  * @example
  * ```ts import.meta.vitest name="resolveConfig"
@@ -343,7 +359,8 @@ export const resolveConfig = (
     const merged = yield* include(empty, text, source, [])
     const localStart = sources.length - 1
     // Without a skipped preset, a section may lack keys only that preset set,
-    // such as sync.source: such a section is dropped rather than failing.
+    // such as sync.source: such a section is dropped rather than failing, and
+    // any other problem is left for the decode below to report.
     let value: Readonly<Record<string, Json>> = merged.value
     if (skipped.length > 0) {
       const { kept, dropped } = decodeSections(merged.value)

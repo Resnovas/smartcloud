@@ -277,6 +277,21 @@ describe('resolveConfig: extends and locked presets', () => {
     }),
   )
 
+  it.effect('with a preset skipped, still fails a section the preset could not have completed', () =>
+    Effect.gen(function* () {
+      const skipAll = { skipUnreadable: () => true }
+      const resolve = (body: string) => Effect.flip(resolveConfig(local(body), 'repo', skipAll).pipe(Effect.provide(presets({}))))
+      // The repository named this label, so the missing colour is its own mistake.
+      const label = yield* resolve('labels:\n  docs: { name: docs }\n')
+      expect(label).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
+      expect(label.message).toContain('color')
+      // A wrong value is never the skipped preset's to fix, even beside a key it could set.
+      const wrong = yield* resolve('sync:\n  exclude: LICENSE\n')
+      expect(wrong).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
+      expect(wrong.message).toContain('exclude')
+    }),
+  )
+
   it.effect('still fails on an unreadable preset the caller does not allow to be skipped', () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(
