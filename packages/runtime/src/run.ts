@@ -110,7 +110,7 @@ export const runEvent = (options: {
         ...featureRun,
         findings: [
           ...accessFindings(access, resolved.skipped ?? []),
-          ...configFindings(resolved.ignored ?? []),
+          ...configFindings(resolved.ignored ?? [], resolved.loosened ?? []),
           ...featureRun.findings,
         ],
         ...(resolved.skipped === undefined ? {} : { configSkipped: resolved.skipped }),

@@ -17,7 +17,7 @@
 import { Context, Data, Effect, Either, Option, ParseResult, Schema, SchemaAST } from 'effect'
 import { parse as parseYaml } from 'yaml'
 import { ExtendsEntry, type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
-import { dottedPath, dropInvalid, type Reserved, withoutReserved } from './lenient.js'
+import { type Dropped, dottedPath, dropInvalid, isRestriction, type Reserved, withoutReserved } from './lenient.js'
 import { empty, type Merged, mergeLocked } from './merge.js'
 import { conventionNeedsPresetOrWhen, SmartcloudConfig } from './schema.js'
 import { migrateV1 } from './v1.js'
@@ -137,6 +137,12 @@ export interface ResolvedConfig {
    * `warnings`. Absent when nothing was dropped.
    */
   readonly ignored?: ReadonlyArray<string>
+  /**
+   * The lines of `ignored` that dropped an invalid value from a setting that
+   * only tightens policy, such as `roles.maintainers`, so that the run
+   * applied looser policy than the config asks for. Absent when there are none.
+   */
+  readonly loosened?: ReadonlyArray<string>
 }
 
 /** How {@link resolveConfig} treats presets it cannot read and config that does not match the schema. */
@@ -356,6 +362,10 @@ export const resolveConfig = (
     const skipped: Array<string> = []
     // What presets set but this build dropped, which later files may not set.
     const reserved = new Map<string, Reserved>()
+    const loosened: Array<string> = []
+    const note = (dropped: ReadonlyArray<Dropped>) => {
+      for (const { path, warning, invalid } of dropped) if (invalid && isRestriction(path)) loosened.push(warning)
+    }
     const skipUnreadable = options.skipUnreadable ?? (() => false)
     const strict = options.strict ?? false
 
@@ -396,7 +406,9 @@ export const resolveConfig = (
         const guarded = withoutReserved(own, reserved, name)
         warnings.push(...guarded.warnings)
         ignored.push(...guarded.warnings)
-        for (const path of layer.dropped) reserved.set(dottedPath(path), { path, preset: name })
+        note(layer.dropped)
+        note(guarded.dropped)
+        for (const { path } of layer.dropped) reserved.set(dottedPath(path), { path, preset: name })
         sources.push(name)
         return yield* mergeLocked(next, guarded.value, name)
       })
@@ -417,9 +429,10 @@ export const resolveConfig = (
     // A file may rely on its presets for required keys, such as sync.source,
     // so the whole config is only checked once everything is merged; what is
     // still incomplete or invalid then is dropped, unless the config is strict.
-    const lenient = strict ? { value, warnings: [] } : dropInvalid(value, from)
+    const lenient = strict ? { value, warnings: [], dropped: [] } : dropInvalid(value, from)
     warnings.push(...lenient.warnings)
     ignored.push(...lenient.warnings)
+    note(lenient.dropped)
     const decoded = decodeV2({ ...lenient.value, version: 2 })
     if (Either.isLeft(decoded)) {
       return yield* new ConfigDecodeError({
@@ -438,5 +451,6 @@ export const resolveConfig = (
       warnings,
       ...(skipped.length === 0 ? {} : { skipped }),
       ...(ignored.length === 0 ? {} : { ignored }),
+      ...(loosened.length === 0 ? {} : { loosened }),
     }
   })

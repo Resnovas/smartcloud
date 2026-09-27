@@ -37,6 +37,18 @@ What is dropped:
 - A problem anywhere in a rule's `when` drops the whole `when`, so a rule never runs with some of its conditions missing. A rule that cannot work without its `when`, such as a labelling rule or an automatic approval, is then dropped too; a convention that also names a `preset` keeps the preset. A problem inside any other list drops the whole list, never one item.
 - A section or rule still incomplete once every file is merged, such as `sync` without `source`, a label without `color`, or a convention with neither `preset` nor `when`, is dropped. A repository can still complete a rule its preset starts, or restate one to add a field, as [Add, never change](#add-never-change) describes.
 
+Dropping a setting that only tightens policy would loosen it. For example, a `roles.maintainers` list with one bad entry would leave fewer than two maintainers, and that opens the review gate. So an invalid value dropped from one of these settings is an error in the `smartcloud / config` check, not a warning. Every feature still runs, but the check fails and blocks merging until the config is fixed:
+
+- `roles.maintainers`
+- `reviews.gate`
+- `commits`
+- `disclosure.requireDraft`
+- `settings.security`
+- `settings.ruleset`
+- `sync.check`
+
+This applies to an invalid value at, inside or around one of these, such as a whole `sync` section dropped for lacking its `source`. An unknown key there is still only a warning, because this version would not have applied it anyway.
+
 A value a preset sets that this version cannot read is dropped from the preset but stays locked: your config cannot set that key either, and a value it sets there is ignored with a warning. A preset that asks for a stricter setting than this version knows can never be turned into a weaker one.
 
 Some problems still fail the run, because they are not about one key: a file that is not YAML or JSON, is not a mapping, or has a malformed `extends` entry; a preset that cannot be read (outside a [restricted run](/reporting#restricted-runs)); presets that extend each other in a loop or more than five deep; and a config that changes a value its preset set, which [Add, never change](#add-never-change) describes.

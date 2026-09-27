@@ -185,8 +185,10 @@ conventions:
         `version: 2\nextends: ['${HOUSE}']\nsettings:\n  security: { codeScanning: 'off', secretScanning: true }\n`,
         { [HOUSE]: 'version: 2\nsettings:\n  security: { codeScanning: maximum }\n' },
       ),
-      ({ config, warnings, locked }) => {
+      ({ config, warnings, locked, loosened }) => {
         expect(config.settings?.security).toStrictEqual({ secretScanning: true })
+        // Only the preset's own invalid value loosened policy; the repository's is held by the lock.
+        expect(loosened).toStrictEqual([warnings[0]])
         expect(locked.has('settings.security.secretScanning')).toBe(false)
         expect(warnings).toStrictEqual([
           `${HOUSE}: ignored settings.security.codeScanning, because settings.security.codeScanning: Expected "default" | "extended" | "off", actual "maximum"`,
@@ -194,6 +196,30 @@ conventions:
         ])
       },
     ),
+  )
+
+  it.effect(
+    'lists an invalid value dropped from a setting that only tightens policy as loosened, but not an unknown key',
+    () =>
+      Effect.map(
+        resolve(
+          'version: 2\nroles: { maintainers: [a, 1], admins: [b] }\nsettings:\n  ruleset: { requiredChecks: [ci, 2] }\n  merging: { squash: yes }\n',
+        ),
+        ({ ignored, loosened }) => {
+          expect(ignored).toHaveLength(4)
+          expect(loosened).toStrictEqual([
+            'smartcloud.yml: ignored roles.maintainers, because roles.maintainers.1: Expected string, actual 1',
+            'smartcloud.yml: ignored settings.ruleset.requiredChecks, because settings.ruleset.requiredChecks.1: Expected string, actual 2',
+          ])
+        },
+      ),
+  )
+
+  it.effect('leaves loosened out when nothing that tightens policy was dropped', () =>
+    Effect.map(resolve('version: 2\nroles: { admins: [b] }\n'), ({ ignored, loosened }) => {
+      expect(ignored).toHaveLength(1)
+      expect(loosened).toBeUndefined()
+    }),
   )
 
   it.effect('reports a union failure by its first message when the members disagree', () =>

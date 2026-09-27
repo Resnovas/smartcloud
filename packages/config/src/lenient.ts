@@ -96,7 +96,7 @@ const valueAt = (value: Json | undefined, path: Path): Json | undefined => {
 const completable = (
   issue: ParseResult.ArrayFormatterIssue,
   value: Readonly<Record<string, Json>>,
-  dropped: ReadonlyMap<string, Path>,
+  dropped: ReadonlyMap<string, Dropped>,
 ): boolean =>
   issue._tag === 'Missing'
     ? !dropped.has(dotted(issue.path))
@@ -122,9 +122,48 @@ const remove = (value: Record<string, Json>, path: Path): boolean => {
 export interface Lenient {
   readonly value: Readonly<Record<string, Json>>
   readonly warnings: ReadonlyArray<string>
-  /** Where each value taken out was. */
-  readonly dropped: ReadonlyArray<Path>
+  /** Each value taken out, in the order of `warnings`. */
+  readonly dropped: ReadonlyArray<Dropped>
 }
+
+/**
+ * One value taken out of a config.
+ *
+ * @internal
+ */
+export interface Dropped {
+  readonly path: Path
+  readonly warning: string
+  /** The value was there but invalid, rather than a key this build does not know. */
+  readonly invalid: boolean
+}
+
+// Paths whose values only tighten policy: dropping one, as a missing list of
+// maintainers or required checks, would loosen it.
+const RESTRICTIONS: ReadonlyArray<Path> = [
+  ['roles', 'maintainers'],
+  ['reviews', 'gate'],
+  ['commits'],
+  ['disclosure', 'requireDraft'],
+  ['settings', 'security'],
+  ['settings', 'ruleset'],
+  ['sync', 'check'],
+]
+
+const within = (inner: Path, outer: Path): boolean => outer.every((key, index) => inner[index] === key)
+
+/**
+ * Whether dropping the value at a path could loosen policy: the path is, is
+ * inside, or holds one of the settings that only tighten it, such as
+ * `roles.maintainers` or `settings.ruleset`.
+ *
+ * @internal
+ *
+ * @param path - The path of a dropped value.
+ * @returns True when the path touches a restriction.
+ */
+export const isRestriction = (path: Path): boolean =>
+  RESTRICTIONS.some((restriction) => within(path, restriction) || within(restriction, path))
 
 /**
  * Takes out of a config every unknown key and every invalid value, so a
@@ -149,7 +188,7 @@ export interface Lenient {
  */
 export const dropInvalid = (value: Readonly<Record<string, Json>>, source: string, keepIncomplete = false): Lenient => {
   const warnings: Array<string> = []
-  const dropped = new Map<string, Path>()
+  const dropped = new Map<string, Dropped>()
   let current = value
   for (;;) {
     const decoded = decodeV2({ ...current, version: 2 })
@@ -173,8 +212,9 @@ export const dropInvalid = (value: Readonly<Record<string, Json>>, source: strin
       if (keepIncomplete && issues.every((issue) => completable(issue, current, dropped))) continue
       if (!remove(next, unit)) continue
       changed = true
-      dropped.set(key, unit)
-      warnings.push(`${source}: ignored ${key}, because ${describe(issues)}`)
+      const warning = `${source}: ignored ${key}, because ${describe(issues)}`
+      dropped.set(key, { path: unit, warning, invalid: !issues.every((issue) => issue._tag === 'Unexpected') })
+      warnings.push(warning)
     }
     // Nothing more can be taken out: a file left incomplete for its presets.
     if (!changed) return { value: current, warnings, dropped: [...dropped.values()] }
@@ -213,13 +253,13 @@ export const withoutReserved = (
 ): Lenient => {
   const next: Record<string, Json> = structuredClone(value)
   const warnings: Array<string> = []
-  const dropped: Array<Path> = []
+  const dropped: Array<Dropped> = []
   for (const [key, { path, preset }] of reserved) {
     if (!remove(next, path)) continue
-    dropped.push(path)
-    warnings.push(
-      `${source}: ignored ${key}, because ${preset} sets it in a form this version of smartcloud cannot use, and what a preset sets cannot be changed`,
-    )
+    const warning = `${source}: ignored ${key}, because ${preset} sets it in a form this version of smartcloud cannot use, and what a preset sets cannot be changed`
+    // The preset's own invalid value is what is reported as invalid.
+    dropped.push({ path, warning, invalid: false })
+    warnings.push(warning)
   }
   return { value: next, warnings, dropped }
 }
