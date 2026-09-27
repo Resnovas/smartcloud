@@ -39,6 +39,8 @@ Orca quick commands and OpenChamber project actions live in per-user settings, s
 
 Pin every third-party action to a full commit SHA with its release as a trailing comment (`uses: actions/checkout@<sha> # v7.0.1`); Dependabot's `github-actions` update moves the SHA and the comment together. Only first-party references stay on a ref: the local action (`uses: ./`) and the `Resnovas/.github` reusable workflows, which track `main` so house changes roll out on the next run.
 
+The synced House workflow lint runs actionlint and zizmor on every pull request and fails on any finding. Run them locally with `uvx --from actionlint-py actionlint` and `uvx zizmor .`. zizmor reads the synced `.github/zizmor.yml`; ignore an intended finding where it occurs with a trailing `# zizmor: ignore[<audit>]` comment, and put the reason on the line above. smartcloud's actionlint exceptions go in `.github/actionlint.yaml`.
+
 ## Adding a package
 
 1. `packages/<name>/package.json`: `"name": "@resnovas/<name>"`, `"type": "module"`, and an export map whose `.` entry lists `"@resnovas/source": "./src/index.ts"` first, then `types` and `import` pointing at `dist/`. Nx configuration stays out of `package.json`.

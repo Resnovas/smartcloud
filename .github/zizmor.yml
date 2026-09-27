@@ -1,0 +1,23 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/zizmor.yml. Edits inside this block are overwritten.
+#
+# zizmor configuration, read by the house workflow lint and by zizmor run
+# locally. Ignore one intended finding where it occurs with a trailing
+# `# zizmor: ignore[<audit>]` comment giving the reason. A repository that
+# needs other rules keeps its own copy with sync.exclude in
+# .github/smartcloud.yml, since local rules cannot extend the rules key.
+rules:
+  # Third-party actions are pinned to a commit SHA. First-party references,
+  # the Resnovas reusable workflows and actions, track a branch or tag so house
+  # changes roll out on the next run. Owners match case-sensitively.
+  unpinned-uses:
+    config:
+      policies:
+        Resnovas/*: any
+        resnovas/*: any
+        '*': hash-pin
+  # A local action is referenced as ./, the form actionlint and every runner
+  # understand, not the newer $/ self-repository syntax.
+  self-repository:
+    disable: true
+# house:managed:end
+# house:local - add comments here; further rules need a repository's own copy.

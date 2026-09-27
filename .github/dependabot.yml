@@ -5,7 +5,9 @@
 # back behind routine bumps. A repository with other ecosystems adds its own
 # updates below the managed block. One without a package.json excludes this
 # file with sync.exclude in .github/smartcloud.yml, because the npm update
-# below would fail there.
+# below would fail there. Version updates wait seven days after a release, so
+# a compromised or broken release is usually pulled before it is proposed;
+# security updates are not delayed.
 version: 2
 updates:
   - package-ecosystem: github-actions
@@ -15,6 +17,8 @@ updates:
       day: monday
       time: '07:00'
       timezone: Europe/London
+    cooldown:
+      default-days: 7
     commit-message:
       prefix: ci
       include: scope
@@ -33,6 +37,8 @@ updates:
       day: monday
       time: '07:00'
       timezone: Europe/London
+    cooldown:
+      default-days: 7
     versioning-strategy: increase
     commit-message:
       prefix: chore

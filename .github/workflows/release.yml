@@ -82,6 +82,8 @@ jobs:
           # Nx reads the conventional commits and v* tags from the full history.
           fetch-depth: 0
           fetch-tags: true
+          # Nx pushes the release commit and tag with git.
+          persist-credentials: true
 
       - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
 
@@ -179,7 +181,7 @@ jobs:
           tree=$(jq --arg base "$base_tree" '{base_tree: $base, tree: .}' <<<"$tree" |
             gh api "repos/$REPO/git/trees" --input - --jq .sha)
 
-          user_id=$(gh api "users/$APP_SLUG[bot]" --jq .id)
+          user_id=$(gh api "users/${APP_SLUG}[bot]" --jq .id)
           message=$(printf '%s\n\nSigned-off-by: %s[bot] <%s+%s[bot]@users.noreply.github.com>' "$title" "$APP_SLUG" "$user_id" "$APP_SLUG")
           commit=$(jq --null-input --arg message "$message" --arg tree "$tree" --arg parent "$BASE" \
             '{message: $message, tree: $tree, parents: [$parent]}' |
@@ -252,8 +254,8 @@ jobs:
 
       - run: node tools/release/prepare-cli.ts
 
-      # Trusted publishing needs npm 11.5 or later.
-      - run: npm install --global npm@latest
+      # Trusted publishing needs npm 11.5 or later, newer than the runner's.
+      - run: npm install --global npm@latest # zizmor: ignore[adhoc-packages]
 
       - name: Publish the CLI
         working-directory: apps/cli/release

@@ -1,0 +1,24 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-workflow-lint.yml. Edits inside this block are overwritten.
+#
+# Lints the workflows with actionlint and audits them, the actions and the
+# Dependabot configuration with zizmor. Both fail on any finding. Configure
+# zizmor with the synced .github/zizmor.yml, or ignore one intended finding
+# with a trailing `# zizmor: ignore[<audit>]` comment; configure actionlint with
+# .github/actionlint.yaml. Uses only the workflow token.
+name: House workflow lint
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+
+permissions: {}
+
+jobs:
+  house-workflow-lint:
+    uses: Resnovas/.github/.github/workflows/workflow-lint.yml@main
+    permissions:
+      contents: read
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.
