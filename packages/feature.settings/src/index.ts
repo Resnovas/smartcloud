@@ -24,7 +24,18 @@
  * @packageDocumentation
  */
 
-export { applySettings, ensureDeploymentPolicies, FEATURE, UnexpectedResponse, upsertRuleset } from './apply.js'
+export {
+  applySettings,
+  checkVariables,
+  ensureDeploymentPolicies,
+  ensurePages,
+  FEATURE,
+  grantTeam,
+  MissingVariables,
+  UnexpectedResponse,
+  upsertRuleset,
+  upsertWebhook,
+} from './apply.js'
 export type { AppliedSettings } from './apply.js'
 export { SETTINGS_EVENTS, settingsFeature } from './feature.js'
 export {
@@ -34,6 +45,7 @@ export {
   environmentBody,
   environmentsFor,
   isProtectedEnvironment,
+  pagesStep,
   planSettings,
   RELEASE_TAG_PATTERN,
   rulesetBody,
@@ -43,6 +55,8 @@ export type {
   DeploymentPoliciesStep,
   DeploymentPolicy,
   GraphqlStep,
+  PagesBody,
+  PagesStep,
   ProjectType,
   RestStep,
   RolesConfig,
@@ -51,4 +65,9 @@ export type {
   RulesetStep,
   SettingsConfig,
   SettingsStep,
+  TeamPermission,
+  TeamStep,
+  VariablesStep,
+  WebhookConfig,
+  WebhookStep,
 } from './plan.js'

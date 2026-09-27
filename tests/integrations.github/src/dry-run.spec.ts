@@ -36,10 +36,19 @@ describe('dry run', () => {
       yield* github.closeIssue(1)
       yield* github.createReview(7, { event: 'COMMENT', body: 'b' })
       yield* github.requestReviewers(7, ['ann'])
-      const run = { name: 'n', headSha: 'h', status: 'completed' as const, conclusion: 'success' as const, title: 't', summary: 's' }
+      const run = {
+        name: 'n',
+        headSha: 'h',
+        status: 'completed' as const,
+        conclusion: 'success' as const,
+        title: 't',
+        summary: 's',
+      }
       expect(yield* github.createCheckRun(run)).toBe(0)
       yield* github.updateCheckRun(0, run)
-      expect(yield* github.proposeChanges({ branch: 'b', base: 'main', title: 't', body: '', files: [] })).toStrictEqual({
+      expect(
+        yield* github.proposeChanges({ branch: 'b', base: 'main', title: 't', body: '', files: [] }),
+      ).toStrictEqual({
         number: 0,
         url: '',
         created: false,
@@ -49,8 +58,29 @@ describe('dry run', () => {
       yield* github.repositoryRequest({ method: 'GET', path: '/rulesets' })
       yield* github.graphql('mutation { x }', {})
       yield* github.graphql('query { y }', {})
+      const hook = (url: string) => ({
+        method: 'POST' as const,
+        path: '/hooks',
+        body: { events: ['push'], config: { url } },
+      })
+      yield* github.repositoryRequest(hook('https://hooks.example.com/services/T0/B0/secret?token=x'))
+      yield* github.repositoryRequest(hook('https://:token@hooks.example.com/'))
+      yield* github.repositoryRequest(hook('https://hooks.example.com/#token'))
+      yield* github.repositoryRequest(hook('https://hooks.example.com/'))
+      yield* github.repositoryRequest(hook('not a url'))
       const writes = yield* log.writes
-      expect(writes.map((write) => write.operation)).toStrictEqual([
+      expect(writes.slice(-5).map((write) => write.details)).toStrictEqual(
+        [
+          'https://hooks.example.com/...',
+          'https://hooks.example.com/...',
+          'https://hooks.example.com/...',
+          'https://hooks.example.com/',
+          '[redacted]',
+        ].map((url) => ({
+          request: { method: 'POST', path: '/hooks', body: { events: ['push'], config: { url } } },
+        })),
+      )
+      expect(writes.slice(0, -5).map((write) => write.operation)).toStrictEqual([
         'createLabel',
         'updateLabel',
         'deleteLabel',

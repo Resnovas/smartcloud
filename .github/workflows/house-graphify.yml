@@ -18,8 +18,11 @@ permissions: {}
 jobs:
   house-graphify:
     uses: Resnovas/.github/.github/workflows/graphify.yml@main
+    # The ceiling for the called jobs: its check job stays read-only, and the
+    # refresh job needs write access when it falls back to the workflow token.
     permissions:
-      contents: read
+      contents: write
+      pull-requests: write
     secrets:
       token: ${{ github.event_name != 'pull_request' && secrets.ACCESS_TOKEN || '' }}
 # house:managed:end

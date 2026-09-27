@@ -76,6 +76,17 @@ const stepTarget = (step: SettingsStep) => {
       return `create or update by name: ${JSON.stringify(step.ruleset)}`
     case 'deploymentPolicies':
       return `create if missing: POST /repos/{owner}/{repo}/environments/${encodeURIComponent(step.environment)}/deployment-branch-policies ${step.policies.map((policy) => JSON.stringify(policy)).join(' ')}`
+    case 'team':
+      return `GraphQL updateTeamsRepository: team ${step.organization}/${step.slug} as ${step.permission}`
+    case 'webhook':
+      // The URL can carry a token, so only the rest of the webhook is shown.
+      return `create or update by URL: ${JSON.stringify({ ...step.webhook, url: '(configured)' })}`
+    case 'pages':
+      return step.enabled
+        ? `create if missing: POST /repos/{owner}/{repo}/pages ${JSON.stringify(step.create)}; update: PUT /repos/{owner}/{repo}/pages ${JSON.stringify(step.update)}`
+        : 'DELETE /repos/{owner}/{repo}/pages'
+    case 'variables':
+      return `check only: GET /repos/{owner}/{repo}/actions/variables for ${Object.keys(step.variables).join(', ')}`
   }
 }
 

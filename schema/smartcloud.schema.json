@@ -1253,6 +1253,196 @@
             }
           },
           "additionalProperties": false
+        },
+        "actions": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "allowedActions": {
+              "type": "string",
+              "enum": [
+                "all",
+                "local_only",
+                "selected"
+              ]
+            },
+            "shaPinningRequired": {
+              "type": "boolean"
+            },
+            "selectedActions": {
+              "type": "object",
+              "required": [],
+              "properties": {
+                "githubOwned": {
+                  "type": "boolean"
+                },
+                "verifiedCreators": {
+                  "type": "boolean"
+                },
+                "patterns": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              },
+              "additionalProperties": false
+            },
+            "workflowPermissions": {
+              "type": "string",
+              "enum": [
+                "read",
+                "write"
+              ]
+            },
+            "createPullRequests": {
+              "type": "boolean"
+            },
+            "accessLevel": {
+              "type": "string",
+              "enum": [
+                "none",
+                "user",
+                "organization",
+                "enterprise"
+              ]
+            }
+          },
+          "additionalProperties": false
+        },
+        "collaborators": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "type": "string",
+              "enum": [
+                "read",
+                "triage",
+                "write",
+                "maintain",
+                "admin",
+                "none"
+              ]
+            }
+          },
+          "propertyNames": {
+            "type": "string",
+            "description": "a string matching the pattern ^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$",
+            "pattern": "^[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?$"
+          }
+        },
+        "teams": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "type": "string",
+              "enum": [
+                "read",
+                "triage",
+                "write",
+                "maintain",
+                "admin"
+              ]
+            }
+          },
+          "propertyNames": {
+            "type": "string",
+            "description": "a string matching the pattern ^[a-z0-9][a-z0-9_-]*$",
+            "pattern": "^[a-z0-9][a-z0-9_-]*$"
+          }
+        },
+        "webhooks": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": {
+            "type": "object",
+            "required": [
+              "url"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "description": "a string matching the pattern ^https?:\\/\\/\\S+$",
+                "pattern": "^https?:\\/\\/\\S+$"
+              },
+              "events": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "contentType": {
+                "type": "string",
+                "enum": [
+                  "json",
+                  "form"
+                ]
+              },
+              "active": {
+                "type": "boolean"
+              },
+              "insecureSsl": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "pages": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "buildType": {
+              "type": "string",
+              "enum": [
+                "workflow",
+                "legacy"
+              ]
+            },
+            "branch": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string",
+              "enum": [
+                "/",
+                "/docs"
+              ]
+            },
+            "cname": {
+              "type": "string"
+            },
+            "httpsEnforced": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "variables": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "patternProperties": {
+            "": {
+              "type": "string"
+            }
+          },
+          "propertyNames": {
+            "type": "string",
+            "description": "a string matching the pattern ^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$",
+            "pattern": "^(?![Gg][Ii][Tt][Hh][Uu][Bb]_)[A-Za-z_][A-Za-z0-9_]*$"
+          }
         }
       },
       "additionalProperties": false

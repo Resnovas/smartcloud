@@ -128,8 +128,54 @@ export interface DeploymentPoliciesStep extends StepBase {
   readonly policies: ReadonlyArray<DeploymentPolicy>
 }
 
+/** A role GitHub's GraphQL API grants a team on a repository. */
+export type TeamPermission = 'READ' | 'TRIAGE' | 'WRITE' | 'MAINTAIN' | 'ADMIN'
+
+/** An organisation team's role on the repository; the team is looked up by slug. */
+export interface TeamStep extends StepBase {
+  readonly kind: 'team'
+  readonly organization: string
+  readonly slug: string
+  /** The repository's GraphQL node id. */
+  readonly repositoryId: string
+  readonly permission: TeamPermission
+}
+
+/** A webhook as the config describes it, matched on GitHub by URL. */
+export type WebhookConfig = NonNullable<SettingsConfig['webhooks']>[string]
+
+/** A webhook to create or update, matched by URL. */
+export interface WebhookStep extends StepBase {
+  readonly kind: 'webhook'
+  readonly webhook: WebhookConfig
+}
+
+/** The body of `POST /pages` and `PUT /pages`, as far as the config sets it. */
+// A type alias rather than an interface, so it is assignable to a request body.
+export type PagesBody = {
+  readonly build_type?: 'workflow' | 'legacy'
+  readonly source?: { readonly branch: string; readonly path: '/' | '/docs' }
+}
+
+/** The GitHub Pages site: created when missing and updated when present, or unpublished. */
+export interface PagesStep extends StepBase {
+  readonly kind: 'pages'
+  readonly enabled: boolean
+  /** What creating the site sends. */
+  readonly create: PagesBody
+  /** What updating the site sends, including the fields only an update takes. */
+  readonly update: Readonly<Record<string, unknown>>
+}
+
+/** Actions variables that must exist; nothing is written. */
+export interface VariablesStep extends StepBase {
+  readonly kind: 'variables'
+  /** Each required name with what it is for. */
+  readonly variables: Readonly<Record<string, string>>
+}
+
 /** One planned change to a repository. */
-export type SettingsStep = RestStep | GraphqlStep | RulesetStep | DeploymentPoliciesStep
+export type SettingsStep = RestStep | GraphqlStep | RulesetStep | DeploymentPoliciesStep | TeamStep | WebhookStep | PagesStep | VariablesStep
 
 /**
  * The tag pattern a protected environment may deploy release tags from.
@@ -409,18 +455,188 @@ const securitySteps = (security: SettingsConfig['security'], repository: Reposit
   return steps
 }
 
+type Actions = NonNullable<SettingsConfig['actions']>
+type SelectedActions = NonNullable<Actions['selectedActions']>
+
+const actionsSteps = (actions: SettingsConfig['actions'], repository: Repository): ReadonlyArray<SettingsStep> => {
+  if (actions === undefined) return []
+  const steps: Array<SettingsStep> = []
+  const permissions = pick<Actions>(actions, [
+    ['enabled', 'enabled'],
+    ['allowedActions', 'allowed_actions'],
+    ['shaPinningRequired', 'sha_pinning_required'],
+  ])
+  if (Object.keys(permissions).length > 0) {
+    // GitHub requires `enabled`; configuring which actions may run implies Actions are on.
+    const described = [
+      actions.enabled === false ? 'off' : 'on',
+      ...(actions.allowedActions === undefined ? [] : [`${actions.allowedActions} actions allowed`]),
+      ...(actions.shaPinningRequired === undefined ? [] : [`SHA pinning ${actions.shaPinningRequired ? 'required' : 'optional'}`]),
+    ]
+    steps.push({
+      kind: 'rest',
+      id: 'actions',
+      description: `GitHub Actions ${described.join(', ')}`,
+      optional: false,
+      request: { method: 'PUT', path: '/actions/permissions', body: { enabled: true, ...permissions } },
+    })
+  }
+  // GitHub rejects the selected-actions list unless only selected actions may run.
+  if (actions.allowedActions === 'selected' && actions.selectedActions !== undefined) {
+    steps.push({
+      kind: 'rest',
+      id: 'actions-selected',
+      description: 'Allowed actions and reusable workflows',
+      optional: false,
+      request: {
+        method: 'PUT',
+        path: '/actions/permissions/selected-actions',
+        body: pick<SelectedActions>(actions.selectedActions, [
+          ['githubOwned', 'github_owned_allowed'],
+          ['verifiedCreators', 'verified_allowed'],
+          ['patterns', 'patterns_allowed'],
+        ]),
+      },
+    })
+  }
+  const workflow = pick<Actions>(actions, [
+    ['workflowPermissions', 'default_workflow_permissions'],
+    ['createPullRequests', 'can_approve_pull_request_reviews'],
+  ])
+  if (Object.keys(workflow).length > 0) {
+    const parts = [
+      ...(actions.workflowPermissions === undefined ? [] : [`${actions.workflowPermissions} by default`]),
+      ...(actions.createPullRequests === undefined ? [] : [`${actions.createPullRequests ? 'may' : 'may not'} create and approve pull requests`]),
+    ]
+    steps.push({
+      kind: 'rest',
+      id: 'actions-workflow',
+      description: `Workflow token: ${parts.join(', ')}`,
+      optional: false,
+      request: { method: 'PUT', path: '/actions/permissions/workflow', body: workflow },
+    })
+  }
+  // GitHub only has an access level for private and internal repositories.
+  if (actions.accessLevel !== undefined && repository.private) {
+    steps.push({
+      kind: 'rest',
+      id: 'actions-access',
+      description: `Actions and reusable workflows usable from: ${actions.accessLevel === 'none' ? 'this repository only' : `${actions.accessLevel} repositories`}`,
+      optional: false,
+      request: { method: 'PUT', path: '/actions/permissions/access', body: { access_level: actions.accessLevel } },
+    })
+  }
+  return steps
+}
+
+type RepositoryRole = NonNullable<SettingsConfig['teams']>[string]
+
+// The REST collaborator API names the read and write roles pull and push.
+const REST_ROLES: Readonly<Record<RepositoryRole, string>> = { read: 'pull', triage: 'triage', write: 'push', maintain: 'maintain', admin: 'admin' }
+
+const collaboratorSteps = (collaborators: SettingsConfig['collaborators']): ReadonlyArray<SettingsStep> =>
+  Object.entries(collaborators ?? {}).map(([login, role]): SettingsStep => {
+    const path = `/collaborators/${encodeURIComponent(login)}`
+    return role === 'none'
+      ? { kind: 'rest', id: `collaborator:${login}`, description: `Collaborator @${login} removed`, optional: false, request: { method: 'DELETE', path } }
+      : {
+          kind: 'rest',
+          id: `collaborator:${login}`,
+          description: `Collaborator @${login} as ${role} (invited if not yet a collaborator)`,
+          optional: false,
+          request: { method: 'PUT', path, body: { permission: REST_ROLES[role] } },
+        }
+  })
+
+const TEAM_ROLES: Readonly<Record<RepositoryRole, TeamPermission>> = { read: 'READ', triage: 'TRIAGE', write: 'WRITE', maintain: 'MAINTAIN', admin: 'ADMIN' }
+
+const teamSteps = (teams: SettingsConfig['teams'], repository: Repository): ReadonlyArray<SettingsStep> =>
+  Object.entries(teams ?? {}).map(([slug, role]) => ({
+    kind: 'team',
+    id: `team:${slug}`,
+    description: `Team @${repository.owner}/${slug} as ${role}`,
+    optional: false,
+    organization: repository.owner,
+    slug,
+    repositoryId: repository.nodeId,
+    permission: TEAM_ROLES[role],
+  }))
+
+// The host alone, so a token in a webhook's path or query never reaches a report.
+const hostOf = (url: string): string => {
+  try {
+    return new URL(url).host
+  } catch {
+    return 'an invalid URL'
+  }
+}
+
+const webhookSteps = (webhooks: SettingsConfig['webhooks']): ReadonlyArray<SettingsStep> =>
+  Object.entries(webhooks ?? {}).map(([name, webhook]) => ({
+    kind: 'webhook',
+    id: `webhook:${name}`,
+    description: `Webhook "${name}" to ${hostOf(webhook.url)}${webhook.active === false ? ' (inactive)' : ''}`,
+    optional: false,
+    webhook,
+  }))
+
+type Pages = NonNullable<SettingsConfig['pages']>
+
+/**
+ * The GitHub Pages step for the `settings.pages` section.
+ *
+ * @remarks
+ * A site built from a branch needs a source, so `branch` falls back to the
+ * default branch and `path` to `/` whenever either is set or the build type
+ * is `legacy`. A `workflow` site has no source, so it ignores both. A new site without a build type builds from its source when
+ * it has one, otherwise from a workflow. An update sends only what the
+ * config sets; the custom domain and HTTPS setting can only be sent when
+ * updating, so they go in the update body alone.
+ *
+ * @example
+ * ```ts import.meta.vitest name="pagesStep"
+ * import { pagesStep } from '@resnovas/feature.settings'
+ *
+ * const repository = { owner: 'o', name: 'r', fullName: 'o/r', nodeId: 'R_1', private: false, defaultBranch: 'main' }
+ * JSON.stringify(pagesStep({ buildType: 'legacy' }, repository).create) // => '{"build_type":"legacy","source":{"branch":"main","path":"/"}}'
+ * pagesStep({ enabled: false }, repository).description // => 'GitHub Pages unpublished'
+ * ```
+ *
+ * @param pages - The `settings.pages` section.
+ * @param repository - The repository, for its default branch.
+ * @returns The step.
+ */
+export const pagesStep = (pages: Pages, repository: Repository): PagesStep => {
+  const base = { kind: 'pages', id: 'pages', optional: false } as const
+  if (pages.enabled === false) return { ...base, description: 'GitHub Pages unpublished', enabled: false, create: {}, update: {} }
+  const fromBranch =
+    pages.buildType !== 'workflow' && (pages.buildType === 'legacy' || pages.branch !== undefined || pages.path !== undefined)
+  const source = fromBranch ? { branch: pages.branch ?? repository.defaultBranch, path: pages.path ?? '/' } : undefined
+  const explicit: PagesBody = {
+    ...(pages.buildType === undefined ? {} : { build_type: pages.buildType }),
+    ...(source === undefined ? {} : { source }),
+  }
+  // A new site builds from its source when it has one, otherwise from a workflow.
+  const create: PagesBody = { build_type: source === undefined ? 'workflow' : 'legacy', ...explicit }
+  const update = { ...explicit, ...pick<Pages>(pages, [['cname', 'cname'], ['httpsEnforced', 'https_enforced']]) }
+  const built = source !== undefined ? `from ${source.branch} ${source.path}` : pages.buildType === 'workflow' ? 'built by a workflow' : 'published'
+  return { ...base, description: `GitHub Pages ${built}${pages.cname === undefined ? '' : ` at ${pages.cname}`}`, enabled: true, create, update }
+}
+
 /**
  * Plans the calls that bring a repository to the configured settings.
  *
  * @remarks
  * Only configured fields are planned; a section or field left out produces
  * no call, so whatever GitHub has for it stays. Steps come in a fixed order:
- * merging, features, security, the ruleset, then environments, each
- * protected environment followed by its deployment policies. Optional steps
+ * merging, features, security, the ruleset, environments (each protected
+ * environment followed by its deployment policies), Actions, collaborators,
+ * teams, webhooks, Pages, then the variables check. The Actions access level
+ * is only planned for private repositories. Optional steps
  * may legitimately fail and are reported as warnings: code scanning (no
- * supported language), secret scanning, and the ruleset on a private
- * repository (rulesets need a paid plan there). Secret scanning is only
- * planned for public repositories.
+ * supported language), secret scanning, the ruleset on a private repository
+ * (rulesets need a paid plan there), and missing Actions variables, which
+ * are set by hand. Secret scanning is only planned for public repositories.
  *
  * @example
  * ```ts import.meta.vitest name="planSettings"
@@ -489,6 +705,21 @@ export const planSettings = (
         policies,
       })
     }
+  }
+  steps.push(...actionsSteps(settings.actions, repository))
+  steps.push(...collaboratorSteps(settings.collaborators))
+  steps.push(...teamSteps(settings.teams, repository))
+  steps.push(...webhookSteps(settings.webhooks))
+  if (settings.pages !== undefined) steps.push(pagesStep(settings.pages, repository))
+  const variables = settings.variables ?? {}
+  if (Object.keys(variables).length > 0) {
+    steps.push({
+      kind: 'variables',
+      id: 'variables',
+      description: `Required Actions variables ${Object.keys(variables).join(', ')}`,
+      optional: true,
+      variables,
+    })
   }
   return steps
 }

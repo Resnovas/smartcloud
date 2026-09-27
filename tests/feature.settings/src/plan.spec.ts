@@ -20,6 +20,7 @@ import {
   environmentBody,
   environmentsFor,
   isProtectedEnvironment,
+  pagesStep,
   planSettings,
   rulesetBody,
   type SettingsStep,
@@ -306,5 +307,240 @@ describe('rulesetBody', () => {
       rules: [],
     })
     expect(rulesetBody({ adminBypass: true }, undefined).bypass_actors).toHaveLength(1)
+  })
+})
+
+describe('Actions permissions', () => {
+  it('plans the permissions, the selected actions, the workflow token and the access level, in that order', () => {
+    const steps = planSettings(
+      {
+        actions: {
+          enabled: true,
+          allowedActions: 'selected',
+          shaPinningRequired: true,
+          selectedActions: { githubOwned: true, verifiedCreators: false, patterns: ['Resnovas/*'] },
+          workflowPermissions: 'read',
+          createPullRequests: true,
+          accessLevel: 'organization',
+        },
+      },
+      undefined,
+      privateRepository,
+    )
+    expect(steps).toStrictEqual([
+      {
+        kind: 'rest',
+        id: 'actions',
+        description: 'GitHub Actions on, selected actions allowed, SHA pinning required',
+        optional: false,
+        request: { method: 'PUT', path: '/actions/permissions', body: { enabled: true, allowed_actions: 'selected', sha_pinning_required: true } },
+      },
+      {
+        kind: 'rest',
+        id: 'actions-selected',
+        description: 'Allowed actions and reusable workflows',
+        optional: false,
+        request: {
+          method: 'PUT',
+          path: '/actions/permissions/selected-actions',
+          body: { github_owned_allowed: true, verified_allowed: false, patterns_allowed: ['Resnovas/*'] },
+        },
+      },
+      {
+        kind: 'rest',
+        id: 'actions-workflow',
+        description: 'Workflow token: read by default, may create and approve pull requests',
+        optional: false,
+        request: { method: 'PUT', path: '/actions/permissions/workflow', body: { default_workflow_permissions: 'read', can_approve_pull_request_reviews: true } },
+      },
+      {
+        kind: 'rest',
+        id: 'actions-access',
+        description: 'Actions and reusable workflows usable from: organization repositories',
+        optional: false,
+        request: { method: 'PUT', path: '/actions/permissions/access', body: { access_level: 'organization' } },
+      },
+    ])
+  })
+
+  it('GitHub requires enabled, so configuring allowed actions alone keeps Actions on', () => {
+    const step = find(planSettings({ actions: { allowedActions: 'local_only' } }, undefined, publicRepository), 'actions')
+    expect(step).toMatchObject({ description: 'GitHub Actions on, local_only actions allowed', request: { body: { enabled: true, allowed_actions: 'local_only' } } })
+  })
+
+  it('turning Actions off, and SHA pinning optional, say so', () => {
+    const step = find(planSettings({ actions: { enabled: false, shaPinningRequired: false } }, undefined, publicRepository), 'actions')
+    expect(step).toMatchObject({ description: 'GitHub Actions off, SHA pinning optional', request: { body: { enabled: false, sha_pinning_required: false } } })
+  })
+
+  it('selected actions are only planned when only selected actions may run', () => {
+    const steps = planSettings({ actions: { allowedActions: 'all', selectedActions: { githubOwned: true } } }, undefined, publicRepository)
+    expect(ids(steps)).toStrictEqual(['actions'])
+  })
+
+  it('each workflow token field is planned on its own', () => {
+    expect(find(planSettings({ actions: { workflowPermissions: 'write' } }, undefined, publicRepository), 'actions-workflow')).toMatchObject({
+      description: 'Workflow token: write by default',
+      request: { body: { default_workflow_permissions: 'write' } },
+    })
+    expect(find(planSettings({ actions: { createPullRequests: false } }, undefined, publicRepository), 'actions-workflow')).toMatchObject({
+      description: 'Workflow token: may not create and approve pull requests',
+      request: { body: { can_approve_pull_request_reviews: false } },
+    })
+  })
+
+  it('the access level is only planned for a private repository, and none keeps workflows to the repository', () => {
+    expect(planSettings({ actions: { accessLevel: 'organization' } }, undefined, publicRepository)).toStrictEqual([])
+    expect(find(planSettings({ actions: { accessLevel: 'none' } }, undefined, privateRepository), 'actions-access')?.description).toBe(
+      'Actions and reusable workflows usable from: this repository only',
+    )
+  })
+
+  it('an empty actions section plans nothing', () => {
+    expect(planSettings({ actions: {} }, undefined, publicRepository)).toStrictEqual([])
+  })
+})
+
+describe('collaborators and teams', () => {
+  it('collaborators get their REST role, and none removes one', () => {
+    const steps = planSettings({ collaborators: { octocat: 'read', hubot: 'write', monalisa: 'admin', former: 'none' } }, undefined, publicRepository)
+    expect(steps).toStrictEqual([
+      {
+        kind: 'rest',
+        id: 'collaborator:octocat',
+        description: 'Collaborator @octocat as read (invited if not yet a collaborator)',
+        optional: false,
+        request: { method: 'PUT', path: '/collaborators/octocat', body: { permission: 'pull' } },
+      },
+      {
+        kind: 'rest',
+        id: 'collaborator:hubot',
+        description: 'Collaborator @hubot as write (invited if not yet a collaborator)',
+        optional: false,
+        request: { method: 'PUT', path: '/collaborators/hubot', body: { permission: 'push' } },
+      },
+      {
+        kind: 'rest',
+        id: 'collaborator:monalisa',
+        description: 'Collaborator @monalisa as admin (invited if not yet a collaborator)',
+        optional: false,
+        request: { method: 'PUT', path: '/collaborators/monalisa', body: { permission: 'admin' } },
+      },
+      { kind: 'rest', id: 'collaborator:former', description: 'Collaborator @former removed', optional: false, request: { method: 'DELETE', path: '/collaborators/former' } },
+    ])
+  })
+
+  it('teams belong to the repository owner and get their GraphQL role', () => {
+    const steps = planSettings({ teams: { docs: 'triage', core: 'maintain' } }, undefined, publicRepository)
+    expect(steps).toStrictEqual([
+      { kind: 'team', id: 'team:docs', description: 'Team @Resnovas/docs as triage', optional: false, organization: 'Resnovas', slug: 'docs', repositoryId: 'R_1', permission: 'TRIAGE' },
+      { kind: 'team', id: 'team:core', description: 'Team @Resnovas/core as maintain', optional: false, organization: 'Resnovas', slug: 'core', repositoryId: 'R_1', permission: 'MAINTAIN' },
+    ])
+    expect(planSettings({ teams: { a: 'read', b: 'write', c: 'admin' } }, undefined, publicRepository).map((step) => (step.kind === 'team' ? step.permission : ''))).toStrictEqual([
+      'READ',
+      'WRITE',
+      'ADMIN',
+    ])
+  })
+})
+
+describe('webhooks', () => {
+  it('names only the host, so a token in the URL never reaches a report', () => {
+    const webhook = { url: 'https://hooks.example.com/services/T0K3N?key=secret', events: ['release'] }
+    const steps = planSettings({ webhooks: { chat: webhook, off: { url: 'https://other.example.com/x', active: false } } }, undefined, publicRepository)
+    expect(steps).toStrictEqual([
+      { kind: 'webhook', id: 'webhook:chat', description: 'Webhook "chat" to hooks.example.com', optional: false, webhook },
+      { kind: 'webhook', id: 'webhook:off', description: 'Webhook "off" to other.example.com (inactive)', optional: false, webhook: { url: 'https://other.example.com/x', active: false } },
+    ])
+  })
+
+  it('a URL that does not parse is described without it', () => {
+    expect(planSettings({ webhooks: { bad: { url: 'http://[' } } }, undefined, publicRepository)[0]?.description).toBe('Webhook "bad" to an invalid URL')
+  })
+})
+
+describe('pagesStep', () => {
+  it('a legacy site builds from the default branch root unless told otherwise', () => {
+    expect(pagesStep({ buildType: 'legacy' }, publicRepository)).toStrictEqual({
+      kind: 'pages',
+      id: 'pages',
+      description: 'GitHub Pages from main /',
+      optional: false,
+      enabled: true,
+      create: { build_type: 'legacy', source: { branch: 'main', path: '/' } },
+      update: { build_type: 'legacy', source: { branch: 'main', path: '/' } },
+    })
+  })
+
+  it('a branch or path implies a source, and a new site builds from it', () => {
+    const step = pagesStep({ path: '/docs', cname: 'docs.example.com', httpsEnforced: true }, publicRepository)
+    expect(step.description).toBe('GitHub Pages from main /docs at docs.example.com')
+    expect(step.create).toStrictEqual({ build_type: 'legacy', source: { branch: 'main', path: '/docs' } })
+    expect(step.update).toStrictEqual({ source: { branch: 'main', path: '/docs' }, cname: 'docs.example.com', https_enforced: true })
+    expect(pagesStep({ branch: 'gh-pages' }, publicRepository).create).toStrictEqual({ build_type: 'legacy', source: { branch: 'gh-pages', path: '/' } })
+  })
+
+  it('a site with no source builds from a workflow, and an update sends only what is configured', () => {
+    const workflow = pagesStep({ buildType: 'workflow' }, publicRepository)
+    expect(workflow.description).toBe('GitHub Pages built by a workflow')
+    expect(workflow.create).toStrictEqual({ build_type: 'workflow' })
+    const ignored = pagesStep({ buildType: 'workflow', branch: 'gh-pages', path: '/docs' }, publicRepository)
+    expect(ignored.create).toStrictEqual({ build_type: 'workflow' })
+    expect(ignored.update).toStrictEqual({ build_type: 'workflow' })
+    const domain = pagesStep({ cname: 'example.com' }, publicRepository)
+    expect(domain.description).toBe('GitHub Pages published at example.com')
+    expect(domain.create).toStrictEqual({ build_type: 'workflow' })
+    expect(domain.update).toStrictEqual({ cname: 'example.com' })
+  })
+
+  it('enabled false unpublishes the site', () => {
+    expect(pagesStep({ enabled: false, buildType: 'legacy' }, publicRepository)).toStrictEqual({
+      kind: 'pages',
+      id: 'pages',
+      description: 'GitHub Pages unpublished',
+      optional: false,
+      enabled: false,
+      create: {},
+      update: {},
+    })
+  })
+})
+
+describe('the new sections in the plan', () => {
+  it('come after environments, in a fixed order, with the variables check last and optional', () => {
+    const steps = planSettings(
+      {
+        variables: { DEPLOY_URL: 'where the site deploys' },
+        pages: { buildType: 'workflow' },
+        webhooks: { chat: { url: 'https://hooks.example.com/x' } },
+        teams: { docs: 'write' },
+        collaborators: { octocat: 'read' },
+        actions: { workflowPermissions: 'read' },
+        environments: { projectType: 'library' },
+      },
+      undefined,
+      publicRepository,
+    )
+    expect(ids(steps)).toStrictEqual([
+      'environment:Release',
+      'deployment-policies:Release',
+      'actions-workflow',
+      'collaborator:octocat',
+      'team:docs',
+      'webhook:chat',
+      'pages',
+      'variables',
+    ])
+    expect(find(steps, 'variables')).toStrictEqual({
+      kind: 'variables',
+      id: 'variables',
+      description: 'Required Actions variables DEPLOY_URL',
+      optional: true,
+      variables: { DEPLOY_URL: 'where the site deploys' },
+    })
+  })
+
+  it('empty collaborators, teams, webhooks and variables plan nothing', () => {
+    expect(planSettings({ collaborators: {}, teams: {}, webhooks: {}, variables: {} }, undefined, publicRepository)).toStrictEqual([])
   })
 })

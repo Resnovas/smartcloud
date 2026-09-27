@@ -63,6 +63,30 @@ settings:
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
+  it.effect('prints teams, webhooks without their URL, Pages and the variables check', () =>
+    Effect.gen(function* () {
+      const config = `version: 2
+settings:
+  teams: { docs: write }
+  webhooks: { chat: { url: "https://hooks.example.com/T0K3N", events: [release] } }
+  pages: { buildType: legacy }
+  variables: { REGION: where it runs }
+`
+      const { service } = memory({ '.github/smartcloud.yml': config })
+      const text = settingsPlanText(yield* planSettingsForRepository(() => Effect.succeed(service), { repository: 'Resnovas/example' }))
+      expect(text).toContain('GraphQL updateTeamsRepository: team Resnovas/docs as WRITE')
+      expect(text).toContain('create or update by URL: {"url":"(configured)","events":["release"]}')
+      expect(text).not.toContain('T0K3N')
+      expect(text).toContain(
+        'create if missing: POST /repos/{owner}/{repo}/pages {"build_type":"legacy","source":{"branch":"main","path":"/"}}; update: PUT /repos/{owner}/{repo}/pages {"build_type":"legacy","source":{"branch":"main","path":"/"}}',
+      )
+      expect(text).toContain('check only: GET /repos/{owner}/{repo}/actions/variables for REGION')
+      const unpublished = memory({ '.github/smartcloud.yml': 'version: 2\nsettings:\n  pages: { enabled: false }\n' })
+      const off = settingsPlanText(yield* planSettingsForRepository(() => Effect.succeed(unpublished.service), { repository: 'Resnovas/example' }))
+      expect(off).toContain('DELETE /repos/{owner}/{repo}/pages')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
   it.effect('plans nothing without a settings section', () =>
     Effect.gen(function* () {
       const plan = yield* planRepositorySettings({ version: 2 }).pipe(Effect.provideService(GitHub, memory().service))
