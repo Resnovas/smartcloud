@@ -15,10 +15,11 @@
  */
 
 import type { SmartcloudConfig } from '@resnovas/config'
-import type { Feature } from '@resnovas/engine'
+import { type Feature, runFeatures } from '@resnovas/engine'
 import { backport } from '@resnovas/feature.backport'
 import { branchesFeature } from '@resnovas/feature.branches'
 import { codeownersFeature } from '@resnovas/feature.codeowners'
+import { makeCommandsFeature, type Runner } from '@resnovas/feature.commands'
 import { commitsFeature } from '@resnovas/feature.commits'
 import { conventions } from '@resnovas/feature.conventions'
 import { disclosureFeature } from '@resnovas/feature.disclosure'
@@ -30,7 +31,42 @@ import { reviewsFeature } from '@resnovas/feature.reviews'
 import { settingsFeature } from '@resnovas/feature.settings'
 import { stale } from '@resnovas/feature.stale'
 import { syncFeature } from '@resnovas/feature.sync'
-import { Data, Effect } from 'effect'
+import { FetchHttpClient } from '@effect/platform'
+import { DryRunLog, GitHub } from '@resnovas/integrations.github'
+import { notify } from '@resnovas/notifications'
+import { publishReport } from '@resnovas/reporting'
+import { Data, Effect, Option } from 'effect'
+import { turnedOffFeatures } from './flags.js'
+
+// What /run uses: the other features, run on the event the command builds
+// and published as their own run would be, feature flags included.
+const runner: Runner = {
+  get features() {
+    return FEATURES
+  },
+  run: (request) =>
+    Effect.gen(function* () {
+      const github = yield* GitHub
+      const features = FEATURES.filter((feature) => request.features.includes(feature.name))
+      const turnedOff = yield* turnedOffFeatures(github.coordinates, features)
+      const result = yield* runFeatures({
+        config: request.config,
+        event: request.event.name,
+        payload: request.event.payload,
+        features,
+        turnedOff,
+      })
+      const published = yield* publishReport(result, { trustedAuthors: request.config.roles?.trustedBots ?? [] })
+      // Notified as an ordinary event run would be, so a rerun's failures reach
+      // the configured channels too.
+      yield* notify(result, request.config.notifications, {
+        repository: `${github.coordinates.owner}/${github.coordinates.repo}`,
+        dryRun: Option.isSome(yield* Effect.serviceOption(DryRunLog)),
+        unchanged: published.comment === 'unchanged',
+      }).pipe(Effect.provide(FetchHttpClient.layer))
+      return result
+    }),
+}
 
 /**
  * Every feature smartcloud can run, in the order their results are reported.
@@ -57,6 +93,7 @@ export const FEATURES: ReadonlyArray<Feature> = [
   codeownersFeature,
   lock,
   backport,
+  makeCommandsFeature({ runner }),
 ]
 
 /** A top-level config section a feature can read. */
@@ -85,6 +122,7 @@ export const FEATURE_SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = 
   ['codeowners', ['codeowners']],
   ['lock', ['lock', 'roles']],
   ['backport', ['backport', 'roles']],
+  ['commands', ['commands']],
 ])
 
 /**

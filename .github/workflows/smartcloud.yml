@@ -17,6 +17,12 @@
 # The job passes its own check run id, so the house preset's required feature
 # waits for every other check on the pull request and the job's "smartcloud"
 # check passes only when they all have: the ruleset requires that one check.
+#
+# Comments run the default branch's workflow and code, never a pull request's,
+# so slash commands cannot run changed code. Each command checks the
+# commenter's role itself; on top of that, only comments from owners, members
+# and collaborators start a job at all, so outside commenters never reach the
+# Resnovas Bot token.
 name: smartcloud
 
 on:
@@ -24,6 +30,8 @@ on:
     types: [opened, edited, synchronize, reopened, ready_for_review]
   issues:
     types: [opened, edited, reopened, labeled, unlabeled]
+  issue_comment:
+    types: [created]
   push:
     branches: [main]
   # The required "smartcloud" check must also report on merge queue groups.
@@ -39,12 +47,18 @@ permissions: {}
 
 concurrency:
   group: smartcloud-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
-  cancel-in-progress: true
+  # A second comment must not cancel the commands in the first.
+  cancel-in-progress: ${{ github.event_name != 'issue_comment' }}
 
 jobs:
   smartcloud:
     name: smartcloud
-    if: github.event_name != 'merge_group'
+    if: >-
+      github.event_name != 'merge_group' && (
+        github.event_name != 'issue_comment' ||
+        contains(github.event.comment.body, '/') &&
+        contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+      )
     runs-on: ubuntu-latest
     # Above the aggregate check's 60-minute wait for the other checks (required.timeout).
     timeout-minutes: 75

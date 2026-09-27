@@ -38,6 +38,7 @@ Declarative repository automation: labels, conventions and policy.
 | `settings` | [Settings](#settings) | no |  |
 | `sync` | [Sync](#sync) | no |  |
 | `notifications` | [Notifications](#notifications) | no |  |
+| `commands` | [Commands](#commands) | no |  |
 
 Other keys are an error.
 
@@ -605,11 +606,51 @@ Other keys are an error.
 
 Other keys are an error.
 
-### NonEmptyTrimmedString
+### Commands
 
-a non empty string Pattern: `^\S[\s\S]*\S$|^\S$|^$`. At least 1 character(s).
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `overrides` | object | no | Per-command changes to who may use it, by command name. |
+| `overrides.help` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.label` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.unlabel` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.assign` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.unassign` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.reviewer` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.unreviewer` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.retitle` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.close` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.reopen` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.lock` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.unlock` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.draft` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.ready` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.update` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.rebase` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.approve` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.merge` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.automerge` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.stale-snooze` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.backport` | [CommandPolicy](#commandpolicy) | no |  |
+| `overrides.run` | [CommandPolicy](#commandpolicy) | no |  |
+| `snoozeDays` | [Int](#int) | no | Days /stale-snooze keeps an item from being marked stale when no number is given; 30 by default. Minimum: 1. |
+| `mergeMethod` | one of `merge`, `squash`, `rebase` | no | How /merge and /automerge merge when no method is given; squash by default. |
+| `backport` | object | no |  |
+| `backport.labelPrefix` | string | no | Labels that ask for a backport on merge are this prefix and the target branch; "backport " by default. At least 1 character(s). |
+| `backport.branchPrefix` | string | no | Backport branches start with this; "backport/" by default. At least 1 character(s). |
+| `reactions` | boolean | no | React to each command comment with 👍 or 😕. On by default. |
 
-Type: string.
+Other keys are an error.
+
+### CommandPolicy
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `enabled` | boolean | no | Set to false to ignore the command. On by default. |
+| `permission` | one of `read`, `triage`, `write`, `maintain`, `admin` | no | The lowest repository role that may use the command. Each command has its own default. |
+| `author` | boolean | no | Whether the issue's or pull request's author may use the command on their own item whatever their role. Each command has its own default. |
+
+Other keys are an error.
 
 ## Conditions
 

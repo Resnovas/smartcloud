@@ -38,20 +38,13 @@ const capped = (lines: ReadonlyArray<string>): ReadonlyArray<string> =>
 // The pull request or issue a run was about, or the repository itself.
 const whereOf = (result: RunResult, repository: string) => {
   const base = `https://github.com/${repository}`
-  switch (result.envelope.kind) {
-    case 'pullRequest':
-      return {
-        url: `${base}/pull/${result.envelope.subject.number}`,
-        label: `pull request #${result.envelope.subject.number} in ${repository}`,
-      }
-    case 'issue':
-      return {
-        url: `${base}/issues/${result.envelope.subject.number}`,
-        label: `issue #${result.envelope.subject.number} in ${repository}`,
-      }
-    default:
-      return { url: base, label: repository }
-  }
+  const { envelope } = result
+  // A comment is about the issue or pull request it was left on.
+  const subject = envelope.kind === 'repository' || envelope.kind === 'unsupported' ? undefined : envelope.subject
+  if (subject === undefined) return { url: base, label: repository }
+  return subject.kind === 'pullRequest'
+    ? { url: `${base}/pull/${subject.number}`, label: `pull request #${subject.number} in ${repository}` }
+    : { url: `${base}/issues/${subject.number}`, label: `issue #${subject.number} in ${repository}` }
 }
 
 /**

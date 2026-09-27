@@ -13,6 +13,9 @@
       "path": "../reporting/tsconfig.lib.json"
     },
     {
+      "path": "../notifications/tsconfig.lib.json"
+    },
+    {
       "path": "../integrations.posthog/tsconfig.lib.json"
     },
     {
@@ -34,22 +37,13 @@
       "path": "../feature.required/tsconfig.lib.json"
     },
     {
+      "path": "../feature.lock/tsconfig.lib.json"
+    },
+    {
       "path": "../feature.labels/tsconfig.lib.json"
     },
     {
       "path": "../feature.freeze/tsconfig.lib.json"
-    },
-    {
-      "path": "../feature.lock/tsconfig.lib.json"
-    },
-    {
-      "path": "../feature.backport/tsconfig.lib.json"
-    },
-    {
-      "path": "../feature.branches/tsconfig.lib.json"
-    },
-    {
-      "path": "../feature.codeowners/tsconfig.lib.json"
     },
     {
       "path": "../feature.disclosure/tsconfig.lib.json"
@@ -59,6 +53,18 @@
     },
     {
       "path": "../feature.commits/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.commands/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.codeowners/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.branches/tsconfig.lib.json"
+    },
+    {
+      "path": "../feature.backport/tsconfig.lib.json"
     },
     {
       "path": "../engine/tsconfig.lib.json"

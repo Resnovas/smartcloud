@@ -24,7 +24,7 @@ import {
   MARKER,
   summaryMarkdown,
 } from '@resnovas/reporting'
-import { error, notice, run, warning } from './fixtures.js'
+import { error, notice, run, subject, warning } from './fixtures.js'
 
 describe('formatting', () => {
   it('concludes failure on errors, neutral on warnings, success otherwise', () => {
@@ -72,6 +72,22 @@ describe('formatting', () => {
       run({ envelope: { kind: 'repository', event: 'schedule' }, ran: [], skipped: [], findings: [], changes: [] }),
     )
     expect(quiet).toBe('## smartcloud\n\nEvent: `schedule`\n')
+    const commented = summaryMarkdown(
+      run({
+        envelope: {
+          kind: 'comment',
+          event: 'issue_comment',
+          action: 'created',
+          subject: { ...subject, number: 4 },
+          comment: { id: 1, body: '', author: 'sam', bot: false },
+        },
+        ran: [],
+        skipped: [],
+        findings: [],
+        changes: [],
+      }),
+    )
+    expect(commented).toContain('Event: `issue_comment` (created) on #4')
   })
 
   it('writes workflow commands with properties and data escaped', () => {

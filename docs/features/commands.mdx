@@ -1,0 +1,131 @@
+---
+title: 'Commands'
+description: 'Label, assign, rebase, approve, backport and more with slash commands in comments, limited by repository role.'
+---
+
+The commands feature answers slash commands in issue and pull request comments. Anyone can write one; smartcloud runs it only when the commenter's role in the repository allows it. It is enabled by a `commands` section, which can be empty:
+
+```yaml
+commands: {}
+```
+
+The workflow must run on new comments. Add `closed` to the pull request types too if you want [backports on merge](#backports):
+
+```yaml
+on:
+  issue_comment:
+    types: [created]
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, closed]
+```
+
+## Writing commands
+
+A command is a line that starts with `/` and a command name. Put each command on its own line; one comment can hold up to ten.
+
+```text
+Thanks, this looks right.
+/label bug "good first issue"
+/assign @octocat
+/backport release/1.x
+```
+
+Arguments are separated by spaces. Quote an argument that has spaces in it. Names are not case-sensitive. smartcloud skips lines in fenced code blocks and quoted lines (`> /close`), so quoting or showing a command does not run it. Lines that start with `/` but are not a command, such as a path, are ignored. Edited comments are not run again, and comments by bot accounts are ignored.
+
+smartcloud reacts to the comment with 👍 when every command worked and 😕 otherwise. It replies when a command was refused, was written wrongly, or failed, and when a command has output, such as `/help`. Every command is recorded in the run's job summary: a change when it worked, a warning when it did not.
+
+## Commands
+
+| Command                                         | Works on      | Who may use it by default | What it does                                                                       |
+| ----------------------------------------------- | ------------- | ------------------------- | ---------------------------------------------------------------------------------- |
+| `/help`                                         | both          | read                      | Lists the commands you can use on this item.                                       |
+| `/label <label>...`                             | both          | triage                    | Adds labels that exist in the repository.                                          |
+| `/unlabel <label>...`                           | both          | triage                    | Removes labels.                                                                    |
+| `/assign [@user...]`                            | both          | triage                    | Assigns people, or you when nobody is named.                                       |
+| `/unassign [@user...]`                          | both          | triage                    | Unassigns people, or you when nobody is named.                                     |
+| `/reviewer @user\|@org/team...`                 | pull requests | triage, or the author     | Requests reviews from people or teams.                                             |
+| `/unreviewer @user\|@org/team...`               | pull requests | triage, or the author     | Withdraws review requests.                                                         |
+| `/retitle <title>`                              | both          | triage, or the author     | Changes the title.                                                                 |
+| `/close [completed\|not-planned\|duplicate]`    | both          | triage, or the author     | Closes the item. A reason is for issues only.                                      |
+| `/reopen`                                       | both          | triage, or the author     | Reopens the item.                                                                  |
+| `/lock [off-topic\|too-heated\|resolved\|spam]` | both          | triage                    | Locks the conversation.                                                            |
+| `/unlock`                                       | both          | triage                    | Unlocks the conversation.                                                          |
+| `/draft`                                        | pull requests | write, or the author      | Turns the pull request back into a draft.                                          |
+| `/ready`                                        | pull requests | write, or the author      | Marks the pull request ready for review.                                           |
+| `/update`                                       | pull requests | write, or the author      | Merges the base branch into the pull request.                                      |
+| `/rebase`                                       | pull requests | write, or the author      | Rebases the pull request on its base branch.                                       |
+| `/approve`                                      | pull requests | write                     | Approves the pull request on your behalf. You cannot approve your own.             |
+| `/merge [merge\|squash\|rebase]`                | pull requests | write                     | Merges the pull request now.                                                       |
+| `/automerge [merge\|squash\|rebase\|off]`       | pull requests | write                     | Merges the pull request once its checks and reviews pass, or stops that.           |
+| `/stale-snooze [days]`                          | both          | triage                    | Keeps the item from being marked stale for a while, and takes off the stale label. |
+| `/backport <branch>...`                         | pull requests | write                     | Backports the pull request to other branches.                                      |
+| `/run [feature...]`                             | both          | write, or the author      | Runs smartcloud's features again.                                                  |
+
+"Or the author" means the person who opened the issue or pull request may use the command on it whatever their role.
+
+## Who may use a command
+
+Roles are GitHub's repository roles, lowest first: `read`, `triage`, `write`, `maintain` and `admin`. Each includes the ones before it. smartcloud reads the commenter's role from GitHub for every comment. A custom role counts as the role it is based on. Someone who is not a collaborator has no role, and if GitHub's answer cannot be read, smartcloud assumes no role and records a warning, so commands fail closed.
+
+Change who may use a command, or turn it off, under `overrides`:
+
+```yaml
+commands:
+  overrides:
+    approve: { permission: maintain }
+    merge: { enabled: false }
+    close: { author: false }
+    assign: { permission: read }
+```
+
+| Key                              | Default            | Meaning                                                                          |
+| -------------------------------- | ------------------ | -------------------------------------------------------------------------------- |
+| `overrides.<command>.enabled`    | `true`             | Set to `false` to refuse the command.                                            |
+| `overrides.<command>.permission` | per command, above | The lowest role that may use the command.                                        |
+| `overrides.<command>.author`     | per command, above | Whether the item's author may use the command on it whatever their role.         |
+| `snoozeDays`                     | `30`               | How long `/stale-snooze` snoozes when no number of days is given, from 1 to 365. |
+| `mergeMethod`                    | `squash`           | How `/merge` and `/automerge` merge when no method is given.                     |
+| `backport.labelPrefix`           | `"backport "`      | The start of a label that asks for a backport on merge.                          |
+| `backport.branchPrefix`          | `"backport/"`      | The start of every backport branch's name.                                       |
+| `reactions`                      | `true`             | Set to `false` to stop smartcloud reacting to command comments.                  |
+
+The `overrides` keys are command names without the slash, such as `stale-snooze`.
+
+## Tokens
+
+Commands act with the action's token, and some need more than the workflow token has:
+
+- Changes the workflow token makes do not start other workflows. A pull request that `/rebase`, `/update` or `/backport` changes gets no CI run from it. Give the action a token of your own, such as a GitHub App token, for those to run CI.
+- `/approve` with the workflow token needs **Allow GitHub Actions to create and approve pull requests** turned on in the repository's Actions settings. The approval is by the token's account, and its text names who asked for it.
+- `/rebase`, `/update` and `/backport` cannot change a branch in a fork unless its author allows maintainers to edit it.
+
+GitHub's answer is reported when it refuses a command, for example "Pull Request is not mergeable" for `/merge`.
+
+`issue_comment` workflows always run the default branch's workflow with the base repository's token, including for comments on pull requests from forks. That is why every command checks the commenter's role before it does anything.
+
+## Stale snooze
+
+`/stale-snooze` needs the [stale feature](/features/stale) to be configured. It writes one smartcloud comment on the item saying until when it is snoozed, updating it on a later snooze, and removes the stale label. The stale sweep does not mark a snoozed item stale, and unmarks one that is. Only a snooze comment written by a bot account or a `roles.trustedBots` login counts, so nobody can snooze an item by typing the marker.
+
+## Backports
+
+On a merged pull request, `/backport release/1.x` backports at once. On an open one it adds the label `backport release/1.x`, and the pull request is backported when it is merged: add `closed` to the workflow's pull request types for that. Labelling a pull request by hand works the same way. Labels need the triage role, so anyone who can add one can ask for a backport; the backport is a pull request, which still needs review and merging.
+
+For each target branch, smartcloud:
+
+1. Creates a branch named `backport/<number>-<target>` from the target, with each `/` in the target written as `--`, so `release/1.x` and `release-1.x` get branches of their own. When GitHub refuses the branch and it does not already exist, as with a prefix that is not a valid branch name, the backport fails rather than reporting an existing branch.
+2. Applies the pull request's changes to it. Squash, rebase and merge-commit merges all work, including a rebase merge of several commits.
+3. Commits them as one commit, authored as the merged commit was, carrying its `Signed-off-by` lines, with `(cherry picked from commit <sha>)` in the message.
+4. Opens a pull request titled `[<target>] <original title>` into the target.
+
+If the changes do not apply cleanly, smartcloud deletes the branch and says so; backport by hand. If the branch already exists, it leaves it alone. Pull requests with more than 100 commits are not backported. When the backport was asked for by label, smartcloud comments on the merged pull request with how each went.
+
+## Running features again
+
+`/run` runs smartcloud's features again for the item the comment is on: every feature for it when none are named, or the ones named, such as `/run conventions labels`. Their results are published as the item's own run would be: check runs and the report comment. This is how to recheck a pull request after fixing its title without pushing.
+
+Features that act on the whole repository, such as `settings`, `sync` and `stale`, run as a manual dispatch would, and need the `maintain` role whatever `overrides.run` says. A feature turned off by its [feature flag](/telemetry) stays off.
+
+## Dry runs
+
+In a dry run, commands record the writes they would make instead of making them. `/backport` reads what it needs and says which branch it would open a backport from.

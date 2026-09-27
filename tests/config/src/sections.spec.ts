@@ -84,6 +84,15 @@ notifications:
     team: { type: slack, on: [failures], level: warning }
     community: { type: discord, secret: DISCORD_ALERTS, username: smartcloud }
     triage: { type: linear, team: 476cd006-7f53-41a0-8743-44dc922b42a0, labels: [bug], on: [stale] }
+commands:
+  overrides:
+    approve: { permission: maintain }
+    close: { author: false }
+    merge: { enabled: false }
+  snoozeDays: 14
+  mergeMethod: rebase
+  backport: { labelPrefix: 'backport-to ', branchPrefix: bp/ }
+  reactions: false
 `
 
   it.effect('decode and round-trip every section', () =>
@@ -95,6 +104,7 @@ notifications:
       expect(config.lock?.reason).toBe('resolved')
       expect(config.backport).toStrictEqual({ prefix: 'backport to ', labels: ['backport'] })
       expect(Object.keys(config.notifications?.channels ?? {})).toStrictEqual(['team', 'community', 'triage'])
+      expect(config.commands?.overrides?.approve).toStrictEqual({ permission: 'maintain' })
       expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(
         config,
       )
@@ -396,6 +406,13 @@ describe('reviewer strategies', () => {
           'x.yml',
         ),
       ),
+      (error) => expect(error._tag).toBe('ConfigDecodeError'),
+    ),
+  )
+
+  it.effect('reject a slash command smartcloud does not have', () =>
+    Effect.map(
+      Effect.flip(parseConfig('version: 2\ncommands: { overrides: { deploy: { permission: admin } } }\n', 'x.yml')),
       (error) => expect(error._tag).toBe('ConfigDecodeError'),
     ),
   )

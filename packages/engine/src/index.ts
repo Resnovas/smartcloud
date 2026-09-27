@@ -16,6 +16,8 @@
 
 export { decodeEvent, EventDecodeError } from './events.js'
 export type {
+  CommentEnvelope,
+  CommentRef,
   Envelope,
   IssueEnvelope,
   PullRequestEnvelope,

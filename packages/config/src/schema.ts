@@ -21,6 +21,7 @@ import {
   Backport,
   Branches,
   CodeOwners,
+  Commands,
   Commits,
   Disclosure,
   Freeze,
@@ -377,6 +378,7 @@ export const SmartcloudConfig = Schema.Struct({
   settings: Schema.optionalWith(Settings, { exact: true }),
   sync: Schema.optionalWith(Sync, { exact: true }),
   notifications: Schema.optionalWith(Notifications, { exact: true }),
+  commands: Schema.optionalWith(Commands, { exact: true }),
 }).annotations({
   identifier: 'SmartcloudConfig',
   title: 'smartcloud configuration',

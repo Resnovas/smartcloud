@@ -17,9 +17,20 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Layer, TestClock } from 'effect'
 import { runFeatures } from '@resnovas/engine'
-import { ABANDONED_MARKER, MARK_GRACE_MS, markedSince, stale, STALE_MARKER, staleBody } from '@resnovas/feature.stale'
+import {
+  ABANDONED_MARKER,
+  MARK_GRACE_MS,
+  markedSince,
+  SNOOZE_MARKER,
+  snoozeBody,
+  snoozedUntil,
+  snoozeItem,
+  stale,
+  STALE_MARKER,
+  staleBody,
+} from '@resnovas/feature.stale'
 import { DryRun, DryRunLog, GitHub, Unavailable } from '@resnovas/integrations.github'
-import { commentsOf, daysAgo, item, labelsOf, memory, NOW, settings, sweep } from './fixtures.js'
+import { commentsOf, DAY, daysAgo, item, labelsOf, memory, NOW, settings, sweep } from './fixtures.js'
 
 describe('stale feature: marking', () => {
   it.effect('marks items inactive for staleAfterDays or more, with one comment carrying the marker and mark time', () =>
@@ -575,5 +586,83 @@ describe('markedSince', () => {
   it('reads a stale comment from a trusted login, ignoring case and a leading @', () => {
     const comments = [{ id: 1, author: 'Release-Robot', bot: false, body: staleBody('x', new Date(0)) }]
     expect(markedSince(comments, ['@release-robot'])).toStrictEqual(new Date(0))
+  })
+})
+
+describe('stale feature: snoozing', () => {
+  const snooze = (until: Date, author = 'smartcloud[bot]', bot = true) => ({
+    id: 7,
+    author,
+    bot,
+    body: snoozeBody('Snoozed.', until),
+  })
+
+  it.effect('does not mark an item snoozed until later, and marks it once the snooze has passed', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1, { updatedAt: daysAgo(40) }), item(2, { updatedAt: daysAgo(40) })], {
+        1: [snooze(new Date(NOW + DAY))],
+        2: [snooze(new Date(NOW - 1))],
+      })
+      yield* sweep({ version: 2, stale: settings }, github)
+      expect(labelsOf(github, 1)).toStrictEqual([])
+      expect(labelsOf(github, 2)).toStrictEqual(['stale'])
+    }),
+  )
+
+  it.effect('ignores a snooze comment a person wrote', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1, { updatedAt: daysAgo(40) })], {
+        1: [snooze(new Date(NOW + DAY), 'mallory', false)],
+      })
+      yield* sweep({ version: 2, stale: settings }, github)
+      expect(labelsOf(github, 1)).toStrictEqual(['stale'])
+    }),
+  )
+
+  it.effect('unmarks a stale item that has been snoozed', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1, { labels: ['stale'], updatedAt: daysAgo(1) })], {
+        1: [snooze(new Date(NOW + DAY))],
+      })
+      yield* sweep({ version: 2, stale: settings }, github)
+      expect(labelsOf(github, 1)).toStrictEqual([])
+    }),
+  )
+
+  it.effect('snoozeItem writes one snooze comment, edits it the next time, and takes the stale label off', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1, { labels: ['Stale'] })])
+      const first = yield* snoozeItem(settings, { number: 1, labels: ['Stale'] }, new Date(NOW), 'Snoozed.').pipe(
+        Effect.provideService(GitHub, github.service),
+      )
+      expect(first).toBe(true)
+      expect(labelsOf(github, 1)).toStrictEqual([])
+      const second = yield* snoozeItem(settings, { number: 1, labels: [] }, new Date(NOW + DAY), 'Again.').pipe(
+        Effect.provideService(GitHub, github.service),
+      )
+      expect(second).toBe(false)
+      expect(commentsOf(github, 1)).toStrictEqual([snoozeBody('Again.', new Date(NOW + DAY))])
+      expect(commentsOf(github, 1)?.[0]).toContain(SNOOZE_MARKER)
+    }),
+  )
+
+  it.effect('snoozeItem is fine when the stale label is already gone', () =>
+    Effect.gen(function* () {
+      const github = memory([item(1)])
+      const removed = yield* snoozeItem(settings, { number: 1, labels: ['stale'] }, new Date(NOW), 'Snoozed.').pipe(
+        Effect.provideService(GitHub, github.service),
+      )
+      expect(removed).toBe(false)
+    }),
+  )
+
+  it('reads the snooze time only from a trusted comment with a valid time', () => {
+    expect(snoozedUntil([snooze(new Date(0), 'Robot', false)], ['@robot'])).toStrictEqual(new Date(0))
+    expect(
+      snoozedUntil([
+        { id: 1, author: 'a', bot: true, body: `${SNOOZE_MARKER}\n<!-- smartcloud:stale-snooze-until 2026-99-99 -->` },
+      ]),
+    ).toBeUndefined()
+    expect(snoozedUntil([])).toBeUndefined()
   })
 })

@@ -3,7 +3,7 @@ title: 'Introduction'
 description: 'What smartcloud does, and how to run it in a repository.'
 ---
 
-smartcloud is a GitHub Action that automates repository housekeeping and enforces contribution policy from one declarative file, `.github/smartcloud.yml`. It labels pull requests and issues, checks titles and commits, gates reviews, marks inactive work stale, locks long-closed threads, backports merged pull requests by label, keeps repository settings in line, syncs shared files from a template repository, and notifies Slack, Discord or Linear of policy failures and stale items.
+smartcloud is a GitHub Action that automates repository housekeeping and enforces contribution policy from one declarative file, `.github/smartcloud.yml`. It labels pull requests and issues, checks titles and commits, gates reviews, marks inactive work stale, locks long-closed threads, backports merged pull requests by label, keeps repository settings in line, syncs shared files from a template repository, notifies Slack, Discord or Linear of policy failures and stale items, and answers slash commands in comments.
 
 Each capability is a feature with its own section in the config. A feature whose section is absent does not run, so you opt in to exactly what you need.
 
@@ -76,11 +76,13 @@ Each capability is a feature with its own section in the config. A feature whose
 
     on:
       pull_request:
-        types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft]
+        types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft, closed]
       pull_request_review:
         types: [submitted, dismissed]
       issues:
         types: [opened, edited, reopened, labeled, unlabeled]
+      issue_comment:
+        types: [created]
       push:
         branches: [main]
       schedule:
@@ -152,9 +154,11 @@ The v1 inputs `fillEmpty` and `skipDelete` are still accepted and ignored with a
 | Event                                                                                       | Features                                                                                                                                                                               |
 | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `pull_request`, `pull_request_target`, `pull_request_review`, `pull_request_review_comment` | conventions, commits, disclosure, reviews, branches, codeowners (the check), labels (labelling rules), sync (the edit check), backport (`pull_request` and `pull_request_target` only) |
+| `issues`                                                                                    | conventions, labels (labelling rules)                                                                                                                                                  |
+| `issue_comment`, on an issue or a pull request                                              | commands                                                                                                                                                                               |
 | `issues`, `issue_comment` on an issue                                                       | conventions, labels (labelling rules)                                                                                                                                                  |
 | `push`                                                                                      | labels (label sync), settings, sync, codeowners                                                                                                                                        |
 | `schedule`, `workflow_dispatch`                                                             | labels (label sync), stale, lock, settings, sync, codeowners                                                                                                                           |
 | `repository_dispatch`, `merge_group`                                                        | labels (label sync)                                                                                                                                                                    |
 
-Any other event is a clean no-op that records a notice. A comment on a pull request carries no pull request data, so smartcloud acts on the pull request events instead.
+Any other event is a clean no-op that records a notice. A comment carries only the issue fields of the item it is on, so a comment runs only the [commands](/features/commands) feature; the other features act on the pull request and issue events.

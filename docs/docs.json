@@ -39,7 +39,8 @@
               "features/backport",
               "features/settings",
               "features/sync",
-              "features/notifications"
+              "features/notifications",
+              "features/commands"
             ]
           },
           {
