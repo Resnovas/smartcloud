@@ -55,6 +55,18 @@ describe('composeNotification: failures', () => {
     const onIssue = Option.getOrThrow(composeNotification(issue, 'failures', options))
     expect(onIssue.title).toBe('1 policy failure on issue #3 in o/r')
     expect(onIssue.url).toBe('https://github.com/o/r/issues/3')
+    const comment = run({
+      envelope: {
+        kind: 'comment',
+        event: 'issue_comment',
+        subject: subject('pullRequest', 9),
+        comment: { id: 1, body: '/run', author: 'sam', bot: false },
+      },
+      findings: [finding('error')],
+    })
+    expect(Option.getOrThrow(composeNotification(comment, 'failures', options)).url).toBe(
+      'https://github.com/o/r/pull/9',
+    )
   })
 
   it(`lists at most ${LINE_LIMIT} lines and counts the rest`, () => {

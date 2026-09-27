@@ -112,6 +112,9 @@
         },
         "notifications": {
           "$ref": "#/$defs/Notifications"
+        },
+        "commands": {
+          "$ref": "#/$defs/Commands"
         }
       },
       "additionalProperties": false,
@@ -3000,12 +3003,151 @@
       },
       "additionalProperties": false
     },
-    "NonEmptyTrimmedString": {
-      "type": "string",
-      "description": "a non empty string",
-      "title": "nonEmptyString",
-      "pattern": "^\\S[\\s\\S]*\\S$|^\\S$|^$",
-      "minLength": 1
+    "Commands": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "overrides": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "help": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "label": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "unlabel": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "assign": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "unassign": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "reviewer": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "unreviewer": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "retitle": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "close": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "reopen": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "lock": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "unlock": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "draft": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "ready": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "update": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "rebase": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "approve": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "merge": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "automerge": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "stale-snooze": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "backport": {
+              "$ref": "#/$defs/CommandPolicy"
+            },
+            "run": {
+              "$ref": "#/$defs/CommandPolicy"
+            }
+          },
+          "additionalProperties": false,
+          "description": "Per-command changes to who may use it, by command name."
+        },
+        "snoozeDays": {
+          "$ref": "#/$defs/Int",
+          "description": "Days /stale-snooze keeps an item from being marked stale when no number is given; 30 by default.",
+          "title": "between(1, 365)",
+          "minimum": 1,
+          "maximum": 365
+        },
+        "mergeMethod": {
+          "type": "string",
+          "enum": [
+            "merge",
+            "squash",
+            "rebase"
+          ],
+          "description": "How /merge and /automerge merge when no method is given; squash by default."
+        },
+        "backport": {
+          "type": "object",
+          "required": [],
+          "properties": {
+            "labelPrefix": {
+              "type": "string",
+              "description": "Labels that ask for a backport on merge are this prefix and the target branch; \"backport \" by default.",
+              "title": "nonEmptyString",
+              "minLength": 1
+            },
+            "branchPrefix": {
+              "type": "string",
+              "description": "Backport branches start with this; \"backport/\" by default.",
+              "title": "nonEmptyString",
+              "minLength": 1
+            }
+          },
+          "additionalProperties": false
+        },
+        "reactions": {
+          "type": "boolean",
+          "description": "React to each command comment with 👍 or 😕. On by default."
+        }
+      },
+      "additionalProperties": false
+    },
+    "CommandPolicy": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "enabled": {
+          "type": "boolean",
+          "description": "Set to false to ignore the command. On by default."
+        },
+        "permission": {
+          "type": "string",
+          "enum": [
+            "read",
+            "triage",
+            "write",
+            "maintain",
+            "admin"
+          ],
+          "description": "The lowest repository role that may use the command. Each command has its own default."
+        },
+        "author": {
+          "type": "boolean",
+          "description": "Whether the issue's or pull request's author may use the command on their own item whatever their role. Each command has its own default."
+        }
+      },
+      "additionalProperties": false
     }
   },
   "$ref": "#/$defs/SmartcloudConfig"

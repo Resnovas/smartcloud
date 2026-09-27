@@ -18,6 +18,7 @@ import { describe, expect, it } from '@effect/vitest'
 import { Effect } from 'effect'
 import { decodeEvent } from '@resnovas/engine'
 import {
+  commentOnIssuePayload,
   commentOnPullRequestPayload,
   issuePayload,
   mergeGroupPayload,
@@ -169,23 +170,47 @@ describe('decodeEvent', () => {
     }),
   )
 
-  it.effect('issues and issue comments become an issue subject', () =>
+  it.effect('issues become an issue subject', () =>
     Effect.gen(function* () {
       expect(yield* decodeEvent('issues', issuePayload)).toMatchObject({
         kind: 'issue',
         action: 'labeled',
         subject: { kind: 'issue', number: 3, body: '', author: 'sam', labels: ['bug'] },
       })
-      expect((yield* decodeEvent('issue_comment', { issue: issuePayload.issue })).kind).toBe('issue')
     }),
   )
 
-  it.effect('a comment on a pull request is unsupported, with the reason', () =>
-    Effect.map(decodeEvent('issue_comment', commentOnPullRequestPayload), (envelope) =>
-      expect(envelope).toMatchObject({
-        kind: 'unsupported',
-        reason: expect.stringContaining('comments on pull requests'),
+  it.effect('a comment becomes a comment envelope, with its issue or pull request as the subject', () =>
+    Effect.gen(function* () {
+      expect(yield* decodeEvent('issue_comment', commentOnIssuePayload)).toMatchObject({
+        kind: 'comment',
+        event: 'issue_comment',
+        action: 'created',
+        subject: { kind: 'issue', number: 3 },
+        comment: { id: 11, body: '/label bug', author: 'sam', bot: false },
+      })
+      expect(yield* decodeEvent('issue_comment', commentOnPullRequestPayload)).toMatchObject({
+        kind: 'comment',
+        subject: { kind: 'pullRequest', number: 3 },
+      })
+    }),
+  )
+
+  it.effect('a comment by a bot, or with no body or author, is still read', () =>
+    Effect.map(
+      decodeEvent('issue_comment', {
+        issue: commentOnIssuePayload.issue,
+        comment: { id: 12, body: null, user: { login: 'renovate[bot]', type: 'Bot' } },
       }),
+      (envelope) =>
+        expect(envelope).toMatchObject({ comment: { id: 12, body: '', author: 'renovate[bot]', bot: true } }),
+    ),
+  )
+
+  it.effect('a comment without an author has an empty one', () =>
+    Effect.map(
+      decodeEvent('issue_comment', { issue: commentOnIssuePayload.issue, comment: { id: 13, body: 'hi', user: null } }),
+      (envelope) => expect(envelope).toMatchObject({ comment: { author: '', bot: false } }),
     ),
   )
 

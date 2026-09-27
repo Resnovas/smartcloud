@@ -19,6 +19,7 @@ import type { SmartcloudConfig } from '@resnovas/config'
 import { GitHub, type GitHubError, type GitHubService } from '@resnovas/integrations.github'
 import { Cause, type Context, Duration, Effect, Exit, LogLevel, Metric, MetricBoundaries } from 'effect'
 import {
+  type CommentEnvelope,
   decodeEvent,
   type Envelope,
   type EventDecodeError,
@@ -29,7 +30,7 @@ import {
 import { makeReport, Report, type ReportSnapshot } from './report.js'
 
 /** The events a feature can act on. */
-export type SupportedEnvelope = PullRequestEnvelope | IssueEnvelope | RepositoryEnvelope
+export type SupportedEnvelope = PullRequestEnvelope | IssueEnvelope | CommentEnvelope | RepositoryEnvelope
 /** The kinds of event a feature can declare it handles. */
 export type EnvelopeKind = SupportedEnvelope['kind']
 

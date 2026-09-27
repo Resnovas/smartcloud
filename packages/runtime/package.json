@@ -21,6 +21,7 @@
     "@resnovas/feature.backport": "workspace:*",
     "@resnovas/feature.branches": "workspace:*",
     "@resnovas/feature.codeowners": "workspace:*",
+    "@resnovas/feature.commands": "workspace:*",
     "@resnovas/feature.commits": "workspace:*",
     "@resnovas/feature.conventions": "workspace:*",
     "@resnovas/feature.disclosure": "workspace:*",

@@ -58,9 +58,16 @@ const PullRequestPayload = Schema.Struct({
   }),
 })
 
-const IssuePayload = Schema.Struct({
+const IssuePayload = Schema.Struct({ action: Schema.optional(Schema.String), issue: Schema.Struct(IssueFields) })
+
+const CommentPayload = Schema.Struct({
   action: Schema.optional(Schema.String),
   issue: Schema.Struct({ ...IssueFields, pull_request: Schema.optional(Schema.Unknown) }),
+  comment: Schema.Struct({
+    id: Schema.Number,
+    body: Schema.NullishOr(Schema.String),
+    user: Schema.NullishOr(Schema.Struct({ login: Schema.String, type: Schema.optional(Schema.String) })),
+  }),
 })
 
 const MergeGroupPayload = Schema.Struct({
@@ -102,6 +109,31 @@ export interface IssueEnvelope {
   readonly subject: Subject
 }
 
+/** A comment on an issue or pull request, as `issue_comment` reports it. */
+export interface CommentRef {
+  readonly id: number
+  readonly body: string
+  readonly author: string
+  /** Whether a bot account wrote it. */
+  readonly bot: boolean
+}
+
+/**
+ * A comment on an issue or a pull request, with the item as a subject.
+ *
+ * @remarks
+ * GitHub sends comments on pull requests as `issue_comment` events with
+ * only the issue fields, so a pull request subject here has no branch,
+ * draft state or size.
+ */
+export interface CommentEnvelope {
+  readonly kind: 'comment'
+  readonly event: string
+  readonly action?: string
+  readonly subject: Subject
+  readonly comment: CommentRef
+}
+
 /**
  * An event about the repository as a whole: a push, a schedule, a manual
  * dispatch, or a merge queue entry.
@@ -122,7 +154,7 @@ export interface UnsupportedEnvelope {
 }
 
 /** A GitHub event, normalised. */
-export type Envelope = PullRequestEnvelope | IssueEnvelope | RepositoryEnvelope | UnsupportedEnvelope
+export type Envelope = PullRequestEnvelope | IssueEnvelope | CommentEnvelope | RepositoryEnvelope | UnsupportedEnvelope
 
 /**
  * The event payload did not have the shape GitHub documents for its name.
@@ -188,7 +220,8 @@ const REPOSITORY_EVENTS = new Set(['schedule', 'workflow_dispatch'])
  *
  * @remarks
  * Pull request and review events become a pull request subject; issue
- * events an issue subject; pushes, schedules, dispatches and merge queue
+ * events an issue subject; `issue_comment` events a comment, on an issue or
+ * a pull request, with the item as its subject; pushes, schedules, dispatches and merge queue
  * entries a repository event. Anything else is unsupported, which is a
  * notice, not a failure: v1 crashed with "There is no context to parse".
  *
@@ -230,15 +263,27 @@ export const decodeEvent = (event: string, payload: unknown): Effect.Effect<Enve
       ),
     )
   }
-  if (event === 'issues' || event === 'issue_comment') {
-    return Effect.map(decode(IssuePayload, event, payload), ({ action, issue }): Envelope =>
-      issue.pull_request === undefined
-        ? withAction({ kind: 'issue' as const, event, subject: subjectOf('issue', issue) }, action)
-        : {
-            kind: 'unsupported',
-            event,
-            reason: 'comments on pull requests carry no pull request data; smartcloud acts on the pull request events',
+  if (event === 'issues') {
+    return Effect.map(decode(IssuePayload, event, payload), ({ action, issue }) =>
+      withAction({ kind: 'issue' as const, event, subject: subjectOf('issue', issue) }, action),
+    )
+  }
+  if (event === 'issue_comment') {
+    return Effect.map(decode(CommentPayload, event, payload), ({ action, issue, comment }) =>
+      withAction(
+        {
+          kind: 'comment' as const,
+          event,
+          subject: subjectOf(issue.pull_request === undefined ? 'issue' : 'pullRequest', issue),
+          comment: {
+            id: comment.id,
+            body: comment.body ?? '',
+            author: comment.user?.login ?? '',
+            bot: comment.user?.type === 'Bot',
           },
+        },
+        action,
+      ),
     )
   }
   if (event === 'merge_group') {

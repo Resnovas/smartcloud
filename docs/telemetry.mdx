@@ -87,6 +87,7 @@ Each feature has a flag in PostHog, named `smartcloud-<feature>`, that can turn 
 | `smartcloud-stale`       | [Stale](features/stale)             | on      |
 | `smartcloud-settings`    | [Settings](features/settings)       | on      |
 | `smartcloud-sync`        | [Sync](features/sync)               | on      |
+| `smartcloud-commands`    | [Commands](features/commands)       | on      |
 
 Flags are evaluated through [OpenFeature](https://openfeature.dev), with PostHog as the provider, for the repository's hashed identity and its organisation group. A feature whose flag is off is listed as skipped, with the reason `turned off by feature flag smartcloud-<feature>`.
 

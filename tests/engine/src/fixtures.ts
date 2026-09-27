@@ -50,7 +50,15 @@ export const pullRequestPayload = {
 
 export const issuePayload = { action: 'labeled', issue: issueFields }
 
-export const commentOnPullRequestPayload = { action: 'created', issue: { ...issueFields, pull_request: { url: 'x' } } }
+export const comment = { id: 11, body: '/label bug', user: { login: 'sam', type: 'User' } }
+
+export const commentOnIssuePayload = { action: 'created', issue: issueFields, comment }
+
+export const commentOnPullRequestPayload = {
+  action: 'created',
+  issue: { ...issueFields, pull_request: { url: 'x' } },
+  comment,
+}
 
 export const mergeGroupPayload = {
   action: 'checks_requested',

@@ -17,8 +17,9 @@
 import { ConditionGroup, Pattern } from '@resnovas/conditions'
 import { DateTime, Option, Schema } from 'effect'
 
-// The configuration sections of the policy, review, stale, lock, backport, settings and sync
-// features. Each is optional: a feature whose section is absent does not run.
+// The configuration sections of the policy, review, stale, lock, backport, settings, sync,
+// notifications and commands features. Each is optional: a feature whose section is absent
+// does not run.
 // Every rule is a keyed record, so presets and repositories merge by key.
 
 const opt = <A, I, R>(schema: Schema.Schema<A, I, R>) => Schema.optionalWith(schema, { exact: true })
@@ -1001,7 +1002,10 @@ export const Sync = Schema.Struct({
 // in the config file, which is committed and readable by anyone with the repo.
 const SecretName = Schema.String.pipe(
   Schema.pattern(/^[A-Za-z_][A-Za-z0-9_]*$/),
-  Schema.annotations({ identifier: 'SecretName', description: 'The name of the environment variable holding the secret.' }),
+  Schema.annotations({
+    identifier: 'SecretName',
+    description: 'The name of the environment variable holding the secret.',
+  }),
 )
 
 // What every channel shares: where its secret is, what it is sent, and from
@@ -1110,3 +1114,152 @@ export type NotificationChannel = typeof NotificationChannel.Type
 export const Notifications = Schema.Struct({
   channels: Schema.Record({ key: Schema.NonEmptyTrimmedString, value: NotificationChannel }),
 }).annotations({ identifier: 'Notifications' })
+
+/**
+ * Every slash command smartcloud answers, by name, in the order `/help`
+ * lists them.
+ *
+ * @example
+ * ```ts import.meta.vitest name="COMMAND_NAMES"
+ * import { COMMAND_NAMES } from '@resnovas/config'
+ *
+ * COMMAND_NAMES.includes('backport') // => true
+ * ```
+ */
+export const COMMAND_NAMES = [
+  'help',
+  'label',
+  'unlabel',
+  'assign',
+  'unassign',
+  'reviewer',
+  'unreviewer',
+  'retitle',
+  'close',
+  'reopen',
+  'lock',
+  'unlock',
+  'draft',
+  'ready',
+  'update',
+  'rebase',
+  'approve',
+  'merge',
+  'automerge',
+  'stale-snooze',
+  'backport',
+  'run',
+] as const
+
+/**
+ * The name of a slash command, without its slash.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CommandName"
+ * import { CommandName } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CommandName)('stale-snooze') // => true
+ * Schema.is(CommandName)('/label') // => false
+ * ```
+ */
+export const CommandName = Schema.Literal(...COMMAND_NAMES).annotations({
+  identifier: 'CommandName',
+  description: 'A slash command, without its slash.',
+})
+/** A decoded {@link CommandName}. */
+export type CommandName = typeof CommandName.Type
+
+/**
+ * A GitHub repository role, lowest first. Each includes the ones before it.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Permission"
+ * import { Permission } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Permission)('triage') // => true
+ * Schema.is(Permission)('owner') // => false
+ * ```
+ */
+export const Permission = Schema.Literal('read', 'triage', 'write', 'maintain', 'admin').annotations({
+  identifier: 'Permission',
+  description: 'A repository role: read, triage, write, maintain or admin. Each includes the ones before it.',
+})
+/** A decoded {@link Permission}. */
+export type Permission = typeof Permission.Type
+
+/**
+ * Who may use one slash command, and whether it is answered at all.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CommandPolicy"
+ * import { CommandPolicy } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CommandPolicy)({ permission: 'maintain', author: false }) // => true
+ * Schema.is(CommandPolicy)({ permission: 'owner' }) // => false
+ * ```
+ */
+export const CommandPolicy = Schema.Struct({
+  enabled: opt(Schema.Boolean.annotations({ description: 'Set to false to ignore the command. On by default.' })),
+  permission: opt(
+    Permission.annotations({
+      description: 'The lowest repository role that may use the command. Each command has its own default.',
+    }),
+  ),
+  author: opt(
+    Schema.Boolean.annotations({
+      description:
+        "Whether the issue's or pull request's author may use the command on their own item whatever their role. Each command has its own default.",
+    }),
+  ),
+}).annotations({ identifier: 'CommandPolicy' })
+
+/**
+ * Slash commands in issue and pull request comments.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Commands"
+ * import { Commands } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Commands)({ overrides: { approve: { permission: 'maintain' } }, snoozeDays: 14 }) // => true
+ * Schema.is(Commands)({ snoozeDays: 0 }) // => false
+ * ```
+ */
+export const Commands = Schema.Struct({
+  overrides: opt(
+    Schema.partial(Schema.Record({ key: CommandName, value: CommandPolicy })).annotations({
+      description: 'Per-command changes to who may use it, by command name.',
+    }),
+  ),
+  snoozeDays: opt(
+    Schema.Int.pipe(Schema.between(1, 365)).annotations({
+      description: 'Days /stale-snooze keeps an item from being marked stale when no number is given; 30 by default.',
+    }),
+  ),
+  mergeMethod: opt(
+    Schema.Literal('merge', 'squash', 'rebase').annotations({
+      description: 'How /merge and /automerge merge when no method is given; squash by default.',
+    }),
+  ),
+  backport: opt(
+    Schema.Struct({
+      labelPrefix: opt(
+        Schema.NonEmptyString.annotations({
+          description:
+            'Labels that ask for a backport on merge are this prefix and the target branch; "backport " by default.',
+        }),
+      ),
+      branchPrefix: opt(
+        Schema.NonEmptyString.annotations({
+          description: 'Backport branches start with this; "backport/" by default.',
+        }),
+      ),
+    }),
+  ),
+  reactions: opt(
+    Schema.Boolean.annotations({ description: 'React to each command comment with 👍 or 😕. On by default.' }),
+  ),
+}).annotations({ identifier: 'Commands' })

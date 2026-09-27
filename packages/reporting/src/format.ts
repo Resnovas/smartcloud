@@ -156,7 +156,10 @@ export const commentBody = (findings: ReadonlyArray<Finding>): string => {
 const eventLine = (result: RunResult) => {
   const { envelope } = result
   const action = 'action' in envelope && envelope.action !== undefined ? ` (${envelope.action})` : ''
-  const subject = envelope.kind === 'pullRequest' || envelope.kind === 'issue' ? ` on #${envelope.subject.number}` : ''
+  const subject =
+    envelope.kind === 'pullRequest' || envelope.kind === 'issue' || envelope.kind === 'comment'
+      ? ` on #${envelope.subject.number}`
+      : ''
   return `\`${envelope.event}\`${action}${subject}`
 }
 

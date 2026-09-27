@@ -37,3 +37,6 @@ settings:
 required:
   expect:
     - ^check$
+
+# Slash commands in comments; see docs/features/commands.mdx.
+commands: {}

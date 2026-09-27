@@ -176,6 +176,7 @@ describe('runAction', () => {
         'codeowners',
         'lock',
         'backport',
+        'commands',
       ])
     }),
   )

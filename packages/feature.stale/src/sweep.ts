@@ -130,6 +130,69 @@ export const markedSince = (
 }
 
 /**
+ * Marks smartcloud's snooze comment, which holds an item back from the stale
+ * sweep until a set time.
+ *
+ * @example
+ * ```ts import.meta.vitest name="SNOOZE_MARKER"
+ * import { SNOOZE_MARKER } from '@resnovas/feature.stale'
+ *
+ * SNOOZE_MARKER // => '<!-- smartcloud:stale-snooze -->'
+ * ```
+ */
+export const SNOOZE_MARKER = '<!-- smartcloud:stale-snooze -->'
+
+// Bounded like SINCE, so reading a user-editable body stays linear.
+const UNTIL = /<!-- smartcloud:stale-snooze-until ([0-9TZ:.+-]{1,40}) -->/
+
+/**
+ * The body of a snooze comment: the marker, the time the snooze ends, and
+ * the text people see.
+ *
+ * @example
+ * ```ts import.meta.vitest name="snoozeBody"
+ * import { snoozeBody } from '@resnovas/feature.stale'
+ *
+ * snoozeBody('Snoozed.', new Date(0)).split('\n')[1] // => '<!-- smartcloud:stale-snooze-until 1970-01-01T00:00:00.000Z -->'
+ * ```
+ *
+ * @param text - What the comment says.
+ * @param until - When the snooze ends.
+ * @returns The comment body.
+ */
+export const snoozeBody = (text: string, until: Date): string =>
+  `${SNOOZE_MARKER}\n<!-- smartcloud:stale-snooze-until ${until.toISOString()} -->\n${text}`
+
+/**
+ * Reads when an item's snooze ends from smartcloud's snooze comment.
+ *
+ * @remarks
+ * Only a snooze comment written by a bot account or a trusted login is read,
+ * so nobody can hold an item back by posting the marker themselves.
+ *
+ * @example
+ * ```ts import.meta.vitest name="snoozedUntil"
+ * import { snoozeBody, snoozedUntil } from '@resnovas/feature.stale'
+ *
+ * const comment = { id: 1, author: 'smartcloud[bot]', bot: true, body: snoozeBody('text', new Date(5)) }
+ * snoozedUntil([comment])?.getTime() // => 5
+ * snoozedUntil([{ ...comment, author: 'someone', bot: false }]) // => undefined
+ * ```
+ *
+ * @param comments - The item's comments.
+ * @param trusted - Logins trusted as well as bot accounts, normally `roles.trustedBots`.
+ * @returns When the snooze ends, or undefined when there is no readable snooze comment.
+ */
+export const snoozedUntil = (
+  comments: ReadonlyArray<Comment>,
+  trusted: ReadonlyArray<string> = [],
+): Date | undefined => {
+  const found = markerComment(comments, SNOOZE_MARKER, trusted)?.body.match(UNTIL)?.[1]
+  const until = found === undefined ? Number.NaN : Date.parse(found)
+  return Number.isNaN(until) ? undefined : new Date(until)
+}
+
+/**
  * The subject conditions see for an item from a scheduled sweep.
  *
  * @example
@@ -180,17 +243,64 @@ const upsertComment = (
     else yield* github.updateComment(existing.id, body)
   })
 
+/**
+ * Holds an item back from the stale sweep until a set time: writes or
+ * updates smartcloud's snooze comment and takes the stale label off.
+ *
+ * @remarks
+ * This is what the `/stale-snooze` command does. The sweep reads the snooze
+ * comment before marking an item, and unmarks a stale one that is snoozed.
+ * A stale label that is already gone is not an error.
+ *
+ * @example
+ * ```ts
+ * import { snoozeItem } from '@resnovas/feature.stale'
+ *
+ * // Needs the GitHub service.
+ * const snoozed = snoozeItem({ staleAfterDays: 30, staleLabel: 'stale' }, { number: 7, labels: ['stale'] }, new Date('2026-12-01'), 'Snoozed.')
+ * ```
+ *
+ * @param stale - The config's `stale` section.
+ * @param item - The item's number and labels.
+ * @param until - When the snooze ends.
+ * @param text - What the snooze comment says.
+ * @param trusted - Logins whose marker comments count as well as bot
+ *   accounts', normally `roles.trustedBots`.
+ * @returns Whether the stale label was taken off.
+ */
+export const snoozeItem = (
+  stale: StaleConfig,
+  item: { readonly number: number; readonly labels: ReadonlyArray<string> },
+  until: Date,
+  text: string,
+  trusted: ReadonlyArray<string> = [],
+): Effect.Effect<boolean, GitHubError, GitHub> =>
+  Effect.gen(function* () {
+    const github = yield* GitHub
+    const comments = yield* github.listComments(item.number)
+    yield* upsertComment(item.number, SNOOZE_MARKER, snoozeBody(text, until), comments, trusted)
+    if (!item.labels.some((label) => label.toLowerCase() === stale.staleLabel.toLowerCase())) return false
+    return yield* github.removeLabel(item.number, stale.staleLabel).pipe(
+      Effect.as(true),
+      Effect.catchTag('NotFound', () => Effect.succeed(false)),
+    )
+  })
+
 // The label is what later sweeps read as "marked", so it is written last: if
 // the comment fails, the next sweep marks the item again instead of leaving a
 // label with no mark time. The mark time is read just before the writes, not
 // at the start of the sweep, so a long sweep's own writes stay within
 // MARK_GRACE_MS of it and are not taken for activity.
-const markStale = (stale: StaleConfig, subject: Subject, trusted: ReadonlyArray<string>) =>
+const markStale = (
+  stale: StaleConfig,
+  subject: Subject,
+  comments: ReadonlyArray<Comment>,
+  trusted: ReadonlyArray<string>,
+) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const report = yield* Report
     if (stale.staleComment !== undefined) {
-      const comments = yield* github.listComments(subject.number)
       const since = new Date(yield* Clock.currentTimeMillis)
       yield* upsertComment(subject.number, STALE_MARKER, staleBody(stale.staleComment, since), comments, trusted)
       yield* report.change({ feature: FEATURE, description: `commented on #${subject.number} that it is stale` })
@@ -254,8 +364,8 @@ const abandon = (
  *
  * @remarks
  * An item not yet labelled stale is marked once it has been inactive for
- * `staleAfterDays`. A stale item with activity since its mark loses the
- * label; one that has stayed quiet for `abandonedAfterDays` is abandoned,
+ * `staleAfterDays`, unless it is snoozed. A stale item with activity since
+ * its mark, or one snoozed since, loses the label; one that has stayed quiet for `abandonedAfterDays` is abandoned,
  * and closed when `close` is set. An item already labelled abandoned is
  * left alone, because abandoning it was itself an update.
  *
@@ -288,15 +398,19 @@ export const sweepItem = (
 ): Effect.Effect<void, GitHubError, GitHub | Report> =>
   Effect.gen(function* () {
     const age = (now - subject.updatedAt.getTime()) / DAY
+    const github = yield* GitHub
+    const snoozed = (comments: ReadonlyArray<Comment>) => (snoozedUntil(comments, trusted)?.getTime() ?? 0) > now
     if (!has(subject, stale.staleLabel)) {
-      if (age >= stale.staleAfterDays) yield* markStale(stale, subject, trusted)
-      return
+      if (age < stale.staleAfterDays) return
+      const comments = yield* github.listComments(subject.number)
+      if (snoozed(comments)) return
+      return yield* markStale(stale, subject, comments, trusted)
     }
     const abandonedLabel = stale.abandonedLabel ?? 'abandoned'
     if (has(subject, abandonedLabel)) return
-    const comments = yield* (yield* GitHub).listComments(subject.number)
+    const comments = yield* github.listComments(subject.number)
     const since = markedSince(comments, trusted)
-    if (since !== undefined && subject.updatedAt.getTime() > since.getTime() + MARK_GRACE_MS)
+    if (snoozed(comments) || (since !== undefined && subject.updatedAt.getTime() > since.getTime() + MARK_GRACE_MS))
       return yield* unmark(stale, subject)
     if (stale.abandonedAfterDays !== undefined && age >= stale.abandonedAfterDays) {
       yield* abandon(stale, subject, abandonedLabel, comments, trusted)
