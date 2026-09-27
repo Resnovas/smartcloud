@@ -104,6 +104,9 @@
         "backport": {
           "$ref": "#/$defs/Backport"
         },
+        "autoMerge": {
+          "$ref": "#/$defs/AutoMerge"
+        },
         "settings": {
           "$ref": "#/$defs/Settings"
         },
@@ -2313,6 +2316,49 @@
       "description": "The start of a backport label, such as `backport `; the rest of the label is the branch.",
       "title": "Backport label prefix",
       "minLength": 1
+    },
+    "AutoMerge": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "rules": {
+          "type": "object",
+          "required": [],
+          "properties": {},
+          "additionalProperties": {
+            "$ref": "#/$defs/AutoMergeRule"
+          },
+          "description": "The auto-merge rules, by key, so presets and repositories merge them. The first rule whose conditions pass, in order, turns auto-merge on with its method."
+        },
+        "disableWhenUnmatched": {
+          "type": "boolean",
+          "description": "Turn auto-merge off again when no rule passes any more, but only where smartcloud turned it on and nobody has changed it since. Off by default."
+        }
+      },
+      "additionalProperties": false,
+      "description": "Turns on GitHub auto-merge for a pull request when one of the rules passes, such as a Dependabot patch update."
+    },
+    "AutoMergeRule": {
+      "type": "object",
+      "required": [
+        "when"
+      ],
+      "properties": {
+        "when": {
+          "$ref": "#/$defs/ConditionGroup"
+        },
+        "method": {
+          "type": "string",
+          "enum": [
+            "merge",
+            "squash",
+            "rebase"
+          ],
+          "description": "How GitHub merges the pull request once auto-merge is on: merge, squash or rebase. Squash by default."
+        }
+      },
+      "additionalProperties": false,
+      "description": "When the conditions pass on an open pull request, smartcloud turns on GitHub auto-merge with the method."
     },
     "Settings": {
       "type": "object",

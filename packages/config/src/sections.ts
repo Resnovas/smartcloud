@@ -17,7 +17,7 @@
 import { ConditionGroup, Pattern } from '@resnovas/conditions'
 import { DateTime, Option, Schema } from 'effect'
 
-// The configuration sections of the policy, review, stale, lock, backport, settings, sync,
+// The configuration sections of the policy, review, stale, lock, backport, auto-merge, settings, sync,
 // notifications and commands features. Each is optional: a feature whose section is absent
 // does not run.
 // Every rule is a keyed record, so presets and repositories merge by key.
@@ -287,6 +287,69 @@ export const Backport = Schema.Struct({
   /** Added to every backport pull request. */
   labels: opt(Schema.Array(Schema.String)),
 }).annotations({ identifier: 'Backport' })
+
+/**
+ * One auto-merge rule: when its conditions pass on an open pull request,
+ * smartcloud turns on GitHub auto-merge with its method.
+ *
+ * @example
+ * ```ts import.meta.vitest name="AutoMergeRule"
+ * import { AutoMergeRule } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(AutoMergeRule)({ when: { condition: [{ type: 'dependencyUpdateType', condition: ['patch'] }] }, method: 'squash' }) // => true
+ * Schema.is(AutoMergeRule)({ method: 'squash' }) // => false
+ * ```
+ */
+export const AutoMergeRule = Schema.Struct({
+  when: ConditionGroup,
+  /** How GitHub merges the pull request; squash when omitted. */
+  method: opt(
+    Schema.Literal('merge', 'squash', 'rebase').annotations({
+      description:
+        'How GitHub merges the pull request once auto-merge is on: merge, squash or rebase. Squash by default.',
+    }),
+  ),
+}).annotations({
+  identifier: 'AutoMergeRule',
+  description:
+    'When the conditions pass on an open pull request, smartcloud turns on GitHub auto-merge with the method.',
+})
+
+/**
+ * Auto-merge policy: turns on GitHub auto-merge for a pull request when one of
+ * the rules passes, such as a Dependabot patch update, and optionally turns it
+ * off again when none does.
+ *
+ * @example
+ * ```ts import.meta.vitest name="AutoMerge"
+ * import { AutoMerge } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(AutoMerge)({ rules: { patch: { when: { condition: [{ type: 'dependencyUpdateType', condition: ['patch'] }] } } }, disableWhenUnmatched: true }) // => true
+ * Schema.is(AutoMerge)({ rules: { patch: { when: {}, method: 'fast' } } }) // => false
+ * ```
+ */
+export const AutoMerge = Schema.Struct({
+  /** The rules, by key, so presets and repositories merge them. The first that passes, in order, sets the method. */
+  rules: opt(
+    Schema.Record({ key: Schema.String, value: AutoMergeRule }).annotations({
+      description:
+        'The auto-merge rules, by key, so presets and repositories merge them. The first rule whose conditions pass, in order, turns auto-merge on with its method.',
+    }),
+  ),
+  /** Turn auto-merge off when no rule passes any more, if smartcloud turned it on. Off by default. */
+  disableWhenUnmatched: opt(
+    Schema.Boolean.annotations({
+      description:
+        'Turn auto-merge off again when no rule passes any more, but only where smartcloud turned it on and nobody has changed it since. Off by default.',
+    }),
+  ),
+}).annotations({
+  identifier: 'AutoMerge',
+  description:
+    'Turns on GitHub auto-merge for a pull request when one of the rules passes, such as a Dependabot patch update.',
+})
 
 /**
  * How long the aggregate check waits for the others, in minutes, when

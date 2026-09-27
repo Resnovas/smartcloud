@@ -18,6 +18,7 @@ import { ConditionGroup } from '@resnovas/conditions'
 import { Schema } from 'effect'
 import { ExtendsEntry } from './extends.js'
 import {
+  AutoMerge,
   Backport,
   Branches,
   CodeOwners,
@@ -375,6 +376,7 @@ export const SmartcloudConfig = Schema.Struct({
   stale: Schema.optionalWith(Stale, { exact: true }),
   lock: Schema.optionalWith(Lock, { exact: true }),
   backport: Schema.optionalWith(Backport, { exact: true }),
+  autoMerge: Schema.optionalWith(AutoMerge, { exact: true }),
   settings: Schema.optionalWith(Settings, { exact: true }),
   sync: Schema.optionalWith(Sync, { exact: true }),
   notifications: Schema.optionalWith(Notifications, { exact: true }),

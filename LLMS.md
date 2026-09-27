@@ -552,6 +552,38 @@ a `roles.trustedBots` login wrote it, because the marker is public.
 5. Test it through `runFeatures` against the in-memory GitHub, aiming for
    100% coverage (90% is enforced), and document it in `docs/features/` and here.
 
+### Rule-driven pull request actions: auto-merge
+
+`feature.automerge` is the pattern for a feature that acts on an open pull
+request when a keyed rule's `when` group passes. Its section is
+`autoMerge: { rules: { <key>: { when, method? } }, disableWhenUnmatched? }`;
+the flag is `smartcloud-automerge` and the feature name `automerge`.
+
+- `matchingRule` evaluates the rules in key order and returns the first that
+  passes (`method` defaults to `squash`). Declare the rules' facets with
+  `requiredFacets`, and read the subject from `FeatureContext.subject`, which
+  carries them, not from the envelope.
+- Drafts and closed pull requests are skipped. Auto-merge that is already on is
+  never changed, whoever turned it on.
+- The GitHub calls are shared with the `/automerge` command and live in
+  `@resnovas/integrations.github`: `readAutoMerge` (REST `GET /pulls/<n>`:
+  node id, state, `auto_merge`), `enableAutoMerge(nodeId, method)`,
+  `disableAutoMerge(nodeId)` (GraphQL mutations, so dry runs record them), and
+  `autoMergeRefusal`, which names the refusals to explain instead of fail on:
+  `notAllowed` (the repository setting is off: warning) and `mergeable` (the
+  pull request is in a clean status, nothing to wait for: notice).
+- Ownership for turning it off again is proved without storing state: the
+  feature keeps one trusted marker comment (`<!-- smartcloud:auto-merge:on -->`
+  or `:off`), and only turns auto-merge off when the comment says `on` and its
+  author is the login GitHub reports in `auto_merge.enabled_by`.
+- Every GitHub failure becomes a finding (`Forbidden` a warning, anything else
+  an error), so one pull request never fails the run.
+
+The feature runs only on pull request events; the engine does not decode
+`check_suite` or `workflow_run`, so a `checksPass` condition in a rule is only
+re-evaluated on the next pull request event. GitHub's auto-merge already waits
+for required checks, so rules should not need it.
+
 ### Writing a feature
 
 A feature declares what it handles, when the config enables it and which
@@ -634,6 +666,67 @@ export const example = Effect.gen(function* () {
   }
   // DryRun wraps whichever GitHub is provided below it.
 }).pipe(Effect.provide(DryRun.pipe(Layer.provide(GitHubMemory()))))
+```
+
+### Turning on auto-merge by rule
+
+An `autoMerge` rule turns on GitHub auto-merge for an open pull request its
+conditions match. Here a Dependabot patch update matches, so the feature
+reads the pull request, turns auto-merge on with the rule's method through
+a GraphQL mutation (recorded, not made, under `DryRun`) and comments why.
+
+```ts
+import { runFeatures } from '@resnovas/engine'
+import { DryRun, DryRunLog, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { FEATURES } from '@resnovas/runtime'
+import { Effect, Layer } from 'effect'
+
+const memory = makeMemoryGitHub()
+// The memory service answers raw requests with null, so answer the pull
+// request read the way GitHub does: auto-merge is off.
+const github = Layer.succeed(GitHub, {
+  ...memory.service,
+  repositoryRequest: () => Effect.succeed({ node_id: 'PR_7', state: 'open', auto_merge: null }),
+})
+
+export const example = Effect.gen(function* () {
+  const result = yield* runFeatures({
+    config: {
+      version: 2,
+      autoMerge: {
+        rules: {
+          'dependabot-patch': {
+            when: { condition: [{ type: 'dependencyUpdateType', condition: ['patch'] }] },
+            method: 'squash',
+          },
+        },
+      },
+    },
+    event: 'pull_request',
+    payload: {
+      action: 'opened',
+      pull_request: {
+        number: 7,
+        title: 'Bump effect from 3.1.0 to 3.1.1',
+        body: '',
+        user: { login: 'dependabot[bot]', type: 'Bot' },
+        state: 'open',
+        locked: false,
+        labels: [],
+        updated_at: '2026-09-01T00:00:00Z',
+        head: { ref: 'dependabot/npm_and_yarn/effect-3.1.1', sha: 'abc' },
+      },
+    },
+    features: FEATURES.filter((feature) => feature.name === 'automerge'),
+  })
+  const writes = yield* (yield* DryRunLog).writes
+  return {
+    // "Turned on auto-merge (squash) for #7 (dependabot-patch)."
+    changes: result.changes.map((change) => change.description),
+    // The enablePullRequestAutoMerge mutation and the explaining comment.
+    writes: writes.map((write) => write.operation),
+  }
+}).pipe(Effect.provide(DryRun.pipe(Layer.provide(github))))
 ```
 
 ---

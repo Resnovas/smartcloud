@@ -25,6 +25,8 @@ export {
 } from './errors.js'
 export type { GitHubError } from './errors.js'
 export { isTrustedComment } from './comments.js'
+export { autoMergeRefusal, disableAutoMerge, enableAutoMerge, MERGE_METHODS, readAutoMerge } from './auto-merge.js'
+export type { AutoMergeState, MergeMethod } from './auto-merge.js'
 export { GitHub } from './service.js'
 export type {
   Annotation,

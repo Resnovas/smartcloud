@@ -18,7 +18,14 @@ import type { Subject } from '@resnovas/conditions'
 import { COMMAND_NAMES, type CommandName, type SmartcloudConfig } from '@resnovas/config'
 import type { EnvelopeKind, RunResult } from '@resnovas/engine'
 import { snoozeItem } from '@resnovas/feature.stale'
-import { GitHub, type GitHubError } from '@resnovas/integrations.github'
+import {
+  disableAutoMerge,
+  enableAutoMerge,
+  GitHub,
+  type GitHubError,
+  MERGE_METHODS,
+  type MergeMethod,
+} from '@resnovas/integrations.github'
 import { Clock, Effect } from 'effect'
 import { backport, type BackportResult, backportNames, isBranchName } from './backport.js'
 import type { Invocation } from './parse.js'
@@ -100,19 +107,16 @@ const MUTATIONS = {
   ready: 'mutation($id: ID!) { markPullRequestReadyForReview(input: { pullRequestId: $id }) { clientMutationId } }',
   rebase:
     'mutation($id: ID!) { updatePullRequestBranch(input: { pullRequestId: $id, updateMethod: REBASE }) { clientMutationId } }',
-  automerge:
-    'mutation($id: ID!, $method: PullRequestMergeMethod!) { enablePullRequestAutoMerge(input: { pullRequestId: $id, mergeMethod: $method }) { clientMutationId } }',
-  noAutomerge: 'mutation($id: ID!) { disablePullRequestAutoMerge(input: { pullRequestId: $id }) { clientMutationId } }',
 } as const
 
-const mutate = (context: CommandContext, mutation: string, variables: Readonly<Record<string, unknown>> = {}) =>
+const mutate = (context: CommandContext, mutation: string) =>
   Effect.gen(function* () {
     const pull = yield* getPull(context.subject.number)
-    yield* (yield* GitHub).graphql(mutation, { id: pull.nodeId, ...variables })
+    yield* (yield* GitHub).graphql(mutation, { id: pull.nodeId })
   })
 
-const METHODS = new Set(['merge', 'squash', 'rebase'])
-type Method = 'merge' | 'squash' | 'rebase'
+const METHODS: ReadonlySet<string> = new Set(MERGE_METHODS)
+type Method = MergeMethod
 const isMethod = (value: string): value is Method => METHODS.has(value)
 
 // The merge method named in the arguments, the config's, or squash.
@@ -556,12 +560,12 @@ export const COMMANDS: Readonly<Record<CommandName, CommandSpec>> = {
     run: (context, invocation) =>
       Effect.gen(function* () {
         if (invocation.args.length === 1 && invocation.args[0]?.toLowerCase() === 'off') {
-          yield* mutate(context, MUTATIONS.noAutomerge)
+          yield* disableAutoMerge((yield* getPull(context.subject.number)).nodeId)
           return yield* done(`turned off auto-merge for #${context.subject.number}`)
         }
         const method = methodOf(context, invocation.args)
         if (method === undefined) return yield* invalid('the method is merge, squash, rebase or off')
-        yield* mutate(context, MUTATIONS.automerge, { method: method.toUpperCase() })
+        yield* enableAutoMerge((yield* getPull(context.subject.number)).nodeId, method)
         return yield* done(`turned on auto-merge (${method}) for #${context.subject.number}`)
       }),
   },

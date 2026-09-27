@@ -139,6 +139,7 @@ describe('explainConfig', () => {
         ['codeowners', false],
         ['lock', false],
         ['backport', false],
+        ['automerge', false],
         ['commands', false],
       ])
       expect(explained.features[4]?.rules).toStrictEqual({ labels: { bug: { name: 'bug', color: 'd73a4a' } } })

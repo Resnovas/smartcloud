@@ -17,6 +17,8 @@
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Either, Schema } from 'effect'
 import {
+  AutoMerge,
+  AutoMergeRule,
   Backport,
   BranchName,
   Branches,
@@ -68,6 +70,10 @@ lock:
 backport:
   prefix: 'backport to '
   labels: [backport]
+autoMerge:
+  rules:
+    dependabot-patch: { when: { condition: [{ type: dependencyUpdateType, condition: [patch] }] }, method: squash }
+  disableWhenUnmatched: true
 settings:
   merging: { mergeCommit: false, squash: true, rebase: true, squashTitle: PR_TITLE, squashMessage: COMMIT_MESSAGES }
   features: { wiki: false, discussions: true, sponsorships: true }
@@ -104,6 +110,8 @@ commands:
       expect(config.sync?.values).toStrictEqual({ ORG_NAME: 'Resnovas' })
       expect(config.lock?.reason).toBe('resolved')
       expect(config.backport).toStrictEqual({ prefix: 'backport to ', labels: ['backport'] })
+      expect(config.autoMerge?.disableWhenUnmatched).toBe(true)
+      expect(config.autoMerge?.rules?.['dependabot-patch']?.method).toBe('squash')
       expect(Object.keys(config.notifications?.channels ?? {})).toStrictEqual(['team', 'community', 'triage'])
       expect(config.commands?.overrides?.approve).toStrictEqual({ permission: 'maintain' })
       expect(Schema.decodeUnknownSync(SmartcloudConfig)(Schema.encodeSync(SmartcloudConfig)(config))).toStrictEqual(
@@ -202,6 +210,18 @@ describe('Lock', () => {
     for (const reason of ['resolved', 'off-topic', 'too heated', 'spam'])
       expect(Schema.is(LockReason)(reason)).toBe(true)
     expect(Schema.is(Lock)({ afterDays: 30, reason: 'stale' })).toBe(false)
+  })
+})
+
+describe('AutoMerge', () => {
+  it('takes rules by key, each with conditions and an optional merge method', () => {
+    const when = { condition: [{ type: 'dependencyUpdateType', condition: ['patch'] }] }
+    expect(Schema.is(AutoMerge)({})).toBe(true)
+    expect(Schema.is(AutoMerge)({ rules: { patch: { when } }, disableWhenUnmatched: false })).toBe(true)
+    expect(Schema.is(AutoMergeRule)({ when, method: 'rebase' })).toBe(true)
+    expect(Schema.is(AutoMergeRule)({ when, method: 'fast-forward' })).toBe(false)
+    expect(Schema.is(AutoMergeRule)({ method: 'squash' })).toBe(false)
+    expect(Schema.is(AutoMerge)({ disableWhenUnmatched: 'yes' })).toBe(false)
   })
 })
 

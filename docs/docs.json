@@ -37,6 +37,7 @@
               "features/stale",
               "features/lock",
               "features/backport",
+              "features/auto-merge",
               "features/settings",
               "features/sync",
               "features/notifications",

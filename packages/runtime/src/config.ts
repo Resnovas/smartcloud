@@ -312,7 +312,7 @@ export interface ConfigExplanation {
  * import { explainConfig } from '@resnovas/runtime'
  *
  * const explained = explainConfig({ config: { version: 2 }, sources: ['smartcloud.yml'], locked: new Set(), warnings: [] })
- * explained.features.length // => 15
+ * explained.features.length // => 16
  * ```
  *
  * @param resolved - The resolved config.
