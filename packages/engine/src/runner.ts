@@ -32,6 +32,8 @@ export interface FeatureContext {
   readonly envelope: SupportedEnvelope
   /** The pull request or issue, with every facet the run's features asked for that could be loaded. */
   readonly subject?: Subject
+  /** The check run of the Actions job running smartcloud, when the workflow passes it, so features reading a commit's checks can leave it out. */
+  readonly checkRunId?: number
 }
 
 /**
@@ -47,6 +49,12 @@ export interface Feature {
   readonly handles: ReadonlyArray<EnvelopeKind>
   /** Whether the config asks for this feature at all. Defaults to always. */
   readonly enabled?: (config: SmartcloudConfig) => boolean
+  /**
+   * Runs only when the run was given the check run of the Actions job
+   * running smartcloud, as a feature that waits on a commit's other checks
+   * must be; skipped otherwise, such as in a CLI dry run.
+   */
+  readonly needsCheckRun?: boolean
   /** Facets the feature needs loaded on the subject. */
   readonly facets?: (config: SmartcloudConfig) => ReadonlySet<Facet>
   readonly run: (context: FeatureContext) => Effect.Effect<void, unknown, GitHub | Report>
@@ -156,7 +164,8 @@ const instrument = <R>(
  * Runs every applicable feature against one GitHub event.
  *
  * @remarks
- * Features that are not turned off, handle the event's kind and are enabled by the config run
+ * Features that are not turned off, handle the event's kind, are enabled by the config and,
+ * when they need it, were given the job's check run, run
  * with bounded concurrency, each isolated: one feature failing is recorded
  * and does not stop the others. Each facet is loaded on its own, so a facet
  * GitHub cannot serve fails only the features that need it, which are
@@ -192,6 +201,8 @@ export const runFeatures = (options: {
   readonly concurrency?: number
   /** Features switched off from outside the config, such as by a feature flag, and why. */
   readonly turnedOff?: ReadonlyMap<string, string>
+  /** The check run of the Actions job running smartcloud, passed on to the features. */
+  readonly checkRunId?: number | undefined
 }): Effect.Effect<RunResult, EventDecodeError, GitHub> =>
   Effect.gen(function* () {
     const envelope = yield* decodeEvent(options.event, options.payload)
@@ -217,6 +228,10 @@ export const runFeatures = (options: {
         skipped.push({ feature: feature.name, reason: 'not configured' })
         return false
       }
+      if (feature.needsCheckRun === true && options.checkRunId === undefined) {
+        skipped.push({ feature: feature.name, reason: 'runs only in a job that passes checkRunId' })
+        return false
+      }
       return true
     })
     for (const skip of skipped) yield* Effect.logDebug(`${skip.feature}: skipped, ${skip.reason}`).pipe(Effect.annotateLogs({ feature: skip.feature }))
@@ -237,7 +252,12 @@ export const runFeatures = (options: {
       else if (facet !== undefined) unavailable.set(facet, Cause.pretty(exit.cause))
     })
     const subject = base === undefined ? undefined : Object.assign({}, base, ...loaded)
-    const context: FeatureContext = subject === undefined ? { config: options.config, envelope } : { config: options.config, envelope, subject }
+    const context: FeatureContext = {
+      config: options.config,
+      envelope,
+      ...(subject === undefined ? {} : { subject }),
+      ...(options.checkRunId === undefined ? {} : { checkRunId: options.checkRunId }),
+    }
 
     const outcomes = yield* Effect.forEach(
       applicable,

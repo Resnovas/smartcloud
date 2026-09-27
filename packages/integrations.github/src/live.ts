@@ -24,6 +24,7 @@ import { type CallDetails, instrumentCall, statusTracker } from './telemetry.js'
 import {
   type Annotation,
   type CheckRun,
+  type CommitCheck,
   type CommitIdentity,
   GitHub,
   type GitHubService,
@@ -196,6 +197,37 @@ const REVIEW_STATES: ReadonlySet<string> = new Set(['APPROVED', 'CHANGES_REQUEST
 const isReviewState = (state: string): state is Review['state'] => REVIEW_STATES.has(state)
 // An unknown future state is treated as a comment: it neither approves nor blocks.
 const reviewState = (state: string): Review['state'] => (isReviewState(state) ? state : 'COMMENTED')
+
+// Neutral and skipped runs let a pull request merge, as they do for GitHub's own required checks.
+const PASSING_CONCLUSIONS: ReadonlySet<string> = new Set(['success', 'neutral', 'skipped'])
+
+const checkRunCheck = (run: {
+  readonly id: number
+  readonly name: string
+  readonly status: string
+  readonly conclusion: string | null
+  readonly html_url: string | null
+  readonly details_url: string | null
+}): CommitCheck => {
+  const url = run.html_url ?? run.details_url
+  const state = run.status !== 'completed' ? 'pending' : PASSING_CONCLUSIONS.has(run.conclusion ?? '') ? 'success' : 'failure'
+  return {
+    name: run.name,
+    source: 'checkRun',
+    id: run.id,
+    state,
+    detail: run.status === 'completed' ? (run.conclusion ?? 'completed') : run.status,
+    ...(url === null ? {} : { url }),
+  }
+}
+
+const statusCheck = (status: { readonly context: string; readonly state: string; readonly target_url: string | null }): CommitCheck => ({
+  name: status.context,
+  source: 'status',
+  state: status.state === 'pending' ? 'pending' : status.state === 'success' ? 'success' : 'failure',
+  detail: status.state,
+  ...(status.target_url === null ? {} : { url: status.target_url }),
+})
 
 const labelName = (label: string | { readonly name?: string | undefined }): string =>
   typeof label === 'string' ? label : (label.name ?? '')
@@ -621,6 +653,25 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           first.length === 0 ? transient : rateLimited,
         ).pipe(Effect.zipRight(appendAnnotations(check_run_id, run, rest)))
       },
+      listCommitChecks: (ref) =>
+        Effect.all(
+          [
+            call('listCommitChecks: check runs', () =>
+              octokit.paginate(octokit.rest.checks.listForRef, { owner, repo, ref, filter: 'latest', per_page: 100 }),
+            ),
+            call('listCommitChecks: statuses', () =>
+              octokit.paginate(octokit.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),
+            ),
+          ],
+          { concurrency: 2 },
+        ).pipe(
+          Effect.map(([runs, statuses]) => {
+            // Statuses come newest first, one per update, so the first of each context is its state now.
+            const latest = new Map<string, (typeof statuses)[number]>()
+            for (const status of statuses) if (!latest.has(status.context)) latest.set(status.context, status)
+            return [...runs.map(checkRunCheck), ...[...latest.values()].map(statusCheck)]
+          }),
+        ),
       getFile,
       listDirectory,
       proposeChanges,

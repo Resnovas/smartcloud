@@ -1,0 +1,24 @@
+{
+  "name": "@resnovas/feature.required",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The required feature: one aggregate check that passes only when every other check on a pull request has passed.",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://github.com/Resnovas/smartcloud",
+  "exports": {
+    ".": {
+      "@resnovas/source": "./src/index.ts",
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "dependencies": {
+    "@resnovas/conditions": "workspace:*",
+    "@resnovas/config": "workspace:*",
+    "@resnovas/engine": "workspace:*",
+    "@resnovas/integrations.github": "workspace:*",
+    "effect": "catalog:",
+    "tslib": "^2.8.1"
+  }
+}

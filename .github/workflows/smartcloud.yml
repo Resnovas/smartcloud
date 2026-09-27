@@ -13,6 +13,10 @@
 # to the read-only workflow token, and smartcloud then runs restricted,
 # skipping the private preset, settings, sync and refused writes rather than
 # failing.
+#
+# The job passes its own check run id, so the house preset's required feature
+# waits for every other check on the pull request and the job's "smartcloud"
+# check passes only when they all have: the ruleset requires that one check.
 name: smartcloud
 
 on:
@@ -33,6 +37,7 @@ permissions:
   checks: write
   issues: write
   pull-requests: write
+  statuses: read
 
 concurrency:
   group: smartcloud-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
@@ -91,3 +96,4 @@ jobs:
         uses: ./
         with:
           GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          checkRunId: ${{ job.check_run_id }}

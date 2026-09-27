@@ -15,7 +15,7 @@
  */
 
 import { parseFeatureList } from '@resnovas/runtime'
-import { Config, Effect, Option, Redacted } from 'effect'
+import { Config, ConfigError, Effect, Option, Redacted } from 'effect'
 
 /** The action's inputs, read from the `INPUT_*` variables Actions sets. */
 export interface Inputs {
@@ -31,6 +31,8 @@ export interface Inputs {
   readonly dryRun: boolean
   /** Only these features run; all of them when omitted. */
   readonly features: Option.Option<ReadonlyArray<string>>
+  /** The check run of the job running the action, from `job.check_run_id`. */
+  readonly checkRunId: Option.Option<number>
   /** False when the workflow opts out of telemetry with `telemetry: false`. */
   readonly telemetry: boolean
   /** Notices about v1 inputs that no longer do anything. */
@@ -62,7 +64,8 @@ const DEPRECATED: ReadonlyArray<readonly [string, string]> = [
  * v1 treated any non-empty string as true. `telemetry` is the exception: it
  * is on unless set to `false`. The token falls back to the
  * `GITHUB_TOKEN` environment variable. `workflowToken` defaults to the
- * workflow's own token in `action.yml` and is never listed in `given`.
+ * workflow's own token in `action.yml` and is never listed in `given`. `checkRunId` must be a whole number,
+ * as `job.check_run_id` gives it.
  *
  * @example
  * ```ts import.meta.vitest name="readInputs"
@@ -98,8 +101,12 @@ export const readInputs = Effect.gen(function* () {
     dryRun: yield* input('dryRun'),
     features,
     telemetry: yield* input('telemetry'),
+    checkRunId: yield* input('checkRunId'),
   }
   for (const [name, value] of Object.entries(optional)) if (Option.isSome(value)) given.push(name)
+  if (Option.exists(optional.checkRunId, (value) => !/^[1-9]\d*$/.test(value))) {
+    return yield* Effect.fail(ConfigError.InvalidData(['INPUT_CHECKRUNID'], 'must be the job\'s check run id, as ${{ job.check_run_id }} gives it'))
+  }
   const inputs: Inputs = {
     token,
     workflowToken,
@@ -112,6 +119,7 @@ export const readInputs = Effect.gen(function* () {
     // A list with no names, such as `,`, selects nothing, so it means the
     // same as leaving the input out: every feature runs.
     features: Option.filter(Option.map(features, parseFeatureList), (names) => names.length > 0),
+    checkRunId: Option.map(optional.checkRunId, Number),
     deprecations,
     given: given.sort(),
   }

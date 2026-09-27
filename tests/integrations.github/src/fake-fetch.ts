@@ -51,9 +51,12 @@ export const fakeFetch = (routes: Routes) => {
     if (reply === undefined) throw new Error(`no reply for ${key}`)
     if ('networkError' in reply) throw new TypeError(reply.networkError)
     const status = reply.status ?? 200
-    return status === 204
-      ? new Response(null, { status })
-      : new Response(JSON.stringify(reply.body ?? {}), { status, headers: { 'content-type': 'application/json' } })
+    const response =
+      status === 204
+        ? new Response(null, { status })
+        : new Response(JSON.stringify(reply.body ?? {}), { status, headers: { 'content-type': 'application/json' } })
+    // A real fetch sets the response URL; Octokit's paginator reads it for list responses that carry a total count.
+    return Object.defineProperty(response, 'url', { value: url.href })
   }
   return { fetch, requests }
 }

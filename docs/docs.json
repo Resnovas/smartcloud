@@ -29,6 +29,7 @@
               "features/commits",
               "features/disclosure",
               "features/reviews",
+              "features/required",
               "features/labels",
               "features/stale",
               "features/settings",

@@ -24,6 +24,7 @@ export type {
   CheckRun,
   CheckRunFields,
   Comment,
+  CommitCheck,
   CommitIdentity,
   DirectoryEntry,
   FileChange,

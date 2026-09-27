@@ -28,6 +28,9 @@ inputs:
   features:
     description: A comma-separated list of the features to run. Defaults to every configured feature, as does a list with no names in it.
     required: false
+  checkRunId:
+    description: The job's check run id, from the job.check_run_id expression, so the required feature waits for the other checks and leaves this job's own check out. Without it, the required feature is skipped.
+    required: false
   telemetry:
     description: Set to false to stop smartcloud sending anonymous telemetry to PostHog. On by default; turning it off is discouraged, because telemetry is how problems are found and fixed. See the telemetry page of the documentation for what is and is not collected.
     required: false

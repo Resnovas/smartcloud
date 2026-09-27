@@ -159,6 +159,19 @@ describe('runFeatures', () => {
     }).pipe(Effect.provide(GitHubMemory())),
   )
 
+  it.effect('runs a feature that needs the job check run only when given one, and hands it the id', () =>
+    Effect.gen(function* () {
+      const seen: Array<number | undefined> = []
+      const waits = feature('waits', { needsCheckRun: true, run: (context) => Effect.sync(() => void seen.push(context.checkRunId)) })
+      const without = yield* runFeatures({ config, event: 'schedule', payload: {}, features: [waits, feature('on')] })
+      expect(without.ran).toStrictEqual(['on'])
+      expect(without.skipped).toStrictEqual([{ feature: 'waits', reason: 'runs only in a job that passes checkRunId' }])
+      const given = yield* runFeatures({ config, event: 'schedule', payload: {}, features: [waits], checkRunId: 42 })
+      expect(given.ran).toStrictEqual(['waits'])
+      expect(seen).toStrictEqual([42])
+    }).pipe(Effect.provide(GitHubMemory())),
+  )
+
   it.effect('loads only the facets the features ask for, and hands features the loaded subject', () =>
     Effect.gen(function* () {
       const seen: Array<unknown> = []

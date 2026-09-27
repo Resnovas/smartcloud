@@ -98,7 +98,7 @@ The ruleset is written whole: a switch left out, or `false`, means that rule is 
 | `linearHistory` | No merge commits on the branch. |
 | `copilotReview` | Copilot reviews every pull request, drafts included, and on every push. |
 | `codeScanningGate` | CodeQL results block merging at high or higher security alerts and at errors. |
-| `requiredChecks` | These status checks must pass. They apply only once two or more distinct maintainers are configured (logins compare ignoring case and a leading `@`), so a sole maintainer is never blocked by the review gate. |
+| `requiredChecks` | These status checks must pass. They apply only once two or more distinct maintainers are configured (logins compare ignoring case and a leading `@`), so a sole maintainer is never blocked by the review gate. With the [required](/features/required) feature, list only the smartcloud job's check, which passes when every other check has. |
 | `adminBypass` | Repository admins may bypass the ruleset. On by default; set `false` to remove the bypass. |
 
 On a private repository, rulesets need a paid plan, so a failure there is a warning.

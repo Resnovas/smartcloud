@@ -28,6 +28,7 @@ Declarative repository automation: labels, conventions and policy.
 | `commits` | [Commits](#commits) | no |  |
 | `disclosure` | [Disclosure](#disclosure) | no |  |
 | `reviews` | [Reviews](#reviews) | no |  |
+| `required` | [Required](#required) | no |  |
 | `stale` | [Stale](#stale) | no |  |
 | `settings` | [Settings](#settings) | no |  |
 | `sync` | [Sync](#sync) | no |  |
@@ -221,6 +222,17 @@ Other keys are an error.
 | --- | --- | --- | --- |
 | `when` | [ConditionGroup](#conditiongroup) | yes |  |
 | `message` | string | no |  |
+
+Other keys are an error.
+
+### Required
+
+One aggregate check that passes only when every other check on the pull request has passed, so a ruleset requires that one check instead of a list of names.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `ignore` | list of [Pattern](#pattern) | no | Checks that do not count towards the aggregate, as patterns matched against each check run name or status context, for example ^codecov/. |
+| `timeout` | [Int](#int) | no | Minutes to wait for the other checks to finish before failing, from 1 to 360 (the longest an Actions job may run). Defaults to 60. Minimum: 1. |
 
 Other keys are an error.
 

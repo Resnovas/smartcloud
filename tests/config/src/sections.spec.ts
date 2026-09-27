@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect, Schema } from 'effect'
-import { parseConfig, SmartcloudConfig } from '@resnovas/config'
+import { parseConfig, Required, REQUIRED_TIMEOUT, SmartcloudConfig } from '@resnovas/config'
 
 describe('feature sections', () => {
   const full = `
@@ -123,4 +123,18 @@ settings:
       }
     }),
   )
+})
+
+describe('Required', () => {
+  it('takes ignore patterns and a timeout of 1 to 360 whole minutes, 60 by default', () => {
+    expect(REQUIRED_TIMEOUT).toBe(60)
+    expect(Schema.is(Required)({})).toBe(true)
+    expect(Schema.is(Required)({ ignore: ['^codecov/', '/preview/i'], timeout: 360 })).toBe(true)
+    for (const timeout of [0, 361, 1.5]) expect(Schema.is(Required)({ timeout })).toBe(false)
+    expect(Schema.is(Required)({ ignore: ['(unclosed'] })).toBe(false)
+  })
+
+  it('is a section of the config', () => {
+    expect(Schema.is(SmartcloudConfig)({ version: 2, required: { timeout: 30 } })).toBe(true)
+  })
 })

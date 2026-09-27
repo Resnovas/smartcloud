@@ -83,6 +83,9 @@
         "reviews": {
           "$ref": "#/$defs/Reviews"
         },
+        "required": {
+          "$ref": "#/$defs/Required"
+        },
         "stale": {
           "$ref": "#/$defs/Stale"
         },
@@ -1089,6 +1092,28 @@
         }
       },
       "additionalProperties": false
+    },
+    "Required": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "ignore": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Pattern"
+          },
+          "description": "Checks that do not count towards the aggregate, as patterns matched against each check run name or status context, for example ^codecov/."
+        },
+        "timeout": {
+          "$ref": "#/$defs/Int",
+          "description": "Minutes to wait for the other checks to finish before failing, from 1 to 360 (the longest an Actions job may run). Defaults to 60.",
+          "title": "between(1, 360)",
+          "minimum": 1,
+          "maximum": 360
+        }
+      },
+      "additionalProperties": false,
+      "description": "One aggregate check that passes only when every other check on the pull request has passed, so a ruleset requires that one check instead of a list of names."
     },
     "Stale": {
       "type": "object",

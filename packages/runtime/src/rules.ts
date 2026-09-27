@@ -88,7 +88,7 @@ const POLICY: Readonly<Record<string, { readonly summary: string; readonly fix: 
 }
 
 // Features whose other findings are operational notices rather than policy rules.
-const NOTICE_FEATURES: ReadonlyArray<string> = ['labels', 'stale', 'settings', 'reviews', 'sync', 'engine']
+const NOTICE_FEATURES: ReadonlyArray<string> = ['labels', 'stale', 'settings', 'reviews', 'sync', 'required', 'engine']
 
 /**
  * Explains a rule from its id, as a finding reports it.

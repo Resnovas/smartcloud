@@ -32,6 +32,7 @@ describe('readInputs', () => {
       const withWorkflow = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_WORKFLOWTOKEN: 'ghs_x' }))
       expect(Option.map(withWorkflow.workflowToken, Redacted.value)).toStrictEqual(Option.some('ghs_x'))
       expect(withWorkflow.given).toStrictEqual([])
+      expect(read.checkRunId).toStrictEqual(Option.none())
       const off = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_TELEMETRY: 'FALSE' }))
       expect(off.telemetry).toBe(false)
       const on = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_TELEMETRY: 'true' }))
@@ -45,6 +46,18 @@ describe('readInputs', () => {
       for (const empty of [',', ' , ,']) {
         const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_FEATURES: empty }))
         expect(read.features).toStrictEqual(Option.none())
+      }
+    }),
+  )
+
+  it.effect('reads the job check run id as a number, and rejects anything else', () =>
+    Effect.gen(function* () {
+      const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_CHECKRUNID: ' 51725241954 ' }))
+      expect(read.checkRunId).toStrictEqual(Option.some(51725241954))
+      expect(read.given).toContain('checkRunId')
+      for (const bad of ['0', '-3', '1.5', 'job.check_run_id']) {
+        const error = yield* Effect.flip(readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_CHECKRUNID: bad })))
+        expect(String(error)).toContain('INPUT_CHECKRUNID')
       }
     }),
   )

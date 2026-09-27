@@ -213,6 +213,50 @@ describe('live GitHub: pull requests', () => {
 })
 
 describe('live GitHub: checks, files, settings and GraphQL', () => {
+  it.effect('lists the checks on a commit: the latest run of each name and the latest status of each context', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        [`GET ${REPO}/commits/abc/check-runs`]: {
+          body: {
+            total_count: 5,
+            check_runs: [
+              { id: 1, name: 'ci / test', status: 'completed', conclusion: 'success', html_url: 'https://github.com/r/1', details_url: null },
+              { id: 2, name: 'ci / lint', status: 'completed', conclusion: 'skipped', html_url: null, details_url: 'https://ci/2' },
+              { id: 3, name: 'ci / build', status: 'in_progress', conclusion: null, html_url: null, details_url: null },
+              { id: 4, name: 'ci / docs', status: 'completed', conclusion: 'timed_out', html_url: null, details_url: null },
+              { id: 5, name: 'ci / odd', status: 'completed', conclusion: null, html_url: null, details_url: null },
+            ],
+          },
+        },
+        [`GET ${REPO}/commits/abc/statuses`]: {
+          body: [
+            { context: 'deploy', state: 'success', target_url: 'https://deploy' },
+            { context: 'deploy', state: 'pending', target_url: null },
+            { context: 'coverage', state: 'error', target_url: null },
+            { context: 'preview', state: 'pending', target_url: null },
+            { context: 'legal', state: 'failure', target_url: null },
+          ],
+        },
+      })
+      const github = yield* service
+      expect(yield* github.listCommitChecks('abc')).toStrictEqual([
+        { name: 'ci / test', source: 'checkRun', id: 1, state: 'success', detail: 'success', url: 'https://github.com/r/1' },
+        { name: 'ci / lint', source: 'checkRun', id: 2, state: 'success', detail: 'skipped', url: 'https://ci/2' },
+        { name: 'ci / build', source: 'checkRun', id: 3, state: 'pending', detail: 'in_progress' },
+        { name: 'ci / docs', source: 'checkRun', id: 4, state: 'failure', detail: 'timed_out' },
+        { name: 'ci / odd', source: 'checkRun', id: 5, state: 'failure', detail: 'completed' },
+        { name: 'deploy', source: 'status', state: 'success', detail: 'success', url: 'https://deploy' },
+        { name: 'coverage', source: 'status', state: 'failure', detail: 'error' },
+        { name: 'preview', source: 'status', state: 'pending', detail: 'pending' },
+        { name: 'legal', source: 'status', state: 'failure', detail: 'failure' },
+      ])
+      expect(requests.find((request) => request.path.endsWith('/check-runs'))?.query).toContain('filter=latest')
+      // Polled, so never served from the cache.
+      yield* github.listCommitChecks('abc')
+      expect(requests).toHaveLength(4)
+    }),
+  )
+
   it.effect('creates and updates check runs, sending annotations 50 at a time', () =>
     Effect.gen(function* () {
       const { service, requests } = live({
