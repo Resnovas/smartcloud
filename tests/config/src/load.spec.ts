@@ -84,6 +84,43 @@ describe('parseConfig', () => {
     }),
   )
 
+  it.effect('keeps an unquoted all-digit colour as the six digits written', () =>
+    Effect.gen(function* () {
+      const { config } = yield* parseConfig(
+        [
+          'version: 2',
+          'labels:',
+          '  black: { name: black, color: 000000 }',
+          '  navy: { name: navy, color: 000123 }',
+          '  grey: { name: grey, color: 123456 }',
+          "  quoted: { name: quoted, color: '000000' }",
+          '  hex: { name: hex, color: 1e3456 }',
+          '',
+        ].join('\n'),
+        'x.yml',
+      )
+      expect(Object.values(config.labels ?? {}).map((label) => label.color)).toStrictEqual([
+        '000000',
+        '000123',
+        '123456',
+        '000000',
+        '1e3456',
+      ])
+    }),
+  )
+
+  it.effect('rejects a number colour that is not six digits as written, such as 1e3', () =>
+    Effect.gen(function* () {
+      for (const color of ['1e3', '0x1f', '0123456']) {
+        const error = yield* Effect.flip(
+          parseConfig(`version: 2\nlabels:\n  x: { name: x, color: ${color} }\n`, 'x.yml'),
+        )
+        expect(error._tag).toBe('ConfigDecodeError')
+        expect(error.message).toContain('Six hex digits')
+      }
+    }),
+  )
+
   it.effect('rejects invalid conditions with the schema path', () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(

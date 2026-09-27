@@ -10,7 +10,11 @@ The config lives in `@resnovas/config`; reading it from a repository lives in
 given `path` and `ref`), and fails with `NoConfig` when there is none.
 `loadConfig` then calls `resolveConfig`, which:
 
-1. parses YAML or JSON (`ConfigParseError` otherwise);
+1. parses YAML or JSON (`ConfigParseError` otherwise). A label `color` that
+   YAML reads as a number keeps its source text, so `000123` stays `'000123'`
+   and `1e3` stays `'1e3'` (and fails the six-hex-digit check) instead of
+   becoming `1000`. The `Color` schema also accepts a whole number from 0 to
+   999999 and pads it to six digits, for configs built in code or JSON;
 2. migrates a file without `version: 2` from v1 (`migrateV1`), with a warning
    for every v1 key it cannot carry over;
 3. reads each `extends` entry through the `ConfigSource` service

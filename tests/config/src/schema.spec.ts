@@ -15,7 +15,7 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Schema } from 'effect'
+import { Either, ParseResult, Schema } from 'effect'
 import { Color, Label, RuleId, SIZE_THRESHOLDS, SizeLabels, sizeThresholds, SmartcloudConfig } from '@resnovas/config'
 
 describe('SmartcloudConfig', () => {
@@ -48,6 +48,28 @@ describe('SmartcloudConfig building blocks', () => {
     expect(Schema.is(Color)('#0E8A16')).toBe(true)
     expect(Schema.is(Color)('0e8a16')).toBe(true)
     expect(Schema.is(Color)('#fff')).toBe(false)
+  })
+
+  it('reads an all-digit colour that arrived as a number back as six digits', () => {
+    const decode = Schema.decodeUnknownEither(Color)
+    // 000000, 000123 and 123456 are what YAML makes 0, 123 and 123456 from.
+    expect(decode(0)).toStrictEqual(Either.right('000000'))
+    expect(decode(123)).toStrictEqual(Either.right('000123'))
+    expect(decode(123_456)).toStrictEqual(Either.right('123456'))
+    expect(decode('000000')).toStrictEqual(Either.right('000000'))
+    expect(Schema.encodeSync(Color)('000123')).toBe('000123')
+  })
+
+  it('rejects a number that is not six digits, asking for quotes', () => {
+    const decode = Schema.decodeUnknownEither(Color)
+    for (const value of [1_000_000, -1, 12.5, Number.POSITIVE_INFINITY]) {
+      const result = decode(value)
+      expect(Either.isLeft(result)).toBe(true)
+      if (Either.isLeft(result)) {
+        expect(ParseResult.TreeFormatter.formatErrorSync(result.left)).toContain('write the colour in quotes')
+      }
+    }
+    expect(Either.isLeft(decode('green'))).toBe(true)
   })
 
   it('needs a label name and colour, and takes aliases', () => {

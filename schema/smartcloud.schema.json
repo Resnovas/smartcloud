@@ -155,9 +155,19 @@
       "additionalProperties": false
     },
     "Color": {
-      "type": "string",
-      "description": "Six hex digits, for example 0E8A16.",
-      "pattern": "^#?[0-9a-fA-F]{6}$"
+      "anyOf": [
+        {
+          "type": "string",
+          "description": "Six hex digits, for example 0E8A16.",
+          "pattern": "^#?[0-9a-fA-F]{6}$"
+        },
+        {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 999999
+        }
+      ],
+      "description": "Six hex digits, for example 0E8A16, with or without a leading #. An unquoted all-digit colour such as 000123 is read as a number and padded back to six digits."
     },
     "RuleId": {
       "type": "string",

@@ -82,7 +82,7 @@ labels:
 ```
 
 - The key (`docs`) is what other sections use; `name` is what GitHub shows.
-- **Quote colours.** A colour made only of digits, such as `000000`, is read by YAML as a number and rejected. Quoting every colour avoids the surprise.
+- **Quoting colours is recommended, not required.** YAML reads a colour made only of digits, such as `000000`, as a number; smartcloud turns it back into the six digits you wrote, so it works either way. Quotes make it plain to the reader (and to editors that check the file) that it is text.
 - Add `labelSync: { prune: true }` only when you want smartcloud to **delete** every label the file does not list. Leave it out while you are getting started.
 - To rename a label without losing it on old issues, give the new `name` and list the old one under `aliases`.
 
@@ -413,8 +413,9 @@ A pull request from a fork or from Dependabot always runs [restricted](/glossary
     The key is misspelt, in the wrong place, or its value is the wrong type. The warning names the file and the key. Run
     `smartcloud validate` for the full list, or let your editor underline it using the schema line from step 1.
   </Accordion>
-  <Accordion title="Expected string, actual 0 on a colour">
-    YAML read a colour made only of digits as a number. Quote it: `color: '000000'`.
+  <Accordion title="Expected Six hex digits on a colour">
+    The colour is not six hexadecimal digits as written, for example a typo, a missing digit, or a value YAML reads as
+    another kind of number such as `1e3`. Fix the digits and, when in doubt, quote it: `color: '0E8A16'`.
   </Accordion>
   <Accordion title="cannot change ... it is set by ...">
     Your file gives a different value for something a preset in `extends` already set. Remove the line, restate it

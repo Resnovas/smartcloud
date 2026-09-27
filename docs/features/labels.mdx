@@ -41,6 +41,9 @@ It is turned on when the config has a `labels`, `labelling` or `sizeLabels` sect
         color: 0075CA
     ```
 
+    The colour is six hexadecimal digits, as GitHub shows them. Quotes are optional: a colour made only of digits, such
+    as `000000`, is read back as the six digits you wrote. Quoting it (`color: '000000'`) is still the clearest.
+
   </Step>
   <Step title="Add a labelling rule (optional)">
     Point a rule at the label's key and give it a [condition group](/glossary#condition-group):
@@ -268,6 +271,9 @@ A Resnovas repository adds its own labels and rules below `house:local` under ne
 <AccordionGroup>
   <Accordion title="A label was not created or updated">
     Label sync only runs on `push`, `schedule`, `workflow_dispatch`, `repository_dispatch` and `merge_group`. A pull request run does not sync labels. Push to the default branch or run the workflow by hand.
+  </Accordion>
+  <Accordion title="labels.x.color: Expected Six hex digits">
+    The colour is not six hexadecimal digits as written. Check for a typo, a missing digit or a colour name such as `red`. YAML reads some unquoted values as numbers, such as `1e3` or `0x1f`; smartcloud keeps what you wrote, so these are reported rather than turned into a different colour. An all-digit colour such as `000123` is fine unquoted. When in doubt, put the colour in quotes: `color: '0E8A16'`.
   </Accordion>
   <Accordion title="label ... was not synced: its description is longer than GitHub's 100 characters">
     GitHub rejects longer descriptions. Shorten `labels.<key>.description` to 100 characters or fewer.

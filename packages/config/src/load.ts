@@ -15,7 +15,7 @@
  */
 
 import { Context, Data, Effect, Either, Option, ParseResult, Schema, SchemaAST } from 'effect'
-import { parse as parseYaml } from 'yaml'
+import { isScalar, parseDocument, visit } from 'yaml'
 import { ExtendsEntry, type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
 import { type Dropped, dottedPath, dropInvalid, isRestriction, type Reserved, withoutReserved } from './lenient.js'
 import { empty, type Merged, mergeLocked } from './merge.js'
@@ -169,6 +169,26 @@ const decodeV2 = Schema.decodeUnknownEither(SmartcloudConfig, { onExcessProperty
 const encodeV2 = Schema.encodeSync(SmartcloudConfig)
 
 type Json = null | boolean | number | string | ReadonlyArray<Json> | { readonly [key: string]: Json }
+
+// Parses YAML (or JSON) like yaml's parse, except that an unquoted label
+// colour YAML reads as a number keeps the text it was written as: `000123`
+// stays '000123' rather than becoming 123, and `1e3` stays '1e3' and is
+// rejected as not being six hex digits instead of turning into 1000.
+const parseYaml = (text: string): unknown => {
+  const document = parseDocument(text)
+  const [error] = document.errors
+  if (error !== undefined) throw error
+  visit(document, {
+    Pair: (_, pair) => {
+      const { key, value } = pair
+      const colour = isScalar(key) && key.value === 'color' && isScalar(value) ? value : undefined
+      // source is set while parsing, so it is only missing for a node built by hand.
+      if (typeof colour?.value === 'number' && colour.source !== undefined) colour.value = colour.source
+    },
+  })
+  return document.toJS()
+}
+
 const isRecord = (value: unknown): value is Readonly<Record<string, Json>> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
 
