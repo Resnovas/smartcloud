@@ -84,7 +84,10 @@ export const validate = (file: string) =>
     const text = yield* fs.readFileString(file)
     const resolved: ResolvedConfig = yield* resolveConfig(text, file, { strict: true })
     yield* recordConfig(resolved, text)
-    yield* Console.log(`${file} is a valid smartcloud config.`)
+    // A path relative to the repository is shown with forward slashes on every
+    // platform; an absolute path is shown as the platform writes it.
+    const shown = /^(?:[A-Za-z]:)?[\\/]/.test(file) ? file : file.replaceAll('\\', '/')
+    yield* Console.log(`${shown} is a valid smartcloud config.`)
     if (resolved.sources.length > 1) yield* Console.log(`Built from: ${resolved.sources.join(', ')}`)
     for (const warning of resolved.warnings) yield* Console.log(`warning: ${warning}`)
     return resolved
@@ -274,7 +277,10 @@ const checkTarget = (root: string, realRoot: string, file: string) =>
     for (const step of path.relative(root, target).split(path.sep)) {
       current = path.join(current, step)
       const exists = yield* fs.exists(current)
-      if (exists && !isWithin(path, realRoot, yield* fs.realPath(current)))
+      // A link that cannot be resolved (dangling, or any link on Windows, where
+      // resolving it can fail) is caught by the symlink check below instead.
+      const real = exists ? yield* Effect.option(fs.realPath(current)) : Option.none()
+      if (Option.isSome(real) && !isWithin(path, realRoot, real.value))
         return yield* new UnsafePath({ path: file, reason: `${current} resolves outside the output directory` })
       // readLink succeeds only on a symlink.
       if (yield* Effect.isSuccess(fs.readLink(current)))

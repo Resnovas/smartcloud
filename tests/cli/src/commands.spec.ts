@@ -35,11 +35,11 @@ import {
   validate,
 } from '@resnovas/smartcloud'
 import { ConfigProvider, Effect, Layer } from 'effect'
-import { chmod, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
+import { mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, vi } from 'vitest'
-import { fixture, memorySource, repository } from './fixtures.js'
+import { fakeCommand, fixture, memorySource, repository } from './fixtures.js'
 
 let dir: string
 let logs: Array<string>
@@ -174,8 +174,11 @@ describe('sync', () => {
       const out = join(dir, 'out')
       yield* runWith(connect)(['node', 'smartcloud', 'sync', '--repo', 'Resnovas/example', '--out', out])
       expect(yield* Effect.promise(() => readFile(join(out, 'LICENSE'), 'utf8'))).toBe('(c) Resnovas\n')
-      expect((yield* Effect.promise(() => stat(join(out, 'tools/run')))).mode & 0o777).toBe(0o755)
-      expect((yield* Effect.promise(() => stat(join(out, 'LICENSE')))).mode & 0o777).toBe(0o644)
+      // Windows has no executable bit to check.
+      if (process.platform !== 'win32') {
+        expect((yield* Effect.promise(() => stat(join(out, 'tools/run')))).mode & 0o777).toBe(0o755)
+        expect((yield* Effect.promise(() => stat(join(out, 'LICENSE')))).mode & 0o777).toBe(0o644)
+      }
       expect(logs).toContain(`Rendered 3 file(s) from Resnovas/.github/templates@main into ${out}:`)
       expect(logs).toContain('- LICENSE (added)')
       expect(logs).toContain('- .github/dependabot.yml (unchanged)')
@@ -257,13 +260,7 @@ describe('sync', () => {
 
 describe('check-commit', () => {
   // A fake git on PATH, so the author is read without the real repository.
-  const withFakeGit = async (ident: string) => {
-    const bin = join(dir, 'bin')
-    await mkdir(bin)
-    await writeFile(join(bin, 'git'), `#!/bin/sh\nprintf '%s\\n' '${ident}'\n`)
-    await chmod(join(bin, 'git'), 0o755)
-    vi.stubEnv('PATH', `${bin}:${process.env['PATH'] ?? ''}`)
-  }
+  const withFakeGit = (ident: string) => fakeCommand(join(dir, 'bin'), 'git', ident)
   afterEach(() => vi.unstubAllEnvs())
 
   const message = async (text: string) => {

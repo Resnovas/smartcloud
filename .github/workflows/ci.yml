@@ -1,7 +1,8 @@
 # CI for the v2 workspace. Five jobs run in parallel on the projects a change
 # affects: lint (with the licence header and Prettier checks), typecheck (with
-# the test projects), test with coverage, build, and docs (API docs, contracts
-# and the check that docs/reference/configuration.mdx matches the JSON Schema).
+# the test projects), test with coverage on Linux, macOS and Windows with Node
+# 24 and the current release, build, and docs (API docs, contracts and the
+# check that docs/reference/configuration.mdx matches the JSON Schema).
 # The changes job first works out which of the last four the change needs
 # (tools/ci/changes.ts), so a documentation-only pull request runs only lint and
 # docs. The check job waits for all of them and is the one context the ruleset
@@ -187,15 +188,35 @@ jobs:
       - name: Type-check the tests
         run: pnpm typecheck:tests
 
+  # Runs the tests on Linux, macOS and Windows, each on the minimum Node major
+  # (.nvmrc, 24) and the current release, so a platform or Node difference
+  # fails here rather than for a user. Every combination runs to the end, and
+  # the check job fails if any of them failed. The test target's Nx inputs
+  # include the Node version and platform, so a result cached on one
+  # combination is never replayed on another.
   test:
-    name: test
+    name: test (${{ matrix.os }}, Node ${{ matrix.node }})
     needs: changes
     if: needs.changes.outputs.test == 'true'
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        node: ['24', current]
+    # Windows runners default to PowerShell; the steps are written for bash.
+    defaults:
+      run:
+        shell: bash
     steps:
+      # Windows checks text files out with CRLF by default, which the
+      # formatting-sensitive tests would read as changes.
+      - name: Keep LF line endings
+        run: git config --global core.autocrlf false
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
@@ -205,17 +226,18 @@ jobs:
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
-          node-version-file: .nvmrc
+          node-version: ${{ matrix.node }}
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
 
-      # Restores and saves the Nx cache as in the lint job.
+      # Restores and saves the Nx cache as in the lint job, one entry per
+      # combination.
       - name: Restore the Nx cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx/cache
-          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci-test
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci-test-node-${{ matrix.node }}
           restore-keys: |
             nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nx-${{ runner.os }}-

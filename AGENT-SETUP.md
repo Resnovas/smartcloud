@@ -4,7 +4,7 @@ Machine-only. People: `README.md`, `AGENTS.md`.
 
 ## Needs
 
-- Linux, macOS or Windows.
+- Linux, macOS or Windows (CI tests all three on Node 24 and the current release).
 - Node 24+ (`.nvmrc` = minimum major; `engines.node` `>=24`). Launcher uses nvm or fnm when present.
 - pnpm `12.4.2` (`packageManager`). Script provides it: installed pnpm, else corepack, else `npx pnpm@12.4.2`.
 - No services, no Docker, no database. Disk about 600 MB with `node_modules`.
