@@ -162,7 +162,7 @@ smartcloud never sets or changes a webhook secret: add one by hand in the reposi
 | --- | --- |
 | `enabled` | `false` unpublishes the site. On by default. |
 | `buildType` | `workflow` (a GitHub Actions workflow deploys it) or `legacy` (GitHub builds it from a branch). |
-| `branch`, `path` | The branch and folder (`/` or `/docs`) a `legacy` site builds from. `branch` defaults to the default branch and `path` to `/`. |
+| `branch`, `path` | The branch and folder (`/` or `/docs`) a `legacy` site builds from. `branch` defaults to the default branch and `path` to `/`. A `workflow` site ignores both. |
 | `cname` | The custom domain. |
 | `httpsEnforced` | `true` redirects HTTP to HTTPS. GitHub rejects it until the custom domain's certificate is issued. |
 

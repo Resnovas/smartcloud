@@ -588,7 +588,7 @@ type Pages = NonNullable<SettingsConfig['pages']>
  * @remarks
  * A site built from a branch needs a source, so `branch` falls back to the
  * default branch and `path` to `/` whenever either is set or the build type
- * is `legacy`. A new site without a build type builds from its source when
+ * is `legacy`. A `workflow` site has no source, so it ignores both. A new site without a build type builds from its source when
  * it has one, otherwise from a workflow. An update sends only what the
  * config sets; the custom domain and HTTPS setting can only be sent when
  * updating, so they go in the update body alone.
@@ -609,7 +609,8 @@ type Pages = NonNullable<SettingsConfig['pages']>
 export const pagesStep = (pages: Pages, repository: Repository): PagesStep => {
   const base = { kind: 'pages', id: 'pages', optional: false } as const
   if (pages.enabled === false) return { ...base, description: 'GitHub Pages unpublished', enabled: false, create: {}, update: {} }
-  const fromBranch = pages.buildType === 'legacy' || pages.branch !== undefined || pages.path !== undefined
+  const fromBranch =
+    pages.buildType !== 'workflow' && (pages.buildType === 'legacy' || pages.branch !== undefined || pages.path !== undefined)
   const source = fromBranch ? { branch: pages.branch ?? repository.defaultBranch, path: pages.path ?? '/' } : undefined
   const explicit: PagesBody = {
     ...(pages.buildType === undefined ? {} : { build_type: pages.buildType }),
