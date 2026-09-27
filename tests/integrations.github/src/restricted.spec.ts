@@ -47,6 +47,8 @@ const readOnly = (): GitHubService => {
     createCheckRun: () => forbidden('createCheckRun'),
     updateCheckRun: () => forbidden('updateCheckRun'),
     proposeChanges: () => forbidden('proposeChanges'),
+    lockIssue: () => forbidden('lockIssue'),
+    backport: () => forbidden('backport'),
     repositoryRequest: (request) =>
       request.method === 'GET' ? Effect.succeed({ read: true }) : forbidden('repositoryRequest'),
     graphql: (query) => (query.startsWith('mutation') ? forbidden('graphql') : Effect.succeed({ read: true })),
@@ -84,6 +86,9 @@ describe('restricted token', () => {
       expect(
         (yield* github.proposeChanges({ branch: 'b', base: 'main', title: 't', body: '', files: [] })).number,
       ).toBe(0)
+      yield* github.lockIssue(1, 'resolved')
+      const backport = { branch: 'b', base: 'v1', from: 'a', to: 'c', message: 'm', title: 't', body: '' }
+      expect((yield* github.backport(backport)).status).toBe('opened')
       expect(yield* github.repositoryRequest({ method: 'GET', path: '' })).toStrictEqual({ read: true })
       expect(yield* github.repositoryRequest({ method: 'PATCH', path: '', body: {} })).toBeNull()
       expect(yield* github.graphql('query { y }', {})).toStrictEqual({ read: true })
@@ -103,6 +108,8 @@ describe('restricted token', () => {
         'createCheckRun',
         'updateCheckRun',
         'proposeChanges',
+        'lockIssue',
+        'backport',
         'repositoryRequest',
         'graphql',
       ])

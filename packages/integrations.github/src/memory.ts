@@ -18,10 +18,13 @@ import type { ChangedFile, Check, Commit, Mergeable, Reactions, Review } from '@
 import { Effect, Layer } from 'effect'
 import { type GitHubError, NotFound, ValidationFailed } from './errors.js'
 import {
+  type BackportRequest,
+  type BackportResult,
   type ChangeProposal,
   type CheckRun,
   type Comment,
   type CommitCheck,
+  type GitCommit,
   GitHub,
   type GitHubService,
   type ClosedIssueSummary,
@@ -68,6 +71,13 @@ export interface MemoryProposal extends ChangeProposal {
   open: boolean
 }
 
+/** A backport the in-memory GitHub received, with the pull request it opened. */
+export interface MemoryBackport extends BackportRequest {
+  readonly number: number
+  /** Whether the pull request is still open; tests close it to see a new one opened. */
+  open: boolean
+}
+
 /**
  * Everything the in-memory GitHub holds. Tests seed it, run a feature, and
  * then read it to see what the feature did.
@@ -89,6 +99,14 @@ export interface MemoryState {
   executables: Set<string>
   /** Pull requests opened by `proposeChanges`, latest content last. */
   proposals: Array<MemoryProposal>
+  /** The commits `getCommit` reads, by SHA. */
+  gitCommits: Map<string, GitCommit>
+  /** The branches a backport can target; `main` unless seeded. */
+  branches: Set<string>
+  /** Branches a backport onto stops without a pull request, and why. */
+  backportOutcomes: Map<string, 'conflict' | 'empty'>
+  /** Pull requests opened by `backport`. */
+  backports: Array<MemoryBackport>
   checkRuns: Array<CheckRun & { readonly id: number }>
   /** The checks on each commit, by SHA, as `listCommitChecks` returns them; tests change them between polls. */
   commitChecks: Map<string, Array<CommitCheck>>
@@ -137,6 +155,10 @@ const defaults = (): MemoryState => ({
   files: new Map(),
   executables: new Set(),
   proposals: [],
+  gitCommits: new Map(),
+  branches: new Set(['main']),
+  backportOutcomes: new Map(),
+  backports: [],
   checkRuns: [],
   commitChecks: new Map(),
   requests: [],
@@ -150,8 +172,9 @@ const defaults = (): MemoryState => ({
  * @remarks
  * It behaves like GitHub where features depend on it: labels are unique by
  * name ignoring case, renames carry a label on existing issues, missing
- * things fail with `NotFound`, and a proposal updates the open pull request
- * from its branch rather than opening another.
+ * things fail with `NotFound`, a proposal updates the open pull request
+ * from its branch rather than opening another, and a backport leaves one
+ * open from its branch alone.
  *
  * @example
  * ```ts import.meta.vitest name="makeMemoryGitHub"
@@ -338,6 +361,30 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
           url: `https://github.com/${state.repository.fullName}/pull/${number}`,
           created: existing === undefined,
         }
+      }),
+    getCommit: (sha) =>
+      Effect.suspend(() => {
+        const commit = state.gitCommits.get(sha)
+        return commit === undefined
+          ? Effect.fail(new NotFound({ operation: 'getCommit', detail: `commit ${sha}` }))
+          : Effect.succeed(commit)
+      }),
+    backport: (request) =>
+      Effect.suspend((): Effect.Effect<BackportResult, GitHubError> => {
+        if (!state.branches.has(request.base))
+          return Effect.fail(new NotFound({ operation: 'backport: read base', detail: `branch ${request.base}` }))
+        const url = (number: number) => `https://github.com/${state.repository.fullName}/pull/${number}`
+        const existing = state.backports.find(
+          (entry) => entry.open && entry.branch === request.branch && entry.base === request.base,
+        )
+        if (existing !== undefined)
+          return Effect.succeed({ status: 'existing' as const, number: existing.number, url: url(existing.number) })
+        const outcome = state.backportOutcomes.get(request.base)
+        if (outcome !== undefined)
+          return Effect.succeed(outcome === 'conflict' ? { status: 'conflict' as const } : { status: 'empty' as const })
+        const number = state.nextId++
+        state.backports.push({ ...request, number, open: true })
+        return Effect.succeed({ status: 'opened' as const, number, url: url(number) })
       }),
     repositoryRequest: (request) => Effect.sync(() => (state.requests.push(request), null)),
     graphql: (query, variables) => Effect.sync(() => (state.graphql.push({ query, variables }), null)),

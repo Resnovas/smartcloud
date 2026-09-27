@@ -101,6 +101,9 @@
         "lock": {
           "$ref": "#/$defs/Lock"
         },
+        "backport": {
+          "$ref": "#/$defs/Backport"
+        },
         "settings": {
           "$ref": "#/$defs/Settings"
         },
@@ -2240,6 +2243,28 @@
         "too heated",
         "spam"
       ]
+    },
+    "Backport": {
+      "type": "object",
+      "required": [],
+      "properties": {
+        "prefix": {
+          "$ref": "#/$defs/BackportPrefix"
+        },
+        "labels": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "BackportPrefix": {
+      "type": "string",
+      "description": "The start of a backport label, such as `backport `; the rest of the label is the branch.",
+      "title": "Backport label prefix",
+      "minLength": 1
     },
     "Settings": {
       "type": "object",

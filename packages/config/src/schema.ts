@@ -18,6 +18,7 @@ import { ConditionGroup } from '@resnovas/conditions'
 import { Schema } from 'effect'
 import { ExtendsEntry } from './extends.js'
 import {
+  Backport,
   Branches,
   CodeOwners,
   Commits,
@@ -371,6 +372,7 @@ export const SmartcloudConfig = Schema.Struct({
   codeowners: Schema.optionalWith(CodeOwners, { exact: true }),
   stale: Schema.optionalWith(Stale, { exact: true }),
   lock: Schema.optionalWith(Lock, { exact: true }),
+  backport: Schema.optionalWith(Backport, { exact: true }),
   settings: Schema.optionalWith(Settings, { exact: true }),
   sync: Schema.optionalWith(Sync, { exact: true }),
 }).annotations({

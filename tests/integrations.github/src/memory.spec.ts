@@ -133,6 +133,39 @@ describe('in-memory GitHub', () => {
     }),
   )
 
+  it.effect('reads seeded commits, and opens, keeps or stops backports', () =>
+    Effect.gen(function* () {
+      const { service, state } = makeMemoryGitHub({
+        gitCommits: new Map([['abc', { sha: 'abc', message: 'fix: x', parents: ['p'] }]]),
+        branches: new Set(['main', 'v1', 'v2', 'v3']),
+        backportOutcomes: new Map([
+          ['v2', 'conflict'],
+          ['v3', 'empty'],
+        ]),
+      })
+      expect(yield* service.getCommit('abc')).toStrictEqual({ sha: 'abc', message: 'fix: x', parents: ['p'] })
+      expect((yield* Effect.flip(service.getCommit('nope')))._tag).toBe('NotFound')
+      const request = {
+        branch: 'backport/1-to-v1',
+        base: 'v1',
+        from: 'p',
+        to: 'abc',
+        message: 'm',
+        title: 't',
+        body: 'b',
+      }
+      const url = 'https://github.com/Resnovas/example/pull/1'
+      expect(yield* service.backport(request)).toStrictEqual({ status: 'opened', number: 1, url })
+      expect(yield* service.backport(request)).toStrictEqual({ status: 'existing', number: 1, url })
+      expect(state.backports).toStrictEqual([{ ...request, number: 1, open: true }])
+      if (state.backports[0] !== undefined) state.backports[0].open = false
+      expect((yield* service.backport(request)).status).toBe('opened')
+      expect(yield* service.backport({ ...request, base: 'v2' })).toStrictEqual({ status: 'conflict' })
+      expect(yield* service.backport({ ...request, base: 'v3' })).toStrictEqual({ status: 'empty' })
+      expect((yield* Effect.flip(service.backport({ ...request, base: 'v9' })))._tag).toBe('NotFound')
+    }),
+  )
+
   it.effect('serves pull request data and records reviews', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub({

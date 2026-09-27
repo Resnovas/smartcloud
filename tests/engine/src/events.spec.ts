@@ -136,6 +136,39 @@ describe('decodeEvent', () => {
     }),
   )
 
+  it.effect('a merged pull request carries its merge commit and base, and a label event its label', () =>
+    Effect.gen(function* () {
+      const merged = {
+        ...pullRequestPayload.pull_request,
+        merged: true,
+        merge_commit_sha: 'def456',
+        base: { ref: 'main' },
+      }
+      expect(
+        yield* decodeEvent('pull_request', { action: 'labeled', label: { name: 'backport v1' }, pull_request: merged }),
+      ).toMatchObject({
+        merge: { sha: 'def456', base: 'main' },
+        label: 'backport v1',
+      })
+      const open = yield* decodeEvent('pull_request', {
+        pull_request: {
+          ...pullRequestPayload.pull_request,
+          merged: false,
+          merge_commit_sha: 'def456',
+          base: { ref: 'main' },
+        },
+      })
+      expect(open).not.toHaveProperty('merge')
+      expect(open).not.toHaveProperty('label')
+      expect(
+        yield* decodeEvent('pull_request', { pull_request: { ...merged, merge_commit_sha: null } }),
+      ).not.toHaveProperty('merge')
+      expect(yield* decodeEvent('pull_request', { pull_request: { ...merged, base: undefined } })).not.toHaveProperty(
+        'merge',
+      )
+    }),
+  )
+
   it.effect('issues and issue comments become an issue subject', () =>
     Effect.gen(function* () {
       expect(yield* decodeEvent('issues', issuePayload)).toMatchObject({

@@ -371,6 +371,41 @@ describe('cached reads: invalidation after writes', () => {
     }),
   )
 
+  it.effect('a backport invalidates file reads and the open issues, and commits are read straight through', () =>
+    Effect.gen(function* () {
+      const { service, calls } = live({
+        [`GET ${REPO}/contents/LICENSE`]: {
+          body: { type: 'file', encoding: 'base64', content: Buffer.from('x').toString('base64') },
+        },
+        [`GET ${REPO}/issues`]: { body: [] },
+        [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'u' }] },
+        [`GET ${REPO}/git/commits/abc`]: { body: { sha: 'abc', message: 'm', tree: { sha: 't' }, parents: [] } },
+      })
+      const github = yield* service
+      const read = Effect.all([
+        github.getFile({ owner: 'Resnovas', repo: 'example', path: 'LICENSE' }),
+        github.listOpenIssues,
+      ])
+      yield* read
+      yield* read
+      yield* github.backport({
+        branch: 'backport/1-to-v1',
+        base: 'v1',
+        from: 'p',
+        to: 'abc',
+        message: 'm',
+        title: 't',
+        body: 'b',
+      })
+      yield* read
+      yield* github.getCommit('abc')
+      yield* github.getCommit('abc')
+      expect(calls('GET', `${REPO}/contents/LICENSE`)).toBe(2)
+      expect(calls('GET', `${REPO}/issues`)).toBe(2)
+      expect(calls('GET', `${REPO}/git/commits/abc`)).toBe(2)
+    }),
+  )
+
   it.effect('a failed write still invalidates, since GitHub may have applied it', () =>
     Effect.gen(function* () {
       const { service, calls } = live({

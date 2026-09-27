@@ -43,6 +43,9 @@
       "path": "../feature.lock/tsconfig.lib.json"
     },
     {
+      "path": "../feature.backport/tsconfig.lib.json"
+    },
+    {
       "path": "../feature.branches/tsconfig.lib.json"
     },
     {

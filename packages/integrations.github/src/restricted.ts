@@ -93,6 +93,8 @@ export const restrictedGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArra
     createCheckRun: (run) => orSkip(inner.createCheckRun(run), skip.createCheckRun(run)),
     updateCheckRun: (id, run) => orSkip(inner.updateCheckRun(id, run), skip.updateCheckRun(id, run)),
     proposeChanges: (proposal) => orSkip(inner.proposeChanges(proposal), skip.proposeChanges(proposal)),
+    lockIssue: (issue, reason) => orSkip(inner.lockIssue(issue, reason), skip.lockIssue(issue, reason)),
+    backport: (request) => orSkip(inner.backport(request), skip.backport(request)),
     repositoryRequest: (request) =>
       request.method === 'GET'
         ? inner.repositoryRequest(request)

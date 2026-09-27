@@ -28,6 +28,8 @@ export { isTrustedComment } from './comments.js'
 export { GitHub } from './service.js'
 export type {
   Annotation,
+  BackportRequest,
+  BackportResult,
   ChangeProposal,
   CheckRun,
   CheckRunFields,
@@ -38,6 +40,7 @@ export type {
   DirectoryEntry,
   FileChange,
   FileLocation,
+  GitCommit,
   GitHubService,
   IssueSummary,
   Label,
@@ -56,6 +59,6 @@ export { Restricted, restrictedGitHub, SkippedWrites } from './restricted.js'
 export { githubDuration, githubRequests, githubSpanName } from './telemetry.js'
 export type { RecordedWrite } from './dry-run.js'
 export { fileKey, GitHubMemory, makeMemoryGitHub } from './memory.js'
-export type { MemoryIssue, MemoryProposal, MemoryPullRequest, MemoryState } from './memory.js'
+export type { MemoryBackport, MemoryIssue, MemoryProposal, MemoryPullRequest, MemoryState } from './memory.js'
 export { reviewAssignmentSnapshot, requestOwnerReviews, previouslyRequestedTeams } from './reviewers.js'
 export type { ReviewAssignmentSnapshot } from './reviewers.js'

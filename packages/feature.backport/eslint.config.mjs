@@ -1,5 +1,5 @@
 /**
- * @file packages/engine/src/index.ts
+ * @file packages/feature.backport/eslint.config.mjs
  *
  * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
@@ -14,16 +14,6 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-export { decodeEvent, EventDecodeError } from './events.js'
-export type {
-  Envelope,
-  IssueEnvelope,
-  PullRequestEnvelope,
-  PullRequestMerge,
-  RepositoryEnvelope,
-  UnsupportedEnvelope,
-} from './events.js'
-export { findingsCounter, makeReport, Report } from './report.js'
-export type { Change, Fact, Finding, ReportSnapshot } from './report.js'
-export { featureDuration, loadFacets, runFeatures } from './runner.js'
-export type { EnvelopeKind, Feature, FeatureContext, RunResult, SupportedEnvelope } from './runner.js'
+import baseConfig from '../../eslint.config.mjs'
+
+export default [...baseConfig]

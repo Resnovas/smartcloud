@@ -54,6 +54,8 @@ describe('dry run', () => {
         url: '',
         created: false,
       })
+      const backport = { branch: 'b', base: 'main', from: 'p', to: 't', message: 'm', title: 't', body: '' }
+      expect(yield* github.backport(backport)).toStrictEqual({ status: 'opened', number: 0, url: '' })
       expect(yield* github.listDirectory({ owner: 'Resnovas', repo: 'example', path: '' })).toStrictEqual([])
       expect(yield* github.repositoryRequest({ method: 'PATCH', path: '', body: { has_wiki: false } })).toBeNull()
       yield* github.repositoryRequest({ method: 'GET', path: '/rulesets' })
@@ -96,6 +98,7 @@ describe('dry run', () => {
         'createCheckRun',
         'updateCheckRun',
         'proposeChanges',
+        'backport',
         'repositoryRequest',
         'graphql',
       ])

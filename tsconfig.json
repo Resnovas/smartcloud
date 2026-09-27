@@ -67,6 +67,9 @@
       "path": "./packages/feature.lock"
     },
     {
+      "path": "./packages/feature.backport"
+    },
+    {
       "path": "./packages/feature.branches"
     },
     {

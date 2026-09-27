@@ -18,6 +18,7 @@
     "@effect/platform": "^0.97.2",
     "@resnovas/config": "workspace:*",
     "@resnovas/engine": "workspace:*",
+    "@resnovas/feature.backport": "workspace:*",
     "@resnovas/feature.branches": "workspace:*",
     "@resnovas/feature.codeowners": "workspace:*",
     "@resnovas/feature.commits": "workspace:*",

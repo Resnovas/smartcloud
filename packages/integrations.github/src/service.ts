@@ -204,6 +204,41 @@ export interface ProposalResult {
   readonly created: boolean
 }
 
+/** A commit in the repository's history, as the backport feature walks it. */
+export interface GitCommit {
+  readonly sha: string
+  readonly message: string
+  /** The parents' SHAs, first parent first. */
+  readonly parents: ReadonlyArray<string>
+}
+
+/** Changes to cherry-pick onto another branch, as a pull request. */
+export interface BackportRequest {
+  /** The branch to create; an existing one with no open pull request to `base` is reset. */
+  readonly branch: string
+  /** The branch the changes are picked onto and the pull request targets. */
+  readonly base: string
+  /** The commit the changes are measured from. */
+  readonly from: string
+  /** The commit holding the changes; everything between `from` and it is picked as one commit. */
+  readonly to: string
+  /** The commit message, before the sign-off. */
+  readonly message: string
+  readonly title: string
+  readonly body: string
+}
+
+/**
+ * What a backport did: opened a pull request, found one already open from
+ * its branch, or stopped because the changes conflict with `base` or are
+ * already on it.
+ */
+export type BackportResult =
+  | { readonly status: 'opened'; readonly number: number; readonly url: string }
+  | { readonly status: 'existing'; readonly number: number; readonly url: string }
+  | { readonly status: 'conflict' }
+  | { readonly status: 'empty' }
+
 /** The name and email commits are made and signed off as. */
 export interface CommitIdentity {
   readonly name: string
@@ -293,6 +328,15 @@ export interface GitHubService {
    * then opens a pull request from it, or updates the one already open.
    */
   readonly proposeChanges: (proposal: ChangeProposal) => Effect.Effect<ProposalResult, GitHubError>
+
+  /** Reads a commit's message and parents. */
+  readonly getCommit: (sha: string) => Effect.Effect<GitCommit, GitHubError>
+  /**
+   * Cherry-picks the changes from `from` to `to` onto `base` as one signed-off
+   * commit on `branch`, and opens a pull request from it. An open pull
+   * request from `branch` to `base` is left as it is.
+   */
+  readonly backport: (request: BackportRequest) => Effect.Effect<BackportResult, GitHubError>
 
   readonly repositoryRequest: (request: RepositoryRequest) => Effect.Effect<unknown, GitHubError>
   readonly graphql: (query: string, variables: Readonly<Record<string, unknown>>) => Effect.Effect<unknown, GitHubError>
