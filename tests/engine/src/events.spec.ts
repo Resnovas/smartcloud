@@ -40,6 +40,8 @@ describe('decodeEvent', () => {
             title: 'feat(labels): sync labels',
             body: 'Adds label sync.',
             author: 'jane',
+            association: 'CONTRIBUTOR',
+            bot: false,
             open: true,
             locked: false,
             labels: ['bug'],
@@ -74,6 +76,22 @@ describe('decodeEvent', () => {
     Effect.map(
       decodeEvent('pull_request', { pull_request: { ...pullRequestPayload.pull_request, base: undefined } }),
       (envelope) => expect(envelope).not.toHaveProperty('subject.baseBranch'),
+    ),
+  )
+
+  it.effect('reads a bot author, and leaves out an association GitHub may add later', () =>
+    Effect.map(
+      decodeEvent('pull_request', {
+        pull_request: {
+          ...pullRequestPayload.pull_request,
+          user: { login: 'bot[bot]', type: 'Bot' },
+          author_association: 'SOMETHING_NEW',
+        },
+      }),
+      (envelope) => {
+        expect(envelope).toMatchObject({ subject: { author: 'bot[bot]', bot: true } })
+        expect(envelope).not.toHaveProperty('subject.association')
+      },
     ),
   )
 

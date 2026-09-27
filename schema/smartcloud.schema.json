@@ -219,6 +219,9 @@
               "$ref": "#/$defs/baseBranchMatches"
             },
             {
+              "$ref": "#/$defs/authorAssociation"
+            },
+            {
               "$ref": "#/$defs/isOpen"
             },
             {
@@ -387,6 +390,43 @@
       },
       "additionalProperties": false,
       "description": "The pull request's base branch, the one it merges into, matches a pattern."
+    },
+    "authorAssociation": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "authorAssociation"
+          ]
+        },
+        "condition": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "member",
+              "collaborator",
+              "contributor",
+              "firstTimeContributor",
+              "firstTimer",
+              "mannequin",
+              "none",
+              "bot"
+            ],
+            "description": "owner, member, collaborator (an outside collaborator), contributor, firstTimeContributor (includes first-timers), firstTimer, mannequin, none or bot."
+          },
+          "description": "The associations that pass; any one is enough."
+        }
+      },
+      "additionalProperties": false,
+      "description": "The author's association with the repository is one of these, or the author is a bot when bot is listed."
     },
     "isOpen": {
       "type": "object",

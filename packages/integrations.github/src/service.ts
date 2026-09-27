@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Check, Commit, Mergeable, Review } from '@resnovas/conditions'
+import type { Association, Check, Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Context, type Effect } from 'effect'
 import type { GitHubError } from './errors.js'
 
@@ -65,6 +65,10 @@ export interface IssueSummary {
   readonly title: string
   readonly body: string
   readonly author: string
+  /** How the author is associated with the repository, when GitHub reports a known association. */
+  readonly association?: Association
+  /** Whether the author is a bot account, such as a GitHub App. */
+  readonly bot?: boolean
   readonly open: boolean
   readonly locked: boolean
   readonly labels: ReadonlyArray<string>

@@ -14,20 +14,22 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Subject } from '@resnovas/conditions'
+import { Association, type Subject } from '@resnovas/conditions'
 import { Data, Effect, Either, ParseResult, Schema } from 'effect'
 
 // Only the fields smartcloud reads are decoded; GitHub's payloads carry far
 // more, and excess properties are ignored.
 
-const Login = Schema.Struct({ login: Schema.String })
+const User = Schema.Struct({ login: Schema.String, type: Schema.optional(Schema.String) })
 const LabelRef = Schema.Struct({ name: Schema.String })
 
 const IssueFields = {
   number: Schema.Number,
   title: Schema.String,
   body: Schema.NullishOr(Schema.String),
-  user: Schema.NullishOr(Login),
+  user: Schema.NullishOr(User),
+  // Read as a string: an association GitHub adds later is left out, not a decode error.
+  author_association: Schema.optional(Schema.String),
   state: Schema.Literal('open', 'closed'),
   locked: Schema.Boolean,
   labels: Schema.Array(LabelRef),
@@ -122,12 +124,16 @@ export class EventDecodeError extends Data.TaggedError('EventDecodeError')<{
 
 type IssueLike = Schema.Schema.Type<typeof IssuePayload>['issue']
 
+const isAssociation = Schema.is(Association)
+
 const subjectOf = (kind: Subject['kind'], item: IssueLike): Subject => ({
   kind,
   number: item.number,
   title: item.title,
   body: item.body ?? '',
   author: item.user?.login ?? '',
+  ...(isAssociation(item.author_association) ? { association: item.author_association } : {}),
+  ...(item.user?.type === undefined ? {} : { bot: item.user.type === 'Bot' }),
   open: item.state === 'open',
   locked: item.locked,
   labels: item.labels.map((label) => label.name),

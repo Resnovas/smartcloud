@@ -149,6 +149,8 @@ export const subjectOf = (item: IssueSummary): Subject => ({
   title: item.title,
   body: item.body,
   author: item.author,
+  ...(item.association === undefined ? {} : { association: item.association }),
+  ...(item.bot === undefined ? {} : { bot: item.bot }),
   open: item.open,
   locked: item.locked,
   labels: item.labels,

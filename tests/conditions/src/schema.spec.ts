@@ -47,6 +47,7 @@ describe('ConditionGroup', () => {
       { type: 'creatorMatches', condition: 'x' },
       { type: 'branchMatches', condition: 'x' },
       { type: 'baseBranchMatches', condition: 'x' },
+      { type: 'authorAssociation', condition: ['member', 'bot'] },
       { type: 'isOpen', condition: true },
       { type: 'isLocked', condition: true },
       { type: 'isDraft', condition: true },
