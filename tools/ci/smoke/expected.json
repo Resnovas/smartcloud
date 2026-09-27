@@ -1,0 +1,22 @@
+{
+  "pull_request": {
+    "event": "Event: `pull_request` (opened) on #634",
+    "results": { "conventions": "passed", "commits": "passed", "labels": "passed" },
+    "changes": ["labels: added label \"Smoke: CI\" to #634"]
+  },
+  "issues": {
+    "event": "Event: `issues` (opened) on #663",
+    "results": { "conventions": "passed", "labels": "passed" },
+    "changes": []
+  },
+  "push": {
+    "event": "Event: `push`",
+    "results": { "labels": "passed", "stale": "passed" },
+    "changes": ["labels: created label \"Smoke: Documentation\"", "labels: created label \"Smoke: CI\""]
+  },
+  "schedule": {
+    "event": "Event: `schedule`",
+    "results": { "labels": "passed", "stale": "passed" },
+    "changes": ["labels: created label \"Smoke: Documentation\"", "labels: created label \"Smoke: CI\""]
+  }
+}

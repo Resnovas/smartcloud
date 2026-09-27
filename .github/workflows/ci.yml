@@ -1,13 +1,14 @@
-# CI for the v2 workspace. Five jobs run in parallel on the projects a change
+# CI for the v2 workspace. Six jobs run in parallel on the projects a change
 # affects: lint (with the licence header and Prettier checks), typecheck (with
 # the test projects), test with coverage on Linux, macOS and Windows with Node
-# 24 and the current release, build, and docs (API docs, contracts and the
-# check that docs/reference/configuration.mdx matches the JSON Schema).
-# The changes job first works out which of the last four the change needs
-# (tools/ci/changes.ts), so a documentation-only pull request runs only lint and
-# docs. The check job waits for all of them and is the one context the ruleset
-# and the merge queue require, so adding or renaming a job never touches the
-# ruleset.
+# 24 and the current release, build, smoke (the built action run through
+# `uses: ./` in dry-run mode against recorded events), and docs (API docs,
+# contracts and the check that docs/reference/configuration.mdx matches the
+# JSON Schema). The changes job first works out which of the last five the
+# change needs (tools/ci/changes.ts), so a documentation-only pull request runs
+# only lint and docs. The check job waits for all of them and is the one
+# context the ruleset and the merge queue require, so adding or renaming a job
+# never touches the ruleset.
 name: CI
 
 on:
@@ -43,6 +44,8 @@ jobs:
       test: ${{ steps.classify.outputs.test }}
       build: ${{ steps.classify.outputs.build }}
       docs: ${{ steps.classify.outputs.docs }}
+      # The smoke test runs the bundle, so it runs whenever the build does.
+      smoke: ${{ steps.classify.outputs.build }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -310,6 +313,84 @@ jobs:
       - name: Check the action bundle size
         run: pnpm bundle:check
 
+  # Runs the built action as a workflow uses it (`uses: ./`), with dryRun,
+  # against events recorded in tools/ci/smoke/events, and checks each job
+  # summary against tools/ci/smoke/expected.json. The runner sets the event
+  # and summary variables for `uses: ./` over the step's env, so the
+  # tools/ci/smoke/replay.ts preload repoints them at the recording. The
+  # config is given inline and telemetry is off, so the run needs only the
+  # read-only workflow token, as on a pull request from a fork.
+  smoke:
+    name: smoke (${{ matrix.event }})
+    needs: changes
+    if: needs.changes.outputs.smoke == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      issues: read
+      pull-requests: read
+    strategy:
+      fail-fast: false
+      matrix:
+        event: [pull_request, issues, push, schedule]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Restores and saves the Nx cache as in the lint job, one entry per event.
+      - name: Restore the Nx cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci-smoke-${{ matrix.event }}
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nx-${{ runner.os }}-
+
+      - name: Bundle the action
+        run: pnpm nx run @resnovas/action:bundle
+
+      - name: Read the smoke config
+        id: config
+        run: |
+          {
+            echo 'text<<SMOKE_CONFIG'
+            cat tools/ci/smoke/config.yml
+            echo 'SMOKE_CONFIG'
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Run the action on the recorded event
+        uses: ./
+        env:
+          NODE_OPTIONS: --import=${{ github.workspace }}/tools/ci/smoke/replay.ts
+          SMOKE_EVENT_NAME: ${{ matrix.event }}
+          SMOKE_EVENT_PATH: ${{ github.workspace }}/tools/ci/smoke/events/${{ matrix.event }}.json
+          SMOKE_SUMMARY: ${{ runner.temp }}/smoke-summary.md
+        with:
+          configJson: ${{ steps.config.outputs.text }}
+          dryRun: true
+          telemetry: false
+
+      # Runs when the action failed too, so its summary, or the lack of one,
+      # is reported.
+      - name: Check the job summary
+        if: ${{ !cancelled() }}
+        env:
+          EVENT: ${{ matrix.event }}
+          SUMMARY: ${{ runner.temp }}/smoke-summary.md
+        run: node tools/ci/smoke/check.ts "$EVENT" "$SUMMARY"
+
   docs:
     name: docs
     needs: changes
@@ -372,7 +453,7 @@ jobs:
   # request through.
   check:
     name: check
-    needs: [changes, lint, typecheck, test, build, docs]
+    needs: [changes, lint, typecheck, test, build, smoke, docs]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5

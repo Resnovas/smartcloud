@@ -1,0 +1,49 @@
+# The config the smoke job gives the action inline, so a run needs no file on
+# the default branch and no preset the workflow token cannot read. It enables
+# features that act on each recorded event with only read access. The labels
+# are named for the smoke test, so none of them exists in the repository.
+version: 2
+
+roles:
+  maintainers: [TGTGamer]
+  trustedBots: ['dependabot[bot]', 'github-actions[bot]']
+
+labels:
+  docs:
+    name: 'Smoke: Documentation'
+    color: '0075CA'
+  ci:
+    name: 'Smoke: CI'
+    color: '5319E7'
+
+labelling:
+  docs:
+    label: docs
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'docs/**'
+  ci:
+    label: ci
+    when:
+      condition:
+        - type: titleMatches
+          condition: '^(ci|test)(\(.+\))?!?: '
+
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      message: The title is not a conventional commit.
+      when:
+        condition:
+          - type: titleMatches
+            condition: '^(feat|fix|perf|refactor|test|docs|chore|build|ci|style|revert)(\([\w./-]+\))?!?: \S'
+
+commits:
+  dco: true
+  aiAttribution: true
+
+stale:
+  staleAfterDays: 60
+  staleLabel: stale
