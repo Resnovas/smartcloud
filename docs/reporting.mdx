@@ -24,6 +24,8 @@ A feature that failed to run concludes as failure with the error as its summary,
 
 Because each feature has its own check, you can make just the ones you enforce required in a ruleset.
 
+Findings that belong to no feature get a check of their own too: in a restricted run, `smartcloud / access` carries the restriction notice and a warning for each part of the config it left out (see [Restricted runs](#restricted-runs)).
+
 ## One comment
 
 On an issue or pull request, smartcloud keeps a single comment listing its errors and warnings in a table, and updates it in place on every run. Notices are left out of it.
@@ -51,6 +53,8 @@ A restricted run skips what its token cannot do, instead of failing:
 - A preset in `extends` from another repository that the token cannot read is left out, and so is a config section that fails only for keys the preset could have set, such as `sync.source`, or a convention rule that only tweaks a rule the preset defined. Each is a warning finding (`access.config-skipped`), because its rules were not checked in this run. A section with a mistake of its own still fails the run, as it would with the preset: a wrong value, or a missing key inside an entry the repository names, such as a label without a `color`. A missing preset in the repository itself still fails the run.
 - The settings and sync features are skipped, with the reason in the job summary.
 - A write GitHub refuses, such as a label, the report comment or a check run on a fork's read-only token, is skipped and listed under **Restricted access** in the job summary.
+
+When config was left out, the check runs show it. smartcloud cannot tell which rules an unreadable preset would have set, so it assumes any feature could be missing some: each feature's check that would pass concludes as neutral instead, its title ends with "config left out", and its summary lists what was left out. A failing check still fails. Neutral does not block a required check, so a pull request from a fork is not held up by config it cannot read, but the check no longer claims every rule passed.
 
 The run notes the restriction and its reason as a notice (`access.restricted`). The job summary and annotations are written by the job itself, so they always carry every finding.
 

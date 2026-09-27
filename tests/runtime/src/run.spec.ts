@@ -78,6 +78,7 @@ describe('runEvent and dryRun', () => {
       )
       expect(outcome.result.findings.map((finding) => finding.rule)).toStrictEqual(['conventions.title'])
       expect(state.checkRuns).not.toHaveLength(0)
+      expect(outcome.result.configSkipped).toBeUndefined()
     }),
   )
 
@@ -86,12 +87,14 @@ describe('runEvent and dryRun', () => {
     () =>
       Effect.gen(function* () {
         const config = `version: 2\nextends: ['Resnovas/.github/smartcloud/house.yml@main']\n${CONVENTIONS.replace('version: 2\n', '')}sync:\n  exclude: [LICENSE]\n`
-        const { service } = memory({ '.github/smartcloud.yml': config })
+        const { service, state } = memory({ '.github/smartcloud.yml': config })
         const access = { restricted: true, reason: 'a pull request from a fork' } as const
         const event = yield* syntheticEvent({ kind: 'pullRequest', number: 7 }).pipe(
           Effect.provideService(GitHub, service),
         )
         const outcome = yield* runEvent({ config: {}, event, access }).pipe(Effect.provideService(GitHub, service))
+        expect(outcome.result.configSkipped).toHaveLength(2)
+        expect(state.checkRuns.map((check) => [check.name, check.conclusion])).toContainEqual(['smartcloud / access', 'neutral'])
         expect(outcome.result.findings.map((finding) => `${finding.level} ${finding.rule}`)).toStrictEqual([
           'notice access.restricted',
           'warning access.config-skipped',
