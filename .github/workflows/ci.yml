@@ -41,6 +41,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Nx keys each task by the hash of its inputs, so a restored entry is
+      # replayed only when nothing it depends on changed. Every run saves a new
+      # entry under its commit and workflow, and restores the latest earlier
+      # one, which may come from the smartcloud workflow. A pull request's
+      # entries are scoped to its own ref, so they never reach main.
+      - name: Restore the Nx cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nx-${{ runner.os }}-
+
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
       - name: Lint, typecheck, test and build affected projects
