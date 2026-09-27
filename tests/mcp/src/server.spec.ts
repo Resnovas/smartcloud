@@ -49,7 +49,10 @@ describe('the MCP server', () => {
     const call = async (name: string, args: Record<string, unknown>) => {
       const result = await client.callTool({ name, arguments: args })
       const content = Array.isArray(result.content) ? result.content : []
-      return { isError: result.isError, text: content.map((part) => (typeof part.text === 'string' ? part.text : '')).join('\n') }
+      return {
+        isError: result.isError,
+        text: content.map((part) => (typeof part.text === 'string' ? part.text : '')).join('\n'),
+      }
     }
     expect((await call('validate_config', { config: 'version: 2\n' })).text).toContain('"valid": true')
     expect((await call('migrate_config', { config: '{}', source: 'config.json' })).text).toContain('version: 2')
@@ -57,14 +60,30 @@ describe('the MCP server', () => {
     const dry = await call('dry_run', { repository: 'Resnovas/example', pr: 7 })
     expect(dry.isError).toBeFalsy()
     expect(dry.text).toContain('Event: `pull_request` (synchronize) on #7')
-    expect((await call('plan_settings', { repository: 'Resnovas/example' })).text).toContain('Settings for Resnovas/example')
+    expect((await call('plan_settings', { repository: 'Resnovas/example' })).text).toContain(
+      'Settings for Resnovas/example',
+    )
     // A host file outside the working directory is never read, however the path is given.
     const outside = await call('dry_run', { repository: 'Resnovas/example', pr: 7, config: '/etc/passwd' })
-    expect(outside).toMatchObject({ isError: true, text: expect.stringContaining('refusing to read "/etc/passwd": it is an absolute path') })
-    const escaped = await call('plan_settings', { repository: 'Resnovas/example', config: '../../../../../../../../../../etc/passwd' })
-    expect(escaped).toMatchObject({ isError: true, text: expect.stringContaining('it resolves outside the working directory') })
-    expect((await call('plan_settings', { repository: 'Resnovas/example', configText: 'version: 2\n' })).text).toContain('Nothing to apply')
-    expect((await call('check_commit_message', { message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com' })).text).toContain('"passes": false')
+    expect(outside).toMatchObject({
+      isError: true,
+      text: expect.stringContaining('refusing to read "/etc/passwd": it is an absolute path'),
+    })
+    const escaped = await call('plan_settings', {
+      repository: 'Resnovas/example',
+      config: '../../../../../../../../../../etc/passwd',
+    })
+    expect(escaped).toMatchObject({
+      isError: true,
+      text: expect.stringContaining('it resolves outside the working directory'),
+    })
+    expect(
+      (await call('plan_settings', { repository: 'Resnovas/example', configText: 'version: 2\n' })).text,
+    ).toContain('Nothing to apply')
+    expect(
+      (await call('check_commit_message', { message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com' }))
+        .text,
+    ).toContain('"passes": false')
     expect((await call('explain_rule', { rule: 'DCO' })).text).toContain('git commit -s')
     expect(state.checkRuns).toStrictEqual([])
     await client.close()

@@ -32,7 +32,10 @@ import {
 import { Effect, Schema } from 'effect'
 import { recording } from './fixtures.js'
 
-const resolved = (config: ResolvedConfig['config'], sources: ReadonlyArray<string> = ['.github/smartcloud.yml']): ResolvedConfig => ({
+const resolved = (
+  config: ResolvedConfig['config'],
+  sources: ReadonlyArray<string> = ['.github/smartcloud.yml'],
+): ResolvedConfig => ({
   config,
   sources,
   locked: new Set(),
@@ -79,7 +82,14 @@ describe('commandRun', () => {
   it('carries the failure only when there was one', () => {
     const ok = commandRun({ command: 'validate', options: ['path'], outcome: 'success', duration_ms: 12.4 })
     expect(ok.properties).toStrictEqual({ command: 'validate', options: ['path'], outcome: 'success', duration_ms: 12 })
-    const failed = commandRun({ command: 'dry-run', options: [], outcome: 'failure', duration_ms: -1, error_tag: 'NotFound', expected: true })
+    const failed = commandRun({
+      command: 'dry-run',
+      options: [],
+      outcome: 'failure',
+      duration_ms: -1,
+      error_tag: 'NotFound',
+      expected: true,
+    })
     expect(failed.properties).toMatchObject({ duration_ms: 0, error_tag: 'NotFound', expected: true })
     expect(Schema.is(ANALYTICS_EVENTS['command run'])(failed.properties)).toBe(true)
   })
@@ -91,7 +101,9 @@ describe('configResolved', () => {
       resolved(
         {
           version: 2,
-          conventions: { rules: { title: { preset: 'conventionalCommits' }, 'no-jira': { preset: 'conventionalCommits' } } },
+          conventions: {
+            rules: { title: { preset: 'conventionalCommits' }, 'no-jira': { preset: 'conventionalCommits' } },
+          },
           labels: { bug: { name: 'bug', color: 'd73a4a' } },
           stale: { staleAfterDays: 30, staleLabel: 'stale' },
         },
@@ -112,7 +124,10 @@ describe('configResolved', () => {
   })
 
   it('tells a v1 file apart, and reads unparsable text as v2', () => {
-    expect(configResolved(resolved({ version: 2 }), '{"labels": {}}').properties).toMatchObject({ config_version: 1, migrated_from_v1: true })
+    expect(configResolved(resolved({ version: 2 }), '{"labels": {}}').properties).toMatchObject({
+      config_version: 1,
+      migrated_from_v1: true,
+    })
     expect(configResolved(resolved({ version: 2 }), 'plain text').properties.config_version).toBe(1)
     expect(configResolved(resolved({ version: 2 }), 'a: [').properties.config_version).toBe(2)
   })
@@ -123,7 +138,11 @@ describe('configResolved', () => {
       { name: 'reviews', handles: ['pullRequest'], run: () => Effect.void },
       { name: 'extra', handles: ['issue'], run: () => Effect.void },
     ]
-    const event = configResolved(resolved({ version: 2, roles: { maintainers: ['a', 'b'] }, settings: { merging: { squash: true } } }), 'version: 2\n', features)
+    const event = configResolved(
+      resolved({ version: 2, roles: { maintainers: ['a', 'b'] }, settings: { merging: { squash: true } } }),
+      'version: 2\n',
+      features,
+    )
     expect(event.properties.rule_counts).toStrictEqual({ settings: 2, reviews: 1, extra: 0 })
   })
 })
@@ -150,7 +169,9 @@ describe('featureRuns', () => {
       }),
       'weird-Event!',
     )
-    expect(events.map((event) => [event.properties.feature, event.properties.outcome, event.properties.skip_reason])).toStrictEqual([
+    expect(
+      events.map((event) => [event.properties.feature, event.properties.outcome, event.properties.skip_reason]),
+    ).toStrictEqual([
       ['conventions', 'success', undefined],
       ['labels', 'failure', undefined],
       ['stale', 'skipped', 'flag'],
@@ -179,9 +200,21 @@ describe('featureRuns', () => {
 describe('measuredEvents', () => {
   it('turns known measurements into events, and drops the rest', () => {
     const events = measuredEvents([
-      { feature: 'sync', name: 'sync proposed', values: { created: 1, updated: 2, mode: 0, conflicts: 1, pull_request: 'updated' } },
-      { feature: 'settings', name: 'settings applied', values: { applied: 3, failed: 0, skipped: 1, project_type: 'saas' } },
-      { feature: 'sync', name: 'sync proposed', values: { created: -1, updated: 0, mode: 0, conflicts: 0, pull_request: 'created' } },
+      {
+        feature: 'sync',
+        name: 'sync proposed',
+        values: { created: 1, updated: 2, mode: 0, conflicts: 1, pull_request: 'updated' },
+      },
+      {
+        feature: 'settings',
+        name: 'settings applied',
+        values: { applied: 3, failed: 0, skipped: 1, project_type: 'saas' },
+      },
+      {
+        feature: 'sync',
+        name: 'sync proposed',
+        values: { created: -1, updated: 0, mode: 0, conflicts: 0, pull_request: 'created' },
+      },
       { feature: 'settings', name: 'settings applied', values: { applied: 1 } },
       { feature: 'labels', name: 'labels synced', values: { created: 1 } },
     ])
@@ -195,12 +228,21 @@ describe('recording', () => {
       const recorded = recording()
       yield* command(
         Effect.zipRight(
-          recordConfig(resolved({ version: 2 }, ['Resnovas/.github/smartcloud/house.yml', 'smartcloud.yml']), 'version: 2\n'),
+          recordConfig(
+            resolved({ version: 2 }, ['Resnovas/.github/smartcloud/house.yml', 'smartcloud.yml']),
+            'version: 2\n',
+          ),
           recordRun(
             result({
               ran: ['labels', 'sync'],
               durations: { labels: 3, sync: -4 },
-              facts: [{ feature: 'sync', name: 'sync proposed', values: { created: 1, updated: 0, mode: 0, conflicts: 0, pull_request: 'dry-run' } }],
+              facts: [
+                {
+                  feature: 'sync',
+                  name: 'sync proposed',
+                  values: { created: 1, updated: 0, mode: 0, conflicts: 0, pull_request: 'dry-run' },
+                },
+              ],
             }),
             'push',
           ),
@@ -208,7 +250,12 @@ describe('recording', () => {
         { command: 'dry-run' },
       ).pipe(Effect.provide(recorded.layer))
       // The sync feature run has a negative duration, which its schema refuses, so it is not sent.
-      expect(recorded.events.map((event) => event.event)).toStrictEqual(['config resolved', 'feature run', 'sync proposed', 'command run'])
+      expect(recorded.events.map((event) => event.event)).toStrictEqual([
+        'config resolved',
+        'feature run',
+        'sync proposed',
+        'command run',
+      ])
       expect(recorded.organisations).toStrictEqual([{ features_enabled: expect.any(Array), uses_house_preset: true }])
     }),
   )

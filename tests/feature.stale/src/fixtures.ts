@@ -75,7 +75,9 @@ export const sweep = (
     yield* TestClock.setTime(NOW)
     // A push payload must carry what GitHub sends for one; the others need nothing.
     const payload = event === 'push' ? { ref: 'refs/heads/main', after: 'abc123' } : {}
-    return yield* runFeatures({ config, event, payload, features: [stale] }).pipe(Effect.provideService(GitHub, service))
+    return yield* runFeatures({ config, event, payload, features: [stale] }).pipe(
+      Effect.provideService(GitHub, service),
+    )
   })
 
 export const labelsOf = (github: ReturnType<typeof memory>, number: number) => github.state.issues.get(number)?.labels

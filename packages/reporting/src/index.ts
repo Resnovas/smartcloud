@@ -14,7 +14,15 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-export { annotationLines, checkRunsFor, commentBody, conclusionOf, findingsTable, MARKER, summaryMarkdown } from './format.js'
+export {
+  annotationLines,
+  checkRunsFor,
+  commentBody,
+  conclusionOf,
+  findingsTable,
+  MARKER,
+  summaryMarkdown,
+} from './format.js'
 export type { Conclusion } from './format.js'
 export { publishReport } from './publish.js'
 export type { Published } from './publish.js'

@@ -23,7 +23,15 @@ const actions = 'github-actions'
 const checks: ReadonlyArray<CommitCheck> = [
   { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' },
   { name: 'smartcloud', source: 'status', state: 'failure', detail: 'failure' },
-  { name: 'smartcloud / reviews', source: 'checkRun', id: 2, app: actions, externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'failure' },
+  {
+    name: 'smartcloud / reviews',
+    source: 'checkRun',
+    id: 2,
+    app: actions,
+    externalId: CHECK_RUN_EXTERNAL_ID,
+    state: 'failure',
+    detail: 'failure',
+  },
   { name: 'ci / test', source: 'checkRun', id: 3, app: actions, state: 'success', detail: 'success' },
   { name: 'ci / build', source: 'checkRun', id: 4, app: actions, state: 'pending', detail: 'queued' },
   { name: 'Codecov/patch', source: 'status', state: 'failure', detail: 'failure' },
@@ -68,13 +76,15 @@ describe('latestChecks', () => {
       { name: 'deploy', source: 'status', state: 'success', detail: 'success' },
       { name: 'deploy', source: 'status', state: 'failure', detail: 'failure' },
     ]
-    expect(latestChecks(listed).map((check) => `${check.app ?? 'status'} ${check.name} ${check.detail}`)).toStrictEqual([
-      'github-actions test success',
-      'circleci test failure',
-      'github-actions build queued',
-      'status deploy success',
-      'status deploy failure',
-    ])
+    expect(latestChecks(listed).map((check) => `${check.app ?? 'status'} ${check.name} ${check.detail}`)).toStrictEqual(
+      [
+        'github-actions test success',
+        'circleci test failure',
+        'github-actions build queued',
+        'status deploy success',
+        'status deploy failure',
+      ],
+    )
   })
 
   it('treats runs with no app or id as one check, keeping the first', () => {
@@ -122,13 +132,43 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
   })
 
   it('counts a smartcloud-named run that another app published, or that is marked otherwise', () => {
-    const own: CommitCheck = { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' }
+    const own: CommitCheck = {
+      name: 'smartcloud',
+      source: 'checkRun',
+      id: 1,
+      app: actions,
+      state: 'pending',
+      detail: 'in_progress',
+    }
     const assessment = assessChecks(
       [
         own,
-        { name: 'smartcloud / reviews', source: 'checkRun', id: 3, app: 'other-app', state: 'failure', detail: 'failure' },
-        { name: 'smartcloud / labels', source: 'checkRun', id: 4, app: actions, externalId: 'someone-else', state: 'pending', detail: 'queued' },
-        { name: 'smartcloud / labels', source: 'checkRun', id: 9, app: actions, externalId: CHECK_RUN_EXTERNAL_ID, state: 'success', detail: 'success' },
+        {
+          name: 'smartcloud / reviews',
+          source: 'checkRun',
+          id: 3,
+          app: 'other-app',
+          state: 'failure',
+          detail: 'failure',
+        },
+        {
+          name: 'smartcloud / labels',
+          source: 'checkRun',
+          id: 4,
+          app: actions,
+          externalId: 'someone-else',
+          state: 'pending',
+          detail: 'queued',
+        },
+        {
+          name: 'smartcloud / labels',
+          source: 'checkRun',
+          id: 9,
+          app: actions,
+          externalId: CHECK_RUN_EXTERNAL_ID,
+          state: 'success',
+          detail: 'success',
+        },
       ],
       { checkRunId: 1, ignore: [] },
     )
@@ -141,10 +181,40 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
     const assessment = assessChecks(
       [
         { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' },
-        { name: 'smartcloud / reviews', source: 'checkRun', id: 2, app: 'resnovas-smartcloud', externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'failure' },
-        { name: 'smartcloud / labels', source: 'checkRun', id: 3, app: 'resnovas-smartcloud', state: 'failure', detail: 'cancelled' },
-        { name: 'smartcloud / sync', source: 'checkRun', id: 4, app: 'mimic', externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'failure' },
-        { name: 'smartcloud / size', source: 'checkRun', id: 5, externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'failure' },
+        {
+          name: 'smartcloud / reviews',
+          source: 'checkRun',
+          id: 2,
+          app: 'resnovas-smartcloud',
+          externalId: CHECK_RUN_EXTERNAL_ID,
+          state: 'failure',
+          detail: 'failure',
+        },
+        {
+          name: 'smartcloud / labels',
+          source: 'checkRun',
+          id: 3,
+          app: 'resnovas-smartcloud',
+          state: 'failure',
+          detail: 'cancelled',
+        },
+        {
+          name: 'smartcloud / sync',
+          source: 'checkRun',
+          id: 4,
+          app: 'mimic',
+          externalId: CHECK_RUN_EXTERNAL_ID,
+          state: 'failure',
+          detail: 'failure',
+        },
+        {
+          name: 'smartcloud / size',
+          source: 'checkRun',
+          id: 5,
+          externalId: CHECK_RUN_EXTERNAL_ID,
+          state: 'failure',
+          detail: 'failure',
+        },
       ],
       { checkRunId: 1, ignore: [], publishers: ['resnovas-smartcloud'] },
     )
@@ -155,8 +225,23 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
     const assessment = assessChecks(
       [
         { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' },
-        { name: 'smartcloud / reviews', source: 'checkRun', id: 3, app: actions, state: 'failure', detail: 'cancelled' },
-        { name: 'smartcloud / reviews', source: 'checkRun', id: 7, app: actions, externalId: CHECK_RUN_EXTERNAL_ID, state: 'success', detail: 'success' },
+        {
+          name: 'smartcloud / reviews',
+          source: 'checkRun',
+          id: 3,
+          app: actions,
+          state: 'failure',
+          detail: 'cancelled',
+        },
+        {
+          name: 'smartcloud / reviews',
+          source: 'checkRun',
+          id: 7,
+          app: actions,
+          externalId: CHECK_RUN_EXTERNAL_ID,
+          state: 'success',
+          detail: 'success',
+        },
       ],
       { checkRunId: 1, ignore: [] },
     )

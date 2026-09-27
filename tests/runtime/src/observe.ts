@@ -55,9 +55,17 @@ export const observe = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<
       context: (f, fiber) => native.context(f, fiber),
     })
     const logger = Logger.make(({ message, logLevel, annotations }) => {
-      logs.push({ message: text(message), level: logLevel.label, annotations: Object.fromEntries(HashMap.toEntries(annotations)) })
+      logs.push({
+        message: text(message),
+        level: logLevel.label,
+        annotations: Object.fromEntries(HashMap.toEntries(annotations)),
+      })
     })
-    const value = yield* effect.pipe(Effect.withTracer(tracer), Logger.withMinimumLogLevel(LogLevel.Debug), Effect.provide(Logger.add(logger)))
+    const value = yield* effect.pipe(
+      Effect.withTracer(tracer),
+      Logger.withMinimumLogLevel(LogLevel.Debug),
+      Effect.provide(Logger.add(logger)),
+    )
     return { value, spans, logs }
   })
 
@@ -69,7 +77,10 @@ export const observe = <A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<
  * @returns The strings, for checking that nothing sensitive is among them.
  */
 export const carried = (observed: Observed<unknown>): ReadonlyArray<string> => [
-  ...observed.spans.flatMap((span) => [span.name, ...[...span.attributes.values()].map((value) => JSON.stringify(value))]),
+  ...observed.spans.flatMap((span) => [
+    span.name,
+    ...[...span.attributes.values()].map((value) => JSON.stringify(value)),
+  ]),
   ...observed.logs.flatMap((log) => [log.message, JSON.stringify(log.annotations)]),
 ]
 
@@ -82,6 +93,7 @@ export const carried = (observed: Observed<unknown>): ReadonlyArray<string> => [
  */
 export const spanNamed = (observed: Observed<unknown>, name: string): Tracer.Span => {
   const span = observed.spans.find((candidate) => candidate.name === name)
-  if (span === undefined) throw new Error(`no span named ${name}; saw ${observed.spans.map((candidate) => candidate.name).join(', ')}`)
+  if (span === undefined)
+    throw new Error(`no span named ${name}; saw ${observed.spans.map((candidate) => candidate.name).join(', ')}`)
   return span
 }

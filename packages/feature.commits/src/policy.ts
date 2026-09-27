@@ -160,5 +160,7 @@ export const pullRequestCommits = (
   feature: string,
 ): Effect.Effect<{ readonly subject: Subject; readonly commits: ReadonlyArray<Commit> }, CommitsNotLoaded> => {
   const subject = context.subject
-  return subject?.commits === undefined ? Effect.fail(new CommitsNotLoaded({ feature })) : Effect.succeed({ subject, commits: subject.commits })
+  return subject?.commits === undefined
+    ? Effect.fail(new CommitsNotLoaded({ feature }))
+    : Effect.succeed({ subject, commits: subject.commits })
 }

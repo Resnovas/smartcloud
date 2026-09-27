@@ -93,7 +93,9 @@ export interface CallDetails {
 }
 
 const statusOf = (value: unknown): number | undefined =>
-  typeof value === 'object' && value !== null && 'status' in value && typeof value.status === 'number' ? value.status : undefined
+  typeof value === 'object' && value !== null && 'status' in value && typeof value.status === 'number'
+    ? value.status
+    : undefined
 
 /**
  * Traces, logs and counts one GitHub call.
@@ -130,17 +132,26 @@ export const instrumentCall = <A>(
     const duration = (yield* Clock.currentTimeMillis) - start
     const outcome = Either.isRight(result) ? 'success' : result.left._tag
     const status = lastStatus()
-    const attributes = { 'github.operation': details.operation, outcome, ...(status === undefined ? {} : { 'http.status_code': status }) }
+    const attributes = {
+      'github.operation': details.operation,
+      outcome,
+      ...(status === undefined ? {} : { 'http.status_code': status }),
+    }
     yield* Effect.annotateCurrentSpan(attributes)
-    const tagged = <T, I, O>(metric: Metric.Metric<T, I, O>) => Metric.tagged(Metric.tagged(metric, 'operation', details.operation), 'outcome', outcome)
+    const tagged = <T, I, O>(metric: Metric.Metric<T, I, O>) =>
+      Metric.tagged(Metric.tagged(metric, 'operation', details.operation), 'outcome', outcome)
     yield* Metric.increment(tagged(githubRequests))
     yield* Metric.update(tagged(githubDuration), duration)
-    yield* Effect.logDebug(`github ${details.operation}: ${outcome}${status === undefined ? '' : ` (${status})`} in ${duration} ms`).pipe(
-      Effect.annotateLogs({ ...attributes, duration_ms: duration }),
-    )
+    yield* Effect.logDebug(
+      `github ${details.operation}: ${outcome}${status === undefined ? '' : ` (${status})`} in ${duration} ms`,
+    ).pipe(Effect.annotateLogs({ ...attributes, duration_ms: duration }))
     return yield* result
   }).pipe(
-    Effect.withSpan(githubSpanName(details.operation), { kind: 'client', captureStackTrace: false, attributes: { 'github.operation': details.operation, ...details.attributes } }),
+    Effect.withSpan(githubSpanName(details.operation), {
+      kind: 'client',
+      captureStackTrace: false,
+      attributes: { 'github.operation': details.operation, ...details.attributes },
+    }),
   )
 
 /**

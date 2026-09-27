@@ -140,14 +140,24 @@ export const applyLabels = (
     const toAdd = decided.filter((entry) => entry.wanted && !present(entry.name)).map((entry) => entry.name)
     const toRemove = decided.filter((candidate) => !candidate.wanted && present(candidate.name))
     yield* Effect.logInfo(`labels: ${toAdd.length} to add, ${toRemove.length} to remove`).pipe(
-      Effect.annotateLogs({ feature: FEATURE, rule: 'labels.apply', rules: decided.length, add: toAdd.length, remove: toRemove.length }),
+      Effect.annotateLogs({
+        feature: FEATURE,
+        rule: 'labels.apply',
+        rules: decided.length,
+        add: toAdd.length,
+        remove: toRemove.length,
+      }),
     )
     if (toAdd.length > 0) {
       yield* github.addLabels(subject.number, toAdd).pipe(
         Effect.zipRight(
-          Effect.forEach(toAdd, (name) => report.change({ feature: FEATURE, description: `added label "${name}" to #${subject.number}` }), {
-            discard: true,
-          }),
+          Effect.forEach(
+            toAdd,
+            (name) => report.change({ feature: FEATURE, description: `added label "${name}" to #${subject.number}` }),
+            {
+              discard: true,
+            },
+          ),
         ),
         Effect.catchTag('Forbidden', () =>
           report.add({

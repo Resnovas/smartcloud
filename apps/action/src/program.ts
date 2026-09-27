@@ -15,9 +15,25 @@
  */
 
 import { FileSystem } from '@effect/platform'
-import { DryRun, DryRunLog, GitHub, Restricted, SkippedWrites, type GitHubService, type RepositoryCoordinates } from '@resnovas/integrations.github'
+import {
+  DryRun,
+  DryRunLog,
+  GitHub,
+  Restricted,
+  SkippedWrites,
+  type GitHubService,
+  type RepositoryCoordinates,
+} from '@resnovas/integrations.github'
 import { conclusionOf } from '@resnovas/reporting'
-import { accessFor, command, connectWithFallback, externalRun, noteOptions, optOut, targetRepository } from '@resnovas/runtime'
+import {
+  accessFor,
+  command,
+  connectWithFallback,
+  externalRun,
+  noteOptions,
+  optOut,
+  targetRepository,
+} from '@resnovas/runtime'
 import { Config, Console, Data, Effect, Layer, Option, Redacted } from 'effect'
 import { readInputs } from './inputs.js'
 import { runAction } from './run.js'
@@ -32,7 +48,10 @@ import { runAction } from './run.js'
  * new BadEventPayload({ path: 'event.json', reason: 'not JSON' }).message // => 'could not read the event payload at event.json: not JSON'
  * ```
  */
-export class BadEventPayload extends Data.TaggedError('BadEventPayload')<{ readonly path: string; readonly reason: string }> {
+export class BadEventPayload extends Data.TaggedError('BadEventPayload')<{
+  readonly path: string
+  readonly reason: string
+}> {
   override get message() {
     return `could not read the event payload at ${this.path}: ${this.reason}`
   }
@@ -62,7 +81,9 @@ const environment = Config.all({
 const readPayload = (path: string) =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem
-    const text = yield* fs.readFileString(path).pipe(Effect.mapError((error) => new BadEventPayload({ path, reason: error.message })))
+    const text = yield* fs
+      .readFileString(path)
+      .pipe(Effect.mapError((error) => new BadEventPayload({ path, reason: error.message })))
     return yield* Effect.try({
       try: (): unknown => JSON.parse(text),
       catch: (error) => new BadEventPayload({ path, reason: error instanceof Error ? error.message : String(error) }),
@@ -72,12 +93,22 @@ const readPayload = (path: string) =>
 const dryRunSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
   writes.length === 0
     ? '\n**Dry run:** nothing would have been written.\n'
-    : ['', '**Dry run:** these writes were recorded, not made:', ...writes.map((write) => `- ${write.operation}`), ''].join('\n')
+    : [
+        '',
+        '**Dry run:** these writes were recorded, not made:',
+        ...writes.map((write) => `- ${write.operation}`),
+        '',
+      ].join('\n')
 
 const skippedSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =>
   writes.length === 0
     ? ''
-    : ['', '**Restricted access:** the token was not allowed to make these writes, so they were skipped:', ...writes.map((write) => `- ${write.operation}`), ''].join('\n')
+    : [
+        '',
+        '**Restricted access:** the token was not allowed to make these writes, so they were skipped:',
+        ...writes.map((write) => `- ${write.operation}`),
+        '',
+      ].join('\n')
 
 /**
  * The whole action: reads inputs and the event, runs, then writes the job
@@ -121,7 +152,10 @@ export const program = (connect: Connect) =>
     const coordinates = yield* targetRepository(env.repository)
     const payload = yield* readPayload(env.eventPath)
     // The workflow token reads the commit's checks: the job grants it checks and statuses read, which a personal access token may lack.
-    const checksToken = Option.match(inputs.workflowToken, { onNone: () => ({}), onSome: (token) => ({ checksToken: token }) })
+    const checksToken = Option.match(inputs.workflowToken, {
+      onNone: () => ({}),
+      onSome: (token) => ({ checksToken: token }),
+    })
     const event = { name: env.eventName, payload }
     const chosen = accessFor({
       token: inputs.token,
@@ -134,7 +168,9 @@ export const program = (connect: Connect) =>
       connect: (token) => connect({ token, coordinates, ...checksToken }),
     })
     if (rejected !== undefined) {
-      yield* Console.log(`::warning title=smartcloud::${escape(`GitHub rejected GITHUB_TOKEN (${rejected}); this run acted with the workflow token and skipped what needs a stronger token. Replace the token.`)}`)
+      yield* Console.log(
+        `::warning title=smartcloud::${escape(`GitHub rejected GITHUB_TOKEN (${rejected}); this run acted with the workflow token and skipped what needs a stronger token. Replace the token.`)}`,
+      )
     }
     // A restricted run skips the writes GitHub refuses; others are made or fail as usual.
     const base = access.restricted
@@ -158,7 +194,9 @@ export const program = (connect: Connect) =>
     for (const warning of outcome.warnings) yield* Console.log(`::warning title=smartcloud::${escape(warning)}`)
     for (const line of outcome.published.annotations) yield* Console.log(line)
     if (env.summaryPath._tag === 'Some') {
-      yield* fs.writeFileString(env.summaryPath.value, `${outcome.published.summary}${dryRun}${skipped}\n`, { flag: 'a' })
+      yield* fs.writeFileString(env.summaryPath.value, `${outcome.published.summary}${dryRun}${skipped}\n`, {
+        flag: 'a',
+      })
     }
     const failed = conclusionOf(outcome.result.findings) === 'failure' || outcome.result.failed.length > 0
     if (failed) {
@@ -178,7 +216,9 @@ export const program = (connect: Connect) =>
     ),
     Effect.catchAllDefect((defect) =>
       Effect.zipRight(
-        Console.log(`::error title=smartcloud::unexpected failure: ${escape(defect instanceof Error ? defect.message : String(defect))}`),
+        Console.log(
+          `::error title=smartcloud::unexpected failure: ${escape(defect instanceof Error ? defect.message : String(defect))}`,
+        ),
         Effect.sync(() => {
           process.exitCode = 1
         }),

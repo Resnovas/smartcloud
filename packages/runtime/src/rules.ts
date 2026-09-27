@@ -51,7 +51,8 @@ const POLICY: Readonly<Record<string, { readonly summary: string; readonly fix: 
     anchor: 'AI_POLICY.md#ai-01',
   },
   'AI-02': {
-    summary: 'Every commit with a material change produced by an AI tool credits it with both a Co-authored-by and an Assisted-by: TOOL:MODEL trailer.',
+    summary:
+      'Every commit with a material change produced by an AI tool credits it with both a Co-authored-by and an Assisted-by: TOOL:MODEL trailer.',
     fix: 'Amend the commits to add both trailers for the tool, for example "Co-authored-by: Claude <noreply@anthropic.com>" and "Assisted-by: claude-code:claude-opus-5-5".',
     anchor: 'AI_POLICY.md#ai-02',
   },
@@ -66,7 +67,8 @@ const POLICY: Readonly<Record<string, { readonly summary: string; readonly fix: 
     anchor: 'AI_POLICY.md#ai-20',
   },
   'AI-21': {
-    summary: 'An AI-assisted pull request that is ready for review names its author as the accountable human and states the human review.',
+    summary:
+      'An AI-assisted pull request that is ready for review names its author as the accountable human and states the human review.',
     fix: 'Set "Accountable human:" to the pull request author and describe the review in "Human review:".',
     anchor: 'AI_POLICY.md#ai-21',
   },
@@ -121,13 +123,16 @@ export const explainRule = (rule: string, config: SmartcloudConfig): Effect.Effe
 const explain = (rule: string, config: SmartcloudConfig): RuleExplanation | undefined => {
   const base = policyBase(config)
   const policy = POLICY[rule.toUpperCase()]
-  if (policy !== undefined) return { rule: rule.toUpperCase(), summary: policy.summary, fix: policy.fix, link: `${base}/${policy.anchor}` }
+  if (policy !== undefined)
+    return { rule: rule.toUpperCase(), summary: policy.summary, fix: policy.fix, link: `${base}/${policy.anchor}` }
   const [feature = '', ...rest] = rule.split('.')
   const id = rest.join('.')
   if (feature === 'conventions') {
     const convention = config.conventions?.rules?.[id]
     if (convention === undefined) return undefined
-    const expected = convention.message ?? (convention.preset === undefined ? undefined : presetDescription(convention.preset, convention.contexts ?? []))
+    const expected =
+      convention.message ??
+      (convention.preset === undefined ? undefined : presetDescription(convention.preset, convention.contexts ?? []))
     return {
       rule,
       summary: `The ${id} convention of this repository's config.`,

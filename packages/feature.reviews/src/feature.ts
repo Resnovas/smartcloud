@@ -88,7 +88,9 @@ const runGate = (
         feature: FEATURE,
         rule: 'REVIEW',
         status: result.status,
-        ...(result.status === 'open' ? { reason: result.reason } : { required: result.required, approvals: result.approvedBy.length }),
+        ...(result.status === 'open'
+          ? { reason: result.reason }
+          : { required: result.required, approvals: result.approvedBy.length }),
       }),
     )
     if (result.status === 'open') {
@@ -104,7 +106,11 @@ const runGate = (
     }
   })
 
-const runRequestApprovals = (rules: NonNullable<Reviews['requestApprovals']>, subject: Subject, reviews: ReadonlyArray<Review>) =>
+const runRequestApprovals = (
+  rules: NonNullable<Reviews['requestApprovals']>,
+  subject: Subject,
+  reviews: ReadonlyArray<Review>,
+) =>
   Effect.gen(function* () {
     const github = yield* GitHub
     const report = yield* Report
@@ -125,8 +131,16 @@ const runRequestApprovals = (rules: NonNullable<Reviews['requestApprovals']>, su
       if (reviewers.length === 0) continue
       const who = reviewers.map((login) => `@${login}`).join(', ')
       yield* github.requestReviewers(subject.number, reviewers).pipe(
-        Effect.zipRight(report.change({ feature: FEATURE, description: `Requested review from ${who} on #${subject.number} (${key}).` })),
-        Effect.catchTag('Forbidden', readOnly('reviews.requestApprovals', `request review from ${who} on #${subject.number} (${key})`)),
+        Effect.zipRight(
+          report.change({
+            feature: FEATURE,
+            description: `Requested review from ${who} on #${subject.number} (${key}).`,
+          }),
+        ),
+        Effect.catchTag(
+          'Forbidden',
+          readOnly('reviews.requestApprovals', `request review from ${who} on #${subject.number} (${key})`),
+        ),
       )
     }
   })
@@ -147,7 +161,12 @@ const runAutomaticApprove = (
     for (const [key, rule] of Object.entries(rules)) {
       const evaluation = yield* evaluate(rule.when, subject)
       yield* Effect.logDebug(`reviews: automaticApprove.${key} ${evaluation.passed ? 'passed' : 'did not pass'}`).pipe(
-        Effect.annotateLogs({ feature: FEATURE, rule: `reviews.automaticApprove.${key}`, passed: evaluation.passed, approved }),
+        Effect.annotateLogs({
+          feature: FEATURE,
+          rule: `reviews.automaticApprove.${key}`,
+          passed: evaluation.passed,
+          approved,
+        }),
       )
       if (!evaluation.passed) continue
       if (approved) {
@@ -159,10 +178,14 @@ const runAutomaticApprove = (
         })
         return
       }
-      yield* github.createReview(subject.number, { event: 'APPROVE', body: rule.message ?? DEFAULT_APPROVAL_MESSAGE }).pipe(
-        Effect.zipRight(report.change({ feature: FEATURE, description: `Approved #${subject.number} automatically (${key}).` })),
-        Effect.catchTag('Forbidden', readOnly('reviews.automaticApprove', `approve #${subject.number} (${key})`)),
-      )
+      yield* github
+        .createReview(subject.number, { event: 'APPROVE', body: rule.message ?? DEFAULT_APPROVAL_MESSAGE })
+        .pipe(
+          Effect.zipRight(
+            report.change({ feature: FEATURE, description: `Approved #${subject.number} automatically (${key}).` }),
+          ),
+          Effect.catchTag('Forbidden', readOnly('reviews.automaticApprove', `approve #${subject.number} (${key})`)),
+        )
       // One approval per run is enough: further rules would only duplicate it.
       return
     }

@@ -173,7 +173,10 @@ describe('labels feature: sync', () => {
     Effect.gen(function* () {
       const { service } = makeMemoryGitHub({ labels: [bug, { name: 'wontfix', color: 'ffffff', description: '' }] })
       const lines: Array<{ readonly message: unknown; readonly annotations: Readonly<Record<string, unknown>> }> = []
-      const capture = Logger.make(({ message, annotations }) => void lines.push({ message, annotations: Object.fromEntries(HashMap.toEntries(annotations)) }))
+      const capture = Logger.make(
+        ({ message, annotations }) =>
+          void lines.push({ message, annotations: Object.fromEntries(HashMap.toEntries(annotations)) }),
+      )
       const config: SmartcloudConfig = {
         version: 2,
         labels: {
@@ -189,7 +192,14 @@ describe('labels feature: sync', () => {
       )
       expect(lines).toContainEqual({
         message: ['labels: 2 to create, 0 to update, 1 to rename, 1 to delete'],
-        annotations: expect.objectContaining({ feature: 'labels', rule: 'labels.sync', create: 2, update: 0, rename: 1, delete: 1 }),
+        annotations: expect.objectContaining({
+          feature: 'labels',
+          rule: 'labels.sync',
+          create: 2,
+          update: 0,
+          rename: 1,
+          delete: 1,
+        }),
       })
     }),
   )
@@ -234,7 +244,10 @@ describe('labels feature: sync', () => {
       )
       expect(result.failed).toStrictEqual([])
       expect(state.labels).toStrictEqual([long, { name: 'docs', color: '0075ca', description: 'd'.repeat(100) }])
-      expect(result.changes.map((change) => change.description)).toStrictEqual(['created label "docs"', 'deleted label "bug"'])
+      expect(result.changes.map((change) => change.description)).toStrictEqual([
+        'created label "docs"',
+        'deleted label "bug"',
+      ])
       expect(result.findings).toStrictEqual([
         {
           feature: 'labels',

@@ -38,7 +38,14 @@ describe('live GitHub: repository and labels', () => {
     Effect.gen(function* () {
       const { service } = live({
         [`GET ${REPO}`]: {
-          body: { owner: { login: 'Resnovas' }, name: 'example', full_name: 'Resnovas/example', node_id: 'R_1', private: true, default_branch: 'main' },
+          body: {
+            owner: { login: 'Resnovas' },
+            name: 'example',
+            full_name: 'Resnovas/example',
+            node_id: 'R_1',
+            private: true,
+            default_branch: 'main',
+          },
         },
       })
       expect(yield* (yield* service).getRepository).toStrictEqual({
@@ -93,7 +100,11 @@ describe('live GitHub: repository and labels', () => {
       yield* github.updateLabel('bug', { name: 'defect', color: 'd73a4a', description: '' })
       yield* github.deleteLabel('old')
       expect(requests.slice(1).map(({ method, path, body }) => ({ method, path, body }))).toStrictEqual([
-        { method: 'POST', path: `${REPO}/labels`, body: { name: 'docs', color: '0075ca', description: 'Documentation' } },
+        {
+          method: 'POST',
+          path: `${REPO}/labels`,
+          body: { name: 'docs', color: '0075ca', description: 'Documentation' },
+        },
         { method: 'PATCH', path: `${REPO}/labels/bug`, body: { new_name: 'defect', color: 'd73a4a', description: '' } },
         { method: 'DELETE', path: `${REPO}/labels/old`, body: undefined },
       ])
@@ -107,7 +118,12 @@ describe('live GitHub: issues and comments', () => {
       const { service, requests } = live({
         [`POST ${REPO}/issues/3/labels`]: { body: [] },
         [`DELETE ${REPO}/issues/3/labels/bug`]: { body: [] },
-        [`GET ${REPO}/issues/3/comments`]: { body: [{ id: 9, body: null, user: null }, { id: 12, body: 'x', user: { login: 'app[bot]', type: 'Bot' } }] },
+        [`GET ${REPO}/issues/3/comments`]: {
+          body: [
+            { id: 9, body: null, user: null },
+            { id: 12, body: 'x', user: { login: 'app[bot]', type: 'Bot' } },
+          ],
+        },
         [`POST ${REPO}/issues/3/comments`]: [
           { status: 201, body: { id: 10, body: 'hi', user: { login: 'bot', type: 'Bot' } } },
           { status: 201, body: { id: 11, body: null, user: null } },
@@ -143,15 +159,54 @@ describe('live GitHub: issues and comments', () => {
       const { service, requests } = live({
         [`GET ${REPO}/issues`]: {
           body: [
-            { number: 1, title: 'a', body: null, user: null, state: 'open', locked: false, labels: ['bug', { name: 'stale' }, {}], updated_at: '2026-01-01T00:00:00Z' },
-            { number: 2, title: 'b', body: 'x', user: { login: 'jane' }, state: 'open', locked: true, labels: [], updated_at: '2026-01-02T00:00:00Z', pull_request: {} },
+            {
+              number: 1,
+              title: 'a',
+              body: null,
+              user: null,
+              state: 'open',
+              locked: false,
+              labels: ['bug', { name: 'stale' }, {}],
+              updated_at: '2026-01-01T00:00:00Z',
+            },
+            {
+              number: 2,
+              title: 'b',
+              body: 'x',
+              user: { login: 'jane' },
+              state: 'open',
+              locked: true,
+              labels: [],
+              updated_at: '2026-01-02T00:00:00Z',
+              pull_request: {},
+            },
           ],
         },
       })
       const issues = yield* (yield* service).listOpenIssues
       expect(issues).toStrictEqual([
-        { number: 1, title: 'a', body: '', author: '', open: true, locked: false, labels: ['bug', 'stale', ''], updatedAt: new Date('2026-01-01T00:00:00Z'), isPullRequest: false },
-        { number: 2, title: 'b', body: 'x', author: 'jane', open: true, locked: true, labels: [], updatedAt: new Date('2026-01-02T00:00:00Z'), isPullRequest: true },
+        {
+          number: 1,
+          title: 'a',
+          body: '',
+          author: '',
+          open: true,
+          locked: false,
+          labels: ['bug', 'stale', ''],
+          updatedAt: new Date('2026-01-01T00:00:00Z'),
+          isPullRequest: false,
+        },
+        {
+          number: 2,
+          title: 'b',
+          body: 'x',
+          author: 'jane',
+          open: true,
+          locked: true,
+          labels: [],
+          updatedAt: new Date('2026-01-02T00:00:00Z'),
+          isPullRequest: true,
+        },
       ])
       expect(requests[0]?.query).toContain('state=open')
     }),
@@ -162,7 +217,11 @@ describe('live GitHub: pull requests', () => {
   const routes: Routes = {
     [`GET ${REPO}/pulls/7/commits`]: {
       body: [
-        { sha: 'a', commit: { message: 'feat: x', author: { name: 'Jane', email: 'jane@example.com' } }, parents: [{}] },
+        {
+          sha: 'a',
+          commit: { message: 'feat: x', author: { name: 'Jane', email: 'jane@example.com' } },
+          parents: [{}],
+        },
         { sha: 'b', commit: { message: 'Merge', author: null }, parents: [{}, {}] },
       ],
     },
@@ -218,7 +277,11 @@ describe('live GitHub: pull requests', () => {
   it.effect('reads mergeability again while GitHub is still computing it', () =>
     Effect.gen(function* () {
       const fake = fakeFetch({
-        [`GET ${REPO}/pulls/7`]: [{ body: { mergeable: null } }, { body: { mergeable: null } }, { body: { mergeable: false } }],
+        [`GET ${REPO}/pulls/7`]: [
+          { body: { mergeable: null } },
+          { body: { mergeable: null } },
+          { body: { mergeable: false } },
+        ],
         [`GET ${REPO}/pulls/8`]: { body: { mergeable: null } },
       })
       const github = yield* makeLiveGitHub({
@@ -237,8 +300,14 @@ describe('live GitHub: pull requests', () => {
 
   it.effect('waits between mergeability reads by default', () =>
     Effect.gen(function* () {
-      const fake = fakeFetch({ [`GET ${REPO}/pulls/7`]: [{ body: { mergeable: null } }, { body: { mergeable: true } }] })
-      const github = yield* makeLiveGitHub({ token: Redacted.make('test-token'), coordinates: { owner: 'Resnovas', repo: 'example' }, fetch: fake.fetch })
+      const fake = fakeFetch({
+        [`GET ${REPO}/pulls/7`]: [{ body: { mergeable: null } }, { body: { mergeable: true } }],
+      })
+      const github = yield* makeLiveGitHub({
+        token: Redacted.make('test-token'),
+        coordinates: { owner: 'Resnovas', repo: 'example' },
+        fetch: fake.fetch,
+      })
       const read = yield* Effect.fork(github.getMergeable(7))
       yield* TestClock.adjust('2 seconds')
       expect(yield* Fiber.join(read)).toBe('MERGEABLE')
@@ -289,7 +358,9 @@ describe('live GitHub: pull requests', () => {
         { name: 'coverage', state: 'failure' },
         { name: 'legacy', state: 'failure' },
       ])
-      expect(requests.find((request) => request.path === `${REPO}/commits/abc/check-runs`)?.query).toContain('per_page=100')
+      expect(requests.find((request) => request.path === `${REPO}/commits/abc/check-runs`)?.query).toContain(
+        'per_page=100',
+      )
     }),
   )
 
@@ -299,59 +370,150 @@ describe('live GitHub: pull requests', () => {
       const github = yield* service
       yield* github.createReview(7, { event: 'COMMENT', body: 'Looks fine' })
       yield* github.requestReviewers(7, ['ann'])
-      expect(requests.map(({ body }) => body)).toStrictEqual([{ event: 'COMMENT', body: 'Looks fine' }, { reviewers: ['ann'] }])
+      expect(requests.map(({ body }) => body)).toStrictEqual([
+        { event: 'COMMENT', body: 'Looks fine' },
+        { reviewers: ['ann'] },
+      ])
     }),
   )
 })
 
 describe('live GitHub: checks, files, settings and GraphQL', () => {
-  it.effect('lists the checks on a commit: the latest run of each name per suite and the latest status of each context', () =>
-    Effect.gen(function* () {
-      const { service, requests } = live({
-        [`GET ${REPO}/commits/abc/check-runs`]: {
-          body: {
-            total_count: 7,
-            check_runs: [
-              { id: 1, name: 'ci / test', status: 'completed', conclusion: 'success', html_url: 'https://github.com/r/1', details_url: null, external_id: '', app: { slug: 'github-actions' } },
-              { id: 2, name: 'ci / lint', status: 'completed', conclusion: 'skipped', html_url: null, details_url: 'https://ci/2', external_id: null, app: null },
-              { id: 3, name: 'ci / build', status: 'in_progress', conclusion: null, html_url: null, details_url: null, external_id: null, app: {} },
-              { id: 4, name: 'ci / docs', status: 'completed', conclusion: 'timed_out', html_url: null, details_url: null, external_id: null, app: null },
-              { id: 5, name: 'ci / odd', status: 'completed', conclusion: null, html_url: null, details_url: null, external_id: null, app: null },
-              { id: 6, name: 'smartcloud / reviews', status: 'completed', conclusion: 'failure', html_url: null, details_url: null, external_id: 'smartcloud', app: { slug: 'github-actions' } },
-              { id: 7, name: 'ci / test', status: 'completed', conclusion: 'cancelled', html_url: null, details_url: null, external_id: null, app: { slug: 'github-actions' } },
+  it.effect(
+    'lists the checks on a commit: the latest run of each name per suite and the latest status of each context',
+    () =>
+      Effect.gen(function* () {
+        const { service, requests } = live({
+          [`GET ${REPO}/commits/abc/check-runs`]: {
+            body: {
+              total_count: 7,
+              check_runs: [
+                {
+                  id: 1,
+                  name: 'ci / test',
+                  status: 'completed',
+                  conclusion: 'success',
+                  html_url: 'https://github.com/r/1',
+                  details_url: null,
+                  external_id: '',
+                  app: { slug: 'github-actions' },
+                },
+                {
+                  id: 2,
+                  name: 'ci / lint',
+                  status: 'completed',
+                  conclusion: 'skipped',
+                  html_url: null,
+                  details_url: 'https://ci/2',
+                  external_id: null,
+                  app: null,
+                },
+                {
+                  id: 3,
+                  name: 'ci / build',
+                  status: 'in_progress',
+                  conclusion: null,
+                  html_url: null,
+                  details_url: null,
+                  external_id: null,
+                  app: {},
+                },
+                {
+                  id: 4,
+                  name: 'ci / docs',
+                  status: 'completed',
+                  conclusion: 'timed_out',
+                  html_url: null,
+                  details_url: null,
+                  external_id: null,
+                  app: null,
+                },
+                {
+                  id: 5,
+                  name: 'ci / odd',
+                  status: 'completed',
+                  conclusion: null,
+                  html_url: null,
+                  details_url: null,
+                  external_id: null,
+                  app: null,
+                },
+                {
+                  id: 6,
+                  name: 'smartcloud / reviews',
+                  status: 'completed',
+                  conclusion: 'failure',
+                  html_url: null,
+                  details_url: null,
+                  external_id: 'smartcloud',
+                  app: { slug: 'github-actions' },
+                },
+                {
+                  id: 7,
+                  name: 'ci / test',
+                  status: 'completed',
+                  conclusion: 'cancelled',
+                  html_url: null,
+                  details_url: null,
+                  external_id: null,
+                  app: { slug: 'github-actions' },
+                },
+              ],
+            },
+          },
+          [`GET ${REPO}/commits/abc/statuses`]: {
+            body: [
+              { context: 'deploy', state: 'success', target_url: 'https://deploy' },
+              { context: 'deploy', state: 'pending', target_url: null },
+              { context: 'coverage', state: 'error', target_url: null },
+              { context: 'preview', state: 'pending', target_url: null },
+              { context: 'legal', state: 'failure', target_url: null },
             ],
           },
-        },
-        [`GET ${REPO}/commits/abc/statuses`]: {
-          body: [
-            { context: 'deploy', state: 'success', target_url: 'https://deploy' },
-            { context: 'deploy', state: 'pending', target_url: null },
-            { context: 'coverage', state: 'error', target_url: null },
-            { context: 'preview', state: 'pending', target_url: null },
-            { context: 'legal', state: 'failure', target_url: null },
-          ],
-        },
-      })
-      const github = yield* service
-      expect(yield* github.listCommitChecks('abc')).toStrictEqual([
-        { name: 'ci / test', source: 'checkRun', id: 1, app: 'github-actions', state: 'success', detail: 'success', url: 'https://github.com/r/1' },
-        { name: 'ci / lint', source: 'checkRun', id: 2, state: 'success', detail: 'skipped', url: 'https://ci/2' },
-        { name: 'ci / build', source: 'checkRun', id: 3, state: 'pending', detail: 'in_progress' },
-        { name: 'ci / docs', source: 'checkRun', id: 4, state: 'failure', detail: 'timed_out' },
-        { name: 'ci / odd', source: 'checkRun', id: 5, state: 'failure', detail: 'completed' },
-        { name: 'smartcloud / reviews', source: 'checkRun', id: 6, app: 'github-actions', externalId: 'smartcloud', state: 'failure', detail: 'failure' },
-        // Another suite's run of the same check is listed too; the reader picks the latest.
-        { name: 'ci / test', source: 'checkRun', id: 7, app: 'github-actions', state: 'failure', detail: 'cancelled' },
-        { name: 'deploy', source: 'status', state: 'success', detail: 'success', url: 'https://deploy' },
-        { name: 'coverage', source: 'status', state: 'failure', detail: 'error' },
-        { name: 'preview', source: 'status', state: 'pending', detail: 'pending' },
-        { name: 'legal', source: 'status', state: 'failure', detail: 'failure' },
-      ])
-      expect(requests.find((request) => request.path.endsWith('/check-runs'))?.query).toContain('filter=all')
-      // Polled, so never served from the cache.
-      yield* github.listCommitChecks('abc')
-      expect(requests).toHaveLength(4)
-    }),
+        })
+        const github = yield* service
+        expect(yield* github.listCommitChecks('abc')).toStrictEqual([
+          {
+            name: 'ci / test',
+            source: 'checkRun',
+            id: 1,
+            app: 'github-actions',
+            state: 'success',
+            detail: 'success',
+            url: 'https://github.com/r/1',
+          },
+          { name: 'ci / lint', source: 'checkRun', id: 2, state: 'success', detail: 'skipped', url: 'https://ci/2' },
+          { name: 'ci / build', source: 'checkRun', id: 3, state: 'pending', detail: 'in_progress' },
+          { name: 'ci / docs', source: 'checkRun', id: 4, state: 'failure', detail: 'timed_out' },
+          { name: 'ci / odd', source: 'checkRun', id: 5, state: 'failure', detail: 'completed' },
+          {
+            name: 'smartcloud / reviews',
+            source: 'checkRun',
+            id: 6,
+            app: 'github-actions',
+            externalId: 'smartcloud',
+            state: 'failure',
+            detail: 'failure',
+          },
+          // Another suite's run of the same check is listed too; the reader picks the latest.
+          {
+            name: 'ci / test',
+            source: 'checkRun',
+            id: 7,
+            app: 'github-actions',
+            state: 'failure',
+            detail: 'cancelled',
+          },
+          { name: 'deploy', source: 'status', state: 'success', detail: 'success', url: 'https://deploy' },
+          { name: 'coverage', source: 'status', state: 'failure', detail: 'error' },
+          { name: 'preview', source: 'status', state: 'pending', detail: 'pending' },
+          { name: 'legal', source: 'status', state: 'failure', detail: 'failure' },
+        ])
+        expect(requests.find((request) => request.path.endsWith('/check-runs'))?.query).toContain('filter=all')
+        // Polled, so never served from the cache.
+        yield* github.listCommitChecks('abc')
+        expect(requests).toHaveLength(4)
+      }),
   )
 
   it.effect('reads the checks on a commit with the checks token, and writes with the main token', () =>
@@ -368,7 +530,14 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         fetch: fake.fetch,
       })
       expect(yield* github.listCommitChecks('abc')).toStrictEqual([])
-      yield* github.createCheckRun({ name: 'smartcloud / labels', headSha: 'abc', status: 'completed', conclusion: 'success', title: 't', summary: 's' })
+      yield* github.createCheckRun({
+        name: 'smartcloud / labels',
+        headSha: 'abc',
+        status: 'completed',
+        conclusion: 'success',
+        title: 't',
+        summary: 's',
+      })
       expect(fake.tokens).toStrictEqual(['workflow-token', 'workflow-token', 'access-token'])
     }),
   )
@@ -397,7 +566,11 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         [`GET ${REPO}/commits/abc/check-runs`]: { body: { total_count: 0, check_runs: [] } },
         [`GET ${REPO}/commits/abc/statuses`]: { body: [] },
       })
-      const github = yield* makeLiveGitHub({ token: Redacted.make('test-token'), coordinates: { owner: 'Resnovas', repo: 'example' }, fetch: fake.fetch })
+      const github = yield* makeLiveGitHub({
+        token: Redacted.make('test-token'),
+        coordinates: { owner: 'Resnovas', repo: 'example' },
+        fetch: fake.fetch,
+      })
       yield* github.listCommitChecks('abc')
       expect(fake.tokens).toStrictEqual(['test-token', 'test-token'])
     }),
@@ -420,9 +593,29 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         annotations: [{ ...annotation, title: 'x' }, ...Array.from({ length: 60 }, () => annotation)],
       })
       expect(id).toBe(42)
-      yield* github.updateCheckRun(42, { name: 'smartcloud', headSha: 'abc', status: 'completed', conclusion: 'success', title: 't', summary: 's' })
-      yield* github.createCheckRun({ name: 'smartcloud', headSha: 'abc', status: 'completed', conclusion: 'neutral', title: 't', summary: 's' })
-      yield* github.updateCheckRun(42, { name: 'smartcloud', headSha: 'abc', status: 'in_progress', title: 't', summary: 's' })
+      yield* github.updateCheckRun(42, {
+        name: 'smartcloud',
+        headSha: 'abc',
+        status: 'completed',
+        conclusion: 'success',
+        title: 't',
+        summary: 's',
+      })
+      yield* github.createCheckRun({
+        name: 'smartcloud',
+        headSha: 'abc',
+        status: 'completed',
+        conclusion: 'neutral',
+        title: 't',
+        summary: 's',
+      })
+      yield* github.updateCheckRun(42, {
+        name: 'smartcloud',
+        headSha: 'abc',
+        status: 'in_progress',
+        title: 't',
+        summary: 's',
+      })
       yield* github.updateCheckRun(42, {
         name: 'smartcloud',
         headSha: 'abc',
@@ -432,7 +625,16 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         summary: 's',
         annotations: Array.from({ length: 120 }, () => annotation),
       })
-      expect(requests.map(({ method }) => method)).toStrictEqual(['POST', 'PATCH', 'PATCH', 'POST', 'PATCH', 'PATCH', 'PATCH', 'PATCH'])
+      expect(requests.map(({ method }) => method)).toStrictEqual([
+        'POST',
+        'PATCH',
+        'PATCH',
+        'POST',
+        'PATCH',
+        'PATCH',
+        'PATCH',
+        'PATCH',
+      ])
       const count = (index: number) => JSON.stringify(requests[index]?.body).match(/"path":"a\.ts"/g)?.length ?? 0
       expect([0, 1, 5, 6, 7].map(count)).toStrictEqual([50, 11, 50, 50, 20])
       expect(requests[1]?.body).toStrictEqual({ output: expect.objectContaining({ title: 't', summary: 's' }) })
@@ -440,7 +642,12 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
       expect(requests[6]?.body).not.toHaveProperty('conclusion')
       expect(requests[3]?.body).toMatchObject({ conclusion: 'neutral' })
       expect(requests[4]?.body).not.toHaveProperty('conclusion')
-      expect(requests[0]?.body).toMatchObject({ head_sha: 'abc', external_id: 'smartcloud', status: 'in_progress', output: { title: 't', summary: 's' } })
+      expect(requests[0]?.body).toMatchObject({
+        head_sha: 'abc',
+        external_id: 'smartcloud',
+        status: 'in_progress',
+        output: { title: 't', summary: 's' },
+      })
       expect(requests[0]?.body).toHaveProperty(['output', 'annotations', '0'], {
         path: 'a.ts',
         start_line: 1,
@@ -463,7 +670,9 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         [`GET /repos/Resnovas/.github/contents/large.yml`]: { body: { type: 'file', encoding: 'none', content: '' } },
       })
       const github = yield* service
-      expect(yield* github.getFile({ owner: 'Resnovas', repo: '.github', path: 'smartcloud/house.yml', ref: 'main' })).toBe('version: 2\n')
+      expect(
+        yield* github.getFile({ owner: 'Resnovas', repo: '.github', path: 'smartcloud/house.yml', ref: 'main' }),
+      ).toBe('version: 2\n')
       expect(requests[0]?.query).toBe('?ref=main')
       const error = yield* Effect.flip(github.getFile({ owner: 'Resnovas', repo: '.github', path: 'templates' }))
       expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: 'templates is not a file' })
@@ -480,8 +689,12 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         [`POST /graphql`]: { body: { data: { repository: { id: 'R_1' } } } },
       })
       const github = yield* service
-      expect(yield* github.repositoryRequest({ method: 'PATCH', path: '', body: { has_wiki: false } })).toStrictEqual({ ok: true })
-      expect(yield* github.graphql('query($id: ID!) { node(id: $id) { id } }', { id: 'R_1' })).toStrictEqual({ repository: { id: 'R_1' } })
+      expect(yield* github.repositoryRequest({ method: 'PATCH', path: '', body: { has_wiki: false } })).toStrictEqual({
+        ok: true,
+      })
+      expect(yield* github.graphql('query($id: ID!) { node(id: $id) { id } }', { id: 'R_1' })).toStrictEqual({
+        repository: { id: 'R_1' },
+      })
       expect(requests[0]?.body).toStrictEqual({ has_wiki: false })
       expect(requests[1]?.body).toMatchObject({ variables: { id: 'R_1' } })
     }),
@@ -494,7 +707,13 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         [`GET ${REPO}/rulesets`]: { body: [] },
       })
       const github = yield* service
-      const body = { owner: 'someone-else', repo: 'other', baseUrl: 'https://attacker.example', headers: { authorization: 'x' }, name: 'r' }
+      const body = {
+        owner: 'someone-else',
+        repo: 'other',
+        baseUrl: 'https://attacker.example',
+        headers: { authorization: 'x' },
+        name: 'r',
+      }
       yield* github.repositoryRequest({ method: 'POST', path: '/rulesets', body })
       yield* github.repositoryRequest({ method: 'GET', path: '/rulesets?per_page=100' })
       expect(requests.map(({ method, path, query }) => `${method} ${path}${query}`)).toStrictEqual([
@@ -506,7 +725,9 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         const error = yield* Effect.flip(github.repositoryRequest({ method: 'GET', path }))
         expect(error._tag).toBe('ValidationFailed')
       }
-      const error = yield* Effect.flip(github.graphql('query { x }', { baseUrl: 'https://attacker.example', headers: {} }))
+      const error = yield* Effect.flip(
+        github.graphql('query { x }', { baseUrl: 'https://attacker.example', headers: {} }),
+      )
       expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: 'variables cannot be named baseUrl, headers' })
       expect(requests).toHaveLength(2)
     }),
@@ -531,7 +752,12 @@ describe('live GitHub: directories', () => {
           },
         },
       })
-      const entries = yield* (yield* service).listDirectory({ owner: 'Resnovas', repo: '.github', path: '/templates/', ref: 'v2' })
+      const entries = yield* (yield* service).listDirectory({
+        owner: 'Resnovas',
+        repo: '.github',
+        path: '/templates/',
+        ref: 'v2',
+      })
       expect(entries).toStrictEqual([
         { path: 'LICENSE', executable: false },
         { path: '.github/dependabot.yml', executable: false },
@@ -567,9 +793,15 @@ describe('live GitHub: proposing changes', () => {
   const baseRoutes: Routes = {
     [`GET ${REPO}/git/ref/heads/main`]: { body: { object: { sha: 'base' } } },
     [`GET ${REPO}/git/commits/base`]: { body: { sha: 'base', tree: { sha: 'base-tree' }, parents: [] } },
-    [`POST ${REPO}/git/blobs`]: [{ status: 201, body: { sha: 'blob-1' } }, { status: 201, body: { sha: 'blob-2' } }],
+    [`POST ${REPO}/git/blobs`]: [
+      { status: 201, body: { sha: 'blob-1' } },
+      { status: 201, body: { sha: 'blob-2' } },
+    ],
     [`POST ${REPO}/git/trees`]: { status: 201, body: { sha: 'new-tree' } },
-    [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'new-commit', author: DEFAULT_COMMITTER, verification: { verified: true } } },
+    [`POST ${REPO}/git/commits`]: {
+      status: 201,
+      body: { sha: 'new-commit', author: DEFAULT_COMMITTER, verification: { verified: true } },
+    },
   }
 
   it.effect('builds a signed-off commit on the base as the token, creates the branch and opens a pull request', () =>
@@ -579,11 +811,15 @@ describe('live GitHub: proposing changes', () => {
         [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { status: 404, body: { message: 'Not Found' } },
         [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
         [`GET ${REPO}/pulls`]: { body: [] },
-        [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'https://github.com/Resnovas/example/pull/5' } },
+        [`POST ${REPO}/pulls`]: {
+          status: 201,
+          body: { number: 5, html_url: 'https://github.com/Resnovas/example/pull/5' },
+        },
       })
       const result = yield* (yield* service).proposeChanges({ ...proposal, deletions: ['OLD.md'] })
       expect(result).toStrictEqual({ number: 5, url: 'https://github.com/Resnovas/example/pull/5', created: true })
-      const sent = (method: string, path: string) => requests.filter((request) => request.method === method && request.path === path)
+      const sent = (method: string, path: string) =>
+        requests.filter((request) => request.method === method && request.path === path)
       expect(sent('POST', `${REPO}/git/blobs`).map(({ body }) => body)).toStrictEqual([
         { content: Buffer.from('MIT').toString('base64'), encoding: 'base64' },
         { content: Buffer.from('#!/bin/sh').toString('base64'), encoding: 'base64' },
@@ -602,9 +838,17 @@ describe('live GitHub: proposing changes', () => {
         parents: ['base'],
       })
       expect(sent('POST', `${REPO}/git/commits`)).toHaveLength(1)
-      expect(sent('POST', `${REPO}/git/refs`)[0]?.body).toStrictEqual({ ref: 'refs/heads/smartcloud/sync', sha: 'new-commit' })
+      expect(sent('POST', `${REPO}/git/refs`)[0]?.body).toStrictEqual({
+        ref: 'refs/heads/smartcloud/sync',
+        sha: 'new-commit',
+      })
       expect(sent('GET', `${REPO}/pulls`)[0]?.query).toContain('head=Resnovas%3Asmartcloud%2Fsync')
-      expect(sent('POST', `${REPO}/pulls`)[0]?.body).toStrictEqual({ head: 'smartcloud/sync', base: 'main', title: proposal.title, body: 'Synced.' })
+      expect(sent('POST', `${REPO}/pulls`)[0]?.body).toStrictEqual({
+        head: 'smartcloud/sync',
+        base: 'main',
+        title: proposal.title,
+        body: 'Synced.',
+      })
     }),
   )
 
@@ -615,7 +859,9 @@ describe('live GitHub: proposing changes', () => {
         {
           ...baseRoutes,
           [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { body: { object: { sha: 'old-commit' } } },
-          [`GET ${REPO}/git/commits/old-commit`]: { body: { sha: 'old-commit', tree: { sha: 'old-tree' }, parents: [{ sha: 'base' }] } },
+          [`GET ${REPO}/git/commits/old-commit`]: {
+            body: { sha: 'old-commit', tree: { sha: 'old-tree' }, parents: [{ sha: 'base' }] },
+          },
           [`PATCH ${REPO}/git/refs/heads/smartcloud/sync`]: { body: {} },
           [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'https://github.com/Resnovas/example/pull/9' }] },
           [`PATCH ${REPO}/pulls/9`]: { body: {} },
@@ -624,12 +870,16 @@ describe('live GitHub: proposing changes', () => {
       )
       const result = yield* (yield* service).proposeChanges(proposal)
       expect(result).toStrictEqual({ number: 9, url: 'https://github.com/Resnovas/example/pull/9', created: false })
-      expect(requests.find((request) => request.path === `${REPO}/git/commits` && request.method === 'POST')?.body).toMatchObject({
+      expect(
+        requests.find((request) => request.path === `${REPO}/git/commits` && request.method === 'POST')?.body,
+      ).toMatchObject({
         message: signOff(proposal.title, bot),
         author: bot,
         committer: bot,
       })
-      expect(requests.find((request) => request.method === 'PATCH' && request.path.endsWith('smartcloud/sync'))?.body).toStrictEqual({
+      expect(
+        requests.find((request) => request.method === 'PATCH' && request.path.endsWith('smartcloud/sync'))?.body,
+      ).toStrictEqual({
         sha: 'new-commit',
         force: true,
       })
@@ -685,7 +935,9 @@ describe('live GitHub: proposing changes', () => {
     Effect.gen(function* () {
       const { service, requests } = live(sameChanges(true))
       expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
-      expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(false)
+      expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(
+        false,
+      )
       expect(requests.some((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))).toBe(false)
     }),
   )
@@ -694,8 +946,12 @@ describe('live GitHub: proposing changes', () => {
     Effect.gen(function* () {
       const { service, requests } = live(sameChanges(false))
       expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
-      expect(requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toHaveLength(1)
-      expect(requests.find((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))?.body).toStrictEqual({
+      expect(
+        requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`),
+      ).toHaveLength(1)
+      expect(
+        requests.find((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))?.body,
+      ).toStrictEqual({
         sha: 'new-commit',
         force: true,
       })
@@ -706,21 +962,30 @@ describe('live GitHub: proposing changes', () => {
     Effect.gen(function* () {
       const { service, requests } = live({
         ...sameChanges(false),
-        [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'unsigned', author: DEFAULT_COMMITTER, verification: { verified: false } } },
+        [`POST ${REPO}/git/commits`]: {
+          status: 201,
+          body: { sha: 'unsigned', author: DEFAULT_COMMITTER, verification: { verified: false } },
+        },
       })
       expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
-      expect(requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toHaveLength(1)
+      expect(
+        requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`),
+      ).toHaveLength(1)
       expect(requests.some((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))).toBe(false)
     }),
   )
 
-  it.effect('leaves an unsigned branch with the same changes when a committer is named, whose commits are never signed', () =>
-    Effect.gen(function* () {
-      const bot = { name: 'smartcloud[bot]', email: '1+smartcloud[bot]@users.noreply.github.com' }
-      const { service, requests } = live(sameChanges(false), bot)
-      expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
-      expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(false)
-    }),
+  it.effect(
+    'leaves an unsigned branch with the same changes when a committer is named, whose commits are never signed',
+    () =>
+      Effect.gen(function* () {
+        const bot = { name: 'smartcloud[bot]', email: '1+smartcloud[bot]@users.noreply.github.com' }
+        const { service, requests } = live(sameChanges(false), bot)
+        expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
+        expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(
+          false,
+        )
+      }),
   )
 
   it.effect('refuses to propose from the base branch itself, before any request', () =>
@@ -751,7 +1016,9 @@ describe('live GitHub: failures', () => {
       })
       const github = yield* service
       expect((yield* Effect.flip(github.deleteLabel('missing')))._tag).toBe('NotFound')
-      expect((yield* Effect.flip(github.createLabel({ name: 'a', color: 'ffffff', description: '' })))._tag).toBe('ValidationFailed')
+      expect((yield* Effect.flip(github.createLabel({ name: 'a', color: 'ffffff', description: '' })))._tag).toBe(
+        'ValidationFailed',
+      )
       expect((yield* Effect.flip(github.listLabels))._tag).toBe('Forbidden')
     }),
   )
@@ -800,7 +1067,10 @@ describe('live GitHub: failures', () => {
   it.effect('retries a write that creates something after a rate limit, which GitHub rejected before acting', () =>
     Effect.gen(function* () {
       const { service, requests } = live({
-        [`POST ${REPO}/issues/3/comments`]: [{ status: 429, body: { message: 'slow down' } }, { status: 201, body: { id: 1, body: 'hi' } }],
+        [`POST ${REPO}/issues/3/comments`]: [
+          { status: 429, body: { message: 'slow down' } },
+          { status: 201, body: { id: 1, body: 'hi' } },
+        ],
       })
       expect(yield* (yield* service).createComment(3, 'hi')).toMatchObject({ id: 1 })
       expect(requests).toHaveLength(2)
@@ -819,7 +1089,10 @@ describe('live GitHub: failures', () => {
       })
       const github = yield* service
       expect((yield* Effect.flip(github.listLabels))._tag).toBe('ValidationFailed')
-      expect(yield* Effect.flip(github.graphql('query { x }', {}))).toMatchObject({ _tag: 'ValidationFailed', operation: 'graphql' })
+      expect(yield* Effect.flip(github.graphql('query { x }', {}))).toMatchObject({
+        _tag: 'ValidationFailed',
+        operation: 'graphql',
+      })
       expect(yield* github.graphql('query { x }', {})).toStrictEqual({ x: 1 })
       expect(requests.map(({ path }) => path)).toStrictEqual([`${REPO}/labels`, '/graphql', '/graphql', '/graphql'])
     }),
@@ -838,12 +1111,14 @@ describe('live GitHub: failures', () => {
 
 describe('GitHubLive', () => {
   const provide = (env: Record<string, string>) =>
-    Effect.provide(Layer.provide(GitHubLive, Layer.setConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))))
+    Effect.provide(
+      Layer.provide(GitHubLive, Layer.setConfigProvider(ConfigProvider.fromMap(new Map(Object.entries(env))))),
+    )
 
   it.effect('reads the token and repository from config', () =>
-    Effect.map(GitHub, (github) => expect(github.coordinates).toStrictEqual({ owner: 'Resnovas', repo: 'smartcloud' })).pipe(
-      provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud' }),
-    ),
+    Effect.map(GitHub, (github) =>
+      expect(github.coordinates).toStrictEqual({ owner: 'Resnovas', repo: 'smartcloud' }),
+    ).pipe(provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud' })),
   )
 
   it.effect('commits as a named committer, filling in the half not set from the default', () =>
@@ -860,13 +1135,18 @@ describe('GitHubLive', () => {
           [`POST ${own}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
           [`POST ${own}/git/trees`]: { status: 201, body: { sha: 'tree' } },
           [`GET ${own}/git/ref/heads/smartcloud/sync`]: { status: 404, body: { message: 'Not Found' } },
-          [`POST ${own}/git/commits`]: { status: 201, body: { sha: 'commit', author: identity, verification: { verified: false } } },
+          [`POST ${own}/git/commits`]: {
+            status: 201,
+            body: { sha: 'commit', author: identity, verification: { verified: false } },
+          },
           [`POST ${own}/git/refs`]: { status: 201, body: {} },
           [`GET ${own}/pulls`]: { body: [] },
           [`POST ${own}/pulls`]: { status: 201, body: { number: 1, html_url: 'u' } },
         })
         vi.stubGlobal('fetch', fake.fetch)
-        const github = yield* GitHub.pipe(provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud', ...env }))
+        const github = yield* GitHub.pipe(
+          provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud', ...env }),
+        )
         yield* github.proposeChanges({
           branch: 'smartcloud/sync',
           base: 'main',
@@ -875,8 +1155,14 @@ describe('GitHubLive', () => {
           files: [{ path: 'LICENSE', content: 'MIT', executable: false }],
         })
         vi.unstubAllGlobals()
-        const commit = fake.requests.find((request) => request.method === 'POST' && request.path === `${own}/git/commits`)
-        expect(commit?.body).toMatchObject({ message: signOff('chore(sync): sync files', identity), author: identity, committer: identity })
+        const commit = fake.requests.find(
+          (request) => request.method === 'POST' && request.path === `${own}/git/commits`,
+        )
+        expect(commit?.body).toMatchObject({
+          message: signOff('chore(sync): sync files', identity),
+          author: identity,
+          committer: identity,
+        })
       }
     }),
   )

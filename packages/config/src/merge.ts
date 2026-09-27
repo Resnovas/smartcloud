@@ -56,7 +56,8 @@ const own = (record: Readonly<Record<string, Json>>, key: string): Json | undefi
   Object.hasOwn(record, key) ? record[key] : undefined
 
 const same = (a: Json, b: Json): boolean => {
-  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((item, i) => same(item, b[i] ?? null))
+  if (Array.isArray(a) && Array.isArray(b))
+    return a.length === b.length && a.every((item, i) => same(item, b[i] ?? null))
   if (isRecord(a) && isRecord(b)) {
     const keys = Object.keys(a)
     return (

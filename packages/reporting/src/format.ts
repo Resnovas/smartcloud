@@ -77,7 +77,8 @@ export const conclusionOf = (findings: ReadonlyArray<Finding>): Conclusion =>
 // is plain replacement, never a backtracking pattern.
 const cell = (text: string) => text.replaceAll('|', '\\|').replaceAll('\r', '').replaceAll('\n', ' ')
 
-const rule = (finding: Finding) => (finding.link === undefined ? `\`${finding.rule}\`` : `[\`${finding.rule}\`](${finding.link})`)
+const rule = (finding: Finding) =>
+  finding.link === undefined ? `\`${finding.rule}\`` : `[\`${finding.rule}\`](${finding.link})`
 
 const where = (finding: Finding) =>
   finding.path !== undefined
@@ -107,7 +108,9 @@ export const findingsTable = (findings: ReadonlyArray<Finding>): string =>
         '| Level | Rule | Where | Finding |',
         '| --- | --- | --- | --- |',
         // A file name may hold a pipe or a line break, so it is escaped like the message.
-        ...findings.map((finding) => `| ${finding.level} | ${rule(finding)} | ${cell(where(finding))} | ${cell(finding.message)} |`),
+        ...findings.map(
+          (finding) => `| ${finding.level} | ${rule(finding)} | ${cell(where(finding))} | ${cell(finding.message)} |`,
+        ),
       ].join('\n')
 
 const count = (findings: ReadonlyArray<Finding>, level: Finding['level']) =>
@@ -176,16 +179,20 @@ const eventLine = (result: RunResult) => {
 export const summaryMarkdown = (result: RunResult): string => {
   const lines = ['## smartcloud', '', `Event: ${eventLine(result)}`, '']
   const features = [
-    ...result.ran.map((feature) => `| ${feature} | ${tally(result.findings.filter((finding) => finding.feature === feature))} |`),
+    ...result.ran.map(
+      (feature) => `| ${feature} | ${tally(result.findings.filter((finding) => finding.feature === feature))} |`,
+    ),
     ...result.failed.map((failure) => `| ${failure.feature} | failed to run |`),
   ]
   if (features.length > 0) lines.push('| Feature | Result |', '| --- | --- |', ...features, '')
-  for (const failure of result.failed) lines.push(`**${failure.feature}** failed to run:`, '', '```', failure.message, '```', '')
+  for (const failure of result.failed)
+    lines.push(`**${failure.feature}** failed to run:`, '', '```', failure.message, '```', '')
   if (result.skipped.length > 0) {
     lines.push('Skipped:', ...result.skipped.map((skip) => `- ${skip.feature}: ${skip.reason}`), '')
   }
   if (result.findings.length > 0) lines.push(findingsTable(result.findings), '')
-  if (result.changes.length > 0) lines.push('Changes:', ...result.changes.map((change) => `- ${change.feature}: ${change.description}`), '')
+  if (result.changes.length > 0)
+    lines.push('Changes:', ...result.changes.map((change) => `- ${change.feature}: ${change.description}`), '')
   return lines.join('\n')
 }
 
@@ -234,7 +241,15 @@ const findingsCheckRun = (feature: string, findings: ReadonlyArray<Finding>, hea
   annotations: findings.flatMap((finding) =>
     finding.path === undefined || finding.line === undefined
       ? []
-      : [{ path: finding.path, line: finding.line, level: LEVEL[finding.level], message: finding.message, title: finding.rule }],
+      : [
+          {
+            path: finding.path,
+            line: finding.line,
+            level: LEVEL[finding.level],
+            message: finding.message,
+            title: finding.rule,
+          },
+        ],
   ),
 })
 

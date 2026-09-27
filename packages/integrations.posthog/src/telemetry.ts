@@ -73,7 +73,12 @@ export interface TelemetryService {
   /** Sets properties on the identity's `organization` group; does nothing for an anonymous identity. */
   readonly describeOrganization: (identity: Identity, properties: Properties) => Effect.Effect<void>
   /** Writes a log line to PostHog Logs only, never to the console, linked to the repository. */
-  readonly log: (identity: Identity, level: LogLevel.LogLevel, message: string, properties?: Properties) => Effect.Effect<void>
+  readonly log: (
+    identity: Identity,
+    level: LogLevel.LogLevel,
+    message: string,
+    properties?: Properties,
+  ) => Effect.Effect<void>
   /**
    * Evaluates a boolean feature flag through OpenFeature.
    *
@@ -197,7 +202,9 @@ const REQUEST_TIMEOUT_MS = 5000
 const quietly =
   (what: string) =>
   <A, E>(effect: Effect.Effect<A, E>, fallback: A): Effect.Effect<A> =>
-    effect.pipe(Effect.catchAllCause((cause) => Effect.as(Effect.logDebug(`telemetry: ${what} failed`, cause), fallback)))
+    effect.pipe(
+      Effect.catchAllCause((cause) => Effect.as(Effect.logDebug(`telemetry: ${what} failed`, cause), fallback)),
+    )
 
 const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
   Effect.gen(function* () {
@@ -224,7 +231,12 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
         ...(request.body === undefined ? {} : { body: request.body }),
       }).catch((error: unknown) => error)
       if (response instanceof Response && response.ok) return response
-      debug(Effect.logDebug(`telemetry: ${request.method} ${url} failed`, response instanceof Response ? response.status : response))
+      debug(
+        Effect.logDebug(
+          `telemetry: ${request.method} ${url} failed`,
+          response instanceof Response ? response.status : response,
+        ),
+      )
       return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })
     }
     const client = yield* Effect.acquireRelease(
@@ -256,7 +268,11 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
 
     // Logs, traces and metrics go to PostHog over OTLP/JSON through the same transport.
     const otlpOptions = {
-      resource: { serviceName: 'smartcloud', serviceVersion: options.version, attributes: { 'smartcloud.surface': options.surface } },
+      resource: {
+        serviceName: 'smartcloud',
+        serviceVersion: options.version,
+        attributes: { 'smartcloud.surface': options.surface },
+      },
       headers: { authorization: `Bearer ${Redacted.value(settings.key)}` },
       shutdownTimeout: shutdownMs,
     }
@@ -303,7 +319,11 @@ const makeLive = (settings: TelemetrySettings, options: TelemetryOptions) =>
             if (!enabled) return
             if (identity.organization !== undefined && !identified.has(identity.organization)) {
               identified.add(identity.organization)
-              client.groupIdentify({ groupType: ORGANIZATION_GROUP, groupKey: identity.organization, distinctId: identity.distinctId })
+              client.groupIdentify({
+                groupType: ORGANIZATION_GROUP,
+                groupKey: identity.organization,
+                distinctId: identity.distinctId,
+              })
             }
             const { properties: extra, groups } = about(identity)
             client.capture({

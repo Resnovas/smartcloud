@@ -25,7 +25,8 @@ export interface Sent {
 }
 
 /** How the fake answers a path: a status and JSON, a thrown network error, or never. */
-export type Reply = { readonly status?: number; readonly body?: unknown } | { readonly networkError: string } | { readonly hang: true }
+export type Reply =
+  { readonly status?: number; readonly body?: unknown } | { readonly networkError: string } | { readonly hang: true }
 
 export const fakeFetch = (routes: Readonly<Record<string, Reply>> = {}) => {
   const sent: Array<Sent> = []
@@ -37,7 +38,10 @@ export const fakeFetch = (routes: Readonly<Record<string, Reply>> = {}) => {
     const reply = routes[path] ?? {}
     if ('networkError' in reply) throw new TypeError(reply.networkError)
     if ('hang' in reply) return new Promise<Response>(() => undefined)
-    return new Response(JSON.stringify(reply.body ?? {}), { status: reply.status ?? 200, headers: { 'content-type': 'application/json' } })
+    return new Response(JSON.stringify(reply.body ?? {}), {
+      status: reply.status ?? 200,
+      headers: { 'content-type': 'application/json' },
+    })
   }
   return { fetch, sent, text: () => sent.map((request) => request.body).join('\n') }
 }

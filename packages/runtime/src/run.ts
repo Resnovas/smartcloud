@@ -42,7 +42,10 @@ export interface GitHubEvent {
  * new FeatureFailed({ feature: 'labels', reason: 'down' }).message // => 'the labels feature failed: down'
  * ```
  */
-export class FeatureFailed extends Data.TaggedError('FeatureFailed')<{ readonly feature: string; readonly reason: string }> {
+export class FeatureFailed extends Data.TaggedError('FeatureFailed')<{
+  readonly feature: string
+  readonly reason: string
+}> {
   override get message() {
     return `the ${this.feature} feature failed: ${this.reason}`
   }
@@ -216,11 +219,16 @@ const isRepositoryEvent = (name: string): name is RepositoryEvent => REPOSITORY_
  * @param options - The pull request, issue or event.
  * @returns The trigger.
  */
-export const triggerOf = (
-  options: { readonly pr?: number | undefined; readonly issue?: number | undefined; readonly event?: string | undefined },
-): Effect.Effect<Trigger, InvalidTrigger> => {
+export const triggerOf = (options: {
+  readonly pr?: number | undefined
+  readonly issue?: number | undefined
+  readonly event?: string | undefined
+}): Effect.Effect<Trigger, InvalidTrigger> => {
   const given = [options.pr, options.issue, options.event].filter((value) => value !== undefined).length
-  if (given !== 1) return Effect.fail(new InvalidTrigger({ reason: given === 0 ? 'nothing to simulate' : 'more than one thing to simulate' }))
+  if (given !== 1)
+    return Effect.fail(
+      new InvalidTrigger({ reason: given === 0 ? 'nothing to simulate' : 'more than one thing to simulate' }),
+    )
   if (options.pr !== undefined) return Effect.succeed({ kind: 'pullRequest', number: options.pr })
   if (options.issue !== undefined) return Effect.succeed({ kind: 'issue', number: options.issue })
   const event = options.event ?? ''
@@ -268,8 +276,14 @@ export const syntheticEvent = (trigger: Trigger) =>
         if (trigger.event !== 'push') return { name: trigger.event, payload: {} }
         const { defaultBranch } = yield* github.getRepository
         const operation = `GET /commits/${defaultBranch}`
-        const commit = yield* github.repositoryRequest({ method: 'GET', path: `/commits/${encodeURIComponent(defaultBranch)}` })
-        const head = yield* Either.mapLeft(Schema.decodeUnknownEither(CommitRef)(commit), () => new UnexpectedResponse({ operation }))
+        const commit = yield* github.repositoryRequest({
+          method: 'GET',
+          path: `/commits/${encodeURIComponent(defaultBranch)}`,
+        })
+        const head = yield* Either.mapLeft(
+          Schema.decodeUnknownEither(CommitRef)(commit),
+          () => new UnexpectedResponse({ operation }),
+        )
         return { name: 'push', payload: { ref: `refs/heads/${defaultBranch}`, after: head.sha } }
       }
     }
@@ -353,7 +367,10 @@ export const dryRunText = (outcome: DryRunOutcome): string =>
     ...(outcome.warnings.length > 0 ? [''] : []),
     ...(outcome.writes.length === 0
       ? ['**Dry run:** nothing would have been written.']
-      : ['**Dry run:** these writes were recorded, not made:', ...outcome.writes.map((write) => `- ${describeWrite(write)}`)]),
+      : [
+          '**Dry run:** these writes were recorded, not made:',
+          ...outcome.writes.map((write) => `- ${describeWrite(write)}`),
+        ]),
   ].join('\n')
 
 /** A dry run of one repository, as the CLI and the MCP server take it. */
@@ -384,7 +401,9 @@ export interface DryRunRequest {
  * @returns The location.
  */
 export const configLocationFor = (file: string | undefined) =>
-  file === undefined ? Effect.succeed<ConfigLocation>({}) : Effect.map(readLocalConfig(file), (text): ConfigLocation => ({ text }))
+  file === undefined
+    ? Effect.succeed<ConfigLocation>({})
+    : Effect.map(readLocalConfig(file), (text): ConfigLocation => ({ text }))
 
 /**
  * Connects to a repository and dry-runs it.

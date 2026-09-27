@@ -25,7 +25,9 @@ import { VERSION } from './version.js'
 // stdout carries the protocol, so nothing here may print to it. The
 // telemetry layer keeps diagnostic logs off the console, and PostHog's own
 // client writes to stderr.
-const runtime = ManagedRuntime.make(Layer.mergeAll(Layer.provideMerge(gitHubConfigSource(), NodeContext.layer), telemetry('mcp', VERSION)))
+const runtime = ManagedRuntime.make(
+  Layer.mergeAll(Layer.provideMerge(gitHubConfigSource(), NodeContext.layer), telemetry('mcp', VERSION)),
+)
 const server = makeServer({ connect: liveConnect(), run: (effect) => runtime.runPromise(effect) })
 const transport = new StdioServerTransport()
 // Disposing the runtime closes the telemetry layer, which flushes what is
@@ -37,5 +39,6 @@ const shutdown = () => {
 }
 transport.onclose = () => void shutdown()
 process.stdin.once('end', () => void shutdown())
-for (const signal of ['SIGINT', 'SIGTERM'] as const) process.once(signal, () => void shutdown().finally(() => process.exit(0)))
+for (const signal of ['SIGINT', 'SIGTERM'] as const)
+  process.once(signal, () => void shutdown().finally(() => process.exit(0)))
 await server.connect(transport)

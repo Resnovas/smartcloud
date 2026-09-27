@@ -38,7 +38,14 @@ export const error: Finding = {
   link: 'https://x/CONTRIBUTING.md#dco',
   commit: 'abcdef1234567890',
 }
-export const warning: Finding = { feature: 'sync', rule: 'SYNC', level: 'warning', message: 'edits\na synced file', path: 'LICENSE', line: 3 }
+export const warning: Finding = {
+  feature: 'sync',
+  rule: 'SYNC',
+  level: 'warning',
+  message: 'edits\na synced file',
+  path: 'LICENSE',
+  line: 3,
+}
 export const notice: Finding = { feature: 'reviews', rule: 'REVIEW', level: 'notice', message: 'gate open' }
 
 export const run = (overrides: Partial<RunResult> = {}): RunResult => ({

@@ -33,7 +33,16 @@ import { Effect } from 'effect'
 import { mkdir, mkdtemp, readFile, rm, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { captureConsole, CONVENTIONS, fixture, liveTelemetry, memory, missingRepository, ROOT, textOf } from './fixtures.js'
+import {
+  captureConsole,
+  CONVENTIONS,
+  fixture,
+  liveTelemetry,
+  memory,
+  missingRepository,
+  ROOT,
+  textOf,
+} from './fixtures.js'
 
 describe('tool handlers', () => {
   const { connect, layer, state } = memory()
@@ -42,8 +51,15 @@ describe('tool handlers', () => {
     Effect.gen(function* () {
       const valid = yield* validateConfigTool({ config: 'version: 2\nextends: [Resnovas/.github/house.yml]\n' })
       expect(valid.isError).toBeUndefined()
-      expect(JSON.parse(textOf(valid))).toStrictEqual({ valid: true, sources: ['Resnovas/.github/house.yml', 'smartcloud.yml'], warnings: [] })
-      const broken = yield* validateConfigTool({ config: 'version: 2\nextends: [Resnovas/.github/missing.yml]\n', source: 'mine.yml' })
+      expect(JSON.parse(textOf(valid))).toStrictEqual({
+        valid: true,
+        sources: ['Resnovas/.github/house.yml', 'smartcloud.yml'],
+        warnings: [],
+      })
+      const broken = yield* validateConfigTool({
+        config: 'version: 2\nextends: [Resnovas/.github/missing.yml]\n',
+        source: 'mine.yml',
+      })
       expect(broken.isError).toBe(true)
       expect(textOf(broken)).toContain('Resnovas/.github/missing.yml')
       // Strict for authors: an unknown key is an error, where a run only warns.
@@ -102,14 +118,21 @@ describe('config files named by an assistant', () => {
   )
 
   const refusal = (root: string, file: string) =>
-    Effect.flip(readConfinedConfig(root, file)).pipe(Effect.map((error) => (error instanceof ConfigRefused ? error.message : 'not refused')))
+    Effect.flip(readConfinedConfig(root, file)).pipe(
+      Effect.map((error) => (error instanceof ConfigRefused ? error.message : 'not refused')),
+    )
 
   it.scoped('reads only a relative path to a regular file inside the working directory', () =>
     Effect.gen(function* () {
       const { base, root } = yield* workspace
-      expect(yield* readConfinedConfig(root, 'smartcloud.yml')).toStrictEqual({ text: CONVENTIONS, source: 'smartcloud.yml' })
+      expect(yield* readConfinedConfig(root, 'smartcloud.yml')).toStrictEqual({
+        text: CONVENTIONS,
+        source: 'smartcloud.yml',
+      })
       expect((yield* readConfinedConfig(root, 'inside.yml')).text).toBe(CONVENTIONS)
-      expect(yield* refusal(root, join(base, 'secret.yml'))).toMatch(/^refusing to read ".*secret\.yml": it is an absolute path\. /)
+      expect(yield* refusal(root, join(base, 'secret.yml'))).toMatch(
+        /^refusing to read ".*secret\.yml": it is an absolute path\. /,
+      )
       expect(yield* refusal(root, '../secret.yml')).toContain('it resolves outside the working directory')
       expect(yield* refusal(root, 'escape.yml')).toContain('it resolves outside the working directory')
       expect(yield* refusal(root, '.')).toContain('it resolves outside the working directory')
@@ -124,18 +147,35 @@ describe('config files named by an assistant', () => {
       const { base, root } = yield* workspace
       const { connect, layer } = memory()
       const run = (effect: Effect.Effect<ToolResult, never, ToolContext>) =>
-        Effect.map(Effect.provide(effect, layer), (result) => ({ error: result.isError === true, text: textOf(result) }))
+        Effect.map(Effect.provide(effect, layer), (result) => ({
+          error: result.isError === true,
+          text: textOf(result),
+        }))
       const repository = 'Resnovas/example'
       const absolute = yield* run(dryRunTool(connect, { repository, pr: 7, config: join(base, 'secret.yml') }, root))
       expect(absolute).toMatchObject({ error: true, text: expect.stringContaining('it is an absolute path') })
       const escaped = yield* run(planSettingsTool(connect, { repository, config: 'escape.yml' }, root))
-      expect(escaped).toMatchObject({ error: true, text: expect.stringContaining('it resolves outside the working directory') })
+      expect(escaped).toMatchObject({
+        error: true,
+        text: expect.stringContaining('it resolves outside the working directory'),
+      })
       const inside = yield* run(dryRunTool(connect, { repository, pr: 7, config: 'smartcloud.yml' }, root))
       expect(inside).toMatchObject({ error: false, text: expect.stringContaining('on #7') })
-      const inline = yield* run(planSettingsTool(connect, { repository, configText: 'version: 2\nsettings:\n  merging: { rebase: false }\n' }, root))
+      const inline = yield* run(
+        planSettingsTool(
+          connect,
+          { repository, configText: 'version: 2\nsettings:\n  merging: { rebase: false }\n' },
+          root,
+        ),
+      )
       expect(inline.text).toContain('{"allow_rebase_merge":false}')
-      const both = yield* run(dryRunTool(connect, { repository, pr: 7, config: 'smartcloud.yml', configText: CONVENTIONS }, root))
-      expect(both).toMatchObject({ error: true, text: expect.stringMatching(/^give config or configText, not both\. /) })
+      const both = yield* run(
+        dryRunTool(connect, { repository, pr: 7, config: 'smartcloud.yml', configText: CONVENTIONS }, root),
+      )
+      expect(both).toMatchObject({
+        error: true,
+        text: expect.stringMatching(/^give config or configText, not both\. /),
+      })
     }),
   )
 
@@ -143,7 +183,13 @@ describe('config files named by an assistant', () => {
     Effect.gen(function* () {
       const { connect, layer } = memory()
       const dry = (features: ReadonlyArray<string> | undefined) =>
-        Effect.map(Effect.provide(dryRunTool(connect, { repository: 'Resnovas/example', pr: 7, configText: CONVENTIONS, features }, ROOT), layer), textOf)
+        Effect.map(
+          Effect.provide(
+            dryRunTool(connect, { repository: 'Resnovas/example', pr: 7, configText: CONVENTIONS, features }, ROOT),
+            layer,
+          ),
+          textOf,
+        )
       const all = yield* dry([])
       expect(all).toBe(yield* dry(undefined))
       expect(all).not.toBe(yield* dry(['conventions']))
@@ -159,9 +205,16 @@ describe('agent self-checks', () => {
       const unsigned = JSON.parse(textOf(yield* checkCommitMessageTool({ ...author, message: 'fix: x' })))
       expect(unsigned.passes).toBe(false)
       expect(unsigned.findings[0]).toMatchObject({ rule: 'DCO', level: 'error' })
-      const signed = yield* checkCommitMessageTool({ ...author, message: 'fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>' })
+      const signed = yield* checkCommitMessageTool({
+        ...author,
+        message: 'fix: x\n\nSigned-off-by: Jane Doe <jane@example.com>',
+      })
       expect(JSON.parse(textOf(signed))).toStrictEqual({ passes: true, findings: [] })
-      const off = yield* checkCommitMessageTool({ ...author, message: 'fix: x', config: 'version: 2\ncommits: { dco: false }\n' })
+      const off = yield* checkCommitMessageTool({
+        ...author,
+        message: 'fix: x',
+        config: 'version: 2\ncommits: { dco: false }\n',
+      })
       expect(JSON.parse(textOf(off)).passes).toBe(true)
       const broken = yield* checkCommitMessageTool({ ...author, message: 'x', config: 'version: [2' })
       expect(broken.isError).toBe(true)
@@ -171,7 +224,9 @@ describe('agent self-checks', () => {
   it.effect('explains a rule, and reports an unknown one as an error result', () =>
     Effect.gen(function* () {
       expect(JSON.parse(textOf(yield* explainRuleTool({ rule: 'AI-02' }))).link).toMatch(/AI_POLICY\.md#ai-02$/)
-      expect(JSON.parse(textOf(yield* explainRuleTool({ rule: 'conventions.title', config: CONVENTIONS }))).rule).toBe('conventions.title')
+      expect(JSON.parse(textOf(yield* explainRuleTool({ rule: 'conventions.title', config: CONVENTIONS }))).rule).toBe(
+        'conventions.title',
+      )
       const unknown = yield* explainRuleTool({ rule: 'nope' })
       expect(unknown.isError).toBe(true)
     }).pipe(Effect.provide(memory().layer)),
@@ -185,7 +240,9 @@ describe('telemetry for every tool call', () => {
     Effect.gen(function* () {
       const lines = captureConsole()
       const live = liveTelemetry()
-      const result = yield* live.run(dryRunTool(missingRepository, { repository: 'Resnovas/this-repo-does-not-exist-xyz', event: 'push' }, ROOT))
+      const result = yield* live.run(
+        dryRunTool(missingRepository, { repository: 'Resnovas/this-repo-does-not-exist-xyz', event: 'push' }, ROOT),
+      )
       expect(result.isError).toBe(true)
       expect(lines).toStrictEqual([])
       const batch = live.batch()
@@ -213,7 +270,9 @@ describe('telemetry for every tool call', () => {
     Effect.gen(function* () {
       captureConsole()
       const live = liveTelemetry()
-      const broken = yield* live.run(planSettingsTool(() => Effect.die(new TypeError('broken')), { repository: 'Resnovas/example' }, ROOT))
+      const broken = yield* live.run(
+        planSettingsTool(() => Effect.die(new TypeError('broken')), { repository: 'Resnovas/example' }, ROOT),
+      )
       expect(broken).toStrictEqual({ content: [{ type: 'text', text: 'unexpected failure: broken' }], isError: true })
       expect(live.batch()).toContain('"expected":false')
       const plain = yield* planSettingsTool(() => Effect.die('not an error'), { repository: 'Resnovas/example' }, ROOT)

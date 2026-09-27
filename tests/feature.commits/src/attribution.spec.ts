@@ -19,7 +19,9 @@ import { classifyAttribution, isAiIdentity, readAttribution } from '@resnovas/fe
 
 describe('readAttribution', () => {
   it('parses trailers case-insensitively, lower-casing emails', () => {
-    const { coAuthors, signOffs } = readAttribution('x\n\nco-authored-by: Bot <A@Anthropic.com>\nSIGNED-OFF-BY: Me <me@x.io>')
+    const { coAuthors, signOffs } = readAttribution(
+      'x\n\nco-authored-by: Bot <A@Anthropic.com>\nSIGNED-OFF-BY: Me <me@x.io>',
+    )
     expect(coAuthors).toStrictEqual([{ name: 'Bot', email: 'a@anthropic.com' }])
     expect(signOffs).toStrictEqual([{ name: 'Me', email: 'me@x.io' }])
   })
@@ -39,8 +41,17 @@ describe('classifyAttribution', () => {
   const isAi = (identity: { readonly name: string; readonly email: string }) => isAiIdentity(identity)
 
   it('an AI co-author or any Assisted-by credits an AI tool', () => {
-    expect(classifyAttribution('x\n\nCo-authored-by: Claude <noreply@anthropic.com>', isAi)).toMatchObject({ aiCoAuthored: true, aiAttributed: true })
-    expect(classifyAttribution('x\n\nAssisted-by: aider:gpt-5', isAi)).toMatchObject({ aiCoAuthored: false, aiAttributed: true })
-    expect(classifyAttribution('x\n\nCo-authored-by: Jane <jane@example.com>', isAi)).toMatchObject({ aiCoAuthored: false, aiAttributed: false })
+    expect(classifyAttribution('x\n\nCo-authored-by: Claude <noreply@anthropic.com>', isAi)).toMatchObject({
+      aiCoAuthored: true,
+      aiAttributed: true,
+    })
+    expect(classifyAttribution('x\n\nAssisted-by: aider:gpt-5', isAi)).toMatchObject({
+      aiCoAuthored: false,
+      aiAttributed: true,
+    })
+    expect(classifyAttribution('x\n\nCo-authored-by: Jane <jane@example.com>', isAi)).toMatchObject({
+      aiCoAuthored: false,
+      aiAttributed: false,
+    })
   })
 })

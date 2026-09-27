@@ -1,6 +1,6 @@
 ---
-title: "Sync"
-description: "Sync files from a template directory in another repository, and protect synced content."
+title: 'Sync'
+description: 'Sync files from a template directory in another repository, and protect synced content.'
 ---
 
 The sync feature keeps files such as community health documents, issue forms, CODEOWNERS and workflows in line with a template directory in another repository. It is enabled by a `sync` section.
@@ -19,14 +19,14 @@ sync:
   check: true
 ```
 
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `source` | required | The template directory, as `owner/repo/path@ref`. The ref is optional. |
-| `values` | none | Values for `{{KEY}}` placeholders. Keys are upper snake case. |
-| `exclude` | none | Template paths this repository keeps its own copy of. |
-| `branch` | `smartcloud/sync` | The branch sync pull requests are opened from. It is force-updated, so it cannot be the default branch. |
-| `check` | `true` | Fail pull requests that edit synced content. |
-| `maintainerLevel` | `warning` | The level for a maintainer's or the owner's own edit to synced content. Contributors always get an error. |
+| Key               | Default           | Meaning                                                                                                   |
+| ----------------- | ----------------- | --------------------------------------------------------------------------------------------------------- |
+| `source`          | required          | The template directory, as `owner/repo/path@ref`. The ref is optional.                                    |
+| `values`          | none              | Values for `{{KEY}}` placeholders. Keys are upper snake case.                                             |
+| `exclude`         | none              | Template paths this repository keeps its own copy of.                                                     |
+| `branch`          | `smartcloud/sync` | The branch sync pull requests are opened from. It is force-updated, so it cannot be the default branch.   |
+| `check`           | `true`            | Fail pull requests that edit synced content.                                                              |
+| `maintainerLevel` | `warning`         | The level for a maintainer's or the owner's own edit to synced content. Contributors always get an error. |
 
 ## Syncing
 
@@ -57,11 +57,11 @@ updates:
       interval: weekly
 ```
 
-| Marker | Meaning |
-| --- | --- |
-| `house:managed:begin` | Opens the managed block. |
-| `house:managed:end` | Closes it. |
-| `house:local` | Where the repository's own additions go. |
+| Marker                | Meaning                                  |
+| --------------------- | ---------------------------------------- |
+| `house:managed:begin` | Opens the managed block.                 |
+| `house:managed:end`   | Closes it.                               |
+| `house:local`         | Where the repository's own additions go. |
 
 Markers count only on comment lines: `#` in YAML and CODEOWNERS, `<!--` in Markdown. The first time a file the repository already had is adopted, its previous content is kept, commented out, at the `house:local` line (or at the end), so nothing is lost silently.
 

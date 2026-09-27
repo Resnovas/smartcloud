@@ -107,5 +107,7 @@ export const renderAll = (
   Either.all(
     [...templates]
       .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
-      .map((template) => Either.map(renderText(template.content, values, template.path), (content) => ({ ...template, content }))),
+      .map((template) =>
+        Either.map(renderText(template.content, values, template.path), (content) => ({ ...template, content })),
+      ),
   )

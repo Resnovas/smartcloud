@@ -18,7 +18,15 @@ import type { Check, Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Duration, Effect, Request, RequestResolver } from 'effect'
 import type { GitHubError } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
-import type { Comment, DirectoryEntry, FileLocation, GitHubService, IssueSummary, Label, Repository } from './service.js'
+import type {
+  Comment,
+  DirectoryEntry,
+  FileLocation,
+  GitHubService,
+  IssueSummary,
+  Label,
+  Repository,
+} from './service.js'
 
 // Every read the service makes is an Effect Request, so equal reads share one
 // cache entry and concurrent equal reads share one call.
@@ -99,7 +107,8 @@ const locationKey = (location: FileLocation): Location => ({
   ref: location.ref,
 })
 
-const locationOf = ({ owner, repo, path, ref }: Location): FileLocation => (ref === undefined ? { owner, repo, path } : { owner, repo, path, ref })
+const locationOf = ({ owner, repo, path, ref }: Location): FileLocation =>
+  ref === undefined ? { owner, repo, path } : { owner, repo, path, ref }
 
 // Large enough that a run never evicts; entries live until a write invalidates them or the service goes.
 const CAPACITY = 65_536
@@ -186,7 +195,10 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
     }
 
     const lookup =
-      <R extends Request.Request<unknown, GitHubError>>(cache: Request.Cache, resolver: RequestResolver.RequestResolver<R>) =>
+      <R extends Request.Request<unknown, GitHubError>>(
+        cache: Request.Cache,
+        resolver: RequestResolver.RequestResolver<R>,
+      ) =>
       (request: R): Effect.Effect<Request.Request.Success<R>, Request.Request.Error<R>> =>
         Effect.request(request, resolver).pipe(
           Effect.withRequestCaching(true),
@@ -194,23 +206,60 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
           Effect.tapErrorCause(() => cache.invalidate(request)),
         )
 
-    const getRepository = lookup(caches.repository, RequestResolver.fromEffect((_: GetRepository) => inner.getRepository))
-    const listLabels = lookup(caches.labels, RequestResolver.fromEffect((_: ListLabels) => inner.listLabels))
-    const listOpenIssues = lookup(caches.issues, RequestResolver.fromEffect((_: ListOpenIssues) => inner.listOpenIssues))
-    const listComments = lookup(caches.comments, RequestResolver.fromEffect(({ issue }: ListComments) => inner.listComments(issue)))
-    const listCommits = lookup(caches.pulls, RequestResolver.fromEffect(({ pullRequest }: ListCommits) => inner.listCommits(pullRequest)))
-    const listFiles = lookup(caches.pulls, RequestResolver.fromEffect(({ pullRequest }: ListFiles) => inner.listFiles(pullRequest)))
-    const listReviews = lookup(caches.pulls, RequestResolver.fromEffect(({ pullRequest }: ListReviews) => inner.listReviews(pullRequest)))
+    const getRepository = lookup(
+      caches.repository,
+      RequestResolver.fromEffect((_: GetRepository) => inner.getRepository),
+    )
+    const listLabels = lookup(
+      caches.labels,
+      RequestResolver.fromEffect((_: ListLabels) => inner.listLabels),
+    )
+    const listOpenIssues = lookup(
+      caches.issues,
+      RequestResolver.fromEffect((_: ListOpenIssues) => inner.listOpenIssues),
+    )
+    const listComments = lookup(
+      caches.comments,
+      RequestResolver.fromEffect(({ issue }: ListComments) => inner.listComments(issue)),
+    )
+    const listCommits = lookup(
+      caches.pulls,
+      RequestResolver.fromEffect(({ pullRequest }: ListCommits) => inner.listCommits(pullRequest)),
+    )
+    const listFiles = lookup(
+      caches.pulls,
+      RequestResolver.fromEffect(({ pullRequest }: ListFiles) => inner.listFiles(pullRequest)),
+    )
+    const listReviews = lookup(
+      caches.pulls,
+      RequestResolver.fromEffect(({ pullRequest }: ListReviews) => inner.listReviews(pullRequest)),
+    )
     const countRequestedReviewers = lookup(
       caches.pulls,
-      RequestResolver.fromEffect(({ pullRequest }: CountRequestedReviewers) => inner.countRequestedReviewers(pullRequest)),
+      RequestResolver.fromEffect(({ pullRequest }: CountRequestedReviewers) =>
+        inner.countRequestedReviewers(pullRequest),
+      ),
     )
-    const readMergeable = lookup(caches.pulls, RequestResolver.fromEffect(({ pullRequest }: GetMergeable) => inner.getMergeable(pullRequest)))
+    const readMergeable = lookup(
+      caches.pulls,
+      RequestResolver.fromEffect(({ pullRequest }: GetMergeable) => inner.getMergeable(pullRequest)),
+    )
     const getMergeable = (request: GetMergeable) =>
-      Effect.tap(readMergeable(request), (mergeable) => (mergeable === 'UNKNOWN' ? caches.pulls.invalidate(request) : Effect.void))
-    const listChecks = lookup(caches.checks, RequestResolver.fromEffect(({ pullRequest }: ListChecks) => inner.listChecks(pullRequest)))
-    const getFile = lookup(caches.contents, RequestResolver.fromEffect((request: GetFile) => inner.getFile(locationOf(request))))
-    const listDirectory = lookup(caches.contents, RequestResolver.fromEffect((request: ListDirectory) => inner.listDirectory(locationOf(request))))
+      Effect.tap(readMergeable(request), (mergeable) =>
+        mergeable === 'UNKNOWN' ? caches.pulls.invalidate(request) : Effect.void,
+      )
+    const listChecks = lookup(
+      caches.checks,
+      RequestResolver.fromEffect(({ pullRequest }: ListChecks) => inner.listChecks(pullRequest)),
+    )
+    const getFile = lookup(
+      caches.contents,
+      RequestResolver.fromEffect((request: GetFile) => inner.getFile(locationOf(request))),
+    )
+    const listDirectory = lookup(
+      caches.contents,
+      RequestResolver.fromEffect((request: ListDirectory) => inner.listDirectory(locationOf(request))),
+    )
     const repositoryGet = lookup(
       caches.requests,
       RequestResolver.fromEffect(({ path }: RepositoryGet) => inner.repositoryRequest({ method: 'GET', path })),
@@ -218,7 +267,10 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
 
     const everything = Object.values(caches)
     // Runs a write, then drops what it may have changed, even when it failed.
-    const writing = <A>(write: Effect.Effect<A, GitHubError>, stale: ReadonlyArray<Effect.Effect<void>>): Effect.Effect<A, GitHubError> =>
+    const writing = <A>(
+      write: Effect.Effect<A, GitHubError>,
+      stale: ReadonlyArray<Effect.Effect<void>>,
+    ): Effect.Effect<A, GitHubError> =>
       Effect.ensuring(write, Effect.all([caches.requests.invalidateAll, ...stale], { discard: true }))
     const invalidateAll = everything.map((cache) => cache.invalidateAll)
 
@@ -228,13 +280,16 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
 
       listLabels: listLabels(ListLabels({})),
       createLabel: (label) => writing(inner.createLabel(label), [caches.labels.invalidateAll]),
-      updateLabel: (current, label) => writing(inner.updateLabel(current, label), [caches.labels.invalidateAll, caches.issues.invalidateAll]),
-      deleteLabel: (name) => writing(inner.deleteLabel(name), [caches.labels.invalidateAll, caches.issues.invalidateAll]),
+      updateLabel: (current, label) =>
+        writing(inner.updateLabel(current, label), [caches.labels.invalidateAll, caches.issues.invalidateAll]),
+      deleteLabel: (name) =>
+        writing(inner.deleteLabel(name), [caches.labels.invalidateAll, caches.issues.invalidateAll]),
 
       addLabels: (issue, labels) => writing(inner.addLabels(issue, labels), [caches.issues.invalidateAll]),
       removeLabel: (issue, label) => writing(inner.removeLabel(issue, label), [caches.issues.invalidateAll]),
       listComments: (issue) => listComments(ListComments({ issue })),
-      createComment: (issue, body) => writing(inner.createComment(issue, body), [caches.comments.invalidate(ListComments({ issue }))]),
+      createComment: (issue, body) =>
+        writing(inner.createComment(issue, body), [caches.comments.invalidate(ListComments({ issue }))]),
       updateComment: (id, body) => writing(inner.updateComment(id, body), [caches.comments.invalidateAll]),
       listOpenIssues: listOpenIssues(ListOpenIssues({})),
       closeIssue: (issue) => writing(inner.closeIssue(issue), [caches.issues.invalidateAll]),
@@ -251,7 +306,9 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
           caches.pulls.invalidate(CountRequestedReviewers({ pullRequest })),
         ]),
       requestReviewers: (pullRequest, logins) =>
-        writing(inner.requestReviewers(pullRequest, logins), [caches.pulls.invalidate(CountRequestedReviewers({ pullRequest }))]),
+        writing(inner.requestReviewers(pullRequest, logins), [
+          caches.pulls.invalidate(CountRequestedReviewers({ pullRequest })),
+        ]),
 
       createCheckRun: (run) => writing(inner.createCheckRun(run), [caches.checks.invalidateAll]),
       updateCheckRun: (id, run) => writing(inner.updateCheckRun(id, run), [caches.checks.invalidateAll]),
@@ -260,7 +317,12 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       getFile: (location) => getFile(GetFile(locationKey(location))),
       listDirectory: (location) => listDirectory(ListDirectory(locationKey(location))),
       proposeChanges: (proposal) =>
-        writing(inner.proposeChanges(proposal), [caches.contents.invalidateAll, caches.issues.invalidateAll, caches.pulls.invalidateAll, caches.checks.invalidateAll]),
+        writing(inner.proposeChanges(proposal), [
+          caches.contents.invalidateAll,
+          caches.issues.invalidateAll,
+          caches.pulls.invalidateAll,
+          caches.checks.invalidateAll,
+        ]),
 
       repositoryRequest: (request) =>
         request.method === 'GET' && request.body === undefined
@@ -269,6 +331,8 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
             ? inner.repositoryRequest(request)
             : writing(inner.repositoryRequest(request), invalidateAll),
       graphql: (query, variables) =>
-        isGraphqlWrite(query) ? writing(inner.graphql(query, variables), invalidateAll) : inner.graphql(query, variables),
+        isGraphqlWrite(query)
+          ? writing(inner.graphql(query, variables), invalidateAll)
+          : inner.graphql(query, variables),
     }
   })

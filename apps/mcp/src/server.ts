@@ -50,7 +50,9 @@ const localConfig = z
 const configText = z
   .string()
   .optional()
-  .describe("The config itself, YAML or JSON, to use instead of the repository's own config. Give this or config, not both.")
+  .describe(
+    "The config itself, YAML or JSON, to use instead of the repository's own config. Give this or config, not both.",
+  )
 
 /**
  * Builds the smartcloud MCP server and registers its tools.
@@ -76,7 +78,11 @@ const configText = z
  * working directory when the server is made, if omitted.
  * @returns The server, ready to connect to a transport.
  */
-export const makeServer = (options: { readonly connect: Connect; readonly run: RunTool; readonly root?: string | undefined }): McpServer => {
+export const makeServer = (options: {
+  readonly connect: Connect
+  readonly run: RunTool
+  readonly root?: string | undefined
+}): McpServer => {
   const root = options.root ?? process.cwd()
   const server = new McpServer({ name: 'smartcloud', version: VERSION })
   const readOnly = { readOnlyHint: true, openWorldHint: true }
@@ -106,7 +112,8 @@ export const makeServer = (options: { readonly connect: Connect; readonly run: R
     'explain_config',
     {
       title: 'Explain a smartcloud config',
-      description: 'Resolve a config and list every feature, whether the config enables it, the events it acts on and the rules it reads.',
+      description:
+        'Resolve a config and list every feature, whether the config enables it, the events it acts on and the rules it reads.',
       inputSchema: configInput,
       annotations: readOnly,
     },
@@ -151,7 +158,10 @@ export const makeServer = (options: { readonly connect: Connect; readonly run: R
         message: z.string().describe('The full commit message, including trailers.'),
         authorName: z.string().describe('The commit author name.'),
         authorEmail: z.string().describe('The commit author email, which the Signed-off-by must match.'),
-        config: z.string().optional().describe("The repository's smartcloud config, YAML or JSON; smartcloud's defaults when omitted."),
+        config: z
+          .string()
+          .optional()
+          .describe("The repository's smartcloud config, YAML or JSON; smartcloud's defaults when omitted."),
       },
       annotations: { readOnlyHint: true, openWorldHint: false },
     },
@@ -161,7 +171,8 @@ export const makeServer = (options: { readonly connect: Connect; readonly run: R
     'explain_rule',
     {
       title: 'Explain a rule',
-      description: 'Explain a smartcloud rule from the id a finding reports, such as AI-02, DCO or conventions.title, and how to satisfy it.',
+      description:
+        'Explain a smartcloud rule from the id a finding reports, such as AI-02, DCO or conventions.title, and how to satisfy it.',
       inputSchema: {
         rule: z.string().describe('The rule id from the finding.'),
         config: z.string().optional().describe('The smartcloud config, for convention rules and policy links.'),

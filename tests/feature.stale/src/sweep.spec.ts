@@ -75,7 +75,9 @@ describe('stale feature: marking', () => {
       const failing: GitHub['Type'] = {
         ...github.service,
         listComments: (number) =>
-          number === 1 ? Effect.fail(new Unavailable({ operation: 'listComments', detail: 'boom' })) : github.service.listComments(number),
+          number === 1
+            ? Effect.fail(new Unavailable({ operation: 'listComments', detail: 'boom' }))
+            : github.service.listComments(number),
       }
       const result = yield* sweep({ version: 2, stale: settings }, github, 'schedule', failing)
       expect(result.failed).toStrictEqual([])
@@ -111,10 +113,18 @@ describe('stale feature: marking', () => {
   it.effect('in a dry run, records every write it would make and changes nothing', () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(NOW)
-      const github = memory([item(1, { updatedAt: daysAgo(40) }), item(2, { labels: ['stale'], updatedAt: daysAgo(10) })])
+      const github = memory([
+        item(1, { updatedAt: daysAgo(40) }),
+        item(2, { labels: ['stale'], updatedAt: daysAgo(10) }),
+      ])
       const layer = DryRun.pipe(Layer.provide(Layer.succeed(GitHub, github.service)))
       const { result, writes } = yield* Effect.gen(function* () {
-        const result = yield* runFeatures({ config: { version: 2, stale: settings }, event: 'schedule', payload: {}, features: [stale] })
+        const result = yield* runFeatures({
+          config: { version: 2, stale: settings },
+          event: 'schedule',
+          payload: {},
+          features: [stale],
+        })
         return { result, writes: yield* (yield* DryRunLog).writes }
       }).pipe(Effect.provide(layer))
       expect(result.failed).toStrictEqual([])
@@ -210,8 +220,17 @@ describe('stale feature: marking', () => {
         item(2, { updatedAt: daysAgo(40), isPullRequest: true }),
         item(3, { updatedAt: daysAgo(40) }),
       ])
-      for (const [number, files] of [[1, ['docs/a.md']], [2, ['src/a.ts']]] as const) {
-        github.state.pulls.set(number, { commits: [], files: [...files], reviews: [], requestedReviewers: [], submittedReviews: [] })
+      for (const [number, files] of [
+        [1, ['docs/a.md']],
+        [2, ['src/a.ts']],
+      ] as const) {
+        github.state.pulls.set(number, {
+          commits: [],
+          files: [...files],
+          reviews: [],
+          requestedReviewers: [],
+          submittedReviews: [],
+        })
       }
       const result = yield* sweep(
         {
@@ -237,7 +256,11 @@ describe('stale feature: marking', () => {
           stale: {
             ...settings,
             // Exempting drafts: nested, and a draft pull request looks ready in a sweep's listing.
-            exempt: { when: { condition: [{ type: '$or', condition: [{ condition: [{ type: 'isDraft', condition: true }] }] }] } },
+            exempt: {
+              when: {
+                condition: [{ type: '$or', condition: [{ condition: [{ type: 'isDraft', condition: true }] }] }],
+              },
+            },
           },
         },
         github,
@@ -389,14 +412,22 @@ describe('markedSince', () => {
       [{ id: 1, author: 'a', bot: true, body: '<!-- smartcloud:stale-since 2026-01-01T00:00:00.000Z -->' }],
       undefined,
     ],
-    ['ignores a stale comment without a mark time', [{ id: 1, author: 'a', bot: true, body: `${STALE_MARKER}\ntext` }], undefined],
+    [
+      'ignores a stale comment without a mark time',
+      [{ id: 1, author: 'a', bot: true, body: `${STALE_MARKER}\ntext` }],
+      undefined,
+    ],
     [
       'ignores an unreadable mark time',
       [{ id: 1, author: 'a', bot: true, body: `${STALE_MARKER}\n<!-- smartcloud:stale-since 2026-99-99T99:99 -->` }],
       undefined,
     ],
     ['finds nothing on an item without comments', [], undefined],
-    ['ignores a stale comment a person wrote', [{ id: 1, author: 'mallory', bot: false, body: staleBody('x', new Date(0)) }], undefined],
+    [
+      'ignores a stale comment a person wrote',
+      [{ id: 1, author: 'mallory', bot: false, body: staleBody('x', new Date(0)) }],
+      undefined,
+    ],
   ] as const)('%s', (_name, comments, expected) => {
     expect(markedSince(comments)).toStrictEqual(expected)
   })

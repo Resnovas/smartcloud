@@ -23,7 +23,11 @@ describe('renderText', () => {
     expect(renderText('(c) {{YEAR}} {{WHO}}', { YEAR: '2026', WHO: 'R' })).toStrictEqual(Either.right('(c) 2026 R'))
     const missing = renderText('{{MISSING}}', {}, 'LICENSE')
     expect(Either.isLeft(missing) && missing.left.message).toBe('LICENSE: no value for {{MISSING}}')
-    expect(Either.isLeft(missing) && missing.left).toMatchObject({ _tag: 'MissingValue', key: 'MISSING', source: 'LICENSE' })
+    expect(Either.isLeft(missing) && missing.left).toMatchObject({
+      _tag: 'MissingValue',
+      key: 'MISSING',
+      source: 'LICENSE',
+    })
   })
 
   it('names a template by default and does not read inherited keys', () => {
@@ -32,7 +36,9 @@ describe('renderText', () => {
   })
 
   it('leaves text that only looks like a placeholder', () => {
-    expect(renderText('{{lower}} {{ SPACED }} {{A-B}}', {})).toStrictEqual(Either.right('{{lower}} {{ SPACED }} {{A-B}}'))
+    expect(renderText('{{lower}} {{ SPACED }} {{A-B}}', {})).toStrictEqual(
+      Either.right('{{lower}} {{ SPACED }} {{A-B}}'),
+    )
   })
 })
 

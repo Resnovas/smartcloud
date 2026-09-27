@@ -133,7 +133,8 @@ export const assessChecks = (
   const ignored = options.ignore.map(compilePattern)
   const own = checks.find((check) => check.source === 'checkRun' && check.id === options.checkRunId)
   const aggregate = (check: CommitCheck) =>
-    check.id === options.checkRunId || (own !== undefined && check.source === 'checkRun' && identity(check) === identity(own))
+    check.id === options.checkRunId ||
+    (own !== undefined && check.source === 'checkRun' && identity(check) === identity(own))
   // Only runs smartcloud itself published are left out: they carry its
   // marker and come from an app smartcloud runs as, so neither another app
   // nor another workflow of the same app can claim the name. A rerun
@@ -150,13 +151,13 @@ export const assessChecks = (
   const counted = latestChecks(checks.filter((check) => !aggregate(check)))
     .filter((check) => !smartcloudFeature(check))
     .filter(
-    (check) =>
-      !ignored.some((pattern) => {
-        // A global or sticky pattern moves lastIndex after a hit, so every name starts from 0.
-        pattern.lastIndex = 0
-        return pattern.test(check.name)
-      }),
-  )
+      (check) =>
+        !ignored.some((pattern) => {
+          // A global or sticky pattern moves lastIndex after a hit, so every name starts from 0.
+          pattern.lastIndex = 0
+          return pattern.test(check.name)
+        }),
+    )
   return {
     counted,
     pending: counted.filter((check) => check.state === 'pending'),

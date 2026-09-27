@@ -44,7 +44,16 @@ const pullRequest = (title: string, body: string | null = null) => ({
 
 const issue = (title: string, body: string | null = null) => ({
   action: 'opened',
-  issue: { number: 3, title, body, user: { login: 'sam' }, state: 'open', locked: false, labels: [], updated_at: '2026-09-01T00:00:00Z' },
+  issue: {
+    number: 3,
+    title,
+    body,
+    user: { login: 'sam' },
+    state: 'open',
+    locked: false,
+    labels: [],
+    updated_at: '2026-09-01T00:00:00Z',
+  },
 })
 
 const configWith = (rules: Record<string, ConventionRule>): SmartcloudConfig => ({ version: 2, conventions: { rules } })
@@ -65,14 +74,20 @@ describe('conventions feature', () => {
     })
     expect(conventions.enabled?.(config)).toBe(true)
     expect([...(conventions.facets?.(config) ?? [])]).toStrictEqual(['commits'])
-    const issueOnly = configWith({ signed: { on: ['issue'], when: { condition: [{ type: 'commitsSignedOff', condition: true }] } } })
+    const issueOnly = configWith({
+      signed: { on: ['issue'], when: { condition: [{ type: 'commitsSignedOff', condition: true }] } },
+    })
     expect([...(conventions.facets?.(issueOnly) ?? [])]).toStrictEqual([])
     expect(conventions.handles).toStrictEqual(['pullRequest', 'issue'])
   })
 
   it.effect('records nothing when every rule passes', () =>
     Effect.gen(function* () {
-      const result = yield* run(configWith({ title: { preset: 'conventionalCommits', when: titled('labels') } }), 'pull_request', pullRequest('feat(labels): sync'))
+      const result = yield* run(
+        configWith({ title: { preset: 'conventionalCommits', when: titled('labels') } }),
+        'pull_request',
+        pullRequest('feat(labels): sync'),
+      )
       expect(result.ran).toStrictEqual(['conventions'])
       expect(result.findings).toStrictEqual([])
     }),
@@ -86,7 +101,12 @@ describe('conventions feature', () => {
       })
       const result = yield* run(config, 'pull_request', pullRequest('Sync labels'))
       expect(result.findings).toStrictEqual([
-        { feature: 'conventions', rule: 'conventions.plain', level: 'error', message: presetDescription('conventionalCommits', ['labels']) },
+        {
+          feature: 'conventions',
+          rule: 'conventions.plain',
+          level: 'error',
+          message: presetDescription('conventionalCommits', ['labels']),
+        },
         { feature: 'conventions', rule: 'conventions.custom', level: 'warning', message: 'Use a conventional title.' },
       ])
     }),
@@ -116,7 +136,10 @@ describe('conventions feature', () => {
       const onIssue = yield* run(config, 'issues', issue('Something broke'))
       expect(onIssue.findings.map((finding) => finding.rule)).toStrictEqual(['conventions.issues', 'conventions.both'])
       const onPullRequest = yield* run(config, 'pull_request', pullRequest('Something broke'))
-      expect(onPullRequest.findings.map((finding) => finding.rule)).toStrictEqual(['conventions.prs', 'conventions.both'])
+      expect(onPullRequest.findings.map((finding) => finding.rule)).toStrictEqual([
+        'conventions.prs',
+        'conventions.both',
+      ])
     }),
   )
 
@@ -124,7 +147,10 @@ describe('conventions feature', () => {
     Effect.gen(function* () {
       const report = yield* makeReport
       yield* conventions
-        .run({ config: configWith({ title: { preset: 'conventionalCommits' } }), envelope: { kind: 'repository', event: 'push', headSha: 'a' } })
+        .run({
+          config: configWith({ title: { preset: 'conventionalCommits' } }),
+          envelope: { kind: 'repository', event: 'push', headSha: 'a' },
+        })
         .pipe(Effect.provideService(Report, report), Effect.provideService(GitHub, makeMemoryGitHub().service))
       expect((yield* report.snapshot).findings).toStrictEqual([])
     }),
@@ -192,14 +218,23 @@ describe("smartcloud's own v1 config", () => {
       const { config } = yield* parseConfig(fixture, 'smartcloud/.github/config.json')
       expect(config.conventions?.rules?.['shared.0']).toStrictEqual({ preset: 'semanticEmoji' })
 
-      const good = yield* run(config, 'pull_request', pullRequest(`${bug?.emoji ?? ''} fix(labels): stop duplicate labels`))
+      const good = yield* run(
+        config,
+        'pull_request',
+        pullRequest(`${bug?.emoji ?? ''} fix(labels): stop duplicate labels`),
+      )
       expect(good.findings).toStrictEqual([])
       const shortcode = yield* run(config, 'issues', issue(`${bug?.code ?? ''} bug: labels duplicate`))
       expect(shortcode.findings).toStrictEqual([])
 
       const bad = yield* run(config, 'pull_request', pullRequest('fix(labels): stop duplicate labels'))
       expect(bad.findings).toStrictEqual([
-        { feature: 'conventions', rule: 'conventions.shared.0', level: 'error', message: presetDescription('semanticEmoji') },
+        {
+          feature: 'conventions',
+          rule: 'conventions.shared.0',
+          level: 'error',
+          message: presetDescription('semanticEmoji'),
+        },
       ])
     }),
   )
@@ -219,7 +254,10 @@ describe('house style through when and $not', () => {
               requires: 1,
               condition: [
                 { type: 'titleMatches', condition: '/[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u20E3]/u' },
-                { type: 'descriptionMatches', condition: '/[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u20E3]/u' },
+                {
+                  type: 'descriptionMatches',
+                  condition: '/[\\p{Extended_Pictographic}\\p{Regional_Indicator}\\u20E3]/u',
+                },
               ],
             },
           },
@@ -247,7 +285,12 @@ describe('house style through when and $not', () => {
       on: ['pullRequest'],
       message: 'Tick or remove every checklist item before review.',
       when: {
-        condition: [{ type: '$not', condition: { condition: [{ type: 'descriptionMatches', condition: '/^[ \\t]*[-*+] \\[ \\]/m' }] } }],
+        condition: [
+          {
+            type: '$not',
+            condition: { condition: [{ type: 'descriptionMatches', condition: '/^[ \\t]*[-*+] \\[ \\]/m' }] },
+          },
+        ],
       },
     },
   })
@@ -266,17 +309,28 @@ describe('house style through when and $not', () => {
 
   it.effect('passes a clean title and description, including an empty one', () =>
     Effect.gen(function* () {
-      expect(yield* failing('feat(labels): sync labels - fast', '## Summary\n\n- [x] Tests added\n- plain item\n\nSee [docs](x).')).toStrictEqual([])
+      expect(
+        yield* failing(
+          'feat(labels): sync labels - fast',
+          '## Summary\n\n- [x] Tests added\n- plain item\n\nSee [docs](x).',
+        ),
+      ).toStrictEqual([])
       expect(yield* failing('fix: typo', null)).toStrictEqual([])
     }),
   )
 
   it.effect('flags emoji in the title or the description', () =>
     Effect.gen(function* () {
-      expect(yield* failing(`feat: sync ${String.fromCodePoint(0x1f680)}`, null)).toStrictEqual(['conventions.house.noEmoji'])
-      expect(yield* failing('feat: sync', `Done ${String.fromCodePoint(0x2728)}`)).toStrictEqual(['conventions.house.noEmoji'])
+      expect(yield* failing(`feat: sync ${String.fromCodePoint(0x1f680)}`, null)).toStrictEqual([
+        'conventions.house.noEmoji',
+      ])
+      expect(yield* failing('feat: sync', `Done ${String.fromCodePoint(0x2728)}`)).toStrictEqual([
+        'conventions.house.noEmoji',
+      ])
       // Flags are regional-indicator pairs and keycaps end in U+20E3; neither is Extended_Pictographic.
-      expect(yield* failing(`feat: sync ${String.fromCodePoint(0x1f1ec, 0x1f1e7)}`, null)).toStrictEqual(['conventions.house.noEmoji'])
+      expect(yield* failing(`feat: sync ${String.fromCodePoint(0x1f1ec, 0x1f1e7)}`, null)).toStrictEqual([
+        'conventions.house.noEmoji',
+      ])
       expect(yield* failing('feat: sync', 'Step 1\ufe0f\u20e3')).toStrictEqual(['conventions.house.noEmoji'])
     }),
   )
@@ -299,11 +353,30 @@ describe('house style through when and $not', () => {
 
   it.effect('reports each broken rule with its message', () =>
     Effect.gen(function* () {
-      const result = yield* run(house, 'pull_request', pullRequest(`feat: sync ${String.fromCodePoint(0x1f680)} \u2013 fast`, '- [ ] Tests'))
+      const result = yield* run(
+        house,
+        'pull_request',
+        pullRequest(`feat: sync ${String.fromCodePoint(0x1f680)} \u2013 fast`, '- [ ] Tests'),
+      )
       expect(result.findings).toStrictEqual([
-        { feature: 'conventions', rule: 'conventions.house.noEmoji', level: 'error', message: 'Remove emoji from the title and description.' },
-        { feature: 'conventions', rule: 'conventions.house.noLongDashes', level: 'error', message: 'Replace em and en dashes with ASCII hyphens.' },
-        { feature: 'conventions', rule: 'conventions.house.checklistDone', level: 'error', message: 'Tick or remove every checklist item before review.' },
+        {
+          feature: 'conventions',
+          rule: 'conventions.house.noEmoji',
+          level: 'error',
+          message: 'Remove emoji from the title and description.',
+        },
+        {
+          feature: 'conventions',
+          rule: 'conventions.house.noLongDashes',
+          level: 'error',
+          message: 'Replace em and en dashes with ASCII hyphens.',
+        },
+        {
+          feature: 'conventions',
+          rule: 'conventions.house.checklistDone',
+          level: 'error',
+          message: 'Tick or remove every checklist item before review.',
+        },
       ])
     }),
   )

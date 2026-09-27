@@ -95,7 +95,9 @@ export const parseIdentity = (value: string): { readonly name: string; readonly 
   const open = trimmed.lastIndexOf('<')
   if (open === -1 || !trimmed.endsWith('>')) return undefined
   const email = trimmed.slice(open + 1, -1)
-  return email === '' || email.includes('>') ? undefined : { name: trimmed.slice(0, open).trim(), email: email.toLowerCase() }
+  return email === '' || email.includes('>')
+    ? undefined
+    : { name: trimmed.slice(0, open).trim(), email: email.toLowerCase() }
 }
 
 /**

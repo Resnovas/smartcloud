@@ -1,6 +1,6 @@
 ---
-title: "Configuration"
-description: "The config file, its sections, and how shared presets lock what they set."
+title: 'Configuration'
+description: 'The config file, its sections, and how shared presets lock what they set.'
 ---
 
 smartcloud reads `.github/smartcloud.yml` (`.github/smartcloud.yaml` also works). The file is YAML; JSON is valid YAML, so a JSON file works too.
@@ -13,7 +13,7 @@ extends:
 
 roles:
   maintainers: [octocat, hubot]
-  trustedBots: ["dependabot[bot]", "renovate[bot]"]
+  trustedBots: ['dependabot[bot]', 'renovate[bot]']
 
 links:
   policyBase: https://github.com/my-org/.github/blob/main
@@ -60,18 +60,18 @@ The warnings appear in a `smartcloud / config` check run and the job summary; se
 
 ## Sections
 
-| Section | Feature |
-| --- | --- |
-| `labels`, `labelSync`, `labelling`, `sizeLabels` | [Labels](/features/labels) |
-| `conventions` | [Conventions](/features/conventions) |
-| `commits` | [Commits](/features/commits) |
-| `disclosure` | [Disclosure](/features/disclosure) |
-| `reviews` | [Reviews](/features/reviews) |
-| `required` | [Required](/features/required) |
-| `stale` | [Stale](/features/stale) |
-| `settings` | [Settings](/features/settings) |
-| `sync` | [Sync](/features/sync) |
-| `roles`, `links` | Shared by several features, below. |
+| Section                                          | Feature                              |
+| ------------------------------------------------ | ------------------------------------ |
+| `labels`, `labelSync`, `labelling`, `sizeLabels` | [Labels](/features/labels)           |
+| `conventions`                                    | [Conventions](/features/conventions) |
+| `commits`                                        | [Commits](/features/commits)         |
+| `disclosure`                                     | [Disclosure](/features/disclosure)   |
+| `reviews`                                        | [Reviews](/features/reviews)         |
+| `required`                                       | [Required](/features/required)       |
+| `stale`                                          | [Stale](/features/stale)             |
+| `settings`                                       | [Settings](/features/settings)       |
+| `sync`                                           | [Sync](/features/sync)               |
+| `roles`, `links`                                 | Shared by several features, below.   |
 
 Every rule is a keyed map, never a list. Keys are how presets and repositories merge, and how an error names the rule it is about.
 

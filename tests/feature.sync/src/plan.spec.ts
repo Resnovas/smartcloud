@@ -51,7 +51,12 @@ describe('planSync', () => {
   })
 
   it('creates missing files, keeps local rules and reports the ones that conflict', () => {
-    const current = new Map([['.github/FUNDING.yml', { content: `${managed.replace('{{OWNER}}', 'old')}github: [someone]\n`, executable: false }]])
+    const current = new Map([
+      [
+        '.github/FUNDING.yml',
+        { content: `${managed.replace('{{OWNER}}', 'old')}github: [someone]\n`, executable: false },
+      ],
+    ])
     const plan = planSync(templates, current, { OWNER: 'Resnovas' }, ['KEEP.md'])
     expect(Either.getOrThrow(plan).files.map(({ path, reason }) => [path, reason])).toStrictEqual([
       ['.github/FUNDING.yml', 'update'],
@@ -62,7 +67,9 @@ describe('planSync', () => {
     expect(Either.getOrThrow(plan).files[0]?.content).toBe(
       '# house:managed:begin\ngithub: [Resnovas]\n# house:managed:end\n# house:local\ngithub: [someone]\n',
     )
-    expect(Either.getOrThrow(plan).conflicts).toStrictEqual([{ path: '.github/FUNDING.yml', problem: 'redefines the synced key "github"' }])
+    expect(Either.getOrThrow(plan).conflicts).toStrictEqual([
+      { path: '.github/FUNDING.yml', problem: 'redefines the synced key "github"' },
+    ])
   })
 
   it('fails on a missing value in a template that is not excluded', () => {

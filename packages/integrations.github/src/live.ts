@@ -166,7 +166,8 @@ const DEFAULT_RETRY = Schedule.exponential('1 second').pipe(Schedule.jittered, S
 const DEFAULT_MERGEABLE_POLL = Schedule.spaced('2 seconds').pipe(Schedule.intersect(Schedule.recurs(3)))
 
 // GitHub leaves `mergeable` null until its background job has compared the branches.
-const mergeableOf = (mergeable: boolean | null): Mergeable => (mergeable === null ? 'UNKNOWN' : mergeable ? 'MERGEABLE' : 'CONFLICTING')
+const mergeableOf = (mergeable: boolean | null): Mergeable =>
+  mergeable === null ? 'UNKNOWN' : mergeable ? 'MERGEABLE' : 'CONFLICTING'
 
 // A completed check run passes when it succeeded, or finished neutral or skipped.
 const PASSING = new Set(['success', 'neutral', 'skipped'])
@@ -176,15 +177,20 @@ const runState = (run: { readonly status: string; readonly conclusion: string | 
 const statusState = (state: string): CheckState => (state === 'success' || state === 'pending' ? state : 'failure')
 
 const statusOf = (error: unknown): number | undefined =>
-  typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number' ? error.status : undefined
+  typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number'
+    ? error.status
+    : undefined
 
 const messageOf = (error: unknown): string => (error instanceof Error ? error.message : String(error))
 
 // Octokit throws this for a GraphQL response that carried an `errors` list.
-const isGraphqlResponseError = (error: unknown): boolean => error instanceof Error && error.name === 'GraphqlResponseError'
+const isGraphqlResponseError = (error: unknown): boolean =>
+  error instanceof Error && error.name === 'GraphqlResponseError'
 
 const toGitHubError = (operation: string, error: unknown): GitHubError =>
-  isGraphqlResponseError(error) ? fromGraphqlErrors(operation, messageOf(error)) : fromStatus(operation, statusOf(error), messageOf(error))
+  isGraphqlResponseError(error)
+    ? fromGraphqlErrors(operation, messageOf(error))
+    : fromStatus(operation, statusOf(error), messageOf(error))
 
 // A rate limit rejects a request before GitHub acts on it, so any call may repeat after one.
 const rateLimited = (error: GitHubError) => error._tag === 'RateLimited'
@@ -212,7 +218,16 @@ const annotationsOf = (annotations: ReadonlyArray<Annotation> = []) =>
 
 // Octokit reads these keys as request options rather than as body fields or
 // variables, so a caller's map must never set them.
-const OCTOKIT_OPTIONS: ReadonlySet<string> = new Set(['baseUrl', 'headers', 'mediaType', 'method', 'operationName', 'query', 'request', 'url'])
+const OCTOKIT_OPTIONS: ReadonlySet<string> = new Set([
+  'baseUrl',
+  'headers',
+  'mediaType',
+  'method',
+  'operationName',
+  'query',
+  'request',
+  'url',
+])
 
 // A `.` or `..` segment, encoded or not, would climb out of `/repos/{owner}/{repo}`.
 const isDotSegment = (segment: string) => {
@@ -228,7 +243,13 @@ const unsafePath = (path: string): string | undefined => {
   return route.split('/').some(isDotSegment) ? 'must not contain . or .. segments' : undefined
 }
 
-const REVIEW_STATES: ReadonlySet<string> = new Set(['APPROVED', 'CHANGES_REQUESTED', 'COMMENTED', 'DISMISSED', 'PENDING'])
+const REVIEW_STATES: ReadonlySet<string> = new Set([
+  'APPROVED',
+  'CHANGES_REQUESTED',
+  'COMMENTED',
+  'DISMISSED',
+  'PENDING',
+])
 const isReviewState = (state: string): state is Review['state'] => REVIEW_STATES.has(state)
 // An unknown future state is treated as a comment: it neither approves nor blocks.
 const reviewState = (state: string): Review['state'] => (isReviewState(state) ? state : 'COMMENTED')
@@ -247,7 +268,8 @@ const checkRunCheck = (run: {
   readonly app: { readonly slug?: string | undefined } | null
 }): CommitCheck => {
   const url = run.html_url ?? run.details_url
-  const state = run.status !== 'completed' ? 'pending' : PASSING_CONCLUSIONS.has(run.conclusion ?? '') ? 'success' : 'failure'
+  const state =
+    run.status !== 'completed' ? 'pending' : PASSING_CONCLUSIONS.has(run.conclusion ?? '') ? 'success' : 'failure'
   const app = run.app?.slug
   return {
     name: run.name,
@@ -262,7 +284,11 @@ const checkRunCheck = (run: {
   }
 }
 
-const statusCheck = (status: { readonly context: string; readonly state: string; readonly target_url: string | null }): CommitCheck => ({
+const statusCheck = (status: {
+  readonly context: string
+  readonly state: string
+  readonly target_url: string | null
+}): CommitCheck => ({
   name: status.context,
   source: 'status',
   state: status.state === 'pending' ? 'pending' : status.state === 'success' ? 'success' : 'failure',
@@ -339,7 +365,11 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     }
 
     // Appends every annotation batch after the first to a run, one request each.
-    const appendAnnotations = (check_run_id: number, run: CheckRun, batches: ReadonlyArray<ReadonlyArray<Annotation>>) =>
+    const appendAnnotations = (
+      check_run_id: number,
+      run: CheckRun,
+      batches: ReadonlyArray<ReadonlyArray<Annotation>>,
+    ) =>
       Effect.forEach(
         batches,
         (annotations) =>
@@ -364,7 +394,12 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       return call(
         operation,
         // The body goes in `data`, so none of its keys can set the owner, the repository or a request option.
-        () => octokit.request(`${request.method} /repos/{owner}/{repo}${request.path}`, { owner, repo, ...(request.body === undefined ? {} : { data: request.body }) }),
+        () =>
+          octokit.request(`${request.method} /repos/{owner}/{repo}${request.path}`, {
+            owner,
+            repo,
+            ...(request.body === undefined ? {} : { data: request.body }),
+          }),
         request.method === 'POST' ? rateLimited : transient,
         // The operation names the repository and the path, so telemetry sees only the method.
         { operation: 'repositoryRequest', attributes: { 'http.method': request.method } },
@@ -374,7 +409,9 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     const graphql: GitHubService['graphql'] = (query, variables) => {
       const reserved = Object.keys(variables).filter((name) => OCTOKIT_OPTIONS.has(name))
       if (reserved.length > 0) {
-        return Effect.fail(new ValidationFailed({ operation: 'graphql', detail: `variables cannot be named ${reserved.join(', ')}` }))
+        return Effect.fail(
+          new ValidationFailed({ operation: 'graphql', detail: `variables cannot be named ${reserved.join(', ')}` }),
+        )
       }
       const write = isGraphqlWrite(query)
       return call('graphql', () => octokit.graphql(query, { ...variables }), write ? rateLimited : transient, {
@@ -384,7 +421,9 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     }
 
     const listCommits: GitHubService['listCommits'] = (pull_number) =>
-      call('listCommits', () => octokit.paginate(octokit.rest.pulls.listCommits, { owner, repo, pull_number, per_page: 100 })).pipe(
+      call('listCommits', () =>
+        octokit.paginate(octokit.rest.pulls.listCommits, { owner, repo, pull_number, per_page: 100 }),
+      ).pipe(
         Effect.map((commits) =>
           commits.map((commit) => ({
             sha: commit.sha,
@@ -397,19 +436,23 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       )
 
     const listFiles: GitHubService['listFiles'] = (pull_number) =>
-      call('listFiles', () => octokit.paginate(octokit.rest.pulls.listFiles, { owner, repo, pull_number, per_page: 100 })).pipe(
-        Effect.map((files) => files.map((file) => file.filename)),
-      )
+      call('listFiles', () =>
+        octokit.paginate(octokit.rest.pulls.listFiles, { owner, repo, pull_number, per_page: 100 }),
+      ).pipe(Effect.map((files) => files.map((file) => file.filename)))
 
     const listReviews: GitHubService['listReviews'] = (pull_number) =>
-      call('listReviews', () => octokit.paginate(octokit.rest.pulls.listReviews, { owner, repo, pull_number, per_page: 100 })).pipe(
-        Effect.map((reviews) => reviews.map((review) => ({ author: review.user?.login ?? '', state: reviewState(review.state) }))),
+      call('listReviews', () =>
+        octokit.paginate(octokit.rest.pulls.listReviews, { owner, repo, pull_number, per_page: 100 }),
+      ).pipe(
+        Effect.map((reviews) =>
+          reviews.map((review) => ({ author: review.user?.login ?? '', state: reviewState(review.state) })),
+        ),
       )
 
     const countRequestedReviewers: GitHubService['countRequestedReviewers'] = (pull_number) =>
-      call('countRequestedReviewers', () => octokit.rest.pulls.listRequestedReviewers({ owner, repo, pull_number })).pipe(
-        Effect.map(({ data }) => data.users.length + data.teams.length),
-      )
+      call('countRequestedReviewers', () =>
+        octokit.rest.pulls.listRequestedReviewers({ owner, repo, pull_number }),
+      ).pipe(Effect.map(({ data }) => data.users.length + data.teams.length))
 
     // Reading the pull request starts GitHub's mergeability job, so a read that finds it unknown is repeated for a while.
     const getMergeable: GitHubService['getMergeable'] = (pull_number) =>
@@ -423,20 +466,30 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     // GitHub's default `latest` filter is deliberate: a re-run replaces the run it repeats, as on the checks tab.
     const listChecks: GitHubService['listChecks'] = (pull_number) =>
       Effect.gen(function* () {
-        const { data } = yield* call('listChecks: pull request', () => octokit.rest.pulls.get({ owner, repo, pull_number }))
+        const { data } = yield* call('listChecks: pull request', () =>
+          octokit.rest.pulls.get({ owner, repo, pull_number }),
+        )
         const ref = data.head.sha
         const [runs, statuses] = yield* Effect.all(
           [
-            call('listChecks: check runs', () => checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, per_page: 100 })),
+            call('listChecks: check runs', () =>
+              checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, per_page: 100 }),
+            ),
             call('listChecks: commit statuses', () =>
-              checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),
+              checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, {
+                owner,
+                repo,
+                ref,
+                per_page: 100,
+              }),
             ),
           ],
           { concurrency: 'unbounded' },
         )
         // Statuses come newest first, and only each context's latest counts.
         const latest = new Map<string, CheckState>()
-        for (const status of statuses) if (!latest.has(status.context)) latest.set(status.context, statusState(status.state))
+        for (const status of statuses)
+          if (!latest.has(status.context)) latest.set(status.context, statusState(status.state))
         return [
           ...runs.map((run) => ({ name: run.name, state: runState(run) })),
           ...[...latest].map(([name, state]) => ({ name, state })),
@@ -459,7 +512,12 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           // Files over 1 MB come back with no inline content and an encoding of `none`: never read that as an empty file.
           return 'encoding' in data && data.encoding === 'base64'
             ? Effect.succeed(Buffer.from(data.content, 'base64').toString('utf8'))
-            : Effect.fail(new ValidationFailed({ operation: 'getFile', detail: `${location.path} is too large to read (over 1 MB)` }))
+            : Effect.fail(
+                new ValidationFailed({
+                  operation: 'getFile',
+                  detail: `${location.path} is too large to read (over 1 MB)`,
+                }),
+              )
         }),
       )
 
@@ -475,7 +533,12 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       ).pipe(
         Effect.flatMap(({ data }) =>
           data.truncated
-            ? Effect.fail(new ValidationFailed({ operation: 'listDirectory', detail: `${location.path} has too many files to list` }))
+            ? Effect.fail(
+                new ValidationFailed({
+                  operation: 'listDirectory',
+                  detail: `${location.path} has too many files to list`,
+                }),
+              )
             : Effect.succeed(
                 data.tree
                   .filter((entry) => entry.type === 'blob' && (entry.mode === REGULAR || entry.mode === EXECUTABLE))
@@ -526,7 +589,10 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         // The proposal branch is force-updated below, so it must never be the
         // branch the pull request merges into.
         if (proposal.branch === proposal.base) {
-          return yield* new ValidationFailed({ operation: 'proposeChanges', detail: `the proposal branch cannot be its base, ${proposal.base}` })
+          return yield* new ValidationFailed({
+            operation: 'proposeChanges',
+            detail: `the proposal branch cannot be its base, ${proposal.base}`,
+          })
         }
         const baseRef = yield* call('proposeChanges: read base', () =>
           octokit.rest.git.getRef({ owner, repo, ref: `heads/${proposal.base}` }),
@@ -539,13 +605,23 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           proposal.files,
           (file) =>
             call('proposeChanges: create blob', () =>
-              octokit.rest.git.createBlob({ owner, repo, content: Buffer.from(file.content, 'utf8').toString('base64'), encoding: 'base64' }),
+              octokit.rest.git.createBlob({
+                owner,
+                repo,
+                content: Buffer.from(file.content, 'utf8').toString('base64'),
+                encoding: 'base64',
+              }),
             ).pipe(Effect.map(({ data }) => treeEntry(file.path, file.executable, data.sha))),
           { concurrency: 4 },
         )
         const deleted = (proposal.deletions ?? []).map((path) => treeEntry(path, false, null))
         const tree = yield* call('proposeChanges: create tree', () =>
-          octokit.rest.git.createTree({ owner, repo, base_tree: baseCommit.data.tree.sha, tree: [...written, ...deleted] }),
+          octokit.rest.git.createTree({
+            owner,
+            repo,
+            base_tree: baseCommit.data.tree.sha,
+            tree: [...written, ...deleted],
+          }),
         )
 
         const branchSha = yield* call('proposeChanges: read branch', () =>
@@ -577,21 +653,41 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           yield* branchSha === undefined
             ? call(
                 'proposeChanges: create branch',
-                () => octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${proposal.branch}`, sha: commit.sha }),
+                () =>
+                  octokit.rest.git.createRef({ owner, repo, ref: `refs/heads/${proposal.branch}`, sha: commit.sha }),
                 rateLimited,
               )
             : call('proposeChanges: update branch', () =>
-                octokit.rest.git.updateRef({ owner, repo, ref: `heads/${proposal.branch}`, sha: commit.sha, force: true }),
+                octokit.rest.git.updateRef({
+                  owner,
+                  repo,
+                  ref: `heads/${proposal.branch}`,
+                  sha: commit.sha,
+                  force: true,
+                }),
               )
         }
 
         const open = yield* call('proposeChanges: find pull request', () =>
-          octokit.rest.pulls.list({ owner, repo, head: `${owner}:${proposal.branch}`, base: proposal.base, state: 'open', per_page: 1 }),
+          octokit.rest.pulls.list({
+            owner,
+            repo,
+            head: `${owner}:${proposal.branch}`,
+            base: proposal.base,
+            state: 'open',
+            per_page: 1,
+          }),
         )
         const existing = open.data[0]
         if (existing !== undefined) {
           yield* call('proposeChanges: update pull request', () =>
-            octokit.rest.pulls.update({ owner, repo, pull_number: existing.number, title: proposal.title, body: proposal.body }),
+            octokit.rest.pulls.update({
+              owner,
+              repo,
+              pull_number: existing.number,
+              title: proposal.title,
+              body: proposal.body,
+            }),
           )
           return { number: existing.number, url: existing.html_url, created: false }
         }
@@ -624,11 +720,17 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           current: currentSettings(data),
         })),
       ),
-      listLabels: call('listLabels', () => octokit.paginate(octokit.rest.issues.listLabelsForRepo, { owner, repo, per_page: 100 })).pipe(
-        Effect.map((labels) => labels.map((label) => ({ name: label.name, color: label.color, description: label.description ?? '' }))),
+      listLabels: call('listLabels', () =>
+        octokit.paginate(octokit.rest.issues.listLabelsForRepo, { owner, repo, per_page: 100 }),
+      ).pipe(
+        Effect.map((labels) =>
+          labels.map((label) => ({ name: label.name, color: label.color, description: label.description ?? '' })),
+        ),
       ),
       createLabel: (label) =>
-        Effect.asVoid(call('createLabel', () => octokit.rest.issues.createLabel({ owner, repo, ...label }), rateLimited)),
+        Effect.asVoid(
+          call('createLabel', () => octokit.rest.issues.createLabel({ owner, repo, ...label }), rateLimited),
+        ),
       updateLabel: (current, label) =>
         Effect.asVoid(
           call('updateLabel', () =>
@@ -642,13 +744,18 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             }),
           ),
         ),
-      deleteLabel: (name) => Effect.asVoid(call('deleteLabel', () => octokit.rest.issues.deleteLabel({ owner, repo, name }))),
+      deleteLabel: (name) =>
+        Effect.asVoid(call('deleteLabel', () => octokit.rest.issues.deleteLabel({ owner, repo, name }))),
       addLabels: (issue_number, labels) =>
-        Effect.asVoid(call('addLabels', () => octokit.rest.issues.addLabels({ owner, repo, issue_number, labels: [...labels] }))),
+        Effect.asVoid(
+          call('addLabels', () => octokit.rest.issues.addLabels({ owner, repo, issue_number, labels: [...labels] })),
+        ),
       removeLabel: (issue_number, name) =>
         Effect.asVoid(call('removeLabel', () => octokit.rest.issues.removeLabel({ owner, repo, issue_number, name }))),
       listComments: (issue_number) =>
-        call('listComments', () => octokit.paginate(octokit.rest.issues.listComments, { owner, repo, issue_number, per_page: 100 })).pipe(
+        call('listComments', () =>
+          octokit.paginate(octokit.rest.issues.listComments, { owner, repo, issue_number, per_page: 100 }),
+        ).pipe(
           Effect.map((comments) =>
             comments.map((comment) => ({
               id: comment.id,
@@ -659,11 +766,22 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           ),
         ),
       createComment: (issue_number, body) =>
-        call('createComment', () => octokit.rest.issues.createComment({ owner, repo, issue_number, body }), rateLimited).pipe(
-          Effect.map(({ data }) => ({ id: data.id, body: data.body ?? '', author: data.user?.login ?? '', bot: data.user?.type === 'Bot' })),
+        call(
+          'createComment',
+          () => octokit.rest.issues.createComment({ owner, repo, issue_number, body }),
+          rateLimited,
+        ).pipe(
+          Effect.map(({ data }) => ({
+            id: data.id,
+            body: data.body ?? '',
+            author: data.user?.login ?? '',
+            bot: data.user?.type === 'Bot',
+          })),
         ),
       updateComment: (comment_id, body) =>
-        Effect.asVoid(call('updateComment', () => octokit.rest.issues.updateComment({ owner, repo, comment_id, body }))),
+        Effect.asVoid(
+          call('updateComment', () => octokit.rest.issues.updateComment({ owner, repo, comment_id, body })),
+        ),
       listOpenIssues: call('listOpenIssues', () =>
         octokit.paginate(octokit.rest.issues.listForRepo, { owner, repo, state: 'open', per_page: 100 }),
       ).pipe(
@@ -682,7 +800,9 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         ),
       ),
       closeIssue: (issue_number) =>
-        Effect.asVoid(call('closeIssue', () => octokit.rest.issues.update({ owner, repo, issue_number, state: 'closed' }))),
+        Effect.asVoid(
+          call('closeIssue', () => octokit.rest.issues.update({ owner, repo, issue_number, state: 'closed' })),
+        ),
       listCommits,
       listFiles,
       listReviews,
@@ -690,10 +810,18 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       getMergeable,
       listChecks,
       createReview: (pull_number, review) =>
-        Effect.asVoid(call('createReview', () => octokit.rest.pulls.createReview({ owner, repo, pull_number, ...review }), rateLimited)),
+        Effect.asVoid(
+          call(
+            'createReview',
+            () => octokit.rest.pulls.createReview({ owner, repo, pull_number, ...review }),
+            rateLimited,
+          ),
+        ),
       requestReviewers: (pull_number, logins) =>
         Effect.asVoid(
-          call('requestReviewers', () => octokit.rest.pulls.requestReviewers({ owner, repo, pull_number, reviewers: [...logins] })),
+          call('requestReviewers', () =>
+            octokit.rest.pulls.requestReviewers({ owner, repo, pull_number, reviewers: [...logins] }),
+          ),
         ),
       createCheckRun: (run) => {
         const [first = [], ...rest] = annotationBatches(run.annotations)
@@ -737,10 +865,21 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         Effect.all(
           [
             call('listCommitChecks: check runs', () =>
-              checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, filter: 'all', per_page: 100 }),
+              checksClient.paginate(checksClient.rest.checks.listForRef, {
+                owner,
+                repo,
+                ref,
+                filter: 'all',
+                per_page: 100,
+              }),
             ),
             call('listCommitChecks: statuses', () =>
-              checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),
+              checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, {
+                owner,
+                repo,
+                ref,
+                per_page: 100,
+              }),
             ),
           ],
           { concurrency: 2 },
@@ -781,7 +920,10 @@ export const GitHubLive = Layer.effect(
   Effect.gen(function* () {
     const token = yield* Config.redacted('GITHUB_TOKEN')
     const repository = yield* Config.string('GITHUB_REPOSITORY').pipe(
-      Config.validate({ message: 'GITHUB_REPOSITORY must be owner/name', validation: (value) => /^[^/\s]+\/[^/\s]+$/.test(value) }),
+      Config.validate({
+        message: 'GITHUB_REPOSITORY must be owner/name',
+        validation: (value) => /^[^/\s]+\/[^/\s]+$/.test(value),
+      }),
     )
     const name = yield* Config.option(Config.string('SMARTCLOUD_COMMITTER_NAME'))
     const email = yield* Config.option(Config.string('SMARTCLOUD_COMMITTER_EMAIL'))

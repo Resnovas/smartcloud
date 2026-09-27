@@ -103,7 +103,9 @@ export type RulesetBody = {
   readonly name: string
   readonly target: 'branch'
   readonly enforcement: 'active'
-  readonly conditions: { readonly ref_name: { readonly include: ReadonlyArray<string>; readonly exclude: ReadonlyArray<string> } }
+  readonly conditions: {
+    readonly ref_name: { readonly include: ReadonlyArray<string>; readonly exclude: ReadonlyArray<string> }
+  }
   readonly bypass_actors: ReadonlyArray<BypassActor>
   readonly rules: ReadonlyArray<RulesetRule>
 }
@@ -175,7 +177,8 @@ export interface VariablesStep extends StepBase {
 }
 
 /** One planned change to a repository. */
-export type SettingsStep = RestStep | GraphqlStep | RulesetStep | DeploymentPoliciesStep | TeamStep | WebhookStep | PagesStep | VariablesStep
+export type SettingsStep =
+  RestStep | GraphqlStep | RulesetStep | DeploymentPoliciesStep | TeamStep | WebhookStep | PagesStep | VariablesStep
 
 /**
  * The tag pattern a protected environment may deploy release tags from.
@@ -254,7 +257,9 @@ export const isProtectedEnvironment = (name: string): boolean =>
  * @returns The deployment branch policy for that environment.
  */
 export const environmentBody = (name: string): Readonly<Record<string, unknown>> => ({
-  deployment_branch_policy: isProtectedEnvironment(name) ? { protected_branches: false, custom_branch_policies: true } : null,
+  deployment_branch_policy: isProtectedEnvironment(name)
+    ? { protected_branches: false, custom_branch_policies: true }
+    : null,
 })
 
 /**
@@ -324,7 +329,9 @@ const pullRequestRule = (pullRequest: NonNullable<Ruleset['pullRequest']>, maint
 // `statusChecks.checks` always binds; the older `requiredChecks` list keeps
 // binding only once two or more maintainers are configured.
 const statusChecksRule = (ruleset: Ruleset, maintainers: number): RulesetRule | undefined => {
-  const keyed = Object.entries(ruleset.statusChecks?.checks ?? {}).flatMap(([context, required]) => (required ? [context] : []))
+  const keyed = Object.entries(ruleset.statusChecks?.checks ?? {}).flatMap(([context, required]) =>
+    required ? [context] : [],
+  )
   const listed = maintainers >= 2 ? (ruleset.requiredChecks ?? []) : []
   const contexts = [...new Set([...keyed, ...listed])]
   if (contexts.length === 0) return undefined
@@ -347,7 +354,11 @@ const codeScanningRule = (ruleset: Ruleset): RulesetRule | undefined => {
   return {
     type: 'code_scanning',
     parameters: {
-      code_scanning_tools: entries.map(([tool, gate]) => ({ tool, security_alerts_threshold: gate.securityAlerts, alerts_threshold: gate.alerts })),
+      code_scanning_tools: entries.map(([tool, gate]) => ({
+        tool,
+        security_alerts_threshold: gate.securityAlerts,
+        alerts_threshold: gate.alerts,
+      })),
     },
   }
 }
@@ -402,13 +413,18 @@ export const rulesetBody = (ruleset: Ruleset, roles: RolesConfig | undefined): R
     ruleset.pullRequest === undefined ? undefined : pullRequestRule(ruleset.pullRequest, maintainers),
     statusChecksRule(ruleset, maintainers),
     codeScanningRule(ruleset),
-    ruleset.codeQuality === undefined ? undefined : { type: 'code_quality', parameters: { severity: ruleset.codeQuality } },
+    ruleset.codeQuality === undefined
+      ? undefined
+      : { type: 'code_quality', parameters: { severity: ruleset.codeQuality } },
     codeCoverageRule(ruleset.codeCoverage),
     // Public preview: GitHub's published REST description does not list this
     // rule yet; the shape is the one GitHub returns for a ruleset that has it.
     ruleset.secretScanningAlerts === undefined
       ? undefined
-      : { type: 'require_secret_scanning_alert_resolution', parameters: { secret_types: ruleset.secretScanningAlerts } },
+      : {
+          type: 'require_secret_scanning_alert_resolution',
+          parameters: { secret_types: ruleset.secretScanningAlerts },
+        },
     // AI review on every pull request, drafts included, so problems surface
     // before the accountable human marks it ready.
     ruleset.copilotReview === true
@@ -496,9 +512,19 @@ const featuresInput = (features: SettingsConfig['features'], repository: Reposit
 // Each of these endpoints turns a feature on with PUT and off with DELETE.
 const toggles: ReadonlyArray<readonly [keyof Security, string, string, string]> = [
   ['immutableReleases', 'immutable-releases', 'Release immutability', '/immutable-releases'],
-  ['privateVulnerabilityReporting', 'private-vulnerability-reporting', 'Private vulnerability reporting', '/private-vulnerability-reporting'],
+  [
+    'privateVulnerabilityReporting',
+    'private-vulnerability-reporting',
+    'Private vulnerability reporting',
+    '/private-vulnerability-reporting',
+  ],
   ['dependabotAlerts', 'dependabot-alerts', 'Dependency graph and Dependabot alerts', '/vulnerability-alerts'],
-  ['dependabotSecurityUpdates', 'dependabot-security-updates', 'Dependabot security updates', '/automated-security-fixes'],
+  [
+    'dependabotSecurityUpdates',
+    'dependabot-security-updates',
+    'Dependabot security updates',
+    '/automated-security-fixes',
+  ],
 ]
 
 const onOff = (enabled: boolean) => (enabled ? 'on' : 'off')
@@ -511,7 +537,13 @@ const securitySteps = (security: SettingsConfig['security'], repository: Reposit
     if (typeof enabled !== 'boolean') continue
     // GitHub only offers private vulnerability reporting on public repositories.
     if (key === 'privateVulnerabilityReporting' && repository.private) continue
-    steps.push({ kind: 'rest', id, description: `${description} ${onOff(enabled)}`, optional: false, request: { method: enabled ? 'PUT' : 'DELETE', path } })
+    steps.push({
+      kind: 'rest',
+      id,
+      description: `${description} ${onOff(enabled)}`,
+      optional: false,
+      request: { method: enabled ? 'PUT' : 'DELETE', path },
+    })
   }
   const codeScanning = security.codeScanning
   if (codeScanning !== undefined) {
@@ -520,7 +552,8 @@ const securitySteps = (security: SettingsConfig['security'], repository: Reposit
     steps.push({
       kind: 'rest',
       id: 'code-scanning',
-      description: codeScanning === 'off' ? 'CodeQL default setup off' : `CodeQL default setup, ${codeScanning} queries`,
+      description:
+        codeScanning === 'off' ? 'CodeQL default setup off' : `CodeQL default setup, ${codeScanning} queries`,
       optional: true,
       request: {
         method: 'PATCH',
@@ -572,7 +605,9 @@ const actionsSteps = (actions: SettingsConfig['actions'], repository: Repository
     const described = [
       actions.enabled === false ? 'off' : 'on',
       ...(actions.allowedActions === undefined ? [] : [`${actions.allowedActions} actions allowed`]),
-      ...(actions.shaPinningRequired === undefined ? [] : [`SHA pinning ${actions.shaPinningRequired ? 'required' : 'optional'}`]),
+      ...(actions.shaPinningRequired === undefined
+        ? []
+        : [`SHA pinning ${actions.shaPinningRequired ? 'required' : 'optional'}`]),
     ]
     steps.push({
       kind: 'rest',
@@ -607,7 +642,9 @@ const actionsSteps = (actions: SettingsConfig['actions'], repository: Repository
   if (Object.keys(workflow).length > 0) {
     const parts = [
       ...(actions.workflowPermissions === undefined ? [] : [`${actions.workflowPermissions} by default`]),
-      ...(actions.createPullRequests === undefined ? [] : [`${actions.createPullRequests ? 'may' : 'may not'} create and approve pull requests`]),
+      ...(actions.createPullRequests === undefined
+        ? []
+        : [`${actions.createPullRequests ? 'may' : 'may not'} create and approve pull requests`]),
     ]
     steps.push({
       kind: 'rest',
@@ -633,13 +670,25 @@ const actionsSteps = (actions: SettingsConfig['actions'], repository: Repository
 type RepositoryRole = NonNullable<SettingsConfig['teams']>[string]
 
 // The REST collaborator API names the read and write roles pull and push.
-const REST_ROLES: Readonly<Record<RepositoryRole, string>> = { read: 'pull', triage: 'triage', write: 'push', maintain: 'maintain', admin: 'admin' }
+const REST_ROLES: Readonly<Record<RepositoryRole, string>> = {
+  read: 'pull',
+  triage: 'triage',
+  write: 'push',
+  maintain: 'maintain',
+  admin: 'admin',
+}
 
 const collaboratorSteps = (collaborators: SettingsConfig['collaborators']): ReadonlyArray<SettingsStep> =>
   Object.entries(collaborators ?? {}).map(([login, role]): SettingsStep => {
     const path = `/collaborators/${encodeURIComponent(login)}`
     return role === 'none'
-      ? { kind: 'rest', id: `collaborator:${login}`, description: `Collaborator @${login} removed`, optional: false, request: { method: 'DELETE', path } }
+      ? {
+          kind: 'rest',
+          id: `collaborator:${login}`,
+          description: `Collaborator @${login} removed`,
+          optional: false,
+          request: { method: 'DELETE', path },
+        }
       : {
           kind: 'rest',
           id: `collaborator:${login}`,
@@ -649,7 +698,13 @@ const collaboratorSteps = (collaborators: SettingsConfig['collaborators']): Read
         }
   })
 
-const TEAM_ROLES: Readonly<Record<RepositoryRole, TeamPermission>> = { read: 'READ', triage: 'TRIAGE', write: 'WRITE', maintain: 'MAINTAIN', admin: 'ADMIN' }
+const TEAM_ROLES: Readonly<Record<RepositoryRole, TeamPermission>> = {
+  read: 'READ',
+  triage: 'TRIAGE',
+  write: 'WRITE',
+  maintain: 'MAINTAIN',
+  admin: 'ADMIN',
+}
 
 const teamSteps = (teams: SettingsConfig['teams'], repository: Repository): ReadonlyArray<SettingsStep> =>
   Object.entries(teams ?? {}).map(([slug, role]) => ({
@@ -709,9 +764,11 @@ type Pages = NonNullable<SettingsConfig['pages']>
  */
 export const pagesStep = (pages: Pages, repository: Repository): PagesStep => {
   const base = { kind: 'pages', id: 'pages', optional: false } as const
-  if (pages.enabled === false) return { ...base, description: 'GitHub Pages unpublished', enabled: false, create: {}, update: {} }
+  if (pages.enabled === false)
+    return { ...base, description: 'GitHub Pages unpublished', enabled: false, create: {}, update: {} }
   const fromBranch =
-    pages.buildType !== 'workflow' && (pages.buildType === 'legacy' || pages.branch !== undefined || pages.path !== undefined)
+    pages.buildType !== 'workflow' &&
+    (pages.buildType === 'legacy' || pages.branch !== undefined || pages.path !== undefined)
   const source = fromBranch ? { branch: pages.branch ?? repository.defaultBranch, path: pages.path ?? '/' } : undefined
   const explicit: PagesBody = {
     ...(pages.buildType === undefined ? {} : { build_type: pages.buildType }),
@@ -719,9 +776,26 @@ export const pagesStep = (pages: Pages, repository: Repository): PagesStep => {
   }
   // A new site builds from its source when it has one, otherwise from a workflow.
   const create: PagesBody = { build_type: source === undefined ? 'workflow' : 'legacy', ...explicit }
-  const update = { ...explicit, ...pick<Pages>(pages, [['cname', 'cname'], ['httpsEnforced', 'https_enforced']]) }
-  const built = source !== undefined ? `from ${source.branch} ${source.path}` : pages.buildType === 'workflow' ? 'built by a workflow' : 'published'
-  return { ...base, description: `GitHub Pages ${built}${pages.cname === undefined ? '' : ` at ${pages.cname}`}`, enabled: true, create, update }
+  const update = {
+    ...explicit,
+    ...pick<Pages>(pages, [
+      ['cname', 'cname'],
+      ['httpsEnforced', 'https_enforced'],
+    ]),
+  }
+  const built =
+    source !== undefined
+      ? `from ${source.branch} ${source.path}`
+      : pages.buildType === 'workflow'
+        ? 'built by a workflow'
+        : 'published'
+  return {
+    ...base,
+    description: `GitHub Pages ${built}${pages.cname === undefined ? '' : ` at ${pages.cname}`}`,
+    enabled: true,
+    create,
+    update,
+  }
 }
 
 /**
@@ -783,7 +857,13 @@ export const planSettings = (
   steps.push(...securitySteps(settings.security, repository))
   if (settings.ruleset !== undefined) {
     const ruleset = rulesetBody(settings.ruleset, roles)
-    steps.push({ kind: 'ruleset', id: 'ruleset', description: `Ruleset "${ruleset.name}"`, optional: repository.private, ruleset })
+    steps.push({
+      kind: 'ruleset',
+      id: 'ruleset',
+      description: `Ruleset "${ruleset.name}"`,
+      optional: repository.private,
+      ruleset,
+    })
   }
   const policies = deploymentPoliciesFor(repository)
   const allowed = policies.map((policy) => `${policy.type} ${policy.name}`).join(', ')

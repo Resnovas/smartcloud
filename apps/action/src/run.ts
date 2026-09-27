@@ -67,7 +67,10 @@ export const runAction = (
   Effect.gen(function* () {
     // Absent inputs are left out rather than set to undefined.
     const config: ConfigLocation = {
-      ...Option.match(inputs.configJson, { onNone: () => ({}), onSome: (text) => ({ text: { text, source: 'the configJson input' } }) }),
+      ...Option.match(inputs.configJson, {
+        onNone: () => ({}),
+        onSome: (text) => ({ text: { text, source: 'the configJson input' } }),
+      }),
       ...Option.match(inputs.config, { onNone: () => ({}), onSome: (path) => ({ path }) }),
       ...Option.match(inputs.configRef, { onNone: () => ({}), onSome: (ref) => ({ ref }) }),
     }

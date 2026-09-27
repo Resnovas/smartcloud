@@ -51,7 +51,6 @@ const DROPPED: Readonly<Record<string, string>> = {
   $schema: 'v2 uses its own schema',
 }
 
-
 const CONTEXTS: ReadonlyMap<string, 'shared' | 'pr' | 'issue' | 'schedule' | 'project'> = new Map([
   ['sharedConfig', 'shared'],
   ['pr', 'pr'],
@@ -80,7 +79,8 @@ const migrateLabels = (labels: Json | undefined, warnings: Array<string>): JsonR
       // Distinct names such as `A B` and `A-B` slug alike; keep both.
       let unique = id
       for (let suffix = 2; out.has(unique); suffix++) unique = `${id}-${suffix}`
-      if (unique !== id) warnings.push(`labels[${index}]: "${name}" has the same key as an earlier label, migrated as "${unique}"`)
+      if (unique !== id)
+        warnings.push(`labels[${index}]: "${name}" has the same key as an earlier label, migrated as "${unique}"`)
       add(unique, label)
     })
   } else if (isRecord(labels)) Object.entries(labels).forEach(([id, label]) => add(id, label))
@@ -181,7 +181,9 @@ export const migrateV1 = (input: JsonRecord): Migration => {
     for (const [key, value] of Object.entries(runner)) {
       const context = CONTEXTS.get(key)
       if (context === undefined) {
-        warnings.push(`runners[${index}].${key}: ${DROPPED[key] === undefined ? 'unknown v1 key, ignored' : `dropped, ${DROPPED[key]}`}`)
+        warnings.push(
+          `runners[${index}].${key}: ${DROPPED[key] === undefined ? 'unknown v1 key, ignored' : `dropped, ${DROPPED[key]}`}`,
+        )
         continue
       }
       if (!isRecord(value)) continue
@@ -194,7 +196,9 @@ export const migrateV1 = (input: JsonRecord): Migration => {
         const where = `runners[${index}].${key}.${feature}`
         if (feature === 'labels' && isRecord(setting)) {
           if (context === 'schedule') {
-            warnings.push(`${where}: now evaluated when an issue or pull request event arrives, v2 has no scheduled labelling`)
+            warnings.push(
+              `${where}: now evaluated when an issue or pull request event arrives, v2 has no scheduled labelling`,
+            )
           }
           for (const [label, when] of Object.entries(setting)) {
             labelling[`${prefix}${context}.${label}`] = on === undefined ? { label, when } : { label, on, when }
@@ -213,7 +217,9 @@ export const migrateV1 = (input: JsonRecord): Migration => {
             if (typeof failedComment === 'string') rule['message'] = failedComment
             if (Array.isArray(contexts)) rule['contexts'] = contexts
             if (typeof condition === 'string' && PRESETS.has(condition)) rule['preset'] = condition
-            else rule['when'] = typeof requires === 'number' ? { requires, condition: condition ?? [] } : { condition: condition ?? [] }
+            else
+              rule['when'] =
+                typeof requires === 'number' ? { requires, condition: condition ?? [] } : { condition: condition ?? [] }
             rules[`${prefix}${context}.${position}`] = rule
           })
         } else if (feature === 'stale' && isRecord(setting)) {
@@ -231,11 +237,14 @@ export const migrateV1 = (input: JsonRecord): Migration => {
           for (const [name, request] of Object.entries(setting)) {
             if (!isRecord(request) || !Array.isArray(request['reviewers'])) continue
             const { reviewers, requires, condition } = request
-            const when: Json = typeof requires === 'number' ? { requires, condition: condition ?? [] } : { condition: condition ?? [] }
+            const when: Json =
+              typeof requires === 'number' ? { requires, condition: condition ?? [] } : { condition: condition ?? [] }
             requestApprovals[`${prefix}${context}.${name}`] = { reviewers, when }
           }
         } else {
-          warnings.push(`${where}: ${DROPPED[feature] === undefined ? 'unknown v1 key, ignored' : `dropped, ${DROPPED[feature]}`}`)
+          warnings.push(
+            `${where}: ${DROPPED[feature] === undefined ? 'unknown v1 key, ignored' : `dropped, ${DROPPED[feature]}`}`,
+          )
         }
       }
     }

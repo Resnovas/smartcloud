@@ -1,6 +1,6 @@
 ---
-title: "Commits"
-description: "DCO sign-off and AI attribution rules for the commits on a pull request."
+title: 'Commits'
+description: 'DCO sign-off and AI attribution rules for the commits on a pull request.'
 ---
 
 The commits feature checks every commit on a pull request: each is signed off by its author, and AI tools are credited but never sign off. It runs on pull request events and is enabled by a `commits` section, even an empty one.
@@ -8,31 +8,31 @@ The commits feature checks every commit on a pull request: each is signed off by
 ```yaml
 roles:
   maintainers: [octocat]
-  trustedBots: ["dependabot[bot]"]
+  trustedBots: ['dependabot[bot]']
 
 commits:
   dco: true
   aiAttribution: true
   aiIdentities:
     emails: ["@example-ai\\.dev$"]
-    names: ["^Robo$"]
+    names: ['^Robo$']
   maintainerLevel: warning
 ```
 
-| Key | Default | Meaning |
-| --- | --- | --- |
-| `dco` | `true` | Check the DCO sign-off. |
-| `aiAttribution` | `true` | Check AI attribution trailers. |
-| `aiIdentities.emails`, `aiIdentities.names` | none | Extra patterns identifying AI tools, added to the built-in list. |
-| `maintainerLevel` | `warning` | The level for errors on a maintainer's own pull request. |
+| Key                                         | Default   | Meaning                                                          |
+| ------------------------------------------- | --------- | ---------------------------------------------------------------- |
+| `dco`                                       | `true`    | Check the DCO sign-off.                                          |
+| `aiAttribution`                             | `true`    | Check AI attribution trailers.                                   |
+| `aiIdentities.emails`, `aiIdentities.names` | none      | Extra patterns identifying AI tools, added to the built-in list. |
+| `maintainerLevel`                           | `warning` | The level for errors on a maintainer's own pull request.         |
 
 ## Rules
 
-| Rule | Finding |
-| --- | --- |
-| `DCO` | A non-merge commit has no `Signed-off-by` whose email matches the commit author's. An AI sign-off never counts, even when its email matches. Fix with `git commit -s`. |
-| `AI-02` | A commit has `Assisted-by` but no AI `Co-authored-by`, or an AI `Co-authored-by` but no `Assisted-by: TOOL:MODEL`. The two travel together. |
-| `AI-03` | A `Signed-off-by` names an AI tool. Only a person can sign off. |
+| Rule    | Finding                                                                                                                                                                |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DCO`   | A non-merge commit has no `Signed-off-by` whose email matches the commit author's. An AI sign-off never counts, even when its email matches. Fix with `git commit -s`. |
+| `AI-02` | A commit has `Assisted-by` but no AI `Co-authored-by`, or an AI `Co-authored-by` but no `Assisted-by: TOOL:MODEL`. The two travel together.                            |
+| `AI-03` | A `Signed-off-by` names an AI tool. Only a person can sign off.                                                                                                        |
 
 A correctly attributed AI-assisted commit ends like this:
 

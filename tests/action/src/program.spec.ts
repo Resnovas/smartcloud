@@ -87,7 +87,9 @@ describe('program', () => {
           enabled = false
         }),
       })
-      const { GITHUB_STEP_SUMMARY: _summary, ...vars } = yield* Effect.promise(() => env(pullRequest('feat: x'), { INPUT_TELEMETRY: 'false' }))
+      const { GITHUB_STEP_SUMMARY: _summary, ...vars } = yield* Effect.promise(() =>
+        env(pullRequest('feat: x'), { INPUT_TELEMETRY: 'false' }),
+      )
       yield* program(() => Effect.succeed(service)).pipe(withEnv(vars), Effect.provide(telemetry))
       expect(enabled).toBe(false)
       expect(out).toStrictEqual([])
@@ -121,7 +123,9 @@ describe('program', () => {
       expect(summary).toContain('**Dry run:** these writes were recorded, not made:\n- createCheckRun')
       const quiet = yield* Effect.promise(() => env({}, { INPUT_DRYRUN: 'true', GITHUB_EVENT_NAME: 'schedule' }))
       yield* program(() => Effect.succeed(service)).pipe(withEnv(quiet))
-      expect(yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))).toContain('**Dry run:** nothing would have been written.')
+      expect(yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))).toContain(
+        '**Dry run:** nothing would have been written.',
+      )
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
@@ -188,8 +192,13 @@ describe('program', () => {
   it.effect('warns and falls back to the workflow token when GitHub rejects the given token', () =>
     Effect.gen(function* () {
       const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
-      const rejected = { ...service, getRepository: Effect.fail(new Forbidden({ operation: 'getRepository', detail: 'Bad credentials' })) }
-      const vars = yield* Effect.promise(() => env(pullRequest('feat: x'), { INPUT_GITHUB_TOKEN: 'expired', INPUT_WORKFLOWTOKEN: 'workflow' }))
+      const rejected = {
+        ...service,
+        getRepository: Effect.fail(new Forbidden({ operation: 'getRepository', detail: 'Bad credentials' })),
+      }
+      const vars = yield* Effect.promise(() =>
+        env(pullRequest('feat: x'), { INPUT_GITHUB_TOKEN: 'expired', INPUT_WORKFLOWTOKEN: 'workflow' }),
+      )
       const tokens: Array<string> = []
       const connect = ({ token }: { readonly token: Redacted.Redacted<string> }) =>
         Effect.sync(() => {
@@ -202,7 +211,9 @@ describe('program', () => {
         '::warning title=smartcloud::GitHub rejected GITHUB_TOKEN (getRepository: forbidden (Bad credentials)); this run acted with the workflow token and skipped what needs a stronger token. Replace the token.',
       )
       expect(process.exitCode).toBe(exitCode)
-      expect(yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))).toContain('GitHub rejected the given token')
+      expect(yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))).toContain(
+        'GitHub rejected the given token',
+      )
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
@@ -212,7 +223,9 @@ describe('program', () => {
       const bad = yield* Effect.promise(() => env('{ nope'))
       yield* program(() => Effect.succeed(service)).pipe(withEnv(bad))
       expect(out[0]).toMatch(/^::error title=smartcloud::could not read the event payload at .*event\.json: /)
-      yield* program(() => Effect.succeed(service)).pipe(withEnv({ ...bad, GITHUB_EVENT_PATH: join(dir, 'missing.json') }))
+      yield* program(() => Effect.succeed(service)).pipe(
+        withEnv({ ...bad, GITHUB_EVENT_PATH: join(dir, 'missing.json') }),
+      )
       expect(out[1]).toContain('missing.json')
       const good = yield* Effect.promise(() => env(pullRequest('feat: x')))
       yield* program(() => Effect.die(new Error('socket\nclosed'))).pipe(withEnv(good))
@@ -232,8 +245,15 @@ describe('program', () => {
       sent.push({ path: new URL(url).pathname, body: typeof init?.body === 'string' ? init.body : '' })
       return new Response('{}', { status: 200, headers: { 'content-type': 'application/json' } })
     }
-    const layer = Layer.merge(telemetryLayer({ surface: 'action', version: '9.9.9', fetch }), Logger.add(Logger.prettyLoggerDefault))
-    const batch = () => sent.filter((request) => request.path === '/batch/').map((request) => request.body).join('\n')
+    const layer = Layer.merge(
+      telemetryLayer({ surface: 'action', version: '9.9.9', fetch }),
+      Logger.add(Logger.prettyLoggerDefault),
+    )
+    const batch = () =>
+      sent
+        .filter((request) => request.path === '/batch/')
+        .map((request) => request.body)
+        .join('\n')
     return { layer, batch }
   }
 
@@ -242,12 +262,16 @@ describe('program', () => {
       const printed: Array<string> = []
       vi.spyOn(console, 'error').mockImplementation((...args: Array<unknown>) => void printed.push(args.join(' ')))
       const { service } = memory()
-      const vars = yield* Effect.promise(() => env({ action: 'opened' }, { GITHUB_EVENT_NAME: 'push', INPUT_DRYRUN: 'true', INPUT_CONFIGREF: 'main' }))
+      const vars = yield* Effect.promise(() =>
+        env({ action: 'opened' }, { GITHUB_EVENT_NAME: 'push', INPUT_DRYRUN: 'true', INPUT_CONFIGREF: 'main' }),
+      )
       const telemetry = live()
       yield* program(() => Effect.succeed(service)).pipe(Effect.provide(telemetry.layer), withEnv(vars))
       expect(process.exitCode).toBe(1)
       expect(out).toHaveLength(1)
-      expect(out[0]).toMatch(/^::error title=smartcloud::no smartcloud config in \[redacted\]|^::error title=smartcloud::no smartcloud config in Resnovas\/example/)
+      expect(out[0]).toMatch(
+        /^::error title=smartcloud::no smartcloud config in \[redacted\]|^::error title=smartcloud::no smartcloud config in Resnovas\/example/,
+      )
       expect(printed).toStrictEqual([])
       const batch = telemetry.batch()
       expect(batch.split('"event":"$exception"')).toHaveLength(2)
@@ -269,5 +293,4 @@ describe('program', () => {
       expect(telemetry.batch()).toContain('"error_tag":"ConfigError"')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
-
 })

@@ -17,7 +17,20 @@
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { GitHub, Unavailable } from '@resnovas/integrations.github'
-import { command, describeWrite, dryRun, dryRunRepository, dryRunText, FeatureFailed, InvalidTrigger, runEvent, syntheticEvent, triggerOf, UnexpectedResponse, type Connect } from '@resnovas/runtime'
+import {
+  command,
+  describeWrite,
+  dryRun,
+  dryRunRepository,
+  dryRunText,
+  FeatureFailed,
+  InvalidTrigger,
+  runEvent,
+  syntheticEvent,
+  triggerOf,
+  UnexpectedResponse,
+  type Connect,
+} from '@resnovas/runtime'
 import { Effect } from 'effect'
 import { CONVENTIONS, fixture, issue, LABELS, memory, pull, PUSH, recording, withConfig } from './fixtures.js'
 import { carried, observe, spanNamed } from './observe.js'
@@ -39,7 +52,9 @@ describe('triggers and synthetic events', () => {
       expect(yield* triggerOf({ event: 'push' })).toStrictEqual({ kind: 'repository', event: 'push' })
       const none = yield* Effect.flip(triggerOf({}))
       expect(none).toBeInstanceOf(InvalidTrigger)
-      expect(none.message).toBe('nothing to simulate: give exactly one of a pull request, an issue, or an event (schedule, push, workflow_dispatch)')
+      expect(none.message).toBe(
+        'nothing to simulate: give exactly one of a pull request, an issue, or an event (schedule, push, workflow_dispatch)',
+      )
       expect((yield* Effect.flip(triggerOf({ pr: 1, event: 'push' }))).reason).toBe('more than one thing to simulate')
       expect((yield* Effect.flip(triggerOf({ event: 'issues' }))).reason).toBe('unknown event "issues"')
     }),
@@ -51,8 +66,14 @@ describe('triggers and synthetic events', () => {
         name: 'pull_request',
         payload: { action: 'synchronize', pull_request: pull },
       })
-      expect(yield* syntheticEvent({ kind: 'issue', number: 9 })).toStrictEqual({ name: 'issues', payload: { action: 'edited', issue } })
-      expect(yield* syntheticEvent({ kind: 'repository', event: 'schedule' })).toStrictEqual({ name: 'schedule', payload: {} })
+      expect(yield* syntheticEvent({ kind: 'issue', number: 9 })).toStrictEqual({
+        name: 'issues',
+        payload: { action: 'edited', issue },
+      })
+      expect(yield* syntheticEvent({ kind: 'repository', event: 'schedule' })).toStrictEqual({
+        name: 'schedule',
+        payload: {},
+      })
       expect(yield* syntheticEvent({ kind: 'repository', event: 'push' })).toStrictEqual({
         name: 'push',
         payload: { ref: 'refs/heads/main', after: 'def456' },
@@ -73,9 +94,9 @@ describe('runEvent and dryRun', () => {
   it.effect('runs features and publishes the report', () =>
     Effect.gen(function* () {
       const { service, state } = memory({ '.github/smartcloud.yml': CONVENTIONS })
-      const outcome = yield* Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) => runEvent({ config: {}, event })).pipe(
-        Effect.provideService(GitHub, service),
-      )
+      const outcome = yield* Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) =>
+        runEvent({ config: {}, event }),
+      ).pipe(Effect.provideService(GitHub, service))
       expect(outcome.result.findings.map((finding) => finding.rule)).toStrictEqual(['conventions.title'])
       expect(state.checkRuns).not.toHaveLength(0)
       expect(outcome.result.configSkipped).toBeUndefined()
@@ -86,14 +107,21 @@ describe('runEvent and dryRun', () => {
     Effect.gen(function* () {
       const config = `${CONVENTIONS}settings:\n  codespaces: { enabled: true }\n`
       const { service, state } = memory({ '.github/smartcloud.yml': config })
-      const event = yield* syntheticEvent({ kind: 'pullRequest', number: 7 }).pipe(Effect.provideService(GitHub, service))
+      const event = yield* syntheticEvent({ kind: 'pullRequest', number: 7 }).pipe(
+        Effect.provideService(GitHub, service),
+      )
       const outcome = yield* runEvent({ config: {}, event }).pipe(Effect.provideService(GitHub, service))
       expect(outcome.result.findings.map((finding) => `${finding.level} ${finding.rule}`)).toStrictEqual([
         'warning config.ignored',
         'error conventions.title',
       ])
-      expect(outcome.result.findings[0]?.message).toMatch(/^\.github\/smartcloud\.yml: ignored settings\.codespaces, because /)
-      expect(state.checkRuns.map((check) => [check.name, check.conclusion])).toContainEqual(['smartcloud / config', 'neutral'])
+      expect(outcome.result.findings[0]?.message).toMatch(
+        /^\.github\/smartcloud\.yml: ignored settings\.codespaces, because /,
+      )
+      expect(state.checkRuns.map((check) => [check.name, check.conclusion])).toContainEqual([
+        'smartcloud / config',
+        'neutral',
+      ])
       // Reported as a finding, so not repeated as a run warning.
       expect(outcome.warnings).toStrictEqual([])
     }),
@@ -103,14 +131,19 @@ describe('runEvent and dryRun', () => {
     Effect.gen(function* () {
       const config = `${CONVENTIONS}roles:\n  maintainers: [a, 1]\n`
       const { service, state } = memory({ '.github/smartcloud.yml': config })
-      const event = yield* syntheticEvent({ kind: 'pullRequest', number: 7 }).pipe(Effect.provideService(GitHub, service))
+      const event = yield* syntheticEvent({ kind: 'pullRequest', number: 7 }).pipe(
+        Effect.provideService(GitHub, service),
+      )
       const outcome = yield* runEvent({ config: {}, event }).pipe(Effect.provideService(GitHub, service))
       expect(outcome.result.findings.map((finding) => `${finding.level} ${finding.rule}`)).toStrictEqual([
         'error config.ignored',
         'error conventions.title',
       ])
       expect(outcome.result.findings[0]?.message).toMatch(/only tightens policy/)
-      expect(state.checkRuns.map((check) => [check.name, check.conclusion])).toContainEqual(['smartcloud / config', 'failure'])
+      expect(state.checkRuns.map((check) => [check.name, check.conclusion])).toContainEqual([
+        'smartcloud / config',
+        'failure',
+      ])
     }),
   )
 
@@ -126,7 +159,10 @@ describe('runEvent and dryRun', () => {
         )
         const outcome = yield* runEvent({ config: {}, event, access }).pipe(Effect.provideService(GitHub, service))
         expect(outcome.result.configSkipped).toHaveLength(2)
-        expect(state.checkRuns.map((check) => [check.name, check.conclusion])).toContainEqual(['smartcloud / access', 'neutral'])
+        expect(state.checkRuns.map((check) => [check.name, check.conclusion])).toContainEqual([
+          'smartcloud / access',
+          'neutral',
+        ])
         expect(outcome.result.findings.map((finding) => `${finding.level} ${finding.rule}`)).toStrictEqual([
           'notice access.restricted',
           'warning access.config-skipped',
@@ -149,7 +185,9 @@ describe('runEvent and dryRun', () => {
     Effect.gen(function* () {
       const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
       const observed = yield* observe(
-        Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) => runEvent({ config: {}, event, features: ['conventions', 'labels'] })),
+        Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) =>
+          runEvent({ config: {}, event, features: ['conventions', 'labels'] }),
+        ),
       ).pipe(Effect.provideService(GitHub, service))
       expect(observed.value.result.findings.map((finding) => finding.rule)).toStrictEqual(['conventions.title'])
       expect(Object.fromEntries(spanNamed(observed, 'smartcloud.config.resolve').attributes)).toStrictEqual({
@@ -158,7 +196,10 @@ describe('runEvent and dryRun', () => {
         warnings: 0,
         locked: 0,
       })
-      expect(Object.fromEntries(spanNamed(observed, 'smartcloud.flags.evaluate').attributes)).toStrictEqual({ features: 2, turned_off: [] })
+      expect(Object.fromEntries(spanNamed(observed, 'smartcloud.flags.evaluate').attributes)).toStrictEqual({
+        features: 2,
+        turned_off: [],
+      })
       expect(spanNamed(observed, 'smartcloud.feature.conventions').attributes.get('findings')).toBe(1)
       expect(Object.fromEntries(spanNamed(observed, 'smartcloud.reporting.publish').attributes)).toMatchObject({
         'event.kind': 'pullRequest',
@@ -171,7 +212,9 @@ describe('runEvent and dryRun', () => {
       expect(messages).toContain('conventions: 1 of 1 rule(s) failed')
       expect(messages).toContain('labels: skipped, not configured')
       expect(messages).toContain('reporting: 1 check run(s), comment created, 0 warning(s)')
-      for (const value of carried(observed)) for (const secret of ['Resnovas', 'example', 'jane', 'Add things', 'smartcloud.yml']) expect(value).not.toContain(secret)
+      for (const value of carried(observed))
+        for (const secret of ['Resnovas', 'example', 'jane', 'Add things', 'smartcloud.yml'])
+          expect(value).not.toContain(secret)
     }),
   )
 
@@ -182,10 +225,13 @@ describe('runEvent and dryRun', () => {
         { id: 1, body: '<!-- smartcloud:report -->\nforged', author: 'mallory', bot: false },
         { id: 2, body: '<!-- smartcloud:report -->\nold', author: 'Release-Robot', bot: false },
       ]
-      const { service, state } = memory({ '.github/smartcloud.yml': config }, { issues: new Map([[7, { labels: [], open: true, comments }]]) })
-      const outcome = yield* Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) => runEvent({ config: {}, event })).pipe(
-        Effect.provideService(GitHub, service),
+      const { service, state } = memory(
+        { '.github/smartcloud.yml': config },
+        { issues: new Map([[7, { labels: [], open: true, comments }]]) },
       )
+      const outcome = yield* Effect.flatMap(syntheticEvent({ kind: 'pullRequest', number: 7 }), (event) =>
+        runEvent({ config: {}, event }),
+      ).pipe(Effect.provideService(GitHub, service))
       expect(outcome.published.comment).toBe('updated')
       const after = state.issues.get(7)?.comments ?? []
       expect(after).toHaveLength(2)
@@ -197,9 +243,11 @@ describe('runEvent and dryRun', () => {
   it.effect('records every write instead of making it', () =>
     Effect.gen(function* () {
       const { service, state } = memory({ '.github/smartcloud.yml': CONVENTIONS })
-      const outcome = yield* dryRun({ trigger: { kind: 'pullRequest', number: 7 }, config: {}, features: ['conventions'] }).pipe(
-        Effect.provideService(GitHub, service),
-      )
+      const outcome = yield* dryRun({
+        trigger: { kind: 'pullRequest', number: 7 },
+        config: {},
+        features: ['conventions'],
+      }).pipe(Effect.provideService(GitHub, service))
       expect(state.checkRuns).toHaveLength(0)
       expect(state.issues.get(7)?.comments ?? []).toHaveLength(0)
       expect(outcome.event.name).toBe('pull_request')
@@ -220,15 +268,18 @@ describe('runEvent and dryRun', () => {
     Effect.gen(function* () {
       const v1 = yield* Effect.promise(() => readFile(fixture('v1-smartcloud.json'), 'utf8'))
       const { service } = memory({ '.github/config.json': v1 })
-      const outcome = yield* dryRun({ trigger: { kind: 'repository', event: 'schedule' }, config: {}, features: ['conventions'] }).pipe(
-        Effect.provideService(GitHub, service),
-      )
+      const outcome = yield* dryRun({
+        trigger: { kind: 'repository', event: 'schedule' },
+        config: {},
+        features: ['conventions'],
+      }).pipe(Effect.provideService(GitHub, service))
       const text = dryRunText(outcome)
       expect(text).toContain('warning: .github/config.json: ')
       expect(text.endsWith('**Dry run:** nothing would have been written.')).toBe(true)
-      const quiet = yield* dryRun({ trigger: { kind: 'repository', event: 'schedule' }, config: { text: { text: 'version: 2\n', source: 'x' } } }).pipe(
-        Effect.provideService(GitHub, service),
-      )
+      const quiet = yield* dryRun({
+        trigger: { kind: 'repository', event: 'schedule' },
+        config: { text: { text: 'version: 2\n', source: 'x' } },
+      }).pipe(Effect.provideService(GitHub, service))
       expect(dryRunText(quiet)).not.toContain('warning:')
     }),
   )
@@ -239,12 +290,20 @@ describe('runEvent and dryRun', () => {
       yield* Effect.promise(() => writeFile(file, CONVENTIONS))
       const { service, state } = memory()
       const opened: Array<string> = []
-      const connect: Connect = (coordinates) => Effect.sync(() => (opened.push(`${coordinates.owner}/${coordinates.repo}`), service))
-      const outcome = yield* dryRunRepository(connect, { repository: 'Resnovas/example', pr: 7, config: file, features: undefined })
+      const connect: Connect = (coordinates) =>
+        Effect.sync(() => (opened.push(`${coordinates.owner}/${coordinates.repo}`), service))
+      const outcome = yield* dryRunRepository(connect, {
+        repository: 'Resnovas/example',
+        pr: 7,
+        config: file,
+        features: undefined,
+      })
       expect(opened).toStrictEqual(['Resnovas/example'])
       expect(outcome.result.ran).toContain('conventions')
       expect(state.checkRuns).toHaveLength(0)
-      expect((yield* Effect.flip(dryRunRepository(connect, { repository: 'nope', pr: 7 })))._tag).toBe('InvalidRepository')
+      expect((yield* Effect.flip(dryRunRepository(connect, { repository: 'nope', pr: 7 })))._tag).toBe(
+        'InvalidRepository',
+      )
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })
@@ -257,13 +316,28 @@ describe('runEvent with telemetry', () => {
         Effect.provideService(GitHub, withConfig(LABELS)),
         Effect.provide(flagged.layer),
       )
-      expect(outcome.result.skipped).toContainEqual({ feature: 'labels', reason: 'turned off by feature flag smartcloud-labels' })
+      expect(outcome.result.skipped).toContainEqual({
+        feature: 'labels',
+        reason: 'turned off by feature flag smartcloud-labels',
+      })
       expect(outcome.result.ran).not.toContain('labels')
       expect(flagged.named('command run')).toHaveLength(1)
-      expect(flagged.named('command run')[0]?.properties).toMatchObject({ command: 'run', outcome: 'success', options: [] })
+      expect(flagged.named('command run')[0]?.properties).toMatchObject({
+        command: 'run',
+        outcome: 'success',
+        options: [],
+      })
       const labels = flagged.named('feature run').find((event) => event.properties['feature'] === 'labels')
-      expect(labels?.properties).toMatchObject({ outcome: 'skipped', skip_reason: 'flag', github_event: 'push', event_kind: 'repository' })
-      expect(flagged.named('config resolved')[0]?.properties).toMatchObject({ config_version: 2, features_enabled: expect.arrayContaining(['labels']) })
+      expect(labels?.properties).toMatchObject({
+        outcome: 'skipped',
+        skip_reason: 'flag',
+        github_event: 'push',
+        event_kind: 'repository',
+      })
+      expect(flagged.named('config resolved')[0]?.properties).toMatchObject({
+        config_version: 2,
+        features_enabled: expect.arrayContaining(['labels']),
+      })
       expect(flagged.organisations[0]).toMatchObject({ uses_house_preset: false })
     }),
   )
@@ -305,14 +379,21 @@ describe('dry runs as invocations', () => {
       const recorded = recording()
       const { service } = memory({ '.github/smartcloud.yml': LABELS })
       const observed = yield* observe(
-        command(dryRunRepository(() => Effect.succeed(service), { repository: 'Resnovas/example', event: 'push' }), { command: 'dry-run', options: ['event', 'repo'] }),
+        command(
+          dryRunRepository(() => Effect.succeed(service), { repository: 'Resnovas/example', event: 'push' }),
+          { command: 'dry-run', options: ['event', 'repo'] },
+        ),
       ).pipe(Effect.provide(recorded.layer))
       const root = spanNamed(observed, 'smartcloud.command')
       const run = spanNamed(observed, 'smartcloud.run')
       expect(run.parent._tag === 'Some' && run.parent.value.spanId).toBeTruthy()
       // Every span of the dry run, the reads for the push included, shares the invocation's trace.
       expect(observed.spans.every((span) => span.traceId === root.traceId)).toBe(true)
-      expect(recorded.named('command run')[0]?.properties).toMatchObject({ command: 'dry-run', options: ['event', 'repo'], outcome: 'success' })
+      expect(recorded.named('command run')[0]?.properties).toMatchObject({
+        command: 'dry-run',
+        options: ['event', 'repo'],
+        outcome: 'success',
+      })
       expect(recorded.named('feature run').map((event) => event.properties['feature'])).toContain('labels')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
@@ -321,12 +402,22 @@ describe('dry runs as invocations', () => {
     Effect.gen(function* () {
       const recorded = recording()
       const failure = yield* Effect.flip(
-        command(dryRunRepository(() => Effect.succeed(memory().service), { repository: 'not a repo', pr: 7 }), { command: 'dry-run' }).pipe(Effect.provide(recorded.layer)),
+        command(
+          dryRunRepository(() => Effect.succeed(memory().service), { repository: 'not a repo', pr: 7 }),
+          { command: 'dry-run' },
+        ).pipe(Effect.provide(recorded.layer)),
       )
       expect(failure._tag).toBe('InvalidRepository')
       expect(recorded.protectedValues).toStrictEqual(['not a repo'])
-      expect(recorded.exceptions[0]?.properties).toMatchObject({ command: 'dry-run', error_tag: 'InvalidRepository', expected: true })
-      expect(recorded.named('command run')[0]?.properties).toMatchObject({ outcome: 'failure', error_tag: 'InvalidRepository' })
+      expect(recorded.exceptions[0]?.properties).toMatchObject({
+        command: 'dry-run',
+        error_tag: 'InvalidRepository',
+        expected: true,
+      })
+      expect(recorded.named('command run')[0]?.properties).toMatchObject({
+        outcome: 'failure',
+        error_tag: 'InvalidRepository',
+      })
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })

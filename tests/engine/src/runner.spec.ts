@@ -29,7 +29,10 @@ const config: SmartcloudConfig = { version: 2 }
 const feature = (name: string, overrides: Partial<Feature> = {}): Feature => ({
   name,
   handles: ['pullRequest', 'issue', 'repository'],
-  run: () => Report.pipe(Effect.flatMap((report) => report.add({ feature: name, rule: `${name}.rule`, level: 'notice', message: 'ran' }))),
+  run: () =>
+    Report.pipe(
+      Effect.flatMap((report) => report.add({ feature: name, rule: `${name}.rule`, level: 'notice', message: 'ran' })),
+    ),
   ...overrides,
 })
 
@@ -52,7 +55,9 @@ const memory = () =>
 describe('runFeatures', () => {
   it.effect('runs the features that handle the event, in the order given, whatever order they finish in', () =>
     Effect.gen(function* () {
-      const slow = feature('slow', { run: () => Effect.zipRight(Effect.sleep('2 seconds'), feature('slow').run(undefined as never)) })
+      const slow = feature('slow', {
+        run: () => Effect.zipRight(Effect.sleep('2 seconds'), feature('slow').run(undefined as never)),
+      })
       const fiber = yield* Effect.fork(
         runFeatures({ config, event: 'pull_request', payload: pullRequestPayload, features: [slow, feature('fast')] }),
       )
@@ -70,7 +75,12 @@ describe('runFeatures', () => {
     Effect.gen(function* () {
       // @effect-diagnostics-next-line globalErrorInEffectFailure:off - a plain Error on purpose: any failure must be handled
       const broken = feature('broken', { run: () => Effect.fail(new Error('boom')) })
-      const result = yield* runFeatures({ config, event: 'issues', payload: issuePayload, features: [broken, feature('ok')] })
+      const result = yield* runFeatures({
+        config,
+        event: 'issues',
+        payload: issuePayload,
+        features: [broken, feature('ok')],
+      })
       expect(result.ran).toStrictEqual(['ok'])
       expect(result.failed).toHaveLength(1)
       expect(result.failed[0]).toMatchObject({ feature: 'broken', message: expect.stringContaining('boom') })
@@ -81,7 +91,10 @@ describe('runFeatures', () => {
   it.effect('a facet GitHub cannot serve fails only the features that need it', () =>
     Effect.gen(function* () {
       const { service } = memory()
-      const github = { ...service, listReviews: () => Effect.fail(new Forbidden({ operation: 'listReviews', detail: 'no access' })) }
+      const github = {
+        ...service,
+        listReviews: () => Effect.fail(new Forbidden({ operation: 'listReviews', detail: 'no access' })),
+      }
       const seen: Array<unknown> = []
       const needsReviews = feature('reviews', { facets: () => new Set(['reviews', 'files'] as const) })
       const needsFiles = feature('files', {
@@ -96,7 +109,10 @@ describe('runFeatures', () => {
       }).pipe(Effect.provideService(GitHub, github))
       expect(result.ran).toStrictEqual(['files', 'plain'])
       expect(result.failed).toStrictEqual([
-        { feature: 'reviews', message: expect.stringContaining('could not load reviews: Forbidden: listReviews: forbidden (no access)') },
+        {
+          feature: 'reviews',
+          message: expect.stringContaining('could not load reviews: Forbidden: listReviews: forbidden (no access)'),
+        },
       ])
       expect(seen[0]).toMatchObject({ files: ['src/a.ts'] })
       expect(seen[0]).not.toHaveProperty('reviews')
@@ -109,7 +125,9 @@ describe('runFeatures', () => {
       const endless = feature('endless', {
         run: () => Effect.never.pipe(Effect.ensuring(Effect.sync(() => void (cleanedUp = true)))),
       })
-      const fiber = yield* Effect.fork(runFeatures({ config, event: 'issues', payload: issuePayload, features: [endless] }))
+      const fiber = yield* Effect.fork(
+        runFeatures({ config, event: 'issues', payload: issuePayload, features: [endless] }),
+      )
       yield* TestClock.adjust('1 second')
       const exit = yield* Fiber.interrupt(fiber)
       expect(Exit.isInterrupted(exit)).toBe(true)
@@ -120,7 +138,9 @@ describe('runFeatures', () => {
   it.effect('a feature that interrupts itself stops the run rather than passing as a failure', () =>
     Effect.gen(function* () {
       const quits = feature('quits', { run: () => Effect.interrupt })
-      const exit = yield* Effect.exit(runFeatures({ config, event: 'issues', payload: issuePayload, features: [quits, feature('ok')] }))
+      const exit = yield* Effect.exit(
+        runFeatures({ config, event: 'issues', payload: issuePayload, features: [quits, feature('ok')] }),
+      )
       expect(Exit.isInterrupted(exit)).toBe(true)
     }).pipe(Effect.provide(GitHubMemory())),
   )
@@ -155,20 +175,33 @@ describe('runFeatures', () => {
         turnedOff: new Map([['flagged', 'turned off by feature flag smartcloud-flagged']]),
       })
       expect(result.ran).toStrictEqual(['on'])
-      expect(result.skipped).toStrictEqual([{ feature: 'flagged', reason: 'turned off by feature flag smartcloud-flagged' }])
+      expect(result.skipped).toStrictEqual([
+        { feature: 'flagged', reason: 'turned off by feature flag smartcloud-flagged' },
+      ])
     }).pipe(Effect.provide(GitHubMemory())),
   )
 
   it.effect('runs a feature that needs the job check run only when given one, and hands it the id', () =>
     Effect.gen(function* () {
       const seen: Array<number | undefined> = []
-      const waits = feature('waits', { needsCheckRun: true, run: (context) => Effect.sync(() => void seen.push(context.checkRunId)) })
+      const waits = feature('waits', {
+        needsCheckRun: true,
+        run: (context) => Effect.sync(() => void seen.push(context.checkRunId)),
+      })
       const without = yield* runFeatures({ config, event: 'schedule', payload: {}, features: [waits, feature('on')] })
       expect(without.ran).toStrictEqual(['on'])
       expect(without.skipped).toStrictEqual([{ feature: 'waits', reason: 'runs only in a job that passes checkRunId' }])
       expect(without.findings.filter((finding) => finding.rule.endsWith('check-run-missing'))).toStrictEqual([])
-      const required = yield* runFeatures({ config, event: 'schedule', payload: {}, features: [waits], checkRunRequired: true })
-      expect(required.findings.map((finding) => [finding.rule, finding.level])).toStrictEqual([['waits.check-run-missing', 'error']])
+      const required = yield* runFeatures({
+        config,
+        event: 'schedule',
+        payload: {},
+        features: [waits],
+        checkRunRequired: true,
+      })
+      expect(required.findings.map((finding) => [finding.rule, finding.level])).toStrictEqual([
+        ['waits.check-run-missing', 'error'],
+      ])
       const given = yield* runFeatures({ config, event: 'schedule', payload: {}, features: [waits], checkRunId: 42 })
       expect(given.ran).toStrictEqual(['waits'])
       expect(seen).toStrictEqual([42])
@@ -194,7 +227,12 @@ describe('runFeatures', () => {
       expect(result.ran).toStrictEqual([])
       expect(result.durations).toStrictEqual({})
       expect(result.findings).toStrictEqual([
-        { feature: 'engine', rule: 'unsupported-event', level: 'notice', message: 'smartcloud does not act on release events' },
+        {
+          feature: 'engine',
+          rule: 'unsupported-event',
+          level: 'notice',
+          message: 'smartcloud does not act on release events',
+        },
       ])
     }).pipe(Effect.provide(GitHubMemory())),
   )
@@ -202,7 +240,10 @@ describe('runFeatures', () => {
   it.effect('records changes as well as findings', () =>
     Effect.gen(function* () {
       const changer = feature('changer', {
-        run: () => Report.pipe(Effect.flatMap((report) => report.change({ feature: 'changer', description: 'added label bug' }))),
+        run: () =>
+          Report.pipe(
+            Effect.flatMap((report) => report.change({ feature: 'changer', description: 'added label bug' })),
+          ),
       })
       const result = yield* runFeatures({ config, event: 'issues', payload: issuePayload, features: [changer] })
       expect(result.changes).toStrictEqual([{ feature: 'changer', description: 'added label bug' }])
@@ -215,7 +256,17 @@ describe('loadFacets', () => {
     Effect.gen(function* () {
       const { service } = memory()
       const subject = yield* loadFacets(
-        { kind: 'pullRequest', number: 7, title: 't', body: '', author: 'a', open: true, locked: false, labels: [], updatedAt: new Date(0) },
+        {
+          kind: 'pullRequest',
+          number: 7,
+          title: 't',
+          body: '',
+          author: 'a',
+          open: true,
+          locked: false,
+          labels: [],
+          updatedAt: new Date(0),
+        },
         new Set(['files', 'reviews', 'pendingReviewers', 'commits', 'mergeable', 'checks'] as const),
       ).pipe(Effect.provideService(GitHub, service))
       expect(subject).toMatchObject({
@@ -231,7 +282,17 @@ describe('loadFacets', () => {
 
   it.effect('leaves issues and empty requests alone', () =>
     Effect.gen(function* () {
-      const issue = { kind: 'issue' as const, number: 3, title: 't', body: '', author: 'a', open: true, locked: false, labels: [], updatedAt: new Date(0) }
+      const issue = {
+        kind: 'issue' as const,
+        number: 3,
+        title: 't',
+        body: '',
+        author: 'a',
+        open: true,
+        locked: false,
+        labels: [],
+        updatedAt: new Date(0),
+      }
       expect(yield* loadFacets(issue, new Set(['files'] as const))).toBe(issue)
       const pr = { ...issue, kind: 'pullRequest' as const }
       expect(yield* loadFacets(pr, new Set())).toBe(pr)
@@ -240,10 +301,16 @@ describe('loadFacets', () => {
 })
 
 const findings = (level: string, feature: string) =>
-  Effect.map(Metric.value(Metric.tagged(Metric.tagged(findingsCounter, 'level', level), 'feature', feature)), (state) => state.count)
+  Effect.map(
+    Metric.value(Metric.tagged(Metric.tagged(findingsCounter, 'level', level), 'feature', feature)),
+    (state) => state.count,
+  )
 
 const durations = (feature: string, outcome: string) =>
-  Effect.map(Metric.value(Metric.tagged(Metric.tagged(featureDuration, 'feature', feature), 'outcome', outcome)), (state) => state.count)
+  Effect.map(
+    Metric.value(Metric.tagged(Metric.tagged(featureDuration, 'feature', feature), 'outcome', outcome)),
+    (state) => state.count,
+  )
 
 const noting: Feature = {
   name: 'noting',
@@ -251,13 +318,22 @@ const noting: Feature = {
   run: () =>
     Effect.flatMap(Report, (report) =>
       Effect.zipRight(
-        report.add({ feature: 'noting', rule: 'noting.rule', level: 'warning', message: 'jane broke "feat(labels): sync labels"' }),
+        report.add({
+          feature: 'noting',
+          rule: 'noting.rule',
+          level: 'warning',
+          message: 'jane broke "feat(labels): sync labels"',
+        }),
         report.change({ feature: 'noting', description: 'labelled #7' }),
       ),
     ),
 }
 // @effect-diagnostics-next-line globalErrorInEffectFailure:off - a plain Error on purpose: any failure must be handled
-const broken: Feature = { name: 'broken', handles: ['pullRequest'], run: () => Effect.fail(new Error('boom in Resnovas/example')) }
+const broken: Feature = {
+  name: 'broken',
+  handles: ['pullRequest'],
+  run: () => Effect.fail(new Error('boom in Resnovas/example')),
+}
 const issuesOnly: Feature = { name: 'issues-only', handles: ['issue'], run: () => Effect.void }
 
 describe('engine telemetry', () => {
@@ -267,13 +343,31 @@ describe('engine telemetry', () => {
       const successBefore = yield* durations('noting', 'success')
       const failureBefore = yield* durations('broken', 'failure')
       const observed = yield* observe(
-        runFeatures({ config, event: 'pull_request', payload: pullRequestPayload, features: [noting, broken, issuesOnly] }),
+        runFeatures({
+          config,
+          event: 'pull_request',
+          payload: pullRequestPayload,
+          features: [noting, broken, issuesOnly],
+        }),
       )
 
       const run = spanNamed(observed, 'smartcloud.engine.runFeatures')
-      expect(Object.fromEntries(run.attributes)).toMatchObject({ github_event: 'pull_request', 'event.kind': 'pullRequest', ran: 1, skipped: 1, failed: 1, findings: 1 })
+      expect(Object.fromEntries(run.attributes)).toMatchObject({
+        github_event: 'pull_request',
+        'event.kind': 'pullRequest',
+        ran: 1,
+        skipped: 1,
+        failed: 1,
+        findings: 1,
+      })
       const ok = spanNamed(observed, 'smartcloud.feature.noting')
-      expect(Object.fromEntries(ok.attributes)).toMatchObject({ feature: 'noting', 'event.kind': 'pullRequest', outcome: 'success', findings: 1, changes: 1 })
+      expect(Object.fromEntries(ok.attributes)).toMatchObject({
+        feature: 'noting',
+        'event.kind': 'pullRequest',
+        outcome: 'success',
+        findings: 1,
+        changes: 1,
+      })
       expect(Option.map(ok.parent, (parent) => parent.spanId)).toStrictEqual(Option.some(run.spanId))
       expect(spanNamed(observed, 'smartcloud.feature.broken').attributes.get('outcome')).toBe('failure')
 
@@ -284,22 +378,41 @@ describe('engine telemetry', () => {
       expect(observed.logs).toContainEqual({
         message: 'noting: finding noting.rule',
         level: 'DEBUG',
-        annotations: expect.objectContaining({ feature: 'noting', rule: 'noting.rule', level: 'warning', github_event: 'pull_request' }),
+        annotations: expect.objectContaining({
+          feature: 'noting',
+          rule: 'noting.rule',
+          level: 'warning',
+          github_event: 'pull_request',
+        }),
       })
       expect(observed.logs).toContainEqual(
-        expect.objectContaining({ message: 'noting: success in 0 ms, 1 finding(s), 1 change(s)', level: 'INFO', annotations: expect.objectContaining({ feature: 'noting' }) }),
+        expect.objectContaining({
+          message: 'noting: success in 0 ms, 1 finding(s), 1 change(s)',
+          level: 'INFO',
+          annotations: expect.objectContaining({ feature: 'noting' }),
+        }),
       )
       expect(observed.logs).toContainEqual(
-        expect.objectContaining({ message: 'broken: failure in 0 ms, 0 finding(s), 0 change(s)', level: 'WARN', annotations: expect.objectContaining({ feature: 'broken', outcome: 'failure' }) }),
+        expect.objectContaining({
+          message: 'broken: failure in 0 ms, 0 finding(s), 0 change(s)',
+          level: 'WARN',
+          annotations: expect.objectContaining({ feature: 'broken', outcome: 'failure' }),
+        }),
       )
       expect(observed.logs).toContainEqual(
-        expect.objectContaining({ message: 'issues-only: skipped, does not handle pullRequest events', level: 'DEBUG' }),
+        expect.objectContaining({
+          message: 'issues-only: skipped, does not handle pullRequest events',
+          level: 'DEBUG',
+        }),
       )
-      expect(observed.logs).toContainEqual(expect.objectContaining({ message: 'engine: 1 ran, 1 skipped, 1 failed, 1 finding(s)', level: 'INFO' }))
+      expect(observed.logs).toContainEqual(
+        expect.objectContaining({ message: 'engine: 1 ran, 1 skipped, 1 failed, 1 finding(s)', level: 'INFO' }),
+      )
 
       // Messages, titles, logins and failure reasons stay out of spans and logs.
       for (const value of carried(observed)) {
-        for (const secret of ['jane', 'feat(labels)', 'Resnovas', 'boom', 'labelled #7']) expect(value).not.toContain(secret)
+        for (const secret of ['jane', 'feat(labels)', 'Resnovas', 'boom', 'labelled #7'])
+          expect(value).not.toContain(secret)
       }
     }).pipe(Effect.provide(GitHubMemory())),
   )
@@ -307,10 +420,24 @@ describe('engine telemetry', () => {
   it.effect('traces loading facets with the facets asked for', () =>
     Effect.gen(function* () {
       const memory = makeMemoryGitHub({
-        pulls: new Map([[7, { commits: [], files: ['src/a.ts'], reviews: [], requestedReviewers: [], submittedReviews: [] }]]),
+        pulls: new Map([
+          [7, { commits: [], files: ['src/a.ts'], reviews: [], requestedReviewers: [], submittedReviews: [] }],
+        ]),
       })
-      const subject: Subject = { kind: 'pullRequest', number: 7, title: 't', body: '', author: 'jane', open: true, locked: false, labels: [], updatedAt: new Date(0) }
-      const observed = yield* observe(loadFacets(subject, new Set(['files'] as const))).pipe(Effect.provideService(GitHub, memory.service))
+      const subject: Subject = {
+        kind: 'pullRequest',
+        number: 7,
+        title: 't',
+        body: '',
+        author: 'jane',
+        open: true,
+        locked: false,
+        labels: [],
+        updatedAt: new Date(0),
+      }
+      const observed = yield* observe(loadFacets(subject, new Set(['files'] as const))).pipe(
+        Effect.provideService(GitHub, memory.service),
+      )
       expect(observed.value).toMatchObject({ files: ['src/a.ts'] })
       expect(Object.fromEntries(spanNamed(observed, 'smartcloud.engine.loadFacets').attributes)).toStrictEqual({
         'subject.kind': 'pullRequest',

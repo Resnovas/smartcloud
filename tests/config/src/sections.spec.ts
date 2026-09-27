@@ -66,8 +66,9 @@ sync:
   )
 
   it.effect('reject a pull request rule with no merge methods, which GitHub refuses', () =>
-    Effect.map(Effect.flip(parseConfig('version: 2\nsettings: { ruleset: { pullRequest: { mergeMethods: [] } } }\n', 'x.yml')), (error) =>
-      expect(error._tag).toBe('ConfigDecodeError'),
+    Effect.map(
+      Effect.flip(parseConfig('version: 2\nsettings: { ruleset: { pullRequest: { mergeMethods: [] } } }\n', 'x.yml')),
+      (error) => expect(error._tag).toBe('ConfigDecodeError'),
     ),
   )
 
@@ -123,7 +124,9 @@ settings:
   it.effect('never repeats a rejected webhook URL, which can carry a token', () =>
     Effect.gen(function* () {
       for (const url of ['ftp://:secret@example.com', 'http://:secret@[']) {
-        const error = yield* Effect.flip(parseConfig(`version: 2\nsettings:\n  webhooks: { x: { url: '${url}' } }\n`, 'x.yml'))
+        const error = yield* Effect.flip(
+          parseConfig(`version: 2\nsettings:\n  webhooks: { x: { url: '${url}' } }\n`, 'x.yml'),
+        )
         expect(error.message).toContain('expected an http or https URL')
         expect(error.message).not.toContain('secret')
       }

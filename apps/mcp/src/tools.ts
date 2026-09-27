@@ -228,8 +228,10 @@ export interface RepositoryConfigInput {
 const configLocation = (root: string, input: RepositoryConfigInput) => {
   if (input.configText !== undefined && input.config !== undefined)
     return Effect.fail(new ConfigRefused({ reason: 'give config or configText, not both' }))
-  if (input.configText !== undefined) return Effect.succeed<ConfigLocation>({ text: { text: input.configText, source: 'smartcloud.yml' } })
-  if (input.config !== undefined) return Effect.map(readConfinedConfig(root, input.config), (text): ConfigLocation => ({ text }))
+  if (input.configText !== undefined)
+    return Effect.succeed<ConfigLocation>({ text: { text: input.configText, source: 'smartcloud.yml' } })
+  if (input.config !== undefined)
+    return Effect.map(readConfinedConfig(root, input.config), (text): ConfigLocation => ({ text }))
   return Effect.succeed<ConfigLocation>({})
 }
 
@@ -304,9 +306,9 @@ export const planSettingsTool = (connect: Connect, input: PlanSettingsInput, roo
       const coordinates = yield* targetRepository(input.repository)
       const location = yield* configLocation(root, input)
       const service = yield* connect(coordinates)
-      const plan = yield* Effect.flatMap(loadConfig(location), (resolved) => planRepositorySettings(resolved.config)).pipe(
-        Effect.provideService(GitHub, service),
-      )
+      const plan = yield* Effect.flatMap(loadConfig(location), (resolved) =>
+        planRepositorySettings(resolved.config),
+      ).pipe(Effect.provideService(GitHub, service))
       return [settingsPlanText(plan)]
     }),
   )
