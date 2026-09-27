@@ -434,6 +434,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
             authorName: commit.commit.author?.name ?? '',
             authorEmail: commit.commit.author?.email ?? '',
             parents: commit.parents.length,
+            verified: commit.commit.verification?.verified ?? false,
           })),
         ),
       )

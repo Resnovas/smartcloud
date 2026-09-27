@@ -37,12 +37,18 @@ export type Review = typeof Review.Type
 /**
  * A commit on a pull request, reduced to what conditions need.
  *
+ * @remarks
+ * `verified` is GitHub's signature verification: the commit carries a GPG,
+ * SSH or S/MIME signature that GitHub checked against a key registered to the
+ * signer. It is separate from a DCO `Signed-off-by` trailer, which is text in
+ * the message.
+ *
  * @example
  * ```ts import.meta.vitest name="Commit"
  * import { Commit } from '@resnovas/conditions'
  * import { Schema } from 'effect'
  *
- * const commit = { sha: 'abc', message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com', parents: 1 }
+ * const commit = { sha: 'abc', message: 'fix: x', authorName: 'Jane', authorEmail: 'jane@example.com', parents: 1, verified: true }
  * Schema.is(Commit)(commit) // => true
  * ```
  */
@@ -53,6 +59,8 @@ export const Commit = Schema.Struct({
   authorEmail: Schema.String,
   /** Number of parents: more than one is a merge commit. */
   parents: Schema.Number,
+  /** GitHub verified the commit's GPG, SSH or S/MIME signature. */
+  verified: Schema.Boolean,
 })
 /** A decoded {@link Commit}. */
 export type Commit = typeof Commit.Type

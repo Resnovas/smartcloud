@@ -253,7 +253,11 @@ describe('live GitHub: pull requests', () => {
       body: [
         {
           sha: 'a',
-          commit: { message: 'feat: x', author: { name: 'Jane', email: 'jane@example.com' } },
+          commit: {
+            message: 'feat: x',
+            author: { name: 'Jane', email: 'jane@example.com' },
+            verification: { verified: true, reason: 'valid' },
+          },
           parents: [{}],
         },
         { sha: 'b', commit: { message: 'Merge', author: null }, parents: [{}, {}] },
@@ -278,8 +282,15 @@ describe('live GitHub: pull requests', () => {
       const { service, requests } = live(routes)
       const github = yield* service
       expect(yield* github.listCommits(7)).toStrictEqual([
-        { sha: 'a', message: 'feat: x', authorName: 'Jane', authorEmail: 'jane@example.com', parents: 1 },
-        { sha: 'b', message: 'Merge', authorName: '', authorEmail: '', parents: 2 },
+        {
+          sha: 'a',
+          message: 'feat: x',
+          authorName: 'Jane',
+          authorEmail: 'jane@example.com',
+          parents: 1,
+          verified: true,
+        },
+        { sha: 'b', message: 'Merge', authorName: '', authorEmail: '', parents: 2, verified: false },
       ])
       expect(yield* github.listFiles(7)).toStrictEqual(['src/a.ts'])
       // An unknown review state neither approves nor blocks.

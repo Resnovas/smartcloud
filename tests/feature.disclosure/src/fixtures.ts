@@ -33,6 +33,7 @@ export const commit = (message: string, extra: Partial<Commit> = {}): Commit => 
   authorName: 'A Contributor',
   authorEmail: 'contrib@example.com',
   parents: 1,
+  verified: false,
   ...extra,
 })
 
