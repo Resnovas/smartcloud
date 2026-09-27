@@ -22,8 +22,8 @@ import type { Association, Check, CheckState, Commit, Facet, Review, Subject } f
 import { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 
 /**
- * A condition needed a facet (files, reviews, pending reviewers, commits,
- * mergeability or checks) that was not loaded onto the subject. This is an
+ * A condition needed a facet (files, reviews, pending or requested reviewers,
+ * commits, mergeability or checks) that was not loaded onto the subject. This is an
  * engine bug, not a user error: the engine loads every facet `requiredFacets`
  * reports.
  *
@@ -151,6 +151,14 @@ const associationNames = (subject: Subject): ReadonlyArray<AssociationName> => [
   ...(subject.bot === true ? (['bot'] as const) : []),
 ]
 
+// Everyone asked to review who has not yet, and everyone who has reviewed,
+// in the order GitHub lists them and each once.
+const reviewersOf = (requested: ReadonlyArray<string>, reviews: ReadonlyArray<Review>): ReadonlyArray<string> => [
+  ...new Set([...requested, ...reviews.map((review) => review.author)].filter((login) => login !== '')),
+]
+
+const logins = (names: ReadonlyArray<string>) => names.map((name) => `@${name}`).join(', ')
+
 const PULL_REQUEST_ONLY = new Set([
   'branchMatches',
   'baseBranchMatches',
@@ -166,6 +174,7 @@ const PULL_REQUEST_ONLY = new Set([
   'hasConflict',
   'checksPass',
   'checkStatus',
+  'reviewerMatches',
 ])
 
 const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effect<ConditionResult, MissingFacet> => {
@@ -213,6 +222,31 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
           ? `author @${subject.author}'s association is unknown`
           : `author @${subject.author} is ${names.join(', ')}`
       return Effect.succeed(result(condition.type, passed, detail))
+    }
+    case 'hasAssignee': {
+      const assignees = subject.assignees ?? []
+      const assigned = assignees.length > 0
+      return Effect.succeed(
+        result(
+          condition.type,
+          assigned === condition.condition,
+          assigned ? `assigned to ${logins(assignees)}` : 'unassigned',
+        ),
+      )
+    }
+    case 'assigneeMatches': {
+      const assignees = subject.assignees ?? []
+      const pattern = compilePattern(condition.condition)
+      const passed = assignees.some((login) => pattern.test(login))
+      return Effect.succeed(
+        result(
+          condition.type,
+          passed,
+          assignees.length === 0
+            ? 'unassigned'
+            : `${passed ? 'an assignee matches' : 'no assignee matches'} among ${logins(assignees)}`,
+        ),
+      )
     }
     case 'isOpen':
       return Effect.succeed(
@@ -288,6 +322,20 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
         if (condition.allowPending === true) return result(condition.type, approved, `${approvals} approval(s)`)
         const pending = yield* facet(subject, 'pendingReviewers', condition.type)
         return result(condition.type, approved && pending === 0, `${approvals} approval(s), ${pending} pending`)
+      })
+    case 'reviewerMatches':
+      return Effect.gen(function* () {
+        const requested = yield* facet(subject, 'requestedReviewers', condition.type)
+        const reviewers = reviewersOf(requested, yield* facet(subject, 'reviews', condition.type))
+        const pattern = compilePattern(condition.condition)
+        const passed = reviewers.some((login) => pattern.test(login))
+        return result(
+          condition.type,
+          passed,
+          reviewers.length === 0
+            ? 'no reviewers'
+            : `${passed ? 'a reviewer matches' : 'no reviewer matches'} among ${logins(reviewers)}`,
+        )
       })
     case 'commitMessagesMatch':
       return Effect.map(facet(subject, 'commits', condition.type), (commits) => {
@@ -420,6 +468,7 @@ const FACETS: Partial<Record<Condition['type'], ReadonlyArray<Facet>>> = {
   pendingReview: ['pendingReviewers'],
   requestedChanges: ['reviews'],
   isApproved: ['reviews', 'pendingReviewers'],
+  reviewerMatches: ['requestedReviewers', 'reviews'],
   commitMessagesMatch: ['commits'],
   commitsSignedOff: ['commits'],
   hasTrailer: ['commits'],

@@ -33,6 +33,7 @@ const IssueFields = {
   state: Schema.Literal('open', 'closed'),
   locked: Schema.Boolean,
   labels: Schema.Array(LabelRef),
+  assignees: Schema.optional(Schema.NullishOr(Schema.Array(User))),
   // An ISO 8601 timestamp, decoded to a valid Date: a malformed one is a decode error, not NaN ages later.
   updated_at: Schema.Date,
 }
@@ -137,6 +138,7 @@ const subjectOf = (kind: Subject['kind'], item: IssueLike): Subject => ({
   open: item.state === 'open',
   locked: item.locked,
   labels: item.labels.map((label) => label.name),
+  assignees: (item.assignees ?? []).map((user) => user.login),
   updatedAt: item.updated_at,
 })
 

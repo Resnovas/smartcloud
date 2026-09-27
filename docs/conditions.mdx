@@ -33,6 +33,9 @@ Conditions that match text take a pattern: a regular expression written either b
 | `descriptionMatches`  | `condition`: pattern                                                | The description matches. An empty description never matches.                                                                                           |
 | `creatorMatches`      | `condition`: pattern                                                | The author's login matches.                                                                                                                            |
 | `authorAssociation`   | `condition`: list of associations                                   | The author's association with the repository is one of those listed, or the author is a bot when `bot` is listed.                                      |
+| `hasAssignee`         | `condition`: boolean                                                | Someone is assigned (`true`), or nobody is (`false`).                                                                                                  |
+| `assigneeMatches`     | `condition`: pattern                                                | An assignee's login matches.                                                                                                                           |
+| `reviewerMatches`     | `condition`: pattern                                                | A reviewer of the pull request matches: someone asked to review (a login, or a team's slug), or someone who has reviewed.                              |
 | `branchMatches`       | `condition`: pattern                                                | The pull request's head branch matches.                                                                                                                |
 | `baseBranchMatches`   | `condition`: pattern                                                | The pull request's base branch, the one it merges into, matches.                                                                                       |
 | `isOpen`              | `condition`: boolean                                                | The subject is open (`true`) or closed (`false`).                                                                                                      |
@@ -93,9 +96,26 @@ Reviews count each reviewer's latest decisive review: comments and pending revie
 
 It applies to issues and pull requests, and works in a stale sweep's `exempt.when`. When GitHub reports an association smartcloud does not know, only `bot` can match.
 
+`hasAssignee` and `assigneeMatches` read who is assigned, so a rule can label unowned issues for triage or route work by owner. `assigneeMatches` passes when any assignee's login matches, and never when nobody is assigned. Both apply to issues and pull requests, and work in a stale sweep's `exempt.when`: to keep claimed issues open, exempt anything assigned.
+
+```yaml
+exempt:
+  when:
+    condition:
+      - type: hasAssignee
+        condition: true
+```
+
+`reviewerMatches` passes when any reviewer of a pull request matches: the users and teams asked to review, and everyone who has reviewed. A requested team matches by its slug, such as `security`, without the organisation. GitHub stops listing a requested reviewer once they review, and they then count as someone who has reviewed, so the condition holds before and after their review.
+
+```yaml
+- type: reviewerMatches
+  condition: '^security$'
+```
+
 ### Pull request only conditions
 
-`branchMatches`, `baseBranchMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass` and `checkStatus` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `baseBranchMatches`, `reviewerMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer`, `hasConflict`, `checksPass` and `checkStatus` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 

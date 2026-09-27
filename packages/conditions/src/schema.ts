@@ -147,6 +147,52 @@ export const AuthorAssociation = Schema.Struct({
 })
 
 /**
+ * Someone is assigned (true), or nobody is (false).
+ *
+ * @example
+ * ```ts import.meta.vitest name="HasAssignee"
+ * import { HasAssignee } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(HasAssignee)({ type: 'hasAssignee', condition: false }) // => true
+ * ```
+ */
+export const HasAssignee = flag('hasAssignee', 'Someone is assigned, or nobody is when false.')
+/**
+ * An assignee's login matches a pattern.
+ *
+ * @example
+ * ```ts import.meta.vitest name="AssigneeMatches"
+ * import { AssigneeMatches } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(AssigneeMatches)({ type: 'assigneeMatches', condition: '^jane$' }) // => true
+ * ```
+ */
+export const AssigneeMatches = matches('assigneeMatches', "An assignee's login matches a pattern.")
+/**
+ * A reviewer of the pull request matches a pattern: someone asked to review,
+ * or someone who has reviewed.
+ *
+ * @remarks
+ * A requested team is matched by its slug, such as `security`. Someone asked
+ * to review stops being requested once they review, and is then matched as a
+ * reviewer, so the condition holds either side of the review.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ReviewerMatches"
+ * import { ReviewerMatches } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(ReviewerMatches)({ type: 'reviewerMatches', condition: '^security$' }) // => true
+ * ```
+ */
+export const ReviewerMatches = matches(
+  'reviewerMatches',
+  "A requested reviewer's login or team slug, or a reviewer's login, matches a pattern.",
+)
+
+/**
  * The subject is open (true) or closed (false).
  *
  * @example
@@ -467,11 +513,14 @@ const Leaf = Schema.Union(
   BranchMatches,
   BaseBranchMatches,
   AuthorAssociation,
+  HasAssignee,
+  AssigneeMatches,
   IsOpen,
   IsLocked,
   IsDraft,
   PendingReview,
   RequestedChanges,
+  ReviewerMatches,
   CommitsSignedOff,
   HasConflict,
   ChecksPass,
