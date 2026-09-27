@@ -229,14 +229,19 @@ Maintainers may turn on auto-merge so it merges as soon as the last check passes
 These tools may comment on your pull request.
 They are the only AI reviews allowed without a maintainer asking ([AI-15](AI_POLICY.md#ai-15)).
 Not every repository uses all of them.
+Which of their findings block a merge, and which are advisory, is set out in [the governance document](GOVERNANCE.md#review-bots).
 
 | Tool | What it does |
 | --- | --- |
-| GitHub Copilot code review | AI review of every pull request, drafts included, and again on each push. |
+| CodeRabbit | The main line-level AI review and the only pull request summary. |
+| GitHub Copilot code review | The security and permissions review of every pull request, drafts included, and again on each push. |
+| Qodo Merge | Checks the change against its ticket, and reviews its tests and edge cases. |
+| Cursor Bugbot | Looks for logic bugs. |
+| Cursor approval agent | Approves low-risk pull requests under the [Approval Policy](APPROVAL_POLICY.md). |
+| Graphify | Architecture review from the committed code graph: coupling, blast radius and module boundaries. |
 | GitHub code scanning (CodeQL) with Copilot Autofix | Security and quality analysis; high or critical findings block the merge, and Autofix suggests fixes. |
 | GitHub secret scanning | Blocks pushes containing credentials, including AI-detected generic secrets. |
 | Dependabot | Dependency alerts, and grouped security and version update pull requests. |
-| CodeRabbit | AI summary, walkthrough and suggested changes. |
 | SonarQube Cloud (formerly SonarCloud) | Code quality and coverage analysis. |
 | Sweep | AI suggestions against the repository's coding rules. |
 

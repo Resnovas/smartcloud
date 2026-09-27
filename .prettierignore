@@ -24,6 +24,12 @@ LICENSE
 .github/workflows/house-dependency-review.yml
 .github/workflows/house-scorecard.yml
 .github/zizmor.yml
+.github/copilot-instructions.md
+.github/instructions/house-*.instructions.md
+.github/dependency-review-config.yml
+.coderabbit.yaml
+.pr_agent.toml
+.cursor/BUGBOT.md
 .github/workflows/house-graphify.yml
 .github/workflows/house-workflow-lint.yml
 .github/workflows/smartcloud.yml

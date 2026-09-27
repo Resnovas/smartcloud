@@ -43,6 +43,11 @@
 # Governance, licensing and repository-wide configuration.
 /.github/CODEOWNERS          @TGTGamer
 /.github/smartcloud.yml      @TGTGamer
+/.coderabbit.yaml            @TGTGamer
+/.pr_agent.toml              @TGTGamer
+/.cursor/BUGBOT.md           @TGTGamer
+/.github/copilot-instructions.md @TGTGamer
+/.github/instructions/       @TGTGamer
 /LICENSE                     @TGTGamer
 /AI_POLICY.md              @TGTGamer
 /APPROVAL_POLICY.md        @TGTGamer

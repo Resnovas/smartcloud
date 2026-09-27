@@ -81,13 +81,26 @@ The agent **MUST NOT** approve a pull request that changes any of these, whateve
 The agent **MUST** confirm each item, from the pull request itself rather than its description's claims ([AI-06](AI_POLICY.md#ai-06)):
 
 1. **Checks:** every required status check has finished and passed, including the `smartcloud` check. A pending, skipped or cancelled required check is not a pass.
-1. **Reviews:** every review thread is resolved or answered by the accountable human, and no automated reviewer ([known review tools](CONTRIBUTING.md#ReviewTools), security agents and bug finders) has an open finding.
+1. **Reviews:** every review thread is resolved or answered by the accountable human, and no review bot has an open blocking finding under [AP-31](#ap-31).
 1. **Title:** the title is a [conventional commit](CONTRIBUTING.md#pr-title).
 1. **Sign-off:** every commit carries a `Signed-off-by` trailer naming a person ([DCO.md](DCO.md), [AI-03](AI_POLICY.md#ai-03)); trusted bots named in the house preset are exempt.
 1. **AI disclosure:** the description declares the AI level, tools, accountable human and human review, and the commits carry the trailers, as [AI-01](AI_POLICY.md#ai-01) and [AI-02](AI_POLICY.md#ai-02) require.
 1. **Issue link:** the description links the issue it resolves, in the repository's tracker.
 1. **Tests:** changed behaviour has tests, and coverage stays at the repository's threshold ([Tests](CONTRIBUTING.md#Tests)).
 1. **Documentation:** documentation that describes the changed behaviour is updated in the same pull request.
+
+### <a id="ap-31"></a>AP-31: Which review bot findings block
+
+Each review bot has one job, set out in [GOVERNANCE.md](GOVERNANCE.md#review-bots).
+Only these findings block an approval until they are fixed, or a maintainer dismisses them with a reason:
+
+- a security finding from GitHub Copilot code review;
+- a CodeRabbit comment marked major or critical;
+- a failing Graphify gate;
+- Qodo reporting that the change does not match its ticket.
+
+Every other bot finding is advisory: it needs a fix or a reply from the accountable human, as item 2 of [AP-30](#ap-30) says, but it does not block on its own.
+Code scanning alerts and failing required checks block through [AP-40](#ap-40) whatever this list says.
 
 ## <a id="blocks"></a>What blocks an approval outright
 
