@@ -92,10 +92,9 @@ export const latestChecks = (checks: ReadonlyArray<CommitCheck>): ReadonlyArray<
  * review while this one waits, and is left out too, so two aggregates on
  * one commit never wait for each other. A `smartcloud / <feature>` run is
  * left out only when smartcloud published it: when it carries
- * {@link CHECK_RUN_EXTERNAL_ID}, or, for runs from smartcloud versions
- * before that mark, when the job's own app (GitHub Actions) published it
- * unmarked. Another app's run of that name, or one marked otherwise,
- * counts.
+ * {@link CHECK_RUN_EXTERNAL_ID} and comes from an app smartcloud runs as,
+ * the job's own or one in `publishers`. Another app's or workflow's run of
+ * that name, unmarked or marked otherwise, counts.
  *
  * @example
  * ```ts import.meta.vitest name="assessChecks"
@@ -131,14 +130,15 @@ export const assessChecks = (
   const own = checks.find((check) => check.source === 'checkRun' && check.id === options.checkRunId)
   const aggregate = (check: CommitCheck) =>
     check.id === options.checkRunId || (own !== undefined && check.source === 'checkRun' && identity(check) === identity(own))
-  // Only runs smartcloud itself published are left out: its marker, or no
-  // marker from before there was one, and always from an app smartcloud runs
-  // as, so another app's run cannot claim the name or the marker.
+  // Only runs smartcloud itself published are left out: they carry its
+  // marker and come from an app smartcloud runs as, so neither another app
+  // nor another workflow of the same app can claim the name. A rerun
+  // replaces an older unmarked run of the same name, so none is left behind.
   const publishers = new Set([...(own?.app === undefined ? [] : [own.app]), ...(options.publishers ?? [])])
   const smartcloudFeature = (check: CommitCheck) =>
     check.source === 'checkRun' &&
     check.name.startsWith(OWN_CHECK_PREFIX) &&
-    (check.externalId === CHECK_RUN_EXTERNAL_ID || check.externalId === undefined) &&
+    check.externalId === CHECK_RUN_EXTERNAL_ID &&
     check.app !== undefined &&
     publishers.has(check.app)
   // Smartcloud's runs go first, so one never stands in for a same-named run another workflow published.

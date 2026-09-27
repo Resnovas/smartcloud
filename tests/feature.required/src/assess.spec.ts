@@ -147,10 +147,10 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
       ],
       { checkRunId: 1, ignore: [], publishers: ['resnovas-smartcloud'] },
     )
-    expect(assessment.counted.map((check) => check.id)).toStrictEqual([4, 5])
+    expect(assessment.counted.map((check) => check.id)).toStrictEqual([3, 4, 5])
   })
 
-  it('leaves out an unmarked smartcloud run from the job app, as older smartcloud versions published them', () => {
+  it('counts an unmarked smartcloud-named run, because only marked runs are smartcloud’s own', () => {
     const assessment = assessChecks(
       [
         { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' },
@@ -158,7 +158,7 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
       ],
       { checkRunId: 1, ignore: [] },
     )
-    expect(assessment.counted).toStrictEqual([])
+    expect(assessment.counted.map((check) => check.id)).toStrictEqual([3])
   })
 
   it('says when the job run is not listed yet, and then counts unmarked smartcloud runs', () => {

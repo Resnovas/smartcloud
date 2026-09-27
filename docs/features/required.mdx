@@ -44,7 +44,7 @@ Every check on the head commit counts: the latest check run of each app and name
 Three kinds are left out:
 
 - every run of the job running smartcloud (until its own run shows up in the list, the feature concludes nothing and looks again): its own, found by `checkRunId`, and any other run with the same app and name, such as one a review started while this one waits;
-- smartcloud's own `smartcloud / <feature>` check runs, because their findings already decide the job's own result. smartcloud marks every check run it creates with the `external_id` `smartcloud`, and only runs with that mark are left out, along with unmarked ones GitHub Actions published, as smartcloud versions before the mark did. A check run of the same name from another app, or marked otherwise, counts;
+- smartcloud's own `smartcloud / <feature>` check runs, because their findings already decide the job's own result. smartcloud marks every check run it creates with the `external_id` `smartcloud`, and only runs with that mark from an app smartcloud runs as (the job's app, or the GitHub App its token acts as) are left out. A check run of the same name from another app or workflow, unmarked or marked otherwise, counts;
 - anything an `ignore` pattern matches.
 
 A check run that concludes success, neutral or skipped passes, as it does for a ruleset. Any other conclusion (failure, cancelled, timed out, action required, stale) fails, as does a status of failure or error.

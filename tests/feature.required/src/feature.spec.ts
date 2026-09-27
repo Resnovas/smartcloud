@@ -130,7 +130,7 @@ describe('requiredFeature', () => {
       const github = scripted([
         [
           check('ci / test', 'success'),
-          { name: 'smartcloud / reviews', source: 'checkRun', id: 99, app: 'resnovas-smartcloud', state: 'failure', detail: 'cancelled' },
+          { name: 'smartcloud / reviews', source: 'checkRun', id: 99, app: 'resnovas-smartcloud', externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'cancelled' },
         ],
       ])
       const service = {
