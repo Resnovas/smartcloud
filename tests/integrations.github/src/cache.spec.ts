@@ -32,6 +32,8 @@ const live = (routes: Routes) => {
     coordinates: { owner: 'Resnovas', repo: 'example' },
     fetch: fake.fetch,
     retry: Schedule.recurs(2),
+    // One read per call, so the counts below show what the cache shares.
+    mergeablePoll: Schedule.stop,
   })
   const calls = (method: string, path: string) => fake.requests.filter((request: Recorded) => request.method === method && request.path === path).length
   return { service, requests: fake.requests, calls }
@@ -199,6 +201,7 @@ describe('cached reads: invalidation after writes', () => {
       const { service, calls } = live({
         [`GET ${REPO}/pulls/7/commits`]: { body: [] },
         [`GET ${REPO}/pulls/7/files`]: { body: [] },
+        [`GET ${REPO}/pulls/7`]: { body: { mergeable: true } },
         [`GET ${REPO}/pulls/7/reviews`]: [{ body: [] }, { body: [{ user: { login: 'bot' }, state: 'COMMENTED' }] }],
         [`GET ${REPO}/pulls/7/requested_reviewers`]: [
           { body: { users: [], teams: [] } },
@@ -209,7 +212,13 @@ describe('cached reads: invalidation after writes', () => {
         [`POST ${REPO}/pulls/7/reviews`]: { body: {} },
       })
       const github = yield* service
-      const read = Effect.all([github.listCommits(7), github.listFiles(7), github.listReviews(7), github.countRequestedReviewers(7)])
+      const read = Effect.all([
+        github.listCommits(7),
+        github.listFiles(7),
+        github.listReviews(7),
+        github.countRequestedReviewers(7),
+        github.getMergeable(7),
+      ])
       yield* read
       yield* github.requestReviewers(7, ['ann'])
       expect(yield* github.countRequestedReviewers(7)).toBe(1)
@@ -220,12 +229,13 @@ describe('cached reads: invalidation after writes', () => {
       yield* read
       expect(calls('GET', `${REPO}/pulls/7/commits`)).toBe(1)
       expect(calls('GET', `${REPO}/pulls/7/files`)).toBe(1)
+      expect(calls('GET', `${REPO}/pulls/7`)).toBe(1)
       expect(calls('GET', `${REPO}/pulls/7/reviews`)).toBe(2)
       expect(calls('GET', `${REPO}/pulls/7/requested_reviewers`)).toBe(3)
     }),
   )
 
-  it.effect('a proposal invalidates file and directory reads and the open issues', () =>
+  it.effect('a proposal invalidates file and directory reads, the open issues and pull request reads', () =>
     Effect.gen(function* () {
       const file = (text: string) => ({ body: { type: 'file', encoding: 'base64', content: Buffer.from(text).toString('base64') } })
       const { service, calls } = live({
@@ -241,12 +251,14 @@ describe('cached reads: invalidation after writes', () => {
         [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
         [`GET ${REPO}/pulls`]: { body: [] },
         [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'u' } },
+        [`GET ${REPO}/pulls/5`]: [{ body: { mergeable: true } }, { body: { mergeable: false } }],
       })
       const github = yield* service
       const read = Effect.all([
         github.getFile({ owner: 'Resnovas', repo: 'example', path: 'LICENSE' }),
         github.listDirectory({ owner: 'Resnovas', repo: 'example', path: '' }),
         github.listOpenIssues,
+        github.getMergeable(5),
       ])
       expect((yield* read)[0]).toBe('old')
       yield* read
@@ -257,10 +269,24 @@ describe('cached reads: invalidation after writes', () => {
         body: 'b',
         files: [{ path: 'LICENSE', content: 'new', executable: false }],
       })
-      expect((yield* read)[0]).toBe('new')
+      const after = yield* read
+      expect(after[0]).toBe('new')
+      expect(after[3]).toBe('CONFLICTING')
+      expect(calls('GET', `${REPO}/pulls/5`)).toBe(2)
       expect(calls('GET', `${REPO}/contents/LICENSE`)).toBe(2)
       expect(calls('GET', `${REPO}/git/trees/HEAD:`)).toBe(2)
       expect(calls('GET', `${REPO}/issues`)).toBe(2)
+    }),
+  )
+
+  it.effect('an unknown mergeability is not cached', () =>
+    Effect.gen(function* () {
+      const { service, calls } = live({ [`GET ${REPO}/pulls/7`]: [{ body: { mergeable: null } }, { body: { mergeable: false } }] })
+      const github = yield* service
+      expect(yield* github.getMergeable(7)).toBe('UNKNOWN')
+      expect(yield* github.getMergeable(7)).toBe('CONFLICTING')
+      expect(yield* github.getMergeable(7)).toBe('CONFLICTING')
+      expect(calls('GET', `${REPO}/pulls/7`)).toBe(2)
     }),
   )
 

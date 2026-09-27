@@ -47,6 +47,7 @@ Conditions that match text take a pattern: a regular expression written either b
 | `commitMessagesMatch` | `condition`: pattern, optional `scope` | Commit messages match. |
 | `commitsSignedOff` | `condition`: boolean | Every non-merge commit has a `Signed-off-by` trailer matching its author's email (`true`), or not (`false`). |
 | `hasTrailer` | `trailer`: key, optional `condition`: pattern, optional `scope` | Commits carry the trailer, with a value matching the pattern when one is given. |
+| `hasConflict` | `condition`: boolean | The pull request conflicts with its base branch (`true`), or does not (`false`). |
 
 Activity is GitHub's `updated_at` time for the issue or pull request.
 
@@ -54,7 +55,7 @@ Reviews count each reviewer's latest decisive review: comments and pending revie
 
 ### Pull request only conditions
 
-`branchMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff` and `hasTrailer` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
+`branchMatches`, `isDraft`, `filesMatch`, `changesSize`, `pendingReview`, `requestedChanges`, `isApproved`, `commitMessagesMatch`, `commitsSignedOff`, `hasTrailer` and `hasConflict` only apply to pull requests. On an issue they fail, with the explanation "only applies to pull requests".
 
 ### Commit conditions
 
@@ -71,7 +72,24 @@ Trailers are read the way git reads them: only from the final paragraph of the m
   scope: any
 ```
 
-Conditions that need a pull request's files, reviews or commits cost an API call each. smartcloud loads only the ones the configured rules use.
+### Merge conflicts
+
+`hasConflict` reads GitHub's mergeability for the pull request. GitHub works it out in the background, so a freshly updated pull request can briefly be unknown: smartcloud reads it again a few times, two seconds apart, and if it is still unknown, counts the pull request as not conflicting.
+
+```yaml
+labelling:
+  conflict:
+    label: "Status: Conflict"
+    on: [pullRequest]
+    when:
+      condition:
+        - type: hasConflict
+          condition: true
+```
+
+Like every labelling rule, it is evaluated when the pull request gets one of the events your workflow runs on, such as a push to its branch, an edit, reopening it or a review. A push to the base branch can create a conflict without any pull request event, and `push` and `schedule` runs do not evaluate labelling rules yet, so the label follows on the pull request's next event.
+
+Conditions that need a pull request's files, reviews, commits or mergeability cost an API call each. smartcloud loads only the ones the configured rules use.
 
 ## Combinators
 

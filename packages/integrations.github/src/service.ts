@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import type { Commit, Review } from '@resnovas/conditions'
+import type { Commit, Mergeable, Review } from '@resnovas/conditions'
 import { Context, type Effect } from 'effect'
 import type { GitHubError } from './errors.js'
 
@@ -220,6 +220,8 @@ export interface GitHubService {
   readonly listFiles: (pullRequest: number) => Effect.Effect<ReadonlyArray<string>, GitHubError>
   readonly listReviews: (pullRequest: number) => Effect.Effect<ReadonlyArray<Review>, GitHubError>
   readonly countRequestedReviewers: (pullRequest: number) => Effect.Effect<number, GitHubError>
+  /** Whether the pull request can merge into its base branch; `UNKNOWN` while GitHub is still computing it. */
+  readonly getMergeable: (pullRequest: number) => Effect.Effect<Mergeable, GitHubError>
   readonly createReview: (pullRequest: number, review: NewReview) => Effect.Effect<void, GitHubError>
   readonly requestReviewers: (pullRequest: number, logins: ReadonlyArray<string>) => Effect.Effect<void, GitHubError>
 

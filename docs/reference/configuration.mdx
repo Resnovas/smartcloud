@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [commitsSignedOff](#commitssignedoff), [hasConflict](#hasconflict), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [changesSize](#changessize), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -446,6 +446,17 @@ Every non-merge commit has a Signed-off-by trailer matching its author email.
 | Key | Type | Required | Notes |
 | --- | --- | --- | --- |
 | `type` | `commitsSignedOff` | yes |  |
+| `condition` | boolean | yes |  |
+
+Other keys are an error.
+
+### hasConflict
+
+The pull request conflicts with its base branch, or does not when false. Unknown mergeability counts as not conflicting.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `hasConflict` | yes |  |
 | `condition` | boolean | yes |  |
 
 Other keys are an error.

@@ -15,7 +15,7 @@
  */
 
 import { Octokit } from '@octokit/rest'
-import type { Review } from '@resnovas/conditions'
+import type { Mergeable, Review } from '@resnovas/conditions'
 import { Config, Effect, Layer, Option, Redacted, Ref, Schedule } from 'effect'
 import { cacheReads } from './cache.js'
 import { fromGraphqlErrors, fromStatus, type GitHubError, ValidationFailed } from './errors.js'
@@ -52,6 +52,8 @@ export interface LiveOptions {
    * access token without those scopes.
    */
   readonly checksToken?: Redacted.Redacted<string>
+  /** How often a pull request's mergeability is read again while GitHub is still computing it. Defaults to three more reads, two seconds apart. */
+  readonly mergeablePoll?: Schedule.Schedule<unknown, Mergeable>
 }
 
 // The REST repository fields the settings feature compares against, so it
@@ -160,6 +162,11 @@ const directoryPath = (path: string) =>
     .join('/')
 
 const DEFAULT_RETRY = Schedule.exponential('1 second').pipe(Schedule.jittered, Schedule.intersect(Schedule.recurs(3)))
+
+const DEFAULT_MERGEABLE_POLL = Schedule.spaced('2 seconds').pipe(Schedule.intersect(Schedule.recurs(3)))
+
+// GitHub leaves `mergeable` null until its background job has compared the branches.
+const mergeableOf = (mergeable: boolean | null): Mergeable => (mergeable === null ? 'UNKNOWN' : mergeable ? 'MERGEABLE' : 'CONFLICTING')
 
 const statusOf = (error: unknown): number | undefined =>
   typeof error === 'object' && error !== null && 'status' in error && typeof error.status === 'number' ? error.status : undefined
@@ -305,6 +312,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     const checksClient = options.checksToken === undefined ? octokit : client(options.checksToken)
     const { owner, repo } = options.coordinates
     const retry = options.retry ?? DEFAULT_RETRY
+    const mergeablePoll = options.mergeablePoll ?? DEFAULT_MERGEABLE_POLL
 
     // One span, count and duration per call, however many attempts it takes.
     const call = <A>(
@@ -394,6 +402,13 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     const countRequestedReviewers: GitHubService['countRequestedReviewers'] = (pull_number) =>
       call('countRequestedReviewers', () => octokit.rest.pulls.listRequestedReviewers({ owner, repo, pull_number })).pipe(
         Effect.map(({ data }) => data.users.length + data.teams.length),
+      )
+
+    // Reading the pull request starts GitHub's mergeability job, so a read that finds it unknown is repeated for a while.
+    const getMergeable: GitHubService['getMergeable'] = (pull_number) =>
+      call('getMergeable', () => octokit.rest.pulls.get({ owner, repo, pull_number })).pipe(
+        Effect.map(({ data }) => mergeableOf(data.mergeable)),
+        Effect.repeat({ schedule: Schedule.passthrough(mergeablePoll), until: (mergeable) => mergeable !== 'UNKNOWN' }),
       )
 
     const getFile: GitHubService['getFile'] = (location) =>
@@ -640,6 +655,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       listFiles,
       listReviews,
       countRequestedReviewers,
+      getMergeable,
       createReview: (pull_number, review) =>
         Effect.asVoid(call('createReview', () => octokit.rest.pulls.createReview({ owner, repo, pull_number, ...review }), rateLimited)),
       requestReviewers: (pull_number, logins) =>

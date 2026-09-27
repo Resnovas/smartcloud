@@ -234,6 +234,9 @@
               "$ref": "#/$defs/commitsSignedOff"
             },
             {
+              "$ref": "#/$defs/hasConflict"
+            },
+            {
               "$ref": "#/$defs/hasLabel"
             },
             {
@@ -475,6 +478,26 @@
       },
       "additionalProperties": false,
       "description": "Every non-merge commit has a Signed-off-by trailer matching its author email."
+    },
+    "hasConflict": {
+      "type": "object",
+      "required": [
+        "type",
+        "condition"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "hasConflict"
+          ]
+        },
+        "condition": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false,
+      "description": "The pull request conflicts with its base branch, or does not when false. Unknown mergeability counts as not conflicting."
     },
     "hasLabel": {
       "type": "object",

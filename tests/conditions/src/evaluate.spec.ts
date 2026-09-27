@@ -132,6 +132,12 @@ const cases: ReadonlyArray<readonly [string, Condition, Subject, boolean]> = [
     pullRequest({ commits: [commit('feat: a'), commit('feat: b')] }),
     true,
   ],
+  ['hasConflict, conflicting', { type: 'hasConflict', condition: true }, pullRequest({ mergeable: 'CONFLICTING' }), true],
+  ['hasConflict, mergeable', { type: 'hasConflict', condition: true }, pullRequest(), false],
+  ['hasConflict false, mergeable', { type: 'hasConflict', condition: false }, pullRequest(), true],
+  ['hasConflict false, conflicting', { type: 'hasConflict', condition: false }, pullRequest({ mergeable: 'CONFLICTING' }), false],
+  ['hasConflict, unknown counts as not conflicting', { type: 'hasConflict', condition: true }, pullRequest({ mergeable: 'UNKNOWN' }), false],
+  ['hasConflict false, unknown counts as not conflicting', { type: 'hasConflict', condition: false }, pullRequest({ mergeable: 'UNKNOWN' }), true],
   ['commitsSignedOff', { type: 'commitsSignedOff', condition: true }, pullRequest(), true],
   [
     'commitsSignedOff, email must match the author',
@@ -199,6 +205,27 @@ describe('evaluate: facets', () => {
         evaluate({ condition: [{ type: 'isApproved', condition: 1 }] }, withoutReviews),
       )
       expect(exit).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'reviews', condition: 'isApproved' })))
+    }),
+  )
+
+  it.effect('hasConflict needs the mergeable facet', () =>
+    Effect.gen(function* () {
+      const { mergeable: _, ...unloaded } = pullRequest()
+      const exit = yield* Effect.exit(evaluate({ condition: [{ type: 'hasConflict', condition: true }] }, unloaded))
+      expect(exit).toStrictEqual(Exit.fail(new MissingFacet({ facet: 'mergeable', condition: 'hasConflict' })))
+    }),
+  )
+
+  it.effect('explains the mergeable state', () =>
+    Effect.gen(function* () {
+      const detail = (mergeable: Subject['mergeable']) =>
+        Effect.map(
+          evaluate({ condition: [{ type: 'hasConflict', condition: true }] }, pullRequest(mergeable === undefined ? {} : { mergeable })),
+          (evaluation) => evaluation.results[0]?.detail,
+        )
+      expect(yield* detail('CONFLICTING')).toBe('conflicts with the base branch')
+      expect(yield* detail('MERGEABLE')).toBe('no conflicts')
+      expect(yield* detail('UNKNOWN')).toBe('mergeability not yet known')
     }),
   )
 })
@@ -302,10 +329,11 @@ describe('requiredFacets', () => {
           { type: '$not', condition: [{ condition: [{ type: 'hasTrailer', trailer: 'X' }] }] },
           { type: '$not', requires: 1, condition: [{ type: 'isApproved', condition: 1 }] },
           { type: 'titleMatches', condition: 'x' },
+          { type: 'hasConflict', condition: true },
         ],
       },
     ])
-    expect([...facets].sort()).toStrictEqual(['commits', 'files', 'pendingReviewers', 'reviews'])
+    expect([...facets].sort()).toStrictEqual(['commits', 'files', 'mergeable', 'pendingReviewers', 'reviews'])
   })
 
   it('looks inside $and and $only too', () => {
