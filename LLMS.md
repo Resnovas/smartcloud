@@ -225,7 +225,11 @@ The config lives in `@resnovas/config`; reading it from a repository lives in
 given `path` and `ref`), and fails with `NoConfig` when there is none.
 `loadConfig` then calls `resolveConfig`, which:
 
-1. parses YAML or JSON (`ConfigParseError` otherwise);
+1. parses YAML or JSON (`ConfigParseError` otherwise). A label `color` that
+   YAML reads as a number keeps its source text, so `000123` stays `'000123'`
+   and `1e3` stays `'1e3'` (and fails the six-hex-digit check) instead of
+   becoming `1000`. The `Color` schema also accepts a whole number from 0 to
+   999999 and pads it to six digits, for configs built in code or JSON;
 2. migrates a file without `version: 2` from v1 (`migrateV1`), with a warning
    for every v1 key it cannot carry over;
 3. reads each `extends` entry through the `ConfigSource` service
@@ -538,6 +542,24 @@ Keep writes idempotent: find your own marker comment (`<!-- smartcloud:<name> --
 and update it, and trust it only when `isTrustedComment` says a bot account or
 a `roles.trustedBots` login wrote it, because the marker is public.
 
+### Renamed labels: aliases in labelling
+
+A `labels` entry's `aliases` are its old names. Label sync renames a repository
+label found under an alias; `applyLabels` also treats an item's label that is
+an alias of a decided label as that label, because a pull request run (a fork
+above all) can happen before sync has renamed anything:
+
+- Wanted: the current name is added and the old name removed (a label under
+  both names loses the old one). The old name is removed only when the add
+  succeeded, so a `Forbidden` add never strips the label.
+- Unwanted: the old name is removed as well as the current one.
+- Current names win: `aliasesOf(config, decidedNames)` drops an alias that is
+  the current name of any configured or decided label, and aliases of labels
+  no rule decided are ignored. The first entry claiming an alias keeps it.
+- Change descriptions say `replacing its old name "..."` and
+  `(an old name of "...")`. `withSizeLabels` adds the preset name as an alias
+  of a renamed size, so this also keeps one size label on a pull request.
+
 ### Adding a feature
 
 1. Scaffold `packages/feature.<name>` and `tests/feature.<name>` as in
@@ -729,6 +751,51 @@ export const example = Effect.gen(function* () {
 }).pipe(Effect.provide(DryRun.pipe(Layer.provide(github))))
 ```
 
+### Applying a renamed label that is still on a pull request
+
+`bug` was renamed from `defect`. The pull request still carries `defect`
+because label sync has not run yet, so labelling swaps the old name for the
+current one instead of leaving both.
+
+```ts
+import { runFeatures } from '@resnovas/engine'
+import { GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { FEATURES } from '@resnovas/runtime'
+import { Effect } from 'effect'
+
+const memory = makeMemoryGitHub()
+memory.state.issues.set(3, { labels: ['defect'], comments: [], open: true })
+
+export const example = Effect.gen(function* () {
+  const result = yield* runFeatures({
+    config: {
+      version: 2,
+      labels: { bug: { name: 'Type: Bug', color: 'd73a4a', aliases: ['defect'] } },
+      labelling: { bug: { label: 'bug', when: { condition: [{ type: 'titleMatches', condition: '^bug' }] } } },
+    },
+    event: 'issues',
+    payload: {
+      action: 'edited',
+      issue: {
+        number: 3,
+        title: 'bug: sync fails',
+        body: null,
+        user: { login: 'sam' },
+        state: 'open',
+        locked: false,
+        labels: [{ name: 'defect' }],
+        updated_at: '2026-09-01T00:00:00Z',
+      },
+    },
+    // Only the labels feature has a section here, so only it runs.
+    features: FEATURES,
+  })
+  // ['added label "Type: Bug" to #3, replacing its old name "defect"',
+  //  'removed label "defect" (an old name of "Type: Bug") from #3']
+  return result.changes.map((change) => change.description)
+}).pipe(Effect.provideService(GitHub, memory.service))
+```
+
 ---
 
 ## Conditions
@@ -897,6 +964,38 @@ writing the query or mutation again in a feature.
 | `Restricted`                                    | Wraps it for a read-only token: a write GitHub refuses as `Forbidden` is recorded in `SkippedWrites` and answered as in a dry run.                                                                                        |
 | `GitHubMemory(seed)` / `makeMemoryGitHub(seed)` | In memory, for tests; see the testing section.                                                                                                                                                                            |
 
+### Tokens: in-repository, privileged and house
+
+The action splits its tokens (`connectTokens` in `@resnovas/runtime`), so each
+does only its own job:
+
+| Service            | Token                                    | Used for                                                                                                   |
+| ------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `GitHub`           | the workflow token (`workflowToken`)     | Everything in the repository: check runs, comments, labels, reviews, facets, the repository's own config.  |
+| `PrivilegedGitHub` | the app or access token (`GITHUB_TOKEN`) | Features with `privileged: true` (settings, sync, codeowners, backport) and presets in other repositories. |
+| house reads        | the read-only house token (`houseToken`) | `getFile` and `listDirectory` in another `.github` repository, through `withHouseReads` on both services.  |
+
+- `PrivilegedGitHub` is optional. The CLI, the MCP server and any run with one
+  token provide only `GitHub`, and everything uses it, so a feature must never
+  require `PrivilegedGitHub`: mark it `privileged: true` and keep using `GitHub`.
+  The engine provides the privileged service as `GitHub` to such a feature.
+- A restricted run (fork, Dependabot, only the workflow token, or a rejected
+  token) has no privileged service. The house token is ignored on forks and
+  Dependabot runs. A restricted pull request run with a house token keeps the
+  sync edit check (`Access.houseReads`, `restrictedFeatures(access, event)`).
+- The workflows mint the app token only on `push`, `schedule` and
+  `workflow_dispatch` of the default branch, and on the `closed` event of a
+  merged pull request from the repository itself (trusted, merged code), for
+  backport: pull requests opened with the workflow token start no CI. Never
+  mint it for other `pull_request` or `issue_comment` runs.
+- `Restricted` never skips a refused `backport`: it fails with `Forbidden`, so
+  the backport feature warns that nothing was backported instead of
+  announcing a dry-run style #0.
+- `DryRun` wraps `PrivilegedGitHub` too, into the same `DryRunLog`.
+- `withHouseReads` falls back to the wrapped service when the house token
+  answers `Forbidden` or `NotFound`, such as for another organisation's
+  `.github`.
+
 ### Errors
 
 Every operation fails with `GitHubError`, a union of five tagged errors, each
@@ -1007,6 +1106,44 @@ export const example = Effect.gen(function* () {
   const skipped = yield* (yield* SkippedWrites).writes
   return { commentId: comment.id, skipped: skipped.map((write) => write.operation) }
 }).pipe(Effect.provide(Restricted.pipe(Layer.provide(readOnly))))
+```
+
+### Splitting the tokens: in-repository, privileged and house
+
+The action connects with up to three tokens through `connectTokens`. The
+workflow token's service is provided as `GitHub` and does everything in
+the repository. The app token's service is provided as `PrivilegedGitHub`
+and is used only by features marked `privileged` (settings, sync,
+codeowners, backport) and for presets in other repositories. Both read files in a
+`.github` repository with the read-only house token first.
+
+```ts
+import { GitHub, makeMemoryGitHub, PrivilegedGitHub } from '@resnovas/integrations.github'
+import { connectTokens, FULL_ACCESS } from '@resnovas/runtime'
+import { Effect, Layer, Option, Redacted } from 'effect'
+
+// One in-memory GitHub per token, so the example can tell them apart.
+const services = new Map([
+  ['ghs_app', makeMemoryGitHub().service],
+  ['ghs_workflow', makeMemoryGitHub().service],
+  ['ghs_house', makeMemoryGitHub().service],
+])
+
+export const example = Effect.gen(function* () {
+  const { service, privileged } = yield* connectTokens({
+    token: Redacted.make('ghs_app'),
+    workflowToken: Option.some(Redacted.make('ghs_workflow')),
+    houseToken: Option.some(Redacted.make('ghs_house')),
+    access: FULL_ACCESS,
+    connect: (token) => Effect.succeed(services.get(Redacted.value(token)) ?? makeMemoryGitHub().service),
+  })
+  // Provide both: the engine hands `PrivilegedGitHub` to privileged features as their `GitHub`.
+  const layer =
+    privileged === undefined
+      ? Layer.succeed(GitHub, service)
+      : Layer.merge(Layer.succeed(GitHub, service), Layer.succeed(PrivilegedGitHub, privileged))
+  return layer
+})
 ```
 
 ---
@@ -1307,6 +1444,9 @@ those messages makes the whole commit a major release, whatever the title's
 type, which is what the release preview reports.
 
 ```ts
+// The release preview is a repository tool, not a workspace library, so no
+// package name reaches it; the example imports it by path on purpose.
+// eslint-disable-next-line @nx/enforce-module-boundaries
 import { bumpOf, renderPreview, squashMessage } from '../../../tools/release/preview.js'
 
 const types = { feat: { semverBump: 'minor' }, fix: { semverBump: 'patch' } }
@@ -1341,6 +1481,25 @@ updated.
 | ------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | People | `docs/` (the Mintlify site, navigation in `docs/docs.json`) and `README.md` | ELI5: what it is and why before how, step-by-step setup, one complete example, what they will see on GitHub, every option with its default, common problems and fixes, every term defined on first use. |
 | Agents | `ai-docs/src`, assembled into `LLMS.md`                                     | Why, the rules that matter, and compiled examples in the codebase's own style.                                                                                                                          |
+
+### Setup guides
+
+The human setup guides live in `docs/guides/` (the "Setup guides" group in
+`docs/docs.json`) and are the first place a newcomer is sent from
+`getting-started`, `configuration`, `presets` and `features/sync`:
+
+| Page                                 | Covers                                                                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/guides/settings-file.mdx`      | `.github/smartcloud.yml` built one section at a time, in newcomer order, with what each does when a run starts and on which events.   |
+| `docs/guides/recommended-setups.mdx` | Complete files for a small repository, a monorepo, an open-source project, and an organisation preset plus a repository extending it. |
+| `docs/guides/organisation-hub.mdx`   | Any organisation's own `<org>/.github` as the sync hub: preset, `templates/`, managed blocks, placeholders, app, first sync, rollout. |
+
+When a section, option, default or event changes, update these guides with the
+feature page. Every YAML config in them must decode: write it to a file and run
+`pnpm run cli validate <file>` (a fragment gets `version: 2` prepended; a file
+that `extends` a fictional `my-org` preset is resolved with `resolveConfig`
+and an in-memory `ConfigSource` serving the guide's own preset). Quote label
+colours, since an all-digit colour decodes as a number.
 
 ### Generated artefacts
 
