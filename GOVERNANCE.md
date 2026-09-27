@@ -51,14 +51,17 @@ A review of an AI-assisted pull request follows [AI-40](AI_POLICY.md#ai-40): an 
 ### <a id="enforcing-review"></a>Enforcement
 
 [smartcloud](https://github.com/Resnovas/smartcloud) counts approvals from the maintainers in the house preset and applies the table above, reporting the result as the `smartcloud / reviews` check.
-As soon as the preset names two or more maintainers, the house ruleset makes the `smartcloud` check required on the default branch; it fails on any policy error, including too few approvals, and on any other check on the pull request that fails, so it is the only check the ruleset needs.
-With a single maintainer the review gate is always open, so a sole maintainer is never blocked.
+The house ruleset makes the `smartcloud` check required on the default branch; it fails on any policy error, including too few approvals, and, as the aggregate check, on any other check on the pull request that fails.
+Until a repository lists its main CI check under `required.expect`, keep that check required beside `smartcloud` (`settings.ruleset.statusChecks.checks`), because a restricted run from a fork or Dependabot skips the private house preset.
+As soon as the preset names two or more maintainers, the ruleset also requires one approval, the minimum both columns share, and the `smartcloud` check enforces the second approval an outside contribution needs.
+With a single maintainer the review gate is always open and no approval is required, so a sole maintainer is never blocked.
 The owner can always bypass the ruleset, including the review gate, whatever the number of maintainers; a bypass is recorded in the pull request.
 
 ## <a id="merging"></a>Merging
 
-History on the default branch is linear.
+History on the default branch is linear and every commit on it is signed.
 Merge commits are disabled; a pull request is either squashed or rebased.
+Pull requests merge through a merge queue, which tests every queued pull request against the required checks and squashes it as it lands.
 
 - **Squash** when the pull request has a noisy history: fix-ups, review responses, work in progress.
 The squash keeps every commit message in its body, so each `Signed-off-by`, `Co-authored-by` and `Assisted-by` trailer survives.
@@ -73,9 +76,10 @@ Every repository is configured to the same baseline, applied automatically by sm
 - merging as above, with sign-off required on web commits and the wiki disabled, because documentation is published elsewhere;
 - Discussions, sponsorships and release immutability enabled;
 - private vulnerability reporting, the dependency graph, Dependabot alerts, security updates and grouped version updates;
-- CodeQL code scanning with Copilot Autofix, and on public repositories secret scanning with push protection;
+- CodeQL code scanning with Copilot Autofix, a dependency review of every pull request, an OpenSSF Scorecard of the default branch, and on public repositories secret scanning with push protection;
 - GitHub Actions with a read-only workflow token by default, which may still open pull requests, and on private repositories reusable workflows shared across the organisation;
-- a ruleset on the default branch requiring linear history, blocking deletion and force pushes, requesting Copilot code review, and blocking merges on serious code scanning findings;
+- a ruleset on the default branch requiring linear history, signed commits, a merge queue and a pull request (with approvals as above, stale approvals dismissed, conversations resolved and an extra approval for Copilot pull requests opened on no one's behalf), blocking deletion and force pushes, requiring the status checks up to date, requesting Copilot code review on every push and on drafts, and blocking merges on serious code scanning findings, code quality errors and open secret scanning alerts for provider patterns;
+- where a repository opts in: successful deployment to its pre-production environment, ESLint code scanning results, and line coverage of at least 80% dropping no more than 5 points;
 - deployment environments for what the repository ships: Production, Staging and Development for software as a service; Windows, Linux and macOS with a Beta of each for desktop applications; Release for libraries.
 
 One setting has no API and is set by hand: pushes are limited to updating five branches or tags at once.

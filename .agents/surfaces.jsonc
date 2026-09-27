@@ -5,7 +5,7 @@
   // runs it. An action runs a package script (`script`, through node --run)
   // or a `command`; `url` opens a page once it starts, and `primary` marks
   // OpenChamber's default action.
-  // house:managed:begin - synced from Resnovas/.github templates/.agents/surfaces.json. Edits inside this block are overwritten.
+  // house:managed:begin - synced from Resnovas/.github templates/.agents/surfaces.jsonc. Edits inside this block are overwritten.
   "repository": "Resnovas/smartcloud",
   "agents": ["claude", "codex"],
   "house": [

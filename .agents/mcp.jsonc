@@ -1,0 +1,40 @@
+{
+  // MCP servers for every agent host (house standard project-dev-surfaces).
+  // Hosts read strict JSON or TOML that cannot carry the house:managed
+  // markers, so this file is the one source: `node tools/dev/surfaces.mjs sync`
+  // writes it to .mcp.json (Claude Code), .cursor/mcp.json (Cursor),
+  // .vscode/mcp.json (VS Code), which that tool owns outright, and to the
+  // house:mcp block at the end of .codex/config.toml (Codex), whose other
+  // settings it keeps; `check` fails while they are out of date.
+  //
+  // Never put a credential here. A server takes secrets from the environment:
+  // `bearerEnv` names the variable holding a bearer token for an HTTP server,
+  // and `envPassthrough` lists variables handed to a stdio server. Each host
+  // gets its own reference syntax for them. Remote servers without either
+  // sign in with OAuth when first used.
+  // house:managed:begin - synced from Resnovas/.github templates/.agents/mcp.jsonc. Edits inside this block are overwritten.
+  "house": {
+    // External tools behind one gateway. MEM0_GATEWAY_TOKEN comes from Proton Pass.
+    "mem0-gateway": { "url": "https://gateway-mcp.mem0.ai/mcp", "bearerEnv": "MEM0_GATEWAY_TOKEN" },
+    // Memory and knowledge on Cognee Cloud. COGNEE_BASE_URL and COGNEE_API_KEY
+    // come from Proton Pass (AI Agents Vault, item "Cognee"). Pinned, because
+    // the server runs with those credentials: bump it after reviewing a release.
+    "cognee": {
+      "command": "uvx",
+      "args": ["cognee-mcp==0.5.5"],
+      "envPassthrough": ["COGNEE_BASE_URL", "COGNEE_API_KEY"],
+    },
+    // This repository's committed code graph, served locally over stdio.
+    // Needs `sh tools/graphify/graphify setup` once per clone.
+    "graphify": { "command": "sh", "args": ["tools/graphify/graphify", "mcp"] },
+    // Graphify Cloud: graphs across repositories. Signs in with OAuth.
+    "graphify-cloud": { "url": "https://api.graphify.com/mcp" },
+  },
+  // house:managed:end
+  // house:local - add this repository's own servers below, in the same shape.
+  // A local server may not reuse a house server's name.
+  "servers": {
+    // smartcloud's own MCP server, built from this checkout.
+    "smartcloud": { "command": "pnpm", "args": ["--silent", "run", "mcp"] },
+  },
+}

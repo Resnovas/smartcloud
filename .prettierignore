@@ -2,7 +2,9 @@
 #
 # Files synced from Resnovas/.github. The sync owns their formatting: a
 # formatter rewriting them would edit the managed block and fail the check.
+AGENTS.md
 AI_POLICY.md
+CLAUDE.md
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 COOPERATION_COMMITMENT.md
@@ -19,18 +21,20 @@ LICENSE
 .github/smartcloud.yml
 .github/workflows/house-codeql.yml
 .github/workflows/house-dependency-review.yml
+.github/workflows/house-scorecard.yml
 .github/zizmor.yml
 .github/workflows/house-graphify.yml
-.github/workflows/house-scorecard.yml
 .github/workflows/house-workflow-lint.yml
 .github/workflows/smartcloud.yml
+.github/workflows/smartcloud-review.yml
 .graphifyignore
 .agents/skills/graphify/
 .claude/skills/graphify/
 tools/graphify/
 tools/dev/surfaces.mjs
 tools/dev/open.mjs
-.agents/surfaces.json
+.agents/surfaces.jsonc
+.agents/mcp.jsonc
 .agents/prompts/verify.md
 .agents/prompts/review.md
 .agents/prompts/address-review.md
@@ -40,10 +44,13 @@ tools/dev/open.mjs
 .run/house-*.run.xml
 .codex/environments/environment.toml
 orca.yaml
-# Generated from .agents/prompts by tools/dev/surfaces.mjs.
+# Generated from .agents/prompts and .agents/mcp.jsonc by tools/dev/surfaces.mjs.
 .claude/commands/
 .cursor/commands/
-.opencode/commands/
+.mcp.json
+.cursor/mcp.json
+.vscode/mcp.json
+.codex/config.toml
 # The committed code graph.
 graphify-out/
 # house:managed:end

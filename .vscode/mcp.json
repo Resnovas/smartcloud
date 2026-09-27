@@ -1,10 +1,10 @@
 {
-  "mcpServers": {
+  "servers": {
     "mem0-gateway": {
       "type": "http",
       "url": "https://gateway-mcp.mem0.ai/mcp",
       "headers": {
-        "Authorization": "Bearer ${MEM0_GATEWAY_TOKEN:-}"
+        "Authorization": "Bearer ${env:MEM0_GATEWAY_TOKEN}"
       }
     },
     "cognee": {
@@ -14,15 +14,15 @@
         "cognee-mcp==0.5.5"
       ],
       "env": {
-        "COGNEE_BASE_URL": "${COGNEE_BASE_URL:-}",
-        "COGNEE_API_KEY": "${COGNEE_API_KEY:-}"
+        "COGNEE_BASE_URL": "${env:COGNEE_BASE_URL}",
+        "COGNEE_API_KEY": "${env:COGNEE_API_KEY}"
       }
     },
     "graphify": {
       "type": "stdio",
       "command": "sh",
       "args": [
-        "tools/graphify/graphify",
+        "${workspaceFolder}/tools/graphify/graphify",
         "mcp"
       ]
     },

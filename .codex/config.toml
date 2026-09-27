@@ -1,0 +1,22 @@
+# house:mcp:begin - Generated from .agents/mcp.jsonc by tools/dev/surfaces.mjs sync. Edit that file, not this one.
+
+[mcp_servers.mem0-gateway]
+url = "https://gateway-mcp.mem0.ai/mcp"
+bearer_token_env_var = "MEM0_GATEWAY_TOKEN"
+
+[mcp_servers.cognee]
+command = "uvx"
+args = ["cognee-mcp==0.5.5"]
+env_vars = ["COGNEE_BASE_URL", "COGNEE_API_KEY"]
+
+[mcp_servers.graphify]
+command = "sh"
+args = ["tools/graphify/graphify", "mcp"]
+
+[mcp_servers.graphify-cloud]
+url = "https://api.graphify.com/mcp"
+
+[mcp_servers.smartcloud]
+command = "pnpm"
+args = ["--silent", "run", "mcp"]
+# house:mcp:end
