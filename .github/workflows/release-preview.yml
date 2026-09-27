@@ -1,0 +1,100 @@
+# Shows on each pull request what the next release would be if it were merged
+# now: the version and the release notes. tools/release/release-preview.ts
+# replaces the pull request's merge commit with the squash commit the merge
+# queue would land (the title and number over the commits' messages) and asks
+# Nx release, in dry-run mode, for the version and notes, as the release
+# workflow would work them out. It writes the report to the job summary, and
+# the comment job keeps it in one comment on the pull request.
+#
+# The preview never blocks a pull request: it is not part of the required
+# check, a problem making it becomes a warning, and both jobs continue on
+# error. It runs apart from CI so that renaming a pull request, which changes
+# the commit that would land, updates the preview without rerunning CI.
+#
+# The preview job runs the pull request's code with a read-only token. The
+# comment job, the only one that can write, checks out and runs nothing: it
+# posts the preview job's output with the GitHub CLI. It is skipped on pull
+# requests from forks and from Dependabot, whose token cannot comment, so
+# those get the job summary only.
+name: release preview
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, edited]
+
+# Each job asks for the access it needs; the workflow grants none.
+permissions: {}
+
+concurrency:
+  group: release-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    name: release preview
+    # An edit that changes neither the title nor the base changes nothing the preview reads.
+    if: github.event.action != 'edited' || github.event.changes.title != null || github.event.changes.base != null
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    continue-on-error: true
+    permissions:
+      contents: read
+    outputs:
+      report: ${{ steps.preview.outputs.report }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Nx reads the conventional commits and v* tags from the full history.
+          fetch-depth: 0
+          fetch-tags: true
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Preview the release
+        id: preview
+        env:
+          # Nx's GitHub client, which the release notes are rendered with, reads this token.
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: node tools/release/release-preview.ts
+
+  comment:
+    name: release preview comment
+    needs: preview
+    if: >-
+      needs.preview.outputs.report != ''
+      && github.event.pull_request.head.repo.full_name == github.repository
+      && github.event.pull_request.user.login != 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    continue-on-error: true
+    permissions:
+      pull-requests: write # to post and update the preview comment
+    steps:
+      # Updates the comment an earlier run left, found by the marker on its
+      # first line, or adds one.
+      - name: Post or update the comment
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number }}
+          REPORT: ${{ needs.preview.outputs.report }}
+        run: |
+          id=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- smartcloud:release-preview -->"))) | .id' | head -n 1)
+          if [ -n "$id" ]; then
+            gh api --method PATCH "repos/$REPO/issues/comments/$id" -f body="$REPORT" > /dev/null
+            echo "Updated the release preview comment."
+          else
+            gh api --method POST "repos/$REPO/issues/$PR/comments" -f body="$REPORT" > /dev/null
+            echo "Posted the release preview comment."
+          fi

@@ -21,4 +21,5 @@ export default testProject('tools', [
   'tools/release/changelog-renderer.ts',
   'tools/release/changelogs.ts',
   'tools/release/nightly-version.ts',
+  'tools/release/preview.ts',
 ])
