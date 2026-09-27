@@ -96,7 +96,7 @@ const valueAt = (value: Json | undefined, path: Path): Json | undefined => {
 const completable = (
   issue: ParseResult.ArrayFormatterIssue,
   value: Readonly<Record<string, Json>>,
-  dropped: ReadonlySet<string>,
+  dropped: ReadonlyMap<string, Path>,
 ): boolean =>
   issue._tag === 'Missing'
     ? !dropped.has(dotted(issue.path))
@@ -114,10 +114,16 @@ const remove = (value: Record<string, Json>, path: Path): boolean => {
   return isRecord(child) && remove(child, rest)
 }
 
-/** A config with its invalid values taken out, and a warning for each. */
+/**
+ * A config with its invalid values taken out, and a warning for each.
+ *
+ * @internal
+ */
 export interface Lenient {
   readonly value: Readonly<Record<string, Json>>
   readonly warnings: ReadonlyArray<string>
+  /** Where each value taken out was. */
+  readonly dropped: ReadonlyArray<Path>
 }
 
 /**
@@ -143,11 +149,11 @@ export interface Lenient {
  */
 export const dropInvalid = (value: Readonly<Record<string, Json>>, source: string, keepIncomplete = false): Lenient => {
   const warnings: Array<string> = []
-  const dropped = new Set<string>()
+  const dropped = new Map<string, Path>()
   let current = value
   for (;;) {
     const decoded = decodeV2({ ...current, version: 2 })
-    if (Either.isRight(decoded)) return { value: current, warnings }
+    if (Either.isRight(decoded)) return { value: current, warnings, dropped: [...dropped.values()] }
     const units = new Map<
       string,
       { unit: Path; issues: [ParseResult.ArrayFormatterIssue, ...Array<ParseResult.ArrayFormatterIssue>] }
@@ -167,11 +173,64 @@ export const dropInvalid = (value: Readonly<Record<string, Json>>, source: strin
       if (keepIncomplete && issues.every((issue) => completable(issue, current, dropped))) continue
       if (!remove(next, unit)) continue
       changed = true
-      dropped.add(key)
+      dropped.set(key, unit)
       warnings.push(`${source}: ignored ${key}, because ${describe(issues)}`)
     }
     // Nothing more can be taken out: a file left incomplete for its presets.
-    if (!changed) return { value: current, warnings }
+    if (!changed) return { value: current, warnings, dropped: [...dropped.values()] }
     current = next
   }
 }
+
+/** A value a preset set but that was dropped as invalid, so no later file may set it. */
+export interface Reserved {
+  readonly path: Path
+  readonly preset: string
+}
+
+/**
+ * Takes out of a file what a preset tried to set but could not, because this
+ * build dropped the preset's value as invalid.
+ *
+ * @remarks
+ * A preset's values are locked, so a repository can only add to them. A
+ * value this build cannot read is dropped from the preset, which would leave
+ * its path unlocked, free for a repository to set to something weaker, such
+ * as turning off a stricter setting a newer preset asks for. The path stays
+ * reserved instead, and a later file's value there is dropped with a warning.
+ *
+ * @internal
+ *
+ * @param value - A later file's config, as parsed.
+ * @param reserved - What earlier presets tried to set, by dotted path.
+ * @param source - The later file, which each warning names.
+ * @returns The file without values at reserved paths, and a warning for each.
+ */
+export const withoutReserved = (
+  value: Readonly<Record<string, Json>>,
+  reserved: ReadonlyMap<string, Reserved>,
+  source: string,
+): Lenient => {
+  const next: Record<string, Json> = structuredClone(value)
+  const warnings: Array<string> = []
+  const dropped: Array<Path> = []
+  for (const [key, { path, preset }] of reserved) {
+    if (!remove(next, path)) continue
+    dropped.push(path)
+    warnings.push(
+      `${source}: ignored ${key}, because ${preset} sets it in a form this version of smartcloud cannot use, and what a preset sets cannot be changed`,
+    )
+  }
+  return { value: next, warnings, dropped }
+}
+
+/**
+ * A path in the dotted form warnings use: a dot or backslash inside a key is
+ * escaped, so the single key `a.b` reads `a\.b`.
+ *
+ * @internal
+ *
+ * @param path - The path.
+ * @returns The dotted path.
+ */
+export const dottedPath = (path: Path): string => dotted(path)

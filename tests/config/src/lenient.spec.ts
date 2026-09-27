@@ -179,6 +179,23 @@ conventions:
     ),
   )
 
+  it.effect('keeps a preset value it cannot read locked, so a repository cannot set a weaker one', () =>
+    Effect.map(
+      resolve(
+        `version: 2\nextends: ['${HOUSE}']\nsettings:\n  security: { codeScanning: 'off', secretScanning: true }\n`,
+        { [HOUSE]: 'version: 2\nsettings:\n  security: { codeScanning: maximum }\n' },
+      ),
+      ({ config, warnings, locked }) => {
+        expect(config.settings?.security).toStrictEqual({ secretScanning: true })
+        expect(locked.has('settings.security.secretScanning')).toBe(false)
+        expect(warnings).toStrictEqual([
+          `${HOUSE}: ignored settings.security.codeScanning, because settings.security.codeScanning: Expected "default" | "extended" | "off", actual "maximum"`,
+          `smartcloud.yml: ignored settings.security.codeScanning, because ${HOUSE} sets it in a form this version of smartcloud cannot use, and what a preset sets cannot be changed`,
+        ])
+      },
+    ),
+  )
+
   it.effect('reports a union failure by its first message when the members disagree', () =>
     Effect.map(resolve('version: 2\nstale: { staleAfterDays: -1, staleLabel: stale }\n'), ({ config, warnings }) => {
       expect(config.stale).toBeUndefined()

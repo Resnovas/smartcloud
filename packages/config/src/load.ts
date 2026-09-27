@@ -17,7 +17,7 @@
 import { Context, Data, Effect, Either, Option, ParseResult, Schema, SchemaAST } from 'effect'
 import { parse as parseYaml } from 'yaml'
 import { ExtendsEntry, type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
-import { dropInvalid } from './lenient.js'
+import { dottedPath, dropInvalid, type Reserved, withoutReserved } from './lenient.js'
 import { empty, type Merged, mergeLocked } from './merge.js'
 import { conventionNeedsPresetOrWhen, SmartcloudConfig } from './schema.js'
 import { migrateV1 } from './v1.js'
@@ -242,12 +242,20 @@ const parseLayer = (text: string, source: string, strict: boolean) =>
     // Unknown keys and invalid values are dropped, file by file, so each
     // warning names the file that has them. What a preset may still complete,
     // such as a missing key, is left for the merged config.
-    const lenient = strict ? { value: migrated.config, warnings: [] } : dropInvalid(migrated.config, source, true)
+    const lenient = strict
+      ? { value: migrated.config, warnings: [], dropped: [] }
+      : dropInvalid(migrated.config, source, true)
     // A complete file is normalised through the schema; an incomplete one is
     // merged as written and checked once merged.
     const decoded = decodeV2(lenient.value)
     const json = Either.isRight(decoded) ? toJson(decoded.right) : lenient.value
-    return { json, extends: entries.right, warnings: [...warnings, ...lenient.warnings], ignored: lenient.warnings }
+    return {
+      json,
+      extends: entries.right,
+      warnings: [...warnings, ...lenient.warnings],
+      ignored: lenient.warnings,
+      dropped: lenient.dropped,
+    }
   })
 
 // Whether a path runs only through fields the schema names, such as
@@ -346,6 +354,8 @@ export const resolveConfig = (
     const warnings: Array<string> = []
     const ignored: Array<string> = []
     const skipped: Array<string> = []
+    // What presets set but this build dropped, which later files may not set.
+    const reserved = new Map<string, Reserved>()
     const skipUnreadable = options.skipUnreadable ?? (() => false)
     const strict = options.strict ?? false
 
@@ -383,8 +393,12 @@ export const resolveConfig = (
         }
         // version, extends and $schema describe the file itself, not rules to merge.
         const { version: _version, extends: _extends, $schema: _schema, ...own } = layer.json
+        const guarded = withoutReserved(own, reserved, name)
+        warnings.push(...guarded.warnings)
+        ignored.push(...guarded.warnings)
+        for (const path of layer.dropped) reserved.set(dottedPath(path), { path, preset: name })
         sources.push(name)
-        return yield* mergeLocked(next, own, name)
+        return yield* mergeLocked(next, guarded.value, name)
       })
 
     const merged = yield* include(empty, text, source, [])
