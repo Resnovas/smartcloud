@@ -71,9 +71,16 @@ export const waitForChecks = (
 ) =>
   Effect.gen(function* () {
     const github = yield* GitHub
+    // The app the run's token acts as publishes smartcloud's feature checks; a
+    // personal token or an unreadable viewer adds none, so nothing more is left out.
+    const viewer = yield* github.graphql('query { viewer { login } }', {}).pipe(
+      Effect.map((data) => (data as { readonly viewer?: { readonly login?: string } } | null)?.viewer?.login),
+      Effect.orElseSucceed(() => undefined),
+    )
+    const publishers = viewer?.endsWith('[bot]') === true ? [viewer.slice(0, -'[bot]'.length)] : []
     let settled: string | undefined
     for (;;) {
-      const assessment = assessChecks(yield* github.listCommitChecks(headSha), options)
+      const assessment = assessChecks(yield* github.listCommitChecks(headSha), { ...options, publishers })
       const names = namesOf(assessment)
       const counts = {
         counted: assessment.counted.length,
@@ -155,6 +162,16 @@ export const requiredFeature: Feature = {
         })
       }
       if (assessment.failed.length > 0) return
+      // Without its own run listed, the job cannot tell its other runs apart, so it fails rather than pass unconfirmed.
+      if (!assessment.selfListed) {
+        yield* report.add({
+          feature: FEATURE,
+          rule: 'required.unconfirmed',
+          level: 'error',
+          message: `GitHub did not list this job's own check run within ${timeout} minute(s), so the other checks could not be confirmed.`,
+        })
+        return
+      }
       for (const check of assessment.pending) {
         yield* report.add({
           feature: FEATURE,

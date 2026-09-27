@@ -136,6 +136,20 @@ describe('assessChecks: stale, overlapping and foreign runs', () => {
     expect(assessment.selfListed).toBe(true)
   })
 
+  it('leaves out smartcloud runs only from an app smartcloud runs as, so another app cannot claim the marker', () => {
+    const assessment = assessChecks(
+      [
+        { name: 'smartcloud', source: 'checkRun', id: 1, app: actions, state: 'pending', detail: 'in_progress' },
+        { name: 'smartcloud / reviews', source: 'checkRun', id: 2, app: 'resnovas-smartcloud', externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'failure' },
+        { name: 'smartcloud / labels', source: 'checkRun', id: 3, app: 'resnovas-smartcloud', state: 'failure', detail: 'cancelled' },
+        { name: 'smartcloud / sync', source: 'checkRun', id: 4, app: 'mimic', externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'failure' },
+        { name: 'smartcloud / size', source: 'checkRun', id: 5, externalId: CHECK_RUN_EXTERNAL_ID, state: 'failure', detail: 'failure' },
+      ],
+      { checkRunId: 1, ignore: [], publishers: ['resnovas-smartcloud'] },
+    )
+    expect(assessment.counted.map((check) => check.id)).toStrictEqual([4, 5])
+  })
+
   it('leaves out an unmarked smartcloud run from the job app, as older smartcloud versions published them', () => {
     const assessment = assessChecks(
       [

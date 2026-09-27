@@ -120,16 +120,27 @@ export const latestChecks = (checks: ReadonlyArray<CommitCheck>): ReadonlyArray<
  */
 export const assessChecks = (
   checks: ReadonlyArray<CommitCheck>,
-  options: { readonly checkRunId: number; readonly ignore: ReadonlyArray<string> },
+  options: {
+    readonly checkRunId: number
+    readonly ignore: ReadonlyArray<string>
+    /** Apps smartcloud publishes its feature checks as, beyond the job's own, such as the GitHub App whose token the run used. */
+    readonly publishers?: ReadonlyArray<string> | undefined
+  },
 ): Assessment => {
   const ignored = options.ignore.map(compilePattern)
   const own = checks.find((check) => check.source === 'checkRun' && check.id === options.checkRunId)
   const aggregate = (check: CommitCheck) =>
     check.id === options.checkRunId || (own !== undefined && check.source === 'checkRun' && identity(check) === identity(own))
+  // Only runs smartcloud itself published are left out: its marker, or no
+  // marker from before there was one, and always from an app smartcloud runs
+  // as, so another app's run cannot claim the name or the marker.
+  const publishers = new Set([...(own?.app === undefined ? [] : [own.app]), ...(options.publishers ?? [])])
   const smartcloudFeature = (check: CommitCheck) =>
     check.source === 'checkRun' &&
     check.name.startsWith(OWN_CHECK_PREFIX) &&
-    (check.externalId === CHECK_RUN_EXTERNAL_ID || (check.externalId === undefined && own !== undefined && check.app === own.app))
+    (check.externalId === CHECK_RUN_EXTERNAL_ID || check.externalId === undefined) &&
+    check.app !== undefined &&
+    publishers.has(check.app)
   // Smartcloud's runs go first, so one never stands in for a same-named run another workflow published.
   const counted = latestChecks(checks.filter((check) => !aggregate(check) && !smartcloudFeature(check))).filter(
     (check) =>

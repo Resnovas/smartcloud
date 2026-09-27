@@ -146,14 +146,13 @@ Every input is optional.
 | Input | Default | What it does |
 | --- | --- | --- |
 | `GITHUB_TOKEN` | `${{ github.token }}` | The token smartcloud acts with. Settings, sync and private presets in other repositories need a stronger token than the workflow token. |
-| `workflowToken` | `${{ github.token }}` | The workflow's own token. Leave it at its default: smartcloud compares `GITHUB_TOKEN` with it to tell a [restricted run](/reporting#restricted-runs), and acts with it on forks and Dependabot runs. |
+| `workflowToken` | `${{ github.token }}` | The workflow's own token. Leave it at its default: smartcloud compares `GITHUB_TOKEN` with it to tell a [restricted run](/reporting#restricted-runs), acts with it on forks and Dependabot runs, and reads the pull request's checks with it for the required feature, since `GITHUB_TOKEN` can be a personal access token without checks and statuses read. |
 | `config` | the first of `.github/smartcloud.yml`, `.github/smartcloud.yaml`, `.github/config.json` | The config file's path in the repository. |
 | `configJson` | none | The config given inline, as YAML or JSON. Wins over the file. |
 | `configRef` | the default branch | The branch, tag or commit to read the config from. |
 | `dryRun` | `false` | Record every write in the job summary instead of making it. |
 | `features` | every configured feature | A comma-separated list of the features to run, for example `labels,stale`. |
 | `checkRunId` | none | The job's own check run, as `${{ job.check_run_id }}` gives it. The [required](/features/required) feature runs only when it is set, so it can wait for every other check and leave this job out. |
-| `workflowToken` | `${{ github.token }}` | The workflow's own token; leave it at its default. The required feature reads the pull request's checks with it, since `GITHUB_TOKEN` can be a personal access token without checks and statuses read. |
 
 The config is read through the GitHub API, so the workflow needs no checkout step. It comes from the default branch unless `configRef` says otherwise, so a pull request cannot loosen the rules it is checked against.
 

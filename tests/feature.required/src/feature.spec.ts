@@ -18,7 +18,7 @@ import { describe, expect, it } from '@effect/vitest'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { makeReport, Report, runFeatures } from '@resnovas/engine'
 import { FEATURE, POLL_INTERVAL, requiredFeature } from '@resnovas/feature.required'
-import { CHECK_RUN_EXTERNAL_ID, type CommitCheck, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { CHECK_RUN_EXTERNAL_ID, type CommitCheck, GitHub, makeMemoryGitHub, Unavailable } from '@resnovas/integrations.github'
 import { Duration, Effect, Fiber, TestClock } from 'effect'
 
 const SHA = 'abc123'
@@ -125,6 +125,45 @@ describe('requiredFeature', () => {
     }),
   )
 
+  it.effect('leaves out the checks the app the token acts as published', () =>
+    Effect.gen(function* () {
+      const github = scripted([
+        [
+          check('ci / test', 'success'),
+          { name: 'smartcloud / reviews', source: 'checkRun', id: 99, app: 'resnovas-smartcloud', state: 'failure', detail: 'cancelled' },
+        ],
+      ])
+      const service = {
+        ...github.service,
+        graphql: () => Effect.succeed({ viewer: { login: 'resnovas-smartcloud[bot]' } }),
+      }
+      const result = yield* runPolling({ ...github, service })
+      expect(findings(result).map((finding) => finding.message)).toStrictEqual([
+        'All 1 other check(s) on this commit passed.',
+      ])
+    }),
+  )
+
+  it.effect('counts every smartcloud-named run from another app when the viewer cannot be read', () =>
+    Effect.gen(function* () {
+      const github = scripted([
+        [{ name: 'smartcloud / reviews', source: 'checkRun', id: 99, app: 'resnovas-smartcloud', state: 'failure', detail: 'cancelled' }],
+      ])
+      const service = { ...github.service, graphql: () => Effect.fail(new Unavailable({ operation: 'graphql', detail: 'down' })) }
+      const result = yield* runPolling({ ...github, service })
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.failed'])
+    }),
+  )
+
+  it.effect("fails when GitHub never lists the job's own run before the deadline, rather than pass unconfirmed", () =>
+    Effect.gen(function* () {
+      const memory = makeMemoryGitHub()
+      const service = { ...memory.service, listCommitChecks: () => Effect.succeed([check('ci / test', 'success')]) }
+      const result = yield* runPolling({ service, looks: () => 0 }, { version: 2, required: { timeout: 1 } })
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.unconfirmed'])
+    }),
+  )
+
   it.effect('waits for pending checks, and for a check that appears after the rest settled', () =>
     Effect.gen(function* () {
       const github = scripted([
@@ -213,7 +252,7 @@ describe('requiredFeature', () => {
     Effect.gen(function* () {
       const github = scripted([
         [
-          { ...check('smartcloud / reviews', 'failure'), externalId: CHECK_RUN_EXTERNAL_ID },
+          { ...check('smartcloud / reviews', 'failure'), app: 'github-actions', externalId: CHECK_RUN_EXTERNAL_ID },
           check('codecov/patch', 'failure'),
           { name: 'smartcloud / legacy', source: 'status', state: 'success', detail: 'success' },
         ],

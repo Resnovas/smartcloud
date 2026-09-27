@@ -80,15 +80,6 @@ const currentSettings = (data: object): Record<string, boolean | string> => {
 }
 
 /**
- * The identity the workflow token commits as, and the first guess at the
- * identity to sign a proposed commit off as.
- *
- * @remarks
- * A proposed commit names no author, so GitHub records the token's own
- * identity (the workflow token's `github-actions[bot]`, or a GitHub App's
- * bot) and signs the commit. When the identity GitHub recorded differs from
- * this guess, the commit is made again signed off as that identity, so the
- * sign-off always matches the author and the DCO check passes.
  * The `external_id` on every check run smartcloud creates, so a reader of a
  * commit's checks can tell smartcloud's runs from another publisher's run
  * of the same name.
@@ -103,9 +94,15 @@ const currentSettings = (data: object): Record<string, boolean | string> => {
 export const CHECK_RUN_EXTERNAL_ID = 'smartcloud'
 
 /**
- * The identity `GITHUB_TOKEN` pushes as. Commits name it as author and
- * committer explicitly, so the sign-off always matches the author and the
- * DCO check passes.
+ * The identity the workflow token commits as, and the first guess at the
+ * identity to sign a proposed commit off as.
+ *
+ * @remarks
+ * A proposed commit names no author, so GitHub records the token's own
+ * identity (the workflow token's `github-actions[bot]`, or a GitHub App's
+ * bot) and signs the commit. When the identity GitHub recorded differs from
+ * this guess, the commit is made again signed off as that identity, so the
+ * sign-off always matches the author and the DCO check passes.
  *
  * @example
  * ```ts import.meta.vitest name="DEFAULT_COMMITTER"
