@@ -6,7 +6,7 @@
 # commits both in a release commit on no branch (without externals/), and
 # pushes only the v<version> tag, so main never holds a release commit or the
 # bundle and no branch protection is bypassed. It then writes the release notes
-# to a GitHub release and moves the v<major> tag.
+# to a draft GitHub release and moves the v<major> tag.
 #
 # Nx writes the same notes to CHANGELOG.md and each app's CHANGELOG.md. They
 # reach main through a pull request, since main takes changes only through
@@ -18,7 +18,11 @@
 #
 # The publish job checks out the tag, refuses to go on unless the tagged bundle
 # is what that tag's source builds, then publishes the CLI and MCP server to npm
-# with provenance, through trusted publishing.
+# with provenance, through trusted publishing. The attest job then signs build
+# provenance for the checked dist/index.js and attaches an SPDX SBOM of each app
+# to the draft release, through the house attest.yml workflow, and the
+# publish-release job publishes it. The release stays a draft until then because
+# immutable releases lock a published release's assets.
 #
 # Every bundle's source map is uploaded to PostHog error tracking for the
 # release and then deleted, so neither the tag nor npm ships one. The upload
@@ -97,7 +101,7 @@ jobs:
       - name: Version, tag and create the GitHub release
         id: release
         env:
-          # Nx creates the GitHub release with this token.
+          # Nx's GitHub client, which the release notes are rendered with, uses this token.
           GITHUB_TOKEN: ${{ github.token }}
           # A PostHog personal API key (error tracking write, organization read)
           # for uploading the action's source map; unused in a dry run.
@@ -122,6 +126,52 @@ jobs:
             apps/*/CHANGELOG.md
           if-no-files-found: error
           retention-days: 7
+
+      - name: Keep the release notes for the draft-release job
+        if: steps.release.outputs.released == 'true'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-notes
+          path: ${{ steps.release.outputs.notes }}
+          if-no-files-found: error
+          retention-days: 7
+
+  # Creates the GitHub release, as a draft, from the notes release.ts wrote.
+  # A separate job, so a failed GitHub request is retried by re-running it
+  # alone: the tag is already pushed, and the release job cannot run twice.
+  # It reuses a release a previous attempt created.
+  draft-release:
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      id: ${{ steps.draft.outputs.id }}
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-notes
+
+      - name: Create the draft release
+        id: draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release.outputs.tag }}
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || { echo "::error::unexpected version: $VERSION"; exit 1; }
+          [ "$TAG" = "v$VERSION" ] || { echo "::error::unexpected tag: $TAG"; exit 1; }
+          id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name == \"$TAG\") | .id")
+          id=${id%%$'\n'*}
+          if [ -z "$id" ]; then
+            prerelease=false
+            if [[ "$VERSION" == *-* ]]; then prerelease=true; fi
+            id=$(gh api --method POST "repos/$GITHUB_REPOSITORY/releases" --field tag_name="$TAG" --field name="$TAG" \
+              --field body=@release-notes.md --field draft=true --field prerelease="$prerelease" --jq .id)
+          fi
+          echo "id=$id" >> "$GITHUB_OUTPUT"
 
   changelogs:
     needs: release
@@ -242,6 +292,25 @@ jobs:
           node tools/release/sourcemaps.ts "$VERSION" dist/index.js
           cmp dist/index.js "$RUNNER_TEMP/tagged.js" || { echo '::error::dist/index.js in the release does not match its source'; exit 1; }
 
+      # One SPDX SBOM per shipped app, of its production dependencies, including
+      # the workspace libraries bundled into it. The attest job signs
+      # provenance for the checked bundle, binds the action's SBOM to it and
+      # attaches every SBOM to the GitHub release.
+      - name: Stage the bundle and its SBOMs for attestation
+        env:
+          STAGE: ${{ runner.temp }}/release-files
+        run: |
+          mkdir -p "$STAGE/dist"
+          cp dist/index.js "$STAGE/dist/index.js"
+          pnpm --filter @resnovas/action --filter @resnovas/smartcloud --filter @resnovas/smartcloud-mcp \
+            sbom --sbom-format spdx --sbom-type application --prod --lockfile-only --split --out "$STAGE/%s-%v.spdx.json"
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: release-files
+          path: ${{ runner.temp }}/release-files
+          if-no-files-found: error
+
       # The tag's package.json files carry the released version, which the bundles stamp as VERSION.
       - run: pnpm nx run-many -t bundle -p @resnovas/smartcloud @resnovas/smartcloud-mcp --skip-nx-cache
 
@@ -260,3 +329,35 @@ jobs:
       - name: Publish the CLI
         working-directory: apps/cli/release
         run: npm publish --provenance --access public
+
+  # Signs build provenance for the released dist/index.js, binds its SBOM to it
+  # and attaches the SBOMs to the GitHub release, through the house workflow.
+  attest:
+    needs: [release, draft-release, publish]
+    uses: Resnovas/.github/.github/workflows/attest.yml@main
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      artifact: release-files
+      subject-path: dist/index.js
+      sbom-path: resnovas-action-${{ needs.release.outputs.version }}.spdx.json
+      release: ${{ needs.release.outputs.tag }}
+      release-assets: '*.spdx.json'
+
+  # Publishes the draft release once its SBOMs are attached; a published
+  # release takes no new assets.
+  publish-release:
+    needs: [draft-release, attest]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Publish the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_ID: ${{ needs.draft-release.outputs.id }}
+        run: |
+          [[ "$RELEASE_ID" =~ ^[0-9]+$ ]] || { echo "::error::unexpected release id: $RELEASE_ID"; exit 1; }
+          gh api --method PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" --field draft=false --field make_latest=legacy --silent

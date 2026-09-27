@@ -64,7 +64,7 @@ Every exported const, function and class carries a description, a typed `@exampl
 
 ## Releasing
 
-Releases are cut by Nx release from the `release` workflow (Actions, run on `main`); see `docs/releasing.mdx`. Conventional commits since the last `v*` tag decide the version, and the tag is the only record of it: the release commit is never on `main`, whose app versions stay `0.0.0`. The workflow pushes a `v<version>` tag on a release commit that holds `dist/index.js` and the bumped versions, writes the notes to the GitHub release, moves `v<major>`, and publishes `@resnovas/smartcloud` to npm.
+Releases are cut by Nx release from the `release` workflow (Actions, run on `main`); see `docs/releasing.mdx`. Conventional commits since the last `v*` tag decide the version, and the tag is the only record of it: the release commit is never on `main`, whose app versions stay `0.0.0`. The workflow pushes a `v<version>` tag on a release commit that holds `dist/index.js` and the bumped versions, writes the notes to a draft GitHub release, moves `v<major>`, publishes `@resnovas/smartcloud` to npm, attaches the SBOMs and attestations, and then publishes the release (immutable releases lock a published one).
 
 The GitHub release holds the main notes. Nx writes the same notes, through `tools/release/changelog-renderer.ts`, to the root `CHANGELOG.md` (v2 releases above the v1 history) and to `CHANGELOG.md` in `apps/action`, `apps/cli` and `apps/mcp`. The workflow's `changelogs` job commits them through the GitHub API as the Resnovas Bot app (a GitHub-signed commit) and opens a `chore(release): changelogs for v<version>` pull request to `main`; merge it before the next release.
 
