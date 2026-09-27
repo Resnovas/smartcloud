@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { describe, expect, it } from '@effect/vitest'
+import { describe, expect, it, vi } from '@effect/vitest'
 import { ConfigProvider, Effect, Exit, Layer, Redacted, Schedule } from 'effect'
 import { DEFAULT_COMMITTER, GitHub, GitHubLive, makeLiveGitHub, signOff } from '@resnovas/integrations.github'
 import { fakeFetch, type Routes } from './fake-fetch.js'
@@ -352,10 +352,10 @@ describe('live GitHub: proposing changes', () => {
     [`GET ${REPO}/git/commits/base`]: { body: { sha: 'base', tree: { sha: 'base-tree' }, parents: [] } },
     [`POST ${REPO}/git/blobs`]: [{ status: 201, body: { sha: 'blob-1' } }, { status: 201, body: { sha: 'blob-2' } }],
     [`POST ${REPO}/git/trees`]: { status: 201, body: { sha: 'new-tree' } },
-    [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'new-commit' } },
+    [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'new-commit', author: DEFAULT_COMMITTER, verification: { verified: true } } },
   }
 
-  it.effect('builds a signed-off commit on the base, creates the branch and opens a pull request', () =>
+  it.effect('builds a signed-off commit on the base as the token, creates the branch and opens a pull request', () =>
     Effect.gen(function* () {
       const { service, requests } = live({
         ...baseRoutes,
@@ -383,9 +383,8 @@ describe('live GitHub: proposing changes', () => {
         message: `chore(sync): sync files\n\nSigned-off-by: ${DEFAULT_COMMITTER.name} <${DEFAULT_COMMITTER.email}>`,
         tree: 'new-tree',
         parents: ['base'],
-        author: DEFAULT_COMMITTER,
-        committer: DEFAULT_COMMITTER,
       })
+      expect(sent('POST', `${REPO}/git/commits`)).toHaveLength(1)
       expect(sent('POST', `${REPO}/git/refs`)[0]?.body).toStrictEqual({ ref: 'refs/heads/smartcloud/sync', sha: 'new-commit' })
       expect(sent('GET', `${REPO}/pulls`)[0]?.query).toContain('head=Resnovas%3Asmartcloud%2Fsync')
       expect(sent('POST', `${REPO}/pulls`)[0]?.body).toStrictEqual({ head: 'smartcloud/sync', base: 'main', title: proposal.title, body: 'Synced.' })
@@ -421,18 +420,89 @@ describe('live GitHub: proposing changes', () => {
     }),
   )
 
-  it.effect('leaves a branch that already holds the same changes on the same base', () =>
+  it.effect('signs off as the identity GitHub records for the token, and remembers it for the next proposal', () =>
     Effect.gen(function* () {
+      const app = { name: 'resnovas-bot[bot]', email: '7+resnovas-bot[bot]@users.noreply.github.com' }
       const { service, requests } = live({
         ...baseRoutes,
-        [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { body: { object: { sha: 'old-commit' } } },
-        [`GET ${REPO}/git/commits/old-commit`]: { body: { sha: 'old-commit', tree: { sha: 'new-tree' }, parents: [{ sha: 'base' }] } },
-        [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'u' }] },
-        [`PATCH ${REPO}/pulls/9`]: { body: {} },
+        [`POST ${REPO}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
+        [`POST ${REPO}/git/commits`]: [
+          { status: 201, body: { sha: 'guessed', author: app, verification: { verified: true } } },
+          { status: 201, body: { sha: 'signed-off', author: app, verification: { verified: true } } },
+          { status: 201, body: { sha: 'again', author: app, verification: { verified: true } } },
+        ],
+        [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { status: 404, body: { message: 'Not Found' } },
+        [`POST ${REPO}/git/refs`]: { status: 201, body: {} },
+        [`GET ${REPO}/pulls`]: { body: [] },
+        [`POST ${REPO}/pulls`]: { status: 201, body: { number: 5, html_url: 'u' } },
       })
+      const github = yield* service
+      yield* github.proposeChanges(proposal)
+      yield* github.proposeChanges(proposal)
+      const commits = requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)
+      expect(commits.map(({ body }) => (body as { message: string }).message)).toStrictEqual([
+        signOff(proposal.title, DEFAULT_COMMITTER),
+        signOff(proposal.title, app),
+        signOff(proposal.title, app),
+      ])
+      expect(commits.every(({ body }) => !Object.hasOwn(body as object, 'author'))).toBe(true)
+      expect(requests.filter((request) => request.path === `${REPO}/git/refs`).map(({ body }) => body)).toStrictEqual([
+        { ref: 'refs/heads/smartcloud/sync', sha: 'signed-off' },
+        { ref: 'refs/heads/smartcloud/sync', sha: 'again' },
+      ])
+    }),
+  )
+
+  const sameChanges = (verified: boolean): Routes => ({
+    ...baseRoutes,
+    [`GET ${REPO}/git/ref/heads/smartcloud/sync`]: { body: { object: { sha: 'old-commit' } } },
+    [`GET ${REPO}/git/commits/old-commit`]: {
+      body: { sha: 'old-commit', tree: { sha: 'new-tree' }, parents: [{ sha: 'base' }], verification: { verified } },
+    },
+    [`PATCH ${REPO}/git/refs/heads/smartcloud/sync`]: { body: {} },
+    [`GET ${REPO}/pulls`]: { body: [{ number: 9, html_url: 'u' }] },
+    [`PATCH ${REPO}/pulls/9`]: { body: {} },
+  })
+
+  it.effect('leaves a signed branch that already holds the same changes on the same base', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live(sameChanges(true))
       expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
       expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(false)
       expect(requests.some((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))).toBe(false)
+    }),
+  )
+
+  it.effect('makes an unsigned branch again as the token, even when it holds the same changes', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live(sameChanges(false))
+      expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
+      expect(requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toHaveLength(1)
+      expect(requests.find((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))?.body).toStrictEqual({
+        sha: 'new-commit',
+        force: true,
+      })
+    }),
+  )
+
+  it.effect('leaves an unsigned branch with the same changes when the token cannot sign either', () =>
+    Effect.gen(function* () {
+      const { service, requests } = live({
+        ...sameChanges(false),
+        [`POST ${REPO}/git/commits`]: { status: 201, body: { sha: 'unsigned', author: DEFAULT_COMMITTER, verification: { verified: false } } },
+      })
+      expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
+      expect(requests.filter((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toHaveLength(1)
+      expect(requests.some((request) => request.method === 'PATCH' && request.path.includes('/git/refs/'))).toBe(false)
+    }),
+  )
+
+  it.effect('leaves an unsigned branch with the same changes when a committer is named, whose commits are never signed', () =>
+    Effect.gen(function* () {
+      const bot = { name: 'smartcloud[bot]', email: '1+smartcloud[bot]@users.noreply.github.com' }
+      const { service, requests } = live(sameChanges(false), bot)
+      expect((yield* (yield* service).proposeChanges(proposal)).created).toBe(false)
+      expect(requests.some((request) => request.method === 'POST' && request.path === `${REPO}/git/commits`)).toBe(false)
     }),
   )
 
@@ -557,6 +627,41 @@ describe('GitHubLive', () => {
     Effect.map(GitHub, (github) => expect(github.coordinates).toStrictEqual({ owner: 'Resnovas', repo: 'smartcloud' })).pipe(
       provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud' }),
     ),
+  )
+
+  it.effect('commits as a named committer, filling in the half not set from the default', () =>
+    Effect.gen(function* () {
+      const cases = [
+        [{ SMARTCLOUD_COMMITTER_NAME: 'Ann' }, { name: 'Ann', email: DEFAULT_COMMITTER.email }],
+        [{ SMARTCLOUD_COMMITTER_EMAIL: 'ann@example.com' }, { name: DEFAULT_COMMITTER.name, email: 'ann@example.com' }],
+      ] as const
+      for (const [env, identity] of cases) {
+        const own = '/repos/Resnovas/smartcloud'
+        const fake = fakeFetch({
+          [`GET ${own}/git/ref/heads/main`]: { body: { object: { sha: 'base' } } },
+          [`GET ${own}/git/commits/base`]: { body: { sha: 'base', tree: { sha: 'base-tree' }, parents: [] } },
+          [`POST ${own}/git/blobs`]: { status: 201, body: { sha: 'blob' } },
+          [`POST ${own}/git/trees`]: { status: 201, body: { sha: 'tree' } },
+          [`GET ${own}/git/ref/heads/smartcloud/sync`]: { status: 404, body: { message: 'Not Found' } },
+          [`POST ${own}/git/commits`]: { status: 201, body: { sha: 'commit', author: identity, verification: { verified: false } } },
+          [`POST ${own}/git/refs`]: { status: 201, body: {} },
+          [`GET ${own}/pulls`]: { body: [] },
+          [`POST ${own}/pulls`]: { status: 201, body: { number: 1, html_url: 'u' } },
+        })
+        vi.stubGlobal('fetch', fake.fetch)
+        const github = yield* GitHub.pipe(provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'Resnovas/smartcloud', ...env }))
+        yield* github.proposeChanges({
+          branch: 'smartcloud/sync',
+          base: 'main',
+          title: 'chore(sync): sync files',
+          body: 'Synced.',
+          files: [{ path: 'LICENSE', content: 'MIT', executable: false }],
+        })
+        vi.unstubAllGlobals()
+        const commit = fake.requests.find((request) => request.method === 'POST' && request.path === `${own}/git/commits`)
+        expect(commit?.body).toMatchObject({ message: signOff('chore(sync): sync files', identity), author: identity, committer: identity })
+      }
+    }),
   )
 
   it.effect('rejects a malformed repository name', () =>

@@ -156,7 +156,7 @@ describe('program', () => {
       )
       yield* program(() => Effect.succeed(service)).pipe(withEnv(restricted))
       const summary = yield* Effect.promise(() => readFile(restricted.GITHUB_STEP_SUMMARY, 'utf8'))
-      expect(summary).toContain('ran with restricted access (the workflow token, without the ACCESS_TOKEN secret)')
+      expect(summary).toContain('ran with restricted access (the workflow token, without an app or access token)')
       expect(summary).not.toContain('**Restricted access:**')
       const full = yield* Effect.promise(() =>
         env(pullRequest('feat: x'), {

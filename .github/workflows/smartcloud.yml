@@ -3,13 +3,16 @@
 # branch too, so a pull request cannot loosen its own rules. The CI workflow
 # tests a pull request's code; this one never runs it.
 #
-# The job acts with the ACCESS_TOKEN organisation secret, because the config
+# The job acts with a Resnovas Bot GitHub App token (org variable
+# RESNOVAS_BOT_APP_ID, org secret RESNOVAS_BOT_PRIVATE_KEY), because the config
 # extends the house preset in the private Resnovas/.github repository, which
-# the workflow token cannot read. Building from the default branch keeps that
-# token away from pull request code. Pull requests from forks and Dependabot
-# get no secrets: they fall back to the read-only workflow token, and
-# smartcloud then runs restricted, skipping the private preset, settings,
-# sync and refused writes rather than failing.
+# the workflow token cannot read. The token reaches only this repository and
+# Resnovas/.github, and GitHub signs the commits made with it. Building from
+# the default branch keeps it away from pull request code. Pull requests from
+# forks and Dependabot get no secrets, so no token is minted: they fall back
+# to the read-only workflow token, and smartcloud then runs restricted,
+# skipping the private preset, settings, sync and refused writes rather than
+# failing.
 name: smartcloud
 
 on:
@@ -39,6 +42,10 @@ jobs:
   smartcloud:
     name: smartcloud
     runs-on: ubuntu-latest
+    # Without the app's credentials, as in a repository outside the
+    # organisation, the mint is skipped rather than attempted with empty inputs.
+    env:
+      HAS_APP_KEY: ${{ vars.RESNOVAS_BOT_APP_ID != '' && secrets.RESNOVAS_BOT_PRIVATE_KEY != '' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -59,7 +66,28 @@ jobs:
       - name: Bundle the action
         run: pnpm nx run @resnovas/action:bundle
 
+      # Minted after the build, so no lifecycle script ever sees it. A failed
+      # mint falls back to the workflow token rather than failing the run.
+      # Never minted for a pull request from another (or a deleted) repository,
+      # Dependabot's runs and pull requests, or a manual run on another branch,
+      # whose workflow file that branch controls.
+      - name: Mint the Resnovas Bot token
+        id: app
+        if: >-
+          env.HAS_APP_KEY == 'true'
+          && (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)
+          && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+          && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
+        continue-on-error: true
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          # GitHub accepts the App ID wherever the client ID is asked for.
+          client-id: ${{ vars.RESNOVAS_BOT_APP_ID }}
+          private-key: ${{ secrets.RESNOVAS_BOT_PRIVATE_KEY }}
+          owner: Resnovas
+          repositories: smartcloud,.github
+
       - name: Run smartcloud
         uses: ./
         with:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN || github.token }}
+          GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
