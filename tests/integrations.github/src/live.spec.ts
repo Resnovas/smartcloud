@@ -255,7 +255,7 @@ describe('live GitHub: checks, files, settings and GraphQL', () => {
         { name: 'preview', source: 'status', state: 'pending', detail: 'pending' },
         { name: 'legal', source: 'status', state: 'failure', detail: 'failure' },
       ])
-      expect(requests.find((request) => request.path.endsWith('/check-runs'))?.query).toContain('filter=latest')
+      expect(requests.find((request) => request.path.endsWith('/check-runs'))?.query).toContain('filter=all')
       // Polled, so never served from the cache.
       yield* github.listCommitChecks('abc')
       expect(requests).toHaveLength(4)

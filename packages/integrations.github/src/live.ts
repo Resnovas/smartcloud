@@ -688,7 +688,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         Effect.all(
           [
             call('listCommitChecks: check runs', () =>
-              checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, filter: 'latest', per_page: 100 }),
+              checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, filter: 'all', per_page: 100 }),
             ),
             call('listCommitChecks: statuses', () =>
               checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, { owner, repo, ref, per_page: 100 }),

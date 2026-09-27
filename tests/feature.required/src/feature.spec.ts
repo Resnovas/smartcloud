@@ -164,6 +164,18 @@ describe('requiredFeature', () => {
     }),
   )
 
+  it.effect('does not take two looks at same-named checks from different apps as settled', () =>
+    Effect.gen(function* () {
+      const github = scripted([
+        [{ ...check('test', 'success'), app: 'circleci' }],
+        [{ ...check('test', 'success'), app: 'github-actions' }],
+      ])
+      const result = yield* runPolling(github)
+      expect(findings(result).map((finding) => finding.rule)).toStrictEqual(['required.passed'])
+      expect(github.looks()).toBe(3)
+    }),
+  )
+
   it.effect('waits for pending checks, and for a check that appears after the rest settled', () =>
     Effect.gen(function* () {
       const github = scripted([

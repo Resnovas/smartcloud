@@ -50,7 +50,7 @@ export const POLL_INTERVAL = Duration.seconds(15)
 // adds its checks between them.
 const namesOf = (assessment: Assessment) =>
   assessment.counted
-    .map((check) => check.name)
+    .map((check) => `${check.app ?? ''}\u0000${check.name}`)
     .sort()
     .join('\n')
 

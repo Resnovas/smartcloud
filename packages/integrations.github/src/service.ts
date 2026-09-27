@@ -226,10 +226,10 @@ export interface GitHubService {
   readonly createCheckRun: (run: CheckRun) => Effect.Effect<number, GitHubError>
   readonly updateCheckRun: (id: number, run: CheckRun) => Effect.Effect<void, GitHubError>
   /**
-   * Lists the checks on a commit: the latest check run of each name in each
-   * check suite, so a commit with several suites (re-runs and retriggered
-   * workflows) can list one name more than once, and the latest status of
-   * each context. Never cached, because callers poll it.
+   * Lists the checks on a commit: every check run, including re-runs and
+   * runs from retriggered workflows, so a caller picks the latest by app and
+   * name itself, and the latest status of each context. Never cached, because
+   * callers poll it.
    */
   readonly listCommitChecks: (sha: string) => Effect.Effect<ReadonlyArray<CommitCheck>, GitHubError>
 
