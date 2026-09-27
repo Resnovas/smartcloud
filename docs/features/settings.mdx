@@ -101,11 +101,11 @@ Only what you configure is changed. A section or key left out produces no call, 
 
 ## Security
 
-| Key                                                                                                   | Values                                                                                                                |
-| ----------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `immutableReleases`, `privateVulnerabilityReporting`, `dependabotAlerts`, `dependabotSecurityUpdates` | `true` or `false`                                                                                                     |
-| `codeScanning`                                                                                        | `default` or `extended` turn on CodeQL default setup with that query suite; `off` turns it off.                       |
-| `secretScanning`                                                                                      | `true` or `false`, for secret scanning, push protection, Copilot secret detection and non-provider patterns together. |
+| Key                                                                                                   | Values                                                                                                                                       |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `immutableReleases`, `privateVulnerabilityReporting`, `dependabotAlerts`, `dependabotSecurityUpdates` | `true` or `false`                                                                                                                            |
+| `codeScanning`                                                                                        | `default` or `extended` turn on CodeQL default setup with that query suite; `off` turns it off, as advanced setup (a CodeQL workflow) needs. |
+| `secretScanning`                                                                                      | `true` or `false`, for secret scanning, push protection, Copilot secret detection and non-provider patterns together.                        |
 
 `dependabotAlerts` turns on the dependency graph with Dependabot alerts, and `dependabotSecurityUpdates` lets Dependabot open pull requests that fix them. Security updates need alerts, so turn both on together.
 

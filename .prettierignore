@@ -17,6 +17,7 @@ LICENSE
 .github/ISSUE_TEMPLATE/
 .github/PULL_REQUEST_TEMPLATE.md
 .github/smartcloud.yml
+.github/workflows/house-codeql.yml
 .github/workflows/house-graphify.yml
 .github/workflows/smartcloud.yml
 .graphifyignore

@@ -1,0 +1,29 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-codeql.yml. Edits inside this block are overwritten.
+#
+# CodeQL code scanning (advanced setup). The house ruleset blocks merging on
+# CodeQL errors and high or critical security alerts, so it runs on every pull
+# request and merge queue entry, on the default branch and weekly. Tune it with
+# .github/codeql/codeql-config.yml, for example paths-ignore for vendored code.
+# Uses only the workflow token.
+name: House CodeQL
+
+on:
+  pull_request:
+  merge_group:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '27 4 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  house-codeql:
+    uses: Resnovas/.github/.github/workflows/codeql.yml@main
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.
