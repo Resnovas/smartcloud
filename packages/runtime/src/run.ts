@@ -19,7 +19,7 @@ import { DryRun, DryRunLog, GitHub, type RecordedWrite } from '@resnovas/integra
 import { reportError, track } from '@resnovas/integrations.posthog'
 import { publishReport, type Published } from '@resnovas/reporting'
 import { Data, Effect, Either, Schema } from 'effect'
-import { loadConfig, readLocalConfig, type ConfigLocation } from './config.js'
+import { configFindings, loadConfig, readLocalConfig, type ConfigLocation } from './config.js'
 import { selectFeatures } from './features.js'
 import { turnedOffFeatures } from './flags.js'
 import { recordRun } from './analytics.js'
@@ -108,14 +108,21 @@ export const runEvent = (options: {
       })
       const result: RunResult = {
         ...featureRun,
-        findings: [...accessFindings(access, resolved.skipped ?? []), ...featureRun.findings],
+        findings: [
+          ...accessFindings(access, resolved.skipped ?? []),
+          ...configFindings(resolved.ignored ?? []),
+          ...featureRun.findings,
+        ],
         ...(resolved.skipped === undefined ? {} : { configSkipped: resolved.skipped }),
       }
       for (const failure of result.failed)
         yield* reportError(repository, new FeatureFailed({ feature: failure.feature, reason: failure.message }))
       yield* recordRun(result, options.event.name)
       const published = yield* publishReport(result, { trustedAuthors: resolved.config.roles?.trustedBots ?? [] })
-      const outcome: RunOutcome = { result, published, warnings: [...resolved.warnings, ...published.warnings] }
+      // Ignored config is reported as findings, so it is not repeated as a warning.
+      const ignored = new Set(resolved.ignored)
+      const warnings = resolved.warnings.filter((warning) => !ignored.has(warning))
+      const outcome: RunOutcome = { result, published, warnings: [...warnings, ...published.warnings] }
       return outcome
     })
     return track(run, {

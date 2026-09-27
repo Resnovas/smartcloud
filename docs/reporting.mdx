@@ -42,7 +42,7 @@ Every finding is also printed as a workflow command, which Actions shows as an a
 
 ## Config warnings
 
-A key the config or a preset has that this version of smartcloud does not know, or a value it cannot use, is dropped rather than failing the run (see [Unknown keys and invalid values](/configuration#unknown-keys-and-invalid-values)). Each one is printed as a warning annotation on the run, naming the file and the key, alongside the migration warnings of a v1 config.
+A key the config or a preset has that this version of smartcloud does not know, or a value it cannot use, is dropped rather than failing the run (see [Unknown keys and invalid values](/configuration#unknown-keys-and-invalid-values)). Each one is a warning finding (`config.ignored`) naming the file and the key, so it shows in its own `smartcloud / config` check run, in the job summary and as an annotation on the run. A warning concludes the check as neutral, which still satisfies a required check.
 
 ## Restricted runs
 

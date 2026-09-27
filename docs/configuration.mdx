@@ -39,7 +39,7 @@ What is dropped:
 
 Some problems still fail the run, because they are not about one key: a file that is not YAML or JSON, is not a mapping, or has a malformed `extends` entry; a preset that cannot be read (outside a [restricted run](/reporting#restricted-runs)); presets that extend each other in a loop or more than five deep; and a config that changes a value its preset set, which [Add, never change](#add-never-change) describes.
 
-The warnings appear as annotations on the workflow run; see [Reporting](/reporting#config-warnings). To catch mistakes before they reach a run, check the config with [`smartcloud validate`](/cli#validate) or the MCP server's `validate_config`, which are strict and report every unknown key and invalid value as an error, or let your editor check it against the JSON Schema named in the first line of the example above, which is strict too.
+The warnings appear in a `smartcloud / config` check run and the job summary; see [Reporting](/reporting#config-warnings). To catch mistakes before they reach a run, check the config with [`smartcloud validate`](/cli#validate) or the MCP server's `validate_config`, which are strict and report every unknown key and invalid value as an error, or let your editor check it against the JSON Schema named in the first line of the example above, which is strict too.
 
 ## Sections
 

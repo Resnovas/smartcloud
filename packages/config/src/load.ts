@@ -131,6 +131,12 @@ export interface ResolvedConfig {
    * nothing was left out.
    */
   readonly skipped?: ReadonlyArray<string>
+  /**
+   * The unknown keys and invalid values dropped from the config and its
+   * presets, one line each naming the file and key, as also listed in
+   * `warnings`. Absent when nothing was dropped.
+   */
+  readonly ignored?: ReadonlyArray<string>
 }
 
 /** How {@link resolveConfig} treats presets it cannot read and config that does not match the schema. */
@@ -241,7 +247,7 @@ const parseLayer = (text: string, source: string, strict: boolean) =>
     // merged as written and checked once merged.
     const decoded = decodeV2(lenient.value)
     const json = Either.isRight(decoded) ? toJson(decoded.right) : lenient.value
-    return { json, extends: entries.right, warnings: [...warnings, ...lenient.warnings] }
+    return { json, extends: entries.right, warnings: [...warnings, ...lenient.warnings], ignored: lenient.warnings }
   })
 
 // Whether a path runs only through fields the schema names, such as
@@ -338,6 +344,7 @@ export const resolveConfig = (
     const configSource = yield* ConfigSource
     const sources: Array<string> = []
     const warnings: Array<string> = []
+    const ignored: Array<string> = []
     const skipped: Array<string> = []
     const skipUnreadable = options.skipUnreadable ?? (() => false)
     const strict = options.strict ?? false
@@ -355,6 +362,7 @@ export const resolveConfig = (
         }
         const layer = yield* parseLayer(contents, name, strict)
         warnings.push(...layer.warnings)
+        ignored.push(...layer.ignored)
         let next = merged
         for (const entry of layer.extends) {
           // Entries were validated by parseLayer, so this always parses.
@@ -397,6 +405,7 @@ export const resolveConfig = (
     // still incomplete or invalid then is dropped, unless the config is strict.
     const lenient = strict ? { value, warnings: [] } : dropInvalid(value, from)
     warnings.push(...lenient.warnings)
+    ignored.push(...lenient.warnings)
     const decoded = decodeV2({ ...lenient.value, version: 2 })
     if (Either.isLeft(decoded)) {
       return yield* new ConfigDecodeError({
@@ -408,5 +417,12 @@ export const resolveConfig = (
     const locked = new Set(
       [...merged.origins].filter(([, origin]) => origin !== sources[localStart]).map(([path]) => path),
     )
-    return skipped.length === 0 ? { config, sources, locked, warnings } : { config, sources, locked, warnings, skipped }
+    return {
+      config,
+      sources,
+      locked,
+      warnings,
+      ...(skipped.length === 0 ? {} : { skipped }),
+      ...(ignored.length === 0 ? {} : { ignored }),
+    }
   })

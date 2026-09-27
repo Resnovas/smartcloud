@@ -186,6 +186,7 @@ describe('resolveConfig: extends and locked presets', () => {
         ),
       ])
       expect(resolved.locked.has('settings.merging.squash')).toBe(true)
+      expect(resolved.ignored).toStrictEqual(resolved.warnings)
     }),
   )
 
@@ -329,7 +330,8 @@ describe('resolveConfig: extends and locked presets', () => {
   it.effect('strictly, with a preset skipped, still fails a section the preset could not have completed', () =>
     Effect.gen(function* () {
       const skipAll = { skipUnreadable: () => true, strict: true }
-      const resolve = (body: string) => Effect.flip(resolveConfig(local(body), 'repo', skipAll).pipe(Effect.provide(presets({}))))
+      const resolve = (body: string) =>
+        Effect.flip(resolveConfig(local(body), 'repo', skipAll).pipe(Effect.provide(presets({}))))
       // The repository named this label, so the missing colour is its own mistake.
       const label = yield* resolve('labels:\n  docs: { name: docs }\n')
       expect(label).toMatchObject({ _tag: 'ConfigDecodeError', source: 'repo' })
@@ -359,6 +361,11 @@ describe('resolveConfig: extends and locked presets', () => {
         'repo: ignored labels.docs, because labels.docs.name is missing',
       ])
       expect(malformed.skipped).toStrictEqual([expect.stringMatching(/^the extends preset /)])
+      // A label the repository named without a colour is its own mistake, not
+      // the skipped preset's, so it is ignored rather than left out.
+      const label = yield* resolve('labels:\n  docs: { name: docs }\n  ok: { name: ok, color: 0E8A16 }\n')
+      expect(label.config.labels).toStrictEqual({ ok: { name: 'ok', color: '0E8A16' } })
+      expect(label.ignored).toStrictEqual(['repo: ignored labels.docs, because labels.docs.color is missing'])
       const convention = yield* resolve('conventions:\n  rules:\n    title: { level: loud, preset: semanticTitle }\n')
       expect(convention.config.conventions?.rules?.['title']).toStrictEqual({ preset: 'semanticTitle' })
       const proto = yield* resolve('__proto__:\n  labels: {}\n')

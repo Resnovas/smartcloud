@@ -23,7 +23,7 @@ import {
   type ResolvedConfig,
   type ResolveOptions,
 } from '@resnovas/config'
-import type { EnvelopeKind, Feature } from '@resnovas/engine'
+import type { EnvelopeKind, Feature, Finding } from '@resnovas/engine'
 import { GitHub } from '@resnovas/integrations.github'
 import { optOut } from '@resnovas/integrations.posthog'
 import { Data, Effect, Layer, Option, Schema } from 'effect'
@@ -196,6 +196,25 @@ export const readLocalConfig = (path: string) =>
 
 // The schema hint lets editors complete and check the file.
 const SCHEMA_HINT = '# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json'
+
+/**
+ * The findings that report config a run ignored: a warning for each unknown
+ * key or invalid value dropped from the config or a preset, under the
+ * `config` source, so they get their own `smartcloud / config` check run.
+ *
+ * @example
+ * ```ts import.meta.vitest name="configFindings"
+ * import { configFindings } from '@resnovas/runtime'
+ *
+ * configFindings(['house.yml: ignored settings.codespaces, because settings.codespaces is unexpected'])[0]?.rule // => 'config.ignored'
+ * configFindings([]).length // => 0
+ * ```
+ *
+ * @param ignored - What was dropped, as `ResolvedConfig.ignored` lists it.
+ * @returns A warning finding for each.
+ */
+export const configFindings = (ignored: ReadonlyArray<string>): ReadonlyArray<Finding> =>
+  ignored.map((item) => ({ feature: 'config', rule: 'config.ignored', level: 'warning', message: item }))
 
 /** A config converted to v2 YAML. */
 export interface Migrated {

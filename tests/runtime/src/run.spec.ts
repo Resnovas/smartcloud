@@ -82,6 +82,23 @@ describe('runEvent and dryRun', () => {
     }),
   )
 
+  it.effect('reports config it ignored as warnings in a config check run, and runs the rest', () =>
+    Effect.gen(function* () {
+      const config = `${CONVENTIONS}settings:\n  codespaces: { enabled: true }\n`
+      const { service, state } = memory({ '.github/smartcloud.yml': config })
+      const event = yield* syntheticEvent({ kind: 'pullRequest', number: 7 }).pipe(Effect.provideService(GitHub, service))
+      const outcome = yield* runEvent({ config: {}, event }).pipe(Effect.provideService(GitHub, service))
+      expect(outcome.result.findings.map((finding) => `${finding.level} ${finding.rule}`)).toStrictEqual([
+        'warning config.ignored',
+        'error conventions.title',
+      ])
+      expect(outcome.result.findings[0]?.message).toMatch(/^\.github\/smartcloud\.yml: ignored settings\.codespaces, because /)
+      expect(state.checkRuns.map((check) => [check.name, check.conclusion])).toContainEqual(['smartcloud / config', 'neutral'])
+      // Reported as a finding, so not repeated as a run warning.
+      expect(outcome.warnings).toStrictEqual([])
+    }),
+  )
+
   it.effect(
     'a restricted run leaves out an unreadable preset from another repository and skips PAT-only features',
     () =>
