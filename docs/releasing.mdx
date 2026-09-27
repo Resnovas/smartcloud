@@ -11,7 +11,7 @@ The GitHub Action, the CLI and the MCP server (`@resnovas/action`, `@resnovas/sm
 
 `pnpm bundle:check` builds the action and checks `dist/index.js` against the raw and gzip byte limits in `bundle-size.json`. CI runs the same command in its build job, which feeds the required `check` context on pull requests and merge queue groups. Changes that skip the build job also skip the bundle check.
 
-The checked-in baseline is 3,528,427 raw bytes and 719,295 gzip bytes, with limits of 3,881,270 and 791,225 bytes respectively (10% headroom, rounded up). Gzip uses level 9. Only `dist/index.js` counts, including its linked source-map comment; the source map and other release assets do not. This measures the CI bundle before release version stamping and PostHog processing.
+The checked-in baseline is 3,881,093 raw bytes and 796,299 gzip bytes, with limits of 4,269,203 and 875,929 bytes respectively (10% headroom, rounded up). Gzip uses level 9. Only `dist/index.js` counts, including its linked source-map comment; the source map and other release assets do not. This measures the CI bundle before release version stamping and PostHog processing.
 
 The command prints a table of baseline, current size, signed change, limit and remaining budget, and appends it to the GitHub job summary. Either limit exceeded fails the build with the exact overage. The delta is against the reviewed baseline in the JSON file, not a freshly rebuilt base branch, so it needs no extra checkout, network access, secrets or write permissions.
 
