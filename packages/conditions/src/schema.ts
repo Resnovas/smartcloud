@@ -16,7 +16,7 @@
 
 import { Schema } from 'effect'
 import { Pattern } from './pattern.js'
-import { CheckState } from './subject.js'
+import { CheckState, Reaction } from './subject.js'
 
 // Field names follow v1 exactly (`type`, `condition`, `requires`, `label`,
 // `min`, `max`), so every v1 condition decodes and evaluates unchanged.
@@ -679,6 +679,68 @@ export const HasTrailer = Schema.Struct({
   description: 'Commits carry the trailer, with a value matching the pattern when one is given.',
 })
 
+/**
+ * A comment on the issue or pull request matches a pattern.
+ *
+ * @remarks
+ * Comments by bot accounts, smartcloud's own report among them, are left out
+ * unless `bots` is set, so a bot quoting the pattern cannot make the
+ * condition pass. The description is not a comment: use `descriptionMatches`
+ * for it.
+ *
+ * @example
+ * ```ts import.meta.vitest name="CommentMatches"
+ * import { CommentMatches } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(CommentMatches)({ type: 'commentMatches', condition: '^/lgtm' }) // => true
+ * ```
+ */
+export const CommentMatches = Schema.Struct({
+  type: Schema.Literal('commentMatches'),
+  condition: Pattern,
+  bots: Schema.optionalWith(
+    Schema.Boolean.annotations({ description: 'Also match comments by bot accounts (default false).' }),
+    { exact: true },
+  ),
+}).annotations({
+  identifier: 'commentMatches',
+  description: 'At least one comment matches a pattern; comments by bots count only when bots is set.',
+})
+
+/**
+ * The number of reactions on the issue or pull request falls in `[min, max)`.
+ *
+ * @remarks
+ * `reaction` picks one reaction by its GitHub name (`+1` is 👍); without it
+ * every reaction counts. Only reactions on the item itself count, not those
+ * on its comments.
+ *
+ * @example
+ * ```ts import.meta.vitest name="ReactionCount"
+ * import { ReactionCount } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(ReactionCount)({ type: 'reactionCount', reaction: '+1', min: 10 }) // => true
+ * Schema.is(ReactionCount)({ type: 'reactionCount', reaction: 'thumbsup', min: 10 }) // => false
+ * ```
+ */
+export const ReactionCount = Schema.Struct({
+  type: Schema.Literal('reactionCount'),
+  reaction: Schema.optionalWith(
+    Reaction.annotations({
+      description:
+        'The reaction to count: +1, -1, laugh, hooray, confused, heart, rocket or eyes. Every reaction when omitted.',
+    }),
+    { exact: true },
+  ),
+  min: Count,
+  max: Schema.optionalWith(Count, { exact: true }),
+}).annotations({
+  identifier: 'reactionCount',
+  description: 'The number of reactions (of one kind, when reaction is set) is at least min and below max.',
+})
+
 const Leaf = Schema.Union(
   TitleMatches,
   DescriptionMatches,
@@ -714,6 +776,8 @@ const Leaf = Schema.Union(
   IsApproved,
   CommitMessagesMatch,
   HasTrailer,
+  CommentMatches,
+  ReactionCount,
 )
 /** Any condition that does not contain other conditions. */
 export type LeafCondition = typeof Leaf.Type

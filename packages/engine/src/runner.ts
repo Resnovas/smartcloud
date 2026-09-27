@@ -111,10 +111,17 @@ const readCodeowners = (github: GitHubService, ref: string | undefined): Effect.
       : Effect.succeed(found),
   ).pipe(Effect.map((text) => text ?? ''))
 
+// The facets an issue has; the others only exist on pull requests.
+const ISSUE_FACETS: ReadonlySet<Facet> = new Set(['comments', 'reactions'])
+
 /**
- * Loads the facets a run needs onto a pull request subject, concurrently.
+ * Loads the facets a run needs onto a subject, concurrently.
  *
  * @remarks
+ * An issue gets only `comments` and `reactions`; every other facet is a pull
+ * request's. A facet the subject already carries, such as reactions from the
+ * event payload, is not read again.
+ *
  * Traced as `smartcloud.engine.loadFacets`, with the subject's kind and the
  * facets asked for.
  *
@@ -127,16 +134,19 @@ const readCodeowners = (github: GitHubService, ref: string | undefined): Effect.
  * const withFiles = loadFacets(pullRequest, new Set(['files', 'reviews'] as const))
  * ```
  *
- * @param subject - The pull request.
+ * @param subject - The issue or pull request.
  * @param facets - The facets to load.
  * @returns The subject with those facets filled in.
  */
 export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect.Effect<Subject, GitHubError, GitHub> =>
   Effect.gen(function* () {
-    if (subject.kind !== 'pullRequest' || facets.size === 0) return subject
+    const wanted = [...facets].filter(
+      (facet) => subject[facet] === undefined && (subject.kind === 'pullRequest' || ISSUE_FACETS.has(facet)),
+    )
+    if (wanted.length === 0) return subject
     const github = yield* GitHub
     const load = <A>(facet: Facet, read: (number: number) => Effect.Effect<A, GitHubError>) =>
-      facets.has(facet) ? Effect.map(read(subject.number), (value) => ({ [facet]: value })) : Effect.succeed({})
+      wanted.includes(facet) ? Effect.map(read(subject.number), (value) => ({ [facet]: value })) : Effect.succeed({})
     const parts = yield* Effect.all(
       [
         // The paths are the changed files' paths, so a load that needs both lists the files once.
@@ -163,6 +173,8 @@ export const loadFacets = (subject: Subject, facets: ReadonlySet<Facet>): Effect
         load('mergeable', github.getMergeable),
         load('checks', github.listChecks),
         load('codeowners', () => readCodeowners(github, subject.baseBranch)),
+        load('comments', github.listComments),
+        load('reactions', github.getReactions),
       ],
       { concurrency: 'unbounded' },
     )

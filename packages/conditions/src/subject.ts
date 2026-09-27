@@ -91,6 +91,61 @@ export const ChangedFile = Schema.Struct({
 export type ChangedFile = typeof ChangedFile.Type
 
 /**
+ * A comment on an issue or pull request, reduced to what conditions need.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Comment"
+ * import { Comment } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Comment)({ author: 'jane', body: 'Still happening on 2.1', bot: false }) // => true
+ * ```
+ */
+export const Comment = Schema.Struct({
+  author: Schema.String,
+  body: Schema.String,
+  /** Whether the author is a bot account, such as a GitHub App. */
+  bot: Schema.Boolean,
+})
+/** A decoded {@link Comment}. */
+export type Comment = typeof Comment.Type
+
+/**
+ * A reaction GitHub offers on an issue or pull request, by its API name:
+ * `+1` is 👍, `-1` 👎, `laugh` 😄, `hooray` 🎉, `confused` 😕, `heart` ❤️,
+ * `rocket` 🚀 and `eyes` 👀.
+ *
+ * @example
+ * ```ts import.meta.vitest name="Reaction"
+ * import { Reaction } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(Reaction)('+1') // => true
+ * Schema.is(Reaction)('thumbsup') // => false
+ * ```
+ */
+export const Reaction = Schema.Literal('+1', '-1', 'laugh', 'hooray', 'confused', 'heart', 'rocket', 'eyes')
+/** A decoded {@link Reaction}. */
+export type Reaction = typeof Reaction.Type
+
+/**
+ * How many of each reaction an issue or pull request has, as GitHub counts
+ * them on the item itself (reactions on its comments are not included).
+ *
+ * @example
+ * ```ts import.meta.vitest name="Reactions"
+ * import { Reactions } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * const reactions = { '+1': 12, '-1': 0, laugh: 0, hooray: 1, confused: 0, heart: 3, rocket: 0, eyes: 0 }
+ * Schema.is(Reactions)(reactions) // => true
+ * ```
+ */
+export const Reactions = Schema.Record({ key: Reaction, value: Schema.NonNegativeInt })
+/** A decoded {@link Reactions}. */
+export type Reactions = typeof Reactions.Type
+
+/**
  * Whether a pull request can merge into its base branch, as GitHub reports
  * it: `UNKNOWN` while GitHub is still computing it.
  *
@@ -174,9 +229,12 @@ export type Association = typeof Association.Type
  *
  * @remarks
  * `files`, `changedFiles`, `reviews`, `pendingReviewers`, `requestedReviewers`,
- * `commits`, `mergeable`, `checks` and `codeowners` are facets that cost an API call each, so the engine loads only the ones a
+ * `commits`, `mergeable`, `checks`, `codeowners`, `comments` and `reactions` are facets that cost an API call each, so the engine loads only the ones a
  * config needs (see `requiredFacets`). Evaluating a condition whose facet was not loaded fails
- * with `MissingFacet` rather than guessing.
+ * with `MissingFacet` rather than guessing. `comments` and `reactions` apply
+ * to issues too; the others only to pull requests. `reactions` is filled in
+ * without a call when the event or listing that delivered the subject
+ * already carries the counts.
  *
  * @example
  * ```ts import.meta.vitest name="Subject"
@@ -225,6 +283,10 @@ export const Subject = Schema.Struct({
   checks: Schema.optionalWith(Schema.Array(Check), { exact: true }),
   /** The CODEOWNERS file on the base branch; an empty string when there is none. */
   codeowners: Schema.optionalWith(Schema.String, { exact: true }),
+  /** The comments on the issue or pull request, oldest first. */
+  comments: Schema.optionalWith(Schema.Array(Comment), { exact: true }),
+  /** The reactions on the issue or pull request itself. */
+  reactions: Schema.optionalWith(Reactions, { exact: true }),
 })
 /** A decoded {@link Subject}. */
 export type Subject = typeof Subject.Type
@@ -240,3 +302,5 @@ export type Facet =
   | 'mergeable'
   | 'checks'
   | 'codeowners'
+  | 'comments'
+  | 'reactions'

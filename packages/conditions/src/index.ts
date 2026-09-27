@@ -27,6 +27,7 @@ export {
   CheckStatus,
   ChecksPass,
   CodeownersTouched,
+  CommentMatches,
   CommitMessagesMatch,
   CommitsSignedOff,
   CommitsVerified,
@@ -51,12 +52,25 @@ export {
   LockfileChanged,
   MilestoneMatches,
   PendingReview,
+  ReactionCount,
   RequestedChanges,
   ReviewerMatches,
   TitleMatches,
 } from './schema.js'
 export type { And, LeafCondition, Not, Only, Or } from './schema.js'
-export { Association, ChangedFile, Check, CheckState, Commit, Mergeable, Review, Subject } from './subject.js'
+export {
+  Association,
+  ChangedFile,
+  Check,
+  CheckState,
+  Comment,
+  Commit,
+  Mergeable,
+  Reaction,
+  Reactions,
+  Review,
+  Subject,
+} from './subject.js'
 export type { Facet } from './subject.js'
 export { hasKey, parseIdentity, parseTrailers } from './trailers.js'
 export type { Trailer } from './trailers.js'

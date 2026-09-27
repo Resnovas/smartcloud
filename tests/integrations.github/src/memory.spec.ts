@@ -92,6 +92,17 @@ describe('in-memory GitHub', () => {
     }),
   )
 
+  it.effect('reads the reactions seeded on an issue, and none on any other', () =>
+    Effect.gen(function* () {
+      const none = { '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
+      const { service } = makeMemoryGitHub({
+        issues: new Map([[3, { labels: [], comments: [], open: true, reactions: { ...none, '+1': 6 } }]]),
+      })
+      expect(yield* service.getReactions(3)).toStrictEqual({ ...none, '+1': 6 })
+      expect(yield* service.getReactions(4)).toStrictEqual(none)
+    }),
+  )
+
   it.effect('serves pull request data and records reviews', () =>
     Effect.gen(function* () {
       const { service, state } = makeMemoryGitHub({

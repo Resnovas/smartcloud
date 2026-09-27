@@ -99,7 +99,7 @@ Type: integer.
 
 ### Condition
 
-Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [lockfileChanged](#lockfilechanged), [fileCount](#filecount), [binaryFilesAdded](#binaryfilesadded), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
+Type: any of [titleMatches](#titlematches), [descriptionMatches](#descriptionmatches), [creatorMatches](#creatormatches), [branchMatches](#branchmatches), [baseBranchMatches](#basebranchmatches), [authorAssociation](#authorassociation), [hasAssignee](#hasassignee), [assigneeMatches](#assigneematches), [hasMilestone](#hasmilestone), [milestoneMatches](#milestonematches), [linksIssue](#linksissue), [isOpen](#isopen), [isLocked](#islocked), [isDraft](#isdraft), [pendingReview](#pendingreview), [requestedChanges](#requestedchanges), [reviewerMatches](#reviewermatches), [commitsSignedOff](#commitssignedoff), [commitsVerified](#commitsverified), [hasConflict](#hasconflict), [checksPass](#checkspass), [checkStatus](#checkstatus), [hasLabel](#haslabel), [isStale](#isstale), [isAbandoned](#isabandoned), [filesMatch](#filesmatch), [codeownersTouched](#codeownerstouched), [changesSize](#changessize), [lockfileChanged](#lockfilechanged), [fileCount](#filecount), [binaryFilesAdded](#binaryfilesadded), [isApproved](#isapproved), [commitMessagesMatch](#commitmessagesmatch), [hasTrailer](#hastrailer), [commentMatches](#commentmatches), [reactionCount](#reactioncount), [$and](#and), [$or](#or), [$not](#not), [$only](#only).
 
 ### Pattern
 
@@ -751,6 +751,31 @@ Commits carry the trailer, with a value matching the pattern when one is given.
 | `trailer` | string | yes |  |
 | `condition` | [Pattern](#pattern) | no |  |
 | `scope` | one of `all`, `any` | no | Whether every commit (all) or at least one commit (any) must match. |
+
+Other keys are an error.
+
+### commentMatches
+
+At least one comment matches a pattern; comments by bots count only when bots is set.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `commentMatches` | yes |  |
+| `condition` | [Pattern](#pattern) | yes |  |
+| `bots` | boolean | no | Also match comments by bot accounts (default false). |
+
+Other keys are an error.
+
+### reactionCount
+
+The number of reactions (of one kind, when reaction is set) is at least min and below max.
+
+| Key | Type | Required | Notes |
+| --- | --- | --- | --- |
+| `type` | `reactionCount` | yes |  |
+| `reaction` | one of `+1`, `-1`, `laugh`, `hooray`, `confused`, `heart`, `rocket`, `eyes` | no | The reaction to count: +1, -1, laugh, hooray, confused, heart, rocket or eyes. Every reaction when omitted. |
+| `min` | [NonNegativeInt](#nonnegativeint) | yes |  |
+| `max` | [NonNegativeInt](#nonnegativeint) | no |  |
 
 Other keys are an error.
 

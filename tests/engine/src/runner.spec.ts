@@ -286,6 +286,8 @@ describe('loadFacets', () => {
           'mergeable',
           'checks',
           'codeowners',
+          'comments',
+          'reactions',
         ] as const),
       ).pipe(Effect.provideService(GitHub, service))
       expect(subject).toMatchObject({
@@ -298,7 +300,58 @@ describe('loadFacets', () => {
         mergeable: 'MERGEABLE',
         checks: [],
         codeowners: '',
+        comments: [],
+        reactions: { '+1': 0, eyes: 0 },
       })
+    }),
+  )
+
+  it.effect('loads only comments and reactions onto an issue', () =>
+    Effect.gen(function* () {
+      const { service, state } = memory()
+      const comment = { id: 1, body: 'me too', author: 'sam', bot: false }
+      const reactions = { '+1': 4, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 1, rocket: 0, eyes: 0 }
+      state.issues.set(3, { labels: [], comments: [comment], open: true, reactions })
+      const issue = {
+        kind: 'issue' as const,
+        number: 3,
+        title: 't',
+        body: '',
+        author: 'a',
+        open: true,
+        locked: false,
+        labels: [],
+        updatedAt: new Date(0),
+      }
+      const subject = yield* loadFacets(issue, new Set(['files', 'comments', 'reactions'] as const)).pipe(
+        Effect.provideService(GitHub, service),
+      )
+      expect(subject.files).toBeUndefined()
+      expect(subject.comments).toStrictEqual([comment])
+      expect(subject.reactions).toStrictEqual(reactions)
+    }),
+  )
+
+  it.effect('does not read a facet the subject already carries', () =>
+    Effect.gen(function* () {
+      const { service } = memory()
+      const github = { ...service, getReactions: () => Effect.die('reactions were read again') }
+      const reactions = { '+1': 2, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
+      const issue = {
+        kind: 'issue' as const,
+        number: 3,
+        title: 't',
+        body: '',
+        author: 'a',
+        open: true,
+        locked: false,
+        labels: [],
+        updatedAt: new Date(0),
+        reactions,
+      }
+      expect(
+        yield* loadFacets(issue, new Set(['reactions'] as const)).pipe(Effect.provideService(GitHub, github)),
+      ).toBe(issue)
     }),
   )
 

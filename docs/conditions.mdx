@@ -63,6 +63,8 @@ Conditions that match text take a pattern: a regular expression written either b
 | `hasConflict`         | `condition`: boolean                                                | The pull request conflicts with its base branch (`true`), or does not (`false`).                                                                       |
 | `checksPass`          | `checks`: list of check names, `condition`: boolean                 | Every named check succeeded (`true`), or at least one has not (`false`).                                                                               |
 | `checkStatus`         | `check`: check name, `condition`: `success`, `failure` or `pending` | The named check is in that state.                                                                                                                      |
+| `commentMatches`      | `condition`: pattern, optional `bots`: boolean                      | At least one comment matches. Comments by bots count only with `bots: true`.                                                                           |
+| `reactionCount`       | `min`, optional `max`: count, optional `reaction`                   | Reactions on the subject (only the `reaction` kind, when set) are at least `min` and below `max`.                                                      |
 
 Activity is GitHub's `updated_at` time for the issue or pull request.
 
@@ -293,7 +295,41 @@ labelling:
 
 All three read the pull request's changed files, one API call covered by `contents: read`. `lockfileChanged` and `fileCount` share it with `filesMatch` and `codeownersTouched`; `binaryFilesAdded` reads the listing's status and line counts too, which is a separate call.
 
-Conditions that need a pull request's files, reviews, commits, mergeability, checks or CODEOWNERS cost an API call each. smartcloud loads only the ones the configured rules use.
+### Comments and reactions
+
+`commentMatches` passes when at least one comment on the issue or pull request matches the pattern. Comments by bot accounts, smartcloud's own among them, are left out unless you set `bots: true`, so a bot quoting the pattern cannot make it pass. The description is not a comment: use `descriptionMatches` for it.
+
+`reactionCount` counts the reactions on the issue or pull request itself, not on its comments. Name one in `reaction` by its GitHub name: `+1` (👍), `-1` (👎), `laugh`, `hooray`, `confused`, `heart`, `rocket` or `eyes`. Without `reaction`, every reaction counts. It passes when the count is at least `min` and, when `max` is set, below it.
+
+Both work on issues as well as pull requests. To prioritise the issues people want most, and to keep them from going stale:
+
+```yaml
+labelling:
+  popular:
+    label: 'Priority - High'
+    on: [issue]
+    when:
+      condition:
+        - type: reactionCount
+          reaction: '+1'
+          min: 10
+stale:
+  staleAfterDays: 60
+  staleLabel: 'Status - Stale'
+  exempt:
+    when:
+      requires: 1
+      condition:
+        - type: reactionCount
+          reaction: '+1'
+          min: 10
+        - type: commentMatches
+          condition: '/still (happening|relevant)/i'
+```
+
+GitHub starts no workflow when someone reacts, so a label follows on the next event smartcloud runs on, while a scheduled stale sweep reads the latest counts every time it runs. A new comment is such an event on an issue only when your workflow subscribes to `issue_comment`. A comment on a pull request arrives as an `issue_comment` event without the pull request's data, which smartcloud does not act on, so there `commentMatches` is read on the next pull request event. `commentMatches` reads the comments, one API call covered by `issues: read` (`pull-requests: read` on a pull request). `reactionCount` needs no call on an issue event or in a stale sweep, whose payload and listing carry the counts; on a pull request event it reads the pull request, one call under the same permission.
+
+Conditions that need a pull request's files, reviews, commits, mergeability, checks or CODEOWNERS, or a subject's comments or reactions, cost an API call each. smartcloud loads only the ones the configured rules use.
 
 ## Combinators
 
