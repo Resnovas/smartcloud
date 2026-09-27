@@ -38,6 +38,7 @@ export const pullRequestPayload = {
     user: { login: 'jane' },
     draft: true,
     head: { ref: 'feat/labels', sha: 'abc123' },
+    base: { ref: 'main' },
     additions: 30,
     deletions: 10,
   },

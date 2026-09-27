@@ -40,6 +40,7 @@ describe('decodeEvent', () => {
             updatedAt: new Date('2026-09-01T00:00:00Z'),
             draft: true,
             headBranch: 'feat/labels',
+            baseBranch: 'main',
             changes: 40,
           },
         }),
@@ -53,6 +54,13 @@ describe('decodeEvent', () => {
         pull_request: { ...pullRequestPayload.pull_request, draft: undefined, additions: undefined, deletions: undefined, user: null, body: null },
       }),
       (envelope) => expect(envelope).toMatchObject({ subject: { draft: false, changes: 0, author: '', body: '' } }),
+    ),
+  )
+
+  it.effect('leaves the base branch out when the payload has none', () =>
+    Effect.map(
+      decodeEvent('pull_request', { pull_request: { ...pullRequestPayload.pull_request, base: undefined } }),
+      (envelope) => expect(envelope).not.toHaveProperty('subject.baseBranch'),
     ),
   )
 

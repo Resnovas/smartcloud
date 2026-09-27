@@ -250,7 +250,7 @@ describe('stale feature: marking', () => {
           rule: 'stale.exempt',
           level: 'warning',
           message:
-            'stale.exempt.when uses isDraft, branchMatches or changesSize, which a sweep cannot read for a pull request; pull requests are skipped',
+            'stale.exempt.when uses isDraft, branchMatches, baseBranchMatches or changesSize, which a sweep cannot read for a pull request; pull requests are skipped',
         },
       ])
     }),

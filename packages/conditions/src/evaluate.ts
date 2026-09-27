@@ -133,6 +133,7 @@ const checkState = (checks: ReadonlyArray<Check>, name: string): CheckState =>
 
 const PULL_REQUEST_ONLY = new Set([
   'branchMatches',
+  'baseBranchMatches',
   'isDraft',
   'filesMatch',
   'changesSize',
@@ -174,6 +175,15 @@ const evaluateCondition = (condition: Condition, subject: Subject): Effect.Effec
       const branch = subject.headBranch ?? ''
       const passed = compilePattern(condition.condition).test(branch)
       return Effect.succeed(result(condition.type, passed, `branch ${branch} ${passed ? 'matches' : 'does not match'}`))
+    }
+    case 'baseBranchMatches': {
+      // No target branch never matches, so a pattern like ^$ or .* cannot pass on its absence.
+      if (subject.baseBranch === undefined) return Effect.succeed(result(condition.type, false, 'no base branch'))
+      const branch = subject.baseBranch
+      const passed = compilePattern(condition.condition).test(branch)
+      return Effect.succeed(
+        result(condition.type, passed, `base branch ${branch} ${passed ? 'matches' : 'does not match'}`),
+      )
     }
     case 'isOpen':
       return Effect.succeed(

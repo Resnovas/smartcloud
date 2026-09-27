@@ -81,6 +81,21 @@ export const CreatorMatches = matches('creatorMatches', "The author's login matc
  * ```
  */
 export const BranchMatches = matches('branchMatches', "The pull request's head branch matches a pattern.")
+/**
+ * The pull request's base branch, the one it merges into, matches a pattern.
+ *
+ * @example
+ * ```ts import.meta.vitest name="BaseBranchMatches"
+ * import { BaseBranchMatches } from '@resnovas/conditions'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(BaseBranchMatches)({ type: 'baseBranchMatches', condition: '^(main|release/.*)$' }) // => true
+ * ```
+ */
+export const BaseBranchMatches = matches(
+  'baseBranchMatches',
+  "The pull request's base branch, the one it merges into, matches a pattern.",
+)
 
 /**
  * The subject is open (true) or closed (false).
@@ -395,6 +410,7 @@ const Leaf = Schema.Union(
   DescriptionMatches,
   CreatorMatches,
   BranchMatches,
+  BaseBranchMatches,
   IsOpen,
   IsLocked,
   IsDraft,
