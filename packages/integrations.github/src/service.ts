@@ -33,6 +33,14 @@ export interface Repository {
   readonly nodeId: string
   readonly private: boolean
   readonly defaultBranch: string
+  /**
+   * The repository's current settings under GitHub's REST names, such as
+   * `has_wiki` or `web_commit_signoff_required`, as far as the token can read
+   * them. The settings feature leaves out any value that already matches, so
+   * it never writes a setting GitHub refuses to change, such as sign-off an
+   * organisation enforces.
+   */
+  readonly current?: Readonly<Record<string, boolean | string>>
 }
 
 /** A repository label. `color` is six hex digits without `#`. */

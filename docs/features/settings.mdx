@@ -67,7 +67,7 @@ Only what you configure is changed. A section or key left out produces no call, 
 
 ## Merging
 
-`mergeCommit`, `squash` and `rebase` choose the allowed merge methods. `autoMerge`, `updateBranch`, `deleteBranchOnMerge` and `webCommitSignoff` switch those repository options. `squashTitle` is `PR_TITLE` or `COMMIT_OR_PR_TITLE`, and `squashMessage` is `COMMIT_MESSAGES`, `PR_BODY` or `BLANK`.
+`mergeCommit`, `squash` and `rebase` choose the allowed merge methods. `autoMerge`, `updateBranch`, `deleteBranchOnMerge` and `webCommitSignoff` switch those repository options. smartcloud reads the repository's current settings first and leaves out any value it already has, because GitHub refuses some writes even of an unchanged value (sign-off an organisation enforces, or a wiki toggle the token may not make). A repository that already matches gets no update. `squashTitle` is `PR_TITLE` or `COMMIT_OR_PR_TITLE`, and `squashMessage` is `COMMIT_MESSAGES`, `PR_BODY` or `BLANK`.
 
 ## Features
 

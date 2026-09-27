@@ -46,6 +46,31 @@ export interface LiveOptions {
   readonly committer?: CommitIdentity
 }
 
+// The REST repository fields the settings feature compares against, so it
+// can leave out a value the repository already has.
+const SETTINGS_FIELDS = [
+  'allow_merge_commit',
+  'allow_squash_merge',
+  'allow_rebase_merge',
+  'allow_auto_merge',
+  'allow_update_branch',
+  'delete_branch_on_merge',
+  'web_commit_signoff_required',
+  'has_wiki',
+  'has_discussions',
+  'squash_merge_commit_title',
+  'squash_merge_commit_message',
+] as const
+
+const currentSettings = (data: object): Record<string, boolean | string> => {
+  const current: Record<string, boolean | string> = {}
+  for (const field of SETTINGS_FIELDS) {
+    const value: unknown = (data as Record<string, unknown>)[field]
+    if (typeof value === 'boolean' || typeof value === 'string') current[field] = value
+  }
+  return current
+}
+
 /**
  * The identity the workflow token commits as, and the first guess at the
  * identity to sign a proposed commit off as.
@@ -487,6 +512,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           nodeId: data.node_id,
           private: data.private,
           defaultBranch: data.default_branch,
+          current: currentSettings(data),
         })),
       ),
       listLabels: call('listLabels', () => octokit.paginate(octokit.rest.issues.listLabelsForRepo, { owner, repo, per_page: 100 })).pipe(
