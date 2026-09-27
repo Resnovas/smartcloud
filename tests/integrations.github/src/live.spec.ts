@@ -86,6 +86,25 @@ describe('live GitHub: repository and labels', () => {
     }),
   )
 
+  it.effect('reads the token scopes from the X-OAuth-Scopes header', () =>
+    Effect.gen(function* () {
+      const repository = {
+        owner: { login: 'Resnovas' },
+        name: 'example',
+        full_name: 'Resnovas/example',
+        node_id: 'R_1',
+        private: true,
+        default_branch: 'main',
+      }
+      const classic = live({ [`GET ${REPO}`]: { body: repository, headers: { 'x-oauth-scopes': 'repo, workflow' } } })
+      expect(yield* (yield* classic.service).tokenScopes).toStrictEqual(['repo', 'workflow'])
+      const none = live({ [`GET ${REPO}`]: { body: repository, headers: { 'x-oauth-scopes': '' } } })
+      expect(yield* (yield* none.service).tokenScopes).toStrictEqual([])
+      const fineGrained = live({ [`GET ${REPO}`]: { body: repository } })
+      expect(yield* (yield* fineGrained.service).tokenScopes).toBeUndefined()
+    }),
+  )
+
   it.effect('lists, creates, renames and deletes labels', () =>
     Effect.gen(function* () {
       const { service, requests } = live({

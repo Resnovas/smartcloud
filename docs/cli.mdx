@@ -96,6 +96,43 @@ smartcloud sync --repo <owner/name> --out <dir> [--config <file>]
 
 Renders the files the sync feature would write to the repository into a local directory, with each file's status (added, updated, made executable or unchanged), and lists any conflicts. Nothing is sent to GitHub. Every file is checked before any is written: one that would land outside the directory, or be written through a symlink inside it, stops the command with nothing written.
 
+## doctor
+
+```sh
+smartcloud doctor --repo <owner/name> [--config <file>]
+```
+
+Checks what smartcloud needs to run on a repository, with the token the CLI finds, and prints one line per check. It exits with code 1 when any check fails. Nothing is written.
+
+| Check                   | Fails or warns when                                                                                                                                                                                                                                                         |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `token`, `token scopes` | A classic or OAuth token lacks the `repo` scope (fails) or the `workflow` scope (warns).                                                                                                                                                                                    |
+| `check runs`            | The token is a personal or OAuth token, which GitHub never lets create check runs, or a workflow passes a secret to smartcloud as its token (warns: if that secret is a personal access token, the `smartcloud` check fails). Use a GitHub App token or the workflow token. |
+| `repository`            | The token cannot read the repository (fails, and the remaining checks are skipped), or is not an admin, so the settings feature cannot run (warns).                                                                                                                         |
+| `config`, `presets`     | The config, or any preset it extends, cannot be read or is invalid (fails). A private preset in another repository is noted, because runs with the workflow token skip it.                                                                                                  |
+| `actions access`        | A workflow uses an action or reusable workflow from a private repository whose Actions access (Settings > Actions > General > Access) does not allow it (fails). Reading the access level needs admin access to that repository; without it, the check warns.               |
+| `secrets`, `variables`  | A workflow reads a secret or variable that the repository, its organisation and its environments do not have (fails). Listing them needs admin access; when a list cannot be read, the check warns instead.                                                                 |
+
+Run it with your own token to check the repository, or with the token a workflow passes to smartcloud to check that token:
+
+```text
+$ smartcloud doctor --repo Resnovas/example
+smartcloud doctor for Resnovas/example:
+ok      token: an OAuth token, such as the GitHub CLI's with scopes: repo, workflow, read:org
+warning check runs: this token cannot create check runs, so the smartcloud check fails in a workflow that passes it; ...
+ok      repository: the token is an admin of Resnovas/example, so every feature can run
+ok      config: the config and its 1 preset(s) resolve: Resnovas/.github/smartcloud/house.yml@main, .github/smartcloud.yml
+ok      presets: Resnovas/.github is private: runs with the workflow token, such as pull requests from forks and Dependabot, skip its presets
+ok      workflows: read 4 workflow file(s)
+ok      actions access: public, so usable from any workflow: actions/checkout, actions/setup-node
+FAIL    actions access: Resnovas/.github is private and its Actions access is none, so .github/workflows/house-graphify.yml cannot use its actions or reusable workflows; ...
+FAIL    secrets: missing POSTHOG_CLI_TOKEN (read by .github/workflows/release.yml); ...
+ok      variables: every variable the workflows read exists: RESNOVAS_BOT_APP_ID
+2 failure(s), 1 warning(s).
+```
+
+Workflows are read line by line rather than parsed: every `uses:` of another repository and every `secrets.NAME` or `vars.NAME` outside a comment line counts, including one guarded by a condition.
+
 ## Tokens
 
-`dry-run`, `plan settings` and `sync` always read GitHub. `validate` needs a token only to read presets named in `extends`, so validating a config without presets works offline. When it does need one, it uses `GITHUB_TOKEN` if set, and otherwise the token of the signed-in GitHub CLI (`gh auth token`). The token is never printed.
+`dry-run`, `plan settings`, `sync` and `doctor` always read GitHub. `validate` needs a token only to read presets named in `extends`, so validating a config without presets works offline. When it does need one, it uses `GITHUB_TOKEN` if set, and otherwise the token of the signed-in GitHub CLI (`gh auth token`). The token is never printed.

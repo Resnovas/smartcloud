@@ -22,6 +22,8 @@ import { fileKey } from '@resnovas/integrations.github'
 import {
   checkCommitCommand,
   CommitCheckFailed,
+  doctorCommand,
+  DoctorFailed,
   isWithin,
   locateConfig,
   main,
@@ -32,7 +34,7 @@ import {
   UnsafePath,
   validate,
 } from '@resnovas/smartcloud'
-import { Effect, Layer } from 'effect'
+import { ConfigProvider, Effect, Layer } from 'effect'
 import { chmod, mkdir, mkdtemp, readdir, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -321,5 +323,35 @@ describe('check-commit', () => {
       expect(error).toBeInstanceOf(UnknownAuthor)
       expect(error.message).toContain('pass --author-name and --author-email')
     }).pipe(Effect.provide(Layer.merge(memorySource({}), NodeContext.layer))),
+  )
+})
+
+describe('doctor', () => {
+  const withToken = Effect.withConfigProvider(ConfigProvider.fromMap(new Map([['GITHUB_TOKEN', 'ghs_example']])))
+
+  it.effect('prints the report and passes a repository without failures', () =>
+    Effect.gen(function* () {
+      const { connect } = repository({ [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: 'version: 2\n' })
+      const report = yield* doctorCommand(connect, { repository: 'Resnovas/example' })
+      expect(report.checks.every((check) => check.status === 'ok')).toBe(true)
+      expect(logs[0]?.split('\n')[0]).toBe('smartcloud doctor for Resnovas/example:')
+    }).pipe(withToken, Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('fails with the number of failed checks', () =>
+    Effect.gen(function* () {
+      const { connect } = repository({})
+      const error = yield* Effect.flip(doctorCommand(connect, { repository: 'Resnovas/example' }))
+      expect(error).toStrictEqual(new DoctorFailed({ count: 1 }))
+      expect(logs[0]).toContain('FAIL    config: no smartcloud config in Resnovas/example')
+    }).pipe(withToken, Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('runs from the command line', () =>
+    Effect.gen(function* () {
+      const { connect } = repository({ [fileKey('Resnovas', 'example', '.github/smartcloud.yml')]: 'version: 2\n' })
+      yield* runWith(connect)(['node', 'smartcloud', 'doctor', '--repo', 'Resnovas/example'])
+      expect(logs.at(-1)).toContain('0 failure(s), 0 warning(s).')
+    }).pipe(withToken, Effect.provide(NodeContext.layer)),
   )
 })

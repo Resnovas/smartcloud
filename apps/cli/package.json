@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
-  "description": "The smartcloud command line: validate and migrate configs, dry-run features and plan settings locally.",
+  "description": "The smartcloud command line: validate and migrate configs, dry-run features, plan settings and diagnose a repository locally.",
   "license": "SEE LICENSE IN LICENSE",
   "homepage": "https://github.com/Resnovas/smartcloud",
   "bin": {

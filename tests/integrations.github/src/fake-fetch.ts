@@ -25,8 +25,10 @@ export interface Recorded {
   readonly body: unknown
 }
 
-/** A canned response: JSON with a status, or a thrown network error. */
-export type Reply = { readonly status?: number; readonly body?: unknown } | { readonly networkError: string }
+/** A canned response: JSON with a status and extra headers, or a thrown network error. */
+export type Reply =
+  | { readonly status?: number; readonly body?: unknown; readonly headers?: Readonly<Record<string, string>> }
+  | { readonly networkError: string }
 
 /** Routes keyed by `METHOD /path`; a list of replies is served in order, the last repeating. */
 export type Routes = Readonly<Record<string, Reply | ReadonlyArray<Reply>>>
@@ -63,7 +65,10 @@ export const fakeFetch = (routes: Routes) => {
     const response =
       status === 204
         ? new Response(null, { status })
-        : new Response(JSON.stringify(reply.body ?? {}), { status, headers: { 'content-type': 'application/json' } })
+        : new Response(JSON.stringify(reply.body ?? {}), {
+            status,
+            headers: { 'content-type': 'application/json', ...reply.headers },
+          })
     // A real fetch sets the response URL; Octokit's paginator reads it for list responses that carry a total count.
     return Object.defineProperty(response, 'url', { value: url.href })
   }

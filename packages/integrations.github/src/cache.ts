@@ -307,6 +307,7 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
     return {
       coordinates: inner.coordinates,
       getRepository: getRepository(GetRepository({})),
+      tokenScopes: inner.tokenScopes,
 
       listLabels: listLabels(ListLabels({})),
       createLabel: (label) => writing(inner.createLabel(label), [caches.labels.invalidateAll]),
