@@ -1,0 +1,12 @@
+{
+  "name": "@resnovas/ci-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tests/ci/src",
+  "tags": ["type_test", "layer_backend"],
+  "targets": {
+    "test": {
+      "inputs": ["...", "{workspaceRoot}/tools/ci/bundle-size.ts"]
+    }
+  }
+}

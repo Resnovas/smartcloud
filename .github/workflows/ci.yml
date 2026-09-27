@@ -285,6 +285,9 @@ jobs:
       - name: Build affected projects
         run: pnpm nx affected -t build
 
+      - name: Check the action bundle size
+        run: pnpm bundle:check
+
   docs:
     name: docs
     needs: changes

@@ -34,7 +34,8 @@
     "graph:update": "sh tools/graphify/graphify update",
     "docs:api": "nx run-many -t docgen contracts",
     "release:dry-run": "node tools/release/release.ts --dry-run",
-    "typecheck:tests": "node tools/typecheck/tests.ts"
+    "typecheck:tests": "node tools/typecheck/tests.ts",
+    "bundle:check": "nx run @resnovas/action:bundle && node tools/ci/bundle-size.ts"
   },
   "devDependencies": {
     "@effect/docgen": "4.0.0-rc.117",
