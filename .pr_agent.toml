@@ -1,0 +1,72 @@
+# house:managed:begin - synced from Resnovas/.github templates/.pr_agent.toml. Edits inside this block are overwritten.
+#
+# Qodo Merge. Its one job among the review bots (GOVERNANCE.md#review-bots) is
+# to check the change against its ticket, and to review its tests and edge
+# cases. CodeRabbit writes the only summary, so Qodo never describes a pull
+# request and never runs /improve on its own; ask for either with a comment.
+#
+# The hosted app reads [github_app], [review_agent] and [config]. The
+# [pr_reviewer], [pr_code_suggestions] and [ignore] tables are the same policy
+# for self-hosted pr-agent, which the hosted app may ignore.
+#
+# A repository adds tables below the managed block, but never one of these:
+# TOML does not allow a table to be defined twice.
+
+[github_app]
+pr_commands = ["/agentic_review"]
+handle_push_trigger = false
+feedback_on_draft_pr = false
+
+[review_agent]
+# Inline comments only for findings that need action; the rest stay in the one
+# review comment.
+inline_comments_severity_threshold = 3
+issues_user_guidelines = """
+Review only the tests and edge cases of the change: missing or weak tests for changed behaviour, unhandled inputs, error paths and boundaries.
+Report at most three findings, the most important first. No style, naming, formatting or documentation comments.
+Leave security and permissions to Copilot code review, logic bugs to Cursor Bugbot and architecture to Graphify.
+Skip externals/, graphify-out/, dist/, schema/*.schema.json, docs/reference/, lockfiles and CHANGELOG.md files.
+Follow the repository's AGENTS.md and APPROVAL_POLICY.md.
+"""
+compliance_user_guidelines = """
+Check the change against its ticket, linked in the description or named in the branch.
+Say plainly whether it matches: that verdict is the only Qodo finding that blocks a merge (APPROVAL_POLICY.md#ap-31). A missing ticket link is a mismatch.
+"""
+
+[pr_reviewer]
+extra_instructions = """
+Review only the change against its ticket, and its tests and edge cases. At most three findings; no style comments.
+Follow the repository's AGENTS.md and APPROVAL_POLICY.md.
+"""
+num_max_findings = 3
+require_ticket_analysis_review = true
+require_tests_review = true
+require_security_review = false
+require_estimate_effort_to_review = false
+require_can_be_split_review = false
+enable_review_labels_security = false
+enable_review_labels_effort = false
+
+[pr_code_suggestions]
+focus_only_on_problems = true
+commitable_code_suggestions = false
+
+[ignore]
+glob = [
+  "externals/**",
+  "graphify-out/**",
+  "**/dist/**",
+  "schema/*.schema.json",
+  "docs/reference/**",
+  "**/pnpm-lock.yaml",
+  "**/package-lock.json",
+  "**/yarn.lock",
+  "**/bun.lockb",
+  "**/Cargo.lock",
+  "**/poetry.lock",
+  "**/uv.lock",
+  "**/CHANGELOG.md",
+]
+# house:managed:end
+
+# house:local - add this repository's own tables below this line.

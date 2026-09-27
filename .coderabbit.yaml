@@ -1,0 +1,117 @@
+# house:managed:begin - synced from Resnovas/.github templates/.coderabbit.yaml. Edits inside this block are overwritten.
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit. Its job among the review bots (GOVERNANCE.md#review-bots) is the
+# main line-level review, correctness, idioms and the house rules, and the only
+# pull request summary. Ticket checks are Qodo's, security Copilot's, logic
+# bugs Bugbot's and architecture Graphify's, so those walkthrough extras and
+# pre-merge checks are off; smartcloud checks titles and descriptions.
+#
+# CodeRabbit only reviews repositories its plan covers, such as open source
+# ones. Elsewhere this file is synced but inert.
+#
+# A repository adds its own path instructions below the managed block, as list
+# items under reviews.path_instructions, which the block ends with.
+language: en-GB
+early_access: false
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  code_guidelines:
+    enabled: true
+    filePatterns:
+      - AGENTS.md
+      - AGENT-SETUP.md
+      - APPROVAL_POLICY.md
+      - GOVERNANCE.md
+      - AI_POLICY.md
+      - CONTRIBUTING.md
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  in_progress_fortune: false
+  review_status: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  estimate_code_review_effort: false
+  assess_linked_issues: false
+  related_issues: false
+  related_prs: false
+  suggested_labels: false
+  suggested_reviewers: false
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+  pre_merge_checks:
+    title:
+      mode: 'off'
+    description:
+      mode: 'off'
+    docstrings:
+      mode: 'off'
+    issue_assessment:
+      mode: 'off'
+  # The house ignore list: vendored source, the code graph, build output,
+  # generated schemas and reference pages, lockfiles and changelogs.
+  path_filters:
+    - '!externals/**'
+    - '!graphify-out/**'
+    - '!**/dist/**'
+    - '!schema/*.schema.json'
+    - '!docs/reference/**'
+    - '!**/pnpm-lock.yaml'
+    - '!**/package-lock.json'
+    - '!**/yarn.lock'
+    - '!**/bun.lockb'
+    - '!**/Cargo.lock'
+    - '!**/poetry.lock'
+    - '!**/uv.lock'
+    - '!**/CHANGELOG.md'
+  path_instructions:
+    - path: '**'
+      instructions: >-
+        Review correctness, idioms and the rules in AGENTS.md and the house
+        policies. Tag each comment with its severity; a major or critical
+        comment blocks the merge (APPROVAL_POLICY.md#ap-31), so use them only
+        for a real defect. Leave security and permissions to Copilot code
+        review, and do not comment on formatting a formatter or linter in CI
+        already enforces.
+    - path: '.github/workflows/**'
+      instructions: >-
+        Check that the workflow does what its comments say. Permissions,
+        tokens and injection are Copilot's review, not yours.
+# house:managed:end
+# house:local - add path instructions below, as list items under reviews.path_instructions.
+    - path: '{packages,apps}/**'
+      instructions: >-
+        Effect v3 in strict TypeScript: failures are typed errors in the
+        Effect error channel, services come from Layers, no Promise or async
+        code outside the platform edges, and no any. GitHub API calls live
+        only in packages/integrations.github, and Nx module boundaries hold.
+        Every export keeps its API contract: a description, a typed @example
+        importing from the package's public path, @param per parameter and
+        @returns unless it returns void; exports left out of index.ts are
+        @internal. Changed source has a mirrored spec under tests/ at 100%
+        coverage.
+    - path: 'packages/config/**'
+      instructions: >-
+        A change to the configuration schema ships with the regenerated
+        schema/smartcloud.schema.json (SMARTCLOUD_UPDATE_SCHEMA=1 pnpm nx test
+        @resnovas/config-tests) and docs/reference/ (pnpm docs:reference) in
+        the same pull request, and keeps v1 configurations migrating.
+    - path: '{packages/runtime,packages/integrations.github}/**'
+      instructions: >-
+        Token handling lives here. Check that a run from a fork, Dependabot
+        or another outside trigger drops to the workflow token and that a
+        feature needing the personal access token turns itself off with a
+        notice; Copilot reviews the security side.
+    - path: 'tests/**'
+      instructions: >-
+        Tests use @effect/vitest and mirror the source file for file. A test
+        is never deleted, skipped or loosened to make a build pass.

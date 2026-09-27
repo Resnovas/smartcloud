@@ -641,6 +641,10 @@ The synced House dependency review fails a pull request that adds a runtime or d
 
 The synced House Scorecard runs OpenSSF Scorecard on `main` weekly and on every push, uploads its findings to code scanning (category `scorecard`) and publishes the score behind the README badge. It uses only the workflow token; fix a finding in the repository rather than suppressing it.
 
+## Review bots
+
+CodeRabbit, Copilot code review, Qodo, Cursor Bugbot and Graphify each have one job, set in `GOVERNANCE.md` (Review bots) and configured by files synced from `Resnovas/.github`: `.coderabbit.yaml`, `.github/copilot-instructions.md` and `.github/instructions/house-*.instructions.md`, `.pr_agent.toml`, `.cursor/BUGBOT.md` and `.graphifyignore`. smartcloud's own review rules go after each file's `house:local` line, or in `.github/instructions/smartcloud-*.instructions.md`. Only a Copilot security finding, a CodeRabbit major or critical comment, the Graphify gate and a Qodo ticket mismatch block a merge (`APPROVAL_POLICY.md`, AP-31).
+
 ## Adding a package
 
 1. `packages/<name>/package.json`: `"name": "@resnovas/<name>"`, `"type": "module"`, and an export map whose `.` entry lists `"@resnovas/source": "./src/index.ts"` first, then `types` and `import` pointing at `dist/`. Nx configuration stays out of `package.json`.
