@@ -135,6 +135,17 @@ export type LabelRule = typeof LabelRule.Type
 export const ConventionPreset = Schema.Literal('conventionalCommits', 'semanticTitle', 'gitmojis', 'semanticEmoji')
 
 /**
+ * The failure a {@link ConventionRule} reports when it has neither a preset
+ * nor conditions.
+ *
+ * @internal
+ * @remarks
+ * A local tweak of a preset's rule, such as a new `level`, has neither when the
+ * preset is left out, so resolveConfig treats this failure as incomplete.
+ */
+export const conventionNeedsPresetOrWhen = 'a convention needs a preset or when'
+
+/**
  * A convention a subject must meet, from a preset, conditions, or both.
  *
  * @example
@@ -155,7 +166,7 @@ export const ConventionRule = Schema.Struct({
   contexts: Schema.optionalWith(Schema.Array(Schema.String), { exact: true }),
   when: Schema.optionalWith(ConditionGroup, { exact: true }),
 }).pipe(
-  Schema.filter((rule) => rule.preset !== undefined || rule.when !== undefined || 'a convention needs a preset or when', {
+  Schema.filter((rule) => rule.preset !== undefined || rule.when !== undefined || conventionNeedsPresetOrWhen, {
     // Wrapped in allOf so Effect merges it with the struct's properties
     // rather than replacing them.
     jsonSchema: { allOf: [{ anyOf: [{ required: ['preset'] }, { required: ['when'] }] }] },

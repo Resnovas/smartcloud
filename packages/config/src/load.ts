@@ -14,11 +14,11 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { Context, Data, Effect, Either, ParseResult, Schema } from 'effect'
+import { Context, Data, Effect, Either, Option, ParseResult, Schema } from 'effect'
 import { parse as parseYaml } from 'yaml'
 import { ExtendsEntry, type ExtendsRef, formatExtendsRef, parseExtendsRef } from './extends.js'
 import { empty, type Merged, mergeLocked } from './merge.js'
-import { SmartcloudConfig } from './schema.js'
+import { conventionNeedsPresetOrWhen, SmartcloudConfig } from './schema.js'
 import { migrateV1 } from './v1.js'
 
 /**
@@ -123,9 +123,26 @@ export interface ResolvedConfig {
   /** Values a preset set, which the repository config cannot change, as dotted paths. */
   readonly locked: ReadonlySet<string>
   readonly warnings: ReadonlyArray<string>
+  /**
+   * What was left out because a preset could not be read and
+   * {@link ResolveOptions.skipUnreadable} allowed it: each skipped preset,
+   * then each top-level section that only made sense with it. Absent when
+   * nothing was left out.
+   */
+  readonly skipped?: ReadonlyArray<string>
 }
 
-type ConfigError = ConfigParseError | ConfigDecodeError | ConfigNotFound | ExtendsCycle | import('./merge.js').LockedRule
+/** How {@link resolveConfig} treats presets it cannot read. */
+export interface ResolveOptions {
+  /**
+   * Decides whether a preset that could not be read is left out instead of
+   * failing the whole config. Absent, every unreadable preset fails.
+   */
+  readonly skipUnreadable?: (ref: ExtendsRef, error: ConfigNotFound) => boolean
+}
+
+type ConfigError =
+  ConfigParseError | ConfigDecodeError | ConfigNotFound | ExtendsCycle | import('./merge.js').LockedRule
 
 // Presets may extend presets, but a chain this deep is a mistake, not a design.
 const MAX_DEPTH = 5
@@ -166,11 +183,15 @@ const toJson = (config: SmartcloudConfig): Readonly<Record<string, Json>> => {
 export const parseConfig = (
   text: string,
   source: string,
-): Effect.Effect<{ readonly config: SmartcloudConfig; readonly warnings: ReadonlyArray<string> }, ConfigParseError | ConfigDecodeError> =>
+): Effect.Effect<
+  { readonly config: SmartcloudConfig; readonly warnings: ReadonlyArray<string> },
+  ConfigParseError | ConfigDecodeError
+> =>
   Effect.gen(function* () {
     const raw = yield* Effect.try({
       try: (): unknown => parseYaml(text),
-      catch: (error) => new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
+      catch: (error) =>
+        new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
     })
     if (!isRecord(raw)) return yield* new ConfigDecodeError({ source, reason: 'expected a mapping at the top level' })
     const migrated = raw['version'] === 2 ? { config: raw, warnings: [] } : migrateV1(raw)
@@ -196,7 +217,8 @@ const parseLayer = (text: string, source: string) =>
   Effect.gen(function* () {
     const raw = yield* Effect.try({
       try: (): unknown => parseYaml(text),
-      catch: (error) => new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
+      catch: (error) =>
+        new ConfigParseError({ source, reason: error instanceof Error ? error.message : String(error) }),
     })
     if (!isRecord(raw)) return yield* new ConfigDecodeError({ source, reason: 'expected a mapping at the top level' })
     const migrated = raw['version'] === 2 ? { config: raw, warnings: [] } : migrateV1(raw)
@@ -212,6 +234,29 @@ const parseLayer = (text: string, source: string) =>
     return { json, extends: entries.right, warnings }
   })
 
+// For a config whose presets were partly left out, drops each top-level
+// section that fails only for keys it is missing, which a skipped preset may
+// have set, and names them. A convention rule with neither preset nor when is
+// missing keys too: it tweaks a rule the skipped preset defined. Any other failure, such as an unknown key or a
+// malformed value, is kept, so it still fails the config. Kept sections are
+// collected in a Map, so a key such as `__proto__` stays data and still fails.
+const decodeSections = (value: Readonly<Record<string, Json>>) => {
+  const kept = new Map<string, Json>()
+  const dropped: Array<string> = []
+  for (const [key, section] of Object.entries(value)) {
+    const decoded = decodeV2({ version: 2, [key]: section })
+    const incomplete =
+      Either.isLeft(decoded) &&
+      ParseResult.ArrayFormatter.formatErrorSync(decoded.left).every(
+        (issue) =>
+          issue._tag === 'Missing' || (issue._tag === 'Refinement' && issue.message === conventionNeedsPresetOrWhen),
+      )
+    if (incomplete) dropped.push(key)
+    else kept.set(key, section)
+  }
+  return { kept: Object.fromEntries(kept), dropped }
+}
+
 /**
  * Loads a config and every preset it extends, and merges them.
  *
@@ -220,6 +265,13 @@ const parseLayer = (text: string, source: string) =>
  * before it, and the repository's config last. Everything a preset sets is
  * locked: see {@link mergeLocked}. Presets are read through
  * {@link ConfigSource}, so this function makes no network calls of its own.
+ *
+ * A preset that cannot be read fails the config, unless
+ * `options.skipUnreadable` says to leave it out, as a run with a restricted
+ * token does for a private preset. The rest of the config is then merged
+ * without it, and any top-level section that is incomplete without the
+ * preset is dropped rather than failing; both are listed in `skipped`.
+ * Unknown keys and malformed values still fail the config.
  *
  * @example
  * ```ts import.meta.vitest name="resolveConfig"
@@ -236,13 +288,20 @@ const parseLayer = (text: string, source: string) =>
  *
  * @param text - The repository's config file.
  * @param source - Its name, for errors.
+ * @param options - Which unreadable presets may be left out.
  * @returns The merged config.
  */
-export const resolveConfig = (text: string, source: string): Effect.Effect<ResolvedConfig, ConfigError, ConfigSource> =>
+export const resolveConfig = (
+  text: string,
+  source: string,
+  options: ResolveOptions = {},
+): Effect.Effect<ResolvedConfig, ConfigError, ConfigSource> =>
   Effect.gen(function* () {
     const configSource = yield* ConfigSource
     const sources: Array<string> = []
     const warnings: Array<string> = []
+    const skipped: Array<string> = []
+    const skipUnreadable = options.skipUnreadable ?? (() => false)
 
     const include = (
       merged: Merged,
@@ -262,8 +321,18 @@ export const resolveConfig = (text: string, source: string): Effect.Effect<Resol
           // Entries were validated by parseLayer, so this always parses.
           const ref = parseExtendsRef(entry) ?? { owner: '', repo: '', path: entry }
           const preset = formatExtendsRef(ref)
-          const presetText = yield* configSource.read(ref)
-          next = yield* include(next, presetText, preset, [...chain, name])
+          const presetText = yield* configSource.read(ref).pipe(
+            Effect.map(Option.some),
+            Effect.catchAll((error) =>
+              skipUnreadable(ref, error)
+                ? Effect.as(
+                    Effect.sync(() => void skipped.push(`the extends preset ${preset}: ${error.message}`)),
+                    Option.none(),
+                  )
+                : Effect.fail(error),
+            ),
+          )
+          if (Option.isSome(presetText)) next = yield* include(next, presetText.value, preset, [...chain, name])
         }
         // version, extends and $schema describe the file itself, not rules to merge.
         const { version: _version, extends: _extends, $schema: _schema, ...own } = layer.json
@@ -273,15 +342,28 @@ export const resolveConfig = (text: string, source: string): Effect.Effect<Resol
 
     const merged = yield* include(empty, text, source, [])
     const localStart = sources.length - 1
+    // Without a skipped preset, a section may lack keys only that preset set,
+    // such as sync.source: such a section is dropped rather than failing.
+    let value: Readonly<Record<string, Json>> = merged.value
+    if (skipped.length > 0) {
+      const { kept, dropped } = decodeSections(merged.value)
+      value = kept
+      skipped.push(...dropped.map((key) => `the ${key} section: incomplete without the skipped preset(s)`))
+    }
     // A file may rely on its presets for required keys, such as sync.source,
     // so the whole config is only checked once everything is merged.
-    const decoded = decodeV2({ ...merged.value, version: 2 })
+    const decoded = decodeV2({ ...value, version: 2 })
     if (Either.isLeft(decoded)) {
       const presets = sources.slice(0, -1)
       const from = presets.length === 0 ? source : `${source} with ${presets.join(', ')}`
-      return yield* new ConfigDecodeError({ source: from, reason: ParseResult.TreeFormatter.formatErrorSync(decoded.left) })
+      return yield* new ConfigDecodeError({
+        source: from,
+        reason: ParseResult.TreeFormatter.formatErrorSync(decoded.left),
+      })
     }
     const config = decoded.right
-    const locked = new Set([...merged.origins].filter(([, origin]) => origin !== sources[localStart]).map(([path]) => path))
-    return { config, sources, locked, warnings }
+    const locked = new Set(
+      [...merged.origins].filter(([, origin]) => origin !== sources[localStart]).map(([path]) => path),
+    )
+    return skipped.length === 0 ? { config, sources, locked, warnings } : { config, sources, locked, warnings, skipped }
   })

@@ -17,7 +17,7 @@
 import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { ConfigSource } from '@resnovas/config'
-import { NotFound, Unavailable } from '@resnovas/integrations.github'
+import { Forbidden, NotFound, RateLimited, Unavailable } from '@resnovas/integrations.github'
 import { gitHubConfigSource, InvalidRepository, liveConnect, MissingToken, parseRepository, presetError, PresetUnreadable, resolveToken } from '@resnovas/runtime'
 import { Effect, Either, Redacted } from 'effect'
 import { withEnv } from './fixtures.js'
@@ -142,5 +142,8 @@ describe('preset read errors', () => {
     const ref = { owner: 'Resnovas', repo: '.github', path: 'a.yml' }
     expect(presetError(ref)(new NotFound({ operation: 'getFile', detail: 'x' }))).not.toBeInstanceOf(PresetUnreadable)
     expect(presetError(ref)(new Unavailable({ operation: 'getFile', detail: 'down' }))).toBeInstanceOf(PresetUnreadable)
+    expect(presetError(ref)(new Unavailable({ operation: 'getFile', detail: 'down' }))).toMatchObject({ transient: true })
+    expect(presetError(ref)(new RateLimited({ operation: 'getFile', detail: 'slow down' }))).toMatchObject({ transient: true })
+    expect(presetError(ref)(new Forbidden({ operation: 'getFile', detail: 'no' }))).toMatchObject({ transient: false })
   })
 })

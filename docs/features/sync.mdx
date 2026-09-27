@@ -5,6 +5,8 @@ description: "Sync files from a template directory in another repository, and pr
 
 The sync feature keeps files such as community health documents, issue forms, CODEOWNERS and workflows in line with a template directory in another repository. It is enabled by a `sync` section.
 
+Sync needs a token that can read the source repository and push workflow files, which the workflow token cannot do. A [restricted run](/reporting#restricted-runs), such as one with only the workflow token or a pull request from a fork, skips sync and says why in the job summary.
+
 ```yaml
 sync:
   source: Resnovas/.github/templates@main

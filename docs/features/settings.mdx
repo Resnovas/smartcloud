@@ -6,7 +6,7 @@ description: "Repository settings as code: merging, features, security, the defa
 The settings feature brings the repository's settings in line with the `settings` section. It runs on `schedule`, `workflow_dispatch` and `push` events, and is enabled by a `settings` section.
 
 <Warning>
-  Changing repository settings needs a token with administration write access to the repository, such as a GitHub App or fine-grained token. The workflow's `GITHUB_TOKEN` cannot do it: without a suitable token every step fails and is reported as a finding.
+  Changing repository settings needs a token with administration write access to the repository, such as a GitHub App or fine-grained token. The workflow's `GITHUB_TOKEN` cannot do it: a run with only the workflow token, or from a fork or Dependabot, skips settings and says why in the job summary. Another token without administration access fails each step and reports it as a finding.
 </Warning>
 
 ```yaml

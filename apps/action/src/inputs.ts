@@ -20,6 +20,8 @@ import { Config, Effect, Option, Redacted } from 'effect'
 /** The action's inputs, read from the `INPUT_*` variables Actions sets. */
 export interface Inputs {
   readonly token: Redacted.Redacted<string>
+  /** The workflow's own token, which the action compares the token with to tell a restricted run. */
+  readonly workflowToken: Option.Option<Redacted.Redacted<string>>
   /** The config file; when omitted, the first of the runtime's `CONFIG_CANDIDATES` that exists. */
   readonly config: Option.Option<string>
   /** Config given inline, which wins over the file. */
@@ -59,7 +61,8 @@ const DEPRECATED: ReadonlyArray<readonly [string, string]> = [
  * Booleans are true only for `true`, ignoring case, so `"false"` means false.
  * v1 treated any non-empty string as true. `telemetry` is the exception: it
  * is on unless set to `false`. The token falls back to the
- * `GITHUB_TOKEN` environment variable.
+ * `GITHUB_TOKEN` environment variable. `workflowToken` defaults to the
+ * workflow's own token in `action.yml` and is never listed in `given`.
  *
  * @example
  * ```ts import.meta.vitest name="readInputs"
@@ -79,6 +82,7 @@ export const readInputs = Effect.gen(function* () {
     Config.validate({ message: 'empty', validation: (value) => Redacted.value(value).trim() !== '' }),
     Config.orElse(() => Config.redacted('GITHUB_TOKEN')),
   )
+  const workflowToken = Option.map(yield* input('workflowToken'), Redacted.make)
   const features = yield* input('features')
   const deprecations: Array<string> = []
   const given: Array<string> = []
@@ -98,6 +102,7 @@ export const readInputs = Effect.gen(function* () {
   for (const [name, value] of Object.entries(optional)) if (Option.isSome(value)) given.push(name)
   const inputs: Inputs = {
     token,
+    workflowToken,
     config: optional.config,
     configJson: optional.configJson,
     configRef: optional.configRef,

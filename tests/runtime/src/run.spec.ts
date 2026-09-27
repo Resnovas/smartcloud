@@ -81,6 +81,35 @@ describe('runEvent and dryRun', () => {
     }),
   )
 
+  it.effect(
+    'a restricted run leaves out an unreadable preset from another repository and skips PAT-only features',
+    () =>
+      Effect.gen(function* () {
+        const config = `version: 2\nextends: ['Resnovas/.github/smartcloud/house.yml@main']\n${CONVENTIONS.replace('version: 2\n', '')}sync:\n  exclude: [LICENSE]\n`
+        const { service } = memory({ '.github/smartcloud.yml': config })
+        const access = { restricted: true, reason: 'a pull request from a fork' } as const
+        const event = yield* syntheticEvent({ kind: 'pullRequest', number: 7 }).pipe(
+          Effect.provideService(GitHub, service),
+        )
+        const outcome = yield* runEvent({ config: {}, event, access }).pipe(Effect.provideService(GitHub, service))
+        expect(outcome.result.findings.map((finding) => `${finding.level} ${finding.rule}`)).toStrictEqual([
+          'notice access.restricted',
+          'warning access.config-skipped',
+          'warning access.config-skipped',
+          'error conventions.title',
+        ])
+        expect(
+          outcome.result.skipped
+            .filter((skip) => skip.reason.startsWith('restricted access'))
+            .map((skip) => skip.feature),
+        ).toStrictEqual(['settings', 'sync'])
+        const unrestricted = yield* Effect.flip(
+          runEvent({ config: {}, event }).pipe(Effect.provideService(GitHub, service)),
+        )
+        expect(unrestricted._tag).toBe('ConfigNotFound')
+      }),
+  )
+
   it.effect('traces config, flags, features and reporting, naming no repository, title or login', () =>
     Effect.gen(function* () {
       const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })

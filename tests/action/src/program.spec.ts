@@ -18,7 +18,8 @@ import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { program } from '@resnovas/action'
 import { disabledTelemetry, Telemetry, telemetryLayer } from '@resnovas/integrations.posthog'
-import { Effect, Layer, Logger } from 'effect'
+import { Forbidden } from '@resnovas/integrations.github'
+import { Effect, Layer, Logger, Redacted } from 'effect'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -106,6 +107,87 @@ describe('program', () => {
       const quiet = yield* Effect.promise(() => env({}, { INPUT_DRYRUN: 'true', GITHUB_EVENT_NAME: 'schedule' }))
       yield* program(() => Effect.succeed(service)).pipe(withEnv(quiet))
       expect(yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))).toContain('**Dry run:** nothing would have been written.')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect(
+    'acts with the workflow token on a fork, skipping the private preset, PAT-only features and refused writes',
+    () =>
+      Effect.gen(function* () {
+        const config = `version: 2\nextends: ['Resnovas/.github/smartcloud/house.yml@main']\n${CONVENTIONS.replace('version: 2\n', '')}`
+        const { service, state } = memory({ '.github/smartcloud.yml': config })
+        const readOnly = {
+          ...service,
+          createCheckRun: () => Effect.fail(new Forbidden({ operation: 'createCheckRun', detail: 'read-only' })),
+        }
+        const fork = pullRequest('feat: x')
+        const payload = {
+          ...fork,
+          pull_request: {
+            ...fork.pull_request,
+            head: { ...fork.pull_request.head, repo: { full_name: 'someone/example' } },
+          },
+        }
+        const vars = yield* Effect.promise(() =>
+          env(payload, { INPUT_GITHUB_TOKEN: 'pat', INPUT_WORKFLOWTOKEN: 'workflow' }),
+        )
+        const tokens: Array<string> = []
+        yield* program(({ token }) =>
+          Effect.sync(() => tokens.push(Redacted.value(token))).pipe(Effect.as(readOnly)),
+        ).pipe(withEnv(vars))
+        expect(tokens).toStrictEqual(['workflow'])
+        expect(state.checkRuns).toHaveLength(0)
+        expect(process.exitCode).toBe(exitCode)
+        const summary = yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))
+        expect(summary).toContain('ran with restricted access (a pull request from a fork)')
+        expect(summary).toContain('settings: restricted access (a pull request from a fork)')
+        expect(summary).toContain(
+          '**Restricted access:** the token was not allowed to make these writes, so they were skipped:\n- createCheckRun',
+        )
+        expect(out.some((line) => line.startsWith('::warning title=access.config-skipped::'))).toBe(true)
+      }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('treats the workflow token as restricted, and a stronger token as full access', () =>
+    Effect.gen(function* () {
+      const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
+      const restricted = yield* Effect.promise(() =>
+        env(pullRequest('feat: x'), { INPUT_GITHUB_TOKEN: 'same', INPUT_WORKFLOWTOKEN: 'same' }),
+      )
+      yield* program(() => Effect.succeed(service)).pipe(withEnv(restricted))
+      const summary = yield* Effect.promise(() => readFile(restricted.GITHUB_STEP_SUMMARY, 'utf8'))
+      expect(summary).toContain('ran with restricted access (the workflow token, without the ACCESS_TOKEN secret)')
+      expect(summary).not.toContain('**Restricted access:**')
+      const full = yield* Effect.promise(() =>
+        env(pullRequest('feat: x'), {
+          INPUT_GITHUB_TOKEN: 'pat',
+          INPUT_WORKFLOWTOKEN: 'workflow',
+          GITHUB_STEP_SUMMARY: join(dir, 'full.md'),
+        }),
+      )
+      yield* program(() => Effect.succeed(service)).pipe(withEnv(full))
+      expect(yield* Effect.promise(() => readFile(full.GITHUB_STEP_SUMMARY, 'utf8'))).not.toContain('restricted access')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('warns and falls back to the workflow token when GitHub rejects the given token', () =>
+    Effect.gen(function* () {
+      const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
+      const rejected = { ...service, getRepository: Effect.fail(new Forbidden({ operation: 'getRepository', detail: 'Bad credentials' })) }
+      const vars = yield* Effect.promise(() => env(pullRequest('feat: x'), { INPUT_GITHUB_TOKEN: 'expired', INPUT_WORKFLOWTOKEN: 'workflow' }))
+      const tokens: Array<string> = []
+      const connect = ({ token }: { readonly token: Redacted.Redacted<string> }) =>
+        Effect.sync(() => {
+          tokens.push(Redacted.value(token))
+          return Redacted.value(token) === 'expired' ? rejected : service
+        })
+      yield* program(connect).pipe(withEnv(vars))
+      expect(tokens).toStrictEqual(['expired', 'workflow'])
+      expect(out[0]).toBe(
+        '::warning title=smartcloud::GitHub rejected GITHUB_TOKEN (getRepository: forbidden (Bad credentials)); this run acted with the workflow token and skipped what needs a stronger token. Replace the token.',
+      )
+      expect(process.exitCode).toBe(exitCode)
+      expect(yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))).toContain('GitHub rejected the given token')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
