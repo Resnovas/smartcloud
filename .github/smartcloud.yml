@@ -40,3 +40,279 @@ required:
 
 # Slash commands in comments; see docs/features/commands.mdx.
 commands: {}
+
+# The Linear label taxonomy (Type, Context, Platform, Versioning and Stage
+# groups, with the Status, Priority, Size and other repository labels), kept in
+# step with the Linear workspace. Added to the preset's own labels.
+labels:
+  abandoned:
+    name: "Status - Abandoned"
+    color: "CFD3D7"
+    description: "This issue/pull request has been abandon"
+  stale:
+    name: "Status - Stale"
+    color: "CFD3D7"
+    description: "This issue has been automatically marked as stale because it has not had recent activity"
+  chore:
+    name: "Type - Chore"
+    color: "0075CA"
+    description: "Changes to the build process or auxiliary tools and libraries such as documentation generation"
+  bug:
+    name: "Type - Bug"
+    color: "0075CA"
+    description: "A possible bug"
+  maintenance:
+    name: "Type - Maintenance"
+    color: "0075CA"
+    description: "Changes to maintain the project"
+  discussion:
+    name: "Type - Discussion"
+    color: "0075CA"
+    description: "A conversation about something"
+  documentation:
+    name: "Type - Documentation"
+    color: "0075CA"
+    description: "Changes to the documentation"
+  feature:
+    name: "Type - Feature"
+    color: "0075CA"
+    description: "A new feature"
+  enhancement:
+    name: "Type - Enhancement"
+    color: "0075CA"
+    description: "Improving a feature"
+  fix:
+    name: "Type - Fix"
+    color: "0075CA"
+    description: "A bug fix"
+  optimisation:
+    name: "Type - Optimisation"
+    color: "0075CA"
+    description: "A code change that improves performance"
+  refactor:
+    name: "Type - Refactor"
+    color: "0075CA"
+    description: "A code change that neither fixes a bug nor adds a feature"
+  revert:
+    name: "Type - Revert"
+    color: "0075CA"
+    description: "Removes and discards a previous change as an error"
+  deprecated:
+    name: "Type - Deprecated"
+    color: "0075CA"
+    description: "Marks functionality which is no longer needed"
+  removal:
+    name: "Type - Removal"
+    color: "0075CA"
+    description: "Removes previous functionality which is no longer needed"
+  style:
+    name: "Type - Style"
+    color: "0075CA"
+    description: "Changes that do not affect the meaning of the code"
+  dependences:
+    name: "Type - Dependencies"
+    color: "0075CA"
+    description: "Changes that affect the dependencies"
+  workflow:
+    name: "Context - Workflows"
+    color: "f9cea2"
+    description: "Related to ./.github/workflows"
+  releaseMastermind:
+    name: "Context - Release Mastermind"
+    color: "f9cea2"
+    description: "Related to @resnovas/release-mastermind"
+  labelMastermind:
+    name: "Context - Label Mastermind"
+    color: "f9cea2"
+    description: "Related to @resnovas/label-mastermind"
+  variableMastermind:
+    name: "Context - Variable Mastermind"
+    color: "f9cea2"
+    description: "Related to @resnovas/variable-mastermind"
+  condition:
+    name: "Context - Conditions"
+    color: "f9cea2"
+    description: "Related to action conditions"
+  api:
+    name: "Context - API"
+    color: "f9cea2"
+    description: "Related to action API"
+  contexts:
+    name: "Context - Contexts"
+    color: "f9cea2"
+    description: "Related to action Contexts"
+  util:
+    name: "Context - Util"
+    color: "f9cea2"
+    description: "Related to action Utilities"
+  installer:
+    name: "Context - Installer"
+    color: "f9cea2"
+    description: "Related to action installer and automatic configuration tools"
+  deps:
+    name: "Context - Dependencies"
+    color: "f9cea2"
+    description: "Related to depenencies"
+  depsDev:
+    name: "Context - Dependencies"
+    color: "f9cea2"
+    description: "Related to developer dependencies"
+  stageCompleted:
+    name: "Stage - Completed"
+    color: "172875"
+    description: "Work has shipped through the full pipeline"
+  stageDeploying:
+    name: "Stage - Deploying"
+    color: "172875"
+    description: "Deploying to latest"
+  stageDeveloping:
+    name: "Stage - Developing"
+    color: "172875"
+    description: "Development is underway"
+  devOpsRejected:
+    name: "DevOps - Rejected"
+    color: "172875"
+    description: "DevOPS wont continue"
+  devOpsReviewing:
+    name: "DevOps - Reviewing"
+    color: "172875"
+    description: "DevOPS awaiting review"
+  stageStaging:
+    name: "Stage - Staging"
+    color: "172875"
+    description: "Deployed to the staging environment"
+  stageTesting:
+    name: "Stage - Testing"
+    color: "172875"
+    description: "Deployed to the testing environment"
+  android:
+    name: "Platform - Android"
+    color: "E0BE84"
+  aws:
+    name: "Platform - AWS"
+    color: "E0BE84"
+  google:
+    name: "Platform - Google Cloud"
+    color: "E0BE84"
+  ios:
+    name: "Platform - iOS"
+    color: "E0BE84"
+  ubuntu:
+    name: "Platform - Ubuntu"
+    color: "E0BE84"
+  fedora:
+    name: "Platform - Fedora"
+    color: "E0BE84"
+  debian:
+    name: "Platform - Debian"
+    color: "E0BE84"
+  macos:
+    name: "Platform - macOS"
+    color: "E0BE84"
+  windows:
+    name: "Platform - Windows"
+    color: "E0BE84"
+  platformOther:
+    name: "Platform - Other"
+    color: "E0BE84"
+    description: "A platform not covered by the other Platform labels"
+  priorityCritical:
+    name: "Priority - Critical"
+    color: "8de8b3"
+    description: "This bug affects more than 50% of users and should be patched before any new features are added"
+  xs:
+    name: "Size - XS"
+    color: "d4c5f9"
+    description: "Less than 10 lines changed"
+  s:
+    name: "Size - S"
+    color: "d4c5f9"
+    description: "More than 10 lines changed"
+  m:
+    name: "Size - M"
+    color: "d4c5f9"
+    description: "More than 30 lines changed"
+  l:
+    name: "Size - L"
+    color: "d4c5f9"
+    description: "More than 100 lines changed"
+  xl:
+    name: "Size - XL"
+    color: "d4c5f9"
+    description: "More than 500 lines changed"
+  xxl:
+    name: "Size - XXL"
+    color: "d4c5f9"
+    description: "More than 1000 lines changed"
+  fixConfirmed:
+    name: "Fix - Confirmed"
+    color: "D73A4A"
+    description: "This fix has been confirmed"
+  bugConfirmed:
+    name: "Bug - Confirmed"
+    color: "D73A4A"
+    description: "This bug has been confirmed"
+  major:
+    name: "Versioning - Major"
+    color: "e580c8"
+    description: "Major version increment due to backwards-incompatible changes"
+  minor:
+    name: "Versioning - Minor"
+    color: "e580c8"
+    description: "Minor version increment due to substantial new functionality or improvements"
+  patch:
+    name: "Versioning - Patch"
+    color: "e580c8"
+    description: "Patch version increment due to backwards-compatible bug fixes"
+  prerelease:
+    name: "Versioning - Prerelease"
+    color: "e580c8"
+    description: "Prerelease of the next version"
+  build:
+    name: "Versioning - Build"
+    color: "e580c8"
+    description: "A build to represent dependency updates and insignificant changes"
+  breaking:
+    name: "Versioning - BREAKING"
+    color: "e580c8"
+    description: "A breaking change"
+  securityFix:
+    name: "security fix"
+    color: "D1260F"
+    description: "A Security Fix"
+  securityVulnerability:
+    name: "security vulnerability"
+    color: "D1260F"
+    description: "A Security vulnerability"
+  duplicate:
+    name: "Duplicate"
+    color: "d4c5f9"
+    description: "A Duplicate of another issue/pull"
+  help:
+    name: "Help wanted"
+    color: "d4c5f9"
+    description: "Help is needed to continue"
+  rebase:
+    name: "Needs rebase"
+    color: "d4c5f9"
+    description: "This request needs to be rebased"
+  wip:
+    name: "Work in progress"
+    color: "d4c5f9"
+    description: "This pull request is a wip"
+  moreInfo:
+    name: "More information needed"
+    color: "d4c5f9"
+    description: "Requires more information before it can continue"
+  firstIssue:
+    name: "Good first issue"
+    color: "d4c5f9"
+    description: "A Good issue for first-time GitHub users"
+  firstTimers:
+    name: "First Timers"
+    color: "d4c5f9"
+    description: "A Good issue for first-time GitHub users"
+  skipChangelog:
+    name: "skip-changelog"
+    color: "d4c5f9"
+    description: "Skip the changelog"
