@@ -17,7 +17,7 @@
 import { describe, expect, it, vi } from '@effect/vitest'
 import { ConfigProvider, Effect, Exit, Fiber, Layer, Redacted, Schedule, TestClock } from 'effect'
 import { DEFAULT_COMMITTER, GitHub, GitHubLive, makeLiveGitHub, signOff } from '@resnovas/integrations.github'
-import { fakeFetch, type Routes } from './fake-fetch.js'
+import { fakeFetch, type Reply, type Routes } from './fake-fetch.js'
 
 const REPO = '/repos/Resnovas/example'
 
@@ -32,6 +32,98 @@ const live = (routes: Routes, committer?: { name: string; email: string }) => {
   })
   return { service, requests: fake.requests }
 }
+
+describe('live GitHub: conditional reads', () => {
+  const connect = (routes: Routes) => {
+    const fake = fakeFetch(routes)
+    const github = makeLiveGitHub({
+      token: Redacted.make('test-token'),
+      coordinates: { owner: 'Resnovas', repo: 'example' },
+      fetch: fake.fetch,
+      retry: Schedule.recurs(0),
+    })
+    return { github, fake }
+  }
+  const run = {
+    id: 1,
+    name: 'ci',
+    status: 'completed',
+    conclusion: 'success',
+    html_url: null,
+    details_url: null,
+    external_id: null,
+    app: null,
+  }
+
+  it.effect('repeats a read with the last ETag, and reuses the last response when GitHub answers 304', () =>
+    Effect.gen(function* () {
+      const { github, fake } = connect({
+        [`GET ${REPO}/commits/abc/check-runs`]: [
+          { body: { total_count: 1, check_runs: [run] }, headers: { etag: '"runs-1"' } },
+          { status: 304, headers: { etag: '"runs-1"' } },
+          { body: { total_count: 0, check_runs: [] }, headers: { etag: '"runs-2"' } },
+        ],
+        [`GET ${REPO}/commits/abc/statuses`]: { body: [] },
+      })
+      const service = yield* github
+      const first = yield* service.listCommitChecks('abc')
+      expect(first).toHaveLength(1)
+      expect(yield* service.listCommitChecks('abc')).toStrictEqual(first)
+      expect(yield* service.listCommitChecks('abc')).toStrictEqual([])
+      // Statuses came back without an ETag, so they are never sent one.
+      expect(fake.conditions).toStrictEqual([undefined, undefined, '"runs-1"', undefined, '"runs-1"', undefined])
+    }),
+  )
+
+  it.effect('never sends an ETag with a write, and passes on a failure after a cached read', () =>
+    Effect.gen(function* () {
+      const { github, fake } = connect({
+        [`GET ${REPO}/commits/abc/check-runs`]: [
+          { body: { total_count: 0, check_runs: [] }, headers: { etag: '"runs"' } },
+          { status: 404, body: { message: 'Not Found' } },
+        ],
+        [`GET ${REPO}/commits/abc/statuses`]: { body: [] },
+        [`POST ${REPO}/check-runs`]: { status: 201, body: { id: 42 } },
+      })
+      const service = yield* github
+      yield* service.listCommitChecks('abc')
+      yield* service.createCheckRun({
+        name: 'c',
+        headSha: 'abc',
+        status: 'completed',
+        conclusion: 'success',
+        title: 't',
+        summary: 's',
+      })
+      const failed = yield* Effect.exit(service.listCommitChecks('abc'))
+      expect(Exit.isFailure(failed)).toBe(true)
+      expect(fake.conditions).toStrictEqual([undefined, undefined, undefined, '"runs"', undefined])
+    }),
+  )
+
+  it.effect('forgets every ETag once it holds a thousand, so a long-lived service stays bounded', () =>
+    Effect.gen(function* () {
+      const refs = Array.from({ length: 501 }, (_, index) => `sha${index}`)
+      const routes: Record<string, Reply> = {}
+      for (const ref of refs) {
+        routes[`GET ${REPO}/commits/${ref}/check-runs`] = {
+          body: { total_count: 0, check_runs: [] },
+          headers: { etag: `"${ref}"` },
+        }
+        routes[`GET ${REPO}/commits/${ref}/statuses`] = { body: [], headers: { etag: `"s-${ref}"` } }
+      }
+      const { github, fake } = connect(routes)
+      const service = yield* github
+      yield* Effect.forEach(refs, (ref) => service.listCommitChecks(ref), { discard: true })
+      // The 1,001st response cleared the first thousand, so the first commit is read afresh.
+      yield* service.listCommitChecks('sha0')
+      expect(fake.conditions.slice(-2)).toStrictEqual([undefined, undefined])
+      yield* service.listCommitChecks('sha500')
+      // The last commit's reads came after the clear, so they are still known.
+      expect(fake.conditions.slice(-2)).toStrictEqual(['"sha500"', '"s-sha500"'])
+    }),
+  )
+})
 
 describe('live GitHub: repository and labels', () => {
   it.effect('reads the repository', () =>

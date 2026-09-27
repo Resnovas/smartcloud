@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { Clock, Effect, Either, Metric, MetricBoundaries } from 'effect'
+import { Clock, Effect, Either, Metric, MetricBoundaries, MetricState } from 'effect'
 import type { GitHubError } from './errors.js'
 
 /**
@@ -59,6 +59,76 @@ export const githubDuration = Metric.histogram(
   MetricBoundaries.exponential({ start: 25, factor: 2, count: 12 }),
   'How long GitHub API calls take, in milliseconds, by operation and outcome',
 )
+
+/**
+ * The rate limit GitHub reported left after the last call of each
+ * operation, tagged by `operation`.
+ *
+ * @remarks
+ * Set from the `X-RateLimit-Remaining` header, so it tracks the quota of
+ * whichever token the operation used: the checks on a commit are read with
+ * the workflow token, everything else with the main token.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Metric } from 'effect'
+ * import { githubRateLimitRemaining } from '@resnovas/integrations.github'
+ *
+ * const left = Metric.value(Metric.tagged(githubRateLimitRemaining, 'operation', 'listLabels')).pipe(
+ *   Effect.map((state) => state.value),
+ * )
+ * ```
+ */
+export const githubRateLimitRemaining = Metric.gauge('smartcloud.github.rate_limit_remaining', {
+  description: 'The GitHub rate limit left after the last call, by operation',
+})
+
+/** What a process has spent on one GitHub operation, from {@link githubUsage}. */
+export interface GitHubUsage {
+  readonly operation: string
+  /** Calls made, whatever their outcome; a retried call counts once. */
+  readonly requests: number
+  /** The rate limit left after the operation's last call, when GitHub reported it. */
+  readonly remaining?: number
+}
+
+const tagOf = (tags: ReadonlyArray<{ readonly key: string; readonly value: string }>, key: string) =>
+  tags.find((tag) => tag.key === key)?.value
+
+/**
+ * The GitHub calls this process has made so far, by operation, with the
+ * rate limit left after each operation's last call, most-called first.
+ *
+ * @remarks
+ * Read from {@link githubRequests} and {@link githubRateLimitRemaining}, so
+ * a run can report what it spent and a regression in its API use shows.
+ *
+ * @example
+ * ```ts
+ * import { Effect } from 'effect'
+ * import { githubUsage } from '@resnovas/integrations.github'
+ *
+ * const report = Effect.map(githubUsage, (usage) => usage.map((entry) => `${entry.operation}: ${entry.requests}`))
+ * ```
+ */
+export const githubUsage: Effect.Effect<ReadonlyArray<GitHubUsage>> = Effect.map(Metric.snapshot, (pairs) => {
+  const requests = new Map<string, number>()
+  const remaining = new Map<string, number>()
+  for (const { metricKey, metricState } of pairs) {
+    const operation = tagOf(metricKey.tags, 'operation')
+    if (operation === undefined) continue
+    if (metricKey.name === 'smartcloud.github.requests' && MetricState.isCounterState(metricState))
+      requests.set(operation, (requests.get(operation) ?? 0) + Number(metricState.count))
+    if (metricKey.name === 'smartcloud.github.rate_limit_remaining' && MetricState.isGaugeState(metricState))
+      remaining.set(operation, Number(metricState.value))
+  }
+  return [...requests]
+    .map(([operation, count]) => {
+      const left = remaining.get(operation)
+      return left === undefined ? { operation, requests: count } : { operation, requests: count, remaining: left }
+    })
+    .sort((a, b) => b.requests - a.requests || a.operation.localeCompare(b.operation))
+})
 
 /**
  * The span name for a GitHub operation.
@@ -112,18 +182,20 @@ const statusOf = (value: unknown): number | undefined =>
  *
  * @example
  * ```ts
- * instrumentCall(attempts, statusRef, { operation: 'listLabels' })
+ * instrumentCall(attempts, statusRef, { operation: 'listLabels' }, client.remaining)
  * ```
  *
  * @param call - The call, retries included.
  * @param lastStatus - Reads the HTTP status of the last attempt, if it had one.
  * @param details - The operation and any safe attributes.
+ * @param lastRemaining - Reads the rate limit GitHub reported left after the last attempt, if it did.
  * @returns The call, instrumented; its result and error are unchanged.
  */
 export const instrumentCall = <A>(
   call: Effect.Effect<A, GitHubError>,
   lastStatus: () => number | undefined,
   details: CallDetails,
+  lastRemaining: () => number | undefined,
 ): Effect.Effect<A, GitHubError> =>
   Effect.gen(function* () {
     const start = yield* Clock.currentTimeMillis
@@ -142,6 +214,9 @@ export const instrumentCall = <A>(
       Metric.tagged(Metric.tagged(metric, 'operation', details.operation), 'outcome', outcome)
     yield* Metric.increment(tagged(githubRequests))
     yield* Metric.update(tagged(githubDuration), duration)
+    const remaining = lastRemaining()
+    if (remaining !== undefined)
+      yield* Metric.set(Metric.tagged(githubRateLimitRemaining, 'operation', details.operation), remaining)
     yield* Effect.logDebug(
       `github ${details.operation}: ${outcome}${status === undefined ? '' : ` (${status})`} in ${duration} ms`,
     ).pipe(Effect.annotateLogs({ ...attributes, duration_ms: duration }))

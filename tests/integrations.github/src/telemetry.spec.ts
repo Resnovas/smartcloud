@@ -23,6 +23,7 @@ import {
   githubDuration,
   githubRequests,
   githubSpanName,
+  githubUsage,
   makeLiveGitHub,
 } from '@resnovas/integrations.github'
 import { fakeFetch, type Routes } from './fake-fetch.js'
@@ -161,6 +162,41 @@ describe('GitHub telemetry', () => {
       ).toStrictEqual(['query', 'mutation'])
       for (const value of carried(observed))
         for (const secret of ['Resnovas', 'example', 'rulesets']) expect(value).not.toContain(secret)
+    }),
+  )
+
+  it.effect('reports the calls made by operation, with the rate limit GitHub left after each', () =>
+    Effect.gen(function* () {
+      const github = yield* live({
+        [`GET ${REPO}/commits/usage/check-runs`]: [
+          { body: { total_count: 0, check_runs: [] }, headers: { etag: '"u"', 'x-ratelimit-remaining': '900' } },
+          { status: 304, headers: { 'x-ratelimit-remaining': '900' } },
+        ],
+        [`GET ${REPO}/commits/usage/statuses`]: { body: [], headers: { 'x-ratelimit-remaining': '899' } },
+        [`GET ${REPO}/contents/usage.yml`]: { status: 404, body: {}, headers: { 'x-ratelimit-remaining': '42' } },
+        [`POST /graphql`]: { networkError: 'offline' },
+      })
+      const before = new Map((yield* githubUsage).map((entry) => [entry.operation, entry.requests]))
+      // Before any response, so no rate limit is known yet.
+      yield* github.graphql('query { usage }', {}).pipe(Effect.ignore)
+      yield* github.listCommitChecks('usage').pipe(Effect.ignore)
+      yield* github.listCommitChecks('usage').pipe(Effect.ignore)
+      yield* github.getFile({ owner: 'Resnovas', repo: 'example', path: 'usage.yml' }).pipe(Effect.ignore)
+      const usage = yield* githubUsage
+      const entry = (operation: string) => usage.find((item) => item.operation === operation)
+      expect(entry('listCommitChecks: check runs')).toStrictEqual({
+        operation: 'listCommitChecks: check runs',
+        requests: (before.get('listCommitChecks: check runs') ?? 0) + 2,
+        remaining: 900,
+      })
+      expect(entry('listCommitChecks: statuses')?.remaining).toBe(899)
+      expect(entry('graphql')?.remaining).toBeUndefined()
+      // A failed call reports the rate limit from its error's response.
+      expect(entry('getFile')?.remaining).toBe(42)
+      // Most-called first.
+      expect(usage.map((item) => item.requests)).toStrictEqual(
+        [...usage.map((item) => item.requests)].sort((a, b) => b - a),
+      )
     }),
   )
 
