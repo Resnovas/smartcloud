@@ -15,6 +15,7 @@
  */
 
 import { Octokit } from '@octokit/rest'
+import { AsyncLocalStorage } from 'node:async_hooks'
 import { Association, type CheckState, type Mergeable, type Reactions, type Review } from '@resnovas/conditions'
 import { Config, Effect, Layer, Option, Redacted, Ref, Schedule, Schema } from 'effect'
 import { cacheReads } from './cache.js'
@@ -325,6 +326,67 @@ const scopesOf = (header: string | number | undefined): ReadonlyArray<string> | 
 const labelName = (label: string | { readonly name?: string | undefined }): string =>
   typeof label === 'string' ? label : (label.name ?? '')
 
+// How many responses a client keeps ETags for, before it starts over.
+const CONDITIONAL_CAPACITY = 1_000
+
+type Response = Awaited<ReturnType<Octokit['request']>>
+
+// The rate limit the latest response of the current call reported. Each call
+// runs its requests inside its own cell, so concurrent calls on one client
+// never read another call's value.
+const callQuota = new AsyncLocalStorage<{ remaining?: number }>()
+
+/** An Octokit client, and the rate limit its token had left after its last response. */
+interface Client {
+  readonly octokit: Octokit
+  readonly remaining: () => number | undefined
+}
+
+/**
+ * Makes every `GET` a client repeats conditional, and notes the rate limit
+ * each response reports.
+ *
+ * @remarks
+ * GitHub does not count a `304 Not Modified` against the rate limit, so a
+ * read polled or repeated after a write sends the ETag of the last response
+ * for the same URL and, when nothing changed, gets that response back with
+ * status `304`.
+ */
+const observedClient = (octokit: Octokit): Client => {
+  const seen = new Map<string, { readonly etag: string; readonly response: Response }>()
+  let remaining: number | undefined
+  const note = (headers: Response['headers'] | undefined) => {
+    const value = headers?.['x-ratelimit-remaining']
+    if (value === undefined) return
+    remaining = Number(value)
+    const cell = callQuota.getStore()
+    if (cell !== undefined) cell.remaining = remaining
+  }
+  octokit.hook.wrap('request', async (request, options) => {
+    const read = options.method === 'GET'
+    const { url } = octokit.request.endpoint.parse(options)
+    const last = read ? seen.get(url) : undefined
+    // Octokit's hooks pass the options they were first given down the chain, so the header is set on them in place.
+    if (last !== undefined) options.headers['if-none-match'] = last.etag
+    try {
+      const response = await request(options)
+      note(response.headers)
+      const etag = response.headers.etag
+      // A long-lived service starts over rather than grow without bound.
+      if (seen.size >= CONDITIONAL_CAPACITY) seen.clear()
+      if (read && etag !== undefined) seen.set(url, { etag, response })
+      return response
+    } catch (error) {
+      // A failed request carries its response, and so the rate limit, unless it never reached GitHub.
+      const headers = (error as { readonly response?: Pick<Response, 'headers'> }).response?.headers
+      note(headers)
+      if (last === undefined || statusOf(error) !== 304) throw error
+      return { ...last.response, status: 304, headers: { ...last.response.headers, ...headers } }
+    }
+  })
+  return { octokit, remaining: () => remaining }
+}
+
 /**
  * Builds the live GitHub service on Octokit.
  *
@@ -360,15 +422,19 @@ const labelName = (label: string | { readonly name?: string | undefined }): stri
 export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubService> =>
   Effect.gen(function* () {
     const client = (token: Redacted.Redacted<string>) =>
-      new Octokit({
-        auth: Redacted.value(token),
-        userAgent: 'smartcloud',
-        // Every failure already surfaces as a typed error, so Octokit's own request log would only repeat it.
-        log: { debug: () => undefined, info: () => undefined, warn: console.warn, error: () => undefined },
-        ...(options.fetch === undefined ? {} : { request: { fetch: options.fetch } }),
-      })
-    const octokit = client(options.token)
-    const checksClient = options.checksToken === undefined ? octokit : client(options.checksToken)
+      observedClient(
+        new Octokit({
+          auth: Redacted.value(token),
+          userAgent: 'smartcloud',
+          // Every failure already surfaces as a typed error, so Octokit's own request log would only repeat it.
+          log: { debug: () => undefined, info: () => undefined, warn: console.warn, error: () => undefined },
+          ...(options.fetch === undefined ? {} : { request: { fetch: options.fetch } }),
+        }),
+      )
+    const main = client(options.token)
+    const checks = options.checksToken === undefined ? main : client(options.checksToken)
+    const { octokit } = main
+    const checksClient = checks.octokit
     const { owner, repo } = options.coordinates
     const retry = options.retry ?? DEFAULT_RETRY
     const mergeablePoll = options.mergeablePoll ?? DEFAULT_MERGEABLE_POLL
@@ -379,16 +445,24 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       run: () => Promise<A>,
       retryWhile: (error: GitHubError) => boolean = transient,
       details: CallDetails = { operation },
+      via: Client = main,
     ): Effect.Effect<A, GitHubError> => {
       const status = statusTracker()
+      const quota: { remaining?: number } = {}
       return instrumentCall(
-        Effect.tryPromise({ try: status.track(run), catch: (error) => toGitHubError(operation, error) }).pipe(
-          Effect.retry({ schedule: retry, while: retryWhile }),
-        ),
+        Effect.tryPromise({
+          try: status.track(() => callQuota.run(quota, run)),
+          catch: (error) => toGitHubError(operation, error),
+        }).pipe(Effect.retry({ schedule: retry, while: retryWhile })),
         status.last,
         details,
+        // This call's own response, or the client's latest when it got none.
+        () => quota.remaining ?? via.remaining(),
       )
     }
+    // A read made with the checks token, whose rate limit is its own.
+    const checksCall = <A>(operation: string, run: () => Promise<A>) =>
+      call(operation, run, transient, { operation }, checks)
 
     // Appends every annotation batch after the first to a run, one request each.
     const appendAnnotations = (
@@ -520,10 +594,10 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         const ref = data.head.sha
         const [runs, statuses] = yield* Effect.all(
           [
-            call('listChecks: check runs', () =>
+            checksCall('listChecks: check runs', () =>
               checksClient.paginate(checksClient.rest.checks.listForRef, { owner, repo, ref, per_page: 100 }),
             ),
-            call('listChecks: commit statuses', () =>
+            checksCall('listChecks: commit statuses', () =>
               checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, {
                 owner,
                 repo,
@@ -1104,7 +1178,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
       listCommitChecks: (ref) =>
         Effect.all(
           [
-            call('listCommitChecks: check runs', () =>
+            checksCall('listCommitChecks: check runs', () =>
               checksClient.paginate(checksClient.rest.checks.listForRef, {
                 owner,
                 repo,
@@ -1113,7 +1187,7 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
                 per_page: 100,
               }),
             ),
-            call('listCommitChecks: statuses', () =>
+            checksCall('listCommitChecks: statuses', () =>
               checksClient.paginate(checksClient.rest.repos.listCommitStatusesForRef, {
                 owner,
                 repo,

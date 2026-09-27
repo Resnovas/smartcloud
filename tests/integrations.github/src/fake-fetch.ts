@@ -37,6 +37,8 @@ export const fakeFetch = (routes: Routes) => {
   const requests: Array<Recorded> = []
   // The token each request was sent with, in request order.
   const tokens: Array<string | undefined> = []
+  // The If-None-Match header each request was sent with, in request order.
+  const conditions: Array<string | undefined> = []
   const served = new Map<string, number>()
   const fetch: typeof globalThis.fetch = async (input, init) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
@@ -51,7 +53,9 @@ export const fakeFetch = (routes: Routes) => {
       query: url.search,
       body: text === undefined || text === '' ? undefined : JSON.parse(text),
     })
-    tokens.push(new Headers(init?.headers).get('authorization')?.replace(/^(token|bearer) /i, ''))
+    const headers = new Headers(init?.headers)
+    tokens.push(headers.get('authorization')?.replace(/^(token|bearer) /i, ''))
+    conditions.push(headers.get('if-none-match') ?? undefined)
     const key = `${method} ${path}`
     const route = routes[key]
     if (route === undefined) throw new Error(`no fake route for ${key}`)
@@ -63,8 +67,8 @@ export const fakeFetch = (routes: Routes) => {
     if ('networkError' in reply) throw new TypeError(reply.networkError)
     const status = reply.status ?? 200
     const response =
-      status === 204
-        ? new Response(null, { status })
+      status === 204 || status === 304
+        ? new Response(null, { status, headers: { ...reply.headers } })
         : new Response(JSON.stringify(reply.body ?? {}), {
             status,
             headers: { 'content-type': 'application/json', ...reply.headers },
@@ -72,5 +76,5 @@ export const fakeFetch = (routes: Routes) => {
     // A real fetch sets the response URL; Octokit's paginator reads it for list responses that carry a total count.
     return Object.defineProperty(response, 'url', { value: url.href })
   }
-  return { fetch, requests, tokens }
+  return { fetch, requests, tokens, conditions }
 }

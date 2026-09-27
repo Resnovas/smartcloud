@@ -19,6 +19,7 @@ import {
   DryRun,
   DryRunLog,
   GitHub,
+  githubUsage,
   Restricted,
   SkippedWrites,
   type GitHubService,
@@ -127,6 +128,9 @@ const skippedSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =
  * its token cannot do, including writes GitHub refuses, and lists them in
  * the job summary rather than failing.
  *
+ * The run ends by logging, as debug lines, the GitHub calls it made by
+ * operation and the rate limit left after each (see `githubUsage`).
+ *
  * The whole run is one telemetry invocation (`command run` with the command `run`), so any
  * failure, from reading the inputs on, is also sent to error tracking.
  *
@@ -191,6 +195,11 @@ export const program = (connect: Connect) =>
         }).pipe(Effect.provide(Layer.provideMerge(DryRun, base)))
       : { ...(yield* run.pipe(Effect.provide(base))), dryRun: '' }
 
+    // What the run spent of each token's rate limit, shown when step debug logging is on, so a rise shows.
+    for (const usage of yield* githubUsage) {
+      const left = usage.remaining === undefined ? '' : `, ${usage.remaining} left`
+      yield* Console.log(`::debug::github ${escape(usage.operation)}: ${usage.requests} request(s)${left}`)
+    }
     for (const warning of outcome.warnings) yield* Console.log(`::warning title=smartcloud::${escape(warning)}`)
     for (const line of outcome.published.annotations) yield* Console.log(line)
     if (env.summaryPath._tag === 'Some') {

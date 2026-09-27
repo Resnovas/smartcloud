@@ -18,8 +18,8 @@ import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { program } from '@resnovas/action'
 import { disabledTelemetry, Telemetry, telemetryLayer } from '@resnovas/integrations.posthog'
-import { Forbidden } from '@resnovas/integrations.github'
-import { Effect, Layer, Logger, Redacted } from 'effect'
+import { Forbidden, githubRateLimitRemaining, githubRequests } from '@resnovas/integrations.github'
+import { Effect, Layer, Logger, Metric, Redacted } from 'effect'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -291,6 +291,22 @@ describe('program', () => {
       expect(out[0]).toMatch(/^::error title=smartcloud::/)
       expect(telemetry.batch()).toContain('"event":"$exception"')
       expect(telemetry.batch()).toContain('"error_tag":"ConfigError"')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  // Last, since the metrics it sets are global and would show in every later run's output.
+  it.effect('logs the GitHub calls made and the rate limit left as debug lines', () =>
+    Effect.gen(function* () {
+      const { service } = memory({ '.github/smartcloud.yml': CONVENTIONS })
+      const { GITHUB_STEP_SUMMARY: _summary, ...vars } = yield* Effect.promise(() => env(pullRequest('feat: x')))
+      const operation = (name: string) => (metric: typeof githubRequests) =>
+        Metric.tagged(Metric.tagged(metric, 'operation', name), 'outcome', 'success')
+      yield* Metric.increment(operation('getFile')(githubRequests))
+      yield* Metric.set(Metric.tagged(githubRateLimitRemaining, 'operation', 'getFile'), 4321)
+      yield* Metric.increment(operation('graphql')(githubRequests))
+      yield* program(() => Effect.succeed(service)).pipe(withEnv(vars))
+      expect(out).toContain('::debug::github getFile: 1 request(s), 4321 left')
+      expect(out).toContain('::debug::github graphql: 1 request(s)')
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 })

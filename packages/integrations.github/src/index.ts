@@ -56,7 +56,14 @@ export { CHECK_RUN_EXTERNAL_ID, DEFAULT_COMMITTER, GitHubLive, makeLiveGitHub, s
 export type { LiveOptions } from './live.js'
 export { DryRun, DryRunLog, dryRunGitHub } from './dry-run.js'
 export { Restricted, restrictedGitHub, SkippedWrites } from './restricted.js'
-export { githubDuration, githubRequests, githubSpanName } from './telemetry.js'
+export {
+  githubDuration,
+  githubRateLimitRemaining,
+  githubRequests,
+  githubSpanName,
+  githubUsage,
+  type GitHubUsage,
+} from './telemetry.js'
 export type { RecordedWrite } from './dry-run.js'
 export { fileKey, GitHubMemory, makeMemoryGitHub } from './memory.js'
 export type { MemoryBackport, MemoryIssue, MemoryProposal, MemoryPullRequest, MemoryState } from './memory.js'
