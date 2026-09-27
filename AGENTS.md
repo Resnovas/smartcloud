@@ -635,7 +635,9 @@ Grant the workflow token per job: set `permissions: {}` at the top of every work
 
 Set `timeout-minutes` on every job that runs steps, a few times its usual run, so a hung step fails in minutes instead of holding a runner for GitHub's six-hour default. A job that calls a reusable workflow cannot set one; the called workflow's jobs do.
 
-A job that runs Nx restores and saves `.nx/cache` with `actions/cache`, keyed on the runner OS, the `pnpm-lock.yaml` hash, the commit and the workflow, and restoring the latest earlier entry, so tasks whose inputs did not change replay from the last run. Never restore a cache in the release workflow, so nothing it builds or publishes can come from a cache entry.
+CI (`.github/workflows/ci.yml`) runs `lint`, `typecheck`, `test`, `build` and `docs` as parallel jobs on the affected projects. The `check` job needs all five and passes only when every one succeeded; it is the single context the ruleset and the merge queue require, so add a new CI job to its `needs` rather than to `statusChecks.checks` in `.github/smartcloud.yml`.
+
+A job that runs Nx restores and saves `.nx/cache` with `actions/cache`, keyed on the runner OS, the `pnpm-lock.yaml` hash, the commit, the workflow and the job, and restoring the latest earlier entry, so tasks whose inputs did not change replay from the last run. Never restore a cache in the release workflow, so nothing it builds or publishes can come from a cache entry.
 
 The synced House workflow lint runs actionlint and zizmor on every pull request and fails on any finding. Run them locally with `uvx --from actionlint-py actionlint` and `uvx zizmor .`. zizmor reads the synced `.github/zizmor.yml`; ignore an intended finding where it occurs with a trailing `# zizmor: ignore[<audit>]` comment, and put the reason on the line above. smartcloud's actionlint exceptions go in `.github/actionlint.yaml`.
 

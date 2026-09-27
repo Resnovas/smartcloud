@@ -1,6 +1,9 @@
-# CI for the v2 workspace: lint, typecheck, test with coverage, build, and
-# check the API docs and contracts of the projects a change affects, plus the licence header check, the Prettier check
-# and the check that docs/reference/configuration.mdx matches the JSON Schema.
+# CI for the v2 workspace. Five jobs run in parallel on the projects a change
+# affects: lint (with the licence header and Prettier checks), typecheck (with
+# the test projects), test with coverage, build, and docs (API docs, contracts
+# and the check that docs/reference/configuration.mdx matches the JSON Schema).
+# The check job waits for all five and is the one context the ruleset and the
+# merge queue require, so adding or renaming a job never touches the ruleset.
 name: CI
 
 on:
@@ -20,10 +23,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check:
-    name: check
+  lint:
+    name: lint
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
     permissions:
       contents: read
     steps:
@@ -42,32 +45,24 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # Nx keys each task by the hash of its inputs, so a restored entry is
-      # replayed only when nothing it depends on changed. Every run saves a new
-      # entry under its commit and workflow, and restores the latest earlier
-      # one, which may come from the smartcloud workflow. A pull request's
-      # entries are scoped to its own ref, so they never reach main.
+      # replayed only when nothing it depends on changed. Every job saves a new
+      # entry under its commit, workflow and job, and restores the latest
+      # earlier one, which may come from another job or the smartcloud
+      # workflow. A pull request's entries are scoped to its own ref, so they
+      # never reach main.
       - name: Restore the Nx cache
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: .nx/cache
-          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci-lint
           restore-keys: |
             nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
             nx-${{ runner.os }}-
 
       - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
 
-      - name: Lint, typecheck, test and build affected projects
-        run: pnpm nx affected -t lint typecheck test build
-
-      # docgen type-checks every @example and fails on an export without a
-      # description; contracts checks the built declarations for @example,
-      # @param and @returns. The examples themselves run as doctests in `test`.
-      - name: API docs and contracts of affected projects
-        run: pnpm nx affected -t docgen contracts
-
-      - name: Type-check the tests
-        run: pnpm typecheck:tests
+      - name: Lint affected projects
+        run: pnpm nx affected -t lint
 
       - name: Licence headers
         run: pnpm headers
@@ -75,5 +70,178 @@ jobs:
       - name: Formatting
         run: pnpm run format:check
 
+  typecheck:
+    name: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Restores and saves the Nx cache as in the lint job.
+      - name: Restore the Nx cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci-typecheck
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nx-${{ runner.os }}-
+
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Type-check affected projects
+        run: pnpm nx affected -t typecheck
+
+      - name: Type-check the tests
+        run: pnpm typecheck:tests
+
+  test:
+    name: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Restores and saves the Nx cache as in the lint job.
+      - name: Restore the Nx cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci-test
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nx-${{ runner.os }}-
+
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Test affected projects
+        run: pnpm nx affected -t test
+
+  build:
+    name: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Restores and saves the Nx cache as in the lint job.
+      - name: Restore the Nx cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci-build
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nx-${{ runner.os }}-
+
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      - name: Build affected projects
+        run: pnpm nx affected -t build
+
+  docs:
+    name: docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # Restores and saves the Nx cache as in the lint job.
+      - name: Restore the Nx cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .nx/cache
+          key: nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}-ci-docs
+          restore-keys: |
+            nx-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            nx-${{ runner.os }}-
+
+      - uses: nrwl/nx-set-shas@afb73a62d26e41464e9254689e1fd6122ee683c1 # v5.0.1
+
+      # docgen type-checks every @example and fails on an export without a
+      # description; contracts checks the built declarations for @example,
+      # @param and @returns. The examples themselves run as doctests in `test`.
+      - name: API docs and contracts of affected projects
+        run: pnpm nx affected -t docgen contracts
+
       - name: Configuration reference is up to date
         run: pnpm docs:reference:check
+
+  # The required context. It runs even when a job above fails or is cancelled,
+  # and passes only when every one of them succeeded, so a skipped or failed
+  # job can never let a pull request through.
+  check:
+    name: check
+    needs: [lint, typecheck, test, build, docs]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions: {}
+    steps:
+      - name: Every job passed
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          failed=$(jq -r 'to_entries[] | select(.value.result != "success") | "\(.key): \(.value.result)"' <<<"$RESULTS")
+          if [ -n "$failed" ]; then
+            echo "::error::Not every CI job passed:"
+            echo "$failed"
+            exit 1
+          fi
+          echo "lint, typecheck, test, build and docs passed."
