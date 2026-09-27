@@ -157,6 +157,9 @@ Doing so leads to a permanent ban ([AI-11](AI_POLICY.md#ai-11)).
 - Line and branch coverage must not fall below 90%.
 Most repositories expect 100%.
 - Every bug fix comes with a regression test that fails before the fix and passes after it.
+- CI retries a failed test and reports every test that passed only on a retry as flaky, in a warning annotation and the job summary.
+A flaky test is a bug: fix the test or the code it exercises, rather than relying on the retry.
+Locally, tests run once.
 
 ### <a id="Dependencies"></a>Dependencies
 

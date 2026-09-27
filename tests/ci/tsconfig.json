@@ -8,5 +8,11 @@
     "composite": false,
     "emitDeclarationOnly": false
   },
-  "include": ["src/**/*.ts", "vitest.config.mts", "../../tools/ci/bundle-size.ts", "../../tools/ci/smoke/*.ts"]
+  "include": [
+    "src/**/*.ts",
+    "vitest.config.mts",
+    "../../tools/ci/bundle-size.ts",
+    "../../tools/ci/smoke/*.ts",
+    "../../tools/ci/flaky-tests.ts"
+  ]
 }

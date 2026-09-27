@@ -214,7 +214,9 @@ jobs:
   # fails here rather than for a user. Every combination runs to the end, and
   # the check job fails if any of them failed. The test target's Nx inputs
   # include the Node version and platform, so a result cached on one
-  # combination is never replayed on another.
+  # combination is never replayed on another. CI=true makes Vitest retry a
+  # failed test and report each one that passed only on a retry as a warning
+  # annotation and in the job summary (vitest.shared.ts).
   test:
     name: test (${{ matrix.os }}, Node ${{ matrix.node }})
     needs: changes

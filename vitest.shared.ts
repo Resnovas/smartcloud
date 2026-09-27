@@ -29,6 +29,24 @@ const packageEntry = (cover: string): string =>
     ? join(workspaceRoot, cover.replace(/\/src\/.*$/, ''), 'src/index.ts')
     : join(workspaceRoot, cover)
 
+// GitHub Actions sets CI. Retries stay off locally, so a flaky test fails where
+// it can be debugged.
+const onCI = process.env['CI'] === 'true'
+
+/**
+ * Flaky-test handling for every test project: on CI (`CI=true`) a failed test
+ * is retried twice, and `tools/ci/flaky-tests.ts` reports every test that
+ * passed only on a retry as a warning annotation and in the job summary, so a
+ * flaky test does not fail an unrelated change but is never hidden either.
+ * Locally tests run once. On CI Vitest also records where each test is
+ * defined, so the annotation points at its line.
+ */
+export const flakyTests = {
+  retry: onCI ? 2 : 0,
+  includeTaskLocation: onCI,
+  reporters: onCI ? ['default', join(workspaceRoot, 'tools/ci/flaky-tests.ts')] : ['default'],
+}
+
 /**
  * The shared Vitest settings every test project extends.
  *
@@ -43,6 +61,8 @@ const packageEntry = (cover: string): string =>
  * documented examples, and their `// =>` assertions, stay true. `vitest.setup.ts`
  * loads the package's entry before those examples run, so the first one does
  * not spend its timeout importing the package.
+ *
+ * Failed tests are retried and reported on CI; see {@link flakyTests}.
  *
  * @param name - The test project's name, shown in the reporter.
  * @param covers - Source globs of the package under test, relative to the
@@ -66,7 +86,7 @@ export const testProject = (name: string, covers: ReadonlyArray<string>) =>
       provide: { packageEntry: packageEntry(covers[0] ?? '') },
       // Doctests are collected from the covered sources: a directory glob or a single file.
       includeSource: covers.map((glob) => join(workspaceRoot, glob.endsWith('.ts') ? glob : join(glob, '*.ts'))),
-      reporters: ['default'],
+      ...flakyTests,
       coverage: {
         enabled: true,
         provider: 'v8',

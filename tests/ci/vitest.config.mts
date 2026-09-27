@@ -16,11 +16,13 @@
 
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
+import { flakyTests } from '../../vitest.shared.js'
 
 export default defineConfig({
   test: {
     name: 'ci',
     include: ['src/**/*.spec.ts'],
+    ...flakyTests,
     coverage: {
       enabled: true,
       provider: 'v8',
@@ -29,6 +31,7 @@ export default defineConfig({
       include: [
         fileURLToPath(new URL('../../tools/ci/bundle-size.ts', import.meta.url)),
         fileURLToPath(new URL('../../tools/ci/smoke/*.ts', import.meta.url)),
+        fileURLToPath(new URL('../../tools/ci/flaky-tests.ts', import.meta.url)),
       ],
       thresholds: { lines: 100, functions: 100, statements: 100, branches: 100 },
     },
