@@ -28,9 +28,9 @@
 // The bundle's source map is uploaded to PostHog error tracking for the
 // release (tools/release/sourcemaps.ts) and never committed.
 // Only the v<version> tag is pushed, so main never carries a release commit or
-// the bundle, and branch protection is never bypassed. Nx then writes the
-// release notes to a GitHub release on that tag, and the v<major> tag moves to
-// it. Nx also writes the notes to CHANGELOG.md and to each app's CHANGELOG.md,
+// the bundle, and branch protection is never bypassed. The release notes go to
+// a draft GitHub release on that tag, which the workflow publishes once the
+// SBOMs are attached, and the v<major> tag moves to it. Nx also writes the notes to CHANGELOG.md and to each app's CHANGELOG.md,
 // which this script formats; they are left in the working tree for the
 // workflow's changelogs job, which opens a pull request to bring them to main.
 // Publishing to npm is a separate job that builds from the tag.
@@ -44,7 +44,8 @@
 
 import { releaseChangelog, releaseVersion } from 'nx/release'
 import { execFileSync } from 'node:child_process'
-import { appendFileSync } from 'node:fs'
+import { appendFileSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { fileURLToPath } from 'node:url'
@@ -156,7 +157,11 @@ if (dryRun) {
 }
 
 // Notes run from the previous tag to HEAD, the release commit; chore(release) is hidden.
-await releaseChangelog({
+// Nx writes the changelog files but not the GitHub release: it would publish
+// the release at once, and house repositories lock a published release's
+// assets (immutable releases), so the workflow could no longer attach the
+// SBOMs. The workflow creates it as a draft instead, from the notes below.
+const { workspaceChangelog } = await releaseChangelog({
   version: workspaceVersion,
   versionData: projectsVersionData,
   releaseGraph,
@@ -168,7 +173,26 @@ await releaseChangelog({
   gitTag: false,
   stageChanges: false,
   gitPush: false,
+  createRelease: false,
 })
+const notes = workspaceChangelog?.contents ?? ''
+
+// The notes go to a draft GitHub release on the tag, which the workflow's
+// draft-release job creates from this file: kept out of this script, so a
+// failed GitHub request is retried by re-running that job alone, after the tag
+// is already pushed. The attest job attaches the SBOMs to the draft, and the
+// last job publishes it.
+if (dryRun) {
+  console.log(`Dry run: would write the notes above to a draft GitHub release for ${tag}.`)
+} else {
+  // The runner's own temporary directory, or a fresh private one.
+  const notesFile = join(
+    process.env['RUNNER_TEMP'] ?? mkdtempSync(join(tmpdir(), 'smartcloud-release-')),
+    'release-notes.md',
+  )
+  writeFileSync(notesFile, notes)
+  output('notes', notesFile)
+}
 
 if (!dryRun) {
   // Workflows pin the action by its major tag.
