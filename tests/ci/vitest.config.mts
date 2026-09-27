@@ -26,7 +26,10 @@ export default defineConfig({
       provider: 'v8',
       reportsDirectory: './test-output/coverage',
       allowExternal: true,
-      include: [fileURLToPath(new URL('../../tools/ci/bundle-size.ts', import.meta.url))],
+      include: [
+        fileURLToPath(new URL('../../tools/ci/bundle-size.ts', import.meta.url)),
+        fileURLToPath(new URL('../../tools/ci/smoke/*.ts', import.meta.url)),
+      ],
       thresholds: { lines: 100, functions: 100, statements: 100, branches: 100 },
     },
   },

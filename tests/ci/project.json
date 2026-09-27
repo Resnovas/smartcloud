@@ -6,7 +6,7 @@
   "tags": ["type_test", "layer_backend"],
   "targets": {
     "test": {
-      "inputs": ["...", "{workspaceRoot}/tools/ci/bundle-size.ts"]
+      "inputs": ["...", "{workspaceRoot}/tools/ci/bundle-size.ts", "{workspaceRoot}/tools/ci/smoke/**"]
     }
   }
 }

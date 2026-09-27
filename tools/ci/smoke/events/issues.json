@@ -1,0 +1,33 @@
+{
+  "action": "opened",
+  "issue": {
+    "number": 663,
+    "title": "feat: need issue templates for bugs, features, docs, perf",
+    "body": "This repo (and [@resnovas/.github](https://github.com/Resnovas/.github)) is missing templates that would allow users to submit issues. These templates need creating. These templates should match the Linear templates so that everything is consistent across platforms. I believe the guidance on the templates already exists in the contributing guidelines, and agent policies - so they just need setting up here.",
+    "state": "open",
+    "locked": false,
+    "user": {
+      "login": "TGTGamer",
+      "type": "User"
+    },
+    "labels": [],
+    "created_at": "2026-09-26T23:12:17Z",
+    "updated_at": "2026-09-26T23:12:17Z",
+    "html_url": "https://github.com/Resnovas/smartcloud/issues/663"
+  },
+  "repository": {
+    "id": 315939103,
+    "name": "smartcloud",
+    "full_name": "Resnovas/smartcloud",
+    "private": false,
+    "owner": {
+      "login": "Resnovas",
+      "type": "Organization"
+    },
+    "default_branch": "main"
+  },
+  "sender": {
+    "login": "TGTGamer",
+    "type": "User"
+  }
+}
