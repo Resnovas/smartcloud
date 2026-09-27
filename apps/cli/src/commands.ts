@@ -19,6 +19,8 @@ import { resolveConfig, type ResolvedConfig, type SmartcloudConfig } from '@resn
 import {
   checkCommitMessage,
   CONFIG_CANDIDATES,
+  doctorRepository,
+  doctorText,
   dryRunRepository,
   dryRunText,
   migrateConfigText,
@@ -159,6 +161,57 @@ export const planSettingsCommand = (
   connect: Connect,
   request: { readonly repository: string; readonly config?: string | undefined },
 ) => Effect.tap(planSettingsForRepository(connect, request), (plan) => Console.log(settingsPlanText(plan)))
+
+/**
+ * `smartcloud doctor` found at least one failure.
+ *
+ * @example
+ * ```ts import.meta.vitest name="DoctorFailed"
+ * import { DoctorFailed } from '@resnovas/smartcloud'
+ *
+ * new DoctorFailed({ count: 2 }).message // => 'smartcloud doctor found 2 failure(s); see above'
+ * ```
+ */
+export class DoctorFailed extends Data.TaggedError('DoctorFailed')<{ readonly count: number }> {
+  override get message() {
+    return `smartcloud doctor found ${this.count} failure(s); see above`
+  }
+}
+
+/**
+ * Checks what smartcloud needs to run on a repository with the current
+ * token, prints every finding, and fails when any check fails.
+ *
+ * @remarks
+ * Checks the token's kind and scopes, its access to the repository, the
+ * config and every preset it extends, the Actions access of private
+ * repositories whose actions or reusable workflows the workflows use, and
+ * the secrets and variables the workflows read. Nothing is written.
+ *
+ * @example
+ * ```ts
+ * import { liveConnect } from '@resnovas/runtime'
+ * import { doctorCommand } from '@resnovas/smartcloud'
+ *
+ * // Needs a CommandExecutor, for the `gh auth token` fallback.
+ * const report = doctorCommand(liveConnect(), { repository: 'Resnovas/example' })
+ * ```
+ *
+ * @param connect - Opens the GitHub service.
+ * @param request - The repository, and a local config file to check instead of its own.
+ * @returns The report, or `DoctorFailed`.
+ */
+export const doctorCommand = (
+  connect: Connect,
+  request: { readonly repository: string; readonly config?: string | undefined },
+) =>
+  Effect.gen(function* () {
+    const report = yield* doctorRepository(connect, request)
+    yield* Console.log(doctorText(report))
+    const failures = report.checks.filter((check) => check.status === 'failure').length
+    if (failures > 0) return yield* new DoctorFailed({ count: failures })
+    return report
+  })
 
 /**
  * A synced file would be written outside the output directory, or through a symlink.

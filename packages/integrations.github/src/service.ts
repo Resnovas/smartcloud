@@ -264,6 +264,13 @@ export interface RepositoryRequest {
 export interface GitHubService {
   readonly coordinates: RepositoryCoordinates
   readonly getRepository: Effect.Effect<Repository, GitHubError>
+  /**
+   * The OAuth scopes GitHub reports for the token, from its `X-OAuth-Scopes`
+   * header: set for classic personal access tokens and OAuth tokens (such as
+   * the GitHub CLI's), and undefined for fine-grained and GitHub App tokens,
+   * which have permissions instead of scopes.
+   */
+  readonly tokenScopes: Effect.Effect<ReadonlyArray<string> | undefined, GitHubError>
 
   readonly listLabels: Effect.Effect<ReadonlyArray<Label>, GitHubError>
   readonly createLabel: (label: Label) => Effect.Effect<void, GitHubError>

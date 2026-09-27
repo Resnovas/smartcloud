@@ -27,6 +27,7 @@ import {
 import { Console, Effect, Option } from 'effect'
 import {
   checkCommitCommand,
+  doctorCommand,
   dryRunCommand,
   locateConfig,
   migrate,
@@ -202,9 +203,20 @@ export const makeSmartcloud = (connect: Connect) => {
     ),
   )
 
+  const doctor = Command.make('doctor', { repo, config }, (options) =>
+    command(doctorCommand(connect, { repository: options.repo, config: Option.getOrUndefined(options.config) }), {
+      command: 'doctor',
+      options: optionNames(options),
+    }),
+  ).pipe(
+    Command.withDescription(
+      'Check the token, the presets, the Actions access of private actions and reusable workflows, and the secrets and variables the workflows read.',
+    ),
+  )
+
   return Command.make('smartcloud').pipe(
     Command.withDescription('Repository automation and policy for GitHub.'),
-    Command.withSubcommands([validateCommand, migrateCommand, checkCommit, dryRun, plan, sync]),
+    Command.withSubcommands([validateCommand, migrateCommand, checkCommit, dryRun, plan, sync, doctor]),
   )
 }
 

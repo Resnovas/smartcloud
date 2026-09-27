@@ -252,6 +252,8 @@ describe('in-memory GitHub', () => {
       expect(state.requests).toStrictEqual([{ method: 'PUT', path: '/vulnerability-alerts' }])
       expect(state.graphql).toHaveLength(1)
       expect((yield* service.getRepository).fullName).toBe('Resnovas/example')
+      expect(yield* service.tokenScopes).toBeUndefined()
+      expect(yield* makeMemoryGitHub({ tokenScopes: ['repo'] }).service.tokenScopes).toStrictEqual(['repo'])
     }),
   )
 })

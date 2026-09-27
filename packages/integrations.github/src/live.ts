@@ -313,6 +313,15 @@ const reactionsOf = (rollup: Reactions): Reactions => ({
 
 const NO_REACTIONS: Reactions = { '+1': 0, '-1': 0, laugh: 0, hooray: 0, confused: 0, heart: 0, rocket: 0, eyes: 0 }
 
+// `X-OAuth-Scopes` is a comma-separated list, empty for a classic token with no scopes and absent for a token without scopes.
+const scopesOf = (header: string | number | undefined): ReadonlyArray<string> | undefined =>
+  header === undefined
+    ? undefined
+    : String(header)
+        .split(',')
+        .map((scope) => scope.trim())
+        .filter((scope) => scope !== '')
+
 const labelName = (label: string | { readonly name?: string | undefined }): string =>
   typeof label === 'string' ? label : (label.name ?? '')
 
@@ -888,6 +897,10 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
           defaultBranch: data.default_branch,
           current: currentSettings(data),
         })),
+      ),
+      // Any authenticated call carries the header; reading the repository also proves the token can see it.
+      tokenScopes: call('tokenScopes', () => octokit.rest.repos.get({ owner, repo })).pipe(
+        Effect.map(({ headers }) => scopesOf(headers['x-oauth-scopes'])),
       ),
       listLabels: call('listLabels', () =>
         octokit.paginate(octokit.rest.issues.listLabelsForRepo, { owner, repo, per_page: 100 }),

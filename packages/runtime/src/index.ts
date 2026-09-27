@@ -65,6 +65,8 @@ export {
   readLocalConfig,
 } from './config.js'
 export type { ConfigExplanation, ConfigLocation, ConfigText, FeatureExplanation, Migrated } from './config.js'
+export { doctorRepository, doctorText, tokenChecks, tokenKind, workflowUsage } from './doctor.js'
+export type { DoctorCheck, DoctorReport, TokenKind, WorkflowUsage } from './doctor.js'
 export { FEATURES, parseFeatureList, selectFeatures, UnknownFeatures } from './features.js'
 export { FEATURE_FLAGS, featureEnabled, flagFor, turnedOffFeatures } from './flags.js'
 export type { FeatureFlag } from './flags.js'

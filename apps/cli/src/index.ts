@@ -18,6 +18,8 @@ export { main, makeSmartcloud, run, runWith } from './cli.js'
 export {
   checkCommitCommand,
   CommitCheckFailed,
+  doctorCommand,
+  DoctorFailed,
   dryRunCommand,
   isWithin,
   locateConfig,

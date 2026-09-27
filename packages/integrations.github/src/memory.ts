@@ -84,6 +84,8 @@ export interface MemoryBackport extends BackportRequest {
  */
 export interface MemoryState {
   repository: Repository
+  /** The scopes `tokenScopes` reports; undefined, as for a fine-grained or app token, by default. */
+  tokenScopes: ReadonlyArray<string> | undefined
   labels: Array<Label>
   /** Labels, comments and reactions on each issue or pull request, by number. */
   issues: Map<number, MemoryIssue>
@@ -146,6 +148,7 @@ const defaults = (): MemoryState => ({
     private: false,
     defaultBranch: 'main',
   },
+  tokenScopes: undefined,
   labels: [],
   issues: new Map(),
   openIssues: [],
@@ -209,6 +212,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
   const service: GitHubService = {
     coordinates: { owner: state.repository.owner, repo: state.repository.name },
     getRepository: Effect.sync(() => state.repository),
+    tokenScopes: Effect.sync(() => state.tokenScopes),
     listLabels: Effect.sync(() => [...state.labels]),
     createLabel: (label) =>
       state.labels.some((existing) => same(existing.name, label.name))
