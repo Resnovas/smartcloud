@@ -35,6 +35,10 @@ The editor tasks, debug configurations and app actions are synced from `Resnovas
 
 Orca quick commands and OpenChamber project actions live in per-user settings, so `node tools/dev/surfaces.mjs install` (run by the setup script) registers everything in `.agents/surfaces.json` for the checkout. Agent prompts live once in `.agents/prompts/<name>.md`; `node tools/dev/surfaces.mjs sync` writes them to `.claude/commands`, `.cursor/commands` and `.opencode/commands`, and `pnpm run check` fails when those drift. Edit the prompt, never the generated copies.
 
+## Workflows
+
+Pin every third-party action to a full commit SHA with its release as a trailing comment (`uses: actions/checkout@<sha> # v7.0.1`); Dependabot's `github-actions` update moves the SHA and the comment together. Only first-party references stay on a ref: the local action (`uses: ./`) and the `Resnovas/.github` reusable workflows, which track `main` so house changes roll out on the next run.
+
 ## Adding a package
 
 1. `packages/<name>/package.json`: `"name": "@resnovas/<name>"`, `"type": "module"`, and an export map whose `.` entry lists `"@resnovas/source": "./src/index.ts"` first, then `types` and `import` pointing at `dist/`. Nx configuration stays out of `package.json`.
