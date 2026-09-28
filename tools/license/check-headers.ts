@@ -36,7 +36,7 @@ const SOURCE = /\.(ts|mts|cts|js|mjs|cjs)$/
 // externals/ is vendored upstream source under its own licence. The house
 // tools in tools/dev/*.mjs and tools/ai-docs/docgen.mjs are synced whole from
 // Resnovas/.github, so they cannot carry a local header.
-const EXCLUDED = /^(graphify-out|node_modules|dist|externals)\/|\/dist\/|\.d\.ts$|^tools\/dev\/(surfaces|open)\.mjs$|^tools\/ai-docs\/docgen\.mjs$/
+const EXCLUDED = /^(graphify-out|node_modules|dist|externals)\/|\/dist\/|\.d\.ts$|^tools\/dev\/(surfaces|open|commit-check)\.mjs$|^tools\/ai-docs\/docgen\.mjs$/
 
 const header = (file: string) => template.replace('{{FILE}}', file)
 
