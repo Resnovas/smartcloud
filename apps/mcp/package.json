@@ -1,6 +1,6 @@
 {
   "name": "@resnovas/smartcloud-mcp",
-  "version": "0.0.0",
+  "version": "2.0.0-nightly.20260928",
   "private": true,
   "type": "module",
   "description": "The smartcloud MCP server: validate, migrate and explain configs, dry-run features and plan settings from an AI assistant, over stdio.",
