@@ -24,7 +24,11 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SOURCE = /\.(ts|mts|cts|js|mjs|cjs|tsx|jsx)$/
-const GENERATED = /^(graphify-out|node_modules|dist|externals|coverage|test-output|out-tsc|release|tmp|\.nx)\/|\/(dist|node_modules|coverage|test-output|out-tsc)\/|\.d\.ts$/
+// Generated or vendored: a top-level directory, a nested build directory, or a typing.
+const GENERATED_ROOT = /^(?:graphify-out|node_modules|dist|externals|coverage|test-output|out-tsc|release|tmp|\.nx)\//
+const GENERATED_NESTED = /\/(?:dist|node_modules|coverage|test-output|out-tsc)\//
+const TYPING = /\.d\.ts$/
+const generated = (file) => GENERATED_ROOT.test(file) || GENERATED_NESTED.test(file) || TYPING.test(file)
 const SYNCED = /Synced from Resnovas\/\.github/
 // A header already present, possibly for another file name or year.
 const EXISTING = /^\/\*\*\r?\n \* @file [^\n]*\n[\s\S]*?DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE\.\r?\n \*\/\r?\n?/
@@ -56,7 +60,7 @@ export const checkHeaders = (root, { fix = false, year = String(new Date().getFu
         .filter((line) => line !== '' && !line.startsWith('#'))
         .map((line) => new RegExp(line))
     : []
-  const skip = (file) => GENERATED.test(file) || extra.some((pattern) => pattern.test(file))
+  const skip = (file) => generated(file) || extra.some((pattern) => pattern.test(file))
   const candidates = (files ?? listFiles(root)).filter((file) => SOURCE.test(file) && !skip(file) && existsSync(join(root, file)))
   const wrong = []
   let checked = 0
