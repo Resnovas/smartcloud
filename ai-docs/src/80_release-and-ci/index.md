@@ -41,7 +41,15 @@ expectations and add it to the job's matrix.
 
 ### Releases
 
-- **Stable** (`release.yml`, run by hand on `main`): Nx release computes the
+The release workflows and `tools/release/` are synced from the house; what
+this repository ships is in `release.config.json` (the action bundle,
+`externals/` dropped from the release commit, the three apps, nightlies for
+2.x, the PostHog project, the npm package prepared by
+`tools/release/prepare-cli.ts`, and `__SMARTCLOUD_VERSION__` as the version
+global). Change that file, never the synced workflows or tools.
+
+
+- **Stable** (`house-release.yml`, run by hand on `main`): Nx release computes the
   version from the conventional commits since the last `v*` tag, pushes a
   `v<version>` tag on a release commit holding `dist/index.js` and the bumped
   versions (never on `main`, whose versions stay `0.0.0`), moves `v<major>`,
@@ -49,7 +57,7 @@ expectations and add it to the job's matrix.
   then publishes the GitHub release. Its `changelogs` job opens a
   `chore(release): changelogs for v<version>` pull request; merge it before
   the next release. `dry-run` is ticked by default.
-- **Nightly** (`nightly.yml`, 02:30 UTC): cuts `v<next>-nightly.<date>` from
+- **Nightly** (`house-nightly.yml`, 02:30 UTC): cuts `v<next>-nightly.<date>` from
   `main` when `main` has moved, as a GitHub pre-release, nothing to npm, and
   moves `v2` to it until the first stable 2.x. `releaseTag.strictPreid` in
   `nx.json` keeps nightly tags out of stable versions; never turn it off.
@@ -60,14 +68,14 @@ bump, so title commits and pull requests with conventional commits.
 
 ### Release preview on pull requests
 
-`release-preview.yml` runs on every pull request (opened, pushed, reopened,
+`house-release-preview.yml` runs on every pull request (opened, pushed, reopened,
 and edited when the title or base changes; kept out of `ci.yml` so a rename
 does not rerun CI). `tools/release/release-preview.ts` swaps the merge commit
 for the squash commit that would land (title plus ` (#<number>)` over the
 commit messages, as GitHub writes it), runs Nx `releaseVersion` and
 `releaseChangelog` in dry-run mode, and writes the report to the job summary
 and a `report` output. A second job, with only `pull-requests: write` and no
-checkout, keeps one comment marked `<!-- smartcloud:release-preview -->` up to
+checkout, keeps one comment marked `<!-- house:release-preview -->` up to
 date; it is skipped for forks and Dependabot. Pure logic (`squashMessage`,
 `bumpOf`, `renderPreview`, `renderFailure`, `isFirstRelease`) lives in
 `tools/release/preview.ts`, tested in `tests/tools`; the example below shows

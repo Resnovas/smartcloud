@@ -1,24 +1,11 @@
-/**
- * @file tools/release/release-preview.ts
- *
- * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
- * Licensed under the Fair Core License, Version 1.0, MIT Future License
- * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
- * the licence key functionality, or modify any part of the software that the
- * licence key protects.
- *
- * Contributions are made under the Developer Certificate of Origin (DCO.md) and
- * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
- * (CODE_OF_CONDUCT.md) and the Cooperation Commitment (COOPERATION_COMMITMENT.md).
- *
- * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
- */
-
+// Synced from Resnovas/.github templates/tools/release/release-preview.ts. Edit it there,
+// not here: the next house sync overwrites local edits.
+//
 // Previews the release a pull request would lead to.
 //
 //   node tools/release/release-preview.ts
 //
-// Run by .github/workflows/release-preview.yml on a pull request's merge
+// Run by the house release preview workflow on a pull request's merge
 // commit, checked out with full history and tags. It replaces that merge
 // commit with the squash commit the merge queue would land (the pull request's
 // title and number over its commits' messages, tools/release/preview.ts), then
@@ -48,15 +35,15 @@ import {
   renderPreview,
   squashMessage,
 } from './preview.ts'
+import { loadReleaseConfig } from './config.ts'
 
-// The version the first stable release takes, as docs/releasing.mdx tells the
-// maintainer to set it.
-const FIRST_RELEASE = '2.0.0'
 // A pull request comment holds at most 65,536 characters; the notes leave room for the rest.
 const COMMENT_NOTES = 60_000
 const BOT = { name: 'github-actions[bot]', email: '41898282+github-actions[bot]@users.noreply.github.com' }
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
+// The version the first stable release takes, from release.config.json.
+const FIRST_RELEASE = loadReleaseConfig(root).firstRelease
 const git = (...args: string[]): string =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim()
 const tryGit = (...args: string[]): string | undefined => {

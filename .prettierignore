@@ -42,6 +42,10 @@ tools/dev/open.mjs
 tools/dev/commit-check.mjs
 tools/dev/docs.ts
 tools/license/
+tools/release/
+.github/workflows/house-release.yml
+.github/workflows/house-nightly.yml
+.github/workflows/house-release-preview.yml
 tools/ci/coverage-goal.ts
 tools/ci/flaky-tests.ts
 tools/test/file.ts

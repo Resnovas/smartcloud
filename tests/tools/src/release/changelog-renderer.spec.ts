@@ -16,9 +16,9 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import type { ChangelogChange } from 'nx/release/changelog-renderer'
-import SmartcloudChangelogRenderer from '../../../../tools/release/changelog-renderer.js'
+import HouseChangelogRenderer from '../../../../tools/release/changelog-renderer.js'
 
-type Config = ConstructorParameters<typeof SmartcloudChangelogRenderer>[0]
+type Config = ConstructorParameters<typeof HouseChangelogRenderer>[0]
 
 const change = (overrides: Partial<ChangelogChange>): ChangelogChange => ({
   type: 'feat',
@@ -45,7 +45,7 @@ const changes: ChangelogChange[] = [
 const remoteReleaseClient = { getRemoteRepoData: () => null } as unknown as Config['remoteReleaseClient']
 
 const render = (project: string | null, authors = true) =>
-  new SmartcloudChangelogRenderer({
+  new HouseChangelogRenderer({
     changes,
     changelogEntryVersion: '2.1.0',
     project,
@@ -62,7 +62,7 @@ const render = (project: string | null, authors = true) =>
     remoteReleaseClient,
   }).render()
 
-describe('SmartcloudChangelogRenderer', () => {
+describe('HouseChangelogRenderer', () => {
   it('renders the workspace notes, for the GitHub release and CHANGELOG.md, in words', async () => {
     const notes = await render(null)
     expect(notes).toContain('### Features\n\n- **cli:** add the plan command')

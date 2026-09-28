@@ -1,19 +1,6 @@
-/**
- * @file tools/release/preview.ts
- *
- * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
- * Licensed under the Fair Core License, Version 1.0, MIT Future License
- * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
- * the licence key functionality, or modify any part of the software that the
- * licence key protects.
- *
- * Contributions are made under the Developer Certificate of Origin (DCO.md) and
- * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
- * (CODE_OF_CONDUCT.md) and the Cooperation Commitment (COOPERATION_COMMITMENT.md).
- *
- * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
- */
-
+// Synced from Resnovas/.github templates/tools/release/preview.ts. Edit it there,
+// not here: the next house sync overwrites local edits.
+//
 // Builds the release preview a pull request gets, for
 // tools/release/release-preview.ts. The pull request is squash-merged, so the
 // commit that lands on main is its title with "(#<number>)" added, over the
@@ -29,7 +16,7 @@ export type Bump = 'major' | 'minor' | 'patch' | 'none'
 export type CommitTypes = Readonly<Record<string, { readonly semverBump?: string } | boolean | undefined>>
 
 /** The hidden line that marks the comment, so each run updates one comment instead of adding another. */
-export const MARKER = '<!-- smartcloud:release-preview -->'
+export const MARKER = '<!-- house:release-preview -->'
 
 const STABLE = /^v\d+\.\d+\.\d+$/
 // Nx's own conventional commit title pattern and breaking change test.
