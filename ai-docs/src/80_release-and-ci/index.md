@@ -58,6 +58,26 @@ Never run `nx release` without `--dry-run`: a local run pushes and creates a
 GitHub release. Preview with `pnpm release:dry-run`. Commit types decide the
 bump, so title commits and pull requests with conventional commits.
 
+### Release preview on pull requests
+
+`release-preview.yml` runs on every pull request (opened, pushed, reopened,
+and edited when the title or base changes; kept out of `ci.yml` so a rename
+does not rerun CI). `tools/release/release-preview.ts` swaps the merge commit
+for the squash commit that would land (title plus ` (#<number>)` over the
+commit messages, as GitHub writes it), runs Nx `releaseVersion` and
+`releaseChangelog` in dry-run mode, and writes the report to the job summary
+and a `report` output. A second job, with only `pull-requests: write` and no
+checkout, keeps one comment marked `<!-- smartcloud:release-preview -->` up to
+date; it is skipped for forks and Dependabot. Pure logic (`squashMessage`,
+`bumpOf`, `renderPreview`, `renderFailure`, `isFirstRelease`) lives in
+`tools/release/preview.ts`, tested in `tests/tools`; the example below shows
+how a squash commit's bump is read.
+
+The preview never fails a pull request: errors become a warning and a short
+report, both jobs set `continue-on-error`, and it is not in `check`'s `needs`.
+With no stable `v*` tag it previews the first release as `2.0.0`. Locally,
+`pnpm release:preview` previews HEAD as it is (no squash outside Actions).
+
 ### smartcloud on itself
 
 `smartcloud.yml` runs smartcloud on this repository from a bundle of the

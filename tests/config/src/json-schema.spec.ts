@@ -66,4 +66,47 @@ describe('JSON Schema', () => {
       { if: { required: ['keys'] }, then: { required: ['preset'], properties: { preset: { const: 'issueKey' } } } },
     ])
   })
+
+  it('puts no keyword beside a $ref, which draft-07 would ignore', () => {
+    const schema: unknown = JSON.parse(JSON.stringify(configJsonSchema()))
+    const offenders: Array<string> = []
+    const refs: Array<string> = []
+    const walk = (node: unknown, path: string): void => {
+      if (Array.isArray(node)) {
+        node.forEach((item: unknown, index) => walk(item, `${path}/${index}`))
+        return
+      }
+      if (typeof node !== 'object' || node === null) return
+      const keys = Object.keys(node)
+      if (keys.includes('$ref')) {
+        refs.push(path)
+        if (keys.length > 1) offenders.push(`${path}: ${keys.join(', ')}`)
+      }
+      for (const key of keys) walk(Reflect.get(node, key), `${path}/${key}`)
+    }
+    walk(schema, '')
+    expect(refs.length).toBeGreaterThan(0)
+    expect(offenders).toStrictEqual([])
+  })
+
+  it('keeps the root pointing at SmartcloudConfig beside $defs', () => {
+    const schema = configJsonSchema()
+    expect(schema['$schema']).toBe('http://json-schema.org/draft-07/schema#')
+    expect(schema['allOf']).toStrictEqual([{ $ref: '#/$defs/SmartcloudConfig' }])
+    expect(Object.keys(schema).sort()).toStrictEqual(['$defs', '$schema', 'allOf'])
+  })
+
+  it('moves constraints beside a $ref into allOf and keeps the annotations on top', () => {
+    const schema: unknown = JSON.parse(JSON.stringify(configJsonSchema()))
+    const at = (...keys: ReadonlyArray<string>): unknown =>
+      keys.reduce<unknown>(
+        (value, key) => (typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined),
+        schema,
+      )
+    const threshold = at('$defs', 'SizeLabels', 'properties', 'thresholds', 'properties', 's')
+    expect(threshold).toMatchObject({
+      allOf: [{ $ref: expect.stringMatching(/^#\/\$defs\//u) }, { exclusiveMinimum: 0 }],
+    })
+    expect(Object.keys(threshold ?? {}).sort()).toStrictEqual(['allOf', 'description', 'title'])
+  })
 })

@@ -1,0 +1,219 @@
+---
+title: 'Tokens and access'
+description: 'Which token smartcloud uses for what, why it splits them, and how to set up the three tokens in a repository or a whole organisation.'
+---
+
+smartcloud talks to GitHub with tokens. A token is like a key card: whoever holds it can open the doors it was made for, and no others. smartcloud can hold up to three key cards at once, and it uses each one only for its own doors. This page explains the three, why they are kept apart, and how to set them up.
+
+<Note>
+  New to the words here? The [workflow token](/glossary#workflow-token), [GitHub App](/glossary#github-app),
+  [preset](/glossary#preset) and [restricted run](/glossary#restricted-run) are explained in the [glossary](/glossary).
+</Note>
+
+## Why split the tokens?
+
+The simplest set-up gives smartcloud one strong token and lets it do everything with it. That works, but it means every run, including the run for a pull request whose workflow file the pull request itself can change, holds a key that can change repository settings, push workflow files and, if the token reaches it, write to your organisation's shared `.github` repository.
+
+Splitting the tokens means each run holds only the keys it needs:
+
+- A pull request run never holds the strong token, so a changed workflow on a pull request cannot use it.
+- The strong token reaches only the repository it runs in, so a leaf repository can never write to your shared `.github` repository.
+- Reading your house preset needs only a read-only key to `.github`, so that key is all a pull request run gets.
+
+## The three tokens
+
+| Token                               | Input                                     | What smartcloud uses it for                                                                                                                                                                                                                 | When the house workflow creates it                                                                                                                                                                                                      |
+| ----------------------------------- | ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Workflow token** (`github.token`) | `workflowToken` (leave it at its default) | Everything in the repository itself: check runs, comments, labels, reviews, review requests, reading checks and statuses. What it may do is set by the job's `permissions`.                                                                 | Always: GitHub creates it for every job.                                                                                                                                                                                                |
+| **House token** (read-only)         | `houseToken`                              | Only reading presets and [sync](/features/sync) templates in a `.github` repository, such as your organisation's house preset. It has `contents: read` on `.github` and nothing else.                                                       | Every run that gets secrets, pull requests included. Never for forks or Dependabot.                                                                                                                                                     |
+| **App token** (privileged)          | `GITHUB_TOKEN`                            | Only what the other two cannot do: [settings](/features/settings), [sync](/features/sync), [CODEOWNERS](/features/codeowners) proposals, [backports](/features/backport), and presets in other private repositories that are not `.github`. | Only on `push`, `schedule` and `workflow_dispatch` runs of the default branch, whose workflow file no pull request controls, and on the `closed` event of a merged pull request from the repository itself, which runs the merged code. |
+
+When a run has no app token (every pull request run, in the house workflow), smartcloud runs [restricted](/reporting#restricted-runs): it skips settings, and it skips sync's scheduled proposal, and says so in the job summary. With a house token, the [sync edit check](/features/sync) on a pull request still runs, because it only reads.
+
+## Set it up
+
+<Steps>
+  <Step title="Create a GitHub App">
+    Follow [Create a GitHub App](/getting-started#optional-create-a-github-app). Install it on each repository that runs smartcloud **and** on your organisation's `.github` repository. Store its ID as the variable `SMARTCLOUD_APP_ID` and its private key as the secret `SMARTCLOUD_APP_PRIVATE_KEY`, at organisation level so every repository can use them.
+  </Step>
+  <Step title="Mint the read-only house token">
+    Add a step that asks the app for a token limited to reading `.github`:
+
+    ```yaml
+    - name: Mint the read-only house token
+      id: house
+      if: >-
+        (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)
+        && github.actor != 'dependabot[bot]'
+      continue-on-error: true
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ vars.SMARTCLOUD_APP_ID }}
+        private-key: ${{ secrets.SMARTCLOUD_APP_PRIVATE_KEY }}
+        owner: ${{ github.repository_owner }}
+        repositories: .github
+        permission-contents: read
+    ```
+
+    `permission-contents: read` is what makes it read-only: the token gets that one permission, whatever the app itself may do.
+
+  </Step>
+  <Step title="Mint the app token only where it is needed">
+    Add a second step, limited to the repository itself, to runs from the default branch and to merged pull requests (for backports):
+
+    ```yaml
+    - name: Mint the app token
+      id: app
+      if: >-
+        (
+          contains(fromJSON('["push", "schedule", "workflow_dispatch"]'), github.event_name)
+          || github.event_name == 'pull_request' && github.event.action == 'closed'
+          && github.event.pull_request.merged == true
+          && github.event.pull_request.head.repo.full_name == github.repository
+        )
+        && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+        && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
+      continue-on-error: true
+      uses: actions/create-github-app-token@v3
+      with:
+        client-id: ${{ vars.SMARTCLOUD_APP_ID }}
+        private-key: ${{ secrets.SMARTCLOUD_APP_PRIVATE_KEY }}
+    ```
+
+    With neither `owner` nor `repositories`, the token reaches only the repository the workflow runs in. If your config extends a preset in another private repository that is not `.github`, add `owner` and list that repository in `repositories` too.
+
+  </Step>
+  <Step title="Pass all three to smartcloud">
+    ```yaml
+    - uses: resnovas/smartcloud@v2
+      with:
+        GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+        houseToken: ${{ steps.house.outputs.token }}
+        checkRunId: ${{ job.check_run_id }}
+    ```
+
+    `workflowToken` is left out on purpose: it defaults to `github.token`. The `|| github.token` fallback means a run with no app token acts with the workflow token and runs restricted instead of failing.
+
+  </Step>
+</Steps>
+
+## Why backport needs the app token
+
+A [backport](/features/backport) pushes a branch and opens a new pull request. GitHub never starts workflows for a pull request opened with the workflow token, so a backport opened that way would sit with no CI, and its required checks would never pass. So backport acts with the app token too.
+
+The app token is minted for a pull request run only when the pull request has been **merged** and came from the repository itself. By then its code is on the default branch, so the run is trusted: nobody can change that run's workflow file any more. Every other pull request run, and every comment run, still acts with the workflow token.
+
+If the app token is missing on that run (the mint failed, or the pull request came from a fork), the job's workflow token has `contents: read` and cannot push. smartcloud then opens nothing and reports a warning, "#7 was not backported to v1: the token cannot push ...", in the job summary instead of claiming a backport it did not make.
+
+## A complete example
+
+```yaml .github/workflows/smartcloud.yml
+name: smartcloud
+
+on:
+  pull_request:
+    # closed starts the backports a merged pull request's labels ask for.
+    types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft, closed]
+  issues:
+    types: [opened, edited, reopened, labeled, unlabeled]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  smartcloud:
+    name: smartcloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    # What the workflow token may do in this repository.
+    permissions:
+      contents: read
+      pull-requests: write
+      checks: write
+      issues: write
+      statuses: read
+    steps:
+      - name: Mint the read-only house token
+        id: house
+        if: >-
+          (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)
+          && github.actor != 'dependabot[bot]'
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SMARTCLOUD_APP_ID }}
+          private-key: ${{ secrets.SMARTCLOUD_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: .github
+          permission-contents: read
+
+      - name: Mint the app token
+        id: app
+        if: >-
+          (
+            contains(fromJSON('["push", "schedule", "workflow_dispatch"]'), github.event_name)
+            || github.event_name == 'pull_request' && github.event.action == 'closed'
+            && github.event.pull_request.merged == true
+            && github.event.pull_request.head.repo.full_name == github.repository
+          )
+          && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+          && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SMARTCLOUD_APP_ID }}
+          private-key: ${{ secrets.SMARTCLOUD_APP_PRIVATE_KEY }}
+
+      - uses: resnovas/smartcloud@v2
+        with:
+          GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          houseToken: ${{ steps.house.outputs.token }}
+          checkRunId: ${{ job.check_run_id }}
+```
+
+Pin each action to a full commit SHA in production.
+
+## What you will see
+
+- **On a pull request**: the checks, comment and labels come from `github-actions[bot]`, the workflow token's identity. The job summary has a notice, "ran with restricted access (the workflow token, without an app or access token)", and lists settings as skipped. That is expected: settings never runs on pull requests anyway. Your house preset is read with the house token, so its rules are checked.
+- **On a push, schedule or manual run**: settings and sync act as your app (for example `my-app[bot]`); the check run and labels still come from `github-actions[bot]`.
+- **When a pull request with a `backport <branch>` label is merged**: the backport pull request is opened by your app, so your CI runs on it.
+- **On a pull request from a fork or Dependabot**: no app token of either kind is minted, and the house token input is ignored even if one is passed. smartcloud acts with the workflow token alone, as before.
+
+## Options
+
+| Input           | Default               | What it does                                                                                                                                                                                                          |
+| --------------- | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GITHUB_TOKEN`  | `${{ github.token }}` | The privileged token, used only for settings, sync, CODEOWNERS proposals and presets in other private repositories. When it is the workflow token, the run is restricted.                                             |
+| `workflowToken` | `${{ github.token }}` | The workflow's own token, used for everything in the repository. Leave it at its default.                                                                                                                             |
+| `houseToken`    | none                  | A read-only token for a `.github` repository, used only to read presets and sync templates there. When it cannot see a file (for example another organisation's `.github`), smartcloud tries the other token instead. |
+
+Older workflows that pass one strong token as `GITHUB_TOKEN` and no `houseToken` keep working: the strong token then reads presets and runs settings and sync, and the workflow token still does everything in the repository.
+
+## Common problems
+
+<AccordionGroup>
+  <Accordion title="A pull request run warns that the house preset was left out (access.config-skipped)">
+    The run had no house token that could read `.github`. Check that the app is installed on `.github`, that the house
+    token step ran (it is skipped for forks and Dependabot, which is expected), and that `houseToken` is passed to
+    smartcloud.
+  </Accordion>
+  <Accordion title="Settings or sync is skipped on a schedule or push run">
+    The app token was not minted. Open the job log: the "Mint the app token" step either was skipped (check its `if`) or
+    failed (check the variable and secret, and that the app is installed on the repository). A failed mint falls back to
+    the workflow token rather than failing the run.
+  </Accordion>
+  <Accordion title="Labels, comments or check runs fail with forbidden">
+    These act with the workflow token now, so the job's `permissions` must grant them: `checks: write`, `issues: write`,
+    `pull-requests: write` and `statuses: read`.
+  </Accordion>
+  <Accordion title="A workflow does not start on labels smartcloud adds">
+    GitHub does not start workflows for events made with the workflow token. Labels and comments now come from the
+    workflow token, so a workflow that listened for smartcloud's labels needs another trigger, such as `pull_request`
+    with `synchronize`.
+  </Accordion>
+</AccordionGroup>

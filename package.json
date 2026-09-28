@@ -36,6 +36,7 @@
     "ai-docs:check": "node tools/ai-docs/docgen.mjs --check",
     "docs:api": "nx run-many -t docgen contracts",
     "release:dry-run": "node tools/release/release.ts --dry-run",
+    "release:preview": "node tools/release/release-preview.ts",
     "typecheck:tests": "node tools/typecheck/tests.ts",
     "bundle:check": "nx run @resnovas/action:bundle && node tools/ci/bundle-size.ts"
   },

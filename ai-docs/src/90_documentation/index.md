@@ -9,6 +9,25 @@ updated.
 | People | `docs/` (the Mintlify site, navigation in `docs/docs.json`) and `README.md` | ELI5: what it is and why before how, step-by-step setup, one complete example, what they will see on GitHub, every option with its default, common problems and fixes, every term defined on first use. |
 | Agents | `ai-docs/src`, assembled into `LLMS.md`                                     | Why, the rules that matter, and compiled examples in the codebase's own style.                                                                                                                          |
 
+### Setup guides
+
+The human setup guides live in `docs/guides/` (the "Setup guides" group in
+`docs/docs.json`) and are the first place a newcomer is sent from
+`getting-started`, `configuration`, `presets` and `features/sync`:
+
+| Page                                 | Covers                                                                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/guides/settings-file.mdx`      | `.github/smartcloud.yml` built one section at a time, in newcomer order, with what each does when a run starts and on which events.   |
+| `docs/guides/recommended-setups.mdx` | Complete files for a small repository, a monorepo, an open-source project, and an organisation preset plus a repository extending it. |
+| `docs/guides/organisation-hub.mdx`   | Any organisation's own `<org>/.github` as the sync hub: preset, `templates/`, managed blocks, placeholders, app, first sync, rollout. |
+
+When a section, option, default or event changes, update these guides with the
+feature page. Every YAML config in them must decode: write it to a file and run
+`pnpm run cli validate <file>` (a fragment gets `version: 2` prepended; a file
+that `extends` a fictional `my-org` preset is resolved with `resolveConfig`
+and an in-memory `ConfigSource` serving the guide's own preset). Quote label
+colours, since an all-digit colour decodes as a number.
+
 ### Generated artefacts
 
 Never edit one by hand; edit its source and regenerate.

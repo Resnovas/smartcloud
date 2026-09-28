@@ -32,8 +32,10 @@ const BACKPORT_EVENTS = new Set(['pull_request', 'pull_request_target'])
  * `pull-requests: write` to open the pull request and comment. A pull request
  * event from a fork has a read-only token, so there it only warns; run it on
  * `pull_request_target` to backport merged fork pull requests. Pull requests
- * opened with the workflow token do not start other workflows, so give
- * smartcloud a GitHub App or personal access token for CI to run on them.
+ * opened with the workflow token do not start other workflows, so the
+ * feature is `privileged`: in the action it acts with the app or access
+ * token when the run has one, as the house workflow mints for a merged pull
+ * request's `closed` event, and CI then runs on the backport.
  *
  * @example
  * ```ts import.meta.vitest name="backport"
@@ -41,10 +43,13 @@ const BACKPORT_EVENTS = new Set(['pull_request', 'pull_request_target'])
  *
  * backport.enabled?.({ version: 2, backport: {} }) // => true
  * backport.handles.join(', ') // => 'pullRequest'
+ * backport.privileged // => true
  * ```
  */
 export const backport: Feature = {
   name: 'backport',
+  // Backport pull requests must start CI, which the workflow token's never do.
+  privileged: true,
   handles: ['pullRequest'],
   enabled: (config) => config.backport !== undefined,
   run: ({ config, envelope }) =>

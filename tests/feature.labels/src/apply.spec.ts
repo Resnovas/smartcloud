@@ -15,11 +15,11 @@
  */
 
 import { describe, expect, it } from '@effect/vitest'
-import { Effect } from 'effect'
+import { Effect, Layer } from 'effect'
 import type { SmartcloudConfig } from '@resnovas/config'
 import { runFeatures } from '@resnovas/engine'
-import { labellingFacets, labelName, labels } from '@resnovas/feature.labels'
-import { Forbidden, GitHub, Unavailable } from '@resnovas/integrations.github'
+import { aliasesOf, labellingFacets, labelName, labels } from '@resnovas/feature.labels'
+import { DryRun, DryRunLog, Forbidden, GitHub, Unavailable } from '@resnovas/integrations.github'
 import { config, issue, memoryWith, pullRequest, titled } from './fixtures.js'
 
 describe('labels feature: apply', () => {
@@ -190,5 +190,161 @@ describe('labels feature: apply', () => {
     expect(labelName(config, 'bug')).toBe('Type: Bug')
     expect(labelName(config, 'docs')).toBe('docs')
     expect(labelName({ version: 2 }, 'docs')).toBe('docs')
+  })
+})
+
+// `bug` was once called "defect" and "Type: Feature", and `feature` was once "enhancement".
+const renamed: SmartcloudConfig = {
+  version: 2,
+  labels: {
+    feature: { name: 'Type: Feature', color: 'a2eeef', aliases: ['enhancement'] },
+    bug: { name: 'Type: Bug', color: 'd73a4a', aliases: ['defect', 'Type: Feature', 'docs'] },
+  },
+  labelling: config.labelling ?? {},
+}
+
+describe('labels feature: apply with renamed labels', () => {
+  it.effect('replaces the old name a wanted label still carries on an open pull request with its current name', () =>
+    Effect.gen(function* () {
+      const { service, state } = memoryWith(7, ['Enhancement'])
+      const result = yield* runFeatures({
+        config: renamed,
+        event: 'pull_request',
+        payload: pullRequest(['Enhancement']),
+        features: [labels],
+      }).pipe(Effect.provideService(GitHub, service))
+      expect(state.issues.get(7)?.labels).toStrictEqual(['Type: Feature'])
+      expect(result.changes.map((change) => change.description)).toStrictEqual([
+        'added label "Type: Feature" to #7, replacing its old name "Enhancement"',
+        'removed label "Enhancement" (an old name of "Type: Feature") from #7',
+      ])
+    }),
+  )
+
+  it.effect('removes an old name left beside the current one, so the label is on the item once', () =>
+    Effect.gen(function* () {
+      const { service, state } = memoryWith(7, ['Type: Feature', 'enhancement'])
+      const result = yield* runFeatures({
+        config: renamed,
+        event: 'pull_request',
+        payload: pullRequest(['Type: Feature', 'enhancement']),
+        features: [labels],
+      }).pipe(Effect.provideService(GitHub, service))
+      expect(state.issues.get(7)?.labels).toStrictEqual(['Type: Feature'])
+      expect(result.changes.map((change) => change.description)).toStrictEqual([
+        'removed label "enhancement" (an old name of "Type: Feature") from #7',
+      ])
+    }),
+  )
+
+  it.effect('removes an unwanted label under its old name as well as its current name', () =>
+    Effect.gen(function* () {
+      const { service, state } = memoryWith(7, ['defect', 'Type: Bug'])
+      const result = yield* runFeatures({
+        config: renamed,
+        event: 'pull_request',
+        payload: pullRequest(['defect', 'Type: Bug']),
+        features: [labels],
+      }).pipe(Effect.provideService(GitHub, service))
+      expect(state.issues.get(7)?.labels).toStrictEqual(['Type: Feature'])
+      expect(result.changes.map((change) => change.description)).toStrictEqual([
+        'added label "Type: Feature" to #7',
+        'removed label "Type: Bug" from #7',
+        'removed label "defect" (an old name of "Type: Bug") from #7',
+      ])
+    }),
+  )
+
+  it.effect("lets current names win over an alias that is another label's name", () =>
+    Effect.gen(function* () {
+      // "Type: Feature" and "docs" are aliases of `bug`, but also labels of their own.
+      const { service, state } = memoryWith(7, ['Type: Feature', 'docs'], ['docs/readme.md'])
+      const result = yield* runFeatures({
+        config: renamed,
+        event: 'pull_request',
+        payload: pullRequest(['Type: Feature', 'docs'], 'bug: crash'),
+        features: [labels],
+      }).pipe(Effect.provideService(GitHub, service))
+      expect(state.issues.get(7)?.labels).toStrictEqual(['docs', 'Type: Bug'])
+      expect(result.changes.map((change) => change.description)).toStrictEqual([
+        'added label "Type: Bug" to #7',
+        'removed label "Type: Feature" from #7',
+      ])
+    }),
+  )
+
+  it.effect('keeps the old name when a read-only token refuses to add the current one', () =>
+    Effect.gen(function* () {
+      const { service, state } = memoryWith(7, ['enhancement'])
+      const result = yield* runFeatures({
+        config: renamed,
+        event: 'pull_request',
+        payload: pullRequest(['enhancement']),
+        features: [labels],
+      }).pipe(
+        Effect.provideService(GitHub, {
+          ...service,
+          addLabels: () => Effect.fail(new Forbidden({ operation: 'addLabels', detail: 'read-only' })),
+        }),
+      )
+      expect(state.issues.get(7)?.labels).toStrictEqual(['enhancement'])
+      expect(result.changes).toStrictEqual([])
+      expect(result.findings.map((finding) => finding.rule)).toStrictEqual(['labels.add'])
+    }),
+  )
+
+  it.effect('only records the replacement in a dry run', () =>
+    Effect.gen(function* () {
+      const { service, state } = memoryWith(7, ['enhancement'])
+      const layer = DryRun.pipe(Layer.provide(Layer.succeed(GitHub, service)))
+      const writes = yield* Effect.gen(function* () {
+        yield* runFeatures({
+          config: renamed,
+          event: 'pull_request',
+          payload: pullRequest(['enhancement']),
+          features: [labels],
+        })
+        return yield* (yield* DryRunLog).writes
+      }).pipe(Effect.provide(layer))
+      expect(state.issues.get(7)?.labels).toStrictEqual(['enhancement'])
+      expect(writes).toStrictEqual([
+        { operation: 'addLabels', details: { issue: 7, labels: ['Type: Feature'] } },
+        { operation: 'removeLabel', details: { issue: 7, label: 'enhancement' } },
+      ])
+    }),
+  )
+
+  it.effect('gives a renamed size label one size on a pull request that still has the preset name', () =>
+    Effect.gen(function* () {
+      const { service, state } = memoryWith(7, ['Size: S'])
+      const result = yield* runFeatures({
+        config: { version: 2, sizeLabels: {}, labels: { 'size-s': { name: 'small', color: '5D9801' } } },
+        event: 'pull_request',
+        payload: pullRequest(['Size: S']),
+        features: [labels],
+      }).pipe(Effect.provideService(GitHub, service))
+      expect(result.failed).toStrictEqual([])
+      expect(state.issues.get(7)?.labels).toStrictEqual(['small'])
+    }),
+  )
+
+  it('maps each alias of a decided label to its current name, first claim winning', () => {
+    const aliases = aliasesOf(
+      {
+        version: 2,
+        labels: {
+          a: { name: 'medium', color: '000000', aliases: ['Size: M', 'mid'] },
+          b: { name: 'middle', color: '000000', aliases: ['MID'] },
+          c: { name: 'unused', color: '000000', aliases: ['gone'] },
+          d: { name: 'plain', color: '000000' },
+        },
+      },
+      ['medium', 'middle', 'plain'],
+    )
+    expect([...aliases]).toStrictEqual([
+      ['size: m', 'medium'],
+      ['mid', 'medium'],
+    ])
+    expect(aliasesOf({ version: 2 }, ['bug']).size).toBe(0)
   })
 })

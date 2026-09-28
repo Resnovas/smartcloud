@@ -67,6 +67,17 @@ describe('readInputs', () => {
     }),
   )
 
+  it.effect('reads the house token, listing only its name among the given inputs', () =>
+    Effect.gen(function* () {
+      const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_HOUSETOKEN: 'ghs_house' }))
+      expect(Option.map(read.houseToken, Redacted.value)).toStrictEqual(Option.some('ghs_house'))
+      expect(read.given).toStrictEqual(['houseToken'])
+      const none = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_HOUSETOKEN: '' }))
+      expect(none.houseToken).toStrictEqual(Option.none())
+      expect(none.given).toStrictEqual([])
+    }),
+  )
+
   it.effect('reads the job check run id as a number, and rejects anything else', () =>
     Effect.gen(function* () {
       const read = yield* readInputs.pipe(withEnv({ INPUT_GITHUB_TOKEN: 'abc', INPUT_CHECKRUNID: ' 51725241954 ' }))

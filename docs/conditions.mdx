@@ -25,6 +25,32 @@ Field names are the same as v1 (`type`, `condition`, `requires`, `label`, `min`,
 
 Conditions that match text take a pattern: a regular expression written either bare (`^feat`) or delimited with flags (`/^feat/i`). An invalid pattern is rejected when the config is loaded, not on the first event.
 
+### Patterns smartcloud refuses: catastrophic backtracking
+
+**What it is.** A regular expression engine tries the ways a pattern could match, one after another, and goes back to try another way when one fails. That going back is called backtracking. For most patterns there are only a few ways to try. For some, a repeated part can match the same text in more than one way: in `^(a+)+$`, the text `aaaa` can be one run of four `a`s, two runs of two, four runs of one, and so on. When the text almost matches but not quite, such as thirty `a`s followed by `!`, the engine tries every one of those ways before giving up, and the number of ways doubles with every extra character. Thirty characters can take minutes. This is called catastrophic backtracking.
+
+**Why smartcloud refuses these patterns.** Your patterns run on text anyone can write: pull request titles and descriptions, branch names and comments. Someone who spots a pattern like that in your config could open a pull request whose title keeps the run busy until it times out. So smartcloud checks every pattern when it reads the config and refuses one that can backtrack like this, whichever condition or feature it belongs to.
+
+**What you will see.**
+
+- `smartcloud validate`, the editor schema check and the MCP server's `validate_config` report it as an error, naming the pattern: `invalid pattern "^fix: (\w+\s?)+$": the repeated part around character 8 can match the same text in more than one way, so some inputs make it run for minutes (catastrophic backtracking); rewrite it so each character can be matched only one way`. The character number counts from 1 and points into the repeated part.
+- A run treats it like any other invalid pattern: it leaves out the condition group that holds the pattern, and with it the rule that needs that group, and names both in the warnings of the `smartcloud / config` check. Everything else still runs. Where a setting only tightens policy (see [Unknown keys and invalid values](/configuration#unknown-keys-and-invalid-values)), the run fails instead, as it does for any invalid value there.
+
+**How to rewrite a refused pattern.** Make sure each character of the text can be matched by only one part of the pattern. Three rewrites cover almost every case:
+
+| Refused        | Why                                                          | Rewrite                                                           |
+| -------------- | ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `^(a+)+$`      | A repeat inside a repeat: the runs can be split any way.     | `^a+$`                                                            |
+| `^(\w+\s?)+$`  | The space is optional, so two words can also be read as one. | `^\w+(\s\w+)*$` (a word, then any number of space-and-word pairs) |
+| `^(\w\|\d)+$`  | A digit matches both choices.                                | `^\w+$` (`\w` already covers digits)                              |
+| `^([\w-]+-)*$` | The dash can end one part or sit inside the next.            | `^(\w+-)*$` (`\w` has no dash, so each dash ends a part)          |
+
+The rule of thumb: after a repeated part, put something the repeated part cannot match, such as a separator (`-`, `/`, a space) that is not in its character class.
+
+**What passes.** Ordinary patterns are fine: prefixes (`^feat`), alternatives (`^(feat|fix)(\(.+\))?: `), repeated parts ended by a separator (`^[a-z]+(-[a-z]+)*$`), and version numbers (`^v\d+\.\d+\.\d+$`). A repeat at the very end of an unanchored pattern, such as `^fix: (\w+\s?)+` without the final `$`, also passes: nothing after it can fail, so the engine never goes back into it.
+
+**Limits of the check.** It reads the pattern and never runs it. It treats anchors (`^`, `$`, `\b`), lookarounds and backreferences as matching nothing, so it can refuse a pattern that one of those would have made safe; rewrite it as above. It does not refuse patterns that are only slow on very long text without being exponential, such as `.*a.*b`, and a pattern too large to check (thousands of parts) is refused with "too large to check": split it into smaller patterns.
+
 `filesMatch` is the exception: it takes a glob such as `docs/**` or `**/*.md`.
 
 ## Conditions

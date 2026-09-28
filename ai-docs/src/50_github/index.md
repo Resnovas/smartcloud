@@ -10,6 +10,13 @@ and `dry-run.ts` and `restricted.ts` (writes); `repositoryRequest` and
 `graphql` are escape hatches for the settings feature's many endpoints, not a
 shortcut around that.
 
+Small helpers built on those escape hatches may live in the package itself,
+next to the service, when more than one feature needs them: `reviewers.ts`
+(review requests) and `auto-merge.ts` (`readAutoMerge`, `enableAutoMerge`,
+`disableAutoMerge`, `autoMergeRefusal`, `MERGE_METHODS`, shared by the
+`/automerge` command and the auto-merge feature). Reuse them rather than
+writing the query or mutation again in a feature.
+
 ### Layers
 
 | Layer                                           | Use                                                                                                                                                                                                                       |
@@ -18,6 +25,71 @@ shortcut around that.
 | `DryRun`                                        | Wraps whichever service is below it: reads pass through, writes are recorded in `DryRunLog`. A `url` field in a recorded raw request keeps only its origin; comment bodies and GraphQL variables are recorded as written. |
 | `Restricted`                                    | Wraps it for a read-only token: a write GitHub refuses as `Forbidden` is recorded in `SkippedWrites` and answered as in a dry run.                                                                                        |
 | `GitHubMemory(seed)` / `makeMemoryGitHub(seed)` | In memory, for tests; see the testing section.                                                                                                                                                                            |
+
+### Tokens: in-repository, privileged and house
+
+The action splits its tokens (`connectTokens` in `@resnovas/runtime`), so each
+does only its own job:
+
+| Service            | Token                                    | Used for                                                                                                   |
+| ------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `GitHub`           | the workflow token (`workflowToken`)     | Everything in the repository: check runs, comments, labels, reviews, facets, the repository's own config.  |
+| `PrivilegedGitHub` | the app or access token (`GITHUB_TOKEN`) | Features with `privileged: true` (settings, sync, codeowners, backport) and presets in other repositories. |
+| house reads        | the read-only house token (`houseToken`) | `getFile` and `listDirectory` in another `.github` repository, through `withHouseReads` on both services.  |
+
+`withHouseReads` routes only `getFile` and `listDirectory`. `resolveRef` and
+`getArchive` go to the wrapped service, so a run whose only way into another
+organisation's `.github` is the house token reads that source file by file
+(sync's fallback) rather than as an archive.
+
+- `PrivilegedGitHub` is optional. The CLI, the MCP server and any run with one
+  token provide only `GitHub`, and everything uses it, so a feature must never
+  require `PrivilegedGitHub`: mark it `privileged: true` and keep using `GitHub`.
+  The engine provides the privileged service as `GitHub` to such a feature.
+- A restricted run (fork, Dependabot, only the workflow token, or a rejected
+  token) has no privileged service. The house token is ignored on forks and
+  Dependabot runs. A restricted pull request run with a house token keeps the
+  sync edit check (`Access.houseReads`, `restrictedFeatures(access, event)`).
+- The workflows mint the app token only on `push`, `schedule` and
+  `workflow_dispatch` of the default branch, and on the `closed` event of a
+  merged pull request from the repository itself (trusted, merged code), for
+  backport: pull requests opened with the workflow token start no CI. Never
+  mint it for other `pull_request` or `issue_comment` runs.
+- `Restricted` never skips a refused `backport`: it fails with `Forbidden`, so
+  the backport feature warns that nothing was backported instead of
+  announcing a dry-run style #0.
+- `DryRun` wraps `PrivilegedGitHub` too, into the same `DryRunLog`.
+- `withHouseReads` falls back to the wrapped service when the house token
+  answers `Forbidden` or `NotFound`, such as for another organisation's
+  `.github`.
+
+### Refs and archives
+
+Two reads serve a whole tree at a commit for the price of two requests:
+
+- `resolveRef({ owner, repo, ref? })` answers the commit SHA of a branch, tag
+  or commit (`GET /repos/{owner}/{repo}/commits/{ref}` with the `sha` media
+  type, so no diff is sent); `HEAD` when `ref` is omitted.
+- `getArchive({ owner, repo, ref?, path?, paths?, maxBytes? })` downloads the
+  repository's tarball at `ref` (the default branch when omitted) and answers
+  every regular file under `path` (relative to it), or only `paths`, as
+  `{ path, content, executable }`, the execute bit from the tar mode. GitHub
+  answers the tarball endpoint with a redirect to codeload; the live service
+  follows it itself, without the token, as GitHub requires. The read is one
+  Effect `Stream` in `archive.ts`: `Stream.fromReadableStream` over the
+  download, `limitBytes` (a `mapAccumEffect` that fails past `maxBytes`),
+  gunzip through Node's `DecompressionStream` (bridged with
+  `Stream.toReadableStream` and back), then `readTar`, a `mapAccumEffect`
+  over an incremental ustar and pax parser (`x` and `g` headers, GNU `L`
+  names, base-256 sizes); links, directories and submodules are skipped, and
+  the whole thing is collected with `Stream.runCollect`. Its typed errors,
+  `ArchiveRejected` (status 422: over the limit, not gzip, not tar) and
+  `DownloadFailed` (codeload's status, or none for a broken connection), go
+  through the same status mapping as every other call, so the first is a
+  `ValidationFailed` that is never retried and an outage is retried. Both
+  reads are cached in the contents family with the file reads, so a proposal
+  invalidates them. The live service's `attempt` runs any Effect as one
+  instrumented, retried call; `call` is the one-request case on top of it.
 
 ### Errors
 

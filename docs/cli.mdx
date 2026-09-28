@@ -136,7 +136,7 @@ Prints every repository settings step the config would apply, with its request, 
 smartcloud plan settings --repo my-org/my-repo --config .github/smartcloud.yml
 ```
 
-It reads only the repository itself, so any token that can read the repository works. A config without a `settings` section prints no steps.
+It reads only the repository itself, so any token that can read the repository works. A config without a `settings` section prints no steps. When a run would ignore part of the `settings` section, such as a merge queue method that conflicts with the rest of the ruleset, the plan lists it after the steps under "Ignored, so not applied", with the reason.
 
 ## sync
 
@@ -176,11 +176,11 @@ smartcloud doctor for Resnovas/example:
 ok      token: an OAuth token, such as the GitHub CLI's with scopes: repo, workflow, read:org
 warning check runs: this token cannot create check runs, so the smartcloud check fails in a workflow that passes it; ...
 ok      repository: the token is an admin of Resnovas/example, so every feature can run
-ok      config: the config and its 1 preset(s) resolve: Resnovas/.github/smartcloud/house.yml@main, .github/smartcloud.yml
-ok      presets: Resnovas/.github is private: runs with the workflow token, such as pull requests from forks and Dependabot, skip its presets
+ok      config: the config and its 1 preset(s) resolve: Resnovas/private-presets/smartcloud/house.yml@main, .github/smartcloud.yml
+ok      presets: Resnovas/private-presets is private: runs with the workflow token, such as pull requests from forks and Dependabot, skip its presets
 ok      workflows: read 4 workflow file(s)
 ok      actions access: public, so usable from any workflow: actions/checkout, actions/setup-node
-FAIL    actions access: Resnovas/.github is private and its Actions access is none, so .github/workflows/house-graphify.yml cannot use its actions or reusable workflows; ...
+FAIL    actions access: Resnovas/private-presets is private and its Actions access is none, so .github/workflows/house-graphify.yml cannot use its actions or reusable workflows; ...
 FAIL    secrets: missing POSTHOG_CLI_TOKEN (read by .github/workflows/release.yml); ...
 ok      variables: every variable the workflows read exists: RESNOVAS_BOT_APP_ID
 2 failure(s), 1 warning(s).

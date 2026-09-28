@@ -20,6 +20,7 @@ import {
   DryRunLog,
   GitHub,
   githubUsage,
+  PrivilegedGitHub,
   Restricted,
   SkippedWrites,
   type GitHubService,
@@ -29,7 +30,7 @@ import { conclusionOf } from '@resnovas/reporting'
 import {
   accessFor,
   command,
-  connectWithFallback,
+  connectTokens,
   externalRun,
   noteOptions,
   optOut,
@@ -121,9 +122,15 @@ const skippedSummary = (writes: ReadonlyArray<{ readonly operation: string }>) =
  * code 1, never an unhandled rejection. The run also exits 1 when any
  * finding is an error or any feature failed to run.
  *
+ * The tokens are split (see `connectTokens`): the workflow token acts in the
+ * repository (check runs, comments, labels, reviews), the given token only
+ * for settings, sync, CODEOWNERS proposals and presets in other
+ * repositories, and the optional read-only house token for presets and
+ * templates in a `.github` repository.
+ *
  * A run from a fork or started by Dependabot acts with the workflow token
- * whatever token it was given, and a run acting with the workflow token is
- * restricted: see `accessFor`. A token GitHub rejects, such as an expired
+ * whatever token it was given, and ignores the house token; a run acting
+ * with the workflow token is restricted: see `accessFor`. A token GitHub rejects, such as an expired
  * or forbidden personal access token, is replaced with the workflow token
  * and warned about: see `connectWithFallback`. A restricted run skips what
  * its token cannot do, including writes GitHub refuses, and lists them in
@@ -162,14 +169,14 @@ export const program = (connect: Connect) =>
       onSome: (token) => ({ checksToken: token }),
     })
     const event = { name: env.eventName, payload }
-    const chosen = accessFor({
-      token: inputs.token,
-      workflowToken: inputs.workflowToken,
-      external: externalRun(event, env.repository, Option.getOrUndefined(env.actor)),
-    })
-    const { service, access, rejected } = yield* connectWithFallback({
+    const external = externalRun(event, env.repository, Option.getOrUndefined(env.actor))
+    const chosen = accessFor({ token: inputs.token, workflowToken: inputs.workflowToken, external })
+    // The workflow token acts in the repository; the given token only for settings, sync and other repositories' presets.
+    const { service, privileged, access, rejected } = yield* connectTokens({
       ...chosen,
       workflowToken: inputs.workflowToken,
+      // A run from outside the repository reads nothing with the house token either.
+      houseToken: external === undefined ? inputs.houseToken : Option.none(),
       connect: (token) => connect({ token, coordinates, ...checksToken }),
     })
     if (rejected !== undefined) {
@@ -178,9 +185,13 @@ export const program = (connect: Connect) =>
       )
     }
     // A restricted run skips the writes GitHub refuses; others are made or fail as usual.
+    const services =
+      privileged === undefined
+        ? Layer.succeed(GitHub, service)
+        : Layer.merge(Layer.succeed(GitHub, service), Layer.succeed(PrivilegedGitHub, privileged))
     const base = access.restricted
-      ? Restricted.pipe(Layer.provide(Layer.succeed(GitHub, service)))
-      : Layer.merge(Layer.succeed(GitHub, service), Layer.succeed(SkippedWrites, { writes: Effect.succeed([]) }))
+      ? Restricted.pipe(Layer.provide(services))
+      : Layer.merge(services, Layer.succeed(SkippedWrites, { writes: Effect.succeed([]) }))
 
     // Reads the skipped writes inside the same layer the run used.
     const run = Effect.gen(function* () {

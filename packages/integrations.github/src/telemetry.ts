@@ -234,22 +234,14 @@ export const instrumentCall = <A>(
  *
  * @internal
  *
- * @returns `track`, which wraps a promise-returning attempt, and `last`, which reads the status of the latest attempt.
+ * @returns `note`, which records the status of an attempt's response or error, and `last`, which reads the status of the latest attempt.
  */
 export const statusTracker = () => {
   let latest: number | undefined
-  const track =
-    <A>(attempt: () => Promise<A>) =>
-    () =>
-      attempt().then(
-        (value) => {
-          latest = statusOf(value)
-          return value
-        },
-        (error: unknown) => {
-          latest = statusOf(error)
-          throw error
-        },
-      )
-  return { track, last: () => latest }
+  return {
+    note: (outcome: unknown) => {
+      latest = statusOf(outcome)
+    },
+    last: () => latest,
+  }
 }

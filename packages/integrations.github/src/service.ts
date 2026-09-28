@@ -175,6 +175,35 @@ export interface DirectoryEntry {
   readonly executable: boolean
 }
 
+/** A commit, branch or tag in any repository the token can see. */
+export interface RefLocation {
+  readonly owner: string
+  readonly repo: string
+  /** The commit SHA, branch or tag; the default branch when omitted. */
+  readonly ref?: string
+}
+
+/** A repository's files at a ref, read from one archive by `getArchive`. */
+export interface ArchiveLocation extends RefLocation {
+  /**
+   * The directory to read; its files come back with paths relative to it.
+   * Empty or omitted reads the whole repository.
+   */
+  readonly path?: string
+  /** Only the files at these paths, relative to `path`; every file when omitted. */
+  readonly paths?: ReadonlyArray<string>
+  /** The most bytes to download; `DEFAULT_ARCHIVE_LIMIT` when omitted. A larger archive fails with `ValidationFailed`. */
+  readonly maxBytes?: number
+}
+
+/** A regular file read from an archive, with its path relative to the directory read. */
+export interface ArchiveEntry {
+  readonly path: string
+  readonly content: string
+  /** Whether git records the file as executable (mode `100755`). */
+  readonly executable: boolean
+}
+
 /** A file to write in a proposed change. */
 export interface FileChange {
   readonly path: string
@@ -330,6 +359,15 @@ export interface GitHubService {
   readonly getFile: (location: FileLocation) => Effect.Effect<string, GitHubError>
   /** Lists every file under a directory, recursively, in any repository the token can see. An empty path lists the root. */
   readonly listDirectory: (location: FileLocation) => Effect.Effect<ReadonlyArray<DirectoryEntry>, GitHubError>
+  /** Resolves a branch, tag or commit in any repository the token can see to its commit SHA. */
+  readonly resolveRef: (location: RefLocation) => Effect.Effect<string, GitHubError>
+  /**
+   * Reads every regular file under a directory at a ref from one download
+   * of the repository's archive, with its execute bit, in any repository
+   * the token can see. Symbolic links and submodules are left out, as
+   * `listDirectory` leaves them out.
+   */
+  readonly getArchive: (location: ArchiveLocation) => Effect.Effect<ReadonlyArray<ArchiveEntry>, GitHubError>
   /**
    * Commits file changes to a branch built on `base`, with a DCO sign-off,
    * then opens a pull request from it, or updates the one already open.
@@ -361,3 +399,28 @@ export interface GitHubService {
  * ```
  */
 export class GitHub extends Context.Tag('@resnovas/integrations.github/GitHub')<GitHub, GitHubService>() {}
+
+/**
+ * The privileged GitHub service: the one acting with a GitHub App or
+ * personal access token, for the features that need more than the workflow
+ * token, such as settings and sync, and for presets in other repositories.
+ *
+ * @remarks
+ * Optional. A run that has one also provides {@link GitHub}, acting with the
+ * workflow token, for everything else: check runs, comments, labels and
+ * reviews. A run without one does everything through {@link GitHub}, as the
+ * CLI and the MCP server do.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Option } from 'effect'
+ * import { GitHub, PrivilegedGitHub } from '@resnovas/integrations.github'
+ *
+ * // The privileged service when the run has one, otherwise the in-repository one.
+ * const strongest = Effect.flatMap(Effect.serviceOption(PrivilegedGitHub), Option.match({ onNone: () => GitHub, onSome: Effect.succeed }))
+ * ```
+ */
+export class PrivilegedGitHub extends Context.Tag('@resnovas/integrations.github/PrivilegedGitHub')<
+  PrivilegedGitHub,
+  GitHubService
+>() {}

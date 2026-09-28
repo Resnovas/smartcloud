@@ -67,6 +67,9 @@
       "path": "../feature.backport/tsconfig.lib.json"
     },
     {
+      "path": "../feature.automerge/tsconfig.lib.json"
+    },
+    {
       "path": "../engine/tsconfig.lib.json"
     },
     {

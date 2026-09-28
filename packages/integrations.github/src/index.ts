@@ -25,9 +25,13 @@ export {
 } from './errors.js'
 export type { GitHubError } from './errors.js'
 export { isTrustedComment } from './comments.js'
+export { autoMergeRefusal, disableAutoMerge, enableAutoMerge, MERGE_METHODS, readAutoMerge } from './auto-merge.js'
+export type { AutoMergeState, MergeMethod } from './auto-merge.js'
 export { GitHub } from './service.js'
 export type {
   Annotation,
+  ArchiveEntry,
+  ArchiveLocation,
   BackportRequest,
   BackportResult,
   ChangeProposal,
@@ -48,14 +52,18 @@ export type {
   NewReview,
   ProposalResult,
   PullRequestSummary,
+  RefLocation,
   Repository,
   RepositoryCoordinates,
   RepositoryRequest,
 } from './service.js'
+export { DEFAULT_ARCHIVE_LIMIT } from './archive.js'
 export { CHECK_RUN_EXTERNAL_ID, DEFAULT_COMMITTER, GitHubLive, makeLiveGitHub, signOff } from './live.js'
 export type { LiveOptions } from './live.js'
 export { DryRun, DryRunLog, dryRunGitHub } from './dry-run.js'
 export { Restricted, restrictedGitHub, SkippedWrites } from './restricted.js'
+// The app or access token's service, beside the workflow token's `GitHub`.
+export { PrivilegedGitHub } from './service.js'
 export {
   githubDuration,
   githubRateLimitRemaining,
@@ -65,7 +73,7 @@ export {
   type GitHubUsage,
 } from './telemetry.js'
 export type { RecordedWrite } from './dry-run.js'
-export { fileKey, GitHubMemory, makeMemoryGitHub } from './memory.js'
+export { fileKey, GitHubMemory, makeMemoryGitHub, refKey } from './memory.js'
 export type { MemoryBackport, MemoryIssue, MemoryProposal, MemoryPullRequest, MemoryState } from './memory.js'
 export { reviewAssignmentSnapshot, requestOwnerReviews, previouslyRequestedTeams } from './reviewers.js'
 export type { ReviewAssignmentSnapshot } from './reviewers.js'

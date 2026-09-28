@@ -17,6 +17,7 @@
 import { describe, expect, it } from '@effect/vitest'
 import { ConfigNotFound } from '@resnovas/config'
 import {
+  fileKey,
   Forbidden,
   makeMemoryGitHub,
   NotFound,
@@ -27,12 +28,14 @@ import {
 import {
   accessFindings,
   accessFor,
+  connectTokens,
   connectWithFallback,
   externalRun,
   FULL_ACCESS,
   PresetUnreadable,
   restrictedFeatures,
   skippablePreset,
+  withHouseReads,
 } from '@resnovas/runtime'
 import { Effect, Option, Redacted } from 'effect'
 
@@ -107,6 +110,16 @@ describe('what a restricted run leaves out', () => {
     expect(restrictedFeatures(fork).get('sync')).toBe(
       'restricted access (a pull request from a fork): cross-repository sync needs a token that can read the source and push workflow files',
     )
+  })
+
+  it('keeps the read-only sync check on a pull request when the house repository can be read', () => {
+    const house = { ...fork, houseReads: true }
+    expect([...restrictedFeatures(house, 'pull_request').keys()]).toStrictEqual(['settings'])
+    expect([...restrictedFeatures(house, 'pull_request_review').keys()]).toStrictEqual(['settings'])
+    expect([...restrictedFeatures(house, 'push').keys()]).toStrictEqual(['settings', 'sync'])
+    expect([...restrictedFeatures(house).keys()]).toStrictEqual(['settings', 'sync'])
+    expect([...restrictedFeatures(fork, 'pull_request').keys()]).toStrictEqual(['settings', 'sync'])
+    expect(restrictedFeatures(FULL_ACCESS, 'pull_request').size).toBe(0)
   })
 
   it('skips only presets from other repositories', () => {
@@ -204,6 +217,169 @@ describe('connectWithFallback', () => {
       const alone = yield* run(rejected, FULL_ACCESS, Option.none())
       expect(alone.used).toStrictEqual(['github_pat_secret'])
       expect(alone.connected.access).toBe(FULL_ACCESS)
+    }),
+  )
+})
+
+describe('withHouseReads', () => {
+  const setup = () => {
+    const inner = makeMemoryGitHub()
+    const house = makeMemoryGitHub()
+    const calls: Array<string> = []
+    const tracked = (name: string, service: GitHubService): GitHubService => ({
+      ...service,
+      getFile: (location) =>
+        Effect.zipRight(
+          Effect.sync(() => calls.push(`${name} getFile ${location.owner}/${location.repo}`)),
+          service.getFile(location),
+        ),
+      listDirectory: (location) =>
+        Effect.zipRight(
+          Effect.sync(() => calls.push(`${name} listDirectory ${location.owner}/${location.repo}`)),
+          service.listDirectory(location),
+        ),
+    })
+    const github = withHouseReads(tracked('inner', inner.service), tracked('house', house.service))
+    return { inner, house, calls, github }
+  }
+
+  it.effect('reads files in another .github repository with the house token', () =>
+    Effect.gen(function* () {
+      const { house, calls, github } = setup()
+      house.state.files.set(fileKey('Resnovas', '.GitHub', 'house.yml'), 'version: 2\n')
+      expect(yield* github.getFile({ owner: 'Resnovas', repo: '.GitHub', path: 'house.yml' })).toBe('version: 2\n')
+      yield* github.listDirectory({ owner: 'Resnovas', repo: '.github', path: 'templates' })
+      expect(calls).toStrictEqual(['house getFile Resnovas/.GitHub', 'house listDirectory Resnovas/.github'])
+    }),
+  )
+
+  it.effect('falls back to the wrapped service when the house token cannot see the file', () =>
+    Effect.gen(function* () {
+      const { inner, calls, github } = setup()
+      inner.state.files.set(fileKey('Climb', '.github', 'house.yml'), 'version: 2\n')
+      expect(yield* github.getFile({ owner: 'Climb', repo: '.github', path: 'house.yml' })).toBe('version: 2\n')
+      expect(calls).toStrictEqual(['house getFile Climb/.github', 'inner getFile Climb/.github'])
+    }),
+  )
+
+  it.effect('keeps other failures, and sends every other read to the wrapped service', () =>
+    Effect.gen(function* () {
+      const inner = makeMemoryGitHub()
+      const down = new Unavailable({ operation: 'getFile', detail: 'Bad Gateway' })
+      const house = { ...makeMemoryGitHub().service, getFile: () => Effect.fail(down) }
+      const github = withHouseReads(inner.service, house)
+      expect(yield* Effect.flip(github.getFile({ owner: 'Resnovas', repo: '.github', path: 'a.yml' }))).toBe(down)
+      inner.state.files.set(fileKey('Resnovas', 'other', 'a.yml'), 'other')
+      expect(yield* github.getFile({ owner: 'Resnovas', repo: 'other', path: 'a.yml' })).toBe('other')
+      const own = withHouseReads({ ...inner.service, coordinates: { owner: 'Resnovas', repo: '.github' } }, house)
+      inner.state.files.set(fileKey('Resnovas', '.github', 'a.yml'), 'own')
+      expect(yield* own.getFile({ owner: 'Resnovas', repo: '.github', path: 'a.yml' })).toBe('own')
+    }),
+  )
+})
+
+describe('connectTokens', () => {
+  const house = Redacted.make('ghs_house')
+  // Connects each token to its own service, recording the order.
+  const connector = (rejected: ReadonlyArray<string> = []) => {
+    const used: Array<string> = []
+    const services = new Map<string, GitHubService>()
+    const memories = new Map<string, ReturnType<typeof makeMemoryGitHub>>()
+    const connect = (token: Redacted.Redacted<string>) =>
+      Effect.sync((): GitHubService => {
+        const value = Redacted.value(token)
+        used.push(value)
+        const memory = makeMemoryGitHub()
+        memories.set(value, memory)
+        const base = memory.service
+        const service = rejected.includes(value)
+          ? {
+              ...base,
+              getRepository: Effect.fail(new Forbidden({ operation: 'getRepository', detail: 'Bad credentials' })),
+            }
+          : base
+        services.set(value, service)
+        return service
+      })
+    return { connect, used, services, memories }
+  }
+
+  it.effect('acts with the workflow token in the repository, and the given token only as the privileged service', () =>
+    Effect.gen(function* () {
+      const { connect, used, services } = connector()
+      const connected = yield* connectTokens({
+        token: pat,
+        workflowToken: Option.some(workflow),
+        houseToken: Option.none(),
+        access: FULL_ACCESS,
+        connect,
+      })
+      expect(used).toStrictEqual(['github_pat_secret', 'ghs_workflow'])
+      expect(connected.service).toBe(services.get('ghs_workflow'))
+      expect(connected.privileged).toBe(services.get('github_pat_secret'))
+      expect(connected.access).toBe(FULL_ACCESS)
+      expect(connected.rejected).toBeUndefined()
+    }),
+  )
+
+  it.effect('reads the house repository with the house token through both services', () =>
+    Effect.gen(function* () {
+      const { connect, used, memories } = connector()
+      const connected = yield* connectTokens({
+        token: pat,
+        workflowToken: Option.some(workflow),
+        houseToken: Option.some(house),
+        access: FULL_ACCESS,
+        connect,
+      })
+      expect(used).toStrictEqual(['github_pat_secret', 'ghs_house', 'ghs_workflow'])
+      memories.get('ghs_house')?.state.files.set(fileKey('Resnovas', '.github', 'a.yml'), 'house')
+      const preset = { owner: 'Resnovas', repo: '.github', path: 'a.yml' }
+      expect(yield* connected.service.getFile(preset)).toBe('house')
+      expect(yield* connected.privileged?.getFile(preset) ?? Effect.succeed('')).toBe('house')
+      expect(connected.access).toBe(FULL_ACCESS)
+    }),
+  )
+
+  it.effect('has no privileged service in a restricted run, and marks it able to read the house repository', () =>
+    Effect.gen(function* () {
+      const { connect, used } = connector()
+      const connected = yield* connectTokens({
+        token: workflow,
+        workflowToken: Option.some(workflow),
+        houseToken: Option.some(house),
+        access: fork,
+        connect,
+      })
+      expect(used).toStrictEqual(['ghs_workflow', 'ghs_house'])
+      expect(connected.privileged).toBeUndefined()
+      expect(connected.access).toStrictEqual({ ...fork, houseReads: true })
+      const alone = yield* connectTokens({
+        token: pat,
+        workflowToken: Option.none(),
+        houseToken: Option.none(),
+        access: FULL_ACCESS,
+        connect,
+      })
+      expect(alone.privileged).toBeUndefined()
+      expect(alone.access).toBe(FULL_ACCESS)
+    }),
+  )
+
+  it.effect('drops a rejected token, keeping the reason', () =>
+    Effect.gen(function* () {
+      const { connect, used } = connector(['github_pat_secret'])
+      const connected = yield* connectTokens({
+        token: pat,
+        workflowToken: Option.some(workflow),
+        houseToken: Option.none(),
+        access: FULL_ACCESS,
+        connect,
+      })
+      expect(used).toStrictEqual(['github_pat_secret', 'ghs_workflow'])
+      expect(connected.privileged).toBeUndefined()
+      expect(connected.access.restricted).toBe(true)
+      expect(connected.rejected).toContain('Bad credentials')
     }),
   )
 })

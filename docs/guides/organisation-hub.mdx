@@ -1,0 +1,500 @@
+---
+title: "Your organisation's sync hub"
+description: "Make your own organisation's .github repository the one place that holds your shared smartcloud rules and files, and roll a change out to every repository."
+---
+
+A **sync hub** is one repository that every other repository in your organisation takes its rules and shared files from. With smartcloud, the hub holds two things:
+
+- a **preset**: the settings every repository shares, such as labels, title rules, review rules and the default branch ruleset;
+- a folder of **templates**: files every repository should have, such as `LICENSE`, `SECURITY.md`, `dependabot.yml` and the smartcloud workflow itself.
+
+Each repository's settings file says "use the hub" in two lines. From then on, a change made once in the hub reaches every repository: preset changes on each repository's next run, and template changes as a pull request someone reviews and merges.
+
+Why you would want one:
+
+- **No drift.** Forty repositories stop holding forty slightly different copies of the same files.
+- **One review for a policy change.** Tightening a rule is one pull request in the hub, not one per repository.
+- **Rules that stick.** A repository can add to the preset but not weaken it, and a pull request that edits a synced file by hand fails a check.
+
+This guide builds a hub for an organisation called `my-org`. Replace `my-org` with your organisation's login throughout. It takes about an hour, most of it writing your own templates. Resnovas runs its own repositories this way from [`Resnovas/.github`](https://github.com/Resnovas/.github), which is a useful full-size example once you have the basics working.
+
+<Note>
+  New to the words used here? [Preset](/glossary#preset), [GitHub App](/glossary#github-app),
+  [ruleset](/glossary#ruleset) and [restricted run](/glossary#restricted-run) are in the [glossary](/glossary). The
+  [Sync](/features/sync) and [Presets](/presets) pages describe each feature on its own; this guide puts them together.
+</Note>
+
+## What you will build
+
+```text
+my-org/.github                          The hub
+├── smartcloud/
+│   └── base.yml                        The preset every repository extends
+├── templates/                          Files every repository receives, at the same path
+│   ├── LICENSE
+│   ├── SECURITY.md
+│   └── .github/
+│       ├── dependabot.yml
+│       ├── smartcloud.yml              Each repository's settings file (a managed block)
+│       └── workflows/
+│           └── smartcloud.yml          The workflow that runs smartcloud
+└── .github/                            The hub's own copies, rendered from templates/
+    ├── smartcloud.yml
+    └── workflows/
+        └── smartcloud.yml
+
+my-org/any-repository
+└── .github/
+    ├── smartcloud.yml                  extends my-org/.github/smartcloud/base.yml
+    └── workflows/smartcloud.yml        (everything else arrives with the first sync)
+```
+
+What happens once it is set up:
+
+1. Someone changes the preset or a template in `my-org/.github` and it merges to `main`.
+2. Each repository runs its smartcloud workflow: on a push to its default branch, on a schedule, or when run by hand.
+3. Every run reads the preset, so a preset change applies straight away.
+4. The sync part of the run renders every template with that repository's values and compares the result with its files. If anything differs, it opens or updates one pull request, `chore(sync): sync files from my-org/.github`.
+5. A maintainer reviews and merges it like any other pull request.
+
+## Before you start
+
+You need:
+
+- to be an **owner** of the organisation, to create the app and organisation secrets;
+- the [GitHub CLI](https://cli.github.com/) signed in (`gh auth login`), to check things from your machine;
+- Node 24 or later, to run the [smartcloud CLI](/cli) (`npx @resnovas/smartcloud`).
+
+Decide one thing first: **should the hub be public?**
+
+| Hub is      | Good                                                                                                                                                                                                                                          | Watch out                                                                                                                                                                      |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Public**  | Any token can read the preset, including the read-only token of a pull request from a fork, so every rule is checked on every pull request. GitHub also shows its root `CONTRIBUTING.md` and `SECURITY.md` in any repository without its own. | Everyone can read your preset and templates. Keep secrets out of them (you should anyway).                                                                                     |
+| **Private** | Your rules and templates stay private.                                                                                                                                                                                                        | Pull requests from forks and Dependabot cannot read the preset, so they run [restricted](/reporting#restricted-runs) and skip its rules. Every repository needs the app token. |
+
+Public is simpler and is what Resnovas uses. The steps below work either way.
+
+## Step 1: create the hub repository
+
+<Steps>
+  <Step title="Create my-org/.github">
+    Create a repository named exactly `.github` in your organisation (**New repository**, owner `my-org`, name
+    `.github`). The name is not required by smartcloud, but GitHub gives a public `.github` repository special jobs,
+    such as default community health files and the organisation profile (`profile/README.md`), so it is the natural
+    home.
+  </Step>
+  <Step title="Add the folders">
+    Create `smartcloud/` for the preset and `templates/` for the shared files. You will fill both in the next steps.
+  </Step>
+</Steps>
+
+## Step 2: create a GitHub App for the organisation
+
+The [workflow token](/glossary#workflow-token) every Actions run gets cannot read another private repository, cannot push changes to workflow files, and cannot change repository settings. Sync and settings need all three, so the hub setup acts as a GitHub App.
+
+<Steps>
+  <Step title="Create the app">
+    Follow [Create a GitHub App](/getting-started#optional-create-a-github-app) in your organisation's **Settings > Developer settings > GitHub Apps**. Name it something like `my-org-bot`; its commits and pull requests appear as `my-org-bot[bot]`. It needs Contents, Pull requests and **Workflows** (read and write) for sync, and Administration (read and write) for settings.
+  </Step>
+  <Step title="Install it on all repositories">
+    On the app's page, **Install App > my-org > All repositories**, so new repositories are covered without a second step.
+  </Step>
+  <Step title="Store its credentials once, for the whole organisation">
+    In the organisation's **Settings > Secrets and variables > Actions**:
+
+    - **Variables** tab: `SMARTCLOUD_APP_ID`, the app's ID.
+    - **Secrets** tab: `SMARTCLOUD_APP_PRIVATE_KEY`, the whole `.pem` file from **Generate a private key**. Give it access to all repositories.
+
+  </Step>
+</Steps>
+
+Every repository's workflow mints a short-lived token from these. Pull requests from forks and Dependabot get no secrets, so they fall back to the workflow token and run restricted: smartcloud skips what it cannot do and says so in the job summary, rather than failing.
+
+## Step 3: write the preset
+
+Create `smartcloud/base.yml` in the hub. This is the organisation's shared settings file: everything in it applies to every repository that extends it, and is **locked** there ([Add, never change](/presets#add-never-change)).
+
+```yaml my-org/.github/smartcloud/base.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+#
+# The my-org preset. Every repository extends it. A repository may add keys
+# this file leaves unset, but cannot change a value set here.
+#
+# Left unset on purpose, so each repository adds its own:
+#   settings.environments        what the repository deploys to
+#   settings.ruleset.statusChecks.checks.<its CI job>
+#   required.expect              its CI job's name
+#   sync.exclude                 templates it keeps its own copy of
+version: 2
+
+roles:
+  maintainers: [octocat, hubot]
+  trustedBots: ['dependabot[bot]', 'renovate[bot]', 'my-org-bot[bot]']
+
+links:
+  policyBase: https://github.com/my-org/.github/blob/main
+
+labels:
+  bug:
+    name: bug
+    color: 'D73A4A'
+  feature:
+    name: enhancement
+    color: 'A2EEEF'
+  org-sync:
+    name: org-sync
+    color: 'EDEDED'
+    description: Automated update from my-org/.github
+
+# Label the sync pull requests, which come from the org/sync branch.
+labelling:
+  org-sync:
+    label: org-sync
+    on: [pullRequest]
+    when:
+      condition:
+        - type: branchMatches
+          condition: '^org/sync$'
+
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+
+required: {}
+
+settings:
+  merging:
+    mergeCommit: false
+    squash: true
+    deleteBranchOnMerge: true
+  ruleset:
+    name: 'my-org: default branch'
+    blockForcePush: true
+    statusChecks:
+      checks:
+        smartcloud: true
+
+# Where every repository's shared files come from.
+sync:
+  source: my-org/.github/templates@main
+  branch: org/sync
+  values:
+    ORG_NAME: My Org
+    COPYRIGHT_HOLDER: My Org Ltd
+    COPYRIGHT_YEAR: '2026'
+    SECURITY_EMAIL: security@my-org.example
+```
+
+The `sync` section is what makes this a hub:
+
+| Key      | What it means here                                                                                                                                                                            |
+| -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `source` | The templates are the `templates/` folder of `my-org/.github`, read from `main`. `owner/repo/path@ref`, like `extends`.                                                                       |
+| `branch` | Sync pull requests come from `org/sync`. smartcloud force-updates it on every run, so nobody should push to it. The default is `smartcloud/sync`.                                             |
+| `values` | What the `{{KEY}}` placeholders in the templates become. Set here, they are the same for every repository and locked. Quote anything YAML could read as a number or a date, such as `'2026'`. |
+
+The [Recommended setups](/guides/recommended-setups#an-organisation-with-a-shared-preset) page has a fuller preset with commits, reviews and security settings.
+
+## Step 4: write the templates
+
+Every file under `templates/` is placed at the same path in each repository: `templates/SECURITY.md` becomes `SECURITY.md`, and `templates/.github/dependabot.yml` becomes `.github/dependabot.yml`. A template can be synced **whole** or in **part**.
+
+### Placeholders: the parts that differ per repository
+
+Write `{{KEY}}` wherever a value differs, for example `templates/SECURITY.md`:
+
+```markdown templates/SECURITY.md
+# Security policy
+
+To report a vulnerability in {{REPOSITORY}}, email {{SECURITY_EMAIL}} or use
+GitHub's private vulnerability reporting. {{ORG_NAME}} replies within
+{{RESPONSE_DAYS:-5}} working days.
+```
+
+| Written            | Becomes                                                                                                                                        |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| `{{KEY}}`          | The value of `KEY` from `sync.values`. With no value, the sync **fails** with `SECURITY.md: no value for {{KEY}}` rather than writing a blank. |
+| `{{KEY:-default}}` | The value of `KEY` when there is one, otherwise `default`. Use it for a value each repository **may** set but need not.                        |
+| `{{REPOSITORY}}`   | Always the repository's own `owner/name`, such as `my-org/api`. You never set it.                                                              |
+
+Keys are upper case letters, digits and underscores, starting with a letter (`ORG_NAME`, `RESPONSE_DAYS`). Anything else in double braces is left alone, so GitHub Actions expressions such as `${{ github.token }}` in a workflow template are safe.
+
+Where values come from:
+
+- **The preset's `sync.values`** hold what is the same everywhere. They are locked: a repository cannot change them.
+- **A repository's own `sync.values`** add keys the preset does not set. That is how one repository says `RESPONSE_DAYS: '2'` while the rest take the default.
+
+### Managed blocks: files a repository can add to
+
+A template synced whole replaces the repository's file every time. That suits `LICENSE` or `SECURITY.md`. For files each repository needs to extend, such as `dependabot.yml`, mark the part the hub owns:
+
+```yaml templates/.github/dependabot.yml
+version: 2
+updates:
+  # house:managed:begin - synced from my-org/.github. Edits inside this block are overwritten.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+  # house:managed:end
+  # house:local - add this repository's own updates below this line.
+```
+
+- Lines between `house:managed:begin` and `house:managed:end` belong to the hub. Every sync rewrites them.
+- Everything else belongs to the repository, and sync never touches it. `house:local` marks where its own lines go.
+- The marker names are fixed (they are not changed to your organisation's name), and they only count on a comment line: `#` in YAML, TOML and CODEOWNERS, `//` in JSON with comments, `<!--` in Markdown.
+
+The [Sync](/features/sync#managed-blocks) page lists the conflicts smartcloud warns about, such as a local key that redefines a synced one.
+
+### The two templates that tie it together
+
+Two templates make the whole thing self-sustaining. The first is each repository's settings file, whose managed block says "use the hub" and leaves the rest to the repository:
+
+```yaml templates/.github/smartcloud.yml
+# house:managed:begin - synced from my-org/.github. Edits inside this block are overwritten.
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+extends:
+  - my-org/.github/smartcloud/base.yml@main
+# house:managed:end
+# house:local - add this repository's own configuration below this line.
+```
+
+The second is the workflow that runs smartcloud, so a fix to the workflow also reaches every repository:
+
+```yaml templates/.github/workflows/smartcloud.yml
+# house:managed:begin - synced from my-org/.github. Edits inside this block are overwritten.
+name: smartcloud
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft]
+  pull_request_review:
+    types: [submitted, dismissed]
+  issues:
+    types: [opened, edited, reopened, labeled, unlabeled]
+  issue_comment:
+    types: [created]
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 7 * * 1'
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  smartcloud:
+    name: smartcloud
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+      issues: write
+      statuses: read
+    steps:
+      # Forks and Dependabot get no secrets, so no token is minted for them;
+      # smartcloud then falls back to the workflow token and runs restricted.
+      - name: Mint the app token
+        id: app
+        if: >-
+          !github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.SMARTCLOUD_APP_ID }}
+          private-key: ${{ secrets.SMARTCLOUD_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - uses: resnovas/smartcloud@v2
+        with:
+          GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          checkRunId: ${{ job.check_run_id }}
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.
+```
+
+The schedule (`0 7 * * 1`, Mondays at 07:00 UTC) is how often each repository checks for template changes without a push. Pin third-party actions to a full commit SHA in production.
+
+Add the rest of your shared files the same way: `LICENSE` (with `{{COPYRIGHT_YEAR}}` and `{{COPYRIGHT_HOLDER}}`), `CODE_OF_CONDUCT.md`, issue forms under `.github/ISSUE_TEMPLATE/`, a pull request template. An executable template, such as a script, makes its synced file executable too.
+
+## Step 5: let the hub sync itself
+
+The hub is a repository too, and it should follow its own rules. Copy the two templates from step 4 into the hub's own `.github/` folder, exactly as they are, and commit everything to `main`.
+
+- The hub extends its own preset. Reading a preset in the same repository always works, whatever the token.
+- Its sync renders `templates/` into the hub itself, so its own `.github/smartcloud.yml`, workflow and `LICENSE` stay in step with what every other repository receives.
+- The edit check is off in the hub, because changing templates is its job: a pull request that edits `templates/` never fails `SYNC` there.
+
+Run the workflow once by hand (**Actions > smartcloud > Run workflow**). The job summary lists the labels it created, the settings it applied and, if any rendered file differs from the hub's own copy, the sync pull request it opened.
+
+## Step 6: connect a repository
+
+For each repository that should follow the hub:
+
+<Steps>
+  <Step title="Add the two files">
+    Copy `templates/.github/smartcloud.yml` to the repository's `.github/smartcloud.yml`, and `templates/.github/workflows/smartcloud.yml` to `.github/workflows/smartcloud.yml`. Everything else arrives with the first sync.
+  </Step>
+  <Step title="Add what the preset leaves open">
+    Below the `house:local` line, add this repository's own settings: its CI job, environments, extra labels, and any template it keeps its own copy of:
+
+    ```yaml .github/smartcloud.yml
+    # house:managed:begin - synced from my-org/.github. Edits inside this block are overwritten.
+    # yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+    version: 2
+    extends:
+      - my-org/.github/smartcloud/base.yml@main
+    # house:managed:end
+    # house:local - add this repository's own configuration below this line.
+
+    settings:
+      ruleset:
+        statusChecks:
+          checks:
+            ci: true
+
+    required:
+      expect: ['^ci$']
+
+    sync:
+      exclude:
+        - LICENSE
+      values:
+        RESPONSE_DAYS: '2'
+    ```
+
+  </Step>
+  <Step title="Check it from your machine">
+    ```sh
+    export GITHUB_TOKEN=$(gh auth token)
+    npx @resnovas/smartcloud validate
+    npx @resnovas/smartcloud doctor --repo my-org/api
+    npx @resnovas/smartcloud sync --repo my-org/api --config .github/smartcloud.yml --out /tmp/api-sync
+    ```
+
+    - `validate` reads the preset and prints `Built from: my-org/.github/smartcloud/base.yml@main, .github/smartcloud.yml`. A value that conflicts with the preset fails here, before it can fail a run.
+    - `doctor` checks the token can read the hub, and that `SMARTCLOUD_APP_ID` and `SMARTCLOUD_APP_PRIVATE_KEY` exist for the repository.
+    - `sync --out` writes every file the first sync would propose into `/tmp/api-sync`, with its status (added, updated, unchanged), and lists conflicts. A missing placeholder value shows up here.
+
+  </Step>
+  <Step title="Commit and run">
+    Commit the two files on a branch, open a pull request and merge it. The merge is a push to the default branch, which starts the first full run.
+  </Step>
+</Steps>
+
+## Step 7: the first sync pull request
+
+Within a minute of that push, the repository has a pull request:
+
+- **Title:** `chore(sync): sync files from my-org/.github`.
+- **From** the `org/sync` branch, **by** `my-org-bot[bot]`, labelled `org-sync` by the preset's labelling rule.
+- **Body:** every file, marked as added, updated or made executable.
+- **Commits** are signed by GitHub, because they are made through the API with the app's token, so they pass a ruleset that requires signed commits.
+
+What happens to files the repository already had:
+
+- A file synced **whole** is replaced by the template. Review the diff: if the repository needs its own version, add the path to `sync.exclude` and the next sync drops it from the pull request.
+- A file with a **managed block** keeps the repository's content: the first time, the old content is kept, commented out, at the `house:local` line, so nothing is lost silently. Move back anything you still need as real lines, and delete the rest.
+
+Review it like any other pull request and merge it. From then on, each sync pull request contains only what changed in the hub since. The same run also applies the preset's `settings` and creates its labels; the job summary lists every change.
+
+## Step 8: roll out a change to every repository
+
+This is what the hub is for. Say you want every repository's Dependabot to check npm weekly.
+
+<Steps>
+  <Step title="Change the hub in a pull request">
+    Edit `templates/.github/dependabot.yml` (or `smartcloud/base.yml`, for a rule change) on a branch of `my-org/.github`, say `npm-updates`.
+  </Step>
+  <Step title="Preview it against a real repository">
+    Point a local config at your branch and render one repository's files:
+
+    ```yaml preview.yml
+    version: 2
+    sync:
+      source: my-org/.github/templates@npm-updates
+      branch: org/sync
+      values:
+        ORG_NAME: My Org
+        COPYRIGHT_HOLDER: My Org Ltd
+        COPYRIGHT_YEAR: '2026'
+        SECURITY_EMAIL: security@my-org.example
+    ```
+
+    ```sh
+    npx @resnovas/smartcloud sync --repo my-org/api --config preview.yml --out /tmp/preview
+    ```
+
+    The output lists which files would change in `my-org/api`, and any conflict with that repository's own lines. For a preset change, run [`smartcloud validate`](/cli#validate) in a few repositories with the preset reference in their file pointed at your branch, to catch a repository whose own settings would now conflict with it.
+
+  </Step>
+  <Step title="Merge it">
+    Merge the pull request in the hub. Because every repository reads `@main`:
+
+    - a **preset** change applies on each repository's next run of any kind;
+    - a **template** change arrives as a sync pull request on each repository's next push to its default branch, its next scheduled run, or a manual run.
+
+  </Step>
+  <Step title="Roll it out now instead of waiting for the schedule">
+    Start the workflow in every repository that has it:
+
+    ```sh
+    gh repo list my-org --no-archived --limit 500 --json nameWithOwner --jq '.[].nameWithOwner' |
+      while read -r repo; do gh workflow run smartcloud.yml --repo "$repo" || true; done
+    ```
+
+    Each repository opens or updates its sync pull request. Merge them as they pass.
+
+  </Step>
+</Steps>
+
+<Tip>
+  For a risky change, roll out in stages: keep `@main` for most repositories, and let a few pilot repositories extend
+  and sync from a branch or tag such as `@next`. Once they are happy, merge `next` into `main`. Pinning a tag (`@v3`)
+  everywhere instead means nothing changes until you move the tag.
+</Tip>
+
+## Everyday rules for repositories
+
+- **Add, never change.** Below `house:local`, add new labels and rules and the keys the preset leaves open. A different value for something the preset sets fails the run with `cannot change "...": it is set by ...`. To change a shared value, change the preset.
+- **Edit templates in the hub, not their copies.** A pull request that edits a synced file, or the managed block of one, fails the `smartcloud / sync` check with `SYNC` (a warning for a maintainer). The next sync would put the content back anyway.
+- **Opt out of a file with `sync.exclude`**, never by deleting it: deleting a synced file fails the check too.
+- **Never push to the sync branch.** It is force-updated on every run.
+
+## Common problems
+
+<AccordionGroup>
+  <Accordion title="Sync was skipped: restricted access">
+    The run had only the workflow token. Check the app is installed on the repository, and that `SMARTCLOUD_APP_ID`
+    and `SMARTCLOUD_APP_PRIVATE_KEY` are visible to it (organisation secrets can be limited to selected repositories).
+    `smartcloud doctor --repo my-org/name` names what is missing. Pull requests from forks and Dependabot are always
+    restricted; that is expected.
+  </Accordion>
+  <Accordion title="SECURITY.md: no value for {{SECURITY_EMAIL}}">
+    A template uses a placeholder that neither the preset's nor the repository's `sync.values` sets. Add it to the
+    preset if it is the same everywhere, to the repository if it differs, or write `{{SECURITY_EMAIL:-a default}}` in
+    the template.
+  </Accordion>
+  <Accordion title="Refusing to allow a GitHub App to create or update workflow">
+    The app lacks the **Workflows** permission, which sync needs to push `.github/workflows/smartcloud.yml`. Add it on
+    the app's page; each organisation owner then accepts the new permission on the installation.
+  </Accordion>
+  <Accordion title="A preset's rules were not checked on a pull request">
+    The hub is private and the pull request came from a fork or Dependabot, whose token cannot read it. Make the hub
+    public, or accept that those pull requests are checked without the preset. Keep the repository's own CI check
+    required in the ruleset next to `smartcloud` for them.
+  </Accordion>
+  <Accordion title="cannot change ... it is set by my-org/.github/smartcloud/base.yml@main">
+    The repository's file sets a different value for something the preset sets. Remove it or restate it exactly, or
+    change the preset for everyone. See [Add, never change](/presets#add-never-change).
+  </Accordion>
+  <Accordion title="The sync pull request keeps undoing a local change">
+    The change is inside a file synced whole, or inside a managed block. Move it below the `house:local` line, or add
+    the file to `sync.exclude` if the repository should own it outright.
+  </Accordion>
+</AccordionGroup>

@@ -1,0 +1,186 @@
+---
+title: 'Auto-merge'
+description: 'Turn on GitHub auto-merge for pull requests a rule allows, such as Dependabot patch updates.'
+---
+
+GitHub **auto-merge** is a switch on a pull request that says "merge this as soon as it is allowed". Once it is on, GitHub waits until every required review and required check has passed, then merges the pull request by itself. Nobody has to come back and press the merge button.
+
+Turning that switch on by hand gets tedious for pull requests that are always safe to merge once CI is green, such as a Dependabot update from `1.4.1` to `1.4.2`. The auto-merge feature turns it on for you: you write a **rule** that says which pull requests qualify, and smartcloud turns on auto-merge for every open pull request that matches it. GitHub still does the merging, and still waits for your required checks and reviews, so a rule never lets anything skip them.
+
+## Turn it on
+
+<Steps>
+  <Step title="Allow auto-merge in the repository">
+    GitHub only offers auto-merge when the repository allows it: **Settings**, **General**, **Pull Requests**, tick **Allow auto-merge**. If smartcloud manages your settings, set it in the config instead:
+
+    ```yaml .github/smartcloud.yml
+    settings:
+      repository:
+        autoMerge: true
+    ```
+
+  </Step>
+  <Step title="Require something to wait for">
+    Auto-merge waits for the pull request's _required_ checks and reviews, set in a branch ruleset or branch protection on the base branch. Require at least one status check (for example your CI job, or the [required](/features/required) aggregate check). Without anything required, GitHub has nothing to wait for and refuses to turn auto-merge on; see [Troubleshooting](#troubleshooting).
+  </Step>
+  <Step title="Add an autoMerge section">
+    ```yaml .github/smartcloud.yml
+    autoMerge:
+      rules:
+        dependabot-patch:
+          when:
+            condition:
+              - type: dependencyUpdateType
+                condition: [patch]
+    ```
+
+    `dependabot-patch` is the rule's key: any name you like. `when` is a [condition group](/conditions), the same as in every other feature. This one passes for a Dependabot or Renovate pull request whose version change is a patch.
+
+  </Step>
+  <Step title="Give the workflow write access">
+    smartcloud already runs on pull request events in the [standard workflow](/getting-started). Make sure its job has these permissions:
+
+    ```yaml .github/workflows/smartcloud.yml
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: write
+    ```
+
+  </Step>
+</Steps>
+
+That is all. The next time Dependabot opens a patch update, smartcloud turns on auto-merge, and GitHub merges it once CI passes.
+
+## Options
+
+The `autoMerge` section:
+
+| Key                    | Default | What it does                                                                                                                                                                             |
+| ---------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `rules`                | none    | The rules, by key. The first rule whose conditions pass, in the order they are written, turns auto-merge on with its method. Keys let a [preset](/presets) and a repository merge rules. |
+| `disableWhenUnmatched` | `false` | Turn auto-merge off again when no rule matches the pull request any more, but only where smartcloud turned it on. See [Turning it off again](#turning-it-off-again).                     |
+
+Each rule:
+
+| Key      | Default  | What it does                                                                                                                                                          |
+| -------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `when`   | required | A [condition group](/conditions). The rule matches when it passes on the pull request.                                                                                |
+| `method` | `squash` | How GitHub merges the pull request: `merge` (a merge commit), `squash` (one commit) or `rebase` (each commit rebased). The repository must allow the method you pick. |
+
+An empty section, `autoMerge: {}`, turns the feature on with no rules, so it does nothing until a preset adds some.
+
+## Complete example
+
+Dependabot and Renovate patch and minor updates merge themselves once CI passes; major updates wait for a person. A rule for your own bot merges its pull requests with a merge commit. If a later push makes a patch update into a major one, auto-merge is turned off again.
+
+```yaml .github/smartcloud.yml
+version: 2
+
+settings:
+  repository:
+    autoMerge: true
+
+autoMerge:
+  disableWhenUnmatched: true
+  rules:
+    dependency-updates:
+      when:
+        condition:
+          - type: dependencyUpdateType
+            condition: [patch, minor]
+          - type: isDraft
+            condition: false
+    release-bot:
+      method: merge
+      when:
+        condition:
+          - type: creatorMatches
+            condition: '^release-bot\[bot\]$'
+          - type: hasLabel
+            label: release
+            condition: true
+```
+
+## How it works
+
+### When it runs
+
+The feature runs on every pull request event: `pull_request`, `pull_request_target`, `pull_request_review` and `pull_request_review_comment`. Each run looks at one open pull request:
+
+1. A draft is left alone until it is marked ready for review. A closed pull request is always left alone.
+2. The rules are checked in order. The first one whose `when` passes is the match.
+3. With a match, smartcloud reads the pull request. If auto-merge is already on, whoever turned it on and with whatever method, it is left exactly as it is. Otherwise smartcloud turns it on with the rule's method.
+4. Without a match, nothing happens, unless `disableWhenUnmatched` is on (next section).
+
+Conditions are checked at the moment of the event. smartcloud does not run on check events, so a rule that uses [`checksPass`](/conditions) is only re-checked on the next pull request event, not when CI finishes. You rarely need it: auto-merge itself waits for the required checks, so "patch update with green checks" is just a `dependencyUpdateType` rule plus a required check.
+
+### The comment
+
+When smartcloud turns auto-merge on, it comments on the pull request to say so and which rule matched:
+
+> Auto-merge is on (squash), because the `dependabot-patch` auto-merge rule matched. GitHub merges this pull request once its required reviews and checks pass.
+
+There is one such comment per pull request, marked `<!-- smartcloud:auto-merge:on -->`, and smartcloud edits it rather than posting again. Only a comment written by a bot account or a login in `roles.trustedBots` counts as smartcloud's own.
+
+### Turning it off again
+
+With `disableWhenUnmatched: true`, a pull request that no rule matches any more (for example, a new push turned a patch update into a major one, or someone removed a label a rule needs) has auto-merge turned off again, but only when all of these are true:
+
+- auto-merge is on,
+- smartcloud's comment says it turned it on, and
+- GitHub says auto-merge was turned on by the same account that wrote that comment.
+
+So auto-merge a person turned on, or turned on again after smartcloud did, is never touched. When smartcloud turns it off, it edits its comment to say so (the marker becomes `<!-- smartcloud:auto-merge:off -->`), and turns it on again if a rule matches later.
+
+The [`/automerge`](/features/commands) command acts as smartcloud's account too. If you turn auto-merge on with the command on a pull request smartcloud already commented on, a later run with no matching rule may turn it off; use `/automerge off` and on again, or leave `disableWhenUnmatched` off, if you mix the two.
+
+### Dry runs
+
+In a [dry run](/glossary#dry-run), turning auto-merge on or off and the comment are recorded in the job summary instead of made.
+
+## What you will see on GitHub
+
+- **On the pull request:** "smartcloud enabled auto-merge (squash)" in the timeline (the name is the account smartcloud runs as), and the comment above. The merge box says the pull request will merge automatically when its requirements are met.
+- **When it merges:** GitHub merges it as soon as the required checks and reviews pass, and names the same account as the merger.
+- **Check run:** `smartcloud / automerge`, `success` when it did what it should, `neutral` for a warning.
+- **Job summary:** "Turned on auto-merge (squash) for #42 (dependabot-patch)." or "Turned off auto-merge for #42, because no auto-merge rule matches it any more."
+
+## Permissions and tokens
+
+Turning auto-merge on needs `pull-requests: write` and `contents: write`; the comment needs `pull-requests: write`.
+
+Pull requests from Dependabot and from forks run [restricted](/glossary#restricted-run), with the [workflow token](/glossary#workflow-token). The workflow token can turn on auto-merge when the job grants the permissions above. Where it is read-only, such as a `pull_request` event from a fork, turning auto-merge on is skipped and listed under **Restricted access** in the job summary, or recorded as a warning.
+
+When auto-merge was turned on with the workflow token, GitHub merges as that token too, and a push made by the workflow token does not start other workflows. So the merge commit on `main` will not start your `push` workflows (such as a release or deploy). If you need them, run smartcloud with a [GitHub App](/glossary#github-app) token, which GitHub does let start workflows.
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Warning: the repository does not allow auto-merge">
+    Tick **Allow auto-merge** under **Settings**, **General**, **Pull Requests**, or set `settings.repository.autoMerge:
+    true` so the [settings](/features/settings) feature does it. The run carries on; nothing fails.
+  </Accordion>
+  <Accordion title="Notice: the pull request can already be merged">
+    GitHub turns auto-merge on only while something required is still outstanding. When the pull request can be merged
+    straight away, because no status check or review is required, GitHub refuses. Require a status check on the base
+    branch in a ruleset, so there is something to wait for.
+  </Accordion>
+  <Accordion title="Nothing happens on a matching pull request">
+    Check the pull request is not a draft and that auto-merge is not already on. Run [`smartcloud
+    dry-run`](/cli#dry-run) on the pull request to see whether the rule's conditions pass. A `dependencyUpdateType` rule
+    needs the version change in the title or description, as Dependabot and Renovate write it.
+  </Accordion>
+  <Accordion title="Warning: read-only token">
+    The run had a read-only token, as a `pull_request` event from a fork does. Grant `contents: write` and
+    `pull-requests: write` to the job, or run on `pull_request_target` for pull requests from forks.
+  </Accordion>
+  <Accordion title="Error: could not turn on auto-merge ... rejected">
+    GitHub refused for another reason, which the message quotes. A common one is a `method` the repository does not
+    allow: pick one that is ticked under **Settings**, **General**, **Pull Requests**.
+  </Accordion>
+  <Accordion title="The merge did not start my release workflow">
+    Auto-merge was turned on with the workflow token, so the merge was made with it, and GitHub does not start workflows
+    for its pushes. Run smartcloud with a GitHub App token.
+  </Accordion>
+</AccordionGroup>

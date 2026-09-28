@@ -30,4 +30,20 @@ describe('Pattern', () => {
     expect(Either.isLeft(result)).toBe(true)
     expect(String(Either.isLeft(result) && result.left)).toContain('invalid pattern "(unclosed"')
   })
+
+  it('refuses a pattern open to catastrophic backtracking, naming it', () => {
+    expect(() => compilePattern('^(a+)+$')).toThrow('catastrophic backtracking')
+    expect(() => compilePattern('/^(A|a)+$/i')).toThrow('catastrophic backtracking')
+    expect(compilePattern('/^(A|a)+$/').source).toBe('^(A|a)+$')
+    const result = Schema.decodeUnknownEither(Pattern)('^(a+)+$')
+    expect(String(Either.isLeft(result) && result.left)).toContain(
+      'invalid pattern "^(a+)+$": the repeated part around character 3 can match the same text in more than one way',
+    )
+  })
+
+  it('checks each pattern once, however often it is compiled', () => {
+    for (let index = 0; index < 1_100; index += 1) expect(compilePattern(`^x${index}`).test(`x${index}`)).toBe(true)
+    expect(compilePattern('^x1').test('x1')).toBe(true)
+    expect(() => compilePattern('^(a+)+$')).toThrow('catastrophic backtracking')
+  })
 })

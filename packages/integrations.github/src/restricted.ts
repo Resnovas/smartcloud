@@ -58,6 +58,11 @@ const orSkip = <A>(
  * and answered like a dry run would: comment and check run ids of `0`.
  * Reads, and writes that fail for any other reason, fail as before.
  *
+ * A refused `backport` is the exception: it fails with `Forbidden` as
+ * usual. Answered like a dry run, it would look like an opened pull request
+ * (#0), and the backport feature would announce it on the pull request;
+ * failing lets the feature report that nothing was backported, and why.
+ *
  * @example
  * ```ts import.meta.vitest name="restrictedGitHub"
  * import { Effect, Ref } from 'effect'
@@ -94,7 +99,8 @@ export const restrictedGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArra
     updateCheckRun: (id, run) => orSkip(inner.updateCheckRun(id, run), skip.updateCheckRun(id, run)),
     proposeChanges: (proposal) => orSkip(inner.proposeChanges(proposal), skip.proposeChanges(proposal)),
     lockIssue: (issue, reason) => orSkip(inner.lockIssue(issue, reason), skip.lockIssue(issue, reason)),
-    backport: (request) => orSkip(inner.backport(request), skip.backport(request)),
+    // Not skipped: the backport feature reports a refused backport itself.
+    backport: (request) => inner.backport(request),
     repositoryRequest: (request) =>
       request.method === 'GET'
         ? inner.repositoryRequest(request)

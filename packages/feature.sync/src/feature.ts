@@ -133,17 +133,70 @@ const readTemplate = (github: GitHubService, source: ExtendsRef, entry: Director
     (content): Template => ({ path: entry.path, content, executable: entry.executable }),
   )
 
-// Reads the templates the listing names, or only those `wanted` keeps.
-const readTemplates = (
+// Reads the listed templates one file at a time: the path before archives,
+// kept for where an archive cannot be read.
+const readEach = (github: GitHubService, source: ExtendsRef, entries: ReadonlyArray<DirectoryEntry>) =>
+  Effect.forEach(entries, (entry) => readTemplate(github, source, entry), { concurrency: CONCURRENCY })
+
+// The archive path is left for the per-file one when GitHub cannot serve
+// the archive (too large, not there, or not visible to this token). A rate
+// limit or an outage would fail the per-file path the same way, so it
+// surfaces as it is.
+const cannotArchive = (error: GitHubError) =>
+  error._tag === 'ValidationFailed' || error._tag === 'NotFound' || error._tag === 'Forbidden'
+
+const logFallback = (what: string, error: GitHubError) =>
+  Effect.logWarning(`sync: could not read ${what} as one archive (${error._tag}); reading file by file`).pipe(
+    Effect.annotateLogs({ feature: FEATURE, rule: 'SYNC', reason: error._tag }),
+  )
+
+// Reads every template from one download of the source at its commit,
+// keeping only those `wanted` keeps.
+const readArchived = (
   github: GitHubService,
   source: ExtendsRef,
   wanted: (entry: DirectoryEntry) => boolean = () => true,
 ) =>
-  Effect.flatMap(github.listDirectory(source), (entries) =>
-    Effect.forEach(entries.filter(wanted), (entry) => readTemplate(github, source, entry), {
-      concurrency: CONCURRENCY,
-    }),
+  Effect.gen(function* () {
+    const { owner, repo } = source
+    const ref = yield* github.resolveRef({ owner, repo, ...at(source.ref) })
+    const entries = yield* github.getArchive({ owner, repo, ref, path: source.path })
+    yield* Effect.logDebug(`sync: read ${entries.length} template(s) from ${owner}/${repo}@${ref}`).pipe(
+      Effect.annotateLogs({ feature: FEATURE, rule: 'SYNC', templates: entries.length }),
+    )
+    return entries.filter(wanted).map((entry): Template => entry)
+  })
+
+// Reads every template: from the source's archive, or file by file when
+// the archive cannot be read.
+const readTemplates = (github: GitHubService, source: ExtendsRef) =>
+  readArchived(github, source).pipe(
+    Effect.catchIf(cannotArchive, (error) =>
+      Effect.zipRight(
+        logFallback('the templates', error),
+        Effect.flatMap(github.listDirectory(source), (entries) => readEach(github, source, entries)),
+      ),
+    ),
   )
+
+// Reading an archive costs a request to resolve the ref and one to download it.
+const ARCHIVE_COST = 2
+
+// Reads only the templates `wanted` keeps, for the pull request check. The
+// listing says which those are; up to as many as the archive would cost are
+// read one by one, more come from the archive, so a check never costs more
+// requests than it did before archives.
+const readWanted = (github: GitHubService, source: ExtendsRef, wanted: (entry: DirectoryEntry) => boolean) =>
+  Effect.gen(function* () {
+    const entries = (yield* github.listDirectory(source)).filter(wanted)
+    if (entries.length <= ARCHIVE_COST) return yield* readEach(github, source, entries)
+    const paths = new Set(entries.map((entry) => entry.path))
+    return yield* readArchived(github, source, (entry) => paths.has(entry.path)).pipe(
+      Effect.catchIf(cannotArchive, (error) =>
+        Effect.zipRight(logFallback('the changed templates', error), readEach(github, source, entries)),
+      ),
+    )
+  })
 
 // Every path in a tree, or undefined when it has too many files to list.
 const pathsAt = (github: GitHubService, location: FileLocation) =>
@@ -197,24 +250,45 @@ const isSourceRepository = (repository: Repository, source: ExtendsRef) =>
   repository.fullName.toLowerCase() === `${source.owner}/${source.repo}`.toLowerCase()
 
 // The files the repository has on its default branch, with their execute
-// bits, for the templates that are synced.
+// bits, for the templates that are synced: from one download of the
+// branch's archive, or listed and read one by one when the archive cannot
+// be read.
 const readCurrent = (github: GitHubService, repository: Repository, templates: ReadonlyArray<Template>) =>
   Effect.gen(function* () {
     const location = { owner: repository.owner, repo: repository.name }
-    const listing = yield* github.listDirectory({ ...location, path: '' })
-    const executable = new Map(listing.map((entry) => [entry.path, entry.executable]))
-    const present = templates.filter((template) => executable.has(template.path))
-    const read = yield* Effect.forEach(
-      present,
-      (template) =>
-        Effect.map(readOptional(github, { ...location, path: template.path }), (content) => ({ template, content })),
-      { concurrency: CONCURRENCY },
+    const paths = templates.map((template) => template.path)
+    const archived = Effect.gen(function* () {
+      const ref = yield* github.resolveRef({ ...location, ref: repository.defaultBranch })
+      return yield* github.getArchive({ ...location, ref, paths })
+    })
+    const read = yield* archived.pipe(
+      Effect.catchIf(cannotArchive, (error) =>
+        Effect.zipRight(logFallback('the repository', error), readCurrentEach(github, location, paths)),
+      ),
     )
     const current = new Map<string, CurrentFile>()
-    for (const { template, content } of read) {
-      if (content !== null) current.set(template.path, { content, executable: executable.get(template.path) === true })
-    }
+    for (const { path, content, executable } of read) current.set(path, { content, executable })
     return current
+  })
+
+// The per-file path: lists the default branch, then reads each synced path it has.
+const readCurrentEach = (
+  github: GitHubService,
+  location: { readonly owner: string; readonly repo: string },
+  paths: ReadonlyArray<string>,
+) =>
+  Effect.gen(function* () {
+    const listing = yield* github.listDirectory({ ...location, path: '' })
+    const executable = new Map(listing.map((entry) => [entry.path, entry.executable]))
+    const present = paths.filter((path) => executable.has(path))
+    const read = yield* Effect.forEach(
+      present,
+      (path) => Effect.map(readOptional(github, { ...location, path }), (content) => ({ path, content })),
+      { concurrency: CONCURRENCY },
+    )
+    return read.flatMap(({ path, content }) =>
+      content === null ? [] : [{ path, content, executable: executable.get(path) === true }],
+    )
   })
 
 const REASONS: Readonly<Record<PlannedFile['reason'], string>> = {
@@ -248,7 +322,12 @@ export interface SyncPreview {
  *
  * @remarks
  * Only reads: the scheduled sync proposes the plan, and the CLI renders it
- * to a local directory instead.
+ * to a local directory instead. The templates come from one download of the
+ * source at its commit, and the repository's current files from one download
+ * of its default branch, so a sync costs the same few requests however many
+ * templates there are. Where an archive cannot be read (over
+ * `DEFAULT_ARCHIVE_LIMIT`, or not visible to the token), that side is
+ * listed and read one file at a time instead, and a warning says so.
  *
  * @example
  * ```ts
@@ -352,11 +431,7 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
     // as on the base, which never makes a finding, so only the files it may
     // touch are read: two reads each, rather than two for every template.
     const touched = yield* touchedBy(github, location, envelope)
-    const templates = yield* readTemplates(
-      github,
-      source,
-      (entry) => !exclude.includes(entry.path) && touched(entry.path),
-    )
+    const templates = yield* readWanted(github, source, (entry) => !exclude.includes(entry.path) && touched(entry.path))
     const rendered = yield* renderAll(templates, valuesFor(sync, repository))
     const files = yield* Effect.forEach(
       rendered,
@@ -417,10 +492,13 @@ const runCheck = (config: SmartcloudConfig, sync: SyncConfig, envelope: PullRequ
  *
  * syncFeature.enabled?.({ version: 2, sync: { source: 'Resnovas/.github/templates@main' } }) // => true
  * syncFeature.enabled?.({ version: 2 }) // => false
+ * syncFeature.privileged // => true
  * ```
  */
 export const syncFeature: Feature = {
   name: FEATURE,
+  // Needs the app or access token: the workflow token cannot do this, or the pull requests it opens would start no workflows.
+  privileged: true,
   handles: ['repository', 'pullRequest'],
   enabled: (config) => config.sync !== undefined,
   run: ({ config, envelope }) => {

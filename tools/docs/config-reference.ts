@@ -44,6 +44,7 @@ interface JsonSchema {
   readonly propertyNames?: JsonSchema
   readonly items?: JsonSchema | ReadonlyArray<JsonSchema>
   readonly anyOf?: ReadonlyArray<JsonSchema>
+  readonly allOf?: ReadonlyArray<JsonSchema>
   readonly $defs?: Readonly<Record<string, JsonSchema>>
 }
 
@@ -88,12 +89,31 @@ const flatten = (options: ReadonlyArray<JsonSchema>): ReadonlyArray<JsonSchema> 
   options.flatMap((option) => (option.anyOf === undefined ? [option] : flatten(option.anyOf)))
 
 /**
+ * Reads a `$ref` wrapped in `allOf` as the plain `$ref` with its constraints.
+ *
+ * @remarks
+ * Draft-07 ignores keywords beside a `$ref`, so the generator writes
+ * `{ description, allOf: [{ $ref }, { minimum }] }`; the page still shows the
+ * definition's link and its constraints as before.
+ *
+ * @param node - The schema.
+ * @returns The schema with the wrapper folded back in.
+ */
+const unwrap = (node: JsonSchema): JsonSchema => {
+  const [first, ...rest] = node.allOf ?? []
+  if (first?.$ref === undefined) return node
+  const { allOf: _allOf, ...annotations } = node
+  return Object.assign({}, annotations, ...rest, { $ref: first.$ref }) as JsonSchema
+}
+
+/**
  * Describes a schema's type in a few words, linking named definitions.
  *
  * @param node - The schema.
  * @returns Markdown for a table cell.
  */
-const typeOf = (node: JsonSchema): string => {
+const typeOf = (wrapped: JsonSchema): string => {
+  const node = unwrap(wrapped)
   if (node.$ref !== undefined) return link(node.$ref)
   if (node.enum !== undefined)
     return node.enum.length === 1 ? code(node.enum[0]) : `one of ${node.enum.map(code).join(', ')}`
@@ -122,7 +142,8 @@ const typeOf = (node: JsonSchema): string => {
  * @param node - The schema.
  * @returns Plain sentences, possibly empty.
  */
-const notesOf = (node: JsonSchema): string => {
+const notesOf = (wrapped: JsonSchema): string => {
+  const node = unwrap(wrapped)
   const notes: Array<string> = []
   if (node.description !== undefined && !GENERIC_DESCRIPTIONS.has(node.description)) notes.push(prose(node.description))
   if (node.pattern !== undefined) notes.push(`Pattern: ${code(node.pattern)}.`)
@@ -144,7 +165,8 @@ interface Row {
 // Inline objects are flattened into dotted keys, so every key appears in the
 // table of the section that owns it.
 const rowsOf = (node: JsonSchema, prefix = ''): ReadonlyArray<Row> =>
-  Object.entries(node.properties ?? {}).flatMap(([key, property]) => {
+  Object.entries(node.properties ?? {}).flatMap(([key, wrapped]) => {
+    const property = unwrap(wrapped)
     const path = `${prefix}${key}`
     const row: Row = {
       key: path,

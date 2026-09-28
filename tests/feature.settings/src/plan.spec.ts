@@ -521,6 +521,17 @@ describe('rulesetBody', () => {
     })
   })
 
+  it('a merge queue without a method picks the first one pull requests may use, never merge under linear history', () => {
+    const method = (ruleset: Parameters<typeof rulesetBody>[0]) =>
+      rulesetBody(ruleset, undefined).rules.find((rule) => rule.type === 'merge_queue')?.parameters?.['merge_method']
+    expect(method({ mergeQueue: {} })).toBe('SQUASH')
+    expect(method({ mergeQueue: {}, pullRequest: { mergeMethods: ['rebase', 'merge'] } })).toBe('REBASE')
+    expect(method({ mergeQueue: {}, pullRequest: { mergeMethods: ['merge'] } })).toBe('MERGE')
+    // Nothing fits: pull requests may only merge under linear history, which the queue cannot fix.
+    expect(method({ linearHistory: true, mergeQueue: {}, pullRequest: { mergeMethods: ['merge'] } })).toBe('SQUASH')
+    expect(method({ mergeQueue: { method: 'merge' }, pullRequest: { mergeMethods: ['squash'] } })).toBe('MERGE')
+  })
+
   it('checks switched off, empty deployments and disabled coverage add no rules', () => {
     const body = rulesetBody(
       {

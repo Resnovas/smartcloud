@@ -12,7 +12,7 @@
     "light": "/images/logo.svg",
     "dark": "/images/logo.svg"
   },
-  "favicon": "/favicon.ico",
+  "favicon": "/favicon.svg",
   "navigation": {
     "tabs": [
       {
@@ -21,6 +21,10 @@
           {
             "group": "Getting started",
             "pages": ["introduction", "getting-started", "configuration", "presets", "conditions"]
+          },
+          {
+            "group": "Setup guides",
+            "pages": ["guides/settings-file", "guides/recommended-setups", "guides/organisation-hub"]
           },
           {
             "group": "Features",
@@ -37,6 +41,7 @@
               "features/stale",
               "features/lock",
               "features/backport",
+              "features/auto-merge",
               "features/settings",
               "features/sync",
               "features/notifications",
@@ -45,7 +50,7 @@
           },
           {
             "group": "Running smartcloud",
-            "pages": ["reporting", "cli", "migration", "mcp-server", "telemetry"]
+            "pages": ["tokens", "reporting", "cli", "migration", "mcp-server", "telemetry"]
           },
           {
             "group": "Help",

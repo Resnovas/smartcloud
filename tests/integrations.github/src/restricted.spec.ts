@@ -88,7 +88,8 @@ describe('restricted token', () => {
       ).toBe(0)
       yield* github.lockIssue(1, 'resolved')
       const backport = { branch: 'b', base: 'v1', from: 'a', to: 'c', message: 'm', title: 't', body: '' }
-      expect((yield* github.backport(backport)).status).toBe('opened')
+      // A refused backport fails, so the feature can say nothing was backported.
+      expect((yield* Effect.flip(github.backport(backport)))._tag).toBe('Forbidden')
       expect(yield* github.repositoryRequest({ method: 'GET', path: '' })).toStrictEqual({ read: true })
       expect(yield* github.repositoryRequest({ method: 'PATCH', path: '', body: {} })).toBeNull()
       expect(yield* github.graphql('query { y }', {})).toStrictEqual({ read: true })
@@ -109,7 +110,6 @@ describe('restricted token', () => {
         'updateCheckRun',
         'proposeChanges',
         'lockIssue',
-        'backport',
         'repositoryRequest',
         'graphql',
       ])

@@ -21,7 +21,7 @@ links:
 
 `version: 2` is required. A file without it is treated as a v1 config and migrated on the fly, with a warning for everything the migration drops; see [Migrating from v1](/migration).
 
-The [configuration reference](/reference/configuration) lists every key.
+The [configuration reference](/reference/configuration) lists every key. To write your first file, [Build your settings file](/guides/settings-file) adds the sections one at a time, and [Recommended setups](/guides/recommended-setups) has complete files to copy.
 
 ### Unknown keys and invalid values
 
@@ -56,7 +56,7 @@ A value a preset sets that this version cannot read is dropped from the preset b
 
 Some problems still fail the run, because they are not about one key: a file that is not YAML or JSON, is not a mapping, or has a malformed `extends` entry; a preset that cannot be read (outside a [restricted run](/reporting#restricted-runs)); presets that extend each other in a loop or more than five deep; and a config that changes a value its preset set, which [Add, never change](/presets#add-never-change) describes.
 
-The warnings appear in a `smartcloud / config` check run and the job summary; see [Reporting](/reporting#config-warnings). To catch mistakes before they reach a run, check the config with [`smartcloud validate`](/cli#validate) or the MCP server's `validate_config`, which are strict and report every unknown key and invalid value as an error, or let your editor check it against the JSON Schema named in the first line of the example above, which is strict too.
+The warnings appear in a `smartcloud / config` check run and the job summary; see [Reporting](/reporting#config-warnings). To catch mistakes before they reach a run, check the config with [`smartcloud validate`](/cli#validate) or the MCP server's `validate_config`, which are strict and report every unknown key and invalid value as an error, or let your editor check it against the JSON Schema named in the first line of the example above, which is strict too. The editor checks the limits on numbers too, such as a size threshold that must be above 0 or a timeout from 1 to 360, so a value out of range is underlined before you commit it.
 
 ## Sections
 
@@ -74,6 +74,7 @@ The warnings appear in a `smartcloud / config` check run and the job summary; se
 | `stale`                                          | [Stale](/features/stale)                 |
 | `lock`                                           | [Lock](/features/lock)                   |
 | `backport`                                       | [Backport](/features/backport)           |
+| `autoMerge`                                      | [Auto-merge](/features/auto-merge)       |
 | `settings`                                       | [Settings](/features/settings)           |
 | `sync`                                           | [Sync](/features/sync)                   |
 | `notifications`                                  | [Notifications](/features/notifications) |

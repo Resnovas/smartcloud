@@ -1,10 +1,10 @@
 {
   "raw": {
-    "baseline": 3528427,
-    "limit": 3881270
+    "baseline": 3881093,
+    "limit": 4269203
   },
   "gzip": {
-    "baseline": 719295,
-    "limit": 791225
+    "baseline": 796299,
+    "limit": 875929
   }
 }

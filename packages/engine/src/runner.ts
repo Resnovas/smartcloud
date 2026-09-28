@@ -16,8 +16,8 @@
 
 import type { Facet, Subject } from '@resnovas/conditions'
 import type { SmartcloudConfig } from '@resnovas/config'
-import { GitHub, type GitHubError, type GitHubService } from '@resnovas/integrations.github'
-import { Cause, type Context, Duration, Effect, Exit, LogLevel, Metric, MetricBoundaries } from 'effect'
+import { GitHub, type GitHubError, type GitHubService, PrivilegedGitHub } from '@resnovas/integrations.github'
+import { Cause, type Context, Duration, Effect, Exit, LogLevel, Metric, MetricBoundaries, Option } from 'effect'
 import {
   type CommentEnvelope,
   decodeEvent,
@@ -63,6 +63,13 @@ export interface Feature {
    * must be; skipped otherwise, such as in a CLI dry run.
    */
   readonly needsCheckRun?: boolean
+  /**
+   * Acts through the privileged GitHub service (`PrivilegedGitHub`) when the
+   * run provides one, rather than the workflow token's: for features that
+   * change settings, push workflow files or open pull requests that must
+   * start other workflows. Without one it acts through `GitHub` as usual.
+   */
+  readonly privileged?: boolean
   /** Facets the feature needs loaded on the subject. */
   readonly facets?: (config: SmartcloudConfig) => ReadonlySet<Facet>
   readonly run: (context: FeatureContext) => Effect.Effect<void, unknown, GitHub | Report>
@@ -235,7 +242,9 @@ const instrument = <R>(
  * and does not stop the others. Each facet is loaded on its own, so a facet
  * GitHub cannot serve fails only the features that need it, which are
  * recorded as failed without running. Interrupting the run interrupts the
- * features rather than recording them as failed. Results are listed in the order the
+ * features rather than recording them as failed. A feature marked `privileged` acts
+ * through the `PrivilegedGitHub` service when one is provided; every other
+ * feature, and every facet, uses `GitHub`. Results are listed in the order the
  * features were given, whatever order they finished in. An unsupported
  * event is a clean no-op with a notice.
  *
@@ -339,6 +348,11 @@ export const runFeatures = (options: {
       else if (facet !== undefined) unavailable.set(facet, Cause.pretty(exit.cause))
     })
     const subject = base === undefined ? undefined : Object.assign({}, base, ...loaded)
+    const privileged = yield* Effect.serviceOption(PrivilegedGitHub)
+    const runFeature = (feature: Feature): Effect.Effect<void, unknown, GitHub | Report> =>
+      feature.privileged === true && Option.isSome(privileged)
+        ? Effect.provideService(feature.run(context), GitHub, privileged.value)
+        : feature.run(context)
     const context: FeatureContext = {
       config: options.config,
       envelope,
@@ -357,7 +371,7 @@ export const runFeatures = (options: {
         // only failures and defects are caught; interrupting the run stops it.
         const attempt: Effect.Effect<Omit<Outcome, 'duration'>, never, GitHub> = missing.length > 0
           ? Effect.succeed({ feature: feature.name, failure: missing.join('\n') })
-          : feature.run(context).pipe(
+          : runFeature(feature).pipe(
               Effect.provideService(Report, report),
               Effect.as({ feature: feature.name, failure: undefined }),
               Effect.catchAllCause((cause) =>

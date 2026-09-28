@@ -73,6 +73,9 @@
       "path": "./packages/feature.backport"
     },
     {
+      "path": "./packages/feature.automerge"
+    },
+    {
       "path": "./packages/feature.branches"
     },
     {

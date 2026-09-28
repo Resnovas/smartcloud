@@ -1,0 +1,7 @@
+{
+  "name": "@resnovas/feature.automerge-tests",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "projectType": "library",
+  "sourceRoot": "tests/feature.automerge/src",
+  "tags": ["type_test", "layer_backend"]
+}

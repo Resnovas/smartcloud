@@ -14,9 +14,9 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { Context, Effect, Layer, Ref } from 'effect'
+import { Context, Effect, Layer, Option, Ref } from 'effect'
 import { isGraphqlWrite } from './graphql.js'
-import { GitHub, type GitHubService } from './service.js'
+import { GitHub, PrivilegedGitHub, type GitHubService } from './service.js'
 
 /** A write the dry-run layer recorded instead of performing. */
 export interface RecordedWrite {
@@ -138,6 +138,11 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
  * Turns whichever GitHub layer is provided into a dry run, and provides the
  * {@link DryRunLog} of what it would have written.
  *
+ * @remarks
+ * A {@link PrivilegedGitHub} service, when one is provided too, is wrapped
+ * the same way and records into the same log, so a dry run makes no write
+ * with either token.
+ *
  * @example
  * ```ts import.meta.vitest name="DryRun"
  * import { Effect } from 'effect'
@@ -151,7 +156,16 @@ export const dryRunGitHub = (inner: GitHubService, log: Ref.Ref<ReadonlyArray<Re
 export const DryRun = Layer.effectContext(
   Effect.gen(function* () {
     const inner = yield* GitHub
+    const privileged = yield* Effect.serviceOption(PrivilegedGitHub)
     const log = yield* Ref.make<ReadonlyArray<RecordedWrite>>([])
-    return Context.make(GitHub, dryRunGitHub(inner, log)).pipe(Context.add(DryRunLog, { writes: Ref.get(log) }))
+    const context: Context.Context<GitHub | DryRunLog> = Context.make(GitHub, dryRunGitHub(inner, log)).pipe(
+      Context.add(DryRunLog, { writes: Ref.get(log) }),
+    )
+    // The privileged service is optional, so it is added only when there is one to wrap.
+    const wrapped: Context.Context<GitHub | DryRunLog> = Option.match(privileged, {
+      onNone: () => context,
+      onSome: (service) => Context.add(context, PrivilegedGitHub, dryRunGitHub(service, log)),
+    })
+    return wrapped
   }),
 )

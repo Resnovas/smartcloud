@@ -18,7 +18,13 @@ import { NodeContext } from '@effect/platform-node'
 import { describe, expect, it } from '@effect/vitest'
 import { program } from '@resnovas/action'
 import { disabledTelemetry, Telemetry, telemetryLayer } from '@resnovas/integrations.posthog'
-import { Forbidden, githubRateLimitRemaining, githubRequests } from '@resnovas/integrations.github'
+import {
+  fileKey,
+  Forbidden,
+  githubRateLimitRemaining,
+  githubRequests,
+  type GitHubService,
+} from '@resnovas/integrations.github'
 import { Effect, Layer, Logger, Metric, Redacted } from 'effect'
 import { mkdtemp, readFile, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -108,7 +114,8 @@ describe('program', () => {
       const { GITHUB_STEP_SUMMARY: _summary, ...vars } = yield* Effect.promise(() => env(pullRequest('feat: x')))
       yield* program(connect).pipe(withEnv({ ...vars, INPUT_WORKFLOWTOKEN: 'ghs_workflow' }))
       yield* program(connect).pipe(withEnv(vars))
-      expect(seen).toStrictEqual(['ghs_workflow', undefined])
+      // Both the given token's service and the workflow token's read checks with the workflow token.
+      expect(seen).toStrictEqual(['ghs_workflow', 'ghs_workflow', undefined])
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
@@ -179,6 +186,105 @@ describe('program', () => {
         )
         expect(out.some((line) => line.startsWith('::warning title=access.config-skipped::'))).toBe(true)
       }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('acts with the workflow token in the repository, and the given token only for privileged work', () =>
+    Effect.gen(function* () {
+      const config = `version: 2\nextends: ['Resnovas/.github/house.yml']\n${CONVENTIONS.replace('version: 2\n', '')}`
+      const inRepository = memory({ '.github/smartcloud.yml': config })
+      const house = memory()
+      house.state.files.set(fileKey('Resnovas', '.github', 'house.yml'), 'version: 2\n')
+      const app = memory()
+      const services: Record<string, GitHubService> = {
+        ghs_app: app.service,
+        ghs_workflow: inRepository.service,
+        ghs_house: house.service,
+      }
+      const tokens: Array<string> = []
+      const connect = ({ token }: { readonly token: Redacted.Redacted<string> }) =>
+        Effect.sync(() => {
+          tokens.push(Redacted.value(token))
+          return services[Redacted.value(token)] ?? app.service
+        })
+      const vars = yield* Effect.promise(() =>
+        env(pullRequest('feat: x'), {
+          INPUT_GITHUB_TOKEN: 'ghs_app',
+          INPUT_WORKFLOWTOKEN: 'ghs_workflow',
+          INPUT_HOUSETOKEN: 'ghs_house',
+        }),
+      )
+      yield* program(connect).pipe(withEnv(vars))
+      expect(tokens).toStrictEqual(['ghs_app', 'ghs_house', 'ghs_workflow'])
+      // The check run and the preset read went through the workflow and house tokens, never the app's.
+      expect(inRepository.state.checkRuns).toHaveLength(1)
+      expect(app.state.checkRuns).toHaveLength(0)
+      expect(process.exitCode).toBe(exitCode)
+      const summary = yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))
+      expect(summary).not.toContain('restricted access')
+
+      // A fork's run ignores the house token and acts with the workflow token alone.
+      tokens.length = 0
+      const fork = pullRequest('feat: x')
+      const forked = yield* Effect.promise(() =>
+        env(
+          {
+            ...fork,
+            pull_request: {
+              ...fork.pull_request,
+              head: { ...fork.pull_request.head, repo: { full_name: 'someone/example' } },
+            },
+          },
+          {
+            INPUT_GITHUB_TOKEN: 'ghs_app',
+            INPUT_WORKFLOWTOKEN: 'ghs_workflow',
+            INPUT_HOUSETOKEN: 'ghs_house',
+            GITHUB_STEP_SUMMARY: join(dir, 'fork.md'),
+          },
+        ),
+      )
+      yield* program(connect).pipe(withEnv(forked))
+      expect(tokens).toStrictEqual(['ghs_workflow'])
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
+  it.effect('dry-runs the privileged features too, making no write with either token', () =>
+    Effect.gen(function* () {
+      const settings = 'version: 2\nsettings:\n  merging:\n    mergeCommit: false\n'
+      const inRepository = memory({ '.github/smartcloud.yml': settings })
+      const app = memory()
+      const calls: Array<string> = []
+      const privileged: GitHubService = {
+        ...app.service,
+        getRepository: Effect.zipRight(
+          Effect.sync(() => calls.push('getRepository')),
+          app.service.getRepository,
+        ),
+        repositoryRequest: (request) =>
+          Effect.zipRight(
+            Effect.sync(() => calls.push(request.method)),
+            app.service.repositoryRequest(request),
+          ),
+      }
+      const connect = ({ token }: { readonly token: Redacted.Redacted<string> }) =>
+        Effect.succeed(Redacted.value(token) === 'ghs_app' ? privileged : inRepository.service)
+      const vars = yield* Effect.promise(() =>
+        env(
+          {},
+          {
+            GITHUB_EVENT_NAME: 'schedule',
+            INPUT_GITHUB_TOKEN: 'ghs_app',
+            INPUT_WORKFLOWTOKEN: 'ghs_workflow',
+            INPUT_DRYRUN: 'true',
+          },
+        ),
+      )
+      yield* program(connect).pipe(withEnv(vars))
+      // The settings feature read through the privileged service, and wrote nothing through it.
+      expect(calls).toContain('getRepository')
+      expect(calls.filter((call) => call !== 'getRepository' && call !== 'GET')).toStrictEqual([])
+      const summary = yield* Effect.promise(() => readFile(vars.GITHUB_STEP_SUMMARY, 'utf8'))
+      expect(summary).toContain('**Dry run:** these writes were recorded, not made:\n- repositoryRequest')
+    }).pipe(Effect.provide(NodeContext.layer)),
   )
 
   it.effect('treats the workflow token as restricted, and a stronger token as full access', () =>

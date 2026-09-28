@@ -296,12 +296,22 @@ const CODEQL_GATE = { securityAlerts: 'high_or_higher', alerts: 'errors' } as co
 const maintainerCount = (roles: RolesConfig | undefined): number =>
   new Set((roles?.maintainers ?? []).map((login) => login.replace(/^@/, '').toLowerCase())).size
 
-// GitHub's own defaults for a merge queue, except the method: a merge commit
-// would break linear history, so the queue squashes unless told otherwise.
-const mergeQueueRule = (queue: NonNullable<Ruleset['mergeQueue']>): RulesetRule => ({
+// The queue's method when none is set: the first of squash, rebase and merge
+// that pull requests may use, never merge under linear history. The config
+// rejects a set method that conflicts, so a lenient run falls back to this.
+const defaultQueueMethod = (ruleset: Ruleset): string =>
+  (['squash', 'rebase', 'merge'] as const).find(
+    (method) =>
+      (ruleset.pullRequest?.mergeMethods ?? [method]).includes(method) &&
+      !(method === 'merge' && ruleset.linearHistory === true),
+  ) ?? 'squash'
+
+// GitHub's own defaults for a merge queue, except the method, which suits
+// the ruleset: see defaultQueueMethod.
+const mergeQueueRule = (queue: NonNullable<Ruleset['mergeQueue']>, ruleset: Ruleset): RulesetRule => ({
   type: 'merge_queue',
   parameters: {
-    merge_method: (queue.method ?? 'squash').toUpperCase(),
+    merge_method: (queue.method ?? defaultQueueMethod(ruleset)).toUpperCase(),
     grouping_strategy: queue.grouping === 'headGreen' ? 'HEADGREEN' : 'ALLGREEN',
     check_response_timeout_minutes: queue.checkTimeoutMinutes ?? 60,
     max_entries_to_build: queue.maxEntriesToBuild ?? 5,
@@ -381,7 +391,9 @@ const codeCoverageRule = (coverage: Ruleset['codeCoverage']): RulesetRule | unde
  * maintainers are configured, so a sole maintainer is never blocked by the
  * review gate; `statusChecks` always binds. Code coverage is enforced only
  * when `codeCoverage.enabled` is true, as it needs coverage uploaded to
- * GitHub. Admins may bypass unless `adminBypass` is false. Rules follow
+ * GitHub. A merge queue without a `method` squashes, or uses the first of
+ * rebase and merge that `pullRequest.mergeMethods` allows, never merge under
+ * linear history. Admins may bypass unless `adminBypass` is false. Rules follow
  * GitHub's order: branch protections, merge queue, deployments, signatures,
  * pull request, status checks, code scanning, code quality, code coverage,
  * secret scanning, then Copilot review.
@@ -405,7 +417,7 @@ export const rulesetBody = (ruleset: Ruleset, roles: RolesConfig | undefined): R
     ruleset.blockDeletion === true ? { type: 'deletion' } : undefined,
     ruleset.blockForcePush === true ? { type: 'non_fast_forward' } : undefined,
     ruleset.linearHistory === true ? { type: 'required_linear_history' } : undefined,
-    ruleset.mergeQueue === undefined ? undefined : mergeQueueRule(ruleset.mergeQueue),
+    ruleset.mergeQueue === undefined ? undefined : mergeQueueRule(ruleset.mergeQueue, ruleset),
     (ruleset.requiredDeployments ?? []).length > 0
       ? { type: 'required_deployments', parameters: { required_deployment_environments: ruleset.requiredDeployments } }
       : undefined,

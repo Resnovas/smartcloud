@@ -16,6 +16,7 @@
 
 import type { SmartcloudConfig } from '@resnovas/config'
 import { type Feature, runFeatures } from '@resnovas/engine'
+import { autoMergeFeature } from '@resnovas/feature.automerge'
 import { backport } from '@resnovas/feature.backport'
 import { branchesFeature } from '@resnovas/feature.branches'
 import { codeownersFeature } from '@resnovas/feature.codeowners'
@@ -93,6 +94,7 @@ export const FEATURES: ReadonlyArray<Feature> = [
   codeownersFeature,
   lock,
   backport,
+  autoMergeFeature,
   makeCommandsFeature({ runner }),
 ]
 
@@ -122,6 +124,7 @@ export const FEATURE_SECTIONS: ReadonlyMap<string, ReadonlyArray<SectionKey>> = 
   ['codeowners', ['codeowners']],
   ['lock', ['lock', 'roles']],
   ['backport', ['backport', 'roles']],
+  ['automerge', ['autoMerge', 'roles']],
   ['commands', ['commands']],
 ])
 

@@ -72,30 +72,30 @@ Thanks, this looks right.
 
 ## Commands
 
-| Command                                         | Works on      | Who may use it by default | What it does                                                                       |
-| ----------------------------------------------- | ------------- | ------------------------- | ---------------------------------------------------------------------------------- |
-| `/help`                                         | both          | read                      | Lists the commands you can use on this item.                                       |
-| `/label <label>...`                             | both          | triage                    | Adds labels that exist in the repository.                                          |
-| `/unlabel <label>...`                           | both          | triage                    | Removes labels.                                                                    |
-| `/assign [@user...]`                            | both          | triage                    | Assigns people, or you when nobody is named.                                       |
-| `/unassign [@user...]`                          | both          | triage                    | Unassigns people, or you when nobody is named.                                     |
-| `/reviewer @user\|@org/team...`                 | pull requests | triage, or the author     | Requests reviews from people or teams.                                             |
-| `/unreviewer @user\|@org/team...`               | pull requests | triage, or the author     | Withdraws review requests.                                                         |
-| `/retitle <title>`                              | both          | triage, or the author     | Changes the title.                                                                 |
-| `/close [completed\|not-planned\|duplicate]`    | both          | triage, or the author     | Closes the item. A reason is for issues only.                                      |
-| `/reopen`                                       | both          | triage, or the author     | Reopens the item.                                                                  |
-| `/lock [off-topic\|too-heated\|resolved\|spam]` | both          | triage                    | Locks the conversation.                                                            |
-| `/unlock`                                       | both          | triage                    | Unlocks the conversation.                                                          |
-| `/draft`                                        | pull requests | write, or the author      | Turns the pull request back into a draft.                                          |
-| `/ready`                                        | pull requests | write, or the author      | Marks the pull request ready for review.                                           |
-| `/update`                                       | pull requests | write, or the author      | Merges the base branch into the pull request.                                      |
-| `/rebase`                                       | pull requests | write, or the author      | Rebases the pull request on its base branch.                                       |
-| `/approve`                                      | pull requests | write                     | Approves the pull request on your behalf. You cannot approve your own.             |
-| `/merge [merge\|squash\|rebase]`                | pull requests | write                     | Merges the pull request now.                                                       |
-| `/automerge [merge\|squash\|rebase\|off]`       | pull requests | write                     | Merges the pull request once its checks and reviews pass, or stops that.           |
-| `/stale-snooze [days]`                          | both          | triage                    | Keeps the item from being marked stale for a while, and takes off the stale label. |
-| `/backport <branch>...`                         | pull requests | write                     | Backports the pull request to other branches.                                      |
-| `/run [feature...]`                             | both          | write, or the author      | Runs smartcloud's features again.                                                  |
+| Command                                         | Works on      | Who may use it by default | What it does                                                                                                                                 |
+| ----------------------------------------------- | ------------- | ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/help`                                         | both          | read                      | Lists the commands you can use on this item.                                                                                                 |
+| `/label <label>...`                             | both          | triage                    | Adds labels that exist in the repository.                                                                                                    |
+| `/unlabel <label>...`                           | both          | triage                    | Removes labels.                                                                                                                              |
+| `/assign [@user...]`                            | both          | triage                    | Assigns people, or you when nobody is named.                                                                                                 |
+| `/unassign [@user...]`                          | both          | triage                    | Unassigns people, or you when nobody is named.                                                                                               |
+| `/reviewer @user\|@org/team...`                 | pull requests | triage, or the author     | Requests reviews from people or teams.                                                                                                       |
+| `/unreviewer @user\|@org/team...`               | pull requests | triage, or the author     | Withdraws review requests.                                                                                                                   |
+| `/retitle <title>`                              | both          | triage, or the author     | Changes the title.                                                                                                                           |
+| `/close [completed\|not-planned\|duplicate]`    | both          | triage, or the author     | Closes the item. A reason is for issues only.                                                                                                |
+| `/reopen`                                       | both          | triage, or the author     | Reopens the item.                                                                                                                            |
+| `/lock [off-topic\|too-heated\|resolved\|spam]` | both          | triage                    | Locks the conversation.                                                                                                                      |
+| `/unlock`                                       | both          | triage                    | Unlocks the conversation.                                                                                                                    |
+| `/draft`                                        | pull requests | write, or the author      | Turns the pull request back into a draft.                                                                                                    |
+| `/ready`                                        | pull requests | write, or the author      | Marks the pull request ready for review.                                                                                                     |
+| `/update`                                       | pull requests | write, or the author      | Merges the base branch into the pull request.                                                                                                |
+| `/rebase`                                       | pull requests | write, or the author      | Rebases the pull request on its base branch.                                                                                                 |
+| `/approve`                                      | pull requests | write                     | Approves the pull request on your behalf. You cannot approve your own.                                                                       |
+| `/merge [merge\|squash\|rebase]`                | pull requests | write                     | Merges the pull request now.                                                                                                                 |
+| `/automerge [merge\|squash\|rebase\|off]`       | pull requests | write                     | Merges the pull request once its checks and reviews pass, or stops that. To do this by rule instead, see [Auto-merge](/features/auto-merge). |
+| `/stale-snooze [days]`                          | both          | triage                    | Keeps the item from being marked stale for a while, and takes off the stale label.                                                           |
+| `/backport <branch>...`                         | pull requests | write                     | Backports the pull request to other branches.                                                                                                |
+| `/run [feature...]`                             | both          | write, or the author      | Runs smartcloud's features again.                                                                                                            |
 
 "Or the author" means the person who opened the issue or pull request may use the command on it whatever their role.
 
