@@ -40,6 +40,14 @@ body:
       required: true
 
   - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, runtime version (for example Node 24.1), and the packages or surfaces involved (action, CLI, MCP server).
+    validations:
+      required: true
+
+  - type: textarea
     id: logs
     attributes:
       label: Logs

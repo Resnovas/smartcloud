@@ -84,6 +84,7 @@ A bug report **must**:
 - reproduce the problem on the production branch, not a fork or an old release;
 - give the exact released version as published (for example `v1.4.2`), or the full commit SHA if the problem is in unreleased code;
 - list the exact steps to reproduce it;
+- say where it happens: the operating system, the runtime version and the package or surface involved;
 - include logs, and a recording or screenshots.
 
 Stack traces, versions and identifiers must be copied from what you actually ran, and must match what is published.
@@ -94,6 +95,18 @@ A report with no reproduction will be slowed down, or closed for lack of evidenc
 Use the feature request form.
 Say what problem you have and what you propose, briefly.
 A short, clear request is read sooner than a long one.
+
+### <a id="DocumentationIssues"></a>Documentation
+
+Use the documentation form when a page is wrong, out of date, missing or hard to follow.
+Name the page, quote what is wrong, and say what it should say instead and what makes that right (the code, a specification or a release note).
+A typo or a small fix is quicker as a pull request.
+
+### <a id="PerformanceIssues"></a>Performance problems
+
+Use the performance form when something works but is too slow or uses too much memory, CPU or network.
+Give the version, the exact steps anyone can repeat, the numbers you measured over several runs and how you measured them, what you expected and why, and the environment you ran on.
+A report without measurements cannot be checked, and will be slowed down or closed for lack of evidence.
 
 ## <a id="PullRequests"></a>Pull requests
 
