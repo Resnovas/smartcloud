@@ -25,9 +25,19 @@ export interface Recorded {
   readonly body: unknown
 }
 
-/** A canned response: JSON with a status and extra headers, or a thrown network error. */
+/** A canned response: JSON or raw bytes with a status and extra headers, or a thrown network error. */
 export type Reply =
-  | { readonly status?: number; readonly body?: unknown; readonly headers?: Readonly<Record<string, string>> }
+  | {
+      readonly status?: number
+      readonly body?: unknown
+      /** Served as they are, with `application/x-gzip`, in place of `body`. */
+      readonly bytes?: Uint8Array
+      /** Served as `text/plain` in place of `body`. */
+      readonly text?: string
+      /** Streams `bytes` this many at a time, to show a reader coping with any chunking. */
+      readonly chunk?: number
+      readonly headers?: Readonly<Record<string, string>>
+    }
   | { readonly networkError: string }
 
 /** Routes keyed by `METHOD /path`; a list of replies is served in order, the last repeating. */
@@ -39,6 +49,8 @@ export const fakeFetch = (routes: Routes) => {
   const tokens: Array<string | undefined> = []
   // The If-None-Match header each request was sent with, in request order.
   const conditions: Array<string | undefined> = []
+  // The Accept header each request was sent with, in request order.
+  const accepts: Array<string | undefined> = []
   const served = new Map<string, number>()
   const fetch: typeof globalThis.fetch = async (input, init) => {
     const url = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url)
@@ -56,6 +68,7 @@ export const fakeFetch = (routes: Routes) => {
     const headers = new Headers(init?.headers)
     tokens.push(headers.get('authorization')?.replace(/^(token|bearer) /i, ''))
     conditions.push(headers.get('if-none-match') ?? undefined)
+    accepts.push(headers.get('accept') ?? undefined)
     const key = `${method} ${path}`
     const route = routes[key]
     if (route === undefined) throw new Error(`no fake route for ${key}`)
@@ -67,14 +80,34 @@ export const fakeFetch = (routes: Routes) => {
     if ('networkError' in reply) throw new TypeError(reply.networkError)
     const status = reply.status ?? 200
     const response =
-      status === 204 || status === 304
+      status === 204 || status === 304 || (status >= 300 && status < 400)
         ? new Response(null, { status, headers: { ...reply.headers } })
-        : new Response(JSON.stringify(reply.body ?? {}), {
-            status,
-            headers: { 'content-type': 'application/json', ...reply.headers },
-          })
+        : reply.bytes !== undefined
+          ? new Response(chunked(reply.bytes, reply.chunk), {
+              status,
+              headers: { 'content-type': 'application/x-gzip', ...reply.headers },
+            })
+          : reply.text !== undefined
+            ? new Response(reply.text, { status, headers: { 'content-type': 'text/plain', ...reply.headers } })
+            : new Response(JSON.stringify(reply.body ?? {}), {
+                status,
+                headers: { 'content-type': 'application/json', ...reply.headers },
+              })
     // A real fetch sets the response URL; Octokit's paginator reads it for list responses that carry a total count.
     return Object.defineProperty(response, 'url', { value: url.href })
   }
-  return { fetch, requests, tokens, conditions }
+  return { fetch, requests, tokens, conditions, accepts }
+}
+
+// The bytes as one body, or streamed a few at a time.
+const chunked = (bytes: Uint8Array, size: number | undefined): Uint8Array | ReadableStream<Uint8Array> => {
+  if (size === undefined) return bytes
+  let offset = 0
+  return new ReadableStream({
+    pull(controller) {
+      if (offset >= bytes.byteLength) return controller.close()
+      controller.enqueue(bytes.subarray(offset, offset + size))
+      offset += size
+    },
+  })
 }

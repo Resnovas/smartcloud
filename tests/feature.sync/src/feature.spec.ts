@@ -23,10 +23,13 @@ import {
   DryRun,
   DryRunLog,
   fileKey,
+  Forbidden,
   GitHub,
   type GitHubService,
   makeMemoryGitHub,
   NotFound,
+  refKey,
+  Unavailable,
   ValidationFailed,
 } from '@resnovas/integrations.github'
 
@@ -188,8 +191,13 @@ describe('sync run', () => {
   it.effect('treats a file that vanishes between listing and reading as missing', () =>
     Effect.gen(function* () {
       const { service, state } = seed()
+      // Only the per-file path lists before it reads, so the repository's archive is made unreadable.
       const flaky: GitHubService = {
         ...service,
+        getArchive: (location) =>
+          location.repo === 'example'
+            ? Effect.fail(new ValidationFailed({ operation: 'getArchive', detail: 'too large' }))
+            : service.getArchive(location),
         getFile: (location) =>
           location.repo === 'example' && location.path === 'LICENSE'
             ? Effect.fail(new NotFound({ operation: 'getFile', detail: 'LICENSE' }))
@@ -197,6 +205,86 @@ describe('sync run', () => {
       }
       yield* run(flaky, config(), 'schedule')
       expect(state.proposals[0]?.body).toContain('- `LICENSE` added')
+    }),
+  )
+
+  // A source of `count` templates spread over 60 directories, and a repository that has half of them.
+  const many = (count: number) => {
+    const memory = seed()
+    for (let index = 0; index < count; index += 1) {
+      const path = `.agents/skills/skill-${index % 60}/file-${index}.md`
+      memory.state.files.set(template(path), `# {{HOLDER}} skill ${index}\n`)
+      if (index % 2 === 0) memory.state.files.set(repo(path), `# Resnovas skill ${index}\n`)
+    }
+    return memory
+  }
+
+  it.effect('reads the source and the repository from one archive each, however many templates there are', () =>
+    Effect.gen(function* () {
+      const { service, state } = many(250)
+      const result = yield* run(service, config(), 'schedule')
+      expect(result.failed).toStrictEqual([])
+      // The 125 templates the repository lacks, plus the three from the seed that differ.
+      expect(state.proposals[0]?.files).toHaveLength(128)
+      expect(state.calls).toStrictEqual([
+        'getRepository',
+        'resolveRef',
+        'getArchive',
+        'resolveRef',
+        'getArchive',
+        'proposeChanges',
+      ])
+      const doubled = many(500)
+      yield* run(doubled.service, config(), 'schedule')
+      expect(doubled.state.proposals[0]?.files).toHaveLength(253)
+      expect(doubled.state.calls).toStrictEqual(state.calls)
+    }),
+  )
+
+  it.effect('reads the source at the commit its ref resolves to', () =>
+    Effect.gen(function* () {
+      const { service, state } = seed()
+      state.refs.set(refKey('Resnovas', '.github', 'main'), 'abc123')
+      const reads: Array<string | undefined> = []
+      const observed: GitHubService = {
+        ...service,
+        getArchive: (location) => {
+          reads.push(location.ref)
+          return service.getArchive(location)
+        },
+      }
+      const result = yield* run(observed, config(), 'schedule')
+      expect(result.failed).toStrictEqual([])
+      expect(reads).toStrictEqual(['abc123', 'main'])
+      expect(state.proposals[0]?.files).toHaveLength(3)
+    }),
+  )
+
+  it.effect('reads file by file, with a warning, where an archive cannot be read, and fails on anything else', () =>
+    Effect.gen(function* () {
+      const expected = (yield* run(seed().service, config(), 'schedule')).changes
+      const outcomes = {
+        source: new ValidationFailed({ operation: 'getArchive', detail: 'the archive is larger than 1 bytes' }),
+        example: new NotFound({ operation: 'getArchive', detail: 'not for this token' }),
+      }
+      const memory = seed()
+      const unarchived: GitHubService = {
+        ...memory.service,
+        getArchive: (location) =>
+          location.repo === '.github' ? Effect.fail(outcomes.source) : Effect.fail(outcomes.example),
+      }
+      const result = yield* run(unarchived, config(), 'schedule')
+      expect(result.failed).toStrictEqual([])
+      expect(result.changes).toStrictEqual(expected)
+      expect(memory.state.calls.filter((call) => call === 'getFile')).toHaveLength(7)
+      const down = seed()
+      const outage: GitHubService = {
+        ...down.service,
+        getArchive: () => Effect.fail(new Unavailable({ operation: 'getArchive', detail: 'down' })),
+      }
+      const failed = yield* run(outage, config(), 'schedule')
+      expect(failed.failed[0]?.message).toContain('getArchive: GitHub unavailable (down)')
+      expect(down.state.calls.filter((call) => call === 'getFile')).toHaveLength(0)
     }),
   )
 
@@ -386,6 +474,49 @@ describe('synced files check', () => {
     }),
   )
 
+  it.effect('reads the changed templates from the archive only when that costs fewer requests', () =>
+    Effect.gen(function* () {
+      const three = withHead()
+      yield* run(three.service, config(), 'pull_request', pullRequest)
+      const reads = (calls: ReadonlyArray<string>) => calls.filter((call) => call !== 'getRepository')
+      expect(reads(three.state.calls)).toStrictEqual([
+        'listFiles',
+        'listDirectory',
+        'listDirectory',
+        'listDirectory',
+        'resolveRef',
+        'getArchive',
+        ...Array.from({ length: 6 }, () => 'getFile'),
+      ])
+      const one = changes(seed(), ['LICENSE'])
+      one.state.files.set(repo('LICENSE', 'head-sha'), 'Changed\n')
+      one.state.files.set(repo('.github/dependabot.yml', 'head-sha'), dependabot('npm'))
+      one.state.files.set(repo('tools/run', 'head-sha'), '#!/bin/sh\n')
+      yield* run(one.service, config(), 'pull_request', pullRequest)
+      expect(reads(one.state.calls)).toStrictEqual([
+        'listFiles',
+        'listDirectory',
+        'listDirectory',
+        'listDirectory',
+        'getFile',
+        'getFile',
+        'getFile',
+      ])
+      const unarchived = withHead()
+      const service: GitHubService = {
+        ...unarchived.service,
+        getArchive: () => Effect.fail(new Forbidden({ operation: 'getArchive', detail: 'no' })),
+      }
+      const result = yield* run(service, config(), 'pull_request', pullRequest)
+      expect(result.findings.map((finding) => finding.path)).toStrictEqual([
+        '.github/dependabot.yml',
+        'LICENSE',
+        'tools/run',
+      ])
+      expect(unarchived.state.calls.filter((call) => call === 'getFile')).toHaveLength(9)
+    }),
+  )
+
   it.effect('reads only the synced files the pull request changes', () =>
     Effect.gen(function* () {
       const memory = changes(seed(), ['src/index.ts'])
@@ -522,6 +653,25 @@ describe('syncFeature', () => {
 })
 
 describe('previewSync', () => {
+  it.effect('renders the same files from the archives as from reading file by file', () => {
+    const { service } = seed()
+    const unarchived: GitHubService = {
+      ...service,
+      getArchive: () => Effect.fail(new ValidationFailed({ operation: 'getArchive', detail: 'too large' })),
+    }
+    const preview = (github: GitHubService) =>
+      previewSync(config().sync ?? { source: SOURCE }).pipe(Effect.provideService(GitHub, github))
+    return Effect.gen(function* () {
+      const archived = yield* preview(service)
+      const each = yield* preview(unarchived)
+      expect(each.templates).toStrictEqual(archived.templates)
+      expect(each.current).toStrictEqual(archived.current)
+      expect(each.plan).toStrictEqual(archived.plan)
+      expect(archived.templates.find((file) => file.path === 'tools/run')?.executable).toBe(true)
+      expect(archived.plan.files.find((file) => file.path === 'tools/run')?.executable).toBe(true)
+    })
+  })
+
   it.effect('plans the sync from what it reads, without proposing anything', () => {
     const { service, state } = seed()
     return Effect.gen(function* () {

@@ -38,6 +38,15 @@ from its branch. `GitHubMemory(seed)` is the same as a layer, for a test that
 does not inspect the state. To test a failure, spread the service and replace
 one operation with `Effect.fail(new Forbidden(...))`.
 
+Every call is recorded by name in `state.calls`, so a test asserts a
+feature's request budget (`expect(state.calls).toStrictEqual([...])`).
+`getArchive` serves the seeded `files` at a ref with their `executables`, and
+`resolveRef` answers `refs` (`refKey(owner, repo, ref)` to a SHA), or the ref
+itself; an archive read at a SHA also serves the files of every ref that
+resolves to it, and a read of the service's own default branch by name serves
+the files seeded with an empty ref. `maxBytes` is honoured, so a small limit
+exercises a feature's fallback.
+
 Test a feature through `runFeatures`, as a run would, so facet loading,
 enabling and isolation are exercised too. Put the clock under test control
 with `TestClock.setTime` before anything reads the time.
