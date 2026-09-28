@@ -18,6 +18,7 @@ import { describe, expect, it, vi } from '@effect/vitest'
 import { ConfigProvider, Effect, Exit, Fiber, Layer, Redacted, Schedule, TestClock } from 'effect'
 import { DEFAULT_COMMITTER, GitHub, GitHubLive, makeLiveGitHub, signOff } from '@resnovas/integrations.github'
 import { fakeFetch, type Reply, type Routes } from './fake-fetch.js'
+import { tarball } from './tar.js'
 
 const REPO = '/repos/Resnovas/example'
 
@@ -1707,6 +1708,113 @@ describe('GitHubLive', () => {
     Effect.gen(function* () {
       const exit = yield* Effect.exit(GitHub.pipe(provide({ GITHUB_TOKEN: 't', GITHUB_REPOSITORY: 'smartcloud' })))
       expect(Exit.isFailure(exit) && String(exit.cause)).toContain('GITHUB_REPOSITORY must be owner/name')
+    }),
+  )
+})
+
+describe('live GitHub: refs and archives', () => {
+  const connect = (routes: Routes) => {
+    const fake = fakeFetch(routes)
+    const service = makeLiveGitHub({
+      token: Redacted.make('test-token'),
+      coordinates: { owner: 'Resnovas', repo: 'example' },
+      fetch: fake.fetch,
+      retry: Schedule.recurs(2),
+    })
+    return { service, fake }
+  }
+  const SHA = 'a'.repeat(40)
+  const archive = tarball([{ path: 'Resnovas-.github-abc1234/LICENSE', content: 'MIT\n' }])
+  const codeload = '/Resnovas/.github/legacy.tar.gz/abc'
+  const redirect = { status: 302, headers: { location: `https://codeload.github.com${codeload}` } }
+
+  it.effect('resolves a ref, or the default branch, to its commit SHA, asking for the SHA alone', () =>
+    Effect.gen(function* () {
+      const { service, fake } = connect({
+        [`GET /repos/Resnovas/.github/commits/main`]: { text: SHA },
+        [`GET /repos/Resnovas/.github/commits/HEAD`]: { text: SHA },
+        [`GET /repos/Resnovas/.github/commits/v2`]: { body: { sha: SHA, files: [] } },
+      })
+      const github = yield* service
+      expect(yield* github.resolveRef({ owner: 'Resnovas', repo: '.github', ref: 'main' })).toBe(SHA)
+      expect(yield* github.resolveRef({ owner: 'Resnovas', repo: '.github' })).toBe(SHA)
+      expect(fake.accepts).toStrictEqual(['application/vnd.github.v3.sha', 'application/vnd.github.v3.sha'])
+      const error = yield* Effect.flip(github.resolveRef({ owner: 'Resnovas', repo: '.github', ref: 'v2' }))
+      expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: 'GitHub sent no commit SHA' })
+    }),
+  )
+
+  it.effect('follows the redirect to codeload without the token, and reads the default branch without a ref', () =>
+    Effect.gen(function* () {
+      const { service, fake } = connect({
+        [`GET /repos/Resnovas/.github/tarball/abc`]: redirect,
+        [`GET /repos/Resnovas/.github/tarball`]: redirect,
+        [`GET ${codeload}`]: { bytes: archive },
+      })
+      const github = yield* service
+      const entries = yield* github.getArchive({ owner: 'Resnovas', repo: '.github', ref: 'abc' })
+      expect(entries).toStrictEqual([{ path: 'LICENSE', content: 'MIT\n', executable: false }])
+      expect(yield* github.getArchive({ owner: 'Resnovas', repo: '.github' })).toStrictEqual(entries)
+      expect(fake.requests.map((request) => request.path)).toStrictEqual([
+        '/repos/Resnovas/.github/tarball/abc',
+        codeload,
+        '/repos/Resnovas/.github/tarball',
+        codeload,
+      ])
+      expect(fake.tokens).toStrictEqual(['test-token', undefined, 'test-token', undefined])
+    }),
+  )
+
+  it.effect('reads an archive a server sends straight back, and refuses anything else', () =>
+    Effect.gen(function* () {
+      const { service } = connect({
+        [`GET /repos/Resnovas/.github/tarball/abc`]: { bytes: archive },
+        [`GET /repos/Resnovas/.github/tarball/json`]: { body: { message: 'not an archive' } },
+        [`GET /repos/Resnovas/.github/tarball/nowhere`]: { status: 302 },
+      })
+      const github = yield* service
+      expect(yield* github.getArchive({ owner: 'Resnovas', repo: '.github', ref: 'abc' })).toHaveLength(1)
+      expect(yield* Effect.flip(github.getArchive({ owner: 'Resnovas', repo: '.github', ref: 'json' }))).toMatchObject({
+        _tag: 'ValidationFailed',
+        detail: 'GitHub answered the archive request with something other than an archive',
+      })
+      expect(
+        yield* Effect.flip(github.getArchive({ owner: 'Resnovas', repo: '.github', ref: 'nowhere' })),
+      ).toMatchObject({ _tag: 'ValidationFailed', detail: 'GitHub redirected the archive nowhere' })
+    }),
+  )
+
+  it.effect('maps a failed download to the usual errors, retrying an outage and not a missing archive', () =>
+    Effect.gen(function* () {
+      const { service, fake } = connect({
+        [`GET /repos/Resnovas/.github/tarball/abc`]: redirect,
+        [`GET ${codeload}`]: [
+          { status: 502, body: {} },
+          { status: 502, body: {} },
+          { status: 404, body: {} },
+        ],
+      })
+      const github = yield* service
+      const error = yield* Effect.flip(github.getArchive({ owner: 'Resnovas', repo: '.github', ref: 'abc' }))
+      expect(error).toMatchObject({ _tag: 'NotFound', detail: 'the archive download answered 404' })
+      expect(fake.requests.filter((request) => request.path === codeload)).toHaveLength(3)
+      const broken = connect({
+        [`GET /repos/Resnovas/.github/tarball/abc`]: redirect,
+        [`GET ${codeload}`]: { networkError: 'socket hang up' },
+      })
+      const outage = yield* Effect.flip(
+        (yield* broken.service).getArchive({ owner: 'Resnovas', repo: '.github', ref: 'abc' }),
+      )
+      expect(outage).toMatchObject({ _tag: 'Unavailable', detail: 'socket hang up' })
+      expect(broken.fake.requests.filter((request) => request.path === codeload)).toHaveLength(3)
+      const empty = connect({
+        [`GET /repos/Resnovas/.github/tarball/abc`]: redirect,
+        [`GET ${codeload}`]: { status: 204 },
+      })
+      const noBody = yield* Effect.flip(
+        (yield* empty.service).getArchive({ owner: 'Resnovas', repo: '.github', ref: 'abc' }),
+      )
+      expect(noBody).toMatchObject({ _tag: 'ValidationFailed', detail: 'the archive download had no body' })
     }),
   )
 })

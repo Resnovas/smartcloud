@@ -37,6 +37,11 @@ does only its own job:
 | `PrivilegedGitHub` | the app or access token (`GITHUB_TOKEN`) | Features with `privileged: true` (settings, sync, codeowners, backport) and presets in other repositories. |
 | house reads        | the read-only house token (`houseToken`) | `getFile` and `listDirectory` in another `.github` repository, through `withHouseReads` on both services.  |
 
+`withHouseReads` routes only `getFile` and `listDirectory`. `resolveRef` and
+`getArchive` go to the wrapped service, so a run whose only way into another
+organisation's `.github` is the house token reads that source file by file
+(sync's fallback) rather than as an archive.
+
 - `PrivilegedGitHub` is optional. The CLI, the MCP server and any run with one
   token provide only `GitHub`, and everything uses it, so a feature must never
   require `PrivilegedGitHub`: mark it `privileged: true` and keep using `GitHub`.
@@ -57,6 +62,34 @@ does only its own job:
 - `withHouseReads` falls back to the wrapped service when the house token
   answers `Forbidden` or `NotFound`, such as for another organisation's
   `.github`.
+
+### Refs and archives
+
+Two reads serve a whole tree at a commit for the price of two requests:
+
+- `resolveRef({ owner, repo, ref? })` answers the commit SHA of a branch, tag
+  or commit (`GET /repos/{owner}/{repo}/commits/{ref}` with the `sha` media
+  type, so no diff is sent); `HEAD` when `ref` is omitted.
+- `getArchive({ owner, repo, ref?, path?, paths?, maxBytes? })` downloads the
+  repository's tarball at `ref` (the default branch when omitted) and answers
+  every regular file under `path` (relative to it), or only `paths`, as
+  `{ path, content, executable }`, the execute bit from the tar mode. GitHub
+  answers the tarball endpoint with a redirect to codeload; the live service
+  follows it itself, without the token, as GitHub requires. The read is one
+  Effect `Stream` in `archive.ts`: `Stream.fromReadableStream` over the
+  download, `limitBytes` (a `mapAccumEffect` that fails past `maxBytes`),
+  gunzip through Node's `DecompressionStream` (bridged with
+  `Stream.toReadableStream` and back), then `readTar`, a `mapAccumEffect`
+  over an incremental ustar and pax parser (`x` and `g` headers, GNU `L`
+  names, base-256 sizes); links, directories and submodules are skipped, and
+  the whole thing is collected with `Stream.runCollect`. Its typed errors,
+  `ArchiveRejected` (status 422: over the limit, not gzip, not tar) and
+  `DownloadFailed` (codeload's status, or none for a broken connection), go
+  through the same status mapping as every other call, so the first is a
+  `ValidationFailed` that is never retried and an outage is retried. Both
+  reads are cached in the contents family with the file reads, so a proposal
+  invalidates them. The live service's `attempt` runs any Effect as one
+  instrumented, retried call; `call` is the one-request case on top of it.
 
 ### Errors
 

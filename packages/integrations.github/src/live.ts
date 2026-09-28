@@ -17,7 +17,8 @@
 import { Octokit } from '@octokit/rest'
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { Association, type CheckState, type Mergeable, type Reactions, type Review } from '@resnovas/conditions'
-import { Config, Effect, Layer, Option, Redacted, Ref, Schedule, Schema } from 'effect'
+import { Config, Data, Effect, Layer, Option, Redacted, Ref, Schedule, Schema } from 'effect'
+import { type ArchiveError, ArchiveRejected, DEFAULT_ARCHIVE_LIMIT, DownloadFailed, readArchive } from './archive.js'
 import { cacheReads } from './cache.js'
 import { fromGraphqlErrors, fromStatus, type GitHubError, ValidationFailed } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
@@ -191,10 +192,17 @@ const messageOf = (error: unknown): string => (error instanceof Error ? error.me
 const isGraphqlResponseError = (error: unknown): boolean =>
   error instanceof Error && error.name === 'GraphqlResponseError'
 
-const toGitHubError = (operation: string, error: unknown): GitHubError =>
-  isGraphqlResponseError(error)
+// What an Octokit request threw, carried typed until the call reads its status and message.
+class RequestFailed extends Data.TaggedError('RequestFailed')<{ readonly cause: unknown }> {}
+
+const unwrap = (error: unknown): unknown => (error instanceof RequestFailed ? error.cause : error)
+
+const toGitHubError = (operation: string, failure: unknown): GitHubError => {
+  const error = unwrap(failure)
+  return isGraphqlResponseError(error)
     ? fromGraphqlErrors(operation, messageOf(error))
     : fromStatus(operation, statusOf(error), messageOf(error))
+}
 
 // A rate limit rejects a request before GitHub acts on it, so any call may repeat after one.
 const rateLimited = (error: GitHubError) => error._tag === 'RateLimited'
@@ -439,27 +447,43 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
     const retry = options.retry ?? DEFAULT_RETRY
     const mergeablePoll = options.mergeablePoll ?? DEFAULT_MERGEABLE_POLL
 
+    // The rate limit the latest response of a call reported, noted by the client's hook.
+    type Quota = { remaining?: number }
+
     // One span, count and duration per call, however many attempts it takes.
-    const call = <A>(
+    const attempt = <A>(
       operation: string,
-      run: () => Promise<A>,
+      run: (quota: Quota) => Effect.Effect<A, unknown>,
       retryWhile: (error: GitHubError) => boolean = transient,
       details: CallDetails = { operation },
       via: Client = main,
     ): Effect.Effect<A, GitHubError> => {
       const status = statusTracker()
-      const quota: { remaining?: number } = {}
+      const quota: Quota = {}
       return instrumentCall(
-        Effect.tryPromise({
-          try: status.track(() => callQuota.run(quota, run)),
-          catch: (error) => toGitHubError(operation, error),
-        }).pipe(Effect.retry({ schedule: retry, while: retryWhile })),
+        run(quota).pipe(
+          Effect.tap((value) => Effect.sync(() => status.note(value))),
+          Effect.tapError((error) => Effect.sync(() => status.note(unwrap(error)))),
+          Effect.mapError((error) => toGitHubError(operation, error)),
+          Effect.retry({ schedule: retry, while: retryWhile }),
+        ),
         status.last,
         details,
         // This call's own response, or the client's latest when it got none.
         () => quota.remaining ?? via.remaining(),
       )
     }
+    // An Octokit request, run inside the call's quota cell so the hook notes the rate limit it reports.
+    const request = <A>(quota: Quota, run: () => Promise<A>): Effect.Effect<A, RequestFailed> =>
+      Effect.tryPromise({ try: () => callQuota.run(quota, run), catch: (cause) => new RequestFailed({ cause }) })
+    // A call that is one request, retried as a whole.
+    const call = <A>(
+      operation: string,
+      run: () => Promise<A>,
+      retryWhile: (error: GitHubError) => boolean = transient,
+      details: CallDetails = { operation },
+      via: Client = main,
+    ): Effect.Effect<A, GitHubError> => attempt(operation, (quota) => request(quota, run), retryWhile, details, via)
     // A read made with the checks token, whose rate limit is its own.
     const checksCall = <A>(operation: string, run: () => Promise<A>) =>
       call(operation, run, transient, { operation }, checks)
@@ -667,6 +691,87 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
                   .map((entry) => ({ path: entry.path, executable: entry.mode === EXECUTABLE })),
               ),
         ),
+      )
+
+    // The SHA alone, so a large commit's diff is never sent.
+    const resolveRef: GitHubService['resolveRef'] = (location) =>
+      call('resolveRef', () =>
+        octokit.request('GET /repos/{owner}/{repo}/commits/{ref}', {
+          owner: location.owner,
+          repo: location.repo,
+          ref: location.ref ?? 'HEAD',
+          mediaType: { format: 'sha' },
+        }),
+      ).pipe(
+        Effect.flatMap(({ data }): Effect.Effect<string, GitHubError> => {
+          const sha: unknown = data
+          if (typeof sha === 'string' && /^[0-9a-f]{40,64}$/.test(sha)) return Effect.succeed(sha)
+          return Effect.fail(new ValidationFailed({ operation: 'resolveRef', detail: 'GitHub sent no commit SHA' }))
+        }),
+      )
+
+    // GitHub answers the archive request with a redirect to codeload, which
+    // is fetched without the token, as GitHub requires. A server that serves
+    // the archive straight away is read as it is.
+    const download = options.fetch ?? globalThis.fetch
+    const archiveBody = (response: {
+      readonly status: number
+      readonly headers: { readonly location?: string }
+      readonly data: unknown
+    }): Effect.Effect<ReadableStream<Uint8Array<ArrayBuffer>>, ArchiveError> => {
+      if (response.status >= 300 && response.status < 400) {
+        const location = response.headers.location
+        if (location === undefined)
+          return Effect.fail(new ArchiveRejected({ detail: 'GitHub redirected the archive nowhere' }))
+        return Effect.tryPromise({
+          try: (signal) => download(location, { signal }),
+          catch: (error) => new DownloadFailed({ detail: messageOf(error) }),
+        }).pipe(
+          Effect.flatMap((redirected): Effect.Effect<ReadableStream<Uint8Array<ArrayBuffer>>, ArchiveError> =>
+            !redirected.ok
+              ? Effect.fail(
+                  new DownloadFailed({
+                    status: redirected.status,
+                    detail: `the archive download answered ${redirected.status}`,
+                  }),
+                )
+              : redirected.body === null
+                ? Effect.fail(new ArchiveRejected({ detail: 'the archive download had no body' }))
+                : Effect.succeed(redirected.body),
+          ),
+        )
+      }
+      if (response.data instanceof ArrayBuffer) return Effect.succeed(new Blob([response.data]).stream())
+      return Effect.fail(
+        new ArchiveRejected({ detail: 'GitHub answered the archive request with something other than an archive' }),
+      )
+    }
+
+    const getArchive: GitHubService['getArchive'] = (location) =>
+      attempt('getArchive', (quota) =>
+        Effect.gen(function* () {
+          const { owner: archiveOwner, repo: archiveRepo, ref } = location
+          const redirect = { request: { redirect: 'manual' as const } }
+          const first = yield* request(quota, () =>
+            ref === undefined
+              ? octokit.request('GET /repos/{owner}/{repo}/tarball', {
+                  owner: archiveOwner,
+                  repo: archiveRepo,
+                  ...redirect,
+                })
+              : octokit.request('GET /repos/{owner}/{repo}/tarball/{ref}', {
+                  owner: archiveOwner,
+                  repo: archiveRepo,
+                  ref,
+                  ...redirect,
+                }),
+          )
+          const body = yield* archiveBody(first)
+          return yield* readArchive(body, location.maxBytes ?? DEFAULT_ARCHIVE_LIMIT, {
+            directory: directoryPath(location.path ?? ''),
+            paths: location.paths === undefined ? undefined : new Set(location.paths),
+          })
+        }),
       )
 
     // The identity GitHub last recorded for an unsigned-off commit, so later
@@ -1207,6 +1312,8 @@ export const makeLiveGitHub = (options: LiveOptions): Effect.Effect<GitHubServic
         ),
       getFile,
       listDirectory,
+      resolveRef,
+      getArchive,
       proposeChanges,
       getCommit: (commit_sha) =>
         call('getCommit', () => octokit.rest.git.getCommit({ owner, repo, commit_sha })).pipe(

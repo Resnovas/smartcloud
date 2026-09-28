@@ -19,12 +19,15 @@ import { Duration, Effect, Request, RequestResolver } from 'effect'
 import type { GitHubError } from './errors.js'
 import { isGraphqlWrite } from './graphql.js'
 import type {
+  ArchiveEntry,
+  ArchiveLocation,
   Comment,
   DirectoryEntry,
   FileLocation,
   GitHubService,
   IssueSummary,
   Label,
+  RefLocation,
   Repository,
 } from './service.js'
 
@@ -93,6 +96,24 @@ interface GetFile extends Request.Request<string, GitHubError>, Location {
 interface ListDirectory extends Request.Request<ReadonlyArray<DirectoryEntry>, GitHubError>, Location {
   readonly _tag: 'ListDirectory'
 }
+interface RefKey {
+  readonly owner: string
+  readonly repo: string
+  readonly ref: string | undefined
+}
+interface ResolveRef extends Request.Request<string, GitHubError>, RefKey {
+  readonly _tag: 'ResolveRef'
+}
+// The wanted paths are part of the key as text, so two reads with the same
+// selection share one download.
+interface ArchiveKey extends RefKey {
+  readonly path: string | undefined
+  readonly paths: string | undefined
+  readonly maxBytes: number | undefined
+}
+interface GetArchive extends Request.Request<ReadonlyArray<ArchiveEntry>, GitHubError>, ArchiveKey {
+  readonly _tag: 'GetArchive'
+}
 interface RepositoryGet extends Request.Request<unknown, GitHubError> {
   readonly _tag: 'RepositoryGet'
   readonly path: string
@@ -113,6 +134,8 @@ const GetMergeable = Request.tagged<GetMergeable>('GetMergeable')
 const ListChecks = Request.tagged<ListChecks>('ListChecks')
 const GetFile = Request.tagged<GetFile>('GetFile')
 const ListDirectory = Request.tagged<ListDirectory>('ListDirectory')
+const ResolveRef = Request.tagged<ResolveRef>('ResolveRef')
+const GetArchive = Request.tagged<GetArchive>('GetArchive')
 const RepositoryGet = Request.tagged<RepositoryGet>('RepositoryGet')
 
 const locationKey = (location: FileLocation): Location => ({
@@ -124,6 +147,33 @@ const locationKey = (location: FileLocation): Location => ({
 
 const locationOf = ({ owner, repo, path, ref }: Location): FileLocation =>
   ref === undefined ? { owner, repo, path } : { owner, repo, path, ref }
+
+const refKey = (location: RefLocation): RefKey => ({
+  owner: location.owner,
+  repo: location.repo,
+  ref: location.ref,
+})
+
+const refOf = ({ owner, repo, ref }: RefKey): RefLocation =>
+  ref === undefined ? { owner, repo } : { owner, repo, ref }
+
+const archiveKey = (location: ArchiveLocation): ArchiveKey => ({
+  owner: location.owner,
+  repo: location.repo,
+  ref: location.ref,
+  path: location.path,
+  paths: location.paths === undefined ? undefined : JSON.stringify(location.paths),
+  maxBytes: location.maxBytes,
+})
+
+const archiveOf = ({ owner, repo, ref, path, paths, maxBytes }: ArchiveKey): ArchiveLocation => ({
+  owner,
+  repo,
+  ...(ref === undefined ? {} : { ref }),
+  ...(path === undefined ? {} : { path }),
+  ...(paths === undefined ? {} : { paths: JSON.parse(paths) as ReadonlyArray<string> }),
+  ...(maxBytes === undefined ? {} : { maxBytes }),
+})
 
 // Large enough that a run never evicts; entries live until a write invalidates them or the service goes.
 const CAPACITY = 65_536
@@ -167,7 +217,8 @@ interface Caches {
  *   issue's, since only the comment id is known;
  * - a review invalidates that pull request's reviews and requested
  *   reviewers, and a review request its requested reviewers;
- * - a proposal or a backport invalidates every file and directory read, the open
+ * - a proposal or a backport invalidates every file, directory, ref and
+ *   archive read, the open
  *   issues, which gain its pull request, and every pull request read, since
  *   updating its branch changes that pull request's commits, files and
  *   mergeability;
@@ -290,6 +341,14 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
       caches.contents,
       RequestResolver.fromEffect((request: ListDirectory) => inner.listDirectory(locationOf(request))),
     )
+    const resolveRef = lookup(
+      caches.contents,
+      RequestResolver.fromEffect((request: ResolveRef) => inner.resolveRef(refOf(request))),
+    )
+    const getArchive = lookup(
+      caches.contents,
+      RequestResolver.fromEffect((request: GetArchive) => inner.getArchive(archiveOf(request))),
+    )
     const repositoryGet = lookup(
       caches.requests,
       RequestResolver.fromEffect(({ path }: RepositoryGet) => inner.repositoryRequest({ method: 'GET', path })),
@@ -355,6 +414,8 @@ export const cacheReads = (inner: GitHubService): Effect.Effect<GitHubService> =
 
       getFile: (location) => getFile(GetFile(locationKey(location))),
       listDirectory: (location) => listDirectory(ListDirectory(locationKey(location))),
+      resolveRef: (location) => resolveRef(ResolveRef(refKey(location))),
+      getArchive: (location) => getArchive(GetArchive(archiveKey(location))),
       proposeChanges: (proposal) =>
         writing(inner.proposeChanges(proposal), [
           caches.contents.invalidateAll,

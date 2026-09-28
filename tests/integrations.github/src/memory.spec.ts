@@ -16,7 +16,7 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import { Effect } from 'effect'
-import { fileKey, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { fileKey, makeMemoryGitHub, refKey } from '@resnovas/integrations.github'
 
 const bug = { name: 'bug', color: 'd73a4a', description: '' }
 
@@ -301,6 +301,72 @@ describe('in-memory GitHub: directories and proposals', () => {
       if (opened !== undefined) opened.open = false
       expect((yield* service.proposeChanges(proposal)).number).toBe(2)
       expect(state.proposals).toHaveLength(2)
+    }),
+  )
+})
+
+describe('in-memory GitHub: refs and archives', () => {
+  const seed = () =>
+    makeMemoryGitHub({
+      files: new Map([
+        [fileKey('Resnovas', '.github', 'templates/LICENSE', 'main'), 'MIT\n'],
+        [fileKey('Resnovas', '.github', 'templates/tools/run', 'main'), '#!/bin/sh\n'],
+        [fileKey('Resnovas', '.github', 'README.md', 'main'), 'outside the templates\n'],
+        [fileKey('Resnovas', 'example', 'LICENSE'), 'ours\n'],
+        [fileKey('Resnovas', 'example', 'LICENSE', 'head'), 'theirs\n'],
+      ]),
+      executables: new Set([fileKey('Resnovas', '.github', 'templates/tools/run', 'main')]),
+      refs: new Map([[refKey('Resnovas', '.github', 'main'), 'abc123']]),
+    })
+
+  it.effect('resolves a seeded ref to its SHA, and any other to itself', () =>
+    Effect.gen(function* () {
+      const { service } = seed()
+      expect(yield* service.resolveRef({ owner: 'Resnovas', repo: '.github', ref: 'main' })).toBe('abc123')
+      expect(yield* service.resolveRef({ owner: 'Resnovas', repo: '.github', ref: 'v2' })).toBe('v2')
+      expect(yield* service.resolveRef({ owner: 'Resnovas', repo: 'example' })).toBe('')
+    }),
+  )
+
+  it.effect('serves an archive of a directory at a ref or at the SHA it resolved to, with execute bits', () =>
+    Effect.gen(function* () {
+      const { service } = seed()
+      const expected = [
+        { path: 'LICENSE', content: 'MIT\n', executable: false },
+        { path: 'tools/run', content: '#!/bin/sh\n', executable: true },
+      ]
+      const source = { owner: 'Resnovas', repo: '.github', path: '/templates/' }
+      expect(yield* service.getArchive({ ...source, ref: 'main' })).toStrictEqual(expected)
+      expect(yield* service.getArchive({ ...source, ref: 'abc123' })).toStrictEqual(expected)
+      expect(yield* service.getArchive({ ...source, ref: 'abc123', paths: ['tools/run'] })).toStrictEqual([expected[1]])
+      expect(yield* service.getArchive({ owner: 'Resnovas', repo: '.github', ref: 'main' })).toHaveLength(3)
+      expect(yield* service.getArchive({ owner: 'Resnovas', repo: '.github', ref: 'nope' })).toStrictEqual([])
+    }),
+  )
+
+  it.effect('serves the default branch of its own repository by name as well as by an empty ref', () =>
+    Effect.gen(function* () {
+      const { service } = seed()
+      const own = { owner: 'Resnovas', repo: 'example' }
+      const ours = [{ path: 'LICENSE', content: 'ours\n', executable: false }]
+      expect(yield* service.getArchive({ ...own, ref: 'main' })).toStrictEqual(ours)
+      expect(yield* service.getArchive(own)).toStrictEqual(ours)
+      expect(yield* service.getArchive({ ...own, ref: 'head' })).toStrictEqual([
+        { path: 'LICENSE', content: 'theirs\n', executable: false },
+      ])
+    }),
+  )
+
+  it.effect('refuses an archive over the limit, and records every call by name', () =>
+    Effect.gen(function* () {
+      const { service, state } = seed()
+      const source = { owner: 'Resnovas', repo: '.github', ref: 'main', path: 'templates' }
+      const error = yield* Effect.flip(service.getArchive({ ...source, maxBytes: 5 }))
+      expect(error).toMatchObject({ _tag: 'ValidationFailed', detail: 'the archive is larger than 5 bytes' })
+      expect(yield* service.getArchive({ ...source, maxBytes: 14 })).toHaveLength(2)
+      yield* service.getRepository
+      yield* Effect.flip(service.getFile({ owner: 'Resnovas', repo: 'example', path: 'nope' }))
+      expect(state.calls).toStrictEqual(['getArchive', 'getArchive', 'getRepository', 'getFile'])
     }),
   )
 })

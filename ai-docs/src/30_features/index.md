@@ -60,6 +60,33 @@ Keep writes idempotent: find your own marker comment (`<!-- smartcloud:<name> --
 and update it, and trust it only when `isTrustedComment` says a bot account or
 a `roles.trustedBots` login wrote it, because the marker is public.
 
+### How sync reads: one archive per side
+
+`packages/feature.sync` reads the template source and the repository's
+default branch from one download each, so a run costs the same few requests
+however many templates the house adds:
+
+- `readTemplates` resolves the source ref to a commit (`resolveRef`, one
+  request) and downloads the source archive at it (`getArchive` with the
+  template directory as `path`), taking every regular file with its execute
+  bit from the tar mode. `readCurrent` does the same for the target's default
+  branch, restricted to the synced `paths`. A full sync run is
+  `getRepository`, two `resolveRef`, two `getArchive` and `proposeChanges`,
+  asserted in `tests/feature.sync` against a source of 250 and 500 files.
+- An archive GitHub cannot serve fails with `ValidationFailed` (over
+  `DEFAULT_ARCHIVE_LIMIT`, 64 MiB compressed, or not an archive), `NotFound`
+  or `Forbidden` (the token cannot see it). On those three, and only those,
+  the side falls back to the old path (`listDirectory`, then `getFile` per
+  path, concurrency 8) with a `sync: could not read ... as one archive`
+  warning; a `RateLimited` or `Unavailable` surfaces, since the per-file path
+  would fail the same way. Both paths give the same templates, files and plan,
+  which `previewSync`'s tests check.
+- The pull request check (`readWanted`) keeps its old budget or better: it
+  lists the template directory, keeps the touched templates, and reads up to
+  `ARCHIVE_COST` (2) of them one by one, or all of them from the archive when
+  there are more.
+- Nothing is configurable here; do not add an option for the fallback.
+
 ### Renamed labels: aliases in labelling
 
 A `labels` entry's `aliases` are its old names. Label sync renames a repository

@@ -22,7 +22,7 @@ A file can be synced whole, or only in part: a **managed block** lets the templa
     Create a directory of templates, for example `templates/` in your organisation's `.github` repository. Each file is placed at the same path in the target repository, so `templates/.github/dependabot.yml` becomes `.github/dependabot.yml`. Write `{{KEY}}` wherever a value differs per repository.
   </Step>
   <Step title="Give smartcloud a token that can read the templates and push workflows">
-    The [workflow token](/glossary#workflow-token) cannot read another private repository or change files under `.github/workflows`, so sync needs a [GitHub App](/glossary#github-app) token. A personal access token can sync too, but GitHub never lets one create check runs, so the `smartcloud` checks cannot be published with it. The app needs Contents, Pull requests and Workflows (read and write) on the target repository and Contents (read) on the template repository. [Settings](/features/settings#turn-it-on) shows how to create the app and pass its token as `GITHUB_TOKEN`.
+    The [workflow token](/glossary#workflow-token) cannot read another private repository or change files under `.github/workflows`, so sync needs a [GitHub App](/glossary#github-app) token. A personal access token can sync too, but GitHub never lets one create check runs, so the `smartcloud` checks cannot be published with it. The app needs Contents, Pull requests and Workflows (read and write) on the target repository and Contents (read) on the template repository; Contents (read) also covers downloading a repository's archive, which is how the templates are read. [Settings](/features/settings#turn-it-on) shows how to create the app and pass its token as `GITHUB_TOKEN`.
   </Step>
   <Step title="Run on the right events">
     Syncing runs on `schedule`, `workflow_dispatch` and `push`. The edit check runs on pull request events. The workflow in [Getting started](/getting-started#2-add-the-workflow) has all of them.
@@ -98,6 +98,18 @@ On `schedule`, `workflow_dispatch` and `push` events, smartcloud:
 The commit is made through the GitHub API as the token's own identity, and signed off as that identity. GitHub signs it when the token is the workflow token or a GitHub App token, so it passes a ruleset that requires signed commits. Setting `SMARTCLOUD_COMMITTER_NAME` and `SMARTCLOUD_COMMITTER_EMAIL` commits and signs off as that identity instead, which GitHub does not sign.
 
 When nothing is out of date, no pull request is opened.
+
+### How the files are read
+
+A sync reads the templates and the repository's current files from one download each, so it costs the same handful of GitHub requests however many templates the source holds:
+
+1. The source ref (`main`, a tag, or a commit) is resolved to a commit, one request, so the run reads one consistent snapshot.
+2. The repository archive at that commit is downloaded once (GitHub's tarball endpoint, which redirects to a download that carries no token), and the files under the template directory are taken from it, with their execute bits.
+3. The repository's own default branch is read the same way: its commit is resolved, its archive downloaded once, and only the synced paths kept.
+
+An archive over 64 MB (compressed) is not read. Where an archive cannot be read, because it is over that size, the token cannot see it, or GitHub cannot serve it, that side is read the old way instead: its tree is listed and each synced file fetched on its own, and the run's log carries a warning, `sync: could not read the templates as one archive`, or `the repository`, with the reason. The result is the same either way, only the request count differs. There is no option for this: the fallback is automatic.
+
+The [edit check](#the-edit-check) reads only the templates a pull request touches, so it lists the template directory first and then fetches up to two touched templates one by one, or every touched template from one archive when there are more, whichever costs fewer requests.
 
 ### Managed blocks
 
@@ -198,6 +210,12 @@ The Resnovas [house preset](/presets) syncs from `Resnovas/.github/templates@mai
     The pull request changed content the templates own. Revert that change and make it in the template repository
     instead. For a file with a managed block, move your change below the `house:local` line. If this repository should
     own the file outright, add it to `sync.exclude`.
+  </Accordion>
+  <Accordion title="sync: could not read the templates as one archive">
+    A warning in the run's log, not a failure: the run read that side one file at a time instead, which costs more
+    requests. The reason follows in brackets. `ValidationFailed` means the archive is over 64 MB compressed, or was not
+    a valid archive; `NotFound` or `Forbidden` means the token could not see the repository's archive. The sync's result
+    is unchanged.
   </Accordion>
   <Accordion title="Refusing to allow a GitHub App to create or update workflow">
     The token cannot push files under `.github/workflows`. Give the app Workflows (read and write), or add the

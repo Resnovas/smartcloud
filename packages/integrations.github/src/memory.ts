@@ -99,6 +99,16 @@ export interface MemoryState {
   files: Map<string, string>
   /** Keys of `files` that are executable. */
   executables: Set<string>
+  /**
+   * The commit SHA `resolveRef` answers for a ref, keyed by `owner/repo@ref`;
+   * an unlisted ref resolves to itself (the empty string for the default
+   * branch). `getArchive` at a SHA serves the files of every ref listed
+   * with it, so a test can seed files under a branch and read them at the
+   * commit the branch resolved to.
+   */
+  refs: Map<string, string>
+  /** Every operation called, in order, by name; `coordinates` is not a call. */
+  calls: Array<string>
   /** Pull requests opened by `proposeChanges`, latest content last. */
   proposals: Array<MemoryProposal>
   /** The commits `getCommit` reads, by SHA. */
@@ -157,6 +167,8 @@ const defaults = (): MemoryState => ({
   pulls: new Map(),
   files: new Map(),
   executables: new Set(),
+  refs: new Map(),
+  calls: [],
   proposals: [],
   gitCommits: new Map(),
   branches: new Set(['main']),
@@ -170,6 +182,47 @@ const defaults = (): MemoryState => ({
 })
 
 /**
+ * The key `MemoryState.refs` stores a ref under.
+ *
+ * @example
+ * ```ts import.meta.vitest name="refKey"
+ * import { refKey } from '@resnovas/integrations.github'
+ *
+ * refKey('Resnovas', '.github', 'main') // => 'Resnovas/.github@main'
+ * refKey('Resnovas', '.github') // => 'Resnovas/.github@'
+ * ```
+ *
+ * @param owner - The repository owner.
+ * @param repo - The repository name.
+ * @param ref - The branch, tag or commit; empty for the default branch.
+ * @returns The key for `MemoryState.refs`.
+ */
+export const refKey = (owner: string, repo: string, ref = ''): string => `${owner}/${repo}@${ref}`
+
+// Wraps every operation so `state.calls` records it, whatever it does next.
+const counting = (service: GitHubService, calls: Array<string>): GitHubService => {
+  const counted: Record<string, unknown> = {}
+  for (const [name, member] of Object.entries(service)) {
+    if (Effect.isEffect(member)) {
+      counted[name] = Effect.suspend(() => {
+        calls.push(name)
+        return member as Effect.Effect<unknown>
+      })
+    } else if (typeof member === 'function') {
+      const operation = member as (...args: ReadonlyArray<unknown>) => Effect.Effect<unknown, unknown>
+      counted[name] = (...args: ReadonlyArray<unknown>) =>
+        Effect.suspend(() => {
+          calls.push(name)
+          return operation(...args)
+        })
+    } else {
+      counted[name] = member
+    }
+  }
+  return counted as unknown as GitHubService
+}
+
+/**
  * Builds an in-memory GitHub for tests.
  *
  * @remarks
@@ -177,7 +230,8 @@ const defaults = (): MemoryState => ({
  * name ignoring case, renames carry a label on existing issues, missing
  * things fail with `NotFound`, a proposal updates the open pull request
  * from its branch rather than opening another, and a backport leaves one
- * open from its branch alone.
+ * open from its branch alone. Every call is recorded by name in
+ * `state.calls`, so a test can assert how many reads a feature makes.
  *
  * @example
  * ```ts import.meta.vitest name="makeMemoryGitHub"
@@ -208,6 +262,27 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
       ? Effect.fail(new NotFound({ operation, detail: `pull request #${number}` }))
       : Effect.succeed(found)
   }
+
+  // The refs whose files a read at `ref` serves: the ref itself, every ref
+  // that resolves to it, and the default branch's (an empty ref) when `ref`
+  // names the service's own default branch.
+  const refsFor = (owner: string, repo: string, ref: string): ReadonlySet<string> => {
+    const refs = new Set([ref])
+    const prefix = `${owner}/${repo}@`
+    for (const [key, sha] of state.refs) if (sha === ref && key.startsWith(prefix)) refs.add(key.slice(prefix.length))
+    if (
+      same(owner, state.repository.owner) &&
+      same(repo, state.repository.name) &&
+      ref === state.repository.defaultBranch
+    )
+      refs.add('')
+    return refs
+  }
+  const directoryOf = (path: string | undefined) =>
+    (path ?? '')
+      .split('/')
+      .filter((part) => part !== '')
+      .join('/')
 
   const service: GitHubService = {
     coordinates: { owner: state.repository.owner, repo: state.repository.name },
@@ -338,10 +413,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
       }),
     listDirectory: (location) =>
       Effect.sync(() => {
-        const directory = location.path
-          .split('/')
-          .filter((part) => part !== '')
-          .join('/')
+        const directory = directoryOf(location.path)
         const prefix = `${location.owner}/${location.repo}/${directory === '' ? '' : `${directory}/`}`
         const suffix = `@${location.ref ?? ''}`
         return [...state.files.keys()]
@@ -351,6 +423,36 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
             path: key.slice(prefix.length, key.length - suffix.length),
             executable: state.executables.has(key),
           }))
+      }),
+    resolveRef: (location) =>
+      Effect.sync(() => state.refs.get(refKey(location.owner, location.repo, location.ref)) ?? location.ref ?? ''),
+    getArchive: (location) =>
+      Effect.suspend(() => {
+        const directory = directoryOf(location.path)
+        const prefix = `${location.owner}/${location.repo}/${directory === '' ? '' : `${directory}/`}`
+        const suffixes = [...refsFor(location.owner, location.repo, location.ref ?? '')].map((ref) => `@${ref}`)
+        const wanted = location.paths === undefined ? undefined : new Set(location.paths)
+        const entries = [...state.files]
+          .filter(([key]) => key.startsWith(prefix) && suffixes.some((suffix) => key.endsWith(suffix)))
+          .map(([key, content]) => {
+            const suffix = suffixes.find((candidate) => key.endsWith(candidate)) ?? ''
+            return {
+              path: key.slice(prefix.length, key.length - suffix.length),
+              content,
+              executable: state.executables.has(key),
+            }
+          })
+          .filter((entry) => wanted === undefined || wanted.has(entry.path))
+          .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0))
+        const bytes = entries.reduce((total, entry) => total + Buffer.byteLength(entry.content), 0)
+        return location.maxBytes !== undefined && bytes > location.maxBytes
+          ? Effect.fail(
+              new ValidationFailed({
+                operation: 'getArchive',
+                detail: `the archive is larger than ${location.maxBytes} bytes`,
+              }),
+            )
+          : Effect.succeed(entries)
       }),
     proposeChanges: (proposal) =>
       Effect.sync(() => {
@@ -393,7 +495,7 @@ export const makeMemoryGitHub = (seed: Partial<MemoryState> = {}): { service: Gi
     repositoryRequest: (request) => Effect.sync(() => (state.requests.push(request), null)),
     graphql: (query, variables) => Effect.sync(() => (state.graphql.push({ query, variables }), null)),
   }
-  return { service, state }
+  return { service: counting(service, state.calls), state }
 }
 
 /**

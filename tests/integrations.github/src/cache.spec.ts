@@ -18,6 +18,7 @@ import { describe, expect, it } from '@effect/vitest'
 import { Effect, Redacted, Ref, Schedule } from 'effect'
 import { DEFAULT_COMMITTER, dryRunGitHub, makeLiveGitHub, type RecordedWrite } from '@resnovas/integrations.github'
 import { fakeFetch, type Recorded, type Routes } from './fake-fetch.js'
+import { tarball } from './tar.js'
 
 // The live service routes every read through Effect Requests; these tests
 // count the HTTP calls the fake fetch sees to prove what is shared, cached
@@ -125,6 +126,37 @@ describe('cached reads: sharing and caching', () => {
       expect(calls('GET', '/repos/Resnovas/.github/contents/a.yml')).toBe(2)
       expect(requests.map(({ query }) => query).slice(0, 2)).toStrictEqual(['', '?ref=v2'])
       expect(calls('GET', '/repos/Resnovas/.github/git/trees/HEAD:templates')).toBe(1)
+    }),
+  )
+
+  it.effect('keys ref and archive reads by repository, ref and selection, and shares one download', () =>
+    Effect.gen(function* () {
+      const sha = 'b'.repeat(40)
+      const codeload = `/Resnovas/.github/legacy.tar.gz/${sha}`
+      const { service, calls } = live({
+        [`GET /repos/Resnovas/.github/commits/main`]: { text: sha },
+        [`GET /repos/Resnovas/.github/commits/HEAD`]: { text: sha },
+        [`GET /repos/Resnovas/.github/tarball/${sha}`]: {
+          status: 302,
+          headers: { location: `https://codeload.github.com${codeload}` },
+        },
+        [`GET ${codeload}`]: { bytes: tarball([{ path: 'top/templates/LICENSE', content: 'MIT\n' }]) },
+      })
+      const github = yield* service
+      const source = { owner: 'Resnovas', repo: '.github' }
+      expect(yield* github.resolveRef({ ...source, ref: 'main' })).toBe(sha)
+      yield* github.resolveRef({ ...source, ref: 'main' })
+      yield* github.resolveRef(source)
+      const read = github.getArchive({ ...source, ref: sha, path: 'templates' })
+      expect(
+        yield* Effect.all([read, read, github.getArchive({ ...source, ref: sha, path: 'templates' })]),
+      ).toHaveLength(3)
+      yield* github.getArchive({ ...source, ref: sha, path: 'templates', paths: ['LICENSE'] })
+      yield* github.getArchive({ ...source, ref: sha, path: 'templates', paths: ['LICENSE'], maxBytes: 1_000 })
+      yield* github.getArchive({ ...source, ref: sha })
+      expect(calls('GET', '/repos/Resnovas/.github/commits/main')).toBe(1)
+      expect(calls('GET', '/repos/Resnovas/.github/commits/HEAD')).toBe(1)
+      expect(calls('GET', codeload)).toBe(4)
     }),
   )
 
