@@ -61,11 +61,13 @@ export const checkHeaders = (root, { fix = false, year = String(new Date().getFu
         .map((line) => new RegExp(line))
     : []
   const skip = (file) => generated(file) || extra.some((pattern) => pattern.test(file))
-  const candidates = (files ?? listFiles(root)).filter((file) => SOURCE.test(file) && !skip(file) && existsSync(join(root, file)))
+  const candidates = (files ?? listFiles(root)).filter((file) => SOURCE.test(file) && !skip(file))
   const wrong = []
   let checked = 0
   for (const file of candidates) {
-    const text = readFileSync(join(root, file), 'utf8')
+    // A deleted file stays in the index until committed, so a missing one is skipped, not read.
+    const text = readIfExists(join(root, file))
+    if (text === null) continue
     const shebang = text.startsWith('#!') ? text.slice(0, text.indexOf('\n') + 1) : ''
     const body = text.slice(shebang.length)
     if (SYNCED.test(body.split('\n').slice(0, 6).join('\n'))) continue
@@ -82,6 +84,15 @@ export const checkHeaders = (root, { fix = false, year = String(new Date().getFu
 }
 
 // Walks the tree when there is no git checkout, skipping what git would ignore.
+const readIfExists = (path) => {
+  try {
+    return readFileSync(path, 'utf8')
+  } catch (error) {
+    if (error.code === 'ENOENT') return null
+    throw error
+  }
+}
+
 const walk = (root, directory) =>
   readdirSync(join(root, directory), { withFileTypes: true }).flatMap((entry) => {
     const path = directory === '' ? entry.name : `${directory}/${entry.name}`
