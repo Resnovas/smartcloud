@@ -9,14 +9,8 @@
       "project": "@resnovas/action"
     }
   ],
-  "dropFromReleaseCommit": [
-    "externals"
-  ],
-  "apps": [
-    "apps/action",
-    "apps/cli",
-    "apps/mcp"
-  ],
+  "dropFromReleaseCommit": ["externals"],
+  "apps": ["apps/action", "apps/cli", "apps/mcp"],
   "nightly": {
     "major": 2
   },
@@ -26,14 +20,8 @@
   "npm": {
     "prepare": "node tools/release/prepare-cli.ts",
     "directory": "apps/cli/release",
-    "bundleTargets": [
-      "@resnovas/smartcloud:bundle",
-      "@resnovas/smartcloud-mcp:bundle"
-    ],
-    "sbomProjects": [
-      "@resnovas/smartcloud",
-      "@resnovas/smartcloud-mcp"
-    ]
+    "bundleTargets": ["@resnovas/smartcloud:bundle", "@resnovas/smartcloud-mcp:bundle"],
+    "sbomProjects": ["@resnovas/smartcloud", "@resnovas/smartcloud-mcp"]
   },
   "versionGlobal": "__SMARTCLOUD_VERSION__"
 }

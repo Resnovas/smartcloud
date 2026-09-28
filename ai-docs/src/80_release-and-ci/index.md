@@ -48,7 +48,6 @@ this repository ships is in `release.config.json` (the action bundle,
 `tools/release/prepare-cli.ts`, and `__SMARTCLOUD_VERSION__` as the version
 global). Change that file, never the synced workflows or tools.
 
-
 - **Stable** (`house-release.yml`, run by hand on `main`): Nx release computes the
   version from the conventional commits since the last `v*` tag, pushes a
   `v<version>` tag on a release commit holding `dist/index.js` and the bumped

@@ -11,18 +11,18 @@ The GitHub Action, the CLI and the MCP server (`@resnovas/action`, `@resnovas/sm
 
 The workflows and the tools under `tools/release/` are synced from [Resnovas/.github](https://github.com/Resnovas/.github/blob/main/docs/workflows.md#release), the same in every repository that ships releases. What this repository ships is written once, in `release.config.json` at the root:
 
-| Key | Value here | What it does |
-| --- | --- | --- |
-| `name` | `smartcloud` | The release name for error tracking (`smartcloud@<version>`). |
-| `firstRelease` | `2.0.0` | The version the first stable release takes, shown by the preview until a stable `v*` tag exists. |
-| `majorTag` | `true` | Move `v2` to each stable release, which workflows pin the action by. |
-| `bundles` | the action, `@resnovas/action:bundle` into `dist/index.js` | Built at release time, committed to the release commit, verified from the tag and attested with the action's SBOM. |
-| `dropFromReleaseCommit` | `externals` | Every run of the action downloads the tagged tree, which does not need the vendored source. |
-| `apps` | `apps/action`, `apps/cli`, `apps/mcp` | Their `package.json` is stamped by a nightly and their `CHANGELOG.md` goes into the changelog pull request. |
-| `nightly.major` | `2` | Nightlies preview 2.x. |
-| `posthog.projectId` | `285077` | The Smartcloud project in PostHog's EU cloud, where source maps go. |
-| `npm` | `apps/cli/release`, prepared by `tools/release/prepare-cli.ts` after the CLI and MCP bundles | Publishes `@resnovas/smartcloud` with provenance. |
-| `versionGlobal` | `__SMARTCLOUD_VERSION__` | The global the bundles stamp the version into, read by each app's `version.ts`. |
+| Key                     | Value here                                                                                   | What it does                                                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `name`                  | `smartcloud`                                                                                 | The release name for error tracking (`smartcloud@<version>`).                                                      |
+| `firstRelease`          | `2.0.0`                                                                                      | The version the first stable release takes, shown by the preview until a stable `v*` tag exists.                   |
+| `majorTag`              | `true`                                                                                       | Move `v2` to each stable release, which workflows pin the action by.                                               |
+| `bundles`               | the action, `@resnovas/action:bundle` into `dist/index.js`                                   | Built at release time, committed to the release commit, verified from the tag and attested with the action's SBOM. |
+| `dropFromReleaseCommit` | `externals`                                                                                  | Every run of the action downloads the tagged tree, which does not need the vendored source.                        |
+| `apps`                  | `apps/action`, `apps/cli`, `apps/mcp`                                                        | Their `package.json` is stamped by a nightly and their `CHANGELOG.md` goes into the changelog pull request.        |
+| `nightly.major`         | `2`                                                                                          | Nightlies preview 2.x.                                                                                             |
+| `posthog.projectId`     | `285077`                                                                                     | The Smartcloud project in PostHog's EU cloud, where source maps go.                                                |
+| `npm`                   | `apps/cli/release`, prepared by `tools/release/prepare-cli.ts` after the CLI and MCP bundles | Publishes `@resnovas/smartcloud` with provenance.                                                                  |
+| `versionGlobal`         | `__SMARTCLOUD_VERSION__`                                                                     | The global the bundles stamp the version into, read by each app's `version.ts`.                                    |
 
 Change the file, not the workflows: the workflows are managed by the house sync. `tools/release/prepare-cli.ts` is this repository's own, since it writes the npm package's manifest and README.
 

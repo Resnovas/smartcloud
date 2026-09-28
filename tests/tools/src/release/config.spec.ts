@@ -54,7 +54,11 @@ describe('parseReleaseConfig', () => {
 
   it('keeps a bundle without a project and an npm section without prepare', () => {
     const config = parseReleaseConfig(
-      { bundles: [{ target: 't', output: 'o' }], npm: { directory: 'd' }, posthog: { host: 'https://us.posthog.com', projectId: '1' } },
+      {
+        bundles: [{ target: 't', output: 'o' }],
+        npm: { directory: 'd' },
+        posthog: { host: 'https://us.posthog.com', projectId: '1' },
+      },
       'x',
     )
     expect(config.bundles).toEqual([{ target: 't', output: 'o' }])
