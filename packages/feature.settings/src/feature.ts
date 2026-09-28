@@ -45,7 +45,9 @@ export const SETTINGS_EVENTS: ReadonlySet<string> = new Set(['schedule', 'workfl
  * settings needs a token with administration write access to the repository
  * (an admin token, not the default `GITHUB_TOKEN`); without one every step
  * fails and is reported. Settings GitHub offers no API for are recorded as
- * notices to set by hand.
+ * notices to set by hand. The feature is `privileged`: in the action it acts
+ * with the app or access token, while other features act with the workflow
+ * token.
  *
  * @example
  * ```ts import.meta.vitest name="settingsFeature"
@@ -53,10 +55,13 @@ export const SETTINGS_EVENTS: ReadonlySet<string> = new Set(['schedule', 'workfl
  *
  * settingsFeature.enabled?.({ version: 2, settings: {} }) // => true
  * settingsFeature.enabled?.({ version: 2 }) // => false
+ * settingsFeature.privileged // => true
  * ```
  */
 export const settingsFeature: Feature = {
   name: FEATURE,
+  // Repository settings need an admin token, never the workflow token.
+  privileged: true,
   handles: ['repository'],
   enabled: (config) => config.settings !== undefined,
   run: ({ config, envelope }) =>

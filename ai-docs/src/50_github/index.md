@@ -10,6 +10,13 @@ and `dry-run.ts` and `restricted.ts` (writes); `repositoryRequest` and
 `graphql` are escape hatches for the settings feature's many endpoints, not a
 shortcut around that.
 
+Small helpers built on those escape hatches may live in the package itself,
+next to the service, when more than one feature needs them: `reviewers.ts`
+(review requests) and `auto-merge.ts` (`readAutoMerge`, `enableAutoMerge`,
+`disableAutoMerge`, `autoMergeRefusal`, `MERGE_METHODS`, shared by the
+`/automerge` command and the auto-merge feature). Reuse them rather than
+writing the query or mutation again in a feature.
+
 ### Layers
 
 | Layer                                           | Use                                                                                                                                                                                                                       |
@@ -18,6 +25,38 @@ shortcut around that.
 | `DryRun`                                        | Wraps whichever service is below it: reads pass through, writes are recorded in `DryRunLog`. A `url` field in a recorded raw request keeps only its origin; comment bodies and GraphQL variables are recorded as written. |
 | `Restricted`                                    | Wraps it for a read-only token: a write GitHub refuses as `Forbidden` is recorded in `SkippedWrites` and answered as in a dry run.                                                                                        |
 | `GitHubMemory(seed)` / `makeMemoryGitHub(seed)` | In memory, for tests; see the testing section.                                                                                                                                                                            |
+
+### Tokens: in-repository, privileged and house
+
+The action splits its tokens (`connectTokens` in `@resnovas/runtime`), so each
+does only its own job:
+
+| Service            | Token                                    | Used for                                                                                                   |
+| ------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `GitHub`           | the workflow token (`workflowToken`)     | Everything in the repository: check runs, comments, labels, reviews, facets, the repository's own config.  |
+| `PrivilegedGitHub` | the app or access token (`GITHUB_TOKEN`) | Features with `privileged: true` (settings, sync, codeowners, backport) and presets in other repositories. |
+| house reads        | the read-only house token (`houseToken`) | `getFile` and `listDirectory` in another `.github` repository, through `withHouseReads` on both services.  |
+
+- `PrivilegedGitHub` is optional. The CLI, the MCP server and any run with one
+  token provide only `GitHub`, and everything uses it, so a feature must never
+  require `PrivilegedGitHub`: mark it `privileged: true` and keep using `GitHub`.
+  The engine provides the privileged service as `GitHub` to such a feature.
+- A restricted run (fork, Dependabot, only the workflow token, or a rejected
+  token) has no privileged service. The house token is ignored on forks and
+  Dependabot runs. A restricted pull request run with a house token keeps the
+  sync edit check (`Access.houseReads`, `restrictedFeatures(access, event)`).
+- The workflows mint the app token only on `push`, `schedule` and
+  `workflow_dispatch` of the default branch, and on the `closed` event of a
+  merged pull request from the repository itself (trusted, merged code), for
+  backport: pull requests opened with the workflow token start no CI. Never
+  mint it for other `pull_request` or `issue_comment` runs.
+- `Restricted` never skips a refused `backport`: it fails with `Forbidden`, so
+  the backport feature warns that nothing was backported instead of
+  announcing a dry-run style #0.
+- `DryRun` wraps `PrivilegedGitHub` too, into the same `DryRunLog`.
+- `withHouseReads` falls back to the wrapped service when the house token
+  answers `Forbidden` or `NotFound`, such as for another organisation's
+  `.github`.
 
 ### Errors
 

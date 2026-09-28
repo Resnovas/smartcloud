@@ -64,12 +64,16 @@ const unitOf = (issue: ParseResult.ArrayFormatterIssue): Path => {
 }
 
 // A union reports one issue per member, such as `Expected "default", actual
-// "max"` for each literal; they read better as one. An unknown or missing key
+// "max"` for each literal; they read better as one. An unknown or missing key,
+// or a value of the right type that failed a check, such as a refused pattern,
 // says more than a member that did not match, such as a condition's `$and`.
 const describe = (
   issues: readonly [ParseResult.ArrayFormatterIssue, ...Array<ParseResult.ArrayFormatterIssue>],
 ): string => {
-  const first = issues.find((issue) => issue._tag === 'Unexpected' || issue._tag === 'Missing') ?? issues[0]
+  const first =
+    issues.find((issue) => issue._tag === 'Unexpected' || issue._tag === 'Missing') ??
+    issues.find((issue) => issue._tag === 'Refinement') ??
+    issues[0]
   const at = dotted(first.path)
   if (first._tag === 'Missing' || first._tag === 'Unexpected') return `${at} ${first.message}`
   const alike = issues.filter((issue) => issue._tag === first._tag && dotted(issue.path) === at)
@@ -158,10 +162,16 @@ const RESTRICTIONS: ReadonlyArray<Path> = [
 
 const within = (inner: Path, outer: Path): boolean => outer.every((key, index) => inner[index] === key)
 
+// Paths inside a restriction whose value has a safe fallback, so dropping it
+// does not loosen policy: a merge queue method that conflicts with the
+// ruleset falls back to one that fits it.
+const FALLBACKS: ReadonlyArray<Path> = [['settings', 'ruleset', 'mergeQueue', 'method']]
+
 /**
  * Whether dropping the value at a path could loosen policy: the path is, is
  * inside, or holds one of the settings that only tighten it, such as
- * `roles.maintainers` or `settings.ruleset`.
+ * `roles.maintainers` or `settings.ruleset`. A value with a safe fallback,
+ * `settings.ruleset.mergeQueue.method`, is not one.
  *
  * @internal
  *
@@ -169,6 +179,7 @@ const within = (inner: Path, outer: Path): boolean => outer.every((key, index) =
  * @returns True when the path touches a restriction.
  */
 export const isRestriction = (path: Path): boolean =>
+  !FALLBACKS.some((fallback) => within(path, fallback)) &&
   RESTRICTIONS.some((restriction) => within(path, restriction) || within(restriction, path))
 
 /**

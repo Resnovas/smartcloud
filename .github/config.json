@@ -997,7 +997,7 @@
             "condition": [
               {
                 "type": "descriptionMatches",
-                "condition": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+                "condition": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )?@(tgtgamer|videndum\\/.*))/im"
               },
               {
                 "type": "descriptionMatches",
@@ -1134,7 +1134,7 @@
             "condition": [
               {
                 "type": "descriptionMatches",
-                "condition": "/^- \\[x\\] bug Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+                "condition": "/^- \\[x\\] bug Confirmed by ((@.*& .*){4,}|(@.*& )?@(tgtgamer|videndum\\/.*))/im"
               },
               {
                 "type": "descriptionMatches",
@@ -1171,7 +1171,7 @@
             "condition": [
               {
                 "type": "descriptionMatches",
-                "condition": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )*@(tgtgamer|videndum\\/.*))/im"
+                "condition": "/^- \\[x\\] fix Confirmed by ((@.*& .*){4,}|(@.*& )?@(tgtgamer|videndum\\/.*))/im"
               },
               {
                 "type": "descriptionMatches",

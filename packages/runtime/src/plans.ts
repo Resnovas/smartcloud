@@ -44,7 +44,12 @@ export class NoSection extends Data.TaggedError('NoSection')<{ readonly section:
 export interface SettingsPlan {
   readonly repository: Repository
   readonly steps: ReadonlyArray<SettingsStep>
+  /** The settings the config sets but a run ignores, one line each, as `ResolvedConfig.ignored` lists them. */
+  readonly ignored?: ReadonlyArray<string>
 }
+
+// A line of `ResolvedConfig.ignored` about the settings section.
+const aboutSettings = (line: string): boolean => /: ignored settings(?:[.,]|$)/.test(line)
 
 /**
  * Plans the settings for the provided repository without applying them.
@@ -58,15 +63,20 @@ export interface SettingsPlan {
  * ```
  *
  * @param config - The resolved config.
+ * @param ignored - What resolving the config dropped, as `ResolvedConfig.ignored` lists it; the lines about settings are kept in the plan.
  * @returns The plan; no steps when the config has no `settings` section.
  */
-export const planRepositorySettings = (config: SmartcloudConfig) =>
+export const planRepositorySettings = (config: SmartcloudConfig, ignored: ReadonlyArray<string> = []) =>
   Effect.map(
     Effect.flatMap(GitHub, (github) => github.getRepository),
-    (repository): SettingsPlan => ({
-      repository,
-      steps: config.settings === undefined ? [] : planSettings(config.settings, config.roles, repository),
-    }),
+    (repository): SettingsPlan => {
+      const settings = ignored.filter(aboutSettings)
+      return {
+        repository,
+        steps: config.settings === undefined ? [] : planSettings(config.settings, config.roles, repository),
+        ...(settings.length === 0 ? {} : { ignored: settings }),
+      }
+    },
   )
 
 const stepTarget = (step: SettingsStep) => {
@@ -94,7 +104,8 @@ const stepTarget = (step: SettingsStep) => {
 }
 
 /**
- * A settings plan as text, one step per line.
+ * A settings plan as text, one step per line, then any settings the config
+ * sets but a run ignores.
  *
  * @example
  * ```ts
@@ -108,15 +119,20 @@ const stepTarget = (step: SettingsStep) => {
  * @returns Markdown.
  */
 export const settingsPlanText = (plan: SettingsPlan): string =>
-  plan.steps.length === 0
-    ? `Nothing to apply to ${plan.repository.fullName}: the config sets no repository settings.`
-    : [
-        `Settings for ${plan.repository.fullName}, in order:`,
-        ...plan.steps.map(
-          (step) =>
-            `- \`${step.id}\`: ${step.description}${step.optional ? ' (may fail; reported as a warning)' : ''}\n  ${stepTarget(step)}`,
-        ),
-      ].join('\n')
+  [
+    plan.steps.length === 0
+      ? `Nothing to apply to ${plan.repository.fullName}: the config sets no repository settings.`
+      : [
+          `Settings for ${plan.repository.fullName}, in order:`,
+          ...plan.steps.map(
+            (step) =>
+              `- \`${step.id}\`: ${step.description}${step.optional ? ' (may fail; reported as a warning)' : ''}\n  ${stepTarget(step)}`,
+          ),
+        ].join('\n'),
+    ...(plan.ignored === undefined
+      ? []
+      : [['Ignored, so not applied:', ...plan.ignored.map((line) => `- ${line}`)].join('\n')]),
+  ].join('\n\n')
 
 /**
  * Connects to a repository, loads its config, and plans its settings.
@@ -140,7 +156,9 @@ export const planSettingsForRepository = (
     const coordinates = yield* targetRepository(request.repository)
     const location = yield* configLocationFor(request.config)
     const service = yield* connect(coordinates)
-    const plan = Effect.flatMap(loadConfig(location), (resolved) => planRepositorySettings(resolved.config))
+    const plan = Effect.flatMap(loadConfig(location), (resolved) =>
+      planRepositorySettings(resolved.config, resolved.ignored),
+    )
     return yield* track(plan, {
       operation: 'settings plan',
       repository: coordinates,

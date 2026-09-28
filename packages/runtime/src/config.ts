@@ -17,6 +17,7 @@
 import { FileSystem } from '@effect/platform'
 import {
   ConfigSource,
+  type ExtendsRef,
   parseConfig,
   resolveConfig,
   SmartcloudConfig,
@@ -24,9 +25,9 @@ import {
   type ResolveOptions,
 } from '@resnovas/config'
 import type { EnvelopeKind, Feature, Finding } from '@resnovas/engine'
-import { GitHub } from '@resnovas/integrations.github'
+import { GitHub, PrivilegedGitHub } from '@resnovas/integrations.github'
 import { optOut } from '@resnovas/integrations.posthog'
-import { Data, Effect, Layer, Option, Schema } from 'effect'
+import { type Context, Data, Effect, Layer, Option, Schema } from 'effect'
 import { stringify } from 'yaml'
 import { recordConfig } from './analytics.js'
 import { FEATURE_SECTIONS, FEATURES } from './features.js'
@@ -86,6 +87,12 @@ export interface ConfigLocation {
 /**
  * Reads presets named in `extends` through whichever GitHub service is provided.
  *
+ * @remarks
+ * A preset in another repository is read through the {@link PrivilegedGitHub}
+ * service when the run has one, since the workflow token cannot see other
+ * private repositories; a preset in the repository itself, and every preset
+ * in a run without one, through `GitHub`.
+ *
  * @example
  * ```ts
  * import { resolveConfig } from '@resnovas/config'
@@ -99,9 +106,22 @@ export interface ConfigLocation {
  */
 export const ConfigSourceFromGitHub = Layer.effect(
   ConfigSource,
-  Effect.map(GitHub, (github) => ({
-    read: (ref) => github.getFile(ref).pipe(Effect.mapError(presetError(ref))),
-  })),
+  Effect.gen(function* () {
+    const github = yield* GitHub
+    const privileged = yield* Effect.serviceOption(PrivilegedGitHub)
+    const here = github.coordinates
+    const reader = (ref: ExtendsRef) =>
+      ref.owner.toLowerCase() === here.owner.toLowerCase() && ref.repo.toLowerCase() === here.repo.toLowerCase()
+        ? github
+        : Option.getOrElse(privileged, () => github)
+    const source: Context.Tag.Service<ConfigSource> = {
+      read: (ref) =>
+        reader(ref)
+          .getFile(ref)
+          .pipe(Effect.mapError(presetError(ref))),
+    }
+    return source
+  }),
 )
 
 /**
@@ -312,7 +332,7 @@ export interface ConfigExplanation {
  * import { explainConfig } from '@resnovas/runtime'
  *
  * const explained = explainConfig({ config: { version: 2 }, sources: ['smartcloud.yml'], locked: new Set(), warnings: [] })
- * explained.features.length // => 15
+ * explained.features.length // => 16
  * ```
  *
  * @param resolved - The resolved config.

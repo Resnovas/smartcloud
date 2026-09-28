@@ -77,6 +77,22 @@ labelling:
     ),
   )
 
+  it.effect('says why a pattern was refused, dropping the when that holds it', () =>
+    Effect.map(
+      resolve(`version: 2
+labelling:
+  fix: { label: fix, when: { condition: [{ type: titleMatches, condition: '^fix: (\\w+\\s?)+$' }] } }
+`),
+      ({ config, warnings }) => {
+        expect(config.labelling).toStrictEqual({})
+        expect(warnings[0]).toMatch(
+          /^smartcloud\.yml: ignored labelling\.fix\.when, because labelling\.fix\.when\.condition\.0\.condition: invalid pattern /,
+        )
+        expect(warnings[0]).toContain('(catastrophic backtracking)')
+      },
+    ),
+  )
+
   it.effect('treats a rule named when as a rule, not as its conditions', () =>
     Effect.map(
       resolve(`version: 2
@@ -223,6 +239,40 @@ conventions:
       ({ config, loosened }) => {
         expect(config.settings?.actions).toStrictEqual({ enabled: true })
         expect(loosened).toHaveLength(3)
+      },
+    ),
+  )
+
+  it.effect('drops a conflicting merge queue method alone, as a warning that does not loosen policy', () =>
+    Effect.map(
+      // The preset turns linear history on; the repository's own queue merges.
+      resolve(
+        `version: 2\nextends: ['${HOUSE}']\nsettings:\n  ruleset: { mergeQueue: { method: merge, grouping: headGreen } }\n`,
+        { [HOUSE]: 'version: 2\nsettings:\n  ruleset: { linearHistory: true }\n' },
+      ),
+      ({ config, ignored, loosened }) => {
+        expect(config.settings?.ruleset).toStrictEqual({ linearHistory: true, mergeQueue: { grouping: 'headGreen' } })
+        expect(ignored).toStrictEqual([
+          expect.stringMatching(
+            /: ignored settings\.ruleset\.mergeQueue\.method, because settings\.ruleset\.mergeQueue\.method: the merge queue cannot use merge while linearHistory is on/,
+          ),
+        ])
+        expect(loosened).toBeUndefined()
+      },
+    ),
+  )
+
+  it.effect('fails a strict config whose merge queue method conflicts', () =>
+    Effect.map(
+      Effect.flip(
+        resolveConfig(
+          'version: 2\nsettings:\n  ruleset: { mergeQueue: { method: rebase }, pullRequest: { mergeMethods: [squash] } }\n',
+          'smartcloud.yml',
+          { strict: true },
+        ).pipe(Effect.provide(presets({}))),
+      ),
+      (error) => {
+        expect(error.message).toContain('the merge queue method rebase is not one of pullRequest.mergeMethods (squash)')
       },
     ),
   )

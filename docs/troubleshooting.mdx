@@ -90,6 +90,13 @@ To see what a run would do without it doing anything, use [`smartcloud dry-run`]
     Dropping a bad value there would loosen policy, so it is an error that blocks merging instead of a warning. Fix the
     value. The list is under [Unknown keys and invalid values](/configuration#unknown-keys-and-invalid-values).
   </Accordion>
+  <Accordion title='"invalid pattern ... (catastrophic backtracking)"'>
+    A pattern in your config has a repeated part that can match the same text in more than one way, such as
+    `^(\w+\s?)+$`. Text that almost matches could keep the run busy for minutes, so smartcloud refuses it: a run leaves
+    out the rule that uses it, and `smartcloud validate` reports it as an error. Rewrite it so each character can be
+    matched only one way, for example `^\w+(\s\w+)*$`. See [Patterns smartcloud
+    refuses](/conditions#patterns-smartcloud-refuses-catastrophic-backtracking).
+  </Accordion>
   <Accordion title='"cannot change ... it is set by ..."'>
     Your config gives a different value for something a preset set. Presets are locked: add a new rule instead. See
     [Add, never change](/presets#add-never-change).

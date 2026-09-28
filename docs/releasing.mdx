@@ -11,7 +11,7 @@ The GitHub Action, the CLI and the MCP server (`@resnovas/action`, `@resnovas/sm
 
 `pnpm bundle:check` builds the action and checks `dist/index.js` against the raw and gzip byte limits in `bundle-size.json`. CI runs the same command in its build job, which feeds the required `check` context on pull requests and merge queue groups. Changes that skip the build job also skip the bundle check.
 
-The checked-in baseline is 3,528,427 raw bytes and 719,295 gzip bytes, with limits of 3,881,270 and 791,225 bytes respectively (10% headroom, rounded up). Gzip uses level 9. Only `dist/index.js` counts, including its linked source-map comment; the source map and other release assets do not. This measures the CI bundle before release version stamping and PostHog processing.
+The checked-in baseline is 3,881,093 raw bytes and 796,299 gzip bytes, with limits of 4,269,203 and 875,929 bytes respectively (10% headroom, rounded up). Gzip uses level 9. Only `dist/index.js` counts, including its linked source-map comment; the source map and other release assets do not. This measures the CI bundle before release version stamping and PostHog processing.
 
 The command prints a table of baseline, current size, signed change, limit and remaining budget, and appends it to the GitHub job summary. Either limit exceeded fails the build with the exact overage. The delta is against the reviewed baseline in the JSON file, not a freshly rebuilt base branch, so it needs no extra checkout, network access, secrets or write permissions.
 
@@ -81,6 +81,53 @@ Run it once as a dry run, check the notes, then run it again with `dry-run` clea
   Do not run `nx release` locally except with `--dry-run`. Nx is configured to create the GitHub release, so a real
   local run pushes and publishes notes against whatever is checked out.
 </Warning>
+
+## Release preview on pull requests
+
+A release is cut from `main` long after most pull requests merge, so it is easy to lose track of what a change will do to the next version. The release preview answers that on the pull request itself: every pull request gets a comment saying which version the next release would be if it were merged now, what its own commit adds, and the release notes that release would carry. Nothing is released by it; it is the same dry run as `pnpm release:dry-run`, run for you.
+
+### What you see
+
+The `release preview` workflow (`.github/workflows/release-preview.yml`) runs when a pull request is opened, reopened or pushed to, and when its title or base branch changes. It leaves one comment headed **Release preview**, and edits that same comment on later runs rather than adding more. The same report is in the job summary of the run (open **Checks**, then **release preview**).
+
+A comment for a pull request titled `feat(labels): colour aliases` reads like this:
+
+```markdown
+## Release preview
+
+If this pull request were merged now, the next release would be **v2.1.0** (the last one is v2.0.3).
+
+This pull request would land as `feat(labels): colour aliases (#712)`, which calls for a minor release (a new feature)
+when it changes the released apps or a library bundled into them. ...
+
+<details><summary>Release notes</summary> ... </details>
+```
+
+How to read it:
+
+- **The next version** counts every commit on `main` since the last stable `v*` tag, plus this pull request. If another merged pull request already calls for a minor release, a `fix` here still shows the minor version: the release takes the biggest bump of all of them.
+- **Would land as** is the commit the merge queue would put on `main`. Pull requests are squash-merged, so it is the pull request's title with its number added, over its commits' messages. That is why the title matters: `feat` is a minor release, `fix`, `perf` and `revert` are patch, `!` after the type or `BREAKING CHANGE:` in any commit message is major, and other types (`docs`, `chore`, `ci`, `refactor`, `test` and so on) change nothing.
+- **Nx counts a commit only for the files it changes.** A pull request that changes only workflows, `tools/`, docs or tests releases nothing whatever its title, and the preview shows the version the other commits call for.
+- **No commit calls for a new version** means that, with this pull request merged, there would be nothing to release yet.
+- **The first release** is shown until a stable v2 release exists. Its version, `2.0.0`, is set by hand when the release workflow runs (see below), so the preview shows that version and the notes it would carry.
+- **Release notes** are what the GitHub release and the changelog files would say. Very long notes are cut short in the comment; the job summary has them in full.
+
+### When the comment is missing or says something went wrong
+
+| What you see                                               | Why                                                                                                                      | What to do                                                                            |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| No comment on a pull request from a fork or Dependabot     | Their workflow token cannot write comments, so the comment job is skipped.                                               | Read the job summary of the **release preview** run.                                  |
+| "The release preview could not be made: ..."               | The dry run failed, for example because the pull request breaks `nx.json` or the lockfile.                               | Run `pnpm release:preview` (or `pnpm release:dry-run`) locally to see the full error. |
+| "which is not a conventional commit"                       | The title is not written as `type(scope): summary`, so Nx ignores the commit.                                            | Rename the pull request; the preview updates when the title changes.                  |
+| The version did not change though the title is `feat: ...` | The pull request changes no file the released apps are built from, or an earlier commit already calls for a bigger bump. | Nothing, if that is expected.                                                         |
+
+The preview never blocks a pull request: it is not part of the required `check`, a failure becomes a warning, and the workflow reports success either way.
+
+### How it works
+
+The workflow checks out the pull request's merge commit with the full history and tags, and runs `tools/release/release-preview.ts`. The script swaps the merge commit for the squash commit that would land, then asks Nx release for the version and notes in dry-run mode, exactly as the release workflow would, without building, tagging or writing anything. The job that runs this code has a read-only token. A second job, which runs no code from the pull request, posts or updates the comment with the only write access in the workflow (`pull-requests: write`).
+
+Run the same preview locally with `pnpm release:preview`. Locally it previews the checked-out commit as it is, since it has no pull request title to squash with.
 
 ## The first v2 release
 

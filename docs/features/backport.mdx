@@ -151,14 +151,14 @@ The two work together rather than twice:
 
 Backports need `contents: write` to push the branch and `pull-requests: write` to open the pull request and comment on the original.
 
-Pull requests opened with the workflow token do not start other workflows, so CI does not run on them. Give smartcloud a GitHub App or personal access token, as the workflow above does with `ACCESS_TOKEN`, for CI to run on backports. Without one it falls back to the workflow token, and backports still open. The workflow token also cannot push changes to files under `.github/workflows`, so a pull request that changes a workflow can only be backported with such a token.
+Pull requests opened with the workflow token do not start other workflows, so CI does not run on them. Give smartcloud a GitHub App or personal access token, as the workflow above does with `ACCESS_TOKEN`, for CI to run on backports. The feature is privileged: when the run has an app token, backports use it while checks and comments still use the workflow token. [Tokens and access](/tokens#why-backport-needs-the-app-token) shows how to mint the app token only for merged pull requests. Without one it falls back to the workflow token, and backports still open. The workflow token also cannot push changes to files under `.github/workflows`, so a pull request that changes a workflow can only be backported with such a token.
 
 ## Forks and restricted runs
 
 A pull request from a fork always runs [restricted](/glossary#restricted-run): smartcloud acts with the workflow token whatever `GITHUB_TOKEN` the workflow passes. So:
 
 - On `pull_request_target`, the workflow token can write, and the fork's merged pull request is backported, but the backport pull request gets no CI run, even with `ACCESS_TOKEN` set.
-- On `pull_request`, the token is read-only. The backport is skipped and listed under **Restricted access** in the job summary, or recorded as a warning that it was not backported on a read-only token.
+- On `pull_request`, the token is read-only. Nothing is backported, and the run records a warning that the token cannot push. The same warning appears when a run has no app token and the job grants only `contents: read`.
 
 The same applies to Dependabot's pull requests.
 

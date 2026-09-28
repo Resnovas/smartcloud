@@ -10,7 +10,11 @@ The config lives in `@resnovas/config`; reading it from a repository lives in
 given `path` and `ref`), and fails with `NoConfig` when there is none.
 `loadConfig` then calls `resolveConfig`, which:
 
-1. parses YAML or JSON (`ConfigParseError` otherwise);
+1. parses YAML or JSON (`ConfigParseError` otherwise). A label `color` that
+   YAML reads as a number keeps its source text, so `000123` stays `'000123'`
+   and `1e3` stays `'1e3'` (and fails the six-hex-digit check) instead of
+   becoming `1000`. The `Color` schema also accepts a whole number from 0 to
+   999999 and pads it to six digits, for configs built in code or JSON;
 2. migrates a file without `version: 2` from v1 (`migrateV1`), with a warning
    for every v1 key it cannot carry over;
 3. reads each `extends` entry through the `ConfigSource` service
@@ -59,6 +63,33 @@ preset, a cycle, and a change to a locked value. `resolveConfig(text, source,
 { strict: true })`, which `smartcloud validate` and the MCP `validate_config`
 tool use, fails on every problem instead.
 
+### Cross-field checks
+
+A rule that ties two keys together is a `Schema.filter` on the struct that
+holds both, checked on the merged config (a preset may set one key and the
+repository the other). Return `Schema.FilterIssue`s whose `path` points at the
+one key a lenient run should drop, never the whole struct: a failing filter
+without a path drops the object it sits on, which for `settings.ruleset` would
+throw away every branch protection. Give the filter `jsonSchema: {}` unless
+the rule can be written as JSON Schema too.
+
+The merge queue check (SMC-122) is the model: `mergeQueueConflicts` in
+`sections.ts` reports `settings.ruleset.mergeQueue.method` when it is `merge`
+under `linearHistory: true`, or not in `pullRequest.mergeMethods`.
+
+- `smartcloud validate` (strict) fails with the message and path.
+- A run drops only the method, with a `config.ignored` warning. The path is in
+  `FALLBACKS` in `lenient.ts`, so it is not counted as `loosened`: the planner
+  (`defaultQueueMethod` in `feature.settings/src/plan.ts`) then picks squash,
+  else the first of rebase and merge the ruleset allows.
+- `planRepositorySettings(config, resolved.ignored)` keeps the `settings.*`
+  lines of `ignored`, and `settingsPlanText` lists them under "Ignored, so not
+  applied", so `smartcloud plan settings` and the MCP `plan_settings` tool
+  show them.
+
+When the dropped value has a safe fallback like this, add its path to
+`FALLBACKS`; otherwise leave it a restriction so dropping it is an error.
+
 ### The schema
 
 `SmartcloudConfig` in `packages/config/src/schema.ts` is the single source of
@@ -69,6 +100,24 @@ conventions and sizes). Two artefacts are generated from it and checked:
 | --------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------- |
 | `schema/smartcloud.schema.json` (for editors) | `SMARTCLOUD_UPDATE_SCHEMA=1 pnpm nx test @resnovas/config-tests` | `tests/config/src/json-schema.spec.ts` |
 | `docs/reference/configuration.mdx`            | `pnpm docs:reference`                                            | `pnpm docs:reference:check`            |
+
+The JSON Schema declares draft-07, where every keyword beside a `$ref` is
+ignored. `configJsonSchema` (`packages/config/src/json-schema.ts`) therefore
+rewrites Effect's output so no `$ref` has siblings: annotations (`title`,
+`description`) stay on the node and constraints move into an `allOf`, and the
+root points at `SmartcloudConfig` the same way beside `$defs`:
+
+```json
+{
+  "description": "The fewest lines added plus deleted that make a pull request Size: S. Defaults to 10.",
+  "title": "positive",
+  "allOf": [{ "$ref": "#/$defs/Int" }, { "exclusiveMinimum": 0 }]
+}
+```
+
+A spec in `json-schema.spec.ts` fails if any `$ref` gains a sibling, and
+`tools/docs/config-reference.ts` folds the wrapper back when it renders the
+reference page. Keep both in step if you change the shape.
 
 Annotate every field with a `description` (it becomes the JSON Schema and the
 reference page), and use `Schema.optionalWith(x, { exact: true })` for optional

@@ -98,17 +98,59 @@ const decide = (config: SmartcloudConfig, rules: Rules, subject: Subject) =>
   })
 
 /**
+ * The old names each decided label is still known by, keyed by the old name
+ * in lower case, as GitHub compares names.
+ *
+ * @remarks
+ * Aliases come from the `labels` section. Current names win: an alias that is
+ * also the current name of a configured or decided label is ignored, so one
+ * label can never be removed as another's old name. When two labels claim the
+ * same alias, the first in the config keeps it.
+ *
+ * @example
+ * ```ts import.meta.vitest name="aliasesOf"
+ * import { aliasesOf } from '@resnovas/feature.labels'
+ *
+ * const config = { version: 2 as const, labels: { m: { name: 'medium', color: '7F7203', aliases: ['Size: M'] } } }
+ * aliasesOf(config, ['medium']).get('size: m') // => 'medium'
+ * ```
+ *
+ * @param config - The whole config; `labels` is read.
+ * @param decided - The current names of the labels the rules decided on.
+ * @returns Each alias, in lower case, mapped to its label's current name.
+ */
+export const aliasesOf = (config: SmartcloudConfig, decided: ReadonlyArray<string>): ReadonlyMap<string, string> => {
+  const configured = Object.values(config.labels ?? {})
+  const current = new Set([...configured.map((label) => label.name), ...decided].map((name) => name.toLowerCase()))
+  const wanted = new Set(decided.map((name) => name.toLowerCase()))
+  const aliases = new Map<string, string>()
+  for (const label of configured) {
+    if (!wanted.has(label.name.toLowerCase())) continue
+    for (const alias of label.aliases ?? []) {
+      const key = alias.toLowerCase()
+      if (!current.has(key) && !aliases.has(key)) aliases.set(key, label.name)
+    }
+  }
+  return aliases
+}
+
+/**
  * Adds and removes labels on a pull request or issue as its `labelling`
  * rules pass and fail.
  *
  * @remarks
  * A rule applies to the subject kinds in its `on`, or both when omitted. A
  * label whose rule passes is added when missing; one whose rules all fail is
- * removed when present. Names compare ignoring case, as GitHub does. When a
- * label disappears between reading the subject and removing it, GitHub
- * answers NotFound; that race is a warning, not a failure. So is a Forbidden
- * write: a pull request from a fork runs with a read-only token, and one
- * label the token cannot set should not fail the whole run.
+ * removed when present. Names compare ignoring case, as GitHub does. A label
+ * still carried under one of its `aliases` (an old name, before label sync
+ * renamed it) counts as present: when it is wanted the old name is replaced
+ * with the current one, and when it is not the old name is removed too. See
+ * {@link aliasesOf} for which aliases count. When a label disappears between
+ * reading the subject and removing it, GitHub answers NotFound; that race is
+ * a warning, not a failure. So is a Forbidden write: a pull request from a
+ * fork runs with a read-only token, and one label the token cannot set should
+ * not fail the whole run. An old name is only removed from a wanted label once
+ * its current name was added, so a refused add never loses the label.
  *
  * @example
  * ```ts
@@ -136,44 +178,79 @@ export const applyLabels = (
     const decisions = yield* decide(config, config.labelling, subject)
     const present = (name: string) => subject.labels.some((label) => sameName(label, name))
     const decided = [...decisions.values()]
+    const aliases = aliasesOf(
+      config,
+      decided.map((entry) => entry.name),
+    )
+    // The subject's labels that are an old name of a decided label.
+    const stale = subject.labels.flatMap((label) => {
+      const current = aliases.get(label.toLowerCase())
+      return current === undefined ? [] : [{ name: label, current }]
+    })
+    const underAlias = (name: string) => stale.filter((entry) => sameName(entry.current, name))
 
     const toAdd = decided.filter((entry) => entry.wanted && !present(entry.name)).map((entry) => entry.name)
     const toRemove = decided.filter((candidate) => !candidate.wanted && present(candidate.name))
-    yield* Effect.logInfo(`labels: ${toAdd.length} to add, ${toRemove.length} to remove`).pipe(
+    const wanted = (name: string) => decided.some((entry) => entry.wanted && sameName(entry.name, name))
+    const replaced = stale.filter((entry) => wanted(entry.current))
+    const dropped = stale.filter((entry) => !wanted(entry.current))
+    yield* Effect.logInfo(
+      `labels: ${toAdd.length} to add, ${toRemove.length + dropped.length} to remove, ${replaced.length} to rename`,
+    ).pipe(
       Effect.annotateLogs({
         feature: FEATURE,
         rule: 'labels.apply',
         rules: decided.length,
         add: toAdd.length,
-        remove: toRemove.length,
+        remove: toRemove.length + dropped.length,
+        rename: replaced.length,
       }),
     )
-    if (toAdd.length > 0) {
-      yield* github.addLabels(subject.number, toAdd).pipe(
-        Effect.zipRight(
-          Effect.forEach(
-            toAdd,
-            (name) => report.change({ feature: FEATURE, description: `added label "${name}" to #${subject.number}` }),
-            {
-              discard: true,
-            },
-          ),
-        ),
-        Effect.catchTag('Forbidden', () =>
-          report.add({
-            feature: FEATURE,
-            rule: 'labels.add',
-            level: 'warning',
-            message: `could not add ${toAdd.map((name) => `"${name}"`).join(', ')} to #${subject.number} ${READ_ONLY_TOKEN}`,
-          }),
-        ),
-      )
-    }
+    const added =
+      toAdd.length === 0
+        ? true
+        : yield* github.addLabels(subject.number, toAdd).pipe(
+            Effect.zipRight(
+              Effect.forEach(
+                toAdd,
+                (name) => {
+                  const old = underAlias(name).map((entry) => `"${entry.name}"`)
+                  const note = old.length === 0 ? '' : `, replacing its old name ${old.join(', ')}`
+                  return report.change({
+                    feature: FEATURE,
+                    description: `added label "${name}" to #${subject.number}${note}`,
+                  })
+                },
+                { discard: true },
+              ),
+            ),
+            Effect.as(true),
+            Effect.catchTag('Forbidden', () =>
+              report
+                .add({
+                  feature: FEATURE,
+                  rule: 'labels.add',
+                  level: 'warning',
+                  message: `could not add ${toAdd.map((name) => `"${name}"`).join(', ')} to #${subject.number} ${READ_ONLY_TOKEN}`,
+                })
+                .pipe(Effect.as(false)),
+            ),
+          )
 
-    for (const entry of toRemove) {
+    const removals = [
+      ...toRemove.map((entry) => ({ name: entry.name, why: '' })),
+      ...[...dropped, ...(added ? replaced : [])].map((entry) => ({
+        name: entry.name,
+        why: ` (an old name of "${entry.current}")`,
+      })),
+    ]
+    for (const entry of removals) {
       yield* github.removeLabel(subject.number, entry.name).pipe(
         Effect.zipRight(
-          report.change({ feature: FEATURE, description: `removed label "${entry.name}" from #${subject.number}` }),
+          report.change({
+            feature: FEATURE,
+            description: `removed label "${entry.name}"${entry.why} from #${subject.number}`,
+          }),
         ),
         Effect.catchTag('NotFound', () =>
           report.add({

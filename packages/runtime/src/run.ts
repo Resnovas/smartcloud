@@ -112,7 +112,10 @@ export const runEvent = (options: {
     const run = Effect.gen(function* () {
       const resolved = yield* loadConfig(options.config, { skipUnreadable: skippablePreset(access, repository) })
       const features = yield* selectFeatures(options.features)
-      const turnedOff = new Map([...(yield* turnedOffFeatures(repository, features)), ...restrictedFeatures(access)])
+      const turnedOff = new Map([
+        ...(yield* turnedOffFeatures(repository, features)),
+        ...restrictedFeatures(access, options.event.name),
+      ])
       const featureRun = yield* runFeatures({
         config: resolved.config,
         event: options.event.name,

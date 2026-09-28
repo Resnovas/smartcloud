@@ -1,0 +1,428 @@
+---
+title: 'Build your settings file'
+description: 'Write .github/smartcloud.yml one section at a time, in the order a newcomer should add them, and see what each section does when a run starts.'
+---
+
+Your **settings file** is `.github/smartcloud.yml`: one YAML file, on your default branch, that tells smartcloud what to do in the repository. Every feature is off until you give it a section, so the file only ever does what you wrote in it. The rest of these docs also call it the [config](/glossary#config). Do not confuse it with the `settings` section inside it, which changes the repository's own GitHub settings ([step 11](#step-11-repository-settings-settings)).
+
+This guide builds a complete file from nothing, one section at a time. After each step you can commit and watch it work, so if something surprises you, you know which step caused it. It assumes you have already added the workflow from [Getting started](/getting-started#2-add-the-workflow). For ready-made files you can copy whole, see [Recommended setups](/guides/recommended-setups).
+
+<Note>
+  New to the words used here? A [subject](/glossary#subject) is the pull request or issue a run is about, a [check
+  run](/glossary#check-run) is one line in the **Checks** tab, and a [preset](/glossary#preset) is a shared settings
+  file. The [glossary](/glossary) explains the rest.
+</Note>
+
+## How the file is read
+
+Knowing what smartcloud does with the file makes every later step easier to reason about. Each time the workflow runs:
+
+1. **An [event](/glossary#event) starts the run**: a pull request opened, a comment posted, a push to `main`, the daily schedule.
+2. **smartcloud reads `.github/smartcloud.yml` from the default branch**, never from the pull request. A pull request cannot loosen the rules it is checked against; a change to the file takes effect once it merges.
+3. **Presets are merged in.** Anything under `extends` is read first and your file is laid on top. You can add to a preset, never change it ([Add, never change](/presets#add-never-change)).
+4. **Mistakes are dropped, not fatal.** An unknown key or a bad value is left out with a warning in the `smartcloud / config` check, so a typo never stops the repository working. [`smartcloud validate`](/cli#validate) is strict and catches them before you commit.
+5. **Each feature with a section runs, if the event is one it acts on.** Labelling runs on pull requests and issues, stale on the schedule, settings on a push or the schedule. The [table at the end](#which-section-runs-when) lists them all.
+6. **Results are reported**: one check run per feature (`smartcloud / labels`, `smartcloud / conventions`, ...), one comment on the pull request or issue, and the job summary in the **Actions** tab.
+
+Two rules shape how you write every section:
+
+- **Rules are keyed maps, never lists.** Each label, labelling rule or convention has a key you choose (`docs:`, `title:`). The key is how presets and your file merge, and how a finding names the rule it is about.
+- **A section being present turns its feature on.** `commands: {}` is enough to turn commands on with every default. Delete a section to turn the feature off.
+
+## Step 1: the skeleton
+
+Create `.github/smartcloud.yml` on the default branch:
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+```
+
+- **The first line** points editors such as VS Code (with the Red Hat YAML extension) at the JSON Schema, so they complete every key and underline mistakes as you type. It is a comment, so smartcloud ignores it.
+- **`version: 2`** is required. A file without it is read as an old v1 config and converted on the fly; see [Migrating from v1](/migration).
+
+**What happens when it runs:** nothing yet. Every feature is off, and the run finishes in a second with nothing to report.
+
+## Step 2: who runs the project (`roles` and `links`)
+
+Several features need to know who the [maintainers](/glossary#maintainer) are and which bots to trust, so set this up first.
+
+```yaml
+roles:
+  maintainers: [octocat, hubot]
+  trustedBots: ['dependabot[bot]', 'renovate[bot]']
+
+links:
+  policyBase: https://github.com/my-org/.github/blob/main
+```
+
+- **`roles.maintainers`** are GitHub logins. The review gate counts their approvals, and the commits, disclosure and sync checks go easier on their own pull requests (a warning rather than an error). The ruleset approvals and the review gate only switch on once **two or more** are listed, so a project with one maintainer is never blocked by its own rules.
+- **`roles.trustedBots`** skip the commits and disclosure checks and the review gate. Quote them: `[bot]` would otherwise be read as a YAML list.
+- **`links.policyBase`** is where your governance documents live. Findings link to pages under it, such as `CONTRIBUTING.md#dco`. Leave it out and they link to the Resnovas documents, which is fine while you try things out.
+
+**What happens when it runs:** still nothing visible. These settings are read by the features you add next. See [Roles and links](/configuration#roles).
+
+## Step 3: the labels (`labels`)
+
+Labels come early because later sections (labelling, stale, lock) refer to them.
+
+```yaml
+labels:
+  bug:
+    name: bug
+    color: 'D73A4A'
+    description: Something is not working
+  docs:
+    name: documentation
+    color: '0075CA'
+    description: Improvements or additions to documentation
+  stale:
+    name: stale
+    color: 'CFD3D7'
+```
+
+- The key (`docs`) is what other sections use; `name` is what GitHub shows.
+- **Quoting colours is recommended, not required.** YAML reads a colour made only of digits, such as `000000`, as a number; smartcloud turns it back into the six digits you wrote, so it works either way. Quotes make it plain to the reader (and to editors that check the file) that it is text.
+- Add `labelSync: { prune: true }` only when you want smartcloud to **delete** every label the file does not list. Leave it out while you are getting started.
+- To rename a label without losing it on old issues, give the new `name` and list the old one under `aliases`.
+
+**What happens when it runs:** on the next push to the default branch (or the daily schedule), smartcloud creates any label that is missing and fixes the colour and description of any that differ. **Issues > Labels** now shows them. See [Labels](/features/labels).
+
+## Step 4: label things automatically (`labelling` and `sizeLabels`)
+
+```yaml
+labelling:
+  docs:
+    label: docs
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'docs/**'
+
+sizeLabels: {}
+```
+
+- A **labelling rule** puts `label` (a key from step 3) on the subject while its `when` passes, and takes it off again when it stops passing.
+- `when` is a [condition group](/conditions): a list of yes-or-no questions. Without `requires`, all of them must pass; with `requires: 1`, any one is enough.
+- **`sizeLabels: {}`** adds `Size: XS` to `Size: XL` to every pull request by how many lines it changes.
+
+**What happens when it runs:** on every pull request event, the pull request gets `documentation` if it changes a file under `docs/`, and one size label. The `smartcloud / labels` check lists what it added or removed.
+
+## Step 5: title rules (`conventions`)
+
+```yaml
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+```
+
+- A **convention rule** fails the subject when it does not meet the `preset`, its `when`, or both.
+- `conventionalCommits` asks for titles like `fix(api): reject expired tokens`. Add `contexts: [api, web]` to allow only those scopes.
+- `level: warning` makes a rule advisory: it reports, but does not fail the check.
+
+**What happens when it runs:** a pull request titled `Update readme` fails `smartcloud / conventions`, and the report comment says why and shows an example. Rename it `docs: update readme` and the next run passes. See [Conventions](/features/conventions).
+
+## Step 6: one check to require (`required`)
+
+```yaml
+required:
+  expect: ['^test$']
+```
+
+- The **required** feature makes the job's own `smartcloud` check wait for every other check on the pull request and fail if any of them fails. A [ruleset](/glossary#ruleset) then needs to require `smartcloud` alone, instead of a list that goes stale every time a CI job is renamed.
+- **`expect`** lists checks that must appear, as patterns. Name your main CI job here, so the aggregate cannot pass while CI never ran.
+- It needs `checkRunId: ${{ job.check_run_id }}` in the workflow step, which the [Getting started workflow](/getting-started#2-add-the-workflow) already has.
+
+**What happens when it runs:** on pull requests the `smartcloud` job stays running until the other checks finish (up to `timeout`, 60 minutes by default), then passes or fails with them. See [Required](/features/required).
+
+## Step 7: housekeeping (`stale` and `lock`)
+
+```yaml
+stale:
+  on: [issue]
+  staleAfterDays: 60
+  staleLabel: stale
+  staleComment: This issue has had no activity for 60 days. Comment to keep it open.
+  abandonedAfterDays: 14
+  close: true
+  exempt:
+    labels: [pinned]
+
+lock:
+  afterDays: 30
+  reason: resolved
+```
+
+- **stale** marks items with no activity, then (with `abandonedAfterDays`) marks them abandoned, and (with `close: true`) closes them. Any comment or push in between resets the clock.
+- **lock** locks the conversation of items that have been closed for `afterDays`, so an old thread is not revived by accident.
+- Both use label **names** as GitHub shows them, not keys from step 3.
+
+**What happens when it runs:** these only run on the `schedule` and `workflow_dispatch` events. Run the workflow by hand (**Actions > smartcloud > Run workflow**) to see the first sweep now. See [Stale](/features/stale) and [Lock](/features/lock).
+
+## Step 8: slash commands (`commands`)
+
+```yaml
+commands:
+  overrides:
+    merge: { enabled: false }
+```
+
+`commands: {}` turns on every command, such as `/label bug`, `/assign`, `/rebase` and `/stale-snooze`, each limited to people with a suitable role. `overrides` switches single commands off or changes who may use them.
+
+**What happens when it runs:** on `issue_comment` events. Comment `/help` on any issue to see the commands you may use; smartcloud reacts to the comment and replies. See [Commands](/features/commands).
+
+## Step 9: stricter pull request policy
+
+These sections are for projects that want contributions to meet a bar. Add only the ones you need.
+
+```yaml
+commits:
+  dco: true
+
+reviews:
+  gate:
+    outside: 2
+    maintainer: 1
+
+branches:
+  names:
+    typed:
+      preset: prefixed
+      prefixes: [feat, fix, docs, chore]
+  exempt:
+    branches: ['^dependabot/']
+
+codeowners: {}
+```
+
+| Section                    | What it checks                                                                                            | Read more                          |
+| -------------------------- | --------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| `commits`                  | Every commit is signed off ([DCO](/glossary#dco)), and AI help is credited with trailers.                 | [Commits](/features/commits)       |
+| `disclosure`               | The pull request description says how AI was used. Needs the fields in your pull request template.        | [Disclosure](/features/disclosure) |
+| `reviews.gate`             | Enough maintainers approved: `outside` for a contributor's pull request, `maintainer` for a maintainer's. | [Reviews](/features/reviews)       |
+| `reviews.requestApprovals` | Requests reviewers by rule, in turn or from CODEOWNERS.                                                   | [Reviews](/features/reviews)       |
+| `branches`                 | Branch names follow a pattern, such as `feat/login-form`.                                                 | [Branches](/features/branches)     |
+| `codeowners`               | CODEOWNERS has no lines GitHub silently ignores; with `rules`, writes owners into it for you.             | [CODEOWNERS](/features/codeowners) |
+| `freeze`                   | Blocks merging during a freeze you switch on, or during scheduled windows such as weekends.               | [Freeze](/features/freeze)         |
+
+**What happens when it runs:** each adds its own check (`smartcloud / commits`, `smartcloud / reviews`, ...) to every pull request, and its findings to the report comment. Pull requests from [trusted bots](/glossary#trusted-bot) skip the commits, disclosure and review checks.
+
+## Step 10: releases and alerts (`backport` and `notifications`)
+
+```yaml
+backport: {}
+
+notifications:
+  channels:
+    maintainers:
+      type: slack
+```
+
+- **backport** cherry-picks a merged pull request onto another branch when it carries a label such as `backport release/1.x`. It needs its own small workflow; see [Backport](/features/backport).
+- **notifications** sends failures and stale sweeps to Slack, Discord or Linear. The webhook or key is an Actions secret passed to the step as an environment variable (here `SLACK_WEBHOOK_URL`), never written in this file. See [Notifications](/features/notifications).
+
+## Step 11: repository settings (`settings`)
+
+```yaml
+settings:
+  merging:
+    mergeCommit: false
+    squash: true
+    deleteBranchOnMerge: true
+  ruleset:
+    blockForcePush: true
+    pullRequest:
+      requiredApprovals: 1
+    statusChecks:
+      checks:
+        smartcloud: true
+```
+
+**settings** writes the repository's own settings from the file: merge buttons, wiki and discussions, security features, a [ruleset](/glossary#ruleset) on the default branch, environments, Actions permissions and more. A key you leave out is left as it is on GitHub.
+
+<Warning>
+  Changing settings needs admin rights, which the workflow token does not have. Without a [GitHub
+  App](/getting-started#optional-create-a-github-app) token the section is skipped and the job summary says so. Preview
+  what a run would change with [`smartcloud plan settings`](/cli#plan-settings) before you commit.
+</Warning>
+
+**What happens when it runs:** on a push to the default branch and on the schedule, smartcloud reads the current settings, changes only what differs, and lists each change in the job summary. See [Settings](/features/settings).
+
+## Step 12: share it (`extends` and `sync`)
+
+Once a second repository wants the same rules, stop copying the file. Move the shared parts into a [preset](/presets) and list it under `extends`, and keep shared files such as `LICENSE` or `dependabot.yml` in step with [sync](/features/sync):
+
+```yaml
+extends:
+  - my-org/.github/smartcloud/base.yml@main
+
+sync:
+  source: my-org/.github/templates@main
+```
+
+Both usually live in your organisation's `.github` repository. [Your organisation's sync hub](/guides/organisation-hub) walks through setting that up from scratch.
+
+## The whole file
+
+Here is everything from steps 1 to 11 in one file, ready to adapt. Each section can be deleted on its own.
+
+```yaml .github/smartcloud.yml
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Resnovas/smartcloud/main/schema/smartcloud.schema.json
+version: 2
+
+roles:
+  maintainers: [octocat, hubot]
+  trustedBots: ['dependabot[bot]', 'renovate[bot]']
+
+links:
+  policyBase: https://github.com/my-org/.github/blob/main
+
+labels:
+  bug:
+    name: bug
+    color: 'D73A4A'
+    description: Something is not working
+  docs:
+    name: documentation
+    color: '0075CA'
+    description: Improvements or additions to documentation
+  stale:
+    name: stale
+    color: 'CFD3D7'
+
+labelling:
+  docs:
+    label: docs
+    on: [pullRequest]
+    when:
+      condition:
+        - type: filesMatch
+          condition: 'docs/**'
+
+sizeLabels: {}
+
+conventions:
+  rules:
+    title:
+      on: [pullRequest]
+      preset: conventionalCommits
+
+required:
+  expect: ['^test$']
+
+stale:
+  on: [issue]
+  staleAfterDays: 60
+  staleLabel: stale
+  staleComment: This issue has had no activity for 60 days. Comment to keep it open.
+  abandonedAfterDays: 14
+  close: true
+  exempt:
+    labels: [pinned]
+
+lock:
+  afterDays: 30
+  reason: resolved
+
+commands:
+  overrides:
+    merge: { enabled: false }
+
+commits:
+  dco: true
+
+reviews:
+  gate:
+    outside: 2
+    maintainer: 1
+
+branches:
+  names:
+    typed:
+      preset: prefixed
+      prefixes: [feat, fix, docs, chore]
+  exempt:
+    branches: ['^dependabot/']
+
+codeowners: {}
+
+backport: {}
+
+notifications:
+  channels:
+    maintainers:
+      type: slack
+
+settings:
+  merging:
+    mergeCommit: false
+    squash: true
+    deleteBranchOnMerge: true
+  ruleset:
+    blockForcePush: true
+    pullRequest:
+      requiredApprovals: 1
+    statusChecks:
+      checks:
+        smartcloud: true
+```
+
+Check it before you commit:
+
+```sh
+smartcloud validate
+```
+
+```text
+.github/smartcloud.yml is a valid smartcloud config.
+Built from: .github/smartcloud.yml
+```
+
+## Which section runs when
+
+| Section                                        | Runs on                                                             | Needs a GitHub App token          | What you see                                                  |
+| ---------------------------------------------- | ------------------------------------------------------------------- | --------------------------------- | ------------------------------------------------------------- |
+| `labels`, `labelSync`                          | `push`, `schedule`, `workflow_dispatch`                             | No                                | Labels created and updated under **Issues > Labels**          |
+| `labelling`, `sizeLabels`                      | pull request and issue events                                       | No                                | Labels added and removed; `smartcloud / labels`               |
+| `conventions`                                  | pull request and issue events                                       | No                                | `smartcloud / conventions`, report comment                    |
+| `commits`, `disclosure`, `reviews`, `branches` | pull request events                                                 | No                                | One check each, report comment                                |
+| `required`                                     | pull request events                                                 | No (needs `checkRunId`)           | The job's `smartcloud` check waits for the others             |
+| `freeze`                                       | pull request events, `schedule`, `merge_group`                      | No                                | `smartcloud / freeze` fails while frozen                      |
+| `codeowners`                                   | pull request events (check); `push`, `schedule` (generate)          | No                                | `smartcloud / codeowners`; a pull request updating CODEOWNERS |
+| `stale`, `lock`                                | `schedule`, `workflow_dispatch`                                     | No                                | Labels, comments, closed and locked items; job summary        |
+| `commands`                                     | `issue_comment`                                                     | No                                | A reaction and a reply to the command                         |
+| `backport`                                     | a merged pull request's `closed` and `labeled` events               | Optional, so CI runs on backports | A backport pull request per target branch                     |
+| `notifications`                                | after any run with matching findings                                | No (needs the channel's secret)   | A message in Slack or Discord, or a Linear issue              |
+| `settings`                                     | `push`, `schedule`, `workflow_dispatch`                             | **Yes**                           | Changes listed in the job summary                             |
+| `sync`                                         | `push`, `schedule`, `workflow_dispatch`; pull requests (edit check) | **Yes**                           | A `chore(sync): ...` pull request; `smartcloud / sync`        |
+
+A pull request from a fork or from Dependabot always runs [restricted](/glossary#restricted-run): it gets a read-only token, so smartcloud skips what it cannot do and says so, rather than failing.
+
+## Common problems
+
+<AccordionGroup>
+  <Accordion title="I added a section and nothing happened">
+    Check three things. The file change must be on the **default branch**, because smartcloud never reads it from a pull
+    request. The event must be one the feature acts on ([the table above](#which-section-runs-when)): stale waits for
+    the schedule, labels sync on a push. And the workflow's `on:` must list that event.
+  </Accordion>
+  <Accordion title="The smartcloud / config check warns that a key was ignored">
+    The key is misspelt, in the wrong place, or its value is the wrong type. The warning names the file and the key. Run
+    `smartcloud validate` for the full list, or let your editor underline it using the schema line from step 1.
+  </Accordion>
+  <Accordion title="Expected Six hex digits on a colour">
+    The colour is not six hexadecimal digits as written, for example a typo, a missing digit, or a value YAML reads as
+    another kind of number such as `1e3`. Fix the digits and, when in doubt, quote it: `color: '0E8A16'`.
+  </Accordion>
+  <Accordion title="cannot change ... it is set by ...">
+    Your file gives a different value for something a preset in `extends` already set. Remove the line, restate it
+    exactly, or add a new rule under a new key. See [Add, never change](/presets#add-never-change).
+  </Accordion>
+  <Accordion title="Settings or sync were skipped: restricted access">
+    The run had only the workflow token. Create a [GitHub App](/getting-started#optional-create-a-github-app) and pass
+    its token as `GITHUB_TOKEN`.
+  </Accordion>
+</AccordionGroup>

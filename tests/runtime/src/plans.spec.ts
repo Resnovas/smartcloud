@@ -100,6 +100,25 @@ settings:
     }).pipe(Effect.provide(NodeContext.layer)),
   )
 
+  it.effect('lists the settings the config sets but a run ignores after the steps', () =>
+    Effect.gen(function* () {
+      const github = memory({
+        '.github/smartcloud.yml':
+          'version: 2\nsettings:\n  ruleset: { linearHistory: true, mergeQueue: { method: merge } }\nlabelSync: { prune: maybe }\n',
+      })
+      const plan = yield* planSettingsForRepository(() => Effect.succeed(github.service), {
+        repository: 'Resnovas/example',
+      })
+      expect(plan.ignored).toStrictEqual([
+        expect.stringMatching(/ignored settings\.ruleset\.mergeQueue\.method, because .*linearHistory is on/),
+      ])
+      const text = settingsPlanText(plan)
+      expect(text).toContain('"merge_method":"SQUASH"')
+      expect(text).toMatch(/\n\nIgnored, so not applied:\n- .*settings\.ruleset\.mergeQueue\.method/)
+      expect(text).not.toContain('labelSync')
+    }).pipe(Effect.provide(NodeContext.layer)),
+  )
+
   it.effect('plans nothing without a settings section', () =>
     Effect.gen(function* () {
       const plan = yield* planRepositorySettings({ version: 2 }).pipe(Effect.provideService(GitHub, memory().service))

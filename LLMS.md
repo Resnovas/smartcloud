@@ -225,7 +225,11 @@ The config lives in `@resnovas/config`; reading it from a repository lives in
 given `path` and `ref`), and fails with `NoConfig` when there is none.
 `loadConfig` then calls `resolveConfig`, which:
 
-1. parses YAML or JSON (`ConfigParseError` otherwise);
+1. parses YAML or JSON (`ConfigParseError` otherwise). A label `color` that
+   YAML reads as a number keeps its source text, so `000123` stays `'000123'`
+   and `1e3` stays `'1e3'` (and fails the six-hex-digit check) instead of
+   becoming `1000`. The `Color` schema also accepts a whole number from 0 to
+   999999 and pads it to six digits, for configs built in code or JSON;
 2. migrates a file without `version: 2` from v1 (`migrateV1`), with a warning
    for every v1 key it cannot carry over;
 3. reads each `extends` entry through the `ConfigSource` service
@@ -274,6 +278,33 @@ preset, a cycle, and a change to a locked value. `resolveConfig(text, source,
 { strict: true })`, which `smartcloud validate` and the MCP `validate_config`
 tool use, fails on every problem instead.
 
+### Cross-field checks
+
+A rule that ties two keys together is a `Schema.filter` on the struct that
+holds both, checked on the merged config (a preset may set one key and the
+repository the other). Return `Schema.FilterIssue`s whose `path` points at the
+one key a lenient run should drop, never the whole struct: a failing filter
+without a path drops the object it sits on, which for `settings.ruleset` would
+throw away every branch protection. Give the filter `jsonSchema: {}` unless
+the rule can be written as JSON Schema too.
+
+The merge queue check (SMC-122) is the model: `mergeQueueConflicts` in
+`sections.ts` reports `settings.ruleset.mergeQueue.method` when it is `merge`
+under `linearHistory: true`, or not in `pullRequest.mergeMethods`.
+
+- `smartcloud validate` (strict) fails with the message and path.
+- A run drops only the method, with a `config.ignored` warning. The path is in
+  `FALLBACKS` in `lenient.ts`, so it is not counted as `loosened`: the planner
+  (`defaultQueueMethod` in `feature.settings/src/plan.ts`) then picks squash,
+  else the first of rebase and merge the ruleset allows.
+- `planRepositorySettings(config, resolved.ignored)` keeps the `settings.*`
+  lines of `ignored`, and `settingsPlanText` lists them under "Ignored, so not
+  applied", so `smartcloud plan settings` and the MCP `plan_settings` tool
+  show them.
+
+When the dropped value has a safe fallback like this, add its path to
+`FALLBACKS`; otherwise leave it a restriction so dropping it is an error.
+
 ### The schema
 
 `SmartcloudConfig` in `packages/config/src/schema.ts` is the single source of
@@ -284,6 +315,24 @@ conventions and sizes). Two artefacts are generated from it and checked:
 | --------------------------------------------- | ---------------------------------------------------------------- | -------------------------------------- |
 | `schema/smartcloud.schema.json` (for editors) | `SMARTCLOUD_UPDATE_SCHEMA=1 pnpm nx test @resnovas/config-tests` | `tests/config/src/json-schema.spec.ts` |
 | `docs/reference/configuration.mdx`            | `pnpm docs:reference`                                            | `pnpm docs:reference:check`            |
+
+The JSON Schema declares draft-07, where every keyword beside a `$ref` is
+ignored. `configJsonSchema` (`packages/config/src/json-schema.ts`) therefore
+rewrites Effect's output so no `$ref` has siblings: annotations (`title`,
+`description`) stay on the node and constraints move into an `allOf`, and the
+root points at `SmartcloudConfig` the same way beside `$defs`:
+
+```json
+{
+  "description": "The fewest lines added plus deleted that make a pull request Size: S. Defaults to 10.",
+  "title": "positive",
+  "allOf": [{ "$ref": "#/$defs/Int" }, { "exclusiveMinimum": 0 }]
+}
+```
+
+A spec in `json-schema.spec.ts` fails if any `$ref` gains a sibling, and
+`tools/docs/config-reference.ts` folds the wrapper back when it renders the
+reference page. Keep both in step if you change the shape.
 
 Annotate every field with a `description` (it becomes the JSON Schema and the
 reference page), and use `Schema.optionalWith(x, { exact: true })` for optional
@@ -390,6 +439,45 @@ export const example = {
 }
 ```
 
+### A cross-field check that drops one key
+
+A filter on the struct that holds both keys, returning an issue whose path
+names the key to drop. Strict decoding reports it at that path; a lenient
+run drops only that key and warns.
+
+```ts
+import { Settings } from '@resnovas/config'
+import { Schema } from 'effect'
+
+type Method = 'squash' | 'rebase' | 'merge'
+
+// The shape `mergeQueueConflicts` in sections.ts follows.
+export const queueConflicts = (ruleset: {
+  readonly linearHistory?: boolean
+  readonly mergeQueue?: { readonly method?: Method }
+}): Array<Schema.FilterIssue> =>
+  ruleset.mergeQueue?.method === 'merge' && ruleset.linearHistory === true
+    ? [{ path: ['mergeQueue', 'method'], message: 'the merge queue cannot use merge while linearHistory is on' }]
+    : []
+
+export const Ruleset = Schema.Struct({
+  linearHistory: Schema.optionalWith(Schema.Boolean, { exact: true }),
+  mergeQueue: Schema.optionalWith(
+    Schema.Struct({ method: Schema.optionalWith(Schema.Literal('squash', 'rebase', 'merge'), { exact: true }) }),
+    { exact: true },
+  ),
+}).pipe(Schema.filter(queueConflicts, { jsonSchema: {} }))
+
+const decode = Schema.decodeUnknownEither(Settings, { errors: 'all' })
+
+export const example = {
+  // Left: ["ruleset"]["mergeQueue"]["method"] with the message.
+  conflict: decode({ ruleset: { linearHistory: true, mergeQueue: { method: 'merge' } } }),
+  // Right: leave the method out and the planner picks one that fits.
+  fits: decode({ ruleset: { linearHistory: true, mergeQueue: {} } }),
+}
+```
+
 ---
 
 ## Features
@@ -454,6 +542,24 @@ Keep writes idempotent: find your own marker comment (`<!-- smartcloud:<name> --
 and update it, and trust it only when `isTrustedComment` says a bot account or
 a `roles.trustedBots` login wrote it, because the marker is public.
 
+### Renamed labels: aliases in labelling
+
+A `labels` entry's `aliases` are its old names. Label sync renames a repository
+label found under an alias; `applyLabels` also treats an item's label that is
+an alias of a decided label as that label, because a pull request run (a fork
+above all) can happen before sync has renamed anything:
+
+- Wanted: the current name is added and the old name removed (a label under
+  both names loses the old one). The old name is removed only when the add
+  succeeded, so a `Forbidden` add never strips the label.
+- Unwanted: the old name is removed as well as the current one.
+- Current names win: `aliasesOf(config, decidedNames)` drops an alias that is
+  the current name of any configured or decided label, and aliases of labels
+  no rule decided are ignored. The first entry claiming an alias keeps it.
+- Change descriptions say `replacing its old name "..."` and
+  `(an old name of "...")`. `withSizeLabels` adds the preset name as an alias
+  of a renamed size, so this also keeps one size label on a pull request.
+
 ### Adding a feature
 
 1. Scaffold `packages/feature.<name>` and `tests/feature.<name>` as in
@@ -467,6 +573,38 @@ a `roles.trustedBots` login wrote it, because the marker is public.
    `PAT_ONLY_FEATURES` in `packages/runtime/src/access.ts` with the reason.
 5. Test it through `runFeatures` against the in-memory GitHub, aiming for
    100% coverage (90% is enforced), and document it in `docs/features/` and here.
+
+### Rule-driven pull request actions: auto-merge
+
+`feature.automerge` is the pattern for a feature that acts on an open pull
+request when a keyed rule's `when` group passes. Its section is
+`autoMerge: { rules: { <key>: { when, method? } }, disableWhenUnmatched? }`;
+the flag is `smartcloud-automerge` and the feature name `automerge`.
+
+- `matchingRule` evaluates the rules in key order and returns the first that
+  passes (`method` defaults to `squash`). Declare the rules' facets with
+  `requiredFacets`, and read the subject from `FeatureContext.subject`, which
+  carries them, not from the envelope.
+- Drafts and closed pull requests are skipped. Auto-merge that is already on is
+  never changed, whoever turned it on.
+- The GitHub calls are shared with the `/automerge` command and live in
+  `@resnovas/integrations.github`: `readAutoMerge` (REST `GET /pulls/<n>`:
+  node id, state, `auto_merge`), `enableAutoMerge(nodeId, method)`,
+  `disableAutoMerge(nodeId)` (GraphQL mutations, so dry runs record them), and
+  `autoMergeRefusal`, which names the refusals to explain instead of fail on:
+  `notAllowed` (the repository setting is off: warning) and `mergeable` (the
+  pull request is in a clean status, nothing to wait for: notice).
+- Ownership for turning it off again is proved without storing state: the
+  feature keeps one trusted marker comment (`<!-- smartcloud:auto-merge:on -->`
+  or `:off`), and only turns auto-merge off when the comment says `on` and its
+  author is the login GitHub reports in `auto_merge.enabled_by`.
+- Every GitHub failure becomes a finding (`Forbidden` a warning, anything else
+  an error), so one pull request never fails the run.
+
+The feature runs only on pull request events; the engine does not decode
+`check_suite` or `workflow_run`, so a `checksPass` condition in a rule is only
+re-evaluated on the next pull request event. GitHub's auto-merge already waits
+for required checks, so rules should not need it.
 
 ### Writing a feature
 
@@ -552,6 +690,112 @@ export const example = Effect.gen(function* () {
 }).pipe(Effect.provide(DryRun.pipe(Layer.provide(GitHubMemory()))))
 ```
 
+### Turning on auto-merge by rule
+
+An `autoMerge` rule turns on GitHub auto-merge for an open pull request its
+conditions match. Here a Dependabot patch update matches, so the feature
+reads the pull request, turns auto-merge on with the rule's method through
+a GraphQL mutation (recorded, not made, under `DryRun`) and comments why.
+
+```ts
+import { runFeatures } from '@resnovas/engine'
+import { DryRun, DryRunLog, GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { FEATURES } from '@resnovas/runtime'
+import { Effect, Layer } from 'effect'
+
+const memory = makeMemoryGitHub()
+// The memory service answers raw requests with null, so answer the pull
+// request read the way GitHub does: auto-merge is off.
+const github = Layer.succeed(GitHub, {
+  ...memory.service,
+  repositoryRequest: () => Effect.succeed({ node_id: 'PR_7', state: 'open', auto_merge: null }),
+})
+
+export const example = Effect.gen(function* () {
+  const result = yield* runFeatures({
+    config: {
+      version: 2,
+      autoMerge: {
+        rules: {
+          'dependabot-patch': {
+            when: { condition: [{ type: 'dependencyUpdateType', condition: ['patch'] }] },
+            method: 'squash',
+          },
+        },
+      },
+    },
+    event: 'pull_request',
+    payload: {
+      action: 'opened',
+      pull_request: {
+        number: 7,
+        title: 'Bump effect from 3.1.0 to 3.1.1',
+        body: '',
+        user: { login: 'dependabot[bot]', type: 'Bot' },
+        state: 'open',
+        locked: false,
+        labels: [],
+        updated_at: '2026-09-01T00:00:00Z',
+        head: { ref: 'dependabot/npm_and_yarn/effect-3.1.1', sha: 'abc' },
+      },
+    },
+    features: FEATURES.filter((feature) => feature.name === 'automerge'),
+  })
+  const writes = yield* (yield* DryRunLog).writes
+  return {
+    // "Turned on auto-merge (squash) for #7 (dependabot-patch)."
+    changes: result.changes.map((change) => change.description),
+    // The enablePullRequestAutoMerge mutation and the explaining comment.
+    writes: writes.map((write) => write.operation),
+  }
+}).pipe(Effect.provide(DryRun.pipe(Layer.provide(github))))
+```
+
+### Applying a renamed label that is still on a pull request
+
+`bug` was renamed from `defect`. The pull request still carries `defect`
+because label sync has not run yet, so labelling swaps the old name for the
+current one instead of leaving both.
+
+```ts
+import { runFeatures } from '@resnovas/engine'
+import { GitHub, makeMemoryGitHub } from '@resnovas/integrations.github'
+import { FEATURES } from '@resnovas/runtime'
+import { Effect } from 'effect'
+
+const memory = makeMemoryGitHub()
+memory.state.issues.set(3, { labels: ['defect'], comments: [], open: true })
+
+export const example = Effect.gen(function* () {
+  const result = yield* runFeatures({
+    config: {
+      version: 2,
+      labels: { bug: { name: 'Type: Bug', color: 'd73a4a', aliases: ['defect'] } },
+      labelling: { bug: { label: 'bug', when: { condition: [{ type: 'titleMatches', condition: '^bug' }] } } },
+    },
+    event: 'issues',
+    payload: {
+      action: 'edited',
+      issue: {
+        number: 3,
+        title: 'bug: sync fails',
+        body: null,
+        user: { login: 'sam' },
+        state: 'open',
+        locked: false,
+        labels: [{ name: 'defect' }],
+        updated_at: '2026-09-01T00:00:00Z',
+      },
+    },
+    // Only the labels feature has a section here, so only it runs.
+    features: FEATURES,
+  })
+  // ['added label "Type: Bug" to #3, replacing its old name "defect"',
+  //  'removed label "defect" (an old name of "Type: Bug") from #3']
+  return result.changes.map((change) => change.description)
+}).pipe(Effect.provideService(GitHub, memory.service))
+```
+
 ---
 
 ## Conditions
@@ -574,6 +818,21 @@ I/O.
 - Patterns (`Pattern`) are either a bare regular expression or a delimited one
   with flags (`/^feat/i`), exactly as v1 read them; the schema rejects an
   invalid one, so `compilePattern` never throws on decoded config.
+- Patterns run on text contributors control (titles, bodies, branch names,
+  comments), so `compilePattern` also refuses one open to catastrophic
+  backtracking, such as `^(a+)+$` or `(a|aa)+$`, using `backtrackingRisk` in
+  `backtracking.ts`: a static check (it never runs the pattern) that builds the
+  pattern's position automaton and looks for a state with two different loops
+  over the same text. A repeat that nothing after it can fail, as in an
+  unanchored `^fix: (\w+\s?)+`, is checked at its minimum count. The refusal
+  is an ordinary `Pattern` failure: `validate` errors, and a run's lenient
+  decode drops the group that holds it with a warning naming the pattern
+  (`describe` in `packages/config/src/lenient.ts` prefers a refinement message
+  over a union member mismatch). Every pattern that takes config text must go
+  through `Pattern` and `compilePattern`; never `new RegExp` on config text.
+  Each verdict is cached per source and flags, so compiling on every event is
+  cheap. Keep `tests/conditions/src/backtracking.spec.ts` green: it runs every
+  YAML pattern in `docs/` and smartcloud's own configs through the check.
 
 ### The subject and its facets
 
@@ -689,6 +948,13 @@ and `dry-run.ts` and `restricted.ts` (writes); `repositoryRequest` and
 `graphql` are escape hatches for the settings feature's many endpoints, not a
 shortcut around that.
 
+Small helpers built on those escape hatches may live in the package itself,
+next to the service, when more than one feature needs them: `reviewers.ts`
+(review requests) and `auto-merge.ts` (`readAutoMerge`, `enableAutoMerge`,
+`disableAutoMerge`, `autoMergeRefusal`, `MERGE_METHODS`, shared by the
+`/automerge` command and the auto-merge feature). Reuse them rather than
+writing the query or mutation again in a feature.
+
 ### Layers
 
 | Layer                                           | Use                                                                                                                                                                                                                       |
@@ -697,6 +963,38 @@ shortcut around that.
 | `DryRun`                                        | Wraps whichever service is below it: reads pass through, writes are recorded in `DryRunLog`. A `url` field in a recorded raw request keeps only its origin; comment bodies and GraphQL variables are recorded as written. |
 | `Restricted`                                    | Wraps it for a read-only token: a write GitHub refuses as `Forbidden` is recorded in `SkippedWrites` and answered as in a dry run.                                                                                        |
 | `GitHubMemory(seed)` / `makeMemoryGitHub(seed)` | In memory, for tests; see the testing section.                                                                                                                                                                            |
+
+### Tokens: in-repository, privileged and house
+
+The action splits its tokens (`connectTokens` in `@resnovas/runtime`), so each
+does only its own job:
+
+| Service            | Token                                    | Used for                                                                                                   |
+| ------------------ | ---------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `GitHub`           | the workflow token (`workflowToken`)     | Everything in the repository: check runs, comments, labels, reviews, facets, the repository's own config.  |
+| `PrivilegedGitHub` | the app or access token (`GITHUB_TOKEN`) | Features with `privileged: true` (settings, sync, codeowners, backport) and presets in other repositories. |
+| house reads        | the read-only house token (`houseToken`) | `getFile` and `listDirectory` in another `.github` repository, through `withHouseReads` on both services.  |
+
+- `PrivilegedGitHub` is optional. The CLI, the MCP server and any run with one
+  token provide only `GitHub`, and everything uses it, so a feature must never
+  require `PrivilegedGitHub`: mark it `privileged: true` and keep using `GitHub`.
+  The engine provides the privileged service as `GitHub` to such a feature.
+- A restricted run (fork, Dependabot, only the workflow token, or a rejected
+  token) has no privileged service. The house token is ignored on forks and
+  Dependabot runs. A restricted pull request run with a house token keeps the
+  sync edit check (`Access.houseReads`, `restrictedFeatures(access, event)`).
+- The workflows mint the app token only on `push`, `schedule` and
+  `workflow_dispatch` of the default branch, and on the `closed` event of a
+  merged pull request from the repository itself (trusted, merged code), for
+  backport: pull requests opened with the workflow token start no CI. Never
+  mint it for other `pull_request` or `issue_comment` runs.
+- `Restricted` never skips a refused `backport`: it fails with `Forbidden`, so
+  the backport feature warns that nothing was backported instead of
+  announcing a dry-run style #0.
+- `DryRun` wraps `PrivilegedGitHub` too, into the same `DryRunLog`.
+- `withHouseReads` falls back to the wrapped service when the house token
+  answers `Forbidden` or `NotFound`, such as for another organisation's
+  `.github`.
 
 ### Errors
 
@@ -808,6 +1106,44 @@ export const example = Effect.gen(function* () {
   const skipped = yield* (yield* SkippedWrites).writes
   return { commentId: comment.id, skipped: skipped.map((write) => write.operation) }
 }).pipe(Effect.provide(Restricted.pipe(Layer.provide(readOnly))))
+```
+
+### Splitting the tokens: in-repository, privileged and house
+
+The action connects with up to three tokens through `connectTokens`. The
+workflow token's service is provided as `GitHub` and does everything in
+the repository. The app token's service is provided as `PrivilegedGitHub`
+and is used only by features marked `privileged` (settings, sync,
+codeowners, backport) and for presets in other repositories. Both read files in a
+`.github` repository with the read-only house token first.
+
+```ts
+import { GitHub, makeMemoryGitHub, PrivilegedGitHub } from '@resnovas/integrations.github'
+import { connectTokens, FULL_ACCESS } from '@resnovas/runtime'
+import { Effect, Layer, Option, Redacted } from 'effect'
+
+// One in-memory GitHub per token, so the example can tell them apart.
+const services = new Map([
+  ['ghs_app', makeMemoryGitHub().service],
+  ['ghs_workflow', makeMemoryGitHub().service],
+  ['ghs_house', makeMemoryGitHub().service],
+])
+
+export const example = Effect.gen(function* () {
+  const { service, privileged } = yield* connectTokens({
+    token: Redacted.make('ghs_app'),
+    workflowToken: Option.some(Redacted.make('ghs_workflow')),
+    houseToken: Option.some(Redacted.make('ghs_house')),
+    access: FULL_ACCESS,
+    connect: (token) => Effect.succeed(services.get(Redacted.value(token)) ?? makeMemoryGitHub().service),
+  })
+  // Provide both: the engine hands `PrivilegedGitHub` to privileged features as their `GitHub`.
+  const layer =
+    privileged === undefined
+      ? Layer.succeed(GitHub, service)
+      : Layer.merge(Layer.succeed(GitHub, service), Layer.succeed(PrivilegedGitHub, privileged))
+  return layer
+})
 ```
 
 ---
@@ -1072,6 +1408,26 @@ Never run `nx release` without `--dry-run`: a local run pushes and creates a
 GitHub release. Preview with `pnpm release:dry-run`. Commit types decide the
 bump, so title commits and pull requests with conventional commits.
 
+### Release preview on pull requests
+
+`release-preview.yml` runs on every pull request (opened, pushed, reopened,
+and edited when the title or base changes; kept out of `ci.yml` so a rename
+does not rerun CI). `tools/release/release-preview.ts` swaps the merge commit
+for the squash commit that would land (title plus ` (#<number>)` over the
+commit messages, as GitHub writes it), runs Nx `releaseVersion` and
+`releaseChangelog` in dry-run mode, and writes the report to the job summary
+and a `report` output. A second job, with only `pull-requests: write` and no
+checkout, keeps one comment marked `<!-- smartcloud:release-preview -->` up to
+date; it is skipped for forks and Dependabot. Pure logic (`squashMessage`,
+`bumpOf`, `renderPreview`, `renderFailure`, `isFirstRelease`) lives in
+`tools/release/preview.ts`, tested in `tests/tools`; the example below shows
+how a squash commit's bump is read.
+
+The preview never fails a pull request: errors become a warning and a short
+report, both jobs set `continue-on-error`, and it is not in `check`'s `needs`.
+With no stable `v*` tag it previews the first release as `2.0.0`. Locally,
+`pnpm release:preview` previews HEAD as it is (no squash outside Actions).
+
 ### smartcloud on itself
 
 `smartcloud.yml` runs smartcloud on this repository from a bundle of the
@@ -1079,6 +1435,39 @@ default branch, never from pull request code, with the config read from the
 default branch so a pull request cannot loosen its own rules. It acts with a
 GitHub App token because the config extends the house preset in the private
 `Resnovas/.github`; forks and Dependabot get no secrets and run restricted.
+
+### Reading the bump a pull request's squash commit calls for
+
+The merge queue squashes a pull request into one commit: its title with the
+number added, over its commits' messages. A `BREAKING CHANGE:` in any of
+those messages makes the whole commit a major release, whatever the title's
+type, which is what the release preview reports.
+
+```ts
+// The release preview is a repository tool, not a workspace library, so no
+// package name reaches it; the example imports it by path on purpose.
+// eslint-disable-next-line @nx/enforce-module-boundaries
+import { bumpOf, renderPreview, squashMessage } from '../../../tools/release/preview.js'
+
+const types = { feat: { semverBump: 'minor' }, fix: { semverBump: 'patch' } }
+
+const message = squashMessage('feat(labels): colour aliases', 712, [
+  'feat(labels): colour aliases',
+  'fix(labels): drop the old colour field\n\nBREAKING CHANGE: labels.color is now labels.colour',
+])
+
+// 'major'
+export const bump = bumpOf(message, types)
+
+export const report = renderPreview({
+  version: '3.0.0',
+  current: '2.4.1',
+  firstRelease: false,
+  commit: message.split('\n')[0],
+  bump,
+  notes: '## 3.0.0\n\n### Breaking changes\n\n- **labels:** drop the old colour field',
+})
+```
 
 ---
 
@@ -1092,6 +1481,25 @@ updated.
 | ------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | People | `docs/` (the Mintlify site, navigation in `docs/docs.json`) and `README.md` | ELI5: what it is and why before how, step-by-step setup, one complete example, what they will see on GitHub, every option with its default, common problems and fixes, every term defined on first use. |
 | Agents | `ai-docs/src`, assembled into `LLMS.md`                                     | Why, the rules that matter, and compiled examples in the codebase's own style.                                                                                                                          |
+
+### Setup guides
+
+The human setup guides live in `docs/guides/` (the "Setup guides" group in
+`docs/docs.json`) and are the first place a newcomer is sent from
+`getting-started`, `configuration`, `presets` and `features/sync`:
+
+| Page                                 | Covers                                                                                                                                |
+| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `docs/guides/settings-file.mdx`      | `.github/smartcloud.yml` built one section at a time, in newcomer order, with what each does when a run starts and on which events.   |
+| `docs/guides/recommended-setups.mdx` | Complete files for a small repository, a monorepo, an open-source project, and an organisation preset plus a repository extending it. |
+| `docs/guides/organisation-hub.mdx`   | Any organisation's own `<org>/.github` as the sync hub: preset, `templates/`, managed blocks, placeholders, app, first sync, rollout. |
+
+When a section, option, default or event changes, update these guides with the
+feature page. Every YAML config in them must decode: write it to a file and run
+`pnpm run cli validate <file>` (a fragment gets `version: 2` prepended; a file
+that `extends` a fictional `my-org` preset is resolved with `resolveConfig`
+and an in-memory `ConfigSource` serving the guide's own preset). Quote label
+colours, since an all-digit colour decodes as a number.
 
 ### Generated artefacts
 

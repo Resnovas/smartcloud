@@ -6,13 +6,16 @@ branding:
   color: purple
 inputs:
   GITHUB_TOKEN:
-    description: The token smartcloud acts with. Settings, sync and private presets in other repositories need a stronger token than the workflow token; without one, smartcloud skips them and says so. Pull requests from forks and runs started by Dependabot always act with the workflow token.
+    description: The app or access token smartcloud uses only for what the workflow token cannot do - repository settings, sync, CODEOWNERS proposals and presets in other private repositories. Everything else in the repository (check runs, comments, labels, reviews) acts with workflowToken. Without a stronger token, smartcloud skips settings and sync and says so. Pull requests from forks and runs started by Dependabot always act with the workflow token.
     required: false
     default: ${{ github.token }}
   workflowToken:
-    description: The workflow's own token. Leave it at its default. smartcloud compares GITHUB_TOKEN with it to tell a restricted run, acts with it on pull requests from forks and runs started by Dependabot, and reads the pull request's checks with it for the required feature, because it has checks and statuses read from the job's permissions.
+    description: The workflow's own token. Leave it at its default. smartcloud acts with it in the repository - check runs, comments, labels, reviews and reading checks - compares GITHUB_TOKEN with it to tell a restricted run, and acts only with it on pull requests from forks and runs started by Dependabot. The job's permissions decide what it may do.
     required: false
     default: ${{ github.token }}
+  houseToken:
+    description: Optional. A read-only token (contents read) for the organisation's .github repository, such as a GitHub App token minted with permission-contents read and repositories .github. smartcloud uses it only to read presets and sync templates in a .github repository, so pull request runs can read a private house preset without the app token. Ignored on pull requests from forks and runs started by Dependabot.
+    required: false
   config:
     description: The config file. Defaults to the first of .github/smartcloud.yml, .github/smartcloud.yaml or .github/config.json.
     required: false

@@ -25,7 +25,7 @@ smartcloud does its work (adding labels, posting comments, creating checks) thro
 | The [workflow token](/glossary#workflow-token) (default) | Everything that acts on one pull request or issue: labels, conventions, commits, disclosure, reviews, required, freeze, branches, stale, lock, backport, commands | Change repository settings ([settings](/features/settings)), sync files that include workflows ([sync](/features/sync)), or read a [preset](/glossary#preset) in another private repository. smartcloud skips these and says so; it does not fail. |
 | A [GitHub App](/glossary#github-app) installation token  | Everything, including settings, sync and private presets                                                                                                          | Nothing smartcloud needs, as long as the app has the permissions below.                                                                                                                                                                            |
 
-Start with the workflow token. You can add an app later without changing your config: only the workflow changes.
+Start with the workflow token. You can add an app later without changing your config: only the workflow changes. With an app, smartcloud still does everything in the repository with the workflow token and keeps the app's token for settings, sync, CODEOWNERS proposals and presets, as [Tokens and access](/tokens) explains.
 
 <Warning>
   Do not pass a personal access token. GitHub never lets a personal or OAuth token create check runs, so the
@@ -144,24 +144,48 @@ Create `.github/workflows/smartcloud.yml`. Pick the version for the token you ch
           issues: write
           statuses: read
         steps:
-          # Forks and Dependabot get no secrets, so no token is minted for them.
-          # smartcloud then falls back to the workflow token and runs restricted.
-          - name: Mint the app token
-            id: app
+          # Read-only access to your organisation's .github repository, for the
+          # house preset and sync templates. Forks and Dependabot get no
+          # secrets, so it is not minted for them.
+          - name: Mint the read-only house token
+            id: house
             if: >-
-              !github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository
+              (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)
+              && github.actor != 'dependabot[bot]'
             continue-on-error: true
             uses: actions/create-github-app-token@v3
             with:
               client-id: ${{ vars.SMARTCLOUD_APP_ID }}
               private-key: ${{ secrets.SMARTCLOUD_APP_PRIVATE_KEY }}
-              # Covers every repository the app is installed on, so a private
-              # preset in another repository can be read too.
               owner: ${{ github.repository_owner }}
+              repositories: .github
+              permission-contents: read
+
+          # The app's full token, for settings, sync, CODEOWNERS proposals and
+          # backports, only on runs whose workflow file comes from the default
+          # branch or that run a merged pull request's code. It
+          # reaches only this repository. Without it smartcloud runs restricted.
+          - name: Mint the app token
+            id: app
+            if: >-
+              (
+                contains(fromJSON('["push", "schedule", "workflow_dispatch"]'), github.event_name)
+                || github.event_name == 'pull_request' && github.event.action == 'closed'
+                && github.event.pull_request.merged == true
+                && github.event.pull_request.head.repo.full_name == github.repository
+              )
+              && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+              && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
+            continue-on-error: true
+            uses: actions/create-github-app-token@v3
+            with:
+              client-id: ${{ vars.SMARTCLOUD_APP_ID }}
+              private-key: ${{ secrets.SMARTCLOUD_APP_PRIVATE_KEY }}
 
           - uses: resnovas/smartcloud@v2
             with:
               GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+              houseToken: ${{ steps.house.outputs.token }}
               checkRunId: ${{ job.check_run_id }}
     ```
 
@@ -227,7 +251,7 @@ stale:
 - The first line lets editors such as VS Code (with the YAML extension) complete and check every key as you type.
 - A feature runs only when its section is present. There is no `commits` section here, so commit checks are off.
 
-Want more? Every feature page lists its options, and [Presets and extends](/presets) shows how to start from a shared config instead of writing everything yourself.
+Want more? [Build your settings file](/guides/settings-file) adds every section one step at a time and says what each does when it runs, [Recommended setups](/guides/recommended-setups) has complete files to copy for common situations, and [Presets and extends](/presets) shows how to start from a shared config instead of writing everything yourself.
 
 ### Check the config before you push
 
@@ -297,6 +321,15 @@ The [settings](/features/settings) feature can write that ruleset for you.
 ## Next steps
 
 <CardGroup cols={2}>
+  <Card title="Build your settings file" icon="list-ol" href="/guides/settings-file">
+    Every section, in the order to add it, and what each does when it runs.
+  </Card>
+  <Card title="Recommended setups" icon="clipboard-check" href="/guides/recommended-setups">
+    Complete files for a small repository, a monorepo, an open-source project and an organisation.
+  </Card>
+  <Card title="Your organisation's sync hub" icon="building" href="/guides/organisation-hub">
+    Share presets and files across every repository from your own .github repository.
+  </Card>
   <Card title="Presets and extends" icon="layer-group" href="/presets">
     Share one config across many repositories.
   </Card>

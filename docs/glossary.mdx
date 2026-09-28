@@ -23,7 +23,7 @@ A `when:` block: a list of conditions under `condition`, and optionally `require
 
 ## Config
 
-The file `.github/smartcloud.yml` (or `.yaml`) that tells smartcloud what to do. See [Configuration](/configuration).
+The file `.github/smartcloud.yml` (or `.yaml`) that tells smartcloud what to do, also called the settings file. See [Configuration](/configuration) and [Build your settings file](/guides/settings-file).
 
 ## DCO
 
@@ -104,6 +104,10 @@ The pull request or issue a rule looks at. Rules take `on: [pullRequest]`, `on: 
 ## Sweep
 
 A pass over every open (or every closed) issue and pull request in the repository, on `schedule` and `workflow_dispatch` events. The [stale](/features/stale) and [lock](/features/lock) features sweep.
+
+## Sync hub
+
+One repository, usually an organisation's `.github` repository, that holds the [preset](#preset) every repository extends and the templates the [sync](/features/sync) feature copies into each of them. A change made once in the hub reaches every repository. See [Your organisation's sync hub](/guides/organisation-hub).
 
 ## Trusted bot
 

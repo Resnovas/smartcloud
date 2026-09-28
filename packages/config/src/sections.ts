@@ -17,7 +17,7 @@
 import { ConditionGroup, Pattern } from '@resnovas/conditions'
 import { DateTime, Option, Schema } from 'effect'
 
-// The configuration sections of the policy, review, stale, lock, backport, settings, sync,
+// The configuration sections of the policy, review, stale, lock, backport, auto-merge, settings, sync,
 // notifications and commands features. Each is optional: a feature whose section is absent
 // does not run.
 // Every rule is a keyed record, so presets and repositories merge by key.
@@ -287,6 +287,69 @@ export const Backport = Schema.Struct({
   /** Added to every backport pull request. */
   labels: opt(Schema.Array(Schema.String)),
 }).annotations({ identifier: 'Backport' })
+
+/**
+ * One auto-merge rule: when its conditions pass on an open pull request,
+ * smartcloud turns on GitHub auto-merge with its method.
+ *
+ * @example
+ * ```ts import.meta.vitest name="AutoMergeRule"
+ * import { AutoMergeRule } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(AutoMergeRule)({ when: { condition: [{ type: 'dependencyUpdateType', condition: ['patch'] }] }, method: 'squash' }) // => true
+ * Schema.is(AutoMergeRule)({ method: 'squash' }) // => false
+ * ```
+ */
+export const AutoMergeRule = Schema.Struct({
+  when: ConditionGroup,
+  /** How GitHub merges the pull request; squash when omitted. */
+  method: opt(
+    Schema.Literal('merge', 'squash', 'rebase').annotations({
+      description:
+        'How GitHub merges the pull request once auto-merge is on: merge, squash or rebase. Squash by default.',
+    }),
+  ),
+}).annotations({
+  identifier: 'AutoMergeRule',
+  description:
+    'When the conditions pass on an open pull request, smartcloud turns on GitHub auto-merge with the method.',
+})
+
+/**
+ * Auto-merge policy: turns on GitHub auto-merge for a pull request when one of
+ * the rules passes, such as a Dependabot patch update, and optionally turns it
+ * off again when none does.
+ *
+ * @example
+ * ```ts import.meta.vitest name="AutoMerge"
+ * import { AutoMerge } from '@resnovas/config'
+ * import { Schema } from 'effect'
+ *
+ * Schema.is(AutoMerge)({ rules: { patch: { when: { condition: [{ type: 'dependencyUpdateType', condition: ['patch'] }] } } }, disableWhenUnmatched: true }) // => true
+ * Schema.is(AutoMerge)({ rules: { patch: { when: {}, method: 'fast' } } }) // => false
+ * ```
+ */
+export const AutoMerge = Schema.Struct({
+  /** The rules, by key, so presets and repositories merge them. The first that passes, in order, sets the method. */
+  rules: opt(
+    Schema.Record({ key: Schema.String, value: AutoMergeRule }).annotations({
+      description:
+        'The auto-merge rules, by key, so presets and repositories merge them. The first rule whose conditions pass, in order, turns auto-merge on with its method.',
+    }),
+  ),
+  /** Turn auto-merge off when no rule passes any more, if smartcloud turned it on. Off by default. */
+  disableWhenUnmatched: opt(
+    Schema.Boolean.annotations({
+      description:
+        'Turn auto-merge off again when no rule passes any more, but only where smartcloud turned it on and nobody has changed it since. Off by default.',
+    }),
+  ),
+}).annotations({
+  identifier: 'AutoMerge',
+  description:
+    'Turns on GitHub auto-merge for a pull request when one of the rules passes, such as a Dependabot patch update.',
+})
 
 /**
  * How long the aggregate check waits for the others, in minutes, when
@@ -769,8 +832,49 @@ export const CodeOwners = Schema.Struct({
 /** A decoded {@link CodeOwners}. */
 export type CodeOwners = typeof CodeOwners.Type
 
+type MergeMethod = 'squash' | 'rebase' | 'merge'
+
+// A merge queue method GitHub cannot use with the rest of the ruleset: a
+// merge commit under linear history, or a method pull requests may not use.
+// Both leave every queued pull request unable to merge.
+const mergeQueueConflicts = (ruleset: {
+  readonly linearHistory?: boolean
+  readonly mergeQueue?: { readonly method?: MergeMethod }
+  readonly pullRequest?: { readonly mergeMethods?: ReadonlyArray<MergeMethod> }
+}): Array<Schema.FilterIssue> => {
+  const method = ruleset.mergeQueue?.method
+  if (method === undefined) return []
+  const path = ['mergeQueue', 'method']
+  const allowed = ruleset.pullRequest?.mergeMethods
+  return [
+    ...(method === 'merge' && ruleset.linearHistory === true
+      ? [
+          {
+            path,
+            message:
+              'the merge queue cannot use merge while linearHistory is on, because a merge commit breaks linear history; use squash or rebase',
+          },
+        ]
+      : []),
+    ...(allowed !== undefined && !allowed.includes(method)
+      ? [
+          {
+            path,
+            message: `the merge queue method ${method} is not one of pullRequest.mergeMethods (${allowed.join(', ')}); add it there or use one of them`,
+          },
+        ]
+      : []),
+  ]
+}
+
 /**
  * The repository settings baseline. Anything omitted is left as it is.
+ *
+ * @remarks
+ * A ruleset's `mergeQueue.method` must suit the rest of the ruleset: not
+ * `merge` while `linearHistory` is on, and one of `pullRequest.mergeMethods`
+ * when those are listed. Either conflict is reported at
+ * `settings.ruleset.mergeQueue.method`.
  *
  * @example
  * ```ts import.meta.vitest name="Settings"
@@ -782,6 +886,8 @@ export type CodeOwners = typeof CodeOwners.Type
  * Schema.is(Settings)({ security: { codeScanning: 'maximum' } }) // => false
  * Schema.is(Settings)({ actions: { workflowPermissions: 'read' }, collaborators: { octocat: 'write' } }) // => true
  * Schema.is(Settings)({ collaborators: { octocat: 'owner' } }) // => false
+ * Schema.is(Settings)({ ruleset: { linearHistory: true, mergeQueue: { method: 'merge' } } }) // => false
+ * Schema.is(Settings)({ ruleset: { mergeQueue: { method: 'rebase' }, pullRequest: { mergeMethods: ['squash'] } } }) // => false
  * ```
  */
 export const Settings = Schema.Struct({
@@ -893,7 +999,13 @@ export const Settings = Schema.Struct({
       copilotReview: opt(Schema.Boolean),
       /** Repository admins may bypass the ruleset. On by default. */
       adminBypass: opt(Schema.Boolean),
-    }),
+    }).pipe(
+      Schema.filter(mergeQueueConflicts, {
+        // The problem is reported at mergeQueue.method, so a lenient run
+        // drops only the method and the queue falls back to one that fits.
+        jsonSchema: {},
+      }),
+    ),
   ),
   environments: opt(
     Schema.Struct({

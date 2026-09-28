@@ -18,6 +18,7 @@ import { ConditionGroup } from '@resnovas/conditions'
 import { Schema } from 'effect'
 import { ExtendsEntry } from './extends.js'
 import {
+  AutoMerge,
   Backport,
   Branches,
   CodeOwners,
@@ -61,8 +62,36 @@ export const RuleId = Schema.NonEmptyTrimmedString.pipe(
   Schema.annotations({ identifier: 'RuleId', description: 'A label or rule key.' }),
 )
 
+const HexColor = Schema.String.pipe(
+  Schema.pattern(/^#?[0-9a-fA-F]{6}$/),
+  Schema.annotations({ description: 'Six hex digits, for example 0E8A16.' }),
+)
+
+// YAML and JSON read an unquoted all-digit colour such as 000123 as the number
+// 123, losing the leading zeros. A whole number below 1000000 is padded back
+// to six digits; any other number cannot be told apart from a typo.
+const NumericColor = Schema.transform(
+  Schema.Number.pipe(
+    Schema.filter(
+      (value) =>
+        (Number.isInteger(value) && value >= 0 && value < 1_000_000) ||
+        `the number ${String(value)} is not a colour: write the colour in quotes, for example color: '0e8a16'`,
+      { jsonSchema: { type: 'integer', minimum: 0, maximum: 999_999 } },
+    ),
+  ),
+  HexColor,
+  {
+    strict: true,
+    decode: (value) => String(value).padStart(6, '0'),
+    // Never reached: HexColor, first in the union, encodes every colour.
+    encode: Number,
+  },
+)
+
 /**
- * A label colour: six hexadecimal digits, with or without a leading `#`.
+ * A label colour: six hexadecimal digits, with or without a leading `#`. A
+ * whole number from 0 to 999999, which is what YAML makes of an unquoted
+ * all-digit colour, is read back as its six digits, zero padded.
  *
  * @example
  * ```ts import.meta.vitest name="Color"
@@ -71,12 +100,14 @@ export const RuleId = Schema.NonEmptyTrimmedString.pipe(
  *
  * Schema.is(Color)('#0E8A16') // => true
  * Schema.is(Color)('green') // => false
+ * Schema.decodeUnknownSync(Color)(123) // => '000123'
  * ```
  */
-export const Color = Schema.String.pipe(
-  Schema.pattern(/^#?[0-9a-fA-F]{6}$/),
-  Schema.annotations({ identifier: 'Color', description: 'Six hex digits, for example 0E8A16.' }),
-)
+export const Color = Schema.Union(HexColor, NumericColor).annotations({
+  identifier: 'Color',
+  description:
+    'Six hex digits, for example 0E8A16, with or without a leading #. An unquoted all-digit colour such as 000123 is read as a number and padded back to six digits.',
+})
 
 /**
  * Which kinds of subject a rule applies to. Omitted means both.
@@ -375,6 +406,7 @@ export const SmartcloudConfig = Schema.Struct({
   stale: Schema.optionalWith(Stale, { exact: true }),
   lock: Schema.optionalWith(Lock, { exact: true }),
   backport: Schema.optionalWith(Backport, { exact: true }),
+  autoMerge: Schema.optionalWith(AutoMerge, { exact: true }),
   settings: Schema.optionalWith(Settings, { exact: true }),
   sync: Schema.optionalWith(Sync, { exact: true }),
   notifications: Schema.optionalWith(Notifications, { exact: true }),

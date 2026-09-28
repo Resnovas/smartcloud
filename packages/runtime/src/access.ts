@@ -16,7 +16,7 @@
 
 import type { ConfigNotFound, ExtendsRef } from '@resnovas/config'
 import type { Finding } from '@resnovas/engine'
-import type { GitHubService, RepositoryCoordinates } from '@resnovas/integrations.github'
+import type { FileLocation, GitHubError, GitHubService, RepositoryCoordinates } from '@resnovas/integrations.github'
 import { Effect, Either, Option, Redacted, Schema } from 'effect'
 import { PresetUnreadable } from './github.js'
 
@@ -25,7 +25,18 @@ import { PresetUnreadable } from './github.js'
  * access, because it acts with the workflow token or was started from outside
  * the repository.
  */
-export type Access = { readonly restricted: false } | { readonly restricted: true; readonly reason: string }
+export type Access =
+  | { readonly restricted: false }
+  | {
+      readonly restricted: true
+      readonly reason: string
+      /**
+       * Whether the run can still read the house repository (`.github`)
+       * with a read-only house token, so the sync check on a pull request,
+       * which only reads, need not be skipped.
+       */
+      readonly houseReads?: boolean
+    }
 
 /**
  * A run with the token it was given and nothing held back.
@@ -153,21 +164,34 @@ export const accessFor = (options: {
 /**
  * The features a run with this access skips, and why.
  *
+ * @remarks
+ * On a pull request, a restricted run that can read the house repository
+ * (`houseReads`) keeps the sync feature: there it only checks the pull
+ * request against the templates, reading them with the house token.
+ *
  * @example
  * ```ts import.meta.vitest name="restrictedFeatures"
  * import { FULL_ACCESS, restrictedFeatures } from '@resnovas/runtime'
  *
  * restrictedFeatures(FULL_ACCESS).size // => 0
  * restrictedFeatures({ restricted: true, reason: 'a pull request from a fork' }).get('settings') // => 'restricted access (a pull request from a fork): repository settings need an admin token'
+ * restrictedFeatures({ restricted: true, reason: 'the workflow token', houseReads: true }, 'pull_request').has('sync') // => false
+ * restrictedFeatures({ restricted: true, reason: 'the workflow token', houseReads: true }, 'schedule').has('sync') // => true
  * ```
  *
  * @param access - The run's access.
+ * @param event - The event the run is for, such as `pull_request`; any event when omitted.
  * @returns Each skipped feature with its reason.
  */
-export const restrictedFeatures = (access: Access): ReadonlyMap<string, string> =>
-  access.restricted
-    ? new Map([...PAT_ONLY_FEATURES].map(([feature, why]) => [feature, `restricted access (${access.reason}): ${why}`]))
-    : new Map()
+export const restrictedFeatures = (access: Access, event?: string): ReadonlyMap<string, string> => {
+  if (!access.restricted) return new Map()
+  const readsOnly = access.houseReads === true && event?.startsWith('pull_request') === true
+  return new Map(
+    [...PAT_ONLY_FEATURES]
+      .filter(([feature]) => !(readsOnly && feature === 'sync'))
+      .map(([feature, why]) => [feature, `restricted access (${access.reason}): ${why}`]),
+  )
+}
 
 /**
  * Whether a preset that could not be read may be left out: only in a
@@ -294,4 +318,134 @@ export const connectWithFallback = <E, R>(options: {
       },
       rejected: probe.left.message,
     }
+  })
+
+/**
+ * The name of the house repository an organisation keeps its presets and
+ * templates in, which a read-only house token may reach.
+ *
+ * @example
+ * ```ts import.meta.vitest name="HOUSE_REPOSITORY"
+ * import { HOUSE_REPOSITORY } from '@resnovas/runtime'
+ *
+ * HOUSE_REPOSITORY // => '.github'
+ * ```
+ */
+export const HOUSE_REPOSITORY = '.github'
+
+/**
+ * Wraps a GitHub service so reads of files in another repository's house
+ * repository (`.github`) go through the house service first.
+ *
+ * @remarks
+ * Only `getFile` and `listDirectory` for a `.github` repository other than
+ * the service's own are sent to `house`; everything else goes to `inner`
+ * unchanged. When the house token cannot see the file (GitHub answers
+ * forbidden or not found, as it does for another organisation's `.github`),
+ * the read is made again through `inner`, so a house token scoped to one
+ * organisation never hides another's presets.
+ *
+ * @example
+ * ```ts import.meta.vitest name="withHouseReads"
+ * import { fileKey, makeMemoryGitHub } from '@resnovas/integrations.github'
+ * import { withHouseReads } from '@resnovas/runtime'
+ * import { Effect } from 'effect'
+ *
+ * const inner = makeMemoryGitHub()
+ * const house = makeMemoryGitHub()
+ * house.state.files.set(fileKey('Resnovas', '.github', 'house.yml'), 'version: 2\n')
+ * const github = withHouseReads(inner.service, house.service)
+ * await Effect.runPromise(github.getFile({ owner: 'Resnovas', repo: '.github', path: 'house.yml' })) // => 'version: 2\n'
+ * ```
+ *
+ * @param inner - The service to wrap.
+ * @param house - The service acting with the read-only house token.
+ * @returns The wrapped service.
+ */
+export const withHouseReads = (inner: GitHubService, house: GitHubService): GitHubService => {
+  const isHouse = (location: FileLocation) =>
+    location.repo.toLowerCase() === HOUSE_REPOSITORY &&
+    !(
+      location.owner.toLowerCase() === inner.coordinates.owner.toLowerCase() &&
+      location.repo.toLowerCase() === inner.coordinates.repo.toLowerCase()
+    )
+  const route =
+    <A>(read: (service: GitHubService, location: FileLocation) => Effect.Effect<A, GitHubError>) =>
+    (location: FileLocation): Effect.Effect<A, GitHubError> =>
+      isHouse(location)
+        ? read(house, location).pipe(
+            Effect.catchIf(
+              (error) => error._tag === 'Forbidden' || error._tag === 'NotFound',
+              () => read(inner, location),
+            ),
+          )
+        : read(inner, location)
+  return {
+    ...inner,
+    getFile: route((service, location) => service.getFile(location)),
+    listDirectory: route((service, location) => service.listDirectory(location)),
+  }
+}
+
+/** The services a run acts through, when its tokens are split. */
+export interface SplitConnection extends Connected {
+  /**
+   * The service acting with the app or access token, for the privileged
+   * features and presets in other repositories; absent when the run has only
+   * one token, when `service` does everything.
+   */
+  readonly privileged?: GitHubService
+}
+
+/**
+ * Connects a run with each token doing only its own job.
+ *
+ * @remarks
+ * `service` acts with the workflow token in the repository itself: check
+ * runs, comments, labels, reviews and statuses. `privileged` acts with the
+ * app or access token, for settings, sync and presets in other
+ * repositories. Both read files in another organisation's house repository
+ * (`.github`) with the read-only house token when one is given (see
+ * {@link withHouseReads}).
+ *
+ * The token is checked and replaced as {@link connectWithFallback} does. A
+ * run with restricted access, or without a workflow token, has no
+ * privileged service: `service` does everything, as before the split.
+ *
+ * @example
+ * ```ts
+ * import { makeMemoryGitHub } from '@resnovas/integrations.github'
+ * import { connectTokens, FULL_ACCESS } from '@resnovas/runtime'
+ * import { Effect, Option, Redacted } from 'effect'
+ *
+ * const connected = connectTokens({
+ *   token: Redacted.make('ghs_app'),
+ *   workflowToken: Option.some(Redacted.make('ghs_workflow')),
+ *   houseToken: Option.some(Redacted.make('ghs_house')),
+ *   access: FULL_ACCESS,
+ *   connect: () => Effect.succeed(makeMemoryGitHub().service),
+ * })
+ * ```
+ *
+ * @param options - The token and access from {@link accessFor}, the workflow and house tokens, and how to connect with a token.
+ * @returns The in-repository service, the privileged one when there is one, and the run's access.
+ */
+export const connectTokens = <E, R>(options: {
+  readonly token: Redacted.Redacted<string>
+  readonly workflowToken: Option.Option<Redacted.Redacted<string>>
+  readonly houseToken: Option.Option<Redacted.Redacted<string>>
+  readonly access: Access
+  readonly connect: (token: Redacted.Redacted<string>) => Effect.Effect<GitHubService, E, R>
+}): Effect.Effect<SplitConnection, E, R> =>
+  Effect.gen(function* () {
+    const connected = yield* connectWithFallback(options)
+    const house = Option.isSome(options.houseToken) ? yield* options.connect(options.houseToken.value) : undefined
+    const reads = (service: GitHubService) => (house === undefined ? service : withHouseReads(service, house))
+    const access: Access =
+      connected.access.restricted && house !== undefined ? { ...connected.access, houseReads: true } : connected.access
+    const base = { access, ...(connected.rejected === undefined ? {} : { rejected: connected.rejected }) }
+    if (connected.access.restricted || Option.isNone(options.workflowToken))
+      return { ...base, service: reads(connected.service) }
+    const inRepository = yield* options.connect(options.workflowToken.value)
+    return { ...base, service: reads(inRepository), privileged: reads(connected.service) }
   })

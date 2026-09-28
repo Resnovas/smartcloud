@@ -3,16 +3,24 @@
 # branch too, so a pull request cannot loosen its own rules. The CI workflow
 # tests a pull request's code; this one never runs it.
 #
-# The job acts with a Resnovas Bot GitHub App token (org variable
-# RESNOVAS_BOT_APP_ID, org secret RESNOVAS_BOT_PRIVATE_KEY), because the config
-# extends the house preset in the private Resnovas/.github repository, which
-# the workflow token cannot read. The token reaches only this repository and
-# Resnovas/.github, and GitHub signs the commits made with it. Building from
-# the default branch keeps it away from pull request code. Pull requests from
-# forks and Dependabot get no secrets, so no token is minted: they fall back
-# to the read-only workflow token, and smartcloud then runs restricted,
-# skipping the private preset, settings, sync and refused writes rather than
-# failing.
+# Each token does only its own job (see docs/tokens.mdx):
+# - the workflow token acts in this repository: check runs, comments, labels
+#   and reviews, within the job's permissions below;
+# - a read-only Resnovas Bot token (contents: read on Resnovas/.github only)
+#   reads the house preset and the sync templates, on every run that gets
+#   secrets, pull requests included. Resnovas/.github is public, so any token
+#   could read them; this one keeps privileged tokens away from .github and
+#   spends the app's rate limit rather than the workflow token's;
+# - the full Resnovas Bot token (org variable RESNOVAS_BOT_APP_ID, org secret
+#   RESNOVAS_BOT_PRIVATE_KEY), scoped to this repository alone, is used only
+#   for settings, sync, CODEOWNERS proposals and backports, and minted only
+#   on push, schedule and manual runs of the default branch, whose workflow
+#   file no pull request controls, and on a merged pull request's closed
+#   event, which runs the merged code. It never reaches Resnovas/.github.
+# Pull requests from forks and Dependabot get no secrets, so neither app token
+# is minted: they act with the read-only workflow token alone, which can still
+# read the public preset, and smartcloud runs restricted, skipping settings,
+# sync and refused writes rather than failing.
 #
 # The job passes its own check run id, so the house preset's required feature
 # waits for every other check on the pull request and the job's "smartcloud"
@@ -22,7 +30,7 @@
 # so slash commands cannot run changed code. Each command checks the
 # commenter's role itself; on top of that, only comments from owners, members
 # and collaborators start a job at all, so outside commenters never reach the
-# Resnovas Bot token.
+# read-only house token.
 name: smartcloud
 
 on:
@@ -106,32 +114,58 @@ jobs:
       - name: Bundle the action
         run: pnpm nx run @resnovas/action:bundle
 
-      # Minted after the build, so no lifecycle script ever sees it. A failed
+      # Minted after the build, so no lifecycle script ever sees them. A failed
       # mint falls back to the workflow token rather than failing the run.
-      # Never minted for a pull request from another (or a deleted) repository,
-      # Dependabot's runs and pull requests, or a manual run on another branch,
-      # whose workflow file that branch controls.
-      - name: Mint the Resnovas Bot token
-        id: app
+      # Only read access to Resnovas/.github, for the house preset and the sync
+      # templates. Never minted for a pull request from another (or a deleted)
+      # repository or for Dependabot's runs and pull requests.
+      - name: Mint the read-only house token
+        id: house
         if: >-
           env.HAS_APP_KEY == 'true'
           && (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)
           && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
-          && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
         continue-on-error: true
-        # The token keeps the app's full permission set, which settings, sync,
-        # labels and checks need between them; it is scoped to this repository
-        # and .github, and never minted for forks or Dependabot.
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0 # zizmor: ignore[github-app]
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           # GitHub accepts the App ID wherever the client ID is asked for.
           client-id: ${{ vars.RESNOVAS_BOT_APP_ID }}
           private-key: ${{ secrets.RESNOVAS_BOT_PRIVATE_KEY }}
           owner: Resnovas
-          repositories: smartcloud,.github
+          repositories: .github
+          permission-contents: read
+
+      # The app's full permission set, for settings, sync, CODEOWNERS
+      # proposals and backports only, scoped to this repository alone. Minted
+      # only on push, schedule and manual runs of the default branch, and on
+      # the closed event of a merged pull request from this repository, whose
+      # run is the merged, trusted code: backport pull requests opened with the
+      # workflow token would start no CI. Every other pull request and comment
+      # run acts with the workflow token; without the app token a backport is
+      # reported as not made, since the job's contents access is read-only.
+      - name: Mint the Resnovas Bot token
+        id: app
+        if: >-
+          env.HAS_APP_KEY == 'true'
+          && (
+            contains(fromJSON('["push", "schedule", "workflow_dispatch"]'), github.event_name)
+            || github.event_name == 'pull_request' && github.event.action == 'closed'
+            && github.event.pull_request.merged == true
+            && github.event.pull_request.head.repo.full_name == github.repository
+          )
+          && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+          && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
+        continue-on-error: true
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0 # zizmor: ignore[github-app]
+        with:
+          client-id: ${{ vars.RESNOVAS_BOT_APP_ID }}
+          private-key: ${{ secrets.RESNOVAS_BOT_PRIVATE_KEY }}
+          owner: Resnovas
+          repositories: smartcloud
 
       - name: Run smartcloud
         uses: ./
         with:
           GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          houseToken: ${{ steps.house.outputs.token }}
           checkRunId: ${{ job.check_run_id }}

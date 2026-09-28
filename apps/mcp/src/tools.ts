@@ -312,7 +312,7 @@ export const planSettingsTool = (connect: Connect, input: PlanSettingsInput, roo
       const location = yield* configLocation(root, input)
       const service = yield* connect(coordinates)
       const plan = yield* Effect.flatMap(loadConfig(location), (resolved) =>
-        planRepositorySettings(resolved.config),
+        planRepositorySettings(resolved.config, resolved.ignored),
       ).pipe(Effect.provideService(GitHub, service))
       return [settingsPlanText(plan)]
     }),

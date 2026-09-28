@@ -361,3 +361,28 @@ export interface GitHubService {
  * ```
  */
 export class GitHub extends Context.Tag('@resnovas/integrations.github/GitHub')<GitHub, GitHubService>() {}
+
+/**
+ * The privileged GitHub service: the one acting with a GitHub App or
+ * personal access token, for the features that need more than the workflow
+ * token, such as settings and sync, and for presets in other repositories.
+ *
+ * @remarks
+ * Optional. A run that has one also provides {@link GitHub}, acting with the
+ * workflow token, for everything else: check runs, comments, labels and
+ * reviews. A run without one does everything through {@link GitHub}, as the
+ * CLI and the MCP server do.
+ *
+ * @example
+ * ```ts
+ * import { Effect, Option } from 'effect'
+ * import { GitHub, PrivilegedGitHub } from '@resnovas/integrations.github'
+ *
+ * // The privileged service when the run has one, otherwise the in-repository one.
+ * const strongest = Effect.flatMap(Effect.serviceOption(PrivilegedGitHub), Option.match({ onNone: () => GitHub, onSome: Effect.succeed }))
+ * ```
+ */
+export class PrivilegedGitHub extends Context.Tag('@resnovas/integrations.github/PrivilegedGitHub')<
+  PrivilegedGitHub,
+  GitHubService
+>() {}

@@ -22,6 +22,8 @@ export interface Inputs {
   readonly token: Redacted.Redacted<string>
   /** The workflow's own token: the action compares the token with it to tell a restricted run, and reads the checks on a commit with it. */
   readonly workflowToken: Option.Option<Redacted.Redacted<string>>
+  /** A read-only token for the organisation's `.github` repository, used only to read presets and sync templates there. */
+  readonly houseToken: Option.Option<Redacted.Redacted<string>>
   /** The config file; when omitted, the first of the runtime's `CONFIG_CANDIDATES` that exists. */
   readonly config: Option.Option<string>
   /** Config given inline, which wins over the file. */
@@ -63,7 +65,8 @@ const DEPRECATED: ReadonlyArray<readonly [string, string]> = [
  * v1 treated any non-empty string as true. `telemetry` is the exception: it
  * is on unless set to `false`. The token falls back to the
  * `GITHUB_TOKEN` environment variable. `workflowToken` defaults to the
- * workflow's own token in `action.yml` and is never listed in `given`. `checkRunId` must be a whole number,
+ * workflow's own token in `action.yml` and is never listed in `given`; `houseToken` has no
+ * default and, when given, is listed by name only. `checkRunId` must be a whole number,
  * as `job.check_run_id` gives it.
  *
  * @example
@@ -85,6 +88,7 @@ export const readInputs = Effect.gen(function* () {
     Config.orElse(() => Config.redacted('GITHUB_TOKEN')),
   )
   const workflowToken = Option.map(yield* input('workflowToken'), Redacted.make)
+  const houseToken = Option.map(yield* input('houseToken'), Redacted.make)
   const features = yield* input('features')
   const deprecations: Array<string> = []
   const given: Array<string> = []
@@ -103,6 +107,7 @@ export const readInputs = Effect.gen(function* () {
     checkRunId: yield* input('checkRunId'),
   }
   for (const [name, value] of Object.entries(optional)) if (Option.isSome(value)) given.push(name)
+  if (Option.isSome(houseToken)) given.push('houseToken')
   if (Option.exists(optional.checkRunId, (value) => !/^[1-9]\d*$/.test(value))) {
     return yield* Effect.fail(
       ConfigError.InvalidData(
@@ -114,6 +119,7 @@ export const readInputs = Effect.gen(function* () {
   const inputs: Inputs = {
     token,
     workflowToken,
+    houseToken,
     config: optional.config,
     configJson: optional.configJson,
     configRef: optional.configRef,

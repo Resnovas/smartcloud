@@ -103,6 +103,7 @@ const NOTICE_FEATURES: ReadonlyArray<string> = [
   'codeowners',
   'lock',
   'backport',
+  'automerge',
   'engine',
 ]
 
