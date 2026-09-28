@@ -27,7 +27,7 @@ const SOURCE = /\.(ts|mts|cts|js|mjs|cjs|tsx|jsx)$/
 const GENERATED = /^(graphify-out|node_modules|dist|externals|coverage|test-output|out-tsc|release|tmp|\.nx)\/|\/(dist|node_modules|coverage|test-output|out-tsc)\/|\.d\.ts$/
 const SYNCED = /Synced from Resnovas\/\.github/
 // A header already present, possibly for another file name or year.
-const EXISTING = /^\/\*\*\n \* @file [^\n]*\n[\s\S]*?DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE\.\n \*\/\n?/
+const EXISTING = /^\/\*\*\r?\n \* @file [^\n]*\n[\s\S]*?DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE\.\r?\n \*\/\r?\n?/
 const IGNORED_DIRECTORIES = new Set(['.git', '.nx', 'node_modules', 'dist', 'release', 'coverage', 'out-tsc', 'test-output', 'tmp', 'externals', 'graphify-out'])
 
 /**
@@ -67,7 +67,7 @@ export const checkHeaders = (root, { fix = false, year = String(new Date().getFu
     if (SYNCED.test(body.split('\n').slice(0, 6).join('\n'))) continue
     checked += 1
     const header = headerFor(template, file, year)
-    if (body.startsWith(`${header}\n`)) continue
+    if (body.replaceAll('\r\n', '\n').startsWith(`${header}\n`)) continue
     wrong.push(file)
     if (fix) {
       const rest = body.replace(EXISTING, '').replace(/^\n+/, '')

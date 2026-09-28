@@ -44,9 +44,12 @@ if (!existsSync(join(project, 'vitest.config.mts'))) {
 const spec = `src/${rest}.spec.ts`
 const filter = area === 'tests' || existsSync(join(project, spec)) ? [spec] : []
 
-const result = spawnSync('vitest', ['run', '--coverage.enabled=false', ...filter], {
+// The repository's own Vitest, so `node tools/test/file.ts` works outside a package script.
+const vitest = join(root, 'node_modules', '.bin', process.platform === 'win32' ? 'vitest.cmd' : 'vitest')
+const result = spawnSync(vitest, ['run', '--coverage.enabled=false', ...filter], {
   cwd: project,
   stdio: 'inherit',
   shell: process.platform === 'win32',
 })
+if (result.error) console.error(`Cannot run ${vitest}: ${result.error.message}. Install the dependencies first.`)
 process.exit(result.status ?? 1)
