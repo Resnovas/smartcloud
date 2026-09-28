@@ -78,14 +78,14 @@ describe('parseDisclosure', () => {
     const labels = disclosureLabels({ level: 'Autonomy (level)', review: 'Reviewed?' })
     expect(labels).toStrictEqual({ ...DEFAULT_LABELS, level: 'Autonomy (level)', review: 'Reviewed?' })
     expect(parseDisclosure('Autonomy (level): none\nReviewed?: yes\nAutonomy level: chat', labels)).toStrictEqual({
-      level: 'none',
+      level: 'unassisted',
       review: 'yes',
     })
     expect(disclosureLabels(undefined)).toStrictEqual(DEFAULT_LABELS)
   })
 
   it('knows the AI_POLICY.md levels', () => {
-    expect(LEVELS).toStrictEqual(['none', 'autocomplete', 'chat', 'agent', 'autonomous'])
+    expect(LEVELS).toStrictEqual(['unassisted', 'autocomplete', 'chat', 'agent', 'autonomous'])
     expect(LEVELS.every(isLevel)).toBe(true)
     expect(isLevel('some')).toBe(false)
   })

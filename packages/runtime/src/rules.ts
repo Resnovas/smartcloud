@@ -48,8 +48,9 @@ export class UnknownRule extends Data.TaggedError('UnknownRule')<{ readonly rule
 // The policy rules, with the document and anchor each links to under links.policyBase.
 const POLICY: Readonly<Record<string, { readonly summary: string; readonly fix: string; readonly anchor: string }>> = {
   'AI-01': {
-    summary: 'The pull request states its AI autonomy level and, unless it is none, every AI tool and model used.',
-    fix: 'Fill in "AI level:" with none, autocomplete, chat, agent or autonomous, and list the tools in "AI tools:". A level of none lists no tools and no commit credits an AI tool.',
+    summary:
+      'The pull request states its AI autonomy level and, unless it is unassisted, every AI tool and model used.',
+    fix: 'Fill in "AI level:" with unassisted, autocomplete, chat, agent or autonomous, and list the tools in "AI tools:". A level of unassisted lists no tools and no commit credits an AI tool.',
     anchor: 'AI_POLICY.md#ai-01',
   },
   'AI-02': {
