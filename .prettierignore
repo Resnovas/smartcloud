@@ -35,11 +35,17 @@ LICENSE
 .github/workflows/smartcloud.yml
 .github/workflows/smartcloud-review.yml
 .graphifyignore
-.agents/skills/graphify/
-.claude/skills/graphify/
+.agents/skills/
 tools/graphify/
 tools/dev/surfaces.mjs
 tools/dev/open.mjs
+tools/dev/commit-check.mjs
+tools/dev/docs.ts
+tools/license/
+tools/ci/coverage-goal.ts
+tools/ci/flaky-tests.ts
+tools/test/file.ts
+tools/typecheck/tests.ts
 tools/ai-docs/
 ai-docs/README.md
 ai-docs/src/05_house-standards/
@@ -54,8 +60,9 @@ ai-docs/src/05_house-standards/
 .run/house-*.run.xml
 .codex/environments/environment.toml
 orca.yaml
-# Generated from .agents/prompts and .agents/mcp.jsonc by tools/dev/surfaces.mjs.
+# Generated from .agents/prompts, .agents/skills and .agents/mcp.jsonc by tools/dev/surfaces.mjs.
 .claude/commands/
+.claude/skills/
 .cursor/commands/
 .mcp.json
 .cursor/mcp.json
