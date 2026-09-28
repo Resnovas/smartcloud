@@ -60,8 +60,9 @@ const checkCommit = (
 
   if (section.aiAttribution !== false) {
     const link = `${base}/AI_POLICY.md#ai-02`
-    // Both trailers travel together: Co-authored-by shows on GitHub,
-    // Assisted-by records the exact tool and model.
+    // Co-authored-by is the credit GitHub shows, so an Assisted-by alone is
+    // never enough. Assisted-by records the exact tool and model in the
+    // kernel form, and is required only where commits.assistedBy is on.
     if (attribution.aiAttributed && !attribution.aiCoAuthored) {
       found.push({
         rule: 'AI-02',
@@ -69,7 +70,11 @@ const checkCommit = (
         link,
         commit: commit.sha,
       })
-    } else if (attribution.aiCoAuthored && !attribution.assistedBy.some(namesToolAndModel)) {
+    } else if (
+      section.assistedBy === true &&
+      attribution.aiCoAuthored &&
+      !attribution.assistedBy.some(namesToolAndModel)
+    ) {
       found.push({
         rule: 'AI-02',
         message: 'This commit credits an AI co-author but has no "Assisted-by: TOOL:MODEL" trailer.',
@@ -148,9 +153,10 @@ export const checkCommitMessage = (
  * @remarks
  * Enabled by a `commits` section. `commits.dco` checks that each non-merge
  * commit has a `Signed-off-by` whose email is the author's (DCO).
- * `commits.aiAttribution` checks that an AI-attributed commit carries both
- * `Co-authored-by` and `Assisted-by` (AI-02), and that no `Signed-off-by`
- * names an AI tool (AI-03). Both are on by default.
+ * `commits.aiAttribution` checks that an AI-attributed commit carries a
+ * `Co-authored-by` for the tool (AI-02), and that no `Signed-off-by` names
+ * an AI tool (AI-03). Both are on by default. `commits.assistedBy`, off by
+ * default, also requires `Assisted-by: TOOL:MODEL` next to each AI co-author.
  *
  * Trusted bots are skipped. On a maintainer's own pull request, or the
  * repository owner's, errors are reported at `commits.maintainerLevel`

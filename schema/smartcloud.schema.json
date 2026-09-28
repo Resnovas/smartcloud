@@ -1627,6 +1627,9 @@
         "aiAttribution": {
           "type": "boolean"
         },
+        "assistedBy": {
+          "type": "boolean"
+        },
         "aiIdentities": {
           "type": "object",
           "required": [],

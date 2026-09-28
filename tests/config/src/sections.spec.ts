@@ -41,7 +41,7 @@ describe('feature sections', () => {
 version: 2
 roles: { maintainers: [TGTGamer], trustedBots: ['dependabot[bot]'] }
 links: { policyBase: 'https://github.com/Resnovas/.github/blob/main' }
-commits: { dco: true, aiAttribution: true, aiIdentities: { emails: ['@example-ai\\.dev$'] }, maintainerLevel: warning }
+commits: { dco: true, aiAttribution: true, assistedBy: false, aiIdentities: { emails: ['@example-ai\\.dev$'] }, maintainerLevel: warning }
 disclosure: { fields: { level: 'AI level' }, requireDraft: true, maintainerLevel: warning }
 reviews:
   gate: { outside: 2, maintainer: 1 }

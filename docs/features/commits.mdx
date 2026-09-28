@@ -6,7 +6,7 @@ description: 'DCO sign-off and AI attribution rules for the commits on a pull re
 Every commit on a pull request says who wrote it. The commits feature checks two things about that:
 
 - **DCO sign-off.** The Developer Certificate of Origin (DCO) is a short statement a contributor agrees to: "I wrote this, or have the right to submit it". You agree by adding a `Signed-off-by: Your Name <you@example.com>` line to each commit, which `git commit -s` does for you. smartcloud checks every commit has one that matches its author.
-- **AI attribution.** When an AI tool helped write a commit, the commit credits it with two trailers, `Co-authored-by` and `Assisted-by`, and the tool never signs off, because only a person can agree to the DCO.
+- **AI attribution.** When an AI tool helped write a commit, the commit credits it with a `Co-authored-by` trailer naming the tool and model, and the tool never signs off, because only a person can agree to the DCO. A repository can also require the Linux kernel's `Assisted-by: TOOL:MODEL` trailer next to it.
 
 Why use it: it makes your contribution policy automatic. A missing sign-off is caught on the pull request, with a link to your policy, instead of in review.
 
@@ -54,6 +54,7 @@ A trailer is a `Key: value` line at the end of a commit message, such as `Signed
 | ----------------------------- | --------- | ----------------------------------------------------------------------------------------------------------------- |
 | `commits.dco`                 | `true`    | Check every non-merge commit is signed off by its author (rule `DCO`). `false` turns the check off.               |
 | `commits.aiAttribution`       | `true`    | Check AI attribution trailers (rules `AI-02` and `AI-03`). `false` turns the check off.                           |
+| `commits.assistedBy`          | `false`   | Also require `Assisted-by: TOOL:MODEL` next to each AI `Co-authored-by` (rule `AI-02`). Needs `aiAttribution`.    |
 | `commits.aiIdentities.emails` | none      | Extra regular expressions matched against trailer emails, to recognise more AI tools. Added to the built-in list. |
 | `commits.aiIdentities.names`  | none      | Extra regular expressions matched against trailer names. Added to the built-in list.                              |
 | `commits.maintainerLevel`     | `warning` | The level for findings on a maintainer's own pull request: `warning` or `error`. `AI-03` is always an error.      |
@@ -89,6 +90,7 @@ links:
 commits:
   dco: true
   aiAttribution: true
+  assistedBy: false
   aiIdentities:
     emails: ["@example-ai\\.dev$"]
     names: ['^Robo$']
@@ -99,11 +101,11 @@ commits:
 
 For each pull request event, smartcloud loads the pull request's commits and checks each one.
 
-| Rule    | Finding                                                                                                                                                                                                                 |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DCO`   | A non-merge commit has no `Signed-off-by` whose email matches the commit author's email, ignoring case. An AI sign-off never counts, even when its email matches. Fix with `git commit -s`.                             |
-| `AI-02` | A commit has `Assisted-by` but no AI `Co-authored-by`, or an AI `Co-authored-by` but no `Assisted-by: TOOL:MODEL`. The two travel together: `Co-authored-by` shows on GitHub, `Assisted-by` records the tool and model. |
-| `AI-03` | A `Signed-off-by` on a non-merge commit names an AI tool. Only a person can sign off.                                                                                                                                   |
+| Rule    | Finding                                                                                                                                                                                                                                                       |
+| ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DCO`   | A non-merge commit has no `Signed-off-by` whose email matches the commit author's email, ignoring case. An AI sign-off never counts, even when its email matches. Fix with `git commit -s`.                                                                   |
+| `AI-02` | A commit has `Assisted-by` but no AI `Co-authored-by`, or, with `assistedBy: true`, an AI `Co-authored-by` but no `Assisted-by: TOOL:MODEL`. `Co-authored-by` is the credit GitHub shows, so it is always required; `Assisted-by` records the tool and model. |
+| `AI-03` | A `Signed-off-by` on a non-merge commit names an AI tool. Only a person can sign off.                                                                                                                                                                         |
 
 Merge commits (commits with more than one parent) are written by Git or GitHub, so they are not checked for `DCO` or `AI-03`.
 
@@ -113,11 +115,10 @@ A correctly attributed AI-assisted commit ends like this:
 feat(labels): sync label aliases
 
 Co-authored-by: Example Assistant <assistant@example-tool.invalid>
-Assisted-by: example-tool:example-model-1
 Signed-off-by: Jane Doe <jane@example.com>
 ```
 
-`Assisted-by` follows the Linux kernel form `TOOL:MODEL`, optionally followed by more tools. The first word must have text on both sides of a colon.
+The co-author's name says which tool and model did the work. With `assistedBy: true`, an `Assisted-by: example-tool:example-model-1` line sits next to it: the Linux kernel form `TOOL:MODEL`, optionally followed by more tools, where the first word must have text on both sides of a colon.
 
 Findings link to `CONTRIBUTING.md#dco`, `AI_POLICY.md#ai-02` and `AI_POLICY.md#ai-03` under [`links.policyBase`](/configuration#links) (by default `https://github.com/Resnovas/.github/blob/main`).
 
@@ -152,7 +153,7 @@ The check needs only read access to the pull request's commits, so it runs on fo
 
 ## In the house preset
 
-The [Resnovas house preset](/presets) sets `dco: true`, `aiAttribution: true` and `maintainerLevel: warning`. An AI sign-off is an error for everyone; anything else on a maintainer's own pull request is a warning. A repository may add `aiIdentities` (the preset leaves it unset), but cannot turn either check off.
+The [Resnovas house preset](/presets) sets `dco: true`, `aiAttribution: true` and `maintainerLevel: warning`. An AI sign-off is an error for everyone; anything else on a maintainer's own pull request is a warning. A repository may add `aiIdentities` or `assistedBy: true` (the preset leaves both unset), but cannot turn either check off.
 
 ## Troubleshooting
 
@@ -161,7 +162,7 @@ The [Resnovas house preset](/presets) sets `dco: true`, `aiAttribution: true` an
     The commit has no sign-off, or the sign-off's email differs from the commit's author email. Set `git config user.email` to the address you sign off with, then `git rebase --signoff <base>` (or `git commit --amend -s` for the last commit) and force-push.
   </Accordion>
   <Accordion title="This commit credits an AI co-author but has no Assisted-by: TOOL:MODEL trailer">
-    Add a line such as `Assisted-by: example-tool:example-model-1` next to the `Co-authored-by` trailer.
+    The repository sets `commits.assistedBy: true`. Add a line such as `Assisted-by: example-tool:example-model-1` next to the `Co-authored-by` trailer.
   </Accordion>
   <Accordion title="This commit has Assisted-by but no Co-authored-by trailer for the AI tool">
     Add a `Co-authored-by` trailer whose name or email identifies the tool. If your tool is not recognised, add a pattern under `commits.aiIdentities`.

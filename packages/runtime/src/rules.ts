@@ -54,8 +54,8 @@ const POLICY: Readonly<Record<string, { readonly summary: string; readonly fix: 
   },
   'AI-02': {
     summary:
-      'Every commit with a material change produced by an AI tool credits it with both a Co-authored-by and an Assisted-by: TOOL:MODEL trailer.',
-    fix: 'Amend the commits to add both trailers for the tool, for example "Co-authored-by: Claude <noreply@anthropic.com>" and "Assisted-by: claude-code:claude-opus-5-5".',
+      'Every commit with a material change produced by an AI tool credits it with a Co-authored-by trailer naming the tool and model.',
+    fix: 'Amend the commits to add the trailer for the tool, for example "Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>"; a repository with commits.assistedBy on also needs "Assisted-by: claude-code:claude-opus-5-5".',
     anchor: 'AI_POLICY.md#ai-02',
   },
   'AI-03': {

@@ -71,15 +71,17 @@ export const Links = Schema.Struct({
  * import { Commits } from '@resnovas/config'
  * import { Schema } from 'effect'
  *
- * Schema.is(Commits)({ dco: true, aiAttribution: true, maintainerLevel: 'warning' }) // => true
+ * Schema.is(Commits)({ dco: true, aiAttribution: true, assistedBy: false, maintainerLevel: 'warning' }) // => true
  * Schema.is(Commits)({ maintainerLevel: 'fatal' }) // => false
  * ```
  */
 export const Commits = Schema.Struct({
   /** Every non-merge commit is signed off by its author. */
   dco: opt(Schema.Boolean),
-  /** AI co-authors carry `Co-authored-by` and `Assisted-by` together, and never sign off. */
+  /** An AI tool that changed a commit is credited with `Co-authored-by`, and never signs off. */
   aiAttribution: opt(Schema.Boolean),
+  /** With `aiAttribution`, each AI co-author also needs `Assisted-by: TOOL:MODEL`. Off by default. */
+  assistedBy: opt(Schema.Boolean),
   /** Extra patterns identifying AI tools by email or name, on top of the built-in list. */
   aiIdentities: opt(
     Schema.Struct({ emails: opt(Schema.Array(Schema.String)), names: opt(Schema.Array(Schema.String)) }),

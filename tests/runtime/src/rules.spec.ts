@@ -37,7 +37,7 @@ describe('explainRule', () => {
       const ai02 = yield* explainRule('ai-02', config)
       expect(ai02.rule).toBe('AI-02')
       expect(ai02.link).toBe('https://example.com/policy/AI_POLICY.md#ai-02')
-      expect(ai02.fix).toContain('Assisted-by')
+      expect(ai02.fix).toContain('Co-authored-by')
       for (const rule of ['AI-01', 'AI-03', 'AI-20', 'AI-21', 'DCO', 'SYNC', 'REVIEW']) {
         expect((yield* explainRule(rule, config)).link).toMatch(/^https:\/\/example\.com\/policy\/[A-Z_]+\.md#/)
       }
