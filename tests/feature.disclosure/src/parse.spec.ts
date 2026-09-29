@@ -1,7 +1,7 @@
 /**
  * @file tests/feature.disclosure/src/parse.spec.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -78,14 +78,14 @@ describe('parseDisclosure', () => {
     const labels = disclosureLabels({ level: 'Autonomy (level)', review: 'Reviewed?' })
     expect(labels).toStrictEqual({ ...DEFAULT_LABELS, level: 'Autonomy (level)', review: 'Reviewed?' })
     expect(parseDisclosure('Autonomy (level): none\nReviewed?: yes\nAutonomy level: chat', labels)).toStrictEqual({
-      level: 'none',
+      level: 'unassisted',
       review: 'yes',
     })
     expect(disclosureLabels(undefined)).toStrictEqual(DEFAULT_LABELS)
   })
 
   it('knows the AI_POLICY.md levels', () => {
-    expect(LEVELS).toStrictEqual(['none', 'autocomplete', 'chat', 'agent', 'autonomous'])
+    expect(LEVELS).toStrictEqual(['unassisted', 'autocomplete', 'chat', 'agent', 'autonomous'])
     expect(LEVELS.every(isLevel)).toBe(true)
     expect(isLevel('some')).toBe(false)
   })

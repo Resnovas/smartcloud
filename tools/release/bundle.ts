@@ -1,33 +1,22 @@
-/**
- * @file tools/release/bundle.ts
- *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
- * Licensed under the Fair Core License, Version 1.0, MIT Future License
- * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
- * the licence key functionality, or modify any part of the software that the
- * licence key protects.
- *
- * Contributions are made under the Developer Certificate of Origin (DCO.md) and
- * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
- * (CODE_OF_CONDUCT.md) and the Cooperation Commitment (COOPERATION_COMMITMENT.md).
- *
- * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
- */
-
+// Synced from Resnovas/.github templates/tools/release/bundle.ts. Edit it there,
+// not here: the next house sync overwrites local edits.
+//
 // Bundles an app's compiled entry point into a single file with esbuild.
 //
 //   node tools/release/bundle.ts <project root> <output file>
 //
-// The app's package.json version is stamped into the bundle as VERSION (see
-// apps/cli/src/version.ts). On main it is 0.0.0; the release workflow runs Nx
-// release first, which writes the version it is releasing, so the bundle
-// carries the version of the tag it is built for. Runs on Node's built-in
-// TypeScript support.
+// The app's package.json version is stamped into the bundle as the global
+// release.config.json names in versionGlobal (the app reads it at start-up).
+// On the default branch it is 0.0.0; the release workflow runs Nx release
+// first, which writes the version it is releasing, so the bundle carries the
+// version of the tag it is built for. Runs on Node's built-in TypeScript
+// support.
 
 import { build } from 'esbuild'
 import { readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { loadReleaseConfig } from './config.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const [projectRoot, outfile] = process.argv.slice(2)
@@ -36,6 +25,7 @@ if (projectRoot === undefined || outfile === undefined) {
   process.exit(1)
 }
 
+const { versionGlobal } = loadReleaseConfig(root)
 const { version }: { version: string } = JSON.parse(readFileSync(join(root, projectRoot, 'package.json'), 'utf8'))
 
 await build({
@@ -49,10 +39,10 @@ await build({
   // Bundled CommonJS dependencies still call require, which ESM does not define.
   banner: { js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);" },
   legalComments: 'none',
-  define: { 'globalThis.__SMARTCLOUD_VERSION__': JSON.stringify(version) },
+  define: { [`globalThis.${versionGlobal}`]: JSON.stringify(version) },
   // A linked source map beside the bundle, for error tracking. Its sources are
   // relative to the bundle, so it names no local path; the release uploads it
-  // to PostHog and deletes it, so no published artefact ships it.
+  // and deletes it, so no published artefact ships it.
   sourcemap: 'linked',
   sourcesContent: true,
   logLevel: 'warning',

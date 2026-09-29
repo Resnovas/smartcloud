@@ -1,54 +1,55 @@
-/**
- * @file tools/release/nightly.ts
- *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
- * Licensed under the Fair Core License, Version 1.0, MIT Future License
- * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
- * the licence key functionality, or modify any part of the software that the
- * licence key protects.
- *
- * Contributions are made under the Developer Certificate of Origin (DCO.md) and
- * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
- * (CODE_OF_CONDUCT.md) and the Cooperation Commitment (COOPERATION_COMMITMENT.md).
- *
- * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
- */
-
-// Cuts a nightly pre-release of smartcloud.
+// Synced from Resnovas/.github templates/tools/release/nightly.ts. Edit it there,
+// not here: the next house sync overwrites local edits.
+//
+// Cuts a nightly pre-release.
 //
 //   node tools/release/nightly.ts [--dry-run]
 //
-// Run by .github/workflows/nightly.yml on a checkout of main with full history
-// and tags. It skips a night when main has not moved since the last nightly.
-// Otherwise it names the version (tools/release/nightly-version.ts), stamps it
-// into the apps' package.json files, bundles the action and records the result
-// the way tools/release/release.ts does: a release commit on no branch, with
-// dist/index.js and without externals/, reachable only from the
-// v<version> tag. It creates a GitHub pre-release on that tag with generated
-// notes, and moves v<major> to it while the major has no stable release, so
-// workflows pinned to v<major> run the newest nightly until the first stable
-// release. Nothing is published to npm and no changelog is written.
+// Run by the house nightly workflow on a checkout of the default branch with
+// full history and tags, in a repository whose release.config.json has a
+// nightly section (elsewhere it says so and does nothing). It skips a night
+// when the branch has not moved since the last nightly. Otherwise it names
+// the version (tools/release/nightly-version.ts), stamps it into the apps'
+// package.json files, builds the bundles and records the result the way
+// tools/release/release.ts does: a release commit on no branch, with the
+// bundles and without the dropped paths, reachable only from the v<version>
+// tag. It creates a GitHub pre-release on that tag with generated notes, and
+// with majorTag moves v<major> to it while the major has no stable release,
+// so workflows pinned to v<major> run the newest nightly until the first
+// stable release. Nothing is published to npm and no changelog is written.
 //
-// A run that finds a nightly already cut from main's head finishes whatever
-// that one left undone (the pre-release, the major tag) instead of cutting
-// another. With --dry-run it only prints the version and what it would do,
-// before writing or building anything. Runs on Node's built-in TypeScript
-// support.
+// A run that finds a nightly already cut from the branch head finishes
+// whatever that one left undone (the pre-release, the major tag) instead of
+// cutting another. With --dry-run it only prints the version and what it
+// would do, before writing or building anything. Runs on Node's built-in
+// TypeScript support.
 
 import { execFileSync } from 'node:child_process'
 import { appendFileSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { fileURLToPath } from 'node:url'
+import { loadReleaseConfig } from './config.ts'
 import { nightlyTakesMajor, nightlyVersion } from './nightly-version.ts'
 
-// The major version the nightlies preview.
-const MAJOR = 2
-const APPS = ['apps/action', 'apps/cli', 'apps/mcp']
-
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const config = loadReleaseConfig(root)
 const { values } = parseArgs({ options: { 'dry-run': { type: 'boolean', default: false } } })
 const dryRun = values['dry-run']
+
+// Hands values to later workflow steps; a no-op outside GitHub Actions.
+const output = (name: string, value: string) => {
+  const file = process.env['GITHUB_OUTPUT']
+  if (file !== undefined && file !== '') appendFileSync(file, `${name}=${value}\n`)
+}
+
+if (config.nightly === undefined) {
+  console.log('release.config.json has no nightly section, so this repository cuts no nightlies.')
+  output('released', 'false')
+  process.exit(0)
+}
+// The major version the nightlies preview.
+const MAJOR = config.nightly.major
 
 // The release commit is authored and signed off by the Actions bot, for the DCO check.
 const BOT = { name: 'github-actions[bot]', email: '41898282+github-actions[bot]@users.noreply.github.com' }
@@ -64,14 +65,8 @@ const tryGit = (...args: string[]): string | undefined => {
 }
 const run = (command: string, ...args: string[]) => execFileSync(command, args, { cwd: root, stdio: 'inherit' })
 
-// Hands values to later workflow steps; a no-op outside GitHub Actions.
-const output = (name: string, value: string) => {
-  const file = process.env['GITHUB_OUTPUT']
-  if (file !== undefined && file !== '') appendFileSync(file, `${name}=${value}\n`)
-}
-
 if (!dryRun && git('status', '--porcelain', '--untracked-files=no') !== '') {
-  console.error('The working tree has uncommitted changes; cut a nightly from a clean checkout of main.')
+  console.error('The working tree has uncommitted changes; cut a nightly from a clean checkout of the default branch.')
   process.exit(1)
 }
 const head = git('rev-parse', 'HEAD')
@@ -79,16 +74,16 @@ const tags = git('tag', '--list', 'v*')
   .split('\n')
   .filter((tag) => tag !== '')
 
-// Every release commit, nightly or stable, has the main commit it was cut from
-// as its parent. A night with nothing new on main since the last one cuts
+// Every release commit, nightly or stable, has the branch commit it was cut
+// from as its parent. A night with nothing new since the last one cuts
 // nothing, and neither does a commit a stable release was already cut from.
-// A tag on a root commit, or on no commit, was not cut from main.
+// A tag on a root commit, or on no commit, was not cut from the branch.
 const cutFrom = (tag: string) => tryGit('rev-parse', '--verify', '--quiet', `${tag}^{commit}^`)
 const nightlies = git('tag', '--list', `v${MAJOR}.*-nightly.*`, '--sort=-creatordate')
   .split('\n')
   .filter((tag) => tag !== '')
 const major = `v${MAJOR}`
-const takesMajor = nightlyTakesMajor(tags, MAJOR)
+const takesMajor = config.majorTag && nightlyTakesMajor(tags, MAJOR)
 
 const tryRun = (command: string, ...args: string[]): boolean => {
   try {
@@ -122,8 +117,7 @@ const publish = (tag: string) => {
     )
   }
   if (takesMajor && tryGit('rev-parse', `${major}^{commit}`) !== git('rev-parse', `${tag}^{commit}`)) {
-    // Workflows pin the action by its major tag. A lightweight tag, as
-    // release.ts moves it, whatever the machine's tag signing.
+    // A lightweight tag, as release.ts moves it, whatever the machine's tag signing.
     git('-c', 'tag.gpgSign=false', 'tag', '--force', major, `${tag}^{commit}`)
     git('push', '--quiet', '--force', 'origin', `refs/tags/${major}`)
     console.log(`Moved ${major} to ${tag}.`)
@@ -137,7 +131,7 @@ if (already !== undefined) {
     console.log(`${already} was already cut from ${head}; finishing whatever it left undone.`)
     publish(already)
   } else {
-    console.log(`${already} was already cut from ${head}; main has not changed since, so there is no nightly to cut.`)
+    console.log(`${already} was already cut from ${head}; the branch has not changed since, so there is no nightly to cut.`)
   }
   output('released', 'false')
   process.exit(0)
@@ -155,21 +149,23 @@ if (dryRun) {
   process.exit(0)
 }
 
-for (const app of APPS) {
+for (const app of config.apps) {
   const path = join(root, app, 'package.json')
   const manifest = JSON.parse(readFileSync(path, 'utf8'))
   writeFileSync(path, `${JSON.stringify({ ...manifest, version }, null, 2)}\n`)
 }
 
-// The bundle carries the version, and its source map goes to PostHog when the
-// key is set (and is deleted either way), as for a release.
-run(join(root, 'node_modules', '.bin', 'nx'), 'run', '@resnovas/action:bundle', '--output-style=static')
-run(process.execPath, join(root, 'tools/release/sourcemaps.ts'), version, 'dist/index.js')
+// Each bundle carries the version, and its source map goes to error tracking
+// when the key is set (and is deleted either way), as for a release.
+for (const bundle of config.bundles) run(join(root, 'node_modules', '.bin', 'nx'), 'run', bundle.target, '--output-style=static')
+if (config.bundles.length > 0) {
+  run(process.execPath, join(root, 'tools/release/sourcemaps.ts'), version, ...config.bundles.map((bundle) => bundle.output))
+}
 
 git('checkout', '--quiet', '--detach')
 git('add', '--update')
-git('add', '--force', 'dist/index.js')
-git('rm', '-r', '--cached', '--ignore-unmatch', '--quiet', 'externals')
+for (const bundle of config.bundles) git('add', '--force', bundle.output)
+for (const path of config.dropFromReleaseCommit) git('rm', '-r', '--cached', '--ignore-unmatch', '--quiet', path)
 git(
   '-c',
   `user.name=${BOT.name}`,

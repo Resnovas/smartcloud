@@ -1,7 +1,7 @@
 /**
  * @file packages/runtime/src/rules.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -48,14 +48,15 @@ export class UnknownRule extends Data.TaggedError('UnknownRule')<{ readonly rule
 // The policy rules, with the document and anchor each links to under links.policyBase.
 const POLICY: Readonly<Record<string, { readonly summary: string; readonly fix: string; readonly anchor: string }>> = {
   'AI-01': {
-    summary: 'The pull request states its AI autonomy level and, unless it is none, every AI tool and model used.',
-    fix: 'Fill in "AI level:" with none, autocomplete, chat, agent or autonomous, and list the tools in "AI tools:". A level of none lists no tools and no commit credits an AI tool.',
+    summary:
+      'The pull request states its AI autonomy level and, unless it is unassisted, every AI tool and model used.',
+    fix: 'Fill in "AI level:" with unassisted, autocomplete, chat, agent or autonomous, and list the tools in "AI tools:". A level of unassisted lists no tools and no commit credits an AI tool.',
     anchor: 'AI_POLICY.md#ai-01',
   },
   'AI-02': {
     summary:
-      'Every commit with a material change produced by an AI tool credits it with both a Co-authored-by and an Assisted-by: TOOL:MODEL trailer.',
-    fix: 'Amend the commits to add both trailers for the tool, for example "Co-authored-by: Claude <noreply@anthropic.com>" and "Assisted-by: claude-code:claude-opus-5-5".',
+      'Every commit with a material change produced by an AI tool credits it with a Co-authored-by trailer naming the tool and model.',
+    fix: 'Amend the commits to add the trailer for the tool, for example "Co-authored-by: Claude Opus 5.5 <noreply@anthropic.com>"; a repository with commits.assistedBy on also needs "Assisted-by: claude-code:claude-opus-5-5".',
     anchor: 'AI_POLICY.md#ai-02',
   },
   'AI-03': {

@@ -1,0 +1,47 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-release.yml. Edits inside this block are overwritten.
+#
+# Cuts a release with Nx release, started by hand from the Actions tab on the
+# default branch. What the release ships is read from release.config.json at
+# the repository root; the mechanics live in the house release workflow (see
+# docs/workflows.md in Resnovas/.github). The first release has no v* tag to
+# count from: run it with a specifier and first-release ticked.
+name: House release
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Print the version and release notes without tagging, releasing or publishing
+        type: boolean
+        default: true
+      specifier:
+        description: Override the conventional commits, with a version (2.0.0) or a bump (major, minor, patch)
+        type: string
+        required: false
+      first-release:
+        description: No v* tag exists yet (the first release only)
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  house-release:
+    uses: Resnovas/.github/.github/workflows/release.yml@main
+    permissions:
+      contents: write
+      id-token: write
+      attestations: write
+    with:
+      dry-run: ${{ inputs.dry-run }}
+      specifier: ${{ inputs.specifier }}
+      first-release: ${{ inputs.first-release }}
+    secrets:
+      POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+      RESNOVAS_BOT_PRIVATE_KEY: ${{ secrets.RESNOVAS_BOT_PRIVATE_KEY }}
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.

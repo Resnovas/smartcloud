@@ -1,7 +1,7 @@
 /**
  * @file tests/feature.disclosure/src/feature.spec.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -51,11 +51,18 @@ describe('disclosureFeature', () => {
     Effect.gen(function* () {
       const result = yield* runOn(disclosureFeature, {
         config,
-        body: body({ level: 'none', tools: 'none', review: '' }),
+        body: body({ level: 'unassisted', tools: 'none', review: '' }),
         commits: [commit(`fix: x\n\n${signed}`)],
         action: 'opened',
       })
       expect(result.findings).toStrictEqual([])
+      const legacy = yield* runOn(disclosureFeature, {
+        config,
+        body: body({ level: 'none', tools: 'none', review: '' }),
+        commits: [commit(`fix: x\n\n${signed}`)],
+        action: 'opened',
+      })
+      expect(legacy.findings).toStrictEqual([])
     }),
   )
 
@@ -72,14 +79,14 @@ describe('disclosureFeature', () => {
           rule: 'AI-01',
           level: 'error',
           message:
-            'The AI disclosure is missing. Fill in "AI level:" with one of: none, autocomplete, chat, agent, autonomous.',
+            'The AI disclosure is missing. Fill in "AI level:" with one of: unassisted, autocomplete, chat, agent, autonomous.',
           link: `${base}#ai-01`,
         },
       ])
       const invalid = yield* runOn(disclosureFeature, { config, body: body({ level: 'some' }), commits: [aiCommit] })
       expect(rules(invalid.findings, 'error')).toStrictEqual(['AI-01'])
       expect(invalid.findings[0]?.message).toBe(
-        '"AI level: some" is not a level. Use one of: none, autocomplete, chat, agent, autonomous.',
+        '"AI level: some" is not a level. Use one of: unassisted, autocomplete, chat, agent, autonomous.',
       )
     }),
   )
@@ -95,7 +102,7 @@ describe('disclosureFeature', () => {
     }),
   )
 
-  it.effect('an AI level other than none must name tools and credit a co-author', () =>
+  it.effect('an AI level other than unassisted must name tools and credit a co-author', () =>
     Effect.gen(function* () {
       const result = yield* runOn(disclosureFeature, {
         config,
@@ -124,7 +131,7 @@ describe('disclosureFeature', () => {
     Effect.gen(function* () {
       const result = yield* runOn(disclosureFeature, {
         config,
-        body: body({ level: 'none', tools: 'none' }),
+        body: body({ level: 'unassisted', tools: 'none' }),
         commits: [aiCommit, commit(`y\n\n${signed}`, { sha: 'human' })],
       })
       expect(result.findings).toStrictEqual([
@@ -132,7 +139,7 @@ describe('disclosureFeature', () => {
           feature: 'disclosure',
           rule: 'AI-01',
           level: 'error',
-          message: 'AI level is none but this commit credits an AI tool.',
+          message: 'AI level is unassisted but this commit credits an AI tool.',
           link: `${base}#ai-01`,
           commit: 'a'.repeat(40),
         },
@@ -144,7 +151,7 @@ describe('disclosureFeature', () => {
     Effect.gen(function* () {
       const result = yield* runOn(disclosureFeature, {
         config,
-        body: body({ level: 'none', tools: 'none' }),
+        body: body({ level: 'unassisted', tools: 'none' }),
         commits: [commit(`x\n\nAssisted-by: aider:gpt-5\n${signed}`)],
       })
       expect(rules(result.findings, 'error')).toStrictEqual(['AI-01'])
@@ -155,11 +162,11 @@ describe('disclosureFeature', () => {
     Effect.gen(function* () {
       const result = yield* runOn(disclosureFeature, {
         config,
-        body: body({ level: 'none', tools: 'Copilot' }),
+        body: body({ level: 'unassisted', tools: 'Copilot' }),
         commits: [commit(`x\n\n${signed}`)],
       })
       expect(result.findings.map((finding) => finding.message)).toStrictEqual([
-        'AI level is none but AI tools lists "Copilot".',
+        'AI level is unassisted but AI tools lists "Copilot".',
       ])
     }),
   )
@@ -281,7 +288,7 @@ describe('disclosureFeature', () => {
       expect(result.findings).toMatchObject([
         {
           rule: 'AI-01',
-          message: 'Autonomy is none but this commit credits an AI tool.',
+          message: 'Autonomy is unassisted but this commit credits an AI tool.',
           link: 'https://example.com/policy/AI_POLICY.md#ai-01',
         },
       ])

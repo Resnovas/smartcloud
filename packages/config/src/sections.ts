@@ -1,7 +1,7 @@
 /**
  * @file packages/config/src/sections.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -71,15 +71,17 @@ export const Links = Schema.Struct({
  * import { Commits } from '@resnovas/config'
  * import { Schema } from 'effect'
  *
- * Schema.is(Commits)({ dco: true, aiAttribution: true, maintainerLevel: 'warning' }) // => true
+ * Schema.is(Commits)({ dco: true, aiAttribution: true, assistedBy: false, maintainerLevel: 'warning' }) // => true
  * Schema.is(Commits)({ maintainerLevel: 'fatal' }) // => false
  * ```
  */
 export const Commits = Schema.Struct({
   /** Every non-merge commit is signed off by its author. */
   dco: opt(Schema.Boolean),
-  /** AI co-authors carry `Co-authored-by` and `Assisted-by` together, and never sign off. */
+  /** An AI tool that changed a commit is credited with `Co-authored-by`, and never signs off. */
   aiAttribution: opt(Schema.Boolean),
+  /** With `aiAttribution`, each AI co-author also needs `Assisted-by: TOOL:MODEL`. Off by default. */
+  assistedBy: opt(Schema.Boolean),
   /** Extra patterns identifying AI tools by email or name, on top of the built-in list. */
   aiIdentities: opt(
     Schema.Struct({ emails: opt(Schema.Array(Schema.String)), names: opt(Schema.Array(Schema.String)) }),

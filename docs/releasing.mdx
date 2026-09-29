@@ -3,9 +3,28 @@ title: 'Releasing'
 description: 'How a smartcloud release is cut with Nx release, and how the first v2 release differs.'
 ---
 
-smartcloud is released by [Nx release](https://nx.dev/docs/features/manage-releases), from the `release` workflow in `.github/workflows/release.yml`. A maintainer starts it by hand from the Actions tab, on `main`.
+smartcloud is released by [Nx release](https://nx.dev/docs/features/manage-releases), from the synced `House release` workflow (`.github/workflows/house-release.yml`). A maintainer starts it by hand from the Actions tab, on `main`.
 
 The GitHub Action, the CLI and the MCP server (`@resnovas/action`, `@resnovas/smartcloud` and `@resnovas/smartcloud-mcp`) form one fixed release group, so they always share a version. The libraries under `packages/` are bundled into them and are never released on their own.
+
+## Release configuration
+
+The workflows and the tools under `tools/release/` are synced from [Resnovas/.github](https://github.com/Resnovas/.github/blob/main/docs/workflows.md#release), the same in every repository that ships releases. What this repository ships is written once, in `release.config.json` at the root:
+
+| Key                     | Value here                                                                                   | What it does                                                                                                       |
+| ----------------------- | -------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `name`                  | `smartcloud`                                                                                 | The release name for error tracking (`smartcloud@<version>`).                                                      |
+| `firstRelease`          | `2.0.0`                                                                                      | The version the first stable release takes, shown by the preview until a stable `v*` tag exists.                   |
+| `majorTag`              | `true`                                                                                       | Move `v2` to each stable release, which workflows pin the action by.                                               |
+| `bundles`               | the action, `@resnovas/action:bundle` into `dist/index.js`                                   | Built at release time, committed to the release commit, verified from the tag and attested with the action's SBOM. |
+| `dropFromReleaseCommit` | `externals`                                                                                  | Every run of the action downloads the tagged tree, which does not need the vendored source.                        |
+| `apps`                  | `apps/action`, `apps/cli`, `apps/mcp`                                                        | Their `package.json` is stamped by a nightly and their `CHANGELOG.md` goes into the changelog pull request.        |
+| `nightly.major`         | `2`                                                                                          | Nightlies preview 2.x.                                                                                             |
+| `posthog.projectId`     | `285077`                                                                                     | The Smartcloud project in PostHog's EU cloud, where source maps go.                                                |
+| `npm`                   | `apps/cli/release`, prepared by `tools/release/prepare-cli.ts` after the CLI and MCP bundles | Publishes `@resnovas/smartcloud` with provenance.                                                                  |
+| `versionGlobal`         | `__SMARTCLOUD_VERSION__`                                                                     | The global the bundles stamp the version into, read by each app's `version.ts`.                                    |
+
+Change the file, not the workflows: the workflows are managed by the house sync. `tools/release/prepare-cli.ts` is this repository's own, since it writes the npm package's manifest and README.
 
 ## Action bundle budget
 
@@ -88,7 +107,7 @@ A release is cut from `main` long after most pull requests merge, so it is easy 
 
 ### What you see
 
-The `release preview` workflow (`.github/workflows/release-preview.yml`) runs when a pull request is opened, reopened or pushed to, and when its title or base branch changes. It leaves one comment headed **Release preview**, and edits that same comment on later runs rather than adding more. The same report is in the job summary of the run (open **Checks**, then **release preview**).
+The `House release preview` workflow (`.github/workflows/house-release-preview.yml`) runs when a pull request is opened, reopened or pushed to, and when its title or base branch changes. It leaves one comment headed **Release preview**, and edits that same comment on later runs rather than adding more. The same report is in the job summary of the run (open **Checks**, then **release preview**).
 
 A comment for a pull request titled `feat(labels): colour aliases` reads like this:
 
@@ -149,11 +168,11 @@ pnpm release:dry-run --first-release --specifier 2.0.0
 - The workflow reads the Resnovas organization secret `POSTHOG_CLI_API_KEY`: a PostHog [personal API key](https://eu.posthog.com/settings/user-api-keys) with the `error tracking write` and `organization read` scopes, in PostHog's EU cloud. It passes the key to PostHog's CLI under the same name. The key names no project: `tools/release/sourcemaps.ts` sets `POSTHOG_CLI_PROJECT_ID` to the Smartcloud project (285077), so one organization key serves every repository that uploads to its own project. Scope the key to the organization, or list each project that uploads with it; a key limited to other projects fails the upload. Without the secret the maps are still deleted, but none is uploaded, so errors from that release show bundle lines rather than source lines. A dry run never uploads.
 - The `changelogs` job authenticates as the Resnovas Bot GitHub app (`resnovas-smartcloud`), from the organisation variable `RESNOVAS_BOT_APP_ID` and secret `RESNOVAS_BOT_PRIVATE_KEY`. The app must be installed on this repository with contents and pull requests write access. A real release stops before tagging when either is missing.
 - The workflow pushes tags with its own token. If a tag ruleset protects `v*`, let GitHub Actions bypass it for tag creation and updates.
-- Trusted publishing needs `@resnovas/smartcloud` on npm to trust this repository's `release.yml` workflow.
+- Trusted publishing needs `@resnovas/smartcloud` on npm to trust this repository's `house-release.yml` workflow.
 
 ## Nightly pre-releases
 
-The `nightly` workflow (`.github/workflows/nightly.yml`, running `tools/release/nightly.ts`) cuts a pre-release from `main` every night at 02:30 UTC, and can be started by hand from the Actions tab (tick `dry-run` to see the version only). It cuts nothing on a night when `main` has not moved: every release commit, nightly or stable, has the `main` commit it was cut from as its parent, so a commit that already has one is skipped.
+The `House nightly` workflow (`.github/workflows/house-nightly.yml`, running `tools/release/nightly.ts`) cuts a pre-release from `main` every night at 02:30 UTC, and can be started by hand from the Actions tab (tick `dry-run` to see the version only). It cuts nothing on a night when `main` has not moved: every release commit, nightly or stable, has the `main` commit it was cut from as its parent, so a commit that already has one is skipped.
 
 A nightly is named `v<version>-nightly.<yyyymmdd>`, with `.1`, `.2` for a second or third that day. Before the first stable `2.x` release the version is `2.0.0`; after it, the next patch of the newest stable release, so a nightly always sorts before the release it previews. It is built like a release, a commit on no branch holding the bundled action with the version stamped in, and gets a GitHub pre-release with generated notes that is never marked latest. Nothing is published to npm and no changelog is written.
 

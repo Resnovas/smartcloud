@@ -42,10 +42,30 @@ with them. The sections after this one describe this repository itself.
   (`AI_POLICY.md` AI-11). A flaky test is a bug to fix, not to retry away.
 - Every bug fix comes with a regression test that fails before the fix.
 
+### TypeScript
+
+- Effect-TS v3 is the foundation of all production TypeScript, in every
+  repository (house skill `coding-preferences`, `references/effect.md`).
+  Anything that does IO, can fail, reads configuration, retries, runs
+  concurrently or holds a resource is an `Effect` with `Data.TaggedError`
+  failures, services as `Context.Tag` classes behind a `Layer`, input through
+  `Schema`, configuration through `Config`, tests with `@effect/vitest`, in
+  the shape of the module's existing code.
+- Raw Promise code (`async`, `await`, `try`/`catch`, `throw`, `new Promise`,
+  `.then`) lives only at a vendor boundary inside an integration module, in
+  the one `Effect.tryPromise` or `Effect.try` that wraps the vendor call,
+  marked with `// effect-boundary: <reason>` on the line above. The commit
+  hook refuses it anywhere else in added source lines, and refuses `any`.
+- A pure function with no IO and no failure path stays plain TypeScript. A
+  whole feature in plain TypeScript is never an agent's decision: it is a
+  house-rule override only the accountable human gives, by naming the rule.
+
 ### Files
 
-- Every source file carries the FCL-1.0-MIT licence header; the repository's
-  header check adds and verifies it.
+- Every source file carries the FCL-1.0-MIT licence header from
+  `tools/license/header.txt`, with its own path on the second line and the
+  current year. `node tools/license/check-headers.mjs` (the `headers` package
+  script) verifies it and `--fix` writes it; synced house tools carry none.
 - ASCII hyphen-minus only in text an agent writes: no em or en dashes, and no
   emoji in titles or descriptions (house skill `no-em-or-en-dashes`,
   `AI_POLICY.md` AI-09).
@@ -56,18 +76,32 @@ with them. The sections after this one describe this repository itself.
   change each, and every commit signed off for the Developer Certificate of
   Origin with the commit author's name and address. An AI tool never signs off
   (`AI_POLICY.md` AI-03).
-- In the maintainer's own repositories agents add no AI attribution: no AI
-  co-author trailer and no "Generated with" footer (house skill
-  `commits-and-rd-evidence`). Outside contributors follow `AI_POLICY.md` AI-02.
+- Every commit an AI tool materially changed carries one `Co-authored-by`
+  trailer per tool naming the tool and the model at the tool's attribution
+  address (`AI_POLICY.md` AI-02); the commit author and the sign-off are the
+  accountable human. No "Generated with" footer, robot emoji or host session
+  line (house skill `commits-and-rd-evidence`). `tools/dev/commit-check.mjs`,
+  installed as the commit-msg hook by setup, refuses a commit that breaks
+  these rules.
+- A pull request an agent opens is a draft (`AI_POLICY.md` AI-20) and states
+  `AI level: autonomous` and every tool and model used (AI-01); the
+  accountable human fills in `Accountable human` and `Human review` when
+  marking it ready (AI-21). No "Generated with" footer or session link.
 - One pull request per batch of work: one stacked branch per issue, each
   squashed to one conventional, signed-off commit naming its issue, all opened
-  as a single pull request. Once Jonathan approves it, it lands as an owner
+  as a single pull request. Once a maintainer approves it, it lands as an owner
   fast-forward (its signed commits pushed onto the default branch unchanged),
   so each issue keeps its own commit; the merge queue squashes, because GitHub
   cannot sign rebased commits. Run the full gate locally first; CI is not the
   debugger.
 - Deterministic gates (the repository's checks and the `smartcloud` check)
   decide a merge. AI review bots are advisory.
+- Releases are cut by the synced house release workflow from `release.config.json`
+  at the repository root (what the repository ships: bundles, apps, the major
+  tag, error tracking project, npm package); the tools under `tools/release/`
+  are synced too. Never run `nx release` without `--dry-run`; the workflow is
+  the only release path, and its first run in a repository takes a specifier
+  with first-release ticked.
 
 ### Document everything twice
 

@@ -1,7 +1,7 @@
 /**
  * @file tests/tools/src/release/changelog-renderer.spec.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -16,9 +16,9 @@
 
 import { describe, expect, it } from '@effect/vitest'
 import type { ChangelogChange } from 'nx/release/changelog-renderer'
-import SmartcloudChangelogRenderer from '../../../../tools/release/changelog-renderer.js'
+import HouseChangelogRenderer from '../../../../tools/release/changelog-renderer.js'
 
-type Config = ConstructorParameters<typeof SmartcloudChangelogRenderer>[0]
+type Config = ConstructorParameters<typeof HouseChangelogRenderer>[0]
 
 const change = (overrides: Partial<ChangelogChange>): ChangelogChange => ({
   type: 'feat',
@@ -45,7 +45,7 @@ const changes: ChangelogChange[] = [
 const remoteReleaseClient = { getRemoteRepoData: () => null } as unknown as Config['remoteReleaseClient']
 
 const render = (project: string | null, authors = true) =>
-  new SmartcloudChangelogRenderer({
+  new HouseChangelogRenderer({
     changes,
     changelogEntryVersion: '2.1.0',
     project,
@@ -62,7 +62,7 @@ const render = (project: string | null, authors = true) =>
     remoteReleaseClient,
   }).render()
 
-describe('SmartcloudChangelogRenderer', () => {
+describe('HouseChangelogRenderer', () => {
   it('renders the workspace notes, for the GitHub release and CHANGELOG.md, in words', async () => {
     const notes = await render(null)
     expect(notes).toContain('### Features\n\n- **cli:** add the plan command')

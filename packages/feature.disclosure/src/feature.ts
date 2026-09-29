@@ -1,7 +1,7 @@
 /**
  * @file packages/feature.disclosure/src/feature.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -81,20 +81,20 @@ const checkDisclosure = (evidence: Evidence): ReadonlyArray<Draft> => {
       },
     ]
   }
-  if (disclosure.level === 'none') {
+  if (disclosure.level === 'unassisted') {
     return [
       ...(listsNoTools(disclosure.tools)
         ? []
         : [
             {
               rule: 'AI-01',
-              message: `${labels.level} is none but ${labels.tools} lists "${disclosure.tools}".`,
+              message: `${labels.level} is unassisted but ${labels.tools} lists "${disclosure.tools}".`,
               link: ai01,
             },
           ]),
       ...evidence.aiAttributed.map((sha) => ({
         rule: 'AI-01',
-        message: `${labels.level} is none but this commit credits an AI tool.`,
+        message: `${labels.level} is unassisted but this commit credits an AI tool.`,
         link: ai01,
         commit: sha,
       })),
@@ -155,9 +155,9 @@ const checkDisclosure = (evidence: Evidence): ReadonlyArray<Draft> => {
  * labels are configurable through `disclosure.fields`), ignoring HTML
  * comments, and checks them against the pull request's commits:
  *
- * - AI-01: the level is valid; `none` lists no tools and no commit credits
+ * - AI-01: the level is valid; `unassisted` lists no tools and no commit credits
  *   an AI tool; any other level names its tools.
- * - AI-02: any level other than `none` has some commit with an AI
+ * - AI-02: any level other than `unassisted` has some commit with an AI
  *   `Co-authored-by`.
  * - AI-20: an AI-assisted pull request is opened as a draft, unless
  *   `disclosure.requireDraft` is false.

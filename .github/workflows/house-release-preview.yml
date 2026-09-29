@@ -1,3 +1,5 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-release-preview.yml. Edits inside this block are overwritten.
+#
 # Shows on each pull request what the next release would be if it were merged
 # now: the version and the release notes. tools/release/release-preview.ts
 # replaces the pull request's merge commit with the squash commit the merge
@@ -9,20 +11,20 @@
 # The preview never blocks a pull request: it is not part of the required
 # check, a problem making it becomes a warning, and both jobs continue on
 # error. It runs apart from CI so that renaming a pull request, which changes
-# the commit that would land, updates the preview without rerunning CI.
+# the commit that would land, updates the preview without rerunning CI. A
+# repository without release.config.json skips it.
 #
 # The preview job runs the pull request's code with a read-only token. The
 # comment job, the only one that can write, checks out and runs nothing: it
 # posts the preview job's output with the GitHub CLI. It is skipped on pull
 # requests from forks and from Dependabot, whose token cannot comment, so
 # those get the job summary only.
-name: release preview
+name: House release preview
 
 on:
   pull_request:
     types: [opened, synchronize, reopened, edited]
 
-# Each job asks for the access it needs; the workflow grants none.
 permissions: {}
 
 concurrency:
@@ -49,17 +51,25 @@ jobs:
           fetch-tags: true
           persist-credentials: false
 
-      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+      - id: config
+        run: |
+          if [ -f release.config.json ]; then echo 'enabled=true' >> "$GITHUB_OUTPUT"; else echo 'No release.config.json, so there is no release to preview.'; echo 'enabled=false' >> "$GITHUB_OUTPUT"; fi
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - if: steps.config.outputs.enabled == 'true'
+        uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+
+      - if: steps.config.outputs.enabled == 'true'
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version-file: .nvmrc
           cache: pnpm
 
-      - run: pnpm install --frozen-lockfile
+      - if: steps.config.outputs.enabled == 'true'
+        run: pnpm install --frozen-lockfile
 
       - name: Preview the release
         id: preview
+        if: steps.config.outputs.enabled == 'true'
         env:
           # Nx's GitHub client, which the release notes are rendered with, reads this token.
           GITHUB_TOKEN: ${{ github.token }}
@@ -90,7 +100,7 @@ jobs:
           REPORT: ${{ needs.preview.outputs.report }}
         run: |
           id=$(gh api --paginate "repos/$REPO/issues/$PR/comments" \
-            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- smartcloud:release-preview -->"))) | .id' | head -n 1)
+            --jq '.[] | select(.user.login == "github-actions[bot]" and (.body | startswith("<!-- house:release-preview -->"))) | .id' | head -n 1)
           if [ -n "$id" ]; then
             gh api --method PATCH "repos/$REPO/issues/comments/$id" -f body="$REPORT" > /dev/null
             echo "Updated the release preview comment."
@@ -98,3 +108,5 @@ jobs:
             gh api --method POST "repos/$REPO/issues/$PR/comments" -f body="$REPORT" > /dev/null
             echo "Posted the release preview comment."
           fi
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.

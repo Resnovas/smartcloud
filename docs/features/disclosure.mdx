@@ -8,7 +8,7 @@ An AI disclosure is a few lines in a pull request description that say how AI wa
 The disclosure feature reads those lines and checks them:
 
 - the disclosure is there and uses a known level;
-- it agrees with the commits (if the commits credit an AI tool, the disclosure cannot say `none`, and the other way round);
+- it agrees with the commits (if the commits credit an AI tool, the disclosure cannot say `unassisted`, and the other way round);
 - AI-assisted pull requests start as drafts and only leave draft once the accountable person has reviewed them.
 
 Why use it: reviewers know how a change was made before they read it, and nobody can quietly submit unreviewed AI output.
@@ -109,7 +109,7 @@ Human review: Read the whole diff, ran the test suite and tried the CLI by hand.
 A description that passes when no AI was used:
 
 ```markdown
-AI level: none
+AI level: unassisted
 AI tools: none
 ```
 
@@ -126,16 +126,16 @@ Each field is the first line that starts with its label followed straight away b
 
 ### Levels
 
-The level must be one of `none`, `autocomplete`, `chat`, `agent` or `autonomous`, ignoring case.
+The level must be one of `unassisted`, `autocomplete`, `chat`, `agent` or `autonomous`, ignoring case. `none`, the level's former name, still reads as `unassisted`; GitHub issue forms reserve that word, so the templates no longer offer it.
 
 ### Rules
 
-| Rule    | Finding                                                                                                                                                                                              |
-| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `AI-01` | The level is missing or not one of the levels above. With `none`: `AI tools` lists something other than `none`, or a commit credits an AI tool. With any other level: `AI tools` is empty or `none`. |
-| `AI-02` | The level is not `none`, but no commit has an AI `Co-authored-by` trailer. The commits feature checks each commit's trailer pairing under the same rule.                                             |
-| `AI-20` | An AI-assisted pull request was opened ready for review. Skipped when `requireDraft` is `false`.                                                                                                     |
-| `AI-21` | An AI-assisted pull request is ready for review, but `Accountable human` is not the pull request's author, or `Human review` is empty.                                                               |
+| Rule    | Finding                                                                                                                                                                                                    |
+| ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AI-01` | The level is missing or not one of the levels above. With `unassisted`: `AI tools` lists something other than `none`, or a commit credits an AI tool. With any other level: `AI tools` is empty or `none`. |
+| `AI-02` | The level is not `unassisted`, but no commit has an AI `Co-authored-by` trailer. The commits feature checks each commit's trailer pairing under the same rule.                                             |
+| `AI-20` | An AI-assisted pull request was opened ready for review. Skipped when `requireDraft` is `false`.                                                                                                           |
+| `AI-21` | An AI-assisted pull request is ready for review, but `Accountable human` is not the pull request's author, or `Human review` is empty.                                                                     |
 
 When the level is missing or unknown, only that one `AI-01` is reported; the other rules wait until the level is fixed.
 
@@ -152,7 +152,7 @@ Findings link to `AI_POLICY.md#ai-01`, `#ai-02`, `#ai-20` and `#ai-21` under [`l
 ## What you will see on GitHub
 
 - **Check run.** `smartcloud / disclosure`: failure on any error, neutral with only warnings, success otherwise.
-- **Report comment.** The smartcloud comment lists each problem, for example `The AI disclosure is missing. Fill in "AI level:" with one of: none, autocomplete, chat, agent, autonomous.`
+- **Report comment.** The smartcloud comment lists each problem, for example `The AI disclosure is missing. Fill in "AI level:" with one of: unassisted, autocomplete, chat, agent, autonomous.`
 - **Job summary and annotations.** Every finding; findings about a commit carry its SHA.
 
 The feature never edits the description and never converts a pull request to a draft; it only reports.
@@ -172,9 +172,9 @@ The [Resnovas house preset](/presets) sets `requireDraft: true` and `maintainerL
     The label must start the line and be followed straight away by a colon. Remove bold or other formatting before the label (`**AI level:**` does not match), and check the label matches `disclosure.fields`. Answers inside `<!-- -->` comments are ignored.
   </Accordion>
   <Accordion title="... is not a level">
-    Use one of `none`, `autocomplete`, `chat`, `agent` or `autonomous`, on its own.
+    Use one of `unassisted`, `autocomplete`, `chat`, `agent` or `autonomous`, on its own.
   </Accordion>
-  <Accordion title="AI level is none but this commit credits an AI tool">
+  <Accordion title="AI level is unassisted but this commit credits an AI tool">
     A commit has an AI `Co-authored-by` or an `Assisted-by` trailer. Either change the level, or, if no AI was used, remove the trailer from that commit.
   </Accordion>
   <Accordion title="AI-assisted pull requests must be opened as drafts">

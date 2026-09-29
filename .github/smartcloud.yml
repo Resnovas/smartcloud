@@ -21,7 +21,6 @@ extends:
 # than from a release.
 sync:
   exclude:
-    - LICENSE
     - .github/workflows/smartcloud.yml
   # smartcloud is a library: the synced documents say so.
   values:

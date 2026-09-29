@@ -1,0 +1,36 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-nightly.yml. Edits inside this block are overwritten.
+#
+# Cuts a nightly pre-release from the default branch every night when it has
+# moved, in a repository whose release.config.json has a nightly section;
+# elsewhere it checks the file and stops. Start it by hand from the Actions
+# tab for a nightly now, or with dry-run ticked to see the version it would
+# cut. The mechanics live in the house nightly workflow.
+name: House nightly
+
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Print the version without tagging or releasing
+        type: boolean
+        default: false
+
+permissions: {}
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  house-nightly:
+    uses: Resnovas/.github/.github/workflows/nightly.yml@main
+    permissions:
+      contents: write
+    with:
+      dry-run: ${{ inputs.dry-run == true }}
+    secrets:
+      POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
+# house:managed:end
+# house:local - add further jobs below, indented under jobs.

@@ -1,7 +1,7 @@
 /**
  * @file tests/feature.commits/src/feature.spec.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -118,10 +118,29 @@ describe('commitsFeature', () => {
     }),
   )
 
-  it.effect('Co-authored-by and Assisted-by must appear together on each AI commit', () =>
+  it.effect('an AI co-author is enough by default, and Assisted-by alone never is', () =>
     Effect.gen(function* () {
       const coOnly = yield* runOn(commitsFeature, {
         config,
+        commits: [commit(`x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\n${signed}`)],
+      })
+      expect(coOnly.findings).toStrictEqual([])
+      const assistedOnly = yield* runOn(commitsFeature, {
+        config,
+        commits: [commit(`x\n\nAssisted-by: aider:gpt-5\n${signed}`)],
+      })
+      expect(rules(assistedOnly.findings, 'error')).toStrictEqual(['AI-02'])
+      expect(assistedOnly.findings[0]?.message).toBe(
+        'This commit has Assisted-by but no Co-authored-by trailer for the AI tool.',
+      )
+    }),
+  )
+
+  it.effect('assistedBy: true requires Assisted-by: TOOL:MODEL next to each AI co-author', () =>
+    Effect.gen(function* () {
+      const strict: SmartcloudConfig = { ...config, commits: { assistedBy: true } }
+      const coOnly = yield* runOn(commitsFeature, {
+        config: strict,
         commits: [commit(`x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\n${signed}`)],
       })
       expect(rules(coOnly.findings, 'error')).toStrictEqual(['AI-02'])
@@ -132,7 +151,7 @@ describe('commitsFeature', () => {
       })
       for (const value of ['unknown', 'aider:', ':gpt-5', 'aider gpt-5:x']) {
         const malformed = yield* runOn(commitsFeature, {
-          config,
+          config: strict,
           commits: [
             commit(`x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: ${value}\n${signed}`),
           ],
@@ -140,7 +159,7 @@ describe('commitsFeature', () => {
         expect(rules(malformed.findings, 'error')).toStrictEqual(['AI-02'])
       }
       const withTools = yield* runOn(commitsFeature, {
-        config,
+        config: strict,
         commits: [
           commit(
             `x\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>\nAssisted-by: claude-code:claude-opus-5-5 ripgrep\n${signed}`,
@@ -148,14 +167,11 @@ describe('commitsFeature', () => {
         ],
       })
       expect(withTools.findings).toStrictEqual([])
-      const assistedOnly = yield* runOn(commitsFeature, {
-        config,
-        commits: [commit(`x\n\nAssisted-by: aider:gpt-5\n${signed}`)],
+      const human = yield* runOn(commitsFeature, {
+        config: strict,
+        commits: [commit(`x\n\nCo-authored-by: Jane Doe <jane@example.com>\n${signed}`)],
       })
-      expect(rules(assistedOnly.findings, 'error')).toStrictEqual(['AI-02'])
-      expect(assistedOnly.findings[0]?.message).toBe(
-        'This commit has Assisted-by but no Co-authored-by trailer for the AI tool.',
-      )
+      expect(human.findings).toStrictEqual([])
     }),
   )
 
@@ -300,7 +316,12 @@ describe('checkCommitMessage', () => {
   it('checks AI attribution with the config, and the defaults without a commits section', () => {
     const message =
       'fix: x\n\nCo-authored-by: Claude <noreply@anthropic.com>\nSigned-off-by: Jane Doe <jane@example.com>'
-    expect(checkCommitMessage({ ...author, message }, config).map((finding) => finding.rule)).toStrictEqual(['AI-02'])
+    expect(checkCommitMessage({ ...author, message }, config)).toStrictEqual([])
+    expect(
+      checkCommitMessage({ ...author, message }, { ...config, commits: { assistedBy: true } }).map(
+        (finding) => finding.rule,
+      ),
+    ).toStrictEqual(['AI-02'])
     expect(checkCommitMessage({ ...author, message }, { ...config, commits: { aiAttribution: false } })).toStrictEqual(
       [],
     )

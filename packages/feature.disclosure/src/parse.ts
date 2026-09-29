@@ -1,7 +1,7 @@
 /**
  * @file packages/feature.disclosure/src/parse.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -26,10 +26,14 @@ import type { SmartcloudConfig } from '@resnovas/config'
  * LEVELS.indexOf('agent') > LEVELS.indexOf('chat') // => true
  * ```
  */
-export const LEVELS = ['none', 'autocomplete', 'chat', 'agent', 'autonomous'] as const
+export const LEVELS = ['unassisted', 'autocomplete', 'chat', 'agent', 'autonomous'] as const
 
 /** An autonomy level from AI_POLICY.md. */
 export type AiLevel = (typeof LEVELS)[number]
+
+// The level was called `none` before GitHub issue forms rejected that word
+// as an option, so an older description still parses.
+const LEGACY_LEVELS: Readonly<Record<string, AiLevel>> = { none: 'unassisted' }
 
 /** The labels of the disclosure fields, as they appear before the colon. */
 export interface DisclosureLabels {
@@ -145,7 +149,8 @@ const readField = (lines: ReadonlyArray<string>, label: string): string | undefi
  * HTML comments are removed first, so the guidance inside the template is
  * never read as an answer. Each field is the first line starting with its
  * label and a colon, ignoring case and leading whitespace; backticks are
- * dropped from the value.
+ * dropped from the value. The level's former name `none` reads as
+ * `unassisted`.
  *
  * @example
  * ```ts import.meta.vitest name="parseDisclosure"
@@ -154,6 +159,7 @@ const readField = (lines: ReadonlyArray<string>, label: string): string | undefi
  * const disclosure = parseDisclosure('AI level: Agent\nAI tools: Claude Code')
  * disclosure.level // => 'agent'
  * disclosure.tools // => 'Claude Code'
+ * parseDisclosure('AI level: none').level // => 'unassisted'
  * ```
  *
  * @param body - The pull request description.
@@ -162,7 +168,8 @@ const readField = (lines: ReadonlyArray<string>, label: string): string | undefi
  */
 export const parseDisclosure = (body: string, labels: DisclosureLabels = DEFAULT_LABELS): Disclosure => {
   const lines = stripHtmlComments(body).split('\n')
-  const level = readField(lines, labels.level)?.toLowerCase()
+  const written = readField(lines, labels.level)?.toLowerCase()
+  const level = written === undefined ? undefined : (LEGACY_LEVELS[written] ?? written)
   const tools = readField(lines, labels.tools)
   const accountable = readField(lines, labels.accountable)
   const review = readField(lines, labels.review)

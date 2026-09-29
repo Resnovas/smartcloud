@@ -1,7 +1,7 @@
 /**
  * @file tests/config/src/sections.spec.ts
  *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
+ * Copyright 2026 Jonathan Stevens trading as Resnovas. All rights reserved.
  * Licensed under the Fair Core License, Version 1.0, MIT Future License
  * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
  * the licence key functionality, or modify any part of the software that the
@@ -44,7 +44,7 @@ describe('feature sections', () => {
 version: 2
 roles: { maintainers: [TGTGamer], trustedBots: ['dependabot[bot]'] }
 links: { policyBase: 'https://github.com/Resnovas/.github/blob/main' }
-commits: { dco: true, aiAttribution: true, aiIdentities: { emails: ['@example-ai\\.dev$'] }, maintainerLevel: warning }
+commits: { dco: true, aiAttribution: true, assistedBy: false, aiIdentities: { emails: ['@example-ai\\.dev$'] }, maintainerLevel: warning }
 disclosure: { fields: { level: 'AI level' }, requireDraft: true, maintainerLevel: warning }
 reviews:
   gate: { outside: 2, maintainer: 1 }

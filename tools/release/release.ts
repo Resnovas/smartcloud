@@ -1,39 +1,27 @@
-/**
- * @file tools/release/release.ts
- *
- * Copyright 2021 Jonathan Stevens trading as Resnovas. All rights reserved.
- * Licensed under the Fair Core License, Version 1.0, MIT Future License
- * (FCL-1.0-MIT); see LICENSE. You may not move, change, disable or circumvent
- * the licence key functionality, or modify any part of the software that the
- * licence key protects.
- *
- * Contributions are made under the Developer Certificate of Origin (DCO.md) and
- * the Contributing Guidelines (CONTRIBUTING.md), subject to the Code of Conduct
- * (CODE_OF_CONDUCT.md) and the Cooperation Commitment (COOPERATION_COMMITMENT.md).
- *
- * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
- */
-
-// Cuts a smartcloud release with Nx release.
+// Synced from Resnovas/.github templates/tools/release/release.ts. Edit it there,
+// not here: the next house sync overwrites local edits.
+//
+// Cuts a release with Nx release.
 //
 //   node tools/release/release.ts [--dry-run] [--specifier <version or bump>] [--first-release]
 //
-// Run by .github/workflows/release.yml on a checkout of main with full history
-// and tags. Nx works out the next version from the conventional commits since
-// the last v* tag (or takes --specifier) and writes it to the apps' package.json
-// files. This script then bundles the action and records the result in a
-// release commit that is never on a branch: its parent is main's head, it adds
-// dist/index.js and the bumped versions, and it drops externals/, which the
-// action does not need and every run of the action would otherwise download.
-// The bundle's source map is uploaded to PostHog error tracking for the
-// release (tools/release/sourcemaps.ts) and never committed.
-// Only the v<version> tag is pushed, so main never carries a release commit or
-// the bundle, and branch protection is never bypassed. The release notes go to
-// a draft GitHub release on that tag, which the workflow publishes once the
-// SBOMs are attached, and the v<major> tag moves to it. Nx also writes the notes to CHANGELOG.md and to each app's CHANGELOG.md,
-// which this script formats; they are left in the working tree for the
-// workflow's changelogs job, which opens a pull request to bring them to main.
-// Publishing to npm is a separate job that builds from the tag.
+// Run by the house release workflow on a checkout of the default branch with
+// full history and tags. Nx works out the next version from the conventional
+// commits since the last v* tag (or takes --specifier) and writes it to the
+// released projects' package.json files. This script then builds the bundles
+// release.config.json lists and records the result in a release commit that
+// is never on a branch: its parent is the branch head, it adds the bundles and
+// the bumped versions, and it drops the paths dropFromReleaseCommit names
+// (vendored source a released tree does not need, for example). Each bundle's
+// source map is uploaded for error tracking (tools/release/sourcemaps.ts) and
+// never committed. Only the v<version> tag is pushed, so the branch never
+// carries a release commit or a bundle, and branch protection is never
+// bypassed. The release notes go to a draft GitHub release on that tag, which
+// the workflow publishes once the SBOMs are attached, and with majorTag the
+// v<major> tag moves to it. Nx also writes the notes to CHANGELOG.md and to
+// each app's CHANGELOG.md, which this script formats; they are left in the
+// working tree for the workflow's changelogs job, which opens a pull request
+// to bring them to the default branch.
 //
 // The first release has no v* tag to count from, so it takes an explicit
 // specifier and --first-release; its notes start at the newest earlier tag.
@@ -44,14 +32,16 @@
 
 import { releaseChangelog, releaseVersion } from 'nx/release'
 import { execFileSync } from 'node:child_process'
-import { appendFileSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { appendFileSync, existsSync, mkdtempSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { parseArgs } from 'node:util'
 import { fileURLToPath } from 'node:url'
 import { changedChangelogs } from './changelogs.ts'
+import { loadReleaseConfig } from './config.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
+const config = loadReleaseConfig(root)
 const { values } = parseArgs({
   options: {
     'dry-run': { type: 'boolean', default: false },
@@ -87,7 +77,7 @@ const output = (name: string, value: string) => {
 }
 
 if (!dryRun && git('status', '--porcelain', '--untracked-files=no') !== '') {
-  console.error('The working tree has uncommitted changes; release from a clean checkout of main.')
+  console.error('The working tree has uncommitted changes; release from a clean checkout of the default branch.')
   process.exit(1)
 }
 const base = git('rev-parse', 'HEAD')
@@ -115,31 +105,33 @@ if (tryGit('rev-parse', '--quiet', '--verify', `refs/tags/${tag}`) !== undefined
   process.exit(1)
 }
 
-// Build the action bundle from this commit's source, with the new versions on disk.
-nx('run', '@resnovas/action:bundle', '--output-style=static')
-
-// Upload its source map to PostHog error tracking for this version, and drop
-// it: the tag ships the bundle only. A dry run uploads nothing.
+// Build each bundle from this commit's source, with the new versions on disk,
+// then hand its source map to error tracking and drop it: the tag ships the
+// bundle only. A dry run uploads nothing.
 const { POSTHOG_CLI_API_KEY: _key, ...withoutKey } = process.env
-execFileSync(process.execPath, [join(root, 'tools/release/sourcemaps.ts'), workspaceVersion, 'dist/index.js'], {
-  cwd: root,
-  stdio: 'inherit',
-  env: dryRun ? withoutKey : process.env,
-})
+for (const bundle of config.bundles) nx('run', bundle.target, '--output-style=static')
+if (config.bundles.length > 0) {
+  execFileSync(
+    process.execPath,
+    [join(root, 'tools/release/sourcemaps.ts'), workspaceVersion, ...config.bundles.map((bundle) => bundle.output)],
+    { cwd: root, stdio: 'inherit', env: dryRun ? withoutKey : process.env },
+  )
+}
 
 // The first release has no v* tag, so its notes start at the newest tag of any
-// kind (for v2, the last v1 prerelease) rather than at the first commit.
+// kind rather than at the first commit.
 const from = firstRelease ? tryGit('describe', '--tags', '--abbrev=0', 'HEAD') : undefined
 
+const outputs = config.bundles.map((bundle) => bundle.output)
 if (dryRun) {
   console.log(
-    `Dry run: would commit dist/index.js and the new versions, drop externals/, tag ${tag} and move ${major}.`,
+    `Dry run: would commit ${[...outputs, 'the new versions'].join(', ')}${config.dropFromReleaseCommit.length > 0 ? `, drop ${config.dropFromReleaseCommit.join(', ')}` : ''}, tag ${tag}${config.majorTag ? ` and move ${major}` : ''}.`,
   )
 } else {
   git('checkout', '--quiet', '--detach')
   git('add', '--update')
-  git('add', '--force', 'dist/index.js')
-  git('rm', '-r', '--cached', '--ignore-unmatch', '--quiet', 'externals')
+  for (const path of outputs) git('add', '--force', path)
+  for (const path of config.dropFromReleaseCommit) git('rm', '-r', '--cached', '--ignore-unmatch', '--quiet', path)
   git(
     '-c',
     `user.name=${BOT.name}`,
@@ -180,22 +172,21 @@ const notes = workspaceChangelog?.contents ?? ''
 // The notes go to a draft GitHub release on the tag, which the workflow's
 // draft-release job creates from this file: kept out of this script, so a
 // failed GitHub request is retried by re-running that job alone, after the tag
-// is already pushed. The attest job attaches the SBOMs to the draft, and the
-// last job publishes it.
+// is already pushed.
 if (dryRun) {
   console.log(`Dry run: would write the notes above to a draft GitHub release for ${tag}.`)
 } else {
   // The runner's own temporary directory, or a fresh private one.
   const notesFile = join(
-    process.env['RUNNER_TEMP'] ?? mkdtempSync(join(tmpdir(), 'smartcloud-release-')),
+    process.env['RUNNER_TEMP'] ?? mkdtempSync(join(tmpdir(), `${config.name}-release-`)),
     'release-notes.md',
   )
   writeFileSync(notesFile, notes)
   output('notes', notesFile)
 }
 
-if (!dryRun) {
-  // Workflows pin the action by its major tag.
+if (!dryRun && config.majorTag) {
+  // Workflows pin a GitHub Action by its major tag.
   git('tag', '--force', major, `${tag}^{commit}`)
   git('push', '--quiet', '--force', 'origin', `refs/tags/${major}`)
 }
@@ -203,20 +194,18 @@ if (!dryRun) {
 output('released', dryRun ? 'false' : 'true')
 output('version', workspaceVersion)
 output('tag', tag)
-// The main commit the release was cut from, which the changelog pull request branches from.
+// The branch commit the release was cut from, which the changelog pull request branches from.
 output('base', base)
 
-// The changelog files go to main through a pull request, which the format
-// check runs on. The release is already out, so a failure here only warns: the
-// pull request's own checks then show what to fix.
+// The changelog files go to the default branch through a pull request, which
+// the format check runs on. The release is already out, so a failure here
+// only warns: the pull request's own checks then show what to fix.
 if (!dryRun) {
   const changelogs = changedChangelogs(git('ls-files', '--modified', '--others', '--exclude-standard'))
+  const prettier = join(root, 'node_modules', '.bin', 'prettier')
   try {
-    if (changelogs.length > 0) {
-      execFileSync(join(root, 'node_modules', '.bin', 'prettier'), ['--write', ...changelogs], {
-        cwd: root,
-        stdio: 'inherit',
-      })
+    if (changelogs.length > 0 && existsSync(prettier)) {
+      execFileSync(prettier, ['--write', ...changelogs], { cwd: root, stdio: 'inherit' })
     }
   } catch {
     console.warn(`::warning::Prettier could not format ${changelogs.join(', ')}.`)
