@@ -63,8 +63,13 @@ export default [
         {
           enforceBuildableLibDependency: true,
           // Workspace config shared by every project: the ESLint config and the
-          // Vitest preset in vitest.shared.ts.
-          allow: ['^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$', '^.*/vitest\\.shared(\\.[jt]s)?$'],
+          // Vitest preset in vitest.shared.ts. The scripts under tools/ belong to
+          // no project; tests/tools imports their pure modules by path to test them.
+          allow: [
+            '^.*/eslint(\\.base)?\\.config\\.[cm]?[jt]s$',
+            '^.*/vitest\\.shared(\\.[jt]s)?$',
+            '^(\\.\\./)+tools/[^/]+/[^/]+\\.js$',
+          ],
           depConstraints: [...typeConstraints, ...layerConstraints],
         },
       ],

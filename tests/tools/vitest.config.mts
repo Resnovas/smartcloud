@@ -16,11 +16,13 @@
 
 import { testProject } from '../../vitest.shared.js'
 
-// The release tooling that can run without cutting a release.
+// The release tooling that can run without cutting a release, and the
+// feature flag tooling that can run without reaching PostHog.
 export default testProject('tools', [
   'tools/release/changelog-renderer.ts',
   'tools/release/config.ts',
   'tools/release/changelogs.ts',
   'tools/release/nightly-version.ts',
   'tools/release/preview.ts',
+  'tools/posthog/flags.ts',
 ])

@@ -18,12 +18,24 @@ import { describe, expect, it } from '@effect/vitest'
 import type { Feature } from '@resnovas/engine'
 import { FEATURE_FLAGS, featureEnabled, FEATURES, flagFor, turnedOffFeatures } from '@resnovas/runtime'
 import { Effect } from 'effect'
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
+import { flagsInTable } from '../../../tools/posthog/flags.js'
 import { recording, repository } from './fixtures.js'
+
+// The table on the telemetry page is the human list of the flags; each flag
+// must appear there, once, with its default.
+const TELEMETRY_PAGE = fileURLToPath(new URL('../../../docs/telemetry.mdx', import.meta.url))
 
 describe('feature flags', () => {
   it('has one flag per feature, named for it and on by default', () => {
     expect(FEATURES.map((feature) => flagFor(feature.name)).sort()).toStrictEqual(Object.keys(FEATURE_FLAGS).sort())
     expect(Object.values(FEATURE_FLAGS).every((value) => value)).toBe(true)
+  })
+
+  it('lists every flag, and only those, in the table on the telemetry page', () => {
+    const listed = flagsInTable(readFileSync(TELEMETRY_PAGE, 'utf8'))
+    expect([...listed].sort()).toStrictEqual(Object.keys(FEATURE_FLAGS).sort())
   })
 
   it.effect('uses the defaults without telemetry, and the flag with it', () =>

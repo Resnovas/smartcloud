@@ -28,6 +28,8 @@
     "headers": "node tools/license/check-headers.mjs",
     "headers:fix": "node tools/license/check-headers.mjs --fix",
     "docs:reference": "node tools/docs/config-reference.ts",
+    "flags:sync": "node tools/posthog/feature-flags.ts",
+    "flags:check": "node tools/posthog/feature-flags.ts --check",
     "docs:reference:check": "node tools/docs/config-reference.ts --check",
     "docs:dev": "node tools/dev/docs.ts",
     "graph:open": "node tools/dev/open.mjs graphify-out/graph.html",

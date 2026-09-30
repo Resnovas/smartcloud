@@ -87,8 +87,23 @@ Each feature has a flag in PostHog, named `smartcloud-<feature>`, that can turn 
 | `smartcloud-stale`       | [Stale](features/stale)             | on      |
 | `smartcloud-settings`    | [Settings](features/settings)       | on      |
 | `smartcloud-sync`        | [Sync](features/sync)               | on      |
+| `smartcloud-required`    | [Required](features/required)       | on      |
+| `smartcloud-freeze`      | [Freeze](features/freeze)           | on      |
+| `smartcloud-branches`    | [Branches](features/branches)       | on      |
+| `smartcloud-codeowners`  | [Code owners](features/codeowners)  | on      |
+| `smartcloud-lock`        | [Lock](features/lock)               | on      |
+| `smartcloud-backport`    | [Backport](features/backport)       | on      |
+| `smartcloud-automerge`   | [Auto-merge](features/auto-merge)   | on      |
 | `smartcloud-commands`    | [Commands](features/commands)       | on      |
 
 Flags are evaluated through [OpenFeature](https://openfeature.dev), with PostHog as the provider, for the repository's hashed identity and its organisation group. A feature whose flag is off is listed as skipped, with the reason `turned off by feature flag smartcloud-<feature>`.
 
 When telemetry is off, PostHog cannot be reached, or a flag does not exist, every flag keeps its default, which is the behaviour smartcloud has without flags. Turning telemetry off therefore never changes what smartcloud does. The flags are temporary: each is removed once its v2 feature has been stable for 30 days.
+
+### Creating the flags in PostHog
+
+A flag only works once it exists in the PostHog project. Because a missing flag silently keeps its default, a feature whose flag was never created cannot be switched off from PostHog, and nothing warns about it. `pnpm run flags:check` lists the flags PostHog is missing and fails when there are any; `pnpm run flags:sync` creates them, each released to every repository and on or off as its default in the table above, so creating a flag changes nothing until someone edits it. A flag that was deleted in PostHog keeps its key, so the script asks for it to be restored there rather than creating it again.
+
+Both need `POSTHOG_API_KEY`: a PostHog [personal API key](https://eu.posthog.com/settings/user-api-keys) with the `feature_flag:read` scope, and `feature_flag:write` to create, for the project named in `release.config.json` (`posthog.projectId`, on `posthog.host`). Run `pnpm run build` first: the script reads the flags from the built runtime, so it creates exactly the keys the code evaluates. Run `flags:sync` once after a release that adds a feature.
+
+The table above is checked by the test suite against the flags in code: a feature added without its row fails `pnpm run check`.

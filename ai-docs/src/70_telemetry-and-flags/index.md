@@ -50,4 +50,17 @@ behind an environment variable or a config toggle. Each feature has one flag,
 default lives. `turnedOffFeatures` evaluates them before a run, and the engine
 skips a feature whose flag is off with the flag named as the reason. A flag
 for finer behaviour inside a feature goes in the same map and is read with
-`featureEnabled`; a test checks that every feature has its flag.
+`featureEnabled`; `tests/runtime/src/flags.spec.ts` checks that every feature
+has its flag and that the table in `docs/telemetry.mdx` lists every flag.
+
+A flag exists only once it is created in the PostHog project: evaluation
+falls back to the default when the key is unknown, so a flag nobody created
+cannot turn its feature off. `tools/posthog/feature-flags.ts` (`pnpm run
+flags:check`, `pnpm run flags:sync`) lists the flags PostHog lacks and creates
+them from the built runtime's `FEATURE_FLAGS`, each released to every
+repository in its default state, with `POSTHOG_API_KEY` (a personal API key
+with `feature_flag:read`, and `feature_flag:write` to create) for the project
+in `release.config.json`. Its pure logic is `tools/posthog/flags.ts`, tested
+in `tests/tools`. Adding a feature therefore means: its entry in
+`FEATURE_FLAGS`, its row on the telemetry page, and `flags:sync` once the
+feature is released.

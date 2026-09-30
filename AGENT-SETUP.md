@@ -18,6 +18,7 @@ Machine-only. People: `README.md`, `AGENTS.md`.
 | `GITHUB_REPOSITORY`, `GITHUB_EVENT_NAME`, `GITHUB_EVENT_PATH` | `pnpm run action` only                     | Sample set in `.vscode/launch.json` and `.run/action-schedule.run.xml`; payload `tools/dev/event.schedule.json`                                    |
 | `INPUT_*` (`INPUT_DRYRUN`, `INPUT_CONFIG`, `INPUT_FEATURES`)  | `pnpm run action` only                     | Mirrors `action.yml` inputs. Use `INPUT_DRYRUN=true` locally                                                                                       |
 | `EFFECT_DEVTOOLS`                                             | optional                                   | `true`: CLI and MCP server stream spans to the Effect Dev Tools extension (`ws://localhost:34437`); or a WebSocket URL. Never set on CI            |
+| `POSTHOG_API_KEY`                                             | `pnpm run flags:check` / `flags:sync` only | PostHog personal API key, `feature_flag:read` (+ `feature_flag:write` to create), project in `release.config.json`. Proton Pass. Never on CI       |
 | `CI`                                                          | optional                                   | Set: `pnpm install --frozen-lockfile`                                                                                                              |
 | `NX_NO_CLOUD`                                                 | set by script                              | No Nx Cloud                                                                                                                                        |
 
@@ -29,6 +30,7 @@ Never write values into repo files.
 - `nodejs.org` (only when nvm or fnm installs Node)
 - `github.com`, `api.github.com` (only CLI `dry-run`, `plan`, `sync`, MCP server, action)
 - `hooks.slack.com`, `discord.com`, `api.linear.app` (only action runs with `notifications` configured; dry runs send nothing)
+- `eu.posthog.com` (only `flags:check` and `flags:sync`)
 
 ## Setup
 
@@ -51,6 +53,7 @@ Never write values into repo files.
 | headers           | `pnpm run headers` (fix: `pnpm run headers:fix`)                    |
 | bundle            | `pnpm run bundle` (`dist/index.js`, `apps/cli/release/`)            |
 | docs              | `pnpm run docs:reference` (check: `pnpm run docs:reference:check`)  |
+| flags in PostHog  | `pnpm run flags:check` (create: `pnpm run flags:sync`); after build |
 | docs server       | `pnpm run docs:dev` (`http://localhost:3000`)                       |
 | code graph        | `pnpm run graph:open`                                               |
 | agent prompts     | `node tools/dev/surfaces.mjs sync` after editing `.agents/prompts/` |
