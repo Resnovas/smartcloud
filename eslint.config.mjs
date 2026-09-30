@@ -47,7 +47,9 @@ export default [
   {
     ignores: [
       '**/dist',
-      '**/release',
+      // The bundled CLI and MCP server in apps/cli/release; the pattern names
+      // the files so that tests/tools/src/release, which holds sources, is linted.
+      '**/release/*.js',
       '**/out-tsc',
       '**/coverage',
       '**/vitest.config.*.timestamp*',

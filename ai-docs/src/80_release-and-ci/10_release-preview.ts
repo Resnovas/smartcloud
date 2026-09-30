@@ -23,8 +23,7 @@
  * type, which is what the release preview reports.
  */
 // The release preview is a repository tool, not a workspace library, so no
-// package name reaches it; the example imports it by path on purpose.
-// eslint-disable-next-line @nx/enforce-module-boundaries
+// package name reaches it; the example imports it by path, as the tests do.
 import { bumpOf, renderPreview, squashMessage } from '../../../tools/release/preview.js'
 
 const types = { feat: { semverBump: 'minor' }, fix: { semverBump: 'patch' } }
