@@ -1,0 +1,94 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/ISSUE_TEMPLATE/performance.yml. Edits inside this block are overwritten.
+name: Performance problem
+description: Something works but is too slow, or uses too much memory, CPU or network, and you can measure it.
+title: 'perf: '
+labels: [performance]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A performance report needs numbers: what you measured, how, and what you expected.
+        "It feels slow" cannot be fixed or checked. Reports without measurements are slowed down or closed for lack of evidence.
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: The released version exactly as published (for example v1.4.2), or the full commit SHA of the production branch you measured on.
+    validations:
+      required: true
+
+  - type: textarea
+    id: workload
+    attributes:
+      label: What you ran
+      description: The exact steps, command or input, starting from a clean state, so that anyone can repeat the measurement.
+      placeholder: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: measurements
+    attributes:
+      label: Measurements
+      description: What you measured (time, memory, CPU, requests or size), how you measured it, and the numbers from several runs.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+      description: What you expected instead, and why, for example an earlier version's numbers or a documented limit.
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Operating system, runtime version (for example Node 24.1), hardware or runner type, and anything else that affects speed.
+    validations:
+      required: true
+
+  - type: textarea
+    id: profile
+    attributes:
+      label: Profile or trace
+      description: Optional. Attach a profile, flame graph or trace if you have one.
+
+  - type: textarea
+    id: duplicates
+    attributes:
+      label: Duplicate search
+      description: What you searched for in open and closed issues, and any related issues you found.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-level
+    attributes:
+      label: AI level
+      description: The highest level of AI involvement in this report. See the [AI Contribution Policy](https://github.com/Resnovas/smartcloud/blob/HEAD/AI_POLICY.md#levels).
+      options:
+        - unassisted
+        - autocomplete
+        - chat
+        - agent
+        - autonomous
+    validations:
+      required: true
+
+  - type: input
+    id: ai-tools
+    attributes:
+      label: AI tools
+      description: Every AI tool and model used, or none.
+    validations:
+      required: true
+# house:managed:end
+# house:local - add further fields below, as list items under body.

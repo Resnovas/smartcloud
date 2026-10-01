@@ -16,18 +16,11 @@
   "house": {
     // External tools behind one gateway. MEM0_GATEWAY_TOKEN comes from Proton Pass.
     "mem0-gateway": { "url": "https://gateway-mcp.mem0.ai/mcp", "bearerEnv": "MEM0_GATEWAY_TOKEN" },
-    // Memory and knowledge on Cognee Cloud. COGNEE_BASE_URL and COGNEE_API_KEY
-    // come from Proton Pass (AI Agents Vault, item "Cognee"). Pinned, because
-    // the server runs with those credentials: bump it after reviewing a release.
-    "cognee": {
-      "command": "uvx",
-      "args": ["cognee-mcp==0.5.5"],
-      "envPassthrough": ["COGNEE_BASE_URL", "COGNEE_API_KEY"],
-    },
     // This repository's committed code graph, served locally over stdio.
     // Needs `sh tools/graphify/graphify setup` once per clone.
     "graphify": { "command": "sh", "args": ["tools/graphify/graphify", "mcp"] },
-    // Graphify Cloud: graphs across repositories. Signs in with OAuth.
+    // Graphify Cloud: graphs across repositories and the memory store
+    // (remember, recall, memories_about). Signs in with OAuth.
     "graphify-cloud": { "url": "https://api.graphify.com/mcp" },
   },
   // house:managed:end

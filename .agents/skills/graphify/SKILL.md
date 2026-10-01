@@ -43,6 +43,7 @@ The server runs over stdio only.
 1. After changing code, run `sh tools/graphify/graphify update`.
    It uses local parsers only: no model, no network, no cost.
    It keeps document nodes already in the graph.
+   Run it in a checkout without build output: with `dist/` present, workspace imports resolve into the ignored build files and the graph drifts from the one `check` and CI build from a clean archive, so `check` reports it stale however often you update. Delete the build output first, or build the graph from `git archive HEAD` the way `check` does.
 2. Commit the changes under `graphify-out/` in the same pull request, as their own commit (`chore(graphify): refresh the code graph`).
    `graphify-out/.gitignore` decides what is committed; do not force-add anything it ignores.
 3. `sh tools/graphify/graphify check` exits 1 when the last commit's graph does not match its code.
@@ -73,4 +74,4 @@ Commit the new cache files with the graph.
 - Run a paid or remote model backend over the repository. The wrapper clears provider API keys for this reason.
 - Run `graphify install`, `graphify claude install`, `graphify global add` or other commands that write outside the repository or merge it into a shared global graph.
 - Serve the graph over HTTP. Shared remote access for maintainers is a separate, private Graphify Cloud workspace.
-- Treat the graph as memory. It describes the code; decisions and preferences belong in the repository's docs.
+- Treat the committed graph as memory. It describes the code; decisions, gotchas and preferences go to Graphify Cloud memory (`remember` on the `graphify-cloud` MCP server) and to the repository's docs.
