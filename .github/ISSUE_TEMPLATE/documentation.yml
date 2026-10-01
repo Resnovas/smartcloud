@@ -1,0 +1,87 @@
+# house:managed:begin - synced from Resnovas/.github templates/.github/ISSUE_TEMPLATE/documentation.yml. Edits inside this block are overwritten.
+name: Documentation
+description: A page is wrong, out of date, missing or hard to follow.
+title: 'docs: '
+labels: [documentation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Tell us which page, what is wrong with it, and what it should say instead.
+        Small fixes are welcome as a pull request straight away; this form is for anything you want to discuss first.
+
+  - type: input
+    id: document
+    attributes:
+      label: Which document
+      description: The path in the repository (for example docs/getting-started.md) or the URL of the page.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: problem-kind
+    attributes:
+      label: What kind of problem
+      options:
+        - Inaccurate
+        - Out of date
+        - Missing
+        - Unclear
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What is wrong
+      description: Quote the passage, or describe what you looked for and could not find.
+    validations:
+      required: true
+
+  - type: textarea
+    id: correction
+    attributes:
+      label: Proposed correction
+      description: What it should say instead. A rough draft is fine.
+    validations:
+      required: true
+
+  - type: textarea
+    id: source
+    attributes:
+      label: Source
+      description: What makes the correction right, for example the code, a specification or a release note. Link it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: duplicates
+    attributes:
+      label: Duplicate search
+      description: What you searched for in open and closed issues, and any related issues you found.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: ai-level
+    attributes:
+      label: AI level
+      description: The highest level of AI involvement in this report. See the [AI Contribution Policy](https://github.com/Resnovas/smartcloud/blob/HEAD/AI_POLICY.md#levels).
+      options:
+        - unassisted
+        - autocomplete
+        - chat
+        - agent
+        - autonomous
+    validations:
+      required: true
+
+  - type: input
+    id: ai-tools
+    attributes:
+      label: AI tools
+      description: Every AI tool and model used, or none.
+    validations:
+      required: true
+# house:managed:end
+# house:local - add further fields below, as list items under body.

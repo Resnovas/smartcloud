@@ -48,6 +48,15 @@ const OUT = join(ROOT, 'LLMS.md')
 // Files are read with LF endings whatever the checkout used, so the output is
 // the same on every platform.
 const read = (path) => readFileSync(path, 'utf8').replace(/\r\n/g, '\n')
+// Reads a file, or null when it does not exist: read first, no exists check to race.
+const readIfExists = (path) => {
+  try {
+    return read(path)
+  } catch (error) {
+    if (error.code === 'ENOENT') return null
+    throw error
+  }
+}
 
 const fail = (message) => {
   console.error(`ai-docs: ${message}`)
@@ -58,8 +67,9 @@ const unprefixed = (name) => name.replace(/^\d+_/, '')
 
 const title = () => {
   const manifest = join(ROOT, 'package.json')
-  if (existsSync(manifest)) {
-    const name = JSON.parse(read(manifest)).name
+  const text = readIfExists(manifest)
+  if (text !== null) {
+    const name = JSON.parse(text).name
     if (typeof name === 'string' && name.trim() !== '') return name.trim()
   }
   return basename(ROOT)
@@ -171,7 +181,7 @@ const generate = () => {
 
 const { content, sections, examples } = generate()
 if (process.argv.includes('--check')) {
-  const current = existsSync(OUT) ? read(OUT) : null
+  const current = readIfExists(OUT)
   if (current !== content) {
     fail(`LLMS.md is ${current === null ? 'missing' : 'out of date'}: run node tools/ai-docs/docgen.mjs and commit the result`)
   }
