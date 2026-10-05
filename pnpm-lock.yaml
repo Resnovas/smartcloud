@@ -173,8 +173,8 @@ importers:
   .:
     devDependencies:
       '@effect/docgen':
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))(tsx@4.23.15)(typescript@6.0.3)
+        specifier: 4.0.0-rc.118
+        version: 4.0.0-rc.118(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))(tsx@4.23.15)(typescript@6.0.3)
       '@effect/doctest':
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117(effect@3.22.2)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))(vitest@5.0.1)
@@ -1924,8 +1924,8 @@ packages:
       '@effect/workflow': ^0.19.1
       effect: ^3.22.1
 
-  '@effect/docgen@4.0.0-rc.117':
-    resolution: {integrity: sha512-8GZq/fRnJeHDkFAaFN90XSJ6NJyVJx5hEX4Ogol/jPDOXjN4W8PhbX98D/bYq+uDhfpksCGuCkM2+3n+NTMIXQ==}
+  '@effect/docgen@4.0.0-rc.118':
+    resolution: {integrity: sha512-g7pOyVtA78sLNl34oABJ+qhEsO6tErMjWhW2UvH/01VPiZjedhPXmiQCSFEbtk5lu86VtIoJL6qKpPn3tdFP3Q==}
     engines: {node: '>=18.0.0'}
     hasBin: true
     peerDependencies:
@@ -1984,11 +1984,11 @@ packages:
       '@effect/sql': ^0.52.1
       effect: ^3.22.1
 
-  '@effect/platform-node-shared@4.0.0-rc.117':
-    resolution: {integrity: sha512-GyRkEfLBG49MwJe+/XDPiXYcQ44RA9p2z0AurlsWhR1cd1PqOUMEZU1pORL+/R5hR8aH6ZuqoJYD8lAc6h+wlA==}
+  '@effect/platform-node-shared@4.0.0-rc.118':
+    resolution: {integrity: sha512-pNbmIlxbAUxAthUNsp2xm1NLG9kxoYecsPkoYl9mNF2oxPcKDxAvkOar7tYnLSUpXJeATm4pxYVipdZjQfqO4Q==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-rc.117
+      effect: ^4.0.0-rc.118
 
   '@effect/platform-node@0.108.2':
     resolution: {integrity: sha512-a5/+/UgDf1EM+2xS6jDDzPrcWVm9J4UH/ew3ipLKBh0lCLbgSOBxF5pm9pnffFo9mrXLm6beOOOIAabuK6qgBA==}
@@ -1999,11 +1999,11 @@ packages:
       '@effect/sql': ^0.52.1
       effect: ^3.22.2
 
-  '@effect/platform-node@4.0.0-rc.117':
-    resolution: {integrity: sha512-WbPcvQDkqXFnCeG6LohJ9eVNapCDhZbCpezhYKxm0IsZEk7swakRh7RkC1t2CXzd3hGmszTv2k9e/pXyZuL+wQ==}
+  '@effect/platform-node@4.0.0-rc.118':
+    resolution: {integrity: sha512-qdAxPZ+5bKxVnzkwziqcHZTHRHz2hyfFX6NhwEmm75CBpmaIzXIZR2LRqGd1/8eI3J3cOrXcAYzByhln7T1/EA==}
     engines: {node: '>=18.0.0'}
     peerDependencies:
-      effect: ^4.0.0-rc.117
+      effect: ^4.0.0-rc.118
       redis: '>=5.0.0 <7.0.0'
 
   '@effect/platform@0.97.2':
@@ -3698,8 +3698,8 @@ packages:
   effect@3.22.2:
     resolution: {integrity: sha512-fm1CQXCs7GTMwpadZxwU5rnAb2bN6mbQpknq/pXBGCzSKkosNYb9k0wsoL0TfB10rSa5xOEZJjo77u/KLXSANg==}
 
-  effect@4.0.0-rc.117:
-    resolution: {integrity: sha512-UUyi9QiOW4nySFIBM3KnYbNMd9EZliOdKfBcyLD0mPMPheO2fkuXS5y0opjWc9oqzlJxPQICEGm8gGw3kh9j/w==}
+  effect@4.0.0-rc.118:
+    resolution: {integrity: sha512-hxhpCd+swzrtu9lnyPpEFre2ODQzJ9qxgyL1oHIEY8NKnW4PxTbM1XzplMZXiAsLD62HO+KJc41Nqxr9T791ZQ==}
 
   ejs@5.0.1:
     resolution: {integrity: sha512-COqBPFMxuPTPspXl2DkVYaDS3HtrD1GpzOGkNTJ1IYkifq/r9h8SVEFrjA3D9/VJGOEoMQcrlhpntcSUrM8k6A==}
@@ -5121,6 +5121,18 @@ packages:
       utf-8-validate:
         optional: true
 
+  ws@8.22.0:
+    resolution: {integrity: sha512-Ydggc987+RO0AnWtZ/7Wq9FtNvcrL1b/RO0ud9mWjUPgDrsAAwQSF51sm2hm1XofbU/4jkpGEsLFsZZxU+1DOg==}
+    engines: {node: '>=10.0.0'}
+    peerDependencies:
+      bufferutil: ^4.0.1
+      utf-8-validate: '>=5.0.2'
+    peerDependenciesMeta:
+      bufferutil:
+        optional: true
+      utf-8-validate:
+        optional: true
+
   xtend@4.0.2:
     resolution: {integrity: sha512-LKYU1iAXJXUgAXn9URjiu+MWhyUXHsvfp7mcuYm9dSUKK0/CjtrUwFAxD82/mCWbtLsGjFIad0wIsod4zrTAEQ==}
     engines: {node: '>=0.4'}
@@ -5941,14 +5953,14 @@ snapshots:
       effect: 3.22.2
       kubernetes-types: 1.30.0
 
-  '@effect/docgen@4.0.0-rc.117(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))(tsx@4.23.15)(typescript@6.0.3)':
+  '@effect/docgen@4.0.0-rc.118(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))(tsx@4.23.15)(typescript@6.0.3)':
     dependencies:
       '@babel/code-frame': 8.0.6
       '@effect/markdown-toc': 0.1.0
-      '@effect/platform-node': 4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))
+      '@effect/platform-node': 4.0.0-rc.118(effect@4.0.0-rc.118)(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))
       chalk: 6.0.0
       doctrine: 3.0.0
-      effect: 4.0.0-rc.117
+      effect: 4.0.0-rc.118
       glob: 13.0.6
       prettier: 3.9.9
       ts-morph: 28.0.0
@@ -6017,11 +6029,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node-shared@4.0.0-rc.117(effect@4.0.0-rc.117)':
+  '@effect/platform-node-shared@4.0.0-rc.118(effect@4.0.0-rc.118)':
     dependencies:
       '@types/ws': 8.18.1
-      effect: 4.0.0-rc.117
-      ws: 8.21.3
+      effect: 4.0.0-rc.118
+      ws: 8.22.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate
@@ -6041,10 +6053,10 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
-  '@effect/platform-node@4.0.0-rc.117(effect@4.0.0-rc.117)(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))':
+  '@effect/platform-node@4.0.0-rc.118(effect@4.0.0-rc.118)(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))':
     dependencies:
-      '@effect/platform-node-shared': 4.0.0-rc.117(effect@4.0.0-rc.117)
-      effect: 4.0.0-rc.117
+      '@effect/platform-node-shared': 4.0.0-rc.118(effect@4.0.0-rc.118)
+      effect: 4.0.0-rc.118
       redis: 6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1)
       undici: 8.11.2
     transitivePeerDependencies:
@@ -7062,6 +7074,7 @@ snapshots:
   '@types/node@24.13.6':
     dependencies:
       undici-types: 7.18.2
+    optional: true
 
   '@types/node@25.9.8':
     dependencies:
@@ -7097,7 +7110,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 24.13.6
+      '@types/node': 25.9.8
 
   '@typescript-eslint/eslint-plugin@8.70.1(@typescript-eslint/parser@8.70.1(eslint@10.11.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3))(eslint@10.11.0(supports-color@7.2.0))(supports-color@7.2.0)(typescript@6.0.3)':
     dependencies:
@@ -7216,6 +7229,15 @@ snapshots:
       magic-string: 1.4.2
     optionalDependencies:
       vite: 8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  '@vitest/mocker@5.0.1(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))':
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      '@vitest/spy': 5.0.1
+      estree-walker: 3.0.3
+      magic-string: 1.4.2
+    optionalDependencies:
+      vite: 8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)
 
   '@vitest/spy@5.0.1': {}
 
@@ -7600,7 +7622,7 @@ snapshots:
       '@standard-schema/spec': 1.1.0
       fast-check: 3.23.2
 
-  effect@4.0.0-rc.117: {}
+  effect@4.0.0-rc.118: {}
 
   ejs@5.0.1: {}
 
@@ -8960,7 +8982,8 @@ snapshots:
 
   typescript@6.0.3: {}
 
-  undici-types@7.18.2: {}
+  undici-types@7.18.2:
+    optional: true
 
   undici-types@7.24.6: {}
 
@@ -9013,6 +9036,20 @@ snapshots:
       tsx: 4.23.15
       yaml: 2.9.0
 
+  vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1):
+    dependencies:
+      lightningcss: 1.33.0
+      picomatch: 4.0.7
+      postcss: 8.5.28
+      rolldown: 1.2.11
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 25.9.8
+      esbuild: 0.28.2
+      fsevents: 2.3.3
+      tsx: 4.23.15
+      yaml: 2.9.1
+
   vitest@5.0.1(@opentelemetry/api@1.9.1)(@types/node@25.9.8)(@vitest/coverage-v8@5.0.1)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)):
     dependencies:
       '@types/chai': 5.2.3
@@ -9028,6 +9065,29 @@ snapshots:
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
       vite: 8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
+      '@types/node': 25.9.8
+      '@vitest/coverage-v8': 5.0.1(vitest@5.0.1)
+    transitivePeerDependencies:
+      - msw
+
+  vitest@5.0.1(@opentelemetry/api@1.9.1)(@types/node@25.9.8)(@vitest/coverage-v8@5.0.1)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)):
+    dependencies:
+      '@types/chai': 5.2.3
+      '@vitest/mocker': 5.0.1(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+      chai: 6.2.2
+      es-module-lexer: 2.3.2
+      expect-type: 1.4.0
+      magic-string: 1.4.2
+      obug: 2.2.1
+      picomatch: 4.0.7
+      std-env: 4.2.0
+      tinybench: 6.1.4
+      tinyexec: 1.3.0
+      tinyglobby: 0.2.17
+      vite: 8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
@@ -9064,6 +9124,8 @@ snapshots:
   wrappy@1.0.2: {}
 
   ws@8.21.3: {}
+
+  ws@8.22.0: {}
 
   xtend@4.0.2: {}
 

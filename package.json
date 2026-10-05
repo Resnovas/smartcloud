@@ -41,7 +41,7 @@
     "bundle:check": "nx run @resnovas/action:bundle && node tools/ci/bundle-size.ts"
   },
   "devDependencies": {
-    "@effect/docgen": "4.0.0-rc.117",
+    "@effect/docgen": "4.0.0-rc.118",
     "@effect/doctest": "4.0.0-rc.117",
     "@effect/language-service": "^0.87.2",
     "@effect/vitest": "^0.30.0",
