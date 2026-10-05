@@ -176,8 +176,8 @@ importers:
         specifier: 4.0.0-rc.117
         version: 4.0.0-rc.117(redis@6.2.1(@node-rs/xxhash@1.7.8)(@opentelemetry/api@1.9.1))(tsx@4.23.15)(typescript@6.0.3)
       '@effect/doctest':
-        specifier: 4.0.0-rc.117
-        version: 4.0.0-rc.117(effect@3.22.2)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))(vitest@5.0.1)
+        specifier: 4.0.0-rc.118
+        version: 4.0.0-rc.118(effect@3.22.2)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))(vitest@5.0.1)
       '@effect/language-service':
         specifier: ^0.87.2
         version: 0.87.2
@@ -1932,10 +1932,10 @@ packages:
       tsx: '>=4.19.3 <5.0.0'
       typescript: '>=5.8.2 <7.0.0'
 
-  '@effect/doctest@4.0.0-rc.117':
-    resolution: {integrity: sha512-28xsCPJyr/Y7nhZOxQc64Vpq4yn15sAoAPWbrsa7fCS/PJiQ5jhkOk5crTpSMoWPT4eg1eBoZtD2fnjllQxmqA==}
+  '@effect/doctest@4.0.0-rc.118':
+    resolution: {integrity: sha512-O0lSxTQxzWcYs+6lJPpepOdGAHpGC6cn7bxIEMS3l92OkQ/mQL5kBsI+IfhkyoCzwf4dY3bnbYpL29jeirbzew==}
     peerDependencies:
-      effect: ^4.0.0-rc.117
+      effect: ^4.0.0-rc.118
       vite: '>=8.1.5 <9.0.0'
       vitest: '>=5.0.0 <6.0.0'
 
@@ -5960,7 +5960,7 @@ snapshots:
       - redis
       - utf-8-validate
 
-  '@effect/doctest@4.0.0-rc.117(effect@3.22.2)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))(vitest@5.0.1)':
+  '@effect/doctest@4.0.0-rc.118(effect@3.22.2)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0))(vitest@5.0.1)':
     dependencies:
       effect: 3.22.2
       rolldown: 1.2.11
@@ -7216,6 +7216,15 @@ snapshots:
       magic-string: 1.4.2
     optionalDependencies:
       vite: 8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
+
+  '@vitest/mocker@5.0.1(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))':
+    dependencies:
+      '@jridgewell/trace-mapping': 0.3.31
+      '@vitest/spy': 5.0.1
+      estree-walker: 3.0.3
+      magic-string: 1.4.2
+    optionalDependencies:
+      vite: 8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)
 
   '@vitest/spy@5.0.1': {}
 
@@ -9013,6 +9022,20 @@ snapshots:
       tsx: 4.23.15
       yaml: 2.9.0
 
+  vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1):
+    dependencies:
+      lightningcss: 1.33.0
+      picomatch: 4.0.7
+      postcss: 8.5.28
+      rolldown: 1.2.11
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 25.9.8
+      esbuild: 0.28.2
+      fsevents: 2.3.3
+      tsx: 4.23.15
+      yaml: 2.9.1
+
   vitest@5.0.1(@opentelemetry/api@1.9.1)(@types/node@25.9.8)(@vitest/coverage-v8@5.0.1)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)):
     dependencies:
       '@types/chai': 5.2.3
@@ -9028,6 +9051,29 @@ snapshots:
       tinyexec: 1.3.0
       tinyglobby: 0.2.17
       vite: 8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.0)
+      why-is-node-running: 2.3.0
+    optionalDependencies:
+      '@opentelemetry/api': 1.9.1
+      '@types/node': 25.9.8
+      '@vitest/coverage-v8': 5.0.1(vitest@5.0.1)
+    transitivePeerDependencies:
+      - msw
+
+  vitest@5.0.1(@opentelemetry/api@1.9.1)(@types/node@25.9.8)(@vitest/coverage-v8@5.0.1)(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)):
+    dependencies:
+      '@types/chai': 5.2.3
+      '@vitest/mocker': 5.0.1(vite@8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1))
+      chai: 6.2.2
+      es-module-lexer: 2.3.2
+      expect-type: 1.4.0
+      magic-string: 1.4.2
+      obug: 2.2.1
+      picomatch: 4.0.7
+      std-env: 4.2.0
+      tinybench: 6.1.4
+      tinyexec: 1.3.0
+      tinyglobby: 0.2.17
+      vite: 8.3.1(@types/node@25.9.8)(esbuild@0.28.2)(tsx@4.23.15)(yaml@2.9.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@opentelemetry/api': 1.9.1
