@@ -40,7 +40,7 @@ body:
       label: AI level
       description: The highest level of AI involvement in this request. See the [AI Contribution Policy](https://github.com/Resnovas/smartcloud/blob/HEAD/AI_POLICY.md#levels).
       options:
-        - none
+        - unassisted
         - autocomplete
         - chat
         - agent
