@@ -30,10 +30,10 @@
 // runtime token from Orca's own metadata file at run time and never stores it.
 
 import { execFileSync } from 'node:child_process'
-import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { chmodSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { createConnection } from 'node:net'
 import { homedir } from 'node:os'
-import { dirname, join } from 'node:path'
+import { dirname, join, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 
@@ -72,9 +72,19 @@ const renamedSources = [['.agents/surfaces.json', '.agents/surfaces.jsonc']]
 // Reads a file, or returns null when it does not exist. Reading straight away,
 // rather than testing existsSync first, leaves no window for the file to change
 // between the test and the read.
-const readIfExists = (path) => {
+const readIfExists = (path, encoding = 'utf8') => {
   try {
-    return readFileSync(path, 'utf8')
+    return readFileSync(path, encoding)
+  } catch (error) {
+    if (error.code === 'ENOENT') return null
+    throw error
+  }
+}
+
+// The permission bits of a file, or null when it does not exist.
+const modeOf = (path) => {
+  try {
+    return statSync(path).mode & 0o777
   } catch (error) {
     if (error.code === 'ENOENT') return null
     throw error
@@ -195,7 +205,7 @@ const syncPrompts = (write) => {
     }
     for (const [file, content] of wanted) {
       const path = join(directory, file)
-      if (existsSync(path) && readFileSync(path, 'utf8') === content) continue
+      if (readIfExists(path) === content) continue
       stale.push(`${target.directory}/${file}`)
       if (write) {
         mkdirSync(directory, { recursive: true })
@@ -214,6 +224,68 @@ const syncPrompts = (write) => {
       rmSync(directory, { recursive: true })
       const parent = dirname(directory)
       if (readdirSync(parent).length === 0) rmSync(parent, { recursive: true })
+    }
+  }
+  return stale
+}
+
+// --- Skills ------------------------------------------------------------------
+
+// `.agents/skills/<name>/` holds each skill once, the house ones synced and
+// the repository's own beside them; `sync` mirrors the whole directory to
+// `.claude/skills`, which this tool owns outright, so Claude Code reads the
+// same files as every other host.
+
+// Every file under a directory, as paths relative to it, in a stable order.
+const listFiles = (directory, prefix = '') =>
+  readdirSync(directory, { withFileTypes: true })
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .flatMap((entry) =>
+      entry.isDirectory()
+        ? listFiles(join(directory, entry.name), `${prefix}${entry.name}/`)
+        : [`${prefix}${entry.name}`],
+    )
+
+// Removes a directory once it is empty, and its empty parents up to `stop`.
+const pruneEmpty = (directory, stop) => {
+  let current = directory
+  while (current !== stop && existsSync(current) && readdirSync(current).length === 0) {
+    rmSync(current, { recursive: true })
+    current = dirname(current)
+  }
+}
+
+const skillTargets = ['.claude/skills']
+
+// Returns the files that differ from the skills in .agents/skills.
+const syncSkills = (write) => {
+  const source = join(root, '.agents/skills')
+  const files = existsSync(source) ? listFiles(source) : []
+  const stale = []
+  for (const target of skillTargets) {
+    const directory = join(root, target)
+    const present = existsSync(directory) ? listFiles(directory) : []
+    for (const file of present) {
+      if (files.includes(file)) continue
+      stale.push(`${target}/${file}`)
+      if (write) {
+        rmSync(join(directory, file))
+        pruneEmpty(dirname(join(directory, file)), root)
+      }
+    }
+    for (const file of files) {
+      const from = join(source, file)
+      const to = join(directory, file)
+      const content = readFileSync(from)
+      const mode = statSync(from).mode & 0o777
+      const existing = readIfExists(to, null)
+      if (existing !== null && existing.equals(content) && modeOf(to) === mode) continue
+      stale.push(`${target}/${file}`)
+      if (write) {
+        mkdirSync(dirname(to), { recursive: true })
+        writeFileSync(to, content)
+        chmodSync(to, mode)
+      }
     }
   }
   return stale
@@ -460,7 +532,8 @@ const installOpenChamber = () => {
   for (const checkout of checkouts) {
     // OpenChamber names a project's settings file after its path.
     const file = join(directory, 'projects', `path_${Buffer.from(checkout, 'utf8').toString('base64url')}.json`)
-    const current = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : {}
+    const text = readIfExists(file)
+    const current = text === null ? {} : JSON.parse(text)
     const kept = (Array.isArray(current.projectActions) ? current.projectActions : []).filter((entry) => !entry.id.startsWith(prefix))
     const projectActions = actions.map((action) => ({
       id: `${prefix}${action.id}`,
@@ -486,24 +559,99 @@ const installOpenChamber = () => {
   return `OpenChamber: ${actions.length} project actions for ${checkouts.join(' and ')}.`
 }
 
+// --- Commit hook -------------------------------------------------------------
+
+// The commit-msg hook runs tools/dev/commit-check.mjs, so a commit that breaks
+// the house commit rules never exists. Installed into this checkout's hooks
+// directory (a worktree has its own); a hook someone wrote by hand is left
+// alone and reported.
+const HOOK_MARKER = '# house:commit-check'
+const commitHook = `#!/bin/sh\n${HOOK_MARKER} - installed by tools/dev/surfaces.mjs install. Runs the house commit rules; see tools/dev/commit-check.mjs.\nexec node "$(git rev-parse --show-toplevel)/tools/dev/commit-check.mjs" "$1"\n`
+
+const installCommitHook = () => {
+  if (!existsSync(join(root, 'tools/dev/commit-check.mjs'))) return 'Commit hook: tools/dev/commit-check.mjs is missing, nothing installed.'
+  let hooks
+  try {
+    hooks = execFileSync('git', ['rev-parse', '--git-path', 'hooks'], { cwd: root, encoding: 'utf8' }).trim()
+  } catch {
+    return 'Commit hook: not a git checkout, nothing installed.'
+  }
+  const path = resolve(root, hooks, 'commit-msg')
+  const current = readIfExists(path)
+  if (current !== null) {
+    if (current === commitHook) return 'Commit hook: already installed.'
+    if (!current.includes(HOOK_MARKER)) return `Commit hook: ${hooks}/commit-msg exists and is not the house hook; add "node tools/dev/commit-check.mjs \\"$1\\"" to it yourself.`
+  }
+  if (!dryRun) {
+    mkdirSync(dirname(path), { recursive: true })
+    writeFileSync(path, commitHook)
+    chmodSync(path, 0o755)
+  }
+  return `Commit hook: ${dryRun ? 'would install' : 'installed'} ${hooks}/commit-msg.`
+}
+
+// The hook is per checkout, so a fresh clone has none until setup runs. On a
+// developer's or an agent's machine, check says so; CI never commits and has
+// no hook to install.
+const missingCommitHook = () => {
+  if (process.env['CI'] !== undefined) return []
+  try {
+    const hooks = execFileSync('git', ['rev-parse', '--git-path', 'hooks'], { cwd: root, encoding: 'utf8' }).trim()
+    const path = resolve(root, hooks, 'commit-msg')
+    const current = readIfExists(path)
+    return current !== null && current.includes(HOOK_MARKER) ? [] : [`${hooks}/commit-msg (run node --run setup)`]
+  } catch {
+    return []
+  }
+}
+
+// project-dev-surfaces: a project with a package.json ships one idempotent
+// scripts/agent-setup that every surface calls, and a machine-only
+// AGENT-SETUP.md for cloud agents. check names what is missing.
+const missingProjectSurfaces = () =>
+  existsSync(join(root, 'package.json'))
+    ? ['scripts/agent-setup', 'AGENT-SETUP.md'].filter((file) => !existsSync(join(root, file)))
+    : []
+
 // --- Commands ----------------------------------------------------------------
 
 if (command === 'sync' || command === 'check') {
-  const stale = [...(command === 'sync' ? migrated : migrateSources(false)), ...syncPrompts(command === 'sync'), ...syncServers(command === 'sync')]
-  if (command === 'check' && stale.length > 0) {
-    console.error(
-      `Agent commands or MCP configs are out of date with .agents (run node tools/dev/surfaces.mjs sync):\n  ${stale.join('\n  ')}`,
-    )
+  const stale = [
+    ...(command === 'sync' ? migrated : migrateSources(false)),
+    ...syncPrompts(command === 'sync'),
+    ...syncSkills(command === 'sync'),
+    ...syncServers(command === 'sync'),
+  ]
+  const missingHook = command === 'check' ? missingCommitHook() : []
+  const missingSurfaces = command === 'check' ? missingProjectSurfaces() : []
+  if (command === 'check' && (stale.length > 0 || missingHook.length > 0 || missingSurfaces.length > 0)) {
+    if (stale.length > 0)
+      console.error(
+        `Agent commands, skills or MCP configs are out of date with .agents (run node tools/dev/surfaces.mjs sync):\n  ${stale.join('\n  ')}`,
+      )
+    if (missingHook.length > 0) console.error(`The house commit hook is not installed in this checkout:\n  ${missingHook.join('\n  ')}`)
+    if (missingSurfaces.length > 0)
+      console.error(
+        `The project setup files every project ships are missing (house standard project-dev-surfaces):\n  ${missingSurfaces.join('\n  ')}`,
+      )
     process.exit(1)
   }
   console.log(
-    stale.length === 0 ? 'Agent commands and MCP configs are up to date.' : `Updated ${stale.length} agent command and MCP config files.`,
+    stale.length === 0
+      ? 'Agent commands, skills and MCP configs are up to date.'
+      : `Updated ${stale.length} agent command, skill and MCP config files.`,
   )
 } else if (command === 'install') {
-  if (migrateSources(false).length > 0 || syncPrompts(false).length > 0 || syncServers(false).length > 0) {
-    console.warn('Agent commands or MCP configs are out of date; run node tools/dev/surfaces.mjs sync.')
+  if (
+    migrateSources(false).length > 0 ||
+    syncPrompts(false).length > 0 ||
+    syncSkills(false).length > 0 ||
+    syncServers(false).length > 0
+  ) {
+    console.warn('Agent commands, skills or MCP configs are out of date; run node tools/dev/surfaces.mjs sync.')
   }
   const prompts = readPrompts()
+  console.log(installCommitHook())
   console.log(await installOrca(prompts))
   console.log(installOpenChamber())
   if (dryRun) console.log('Dry run: nothing was written.')
