@@ -1,6 +1,6 @@
 ---
 name: writing-specifications
-description: Write a brief an agent can execute without guessing: goal, context, validation, out-of-scope and escalation. Use when creating a work-tracking card, delegating a task to another agent or a report, turning a vague request into executable work, or reviewing whether a brief is ready to send.
+description: 'Write a brief an agent can execute without guessing: goal, context, validation, out-of-scope and escalation. Use when creating a work-tracking card, delegating a task to another agent or a report, turning a vague request into executable work, or reviewing whether a brief is ready to send.'
 ---
 # Writing specifications
 

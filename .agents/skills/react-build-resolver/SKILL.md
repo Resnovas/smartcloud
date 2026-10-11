@@ -1,6 +1,6 @@
 ---
 name: react-build-resolver
-description: Diagnose and fix React build failures across Vite, webpack, Next.js, CRA, Parcel, esbuild and Bun: JSX and TSX compile errors, tsconfig and bundler configuration, hydration mismatches, server and client boundary errors in the App Router, duplicate React copies, and Tailwind or PostCSS pipeline failures. Use when a React build is red, when the dev server will not start, or when the page hydrates with a mismatch warning.
+description: 'Diagnose and fix React build failures across Vite, webpack, Next.js, CRA, Parcel, esbuild and Bun: JSX and TSX compile errors, tsconfig and bundler configuration, hydration mismatches, server and client boundary errors in the App Router, duplicate React copies, and Tailwind or PostCSS pipeline failures. Use when a React build is red, when the dev server will not start, or when the page hydrates with a mismatch warning.'
 ---
 # React build resolver
 

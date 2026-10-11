@@ -1,6 +1,6 @@
 ---
 name: workflow-sdk-vendor
-description: Vercel Workflow SDK vendor routing (npm `workflow`, Apache-2.0): durable, resumable TypeScript functions that survive restarts, retry failed steps, suspend without compute while waiting for events or time, and include observability. Runs on Vercel or any infrastructure through Worlds (local, Postgres, Vercel, custom). Routes to Vercel's own workflow Agent Skill at a pinned commit and carries the house overrides, including how it sits with Effect (@effect/workflow, Effect Cluster). Use when a job must outlive a request, pause for a webhook or human approval, run a long AI agent loop, or coordinate multi-step operations over time; or when choosing between Vercel Workflow and Effect's workflow tooling.
+description: 'Vercel Workflow SDK vendor routing (npm `workflow`, Apache-2.0): durable, resumable TypeScript functions that survive restarts, retry failed steps, suspend without compute while waiting for events or time, and include observability. Runs on Vercel or any infrastructure through Worlds (local, Postgres, Vercel, custom). Routes to Vercel''s own workflow Agent Skill at a pinned commit and carries the house overrides, including how it sits with Effect (@effect/workflow, Effect Cluster). Use when a job must outlive a request, pause for a webhook or human approval, run a long AI agent loop, or coordinate multi-step operations over time; or when choosing between Vercel Workflow and Effect''s workflow tooling.'
 license: Apache-2.0
 ---
 # Workflow SDK vendor routing

@@ -1,6 +1,6 @@
 ---
 name: build-error-resolver
-description: Resolve build and TypeScript type errors with minimal diffs and no architectural edits: tsc failures, module resolution, dependency and tsconfig problems. Use when a build or typecheck is red and the goal is to get it green quickly without refactoring.
+description: 'Resolve build and TypeScript type errors with minimal diffs and no architectural edits: tsc failures, module resolution, dependency and tsconfig problems. Use when a build or typecheck is red and the goal is to get it green quickly without refactoring.'
 ---
 # Build error resolver
 

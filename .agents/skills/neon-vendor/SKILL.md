@@ -1,6 +1,6 @@
 ---
 name: neon-vendor
-description: Neon vendor guidance for Lakebase Postgres: connections (pooled vs direct), schema migrations, branch-first workflow, autoscaling, scale-to-zero, instant restore, read replicas, Lakebase Search, Neon Auth, Object Storage, Functions and the AI Gateway. Use when writing code against a Neon database or the Neon API, planning Neon branching, or choosing Neon platform primitives. Complements the coding-preferences data layer choice (Drizzle + Neon).
+description: 'Neon vendor guidance for Lakebase Postgres: connections (pooled vs direct), schema migrations, branch-first workflow, autoscaling, scale-to-zero, instant restore, read replicas, Lakebase Search, Neon Auth, Object Storage, Functions and the AI Gateway. Use when writing code against a Neon database or the Neon API, planning Neon branching, or choosing Neon platform primitives. Complements the coding-preferences data layer choice (Drizzle + Neon).'
 ---
 # Neon vendor routing
 

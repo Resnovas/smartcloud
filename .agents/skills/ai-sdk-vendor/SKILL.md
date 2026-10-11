@@ -1,6 +1,6 @@
 ---
 name: ai-sdk-vendor
-description: Vercel AI SDK vendor routing (npm `ai`, Apache-2.0): one API over every model provider for text generation, streaming, structured output, tool calling, agents (ToolLoopAgent), embeddings, RAG and UI hooks such as useChat, plus AI SDK devtools. Routes to Vercel's own ai-sdk Agent Skill at a pinned commit and carries the house overrides: use it alongside Effect AI and wrap it in Effect, trace every call into PostHog LLM analytics, keep prompts in PostHog. Use when adding AI to an app, choosing a model provider, building an agent or chatbot, streaming AI UI, or deciding between the AI SDK and @effect/ai.
+description: 'Vercel AI SDK vendor routing (npm `ai`, Apache-2.0): one API over every model provider for text generation, streaming, structured output, tool calling, agents (ToolLoopAgent), embeddings, RAG and UI hooks such as useChat, plus AI SDK devtools. Routes to Vercel''s own ai-sdk Agent Skill at a pinned commit and carries the house overrides: use it alongside Effect AI and wrap it in Effect, trace every call into PostHog LLM analytics, keep prompts in PostHog. Use when adding AI to an app, choosing a model provider, building an agent or chatbot, streaming AI UI, or deciding between the AI SDK and @effect/ai.'
 license: Apache-2.0
 ---
 # AI SDK vendor routing

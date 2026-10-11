@@ -1,6 +1,6 @@
 ---
 name: documentation-writing-standards
-description: First-class docs: novice-followable, no UI chrome, imperative actions, facts only, whitelabel customer copy.
+description: 'First-class docs: novice-followable, no UI chrome, imperative actions, facts only, whitelabel customer copy.'
 ---
 # Documentation writing standards
 

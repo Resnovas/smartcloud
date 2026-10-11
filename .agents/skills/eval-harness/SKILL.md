@@ -1,6 +1,6 @@
 ---
 name: eval-harness
-description: Eval-driven development for agent workflows: define capability and regression evals before implementing, grade them with code, rule, model and human graders, and measure reliability with pass@k and pass^k. Use when an agent workflow needs a formal eval before it is trusted or changed, when setting pass/fail criteria for task completion, when building a regression suite for a prompt or agent change, or when benchmarking across model versions.
+description: 'Eval-driven development for agent workflows: define capability and regression evals before implementing, grade them with code, rule, model and human graders, and measure reliability with pass@k and pass^k. Use when an agent workflow needs a formal eval before it is trusted or changed, when setting pass/fail criteria for task completion, when building a regression suite for a prompt or agent change, or when benchmarking across model versions.'
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob
 ---
 # Eval harness

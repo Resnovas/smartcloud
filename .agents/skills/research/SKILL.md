@@ -1,6 +1,6 @@
 ---
 name: research
-description: Investigate a question and produce a cited answer, picking the cheapest mode that works: a primary-source lookup, a multi-source synthesis with delegated subagents, an exhaustive deep-research run, or a fact-check of claims in an existing document. Use when asked to research a topic, search the web, look something up, compare options, verify a claim or a statistic, or produce a cited research report.
+description: 'Investigate a question and produce a cited answer, picking the cheapest mode that works: a primary-source lookup, a multi-source synthesis with delegated subagents, an exhaustive deep-research run, or a fact-check of claims in an existing document. Use when asked to research a topic, search the web, look something up, compare options, verify a claim or a statistic, or produce a cited research report.'
 ---
 # Research
 

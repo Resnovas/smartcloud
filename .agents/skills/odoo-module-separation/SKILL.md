@@ -1,6 +1,6 @@
 ---
 name: odoo-module-separation
-description: Odoo core vs feature module separation for external service integrations: service_<vendor>_core plus service_<vendor>_<hook>, the depends graph, and auto_install. Use when adding or refactoring an Odoo integration with a third-party service, naming new Odoo modules, or deciding what belongs in a core module versus a feature module.
+description: 'Odoo core vs feature module separation for external service integrations: service_<vendor>_core plus service_<vendor>_<hook>, the depends graph, and auto_install. Use when adding or refactoring an Odoo integration with a third-party service, naming new Odoo modules, or deciding what belongs in a core module versus a feature module.'
 ---
 # Odoo module separation
 

@@ -1,6 +1,6 @@
 ---
 name: odoo-enterprise
-description: Odoo Enterprise engineering defaults: keeping blocking IO off ORM hot paths with cr.postcommit, log-level discipline, Settings sidebar configuration, the architecture ceiling question, and module upgrade verification. Use when implementing or reviewing Odoo addon code, writing create/write/unlink hooks, adding settings, or verifying a module upgrade.
+description: 'Odoo Enterprise engineering defaults: keeping blocking IO off ORM hot paths with cr.postcommit, log-level discipline, Settings sidebar configuration, the architecture ceiling question, and module upgrade verification. Use when implementing or reviewing Odoo addon code, writing create/write/unlink hooks, adding settings, or verifying a module upgrade.'
 ---
 # Odoo Enterprise engineering
 

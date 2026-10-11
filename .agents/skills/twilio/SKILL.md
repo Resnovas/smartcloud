@@ -1,6 +1,6 @@
 ---
 name: twilio
-description: Twilio vendor guidance for building messaging, voice, verification and email features: product selection, SMS/WhatsApp/Verify/SendGrid patterns, webhook signature validation, A2P 10DLC and TCPA compliance, security hardening. Use when writing code against Twilio or SendGrid APIs, choosing between Twilio products, or handling Twilio webhooks and compliance.
+description: 'Twilio vendor guidance for building messaging, voice, verification and email features: product selection, SMS/WhatsApp/Verify/SendGrid patterns, webhook signature validation, A2P 10DLC and TCPA compliance, security hardening. Use when writing code against Twilio or SendGrid APIs, choosing between Twilio products, or handling Twilio webhooks and compliance.'
 ---
 # Twilio vendor routing
 

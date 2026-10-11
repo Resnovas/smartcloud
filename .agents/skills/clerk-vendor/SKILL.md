@@ -1,6 +1,6 @@
 ---
 name: clerk-vendor
-description: Clerk-published guidance for adding authentication: the Clerk CLI accountless quickstart (npx clerk init), claimable applications, framework-specific setup, and the vendor's Agent Skills collection. Use when adding Clerk auth to an app, scaffolding a Clerk integration, or working against the Clerk API or MCP server.
+description: 'Clerk-published guidance for adding authentication: the Clerk CLI accountless quickstart (npx clerk init), claimable applications, framework-specific setup, and the vendor''s Agent Skills collection. Use when adding Clerk auth to an app, scaffolding a Clerk integration, or working against the Clerk API or MCP server.'
 ---
 # Clerk vendor routing
 
