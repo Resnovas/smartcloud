@@ -1,6 +1,6 @@
 ---
 name: vendor-llms-indexes
-description: Directory of vendor-published llms.txt and AI docs endpoints for the MCP vendors in use: Stripe, PostHog, Cloudflare, Neon, Canva, Vercel, Next.js, Convex, Apify, Grafana, Ramp, Base44, Fiscal.ai, Consensus, DeepWiki/Devin, LottieFiles, Storybook, Clerk, AgentGrade, TalkToHumans. Use when you need authoritative current docs for one of these vendors and their MCP server or context7 does not cover the question.
+description: 'Directory of vendor-published llms.txt and AI docs endpoints for the MCP vendors in use: Stripe, PostHog, Cloudflare, Neon, Canva, Vercel, Next.js, Convex, Apify, Grafana, Ramp, Base44, Fiscal.ai, Consensus, DeepWiki/Devin, LottieFiles, Storybook, Clerk, AgentGrade, TalkToHumans. Use when you need authoritative current docs for one of these vendors and their MCP server or context7 does not cover the question.'
 ---
 # Vendor llms.txt directory
 

@@ -1,6 +1,6 @@
 ---
 name: code-review
-description: Review the changes since a fixed point (commit, branch, tag or merge-base) along two independent axes: Standards, meaning does the code follow this repo's documented conventions plus a Fowler smell baseline, and Spec, meaning does it implement what the originating issue asked for. Runs both as parallel sub-agents and reports them side by side without merging. Use when reviewing a branch, a pull request, work in progress, or when asked to review since a given point.
+description: 'Review the changes since a fixed point (commit, branch, tag or merge-base) along two independent axes: Standards, meaning does the code follow this repo''s documented conventions plus a Fowler smell baseline, and Spec, meaning does it implement what the originating issue asked for. Runs both as parallel sub-agents and reports them side by side without merging. Use when reviewing a branch, a pull request, work in progress, or when asked to review since a given point.'
 license: MIT
 ---
 # Code review

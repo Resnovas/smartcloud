@@ -1,6 +1,6 @@
 ---
 name: agent-self-evaluation
-description: Rate agent output against a five-axis rubric - accuracy, completeness, clarity, actionability, conciseness - with concrete evidence per axis and a 1-5 scorecard, then act on the weakest axis. Use after any non-trivial task: a change spanning several files, a multi-step workflow, a debugging session that took several attempts, or a written design or analysis. Also use when scoring another agent's output rather than your own.
+description: 'Rate agent output against a five-axis rubric - accuracy, completeness, clarity, actionability, conciseness - with concrete evidence per axis and a 1-5 scorecard, then act on the weakest axis. Use after any non-trivial task: a change spanning several files, a multi-step workflow, a debugging session that took several attempts, or a written design or analysis. Also use when scoring another agent''s output rather than your own.'
 ---
 # Agent self-evaluation
 

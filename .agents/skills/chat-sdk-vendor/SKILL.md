@@ -1,6 +1,6 @@
 ---
 name: chat-sdk-vendor
-description: Vercel Chat SDK vendor routing (npm `chat`, MIT): one TypeScript bot that runs on many chat platforms through `@chat-adapter/*` packages, including Discord, GitHub, Linear, Twilio (SMS and MMS), Web (AI SDK useChat protocol), Slack, Microsoft Teams, Google Chat, Gmail, Telegram, WhatsApp, Messenger, Instagram, Notion and X; mentions, direct messages, threads, reactions, slash commands, cards, modals, files and streamed AI replies; Redis, Postgres or memory state. Routes to Vercel's own chat-sdk Agent Skill at a pinned commit and carries the house overrides. Use when building a chatbot or support agent, adding a bot to Discord, GitHub, Linear, SMS or a website, or writing a custom chat adapter.
+description: 'Vercel Chat SDK vendor routing (npm `chat`, MIT): one TypeScript bot that runs on many chat platforms through `@chat-adapter/*` packages, including Discord, GitHub, Linear, Twilio (SMS and MMS), Web (AI SDK useChat protocol), Slack, Microsoft Teams, Google Chat, Gmail, Telegram, WhatsApp, Messenger, Instagram, Notion and X; mentions, direct messages, threads, reactions, slash commands, cards, modals, files and streamed AI replies; Redis, Postgres or memory state. Routes to Vercel''s own chat-sdk Agent Skill at a pinned commit and carries the house overrides. Use when building a chatbot or support agent, adding a bot to Discord, GitHub, Linear, SMS or a website, or writing a custom chat adapter.'
 license: MIT
 ---
 # Chat SDK vendor routing

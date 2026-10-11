@@ -1,6 +1,6 @@
 ---
 name: convex-vendor
-description: Convex-published coding rules for writing Convex backends: function syntax (query/mutation/action), validators, schema design, indexes over filters, pagination, file storage, scheduling and cron, HTTP endpoints, TypeScript typing of Id and Doc. Use when writing or reviewing code that runs on Convex or calls a Convex deployment.
+description: 'Convex-published coding rules for writing Convex backends: function syntax (query/mutation/action), validators, schema design, indexes over filters, pagination, file storage, scheduling and cron, HTTP endpoints, TypeScript typing of Id and Doc. Use when writing or reviewing code that runs on Convex or calls a Convex deployment.'
 ---
 # Convex vendor routing
 

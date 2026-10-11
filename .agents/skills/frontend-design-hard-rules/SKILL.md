@@ -1,6 +1,6 @@
 ---
 name: frontend-design-hard-rules
-description: Frontend design constraints: one composition, brand-first, no generic AI layouts, motion, and existing-system exception.
+description: 'Frontend design constraints: one composition, brand-first, no generic AI layouts, motion, and existing-system exception.'
 ---
 # Frontend design hard rules
 

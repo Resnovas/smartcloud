@@ -1,13 +1,18 @@
 # house:managed:begin - synced from Resnovas/.github templates/.github/workflows/house-release.yml. Edits inside this block are overwritten.
 #
-# Cuts a release with Nx release, started by hand from the Actions tab on the
-# default branch. What the release ships is read from release.config.json at
-# the repository root; the mechanics live in the house release workflow (see
-# docs/workflows.md in Resnovas/.github). The first release has no v* tag to
-# count from: run it with a specifier and first-release ticked.
+# Cuts a release with Nx release on every push to the default branch whose
+# conventional commits call for one; a push that calls for none, or a
+# repository without release.config.json, stops without releasing. What the
+# release ships is read from release.config.json at the repository root; the
+# mechanics live in the house release workflow (see docs/workflows.md in
+# Resnovas/.github). Before the first stable v* tag, a push releases the
+# firstRelease version from release.config.json. Run it by hand from the
+# Actions tab for a dry run, or to force a version with specifier.
 name: House release
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       dry-run:
@@ -37,9 +42,10 @@ jobs:
       id-token: write
       attestations: write
     with:
-      dry-run: ${{ inputs.dry-run }}
+      # A push releases for real; a manual run follows its dry-run box.
+      dry-run: ${{ github.event_name == 'workflow_dispatch' && inputs.dry-run }}
       specifier: ${{ inputs.specifier }}
-      first-release: ${{ inputs.first-release }}
+      first-release: ${{ inputs.first-release == true }}
     secrets:
       POSTHOG_CLI_API_KEY: ${{ secrets.POSTHOG_CLI_API_KEY }}
       RESNOVAS_BOT_PRIVATE_KEY: ${{ secrets.RESNOVAS_BOT_PRIVATE_KEY }}

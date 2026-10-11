@@ -1,6 +1,6 @@
 ---
 name: cloudflare-workers
-description: Cloudflare-published guidance for generating Workers code: service selection (KV, Durable Objects, D1, R2, Hyperdrive, Queues, Vectorize, Workers AI), WebSocket hibernation, agents SDK, wrangler configuration, and Workers security practices. Use when writing or reviewing Cloudflare Workers code, choosing between Cloudflare storage/compute services, or configuring wrangler.
+description: 'Cloudflare-published guidance for generating Workers code: service selection (KV, Durable Objects, D1, R2, Hyperdrive, Queues, Vectorize, Workers AI), WebSocket hibernation, agents SDK, wrangler configuration, and Workers security practices. Use when writing or reviewing Cloudflare Workers code, choosing between Cloudflare storage/compute services, or configuring wrangler.'
 ---
 # Cloudflare Workers vendor routing
 

@@ -1,6 +1,6 @@
 ---
 name: graphify-vendor
-description: Graphify vendor routing (Graphify-Labs/graphify, Apache-2.0): Graphify's own Claude skill for the /graphify pipeline, query, path and explain, updates and watch mode, exports (HTML, Obsidian, wiki, Neo4j), git hooks and merge driver, transcription, and the extraction spec. Routes to the upstream skill at a pinned commit, kept current by skills-upstream-sync, and carries the house overrides: use the repository wrapper tools/graphify/graphify, local models only, never graphify install or global add. Use when a task needs Graphify behaviour the house graphify skill does not cover, or when checking what a Graphify command does.
+description: 'Graphify vendor routing (Graphify-Labs/graphify, Apache-2.0): Graphify''s own Claude skill for the /graphify pipeline, query, path and explain, updates and watch mode, exports (HTML, Obsidian, wiki, Neo4j), git hooks and merge driver, transcription, and the extraction spec. Routes to the upstream skill at a pinned commit, kept current by skills-upstream-sync, and carries the house overrides: use the repository wrapper tools/graphify/graphify, local models only, never graphify install or global add. Use when a task needs Graphify behaviour the house graphify skill does not cover, or when checking what a Graphify command does.'
 license: MIT
 ---
 # Graphify vendor routing

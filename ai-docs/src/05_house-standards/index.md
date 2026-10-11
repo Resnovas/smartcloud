@@ -99,9 +99,11 @@ with them. The sections after this one describe this repository itself.
 - Releases are cut by the synced house release workflow from `release.config.json`
   at the repository root (what the repository ships: bundles, apps, the major
   tag, error tracking project, npm package); the tools under `tools/release/`
-  are synced too. Never run `nx release` without `--dry-run`; the workflow is
-  the only release path, and its first run in a repository takes a specifier
-  with first-release ticked.
+  are synced too. The workflow runs on every push to the default branch and
+  releases when the conventional commits call for it (before the first stable
+  `v*` tag, the `firstRelease` version); never add a release that needs
+  starting by hand. Never run `nx release` without `--dry-run`; the workflow
+  is the only release path.
 
 ### Document everything twice
 

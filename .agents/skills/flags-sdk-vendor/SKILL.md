@@ -1,6 +1,6 @@
 ---
 name: flags-sdk-vendor
-description: Vercel Flags SDK vendor routing (npm `flags`, MIT): declaring feature flags as code in Next.js and SvelteKit, adapters (PostHog, OpenFeature and others), precompute, identify/dedupe, Flags Explorer and Toolbar, encrypted flag values. Routes to Vercel's own flags-sdk Agent Skill at a pinned commit and carries the house overrides: PostHog is the provider, OpenFeature is supported by default, Vercel Flags is not the flag store. Use when adding or reading a flag in a Next.js or SvelteKit app, choosing a flag adapter, or wiring OpenFeature. Companion to the `feature-flags` house standard.
+description: 'Vercel Flags SDK vendor routing (npm `flags`, MIT): declaring feature flags as code in Next.js and SvelteKit, adapters (PostHog, OpenFeature and others), precompute, identify/dedupe, Flags Explorer and Toolbar, encrypted flag values. Routes to Vercel''s own flags-sdk Agent Skill at a pinned commit and carries the house overrides: PostHog is the provider, OpenFeature is supported by default, Vercel Flags is not the flag store. Use when adding or reading a flag in a Next.js or SvelteKit app, choosing a flag adapter, or wiring OpenFeature. Companion to the `feature-flags` house standard.'
 license: MIT
 ---
 # Flags SDK vendor routing
