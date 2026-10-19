@@ -4,6 +4,6 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "nx": "23.2.1"
+    "nx": "23.3.0"
   }
 }
