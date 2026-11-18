@@ -19,6 +19,12 @@ updates:
       timezone: Europe/London
     cooldown:
       default-days: 7
+    # The 6.1.1 bootstrap intermittently failed before setup-node could read
+    # pnpm's store path (Eventiva #1046, run 44298210070, attempt 1).
+    # Skip only that release; later fixes can still be proposed.
+    ignore:
+      - dependency-name: pnpm/action-setup
+        versions: ['6.1.1']
     commit-message:
       prefix: ci
       include: scope
