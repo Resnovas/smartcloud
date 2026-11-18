@@ -12,32 +12,54 @@ Preferences and rationale only. For how any of these tools actually work - curre
 
 ### Tag structure
 
-All packages must have two or three tags in `project.json`:
+Use colon-separated tags in the project's Nx configuration (`project.json` or the repository's configured equivalent). Read the repository's `eslint.config.mjs` before choosing dependencies: it is the source of truth for allowed imports, not a universal type hierarchy.
 
-1. **Type tag**, required: `type_core`, `type_shared`, `type_database`, `type_extension`, or `type_platform`
-2. **Layer tag**, required: `layer_backend`, `layer_frontend`, or `layer_shared`
-3. **Capability tags**, optional: `capability_entities`, `capability_workflows`, `capability_ui`
+1. **Type tag**, required: for example, `type:core`, `type:shared`, `type:runtime`, `type:integration`, `type:extension`, `type:platform` or `type:test`.
+2. **Layer tag**, required: `layer:backend`, `layer:frontend`, `layer:shared` or, where configured, `layer:test`.
+3. **Capability tags**, as configured by the repository: for example, `capability:contracts`, `capability:schema`, `capability:actions`, `capability:flags` or `capability:i18n`. Eventiva requires one capability tag per project.
 
-Projects with multiple tags must satisfy **all** applicable constraints simultaneously.
+Projects with multiple tags must satisfy **all** applicable constraints simultaneously. Allowed sets intersect; one matching row cannot override another.
 
-### How this prevents circular dependencies
+### Eventiva boundary baseline (EVE-22)
 
-1. **The type hierarchy is strict and one-directional.** `type_core` cannot depend on anything. Each higher type can only depend on equal or lower types, which creates a strict one-way flow.
-2. **Layer separation prevents cross-layer cycles.** Backend cannot depend on frontend. Frontend cannot depend on backend. Both can depend on shared.
-3. **Capability tags do not override type or layer rules.** Adding `capability_ui` to a backend package does not allow it to depend on frontend packages.
+These 16 workspace dependency constraints describe Eventiva's reset foundation, reconciled on 2026-11-17. In Eventiva, read `docs/foundation.md`, `packages/README.md` and `eslint.config.mjs` together. Other repositories use their own checked constraints; this reference does not install or relax lint rules.
+
+| Source tag | Allowed target tags |
+| --- | --- |
+| `type:core` | `type:core` |
+| `type:shared` | `type:core`, `type:shared` |
+| `type:runtime` | `type:core`, `type:shared`, `type:runtime` |
+| `type:integration` | `type:core`, `type:shared`, `type:integration` |
+| `type:extension` | `type:core`, `type:shared`, `type:extension` |
+| `type:platform` | `type:core`, `type:shared`, `type:runtime`, `type:integration`, `type:extension` |
+| `type:test` | `*` |
+| `layer:shared` | `layer:shared` |
+| `layer:frontend` | `layer:frontend`, `layer:shared` |
+| `layer:backend` | `layer:backend`, `layer:shared` |
+| `layer:test` | `layer:frontend`, `layer:backend`, `layer:shared`, `layer:test` |
+| `capability:contracts` | `capability:contracts` |
+| `capability:schema` | `capability:contracts`, `capability:schema` |
+| `capability:actions` | `capability:contracts`, `capability:schema`, `capability:actions` |
+| `capability:flags` | `capability:contracts`, `capability:flags` |
+| `capability:i18n` | `capability:contracts`, `capability:i18n` |
+
+`*` permits any target type, not a bypass of layers or other matching constraints. A `type:test layer:backend` project cannot import a frontend library; `type:test layer:test` can import either layer, subject to its other constraints. Same-type integration imports are allowed when their layers and capabilities also allow the edge. Platforms cannot import platforms. Flags and i18n are separate capability sets, not successive levels in a hierarchy; `capability:app`, `capability:storage`, `capability:telemetry`, `capability:ui` and `capability:test` have no capability-specific row.
+
+External restrictions apply separately: `type:core`, `type:shared` and `capability:actions` allow only `effect` and its subpaths externally. Shared/frontend code also rejects the explicit server-only SDK/driver list in lint. Node built-ins are banned in shared/frontend/actions code; the listed Node globals are banned in shared/frontend code. Eventiva additionally rejects Zod globally and `export *` in package TypeScript. Drivers, SQL adapters and vendor SDKs belong in integrations wired by composition roots, not in portable contracts or the action runtime. There is no active `type:database` tier or exemption for `import type` or `devDependencies`.
+
+### Cycle checks are separate
+
+Same-type permission does not make a dependency cycle valid. Nx reports workspace dependency cycles; layer separation alone does not prevent cycles within one layer. In Eventiva the foundational direction is `runtime` -> `schema` -> `contracts`, never a back-import. The additional source, manifest and emitted-declaration audits cover edges beyond lint, including type-only edges; runtime module/provider admission has its own cycle checks. Keep these gates rather than inferring acyclicity from the tag table.
 
 ### Adding a new package
 
-1. Determine the module type and add the `type:*` tag
-2. Determine the layer and add the `layer:*` tag
-3. Identify capabilities and add any `capability:*` tags
-4. Add all tags to `project.json`
-5. Verify dependencies comply with all rules
-6. Run `pnpm nx lint` to check boundaries
+1. Read the repository's lint constraints and package-boundary documentation.
+2. Add the required `type:*`, `layer:*` and configured `capability:*` tags to its Nx project configuration.
+3. Check every dependency against all matching rows and external restrictions, including type-only imports.
+4. Run the project's Nx lint target. In Eventiva also run `pnpm nx test @eventiva/boundaries-tests` and the source/declaration audits documented in `docs/foundation.md`; build declared dependencies before the emitted-declaration audit.
+5. If an import is denied, move the responsibility or inject its implementation through an allowed contract. Do not weaken the boundary rule to allow it.
 
-### Exceptions
-
-Database packages can be in `devDependencies` for type imports, even where they are not allowed as runtime dependencies.
+### Vendor ownership
 
 Third-party service integrations - analytics, error reporting, email, payments, webhooks - must live in a dedicated workspace package (`@your-org/integrations.<vendor>`), not in core, unless an explicit exception is documented.
 

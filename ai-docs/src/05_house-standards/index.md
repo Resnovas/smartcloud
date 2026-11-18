@@ -7,6 +7,15 @@ Every Resnovas repository follows the same standards. This section is synced fro
 `coding-preferences`, and those documents win if this summary ever disagrees
 with them. The sections after this one describe this repository itself.
 
+### Agent checkout isolation
+
+Use a dedicated task branch in a Git worktree for repository changes. Reuse a
+host-provided task checkout. Prefer T3 or Orca managed worktrees when working
+through those hosts; otherwise use native worktree support or `git worktree`.
+Use ordinary Git for commits and pushes and explicit PR head/base branches.
+GitButler remains the user's personal tool; leave its checkout and metadata
+untouched. The synced `git-worktrees` skill contains the workflow.
+
 ### Code
 
 - **Effect-TS v3 first.** TypeScript is the primary language, written with
@@ -29,8 +38,15 @@ with them. The sections after this one describe this repository itself.
   `feature-flags`). Telemetry events carry no secret or personal data.
 - **Module boundaries.** The core package holds domain-agnostic building
   blocks only. Vendor SDKs and API clients live in
-  `@resnovas/integrations.<vendor>`. Features depend on core and
-  integrations, never the other way round (`AI_POLICY.md` AI-13).
+  `@resnovas/integrations.<vendor>` (`AI_POLICY.md` AI-13).
+  Use colon-separated Nx tags (`type:core`, `layer:shared`,
+  `capability:contracts`) and intersect every matching constraint in the
+  repository's `eslint.config.mjs`. Type-only imports and `devDependencies`
+  do not bypass boundaries; same-type permission does not permit cycles.
+  Read `coding-preferences/references/architecture.md` for Eventiva's
+  16-row baseline and the distinction between workspace, external and cycle
+  checks. That baseline is not a universal hierarchy or permission for
+  extensions to import integrations.
 - **Comments explain why.** Constraints, trade-offs and anything surprising;
   never a restatement of the code.
 

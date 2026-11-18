@@ -18,8 +18,11 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 const tsc = join(root, 'node_modules', '.bin', 'tsc')
 
 const projects = readdirSync(join(root, 'tests'), { withFileTypes: true })
-  .filter((entry) => entry.isDirectory() && existsSync(join(root, 'tests', entry.name, 'tsconfig.json')))
-  .map((entry) => `tests/${entry.name}`)
+  .filter(
+    /** Select immediate test directories with an explicit TypeScript project configuration. */ (entry) =>
+      entry.isDirectory() && existsSync(join(root, 'tests', entry.name, 'tsconfig.json')),
+  )
+  .map(/** Keep compiler project paths workspace-relative for portable diagnostics. */ (entry) => `tests/${entry.name}`)
 
 // The test projects reference the packages' declaration output, so build
 // everything first; Nx serves unchanged projects from its cache.

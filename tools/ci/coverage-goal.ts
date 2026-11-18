@@ -21,6 +21,7 @@ export interface CoverageGoalOptions {
 }
 
 // Workflow command escaping, as in @actions/core.
+/** Escape workflow annotation data so coverage messages cannot inject additional commands. */
 const escapeData = (text: string) => text.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')
 
 /**
@@ -30,10 +31,16 @@ const escapeData = (text: string) => text.replaceAll('%', '%25').replaceAll('\r'
  * @returns Each metric's percentage, 100 for a metric with nothing to cover, or `undefined` when the value is not a coverage map.
  */
 export const coverageTotals = (coverage: unknown): Record<Metric, number> | undefined => {
+  // Reporter input is unknown; recognize the coverage-map entry point before invoking its vendor-owned summary API.
   if (typeof coverage !== 'object' || coverage === null || !('getCoverageSummary' in coverage)) return undefined
   const summarise = coverage.getCoverageSummary
   if (typeof summarise !== 'function') return undefined
-  const json = (summarise.call(coverage) as { toJSON: () => Record<string, { pct: number | string }> }).toJSON()
+  const json = (
+    summarise.call(coverage) as {
+      /** Serialize Istanbul's aggregate metric percentages. */ toJSON: () => Record<string, { pct: number | string }>
+    }
+  ).toJSON()
+  /** Treat Istanbul's nonnumeric empty-metric sentinel as fully covered. */
   const pct = (metric: Metric) => {
     const value = json[metric]?.pct
     return typeof value === 'number' ? value : 100
@@ -41,14 +48,23 @@ export const coverageTotals = (coverage: unknown): Record<Metric, number> | unde
   return { lines: pct('lines'), statements: pct('statements'), functions: pct('functions'), branches: pct('branches') }
 }
 
+/** Warn about aspirational coverage gaps without changing Vitest's independently enforced failure threshold. */
 export default class CoverageGoalReporter implements Reporter {
+  /** Retain optional project labeling and goal; an omitted goal means 100 percent. */
   constructor(private readonly options: CoverageGoalOptions = {}) {}
 
+  /** Emit one escaped CI annotation or local warning when measured metrics fall short of the goal. */
   onCoverage(coverage: unknown) {
+    // Unrecognized payloads and projects already at goal produce no advisory warning.
     const totals = coverageTotals(coverage)
     if (totals === undefined) return
     const goal = this.options.goal ?? 100
-    const short = METRICS.filter((metric) => totals[metric] < goal).map((metric) => `${metric} ${totals[metric]}%`)
+    const short = METRICS.filter(
+      /** Report only metrics below the advisory goal, not the hard failure threshold. */ (metric) =>
+        totals[metric] < goal,
+    ).map(
+      /** Include the measured percentage beside each deficient metric. */ (metric) => `${metric} ${totals[metric]}%`,
+    )
     if (short.length === 0) return
     const message = `${this.options.project ?? 'The tests'} cover less than the ${goal}% goal: ${short.join(', ')}. The run still passes above the enforced minimum; add the missing tests when you can.`
     console.log(

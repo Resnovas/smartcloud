@@ -1,5 +1,6 @@
 # Changelog
 
+- 2026-11-17: Use colon-separated Nx tags and Eventiva's intersecting 16-constraint baseline; remove the obsolete database import exemption and distinguish cycle checks in `references/architecture.md` (EVE-22).
 - 2026-09-26: Effect repositories install the Effect Language Service (tsconfig plugin, patched tsc via `prepare`, workspace TypeScript in editors) and Effect Dev Tools (extension recommendation, opt-in `EFFECT_DEVTOOLS` layer) by default. See `references/effect.md`.
 
 Rolling window - the last 30 entries, newest first. When you add an entry,
