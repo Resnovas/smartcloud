@@ -21,11 +21,13 @@ import {
   enableAutoMerge,
   Forbidden,
   GitHub,
+  makeLiveGitHub,
   makeMemoryGitHub,
   readAutoMerge,
   ValidationFailed,
 } from '@resnovas/integrations.github'
-import { Effect } from 'effect'
+import { Effect, Redacted, Schedule } from 'effect'
+import { fakeFetch } from './fake-fetch.js'
 
 const answering = (answer: unknown) => {
   const memory = makeMemoryGitHub()
@@ -40,11 +42,26 @@ describe('auto-merge', () => {
       yield* enableAutoMerge('PR_7', 'rebase').pipe(Effect.provideService(GitHub, memory.service))
       yield* disableAutoMerge('PR_7').pipe(Effect.provideService(GitHub, memory.service))
       expect(memory.state.graphql.map(({ variables }) => variables)).toStrictEqual([
-        { id: 'PR_7', method: 'REBASE' },
+        { id: 'PR_7', mergeMethod: 'REBASE' },
         { id: 'PR_7' },
       ])
       expect(memory.state.graphql[0]?.query).toContain('enablePullRequestAutoMerge')
       expect(memory.state.graphql[1]?.query).toContain('disablePullRequestAutoMerge')
+    }),
+  )
+
+  // The memory fake accepts any variable name; the live client refuses Octokit's request options, such as `method`.
+  it.effect('turns auto-merge on through the live client', () =>
+    Effect.gen(function* () {
+      const fake = fakeFetch({ 'POST /graphql': { body: { data: { enablePullRequestAutoMerge: null } } } })
+      const github = yield* makeLiveGitHub({
+        token: Redacted.make('test-token'),
+        coordinates: { owner: 'Resnovas', repo: 'example' },
+        fetch: fake.fetch,
+        retry: Schedule.recurs(0),
+      })
+      yield* enableAutoMerge('PR_7', 'squash').pipe(Effect.provideService(GitHub, github))
+      expect(fake.requests[0]?.body).toMatchObject({ variables: { id: 'PR_7', mergeMethod: 'SQUASH' } })
     }),
   )
 
