@@ -38,7 +38,9 @@ const { values } = parseArgs({ options: { 'dry-run': { type: 'boolean', default:
 const dryRun = values['dry-run']
 
 // Hands values to later workflow steps; a no-op outside GitHub Actions.
+/** Append a single-line workflow output when a destination exists; caller values must not contain line breaks. */
 const output = (name: string, value: string) => {
+  // Local runs have no workflow destination; an empty path must not become a filesystem write.
   const file = process.env['GITHUB_OUTPUT']
   if (file !== undefined && file !== '') appendFileSync(file, `${name}=${value}\n`)
 }
@@ -54,15 +56,19 @@ const MAJOR = config.nightly.major
 // The release commit is authored and signed off by the Actions bot, for the DCO check.
 const BOT = { name: 'github-actions[bot]', email: '41898282+github-actions[bot]@users.noreply.github.com' }
 
+/** Execute required Git operations from the repository root and propagate command failures. */
 const git = (...args: string[]): string =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim()
+/** Probe optional Git state, returning undefined for command failure rather than an empty successful result. */
 const tryGit = (...args: string[]): string | undefined => {
+  // Tag/parent probes can legitimately fail; required mutations use the throwing git helper instead.
   try {
     return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
   } catch {
     return undefined
   }
 }
+/** Execute a required release command with inherited diagnostics and fail on a nonzero exit. */
 const run = (command: string, ...args: string[]) => execFileSync(command, args, { cwd: root, stdio: 'inherit' })
 
 if (!dryRun && git('status', '--porcelain', '--untracked-files=no') !== '') {
@@ -72,20 +78,23 @@ if (!dryRun && git('status', '--porcelain', '--untracked-files=no') !== '') {
 const head = git('rev-parse', 'HEAD')
 const tags = git('tag', '--list', 'v*')
   .split('\n')
-  .filter((tag) => tag !== '')
+  .filter(/** Discard Git's empty trailing tag-list entry. */ (tag) => tag !== '')
 
 // Every release commit, nightly or stable, has the branch commit it was cut
 // from as its parent. A night with nothing new since the last one cuts
 // nothing, and neither does a commit a stable release was already cut from.
 // A tag on a root commit, or on no commit, was not cut from the branch.
+/** Recover a release tag's parent commit; a missing parent cannot identify an already released branch head. */
 const cutFrom = (tag: string) => tryGit('rev-parse', '--verify', '--quiet', `${tag}^{commit}^`)
 const nightlies = git('tag', '--list', `v${MAJOR}.*-nightly.*`, '--sort=-creatordate')
   .split('\n')
-  .filter((tag) => tag !== '')
+  .filter(/** Retain only actual nightly tag names from the sorted Git listing. */ (tag) => tag !== '')
 const major = `v${MAJOR}`
 const takesMajor = config.majorTag && nightlyTakesMajor(tags, MAJOR)
 
+/** Return command success for an existence probe, discarding output and treating every failure as false. */
 const tryRun = (command: string, ...args: string[]): boolean => {
+  // This is only a pre-release existence probe; publication itself uses the required command helper.
   try {
     execFileSync(command, args, { cwd: root, stdio: 'ignore' })
     return true
@@ -97,8 +106,11 @@ const tryRun = (command: string, ...args: string[]): boolean => {
 // Creates the pre-release and moves the major tag, skipping whichever is
 // already done, so a run that failed after pushing the version tag is finished
 // by the next one rather than skipped.
+/** Finish publication of an existing version tag and update the major alias only when configured and eligible. */
 const publish = (tag: string) => {
-  const previous = nightlies.find((nightly) => nightly !== tag)
+  const previous = nightlies.find(
+    /** Use the newest other nightly as the generated-notes baseline. */ (nightly) => nightly !== tag,
+  )
   if (tryRun('gh', 'release', 'view', tag)) {
     console.log(`The ${tag} pre-release exists.`)
   } else {
@@ -125,13 +137,17 @@ const publish = (tag: string) => {
 }
 
 // Version tags only: a bare major tag points at one of them.
-const already = tags.filter((tag) => /^v\d+\.\d+\.\d+/.test(tag)).find((tag) => cutFrom(tag) === head)
+const already = tags
+  .filter(/** Exclude bare major aliases from release-parent comparisons. */ (tag) => /^v\d+\.\d+\.\d+/.test(tag))
+  .find(/** Detect any version release already cut from this branch head. */ (tag) => cutFrom(tag) === head)
 if (already !== undefined) {
   if (nightlies.includes(already) && !dryRun) {
     console.log(`${already} was already cut from ${head}; finishing whatever it left undone.`)
     publish(already)
   } else {
-    console.log(`${already} was already cut from ${head}; the branch has not changed since, so there is no nightly to cut.`)
+    console.log(
+      `${already} was already cut from ${head}; the branch has not changed since, so there is no nightly to cut.`,
+    )
   }
   output('released', 'false')
   process.exit(0)
@@ -157,9 +173,15 @@ for (const app of config.apps) {
 
 // Each bundle carries the version, and its source map goes to error tracking
 // when the key is set (and is deleted either way), as for a release.
-for (const bundle of config.bundles) run(join(root, 'node_modules', '.bin', 'nx'), 'run', bundle.target, '--output-style=static')
+for (const bundle of config.bundles)
+  run(join(root, 'node_modules', '.bin', 'nx'), 'run', bundle.target, '--output-style=static')
 if (config.bundles.length > 0) {
-  run(process.execPath, join(root, 'tools/release/sourcemaps.ts'), version, ...config.bundles.map((bundle) => bundle.output))
+  run(
+    process.execPath,
+    join(root, 'tools/release/sourcemaps.ts'),
+    version,
+    ...config.bundles.map(/** Pass each built artifact path to source-map processing. */ (bundle) => bundle.output),
+  )
 }
 
 git('checkout', '--quiet', '--detach')

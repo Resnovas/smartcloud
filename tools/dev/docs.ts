@@ -17,7 +17,9 @@ import { fileURLToPath } from 'node:url'
 
 const MINT_VERSION = '4.2.939'
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
-const builds = ['sharp', 'keytar', '@scarf/scarf'].flatMap((name) => ['--allow-build', name])
+const builds = ['sharp', 'keytar', '@scarf/scarf'].flatMap(
+  /** Permit install scripts only for the three CLI dependencies listed here. */ (name) => ['--allow-build', name],
+)
 
 const result = spawnSync('pnpm', ['dlx', ...builds, `mint@${MINT_VERSION}`, 'dev', ...process.argv.slice(2)], {
   cwd: join(root, 'docs'),

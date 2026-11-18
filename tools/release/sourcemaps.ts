@@ -42,7 +42,9 @@ if (version === undefined || bundles.length === 0) {
 const COMMENT = /\n\/\/# sourceMappingURL=[^\n]*\n?$/
 
 // Removes the map and the comment that points at it.
+/** Delete a bundle's adjacent map and remove its trailing sourceMappingURL before the artifact ships. */
 const strip = (bundle: string) => {
+  // Removal and comment stripping are both necessary: shipped bundles must neither contain nor reference private maps.
   rmSync(`${bundle}.map`, { force: true })
   writeFileSync(bundle, readFileSync(bundle, 'utf8').replace(COMMENT, '\n'))
 }
@@ -66,11 +68,14 @@ if (key === undefined || key.trim() === '' || posthog === undefined) {
 
 // The CLI works on a directory, so each bundle and its map are moved into one
 // of their own, processed there, and moved back.
-for (const bundle of bundles.map((path) => resolve(path))) {
+for (const bundle of bundles.map(
+  /** Anchor paths before moving artifacts into the CLI's isolated work directory. */ (path) => resolve(path),
+)) {
   const work = mkdtempSync(join(tmpdir(), `${config.name}-sourcemaps-`))
   const name = basename(bundle)
   renameSync(bundle, join(work, name))
   renameSync(`${bundle}.map`, join(work, `${name}.map`))
+  /** Invoke the pinned CLI against only this bundle's work directory and configured project/release. */
   const cli = (...args: Array<string>) =>
     execFileSync(
       'npx',

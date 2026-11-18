@@ -61,22 +61,31 @@ export interface ReleaseConfig {
 /** The file's name, at the repository root. */
 export const CONFIG_FILE = 'release.config.json'
 
+/** Abort configuration loading with a field-specific expectation rather than accepting malformed release instructions. */
 const fail = (path: string, expected: string): never => {
   throw new Error(`${CONFIG_FILE}: ${path} must be ${expected}`)
 }
+/** Narrow JSON objects while excluding null and arrays before reading configuration properties. */
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   typeof value === 'object' && value !== null && !Array.isArray(value)
+/** Require nonblank string input, preserving the original value once validated. */
 const string = (value: unknown, path: string): string =>
   typeof value === 'string' && value.trim() !== '' ? value : fail(path, 'a non-empty string')
+/** Use the fallback only for an absent field; reject an explicitly malformed string. */
 const optionalString = (value: unknown, path: string, fallback: string): string =>
   value === undefined ? fallback : string(value, path)
+/** Default absent booleans without coercing strings or numbers into release switches. */
 const optionalBoolean = (value: unknown, path: string, fallback: boolean): boolean =>
   value === undefined ? fallback : typeof value === 'boolean' ? value : fail(path, 'true or false')
+/** Default omitted lists to empty and validate each present element with its indexed diagnostic path. */
 const strings = (value: unknown, path: string): ReadonlyArray<string> =>
   value === undefined
     ? []
     : Array.isArray(value)
-      ? value.map((item, index) => string(item, `${path}[${index}]`))
+      ? value.map(
+          /** Preserve list order and identify the exact malformed element on failure. */ (item, index) =>
+            string(item, `${path}[${index}]`),
+        )
       : fail(path, 'a list of strings')
 
 /**
@@ -88,6 +97,7 @@ const strings = (value: unknown, path: string): ReadonlyArray<string> =>
  * @throws When a field has the wrong shape; the message names the field.
  */
 export const parseReleaseConfig = (raw: unknown, packageName: string): ReleaseConfig => {
+  // Defaults apply only to absent fields; malformed explicit release instructions must fail before any release side effect.
   if (!isRecord(raw)) return fail('the file', 'a JSON object')
   const nightly = raw['nightly']
   const posthog = raw['posthog']
@@ -101,15 +111,21 @@ export const parseReleaseConfig = (raw: unknown, packageName: string): ReleaseCo
       bundles === undefined
         ? []
         : Array.isArray(bundles)
-          ? bundles.map((bundle, index) => {
-              if (!isRecord(bundle)) return fail(`bundles[${index}]`, 'an object with target and output')
-              const project = bundle['project']
-              return {
-                target: string(bundle['target'], `bundles[${index}].target`),
-                output: string(bundle['output'], `bundles[${index}].output`),
-                ...(project === undefined ? {} : { project: string(project, `bundles[${index}].project`) }),
-              }
-            })
+          ? bundles.map(
+              /** Validate each bundle's required build/output fields and optional owning project. */ (
+                bundle,
+                index,
+              ) => {
+                // Diagnose the bundle index before accessing fields so arbitrary JSON cannot masquerade as a bundle.
+                if (!isRecord(bundle)) return fail(`bundles[${index}]`, 'an object with target and output')
+                const project = bundle['project']
+                return {
+                  target: string(bundle['target'], `bundles[${index}].target`),
+                  output: string(bundle['output'], `bundles[${index}].output`),
+                  ...(project === undefined ? {} : { project: string(project, `bundles[${index}].project`) }),
+                }
+              },
+            )
           : fail('bundles', 'a list'),
     dropFromReleaseCommit: strings(raw['dropFromReleaseCommit'], 'dropFromReleaseCommit'),
     apps: strings(raw['apps'], 'apps'),
@@ -156,6 +172,7 @@ export const parseReleaseConfig = (raw: unknown, packageName: string): ReleaseCo
  * @returns The configuration, with defaults filled in.
  */
 export const loadReleaseConfig = (root: string): ReleaseConfig => {
+  // Read both files from the same repository root; package metadata supplies only the default release name.
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as { name?: unknown }
   const packageName = typeof manifest.name === 'string' ? manifest.name : 'release'
   return parseReleaseConfig(JSON.parse(readFileSync(join(root, CONFIG_FILE), 'utf8')), packageName)

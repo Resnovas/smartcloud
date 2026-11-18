@@ -13,4 +13,9 @@
  * @returns The paths of the changed or new `CHANGELOG.md` files, in the order listed.
  */
 export const changedChangelogs = (changed: string): ReadonlyArray<string> =>
-  changed.split('\n').filter((path) => path === 'CHANGELOG.md' || path.endsWith('/CHANGELOG.md'))
+  changed
+    .split('\n')
+    .filter(
+      /** Retain only root or nested changelog filenames from Git's changed-path listing. */ (path) =>
+        path === 'CHANGELOG.md' || path.endsWith('/CHANGELOG.md'),
+    )

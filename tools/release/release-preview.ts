@@ -10,9 +10,11 @@
 // commit with the squash commit the merge queue would land (the pull request's
 // title and number over its commits' messages, tools/release/preview.ts), then
 // asks Nx release, in dry-run mode, for the next version and its notes, as
-// tools/release/release.ts would work them out. Nothing is written, built,
-// tagged or pushed. The report goes to stdout, the job summary and the
-// `report` output, which the workflow's comment job posts on the pull request.
+// tools/release/release.ts would work them out. Nx applies no version or
+// changelog changes; no bundles are built and no tags are created or pushed.
+// The synthetic squash commit and checkout still change local Git state on
+// CI. The report goes to stdout and appends the job summary and `report`
+// output files when configured; the comment job posts it on the pull request.
 //
 // The squash commit is made only on GitHub Actions (GITHUB_ACTIONS=true) with
 // PR_TITLE and PR_NUMBER set, since it moves HEAD; run locally, the script
@@ -44,9 +46,12 @@ const BOT = { name: 'github-actions[bot]', email: '41898282+github-actions[bot]@
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..')
 // The version the first stable release takes, from release.config.json.
 const FIRST_RELEASE = loadReleaseConfig(root).firstRelease
+/** Execute required Git reads or temporary checkout mutations in the repository root, propagating failures. */
 const git = (...args: string[]): string =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim()
+/** Probe optional parents or tags; command failures become an absent result for preview fallback logic. */
 const tryGit = (...args: string[]): string | undefined => {
+  // Missing merge parents or earlier tags are valid preview states, unlike required Git operations.
   try {
     return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
   } catch {
@@ -55,11 +60,14 @@ const tryGit = (...args: string[]): string | undefined => {
 }
 
 // Workflow command escaping, as in @actions/core.
+/** Escape warning text so a preview error cannot introduce another workflow command. */
 const escapeData = (text: string) => text.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')
 
 // Hands the full report to the job summary, and the comment's copy to the
 // comment job; no-ops outside GitHub Actions.
+/** Print the full report and optionally append summary/output files; use a unique delimiter for multiline comment output. */
 const publish = (report: string, comment: string) => {
+  // The comment may contain arbitrary release-note lines, so a fresh delimiter avoids ordinary content collisions.
   console.log(report)
   const summary = process.env['GITHUB_STEP_SUMMARY']
   if (summary !== undefined && summary !== '') appendFileSync(summary, report)
@@ -72,7 +80,9 @@ const publish = (report: string, comment: string) => {
 
 // Replaces the merge commit with the squash commit, on the same tree, and
 // returns that commit's message.
+/** Replace a merge checkout with a synthetic squash commit on the same tree, or decline when either parent is missing. */
 const squash = (title: string, number: number): string | undefined => {
+  // Keep the merged tree but change history shape so Nx sees the conventional title the queue would actually land.
   const base = tryGit('rev-parse', '--verify', '--quiet', 'HEAD^1')
   const head = tryGit('rev-parse', '--verify', '--quiet', 'HEAD^2')
   if (base === undefined || head === undefined) return undefined
@@ -98,6 +108,7 @@ const squash = (title: string, number: number): string | undefined => {
   return message
 }
 
+/** Compute Nx version and notes in dry-run mode, synthesizing squash history only in an explicitly identified CI PR checkout. */
 const preview = async (): Promise<Preview> => {
   const title = process.env['PR_TITLE'] ?? ''
   const number = Number(process.env['PR_NUMBER'] ?? '')

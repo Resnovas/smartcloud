@@ -34,7 +34,7 @@ The commit hook (`tools/dev/commit-check.mjs`, installed by setup) refuses a com
 
 ## Before a pull request
 
-1. **One pull request per batch.** Work a sprint or a set of issues locally, one stacked GitButler branch per issue where the repository uses GitButler (`but`), each squashed to one conventional, signed-off commit naming its issue. Push once and open one pull request for the batch whose body lists each commit with its issue and a `Closes` line. Never push issues one by one or open a pull request per issue: every pull request re-runs CI, smartcloud and the review bots.
+1. **One pull request per batch.** Work a sprint or a set of issues locally, one task branch and isolated Git worktree per independent issue, each squashed to one conventional, signed-off commit naming its issue. Push once and open one pull request for the batch whose body lists each commit with its issue and a `Closes` line. Never push issues one by one or open a pull request per issue: every pull request re-runs CI, smartcloud and the review bots.
 2. **Draft, disclosed, about the code.** Open it as a draft (AI-20). Fill in the template's `AI level` (`unassisted`, `autocomplete`, `chat`, `agent` or `autonomous`; an agent working alone is `autonomous`), `AI tools` (every tool and model), and leave `Accountable human` and `Human review` for the person who marks it ready (AI-21). Describe the code in it and nothing else, shorter than the diff, with the exact commands and output as evidence (AI-06, AI-08). No checklists, emoji or long dashes (AI-09).
 3. **Never mark ready, approve, merge or land.** Those belong to the accountable human. Once a maintainer approves, the repository owner lands a batch as a fast-forward of its signed commits; the merge queue squashes everything else. Merge open pull requests before starting new work, when asked to.
 4. **Answer reviewers as an agent, never as the human.** Push commits that address review feedback; do not reply to a human reviewer as though you were the accountable human (AI-33). Where the repository's rules ask you to reply, say who you are.
@@ -72,13 +72,23 @@ The skills under `.agents/skills/` are the house standards; Claude Code reads th
 | `project-dev-surfaces` | Adding a project or a dev command | Every project ships the editor and agent surfaces below, one idempotent `scripts/agent-setup`, and a machine-only `AGENT-SETUP.md`; `check` fails while a project with a `package.json` lacks either. |
 | `documentation-writing-standards` | Writing docs | Novice-followable, imperative, facts only, no UI chrome, whitelabelled. |
 | `writing-specifications` | Briefing another agent or opening an issue | Goal, context, validation, out of scope, done signal. |
-| `gitbutler-instead-worktrees`, `gitbutler` | The repository uses GitButler | Prefer `but` over git worktrees and raw branches. |
+| `git-worktrees` | Agent repository changes | Use ordinary Git in dedicated task worktrees; preserve personal GitButler use. |
 | `graphify` | Before broad code searches and after changing code | Query first; update and commit the graph with the change. |
 | `investigate-first`, `surgical-patch`, `safe-refactor`, `migration`, `lean-build` | Choosing how to change code | Diagnose before editing; fix at the narrowest layer; preserve behaviour when restructuring; reversible migrations; build the thinnest slice. |
 | `code-review` | Reviewing a branch | Review since a fixed point along correctness and quality. |
 | `skills-spec`, `skills-best-practices` | Writing or changing a skill | The Agent Skills format and the house style for skills. |
 
 Every house skill is synced into the repository; a published catalogue carries the same skills with their version history. Change a house skill in `Resnovas/.github`, never in a copy. When a workflow is not covered, search for an existing community skill before inventing one, and add a repository's own skill beside the house ones rather than keeping a private copy elsewhere.
+
+## Agent Git worktrees
+
+Use a dedicated Git worktree and task branch for agent repository changes. Reuse an existing task worktree supplied by the host; do not create nested worktrees. Independent writers need separate worktrees and branches. Read-only reviews and non-repository tasks do not need a new checkout.
+
+- Use the host's worktree mechanism when available: T3 worktree mode and worktree isolation for delegates; Orca worktree creation for Orca-managed work; Claude Code worktree isolation; native Git worktrees for Codex, OpenCode, Copilot, Cursor, Antigravity and other hosts without a managed mechanism.
+- Inspect the repository root, current branch, status and worktree list before editing. Create new task branches from the intended base, never from the GitButler integration branch. Do not switch or reset the user's primary checkout.
+- Use ordinary Git for status, diffs, staging, commits and pushes. Stage only task-owned changes, sign off commits, preserve repository signing requirements, and use explicit PR head and base branches. For dependent branches, explicitly select the parent branch as the PR base.
+- GitButler is Jonathan's personal tool. Do not install, initialize or use `but` for routine agent work, alter GitButler metadata, or modify his applied branches. GitButler-specific skills are opt-in only when he explicitly requests GitButler assistance.
+- Preserve existing dirty work and other agents' branches. Never force-remove a dirty worktree or rewrite shared history without authorization. Remove an owned worktree only after its work is committed and safely retained.
 
 ## The repository workspace
 
@@ -197,7 +207,7 @@ Every issue that leaves Triage carries a packet: goal (one sentence), context (l
 | Kind | Default |
 | --- | --- |
 | Package manager and monorepo | PNPM; Nx when the repository is an Nx workspace |
-| Version control writes | GitButler `but` when the repository uses it; otherwise host git norms |
+| Version control writes | Ordinary Git in isolated agent task worktrees |
 | Governance files and scaffold | `Resnovas/.github` is the single source of truth; change governance there, never in a downstream copy |
 | Library APIs | Context7 through the gateway, always |
 | Knowledge and standards | The skills in the repository; never a local vault path |
