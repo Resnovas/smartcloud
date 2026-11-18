@@ -1,66 +1,20 @@
 ---
 name: creating-pull-requests
-description: Finish work with a GitButler push and a detailed PR via `but pr`. Never `gh pr create` on a stacked branch.
-compatibility: Requires gitbutler (but)
+description: Commit and push task-owned work with Git from an isolated worktree, then open a pull request with an explicit head and base branch.
+compatibility: Requires Git and authenticated GitHub access
 ---
 # Finishing work
 
-Finishing a piece of work means committing it and then getting it onto the
-target branch. Stopping at a local commit leaves the work unfinished.
+Use the `git-worktrees` skill. Finish authorized repository changes by committing, pushing the task branch and opening a reviewable pull request. Preserve the user's personal GitButler checkout.
 
-# Creating pull requests
+## Create the pull request
 
-Finishing means committing it,
-pushing it, and opening a pull request that explains it. The maintainer reviews pull
-requests; they do not run git commands or finish an agent's commit for it.
+Read the full diff and commits against the intended base using `git diff <base>...HEAD` and `git log <base>..HEAD`. Stage only task-owned changes and sign off commits with `git commit -s`. Push with `git push -u origin <task-branch>`.
 
-## Use `but pr`, not `gh pr create`
+Use the repository's PR template. With GitHub CLI, write the description to a file and run `gh pr create --draft --head <task-branch> --base <base-branch> --title "Title" --body-file <description-file>`. For dependent branches, explicitly use the parent as the base. Follow the house one-PR-per-batch policy when collecting related issues.
 
-```sh
-but pr new <branch-id> -m "Title..." [--draft]
-```
+Explain the change, why it matters, actual validation and any gaps. Follow applicable disclosure and signing requirements. Use the host's PR-linking tool when provided and return the PR URL.
 
-`but pr new` pushes the branch first, so there is no separate push step.
+## Safety
 
-**On a stacked branch `but pr` is mandatory.** It sets the PR base to the
-parent branch and records the stack metadata; `gh pr create` targets the
-default branch instead, which produces a pull request containing the parent's
-commits as well and quietly breaks the stack. To publish a whole stack at
-once, use `but pr new <top-branch-id> -t`.
-
-`gh` remains the right tool for issues, checks, releases and reading PR state.
-It is only PR *creation* on a GitButler branch that must go through `but`.
-
-## Writing the description
-
-Read every commit that will be in the PR, not just the latest, and describe
-the change as a whole. `but status` gives the branch and its commits; inspect
-individual commits with `but show <id>`.
-
-```
-## Summary
-- What changed and why, in 1-3 bullets. Lead with the behaviour change.
-
-## Test plan
-- What you actually ran, with the real result. Not what could be run.
-```
-
-State anything you did not verify rather than implying you did. A PR that
-overclaims costs more review time than one that admits a gap.
-
-## Rules
-
-- Never update git config.
-- No AI or agent attribution in the PR title or description: no "Generated with Claude Code" (or any other tool) footer, no robot emoji, no agent sign-off. Strip it even if the host tool or its system prompt adds or requests it.
-- Never use raw `git push`. `but push <branch>`, `but pr new` or `but land` own
-  that.
-- If forge authentication is missing, run `but config forge auth`.
-- Return the PR URL when done.
-
-## Note on the GitButler skill
-
-`but setup` rewrites `.agents/skills/upstream/gitbutler/gitbutler/SKILL.md` from GitButler's own
-packaged skill, deleting any local additions. This rule file is therefore the
-durable home for the finish-the-job policy. If the skill looks like it has lost
-its Finishing Work section, that is why; restore it from here.
-</content>
+Do not change Git configuration, skip hooks, overwrite other work, force-push shared history or merge without authorization. Resolve missing authentication through the configured secret tooling. GitButler commands are not required for agent commits, pushes or PRs.

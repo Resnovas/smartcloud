@@ -76,6 +76,7 @@ orca.yaml
 LLMS.md
 # The committed code graph.
 graphify-out/
+.agents/skills/git-worktrees/
 # house:managed:end
 # house:local - add this repository's own ignores below this line.
 dist

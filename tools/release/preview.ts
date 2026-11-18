@@ -29,7 +29,8 @@ const BREAKING = 'BREAKING CHANGE:'
  * @param tags - Every tag in the repository.
  * @returns True when no `v<major>.<minor>.<patch>` tag exists; nightly and v1 tags do not count.
  */
-export const isFirstRelease = (tags: ReadonlyArray<string>): boolean => !tags.some((tag) => STABLE.test(tag))
+export const isFirstRelease = (tags: ReadonlyArray<string>): boolean =>
+  !tags.some(/** Only a full stable version tag ends first-release mode. */ (tag) => STABLE.test(tag))
 
 /**
  * The message of the commit a squash merge would land.
@@ -40,10 +41,11 @@ export const isFirstRelease = (tags: ReadonlyArray<string>): boolean => !tags.so
  * @returns The title with ` (#<number>)` added, then each commit message as a `* ` list item, as GitHub writes it.
  */
 export const squashMessage = (title: string, number: number, messages: ReadonlyArray<string>): string => {
+  // Preserve multiline bodies because Nx also detects breaking-change markers below the conventional title.
   const body = messages
-    .map((message) => message.trim())
-    .filter((message) => message !== '')
-    .map((message) => `* ${message}`)
+    .map(/** Normalize surrounding whitespace while preserving multiline commit bodies. */ (message) => message.trim())
+    .filter(/** Omit empty commits from the synthesized squash body. */ (message) => message !== '')
+    .map(/** Prefix each retained commit as GitHub's squash-message list item. */ (message) => `* ${message}`)
     .join('\n\n')
   return body === '' ? `${title.trim()} (#${number})` : `${title.trim()} (#${number})\n\n${body}`
 }
@@ -56,6 +58,7 @@ export const squashMessage = (title: string, number: number, messages: ReadonlyA
  * @returns `major` for a `!` or a `BREAKING CHANGE:` anywhere in the body, else the type's `semverBump` (`none` for a type it does not list), or `undefined` when the title is not a conventional commit.
  */
 export const bumpOf = (message: string, types: CommitTypes): Bump | undefined => {
+  // Only conventional headers count; breaking markers override the configured type-specific bump.
   const [title = '', ...rest] = message.split('\n')
   const header = HEADER.exec(title)
   if (header === null) return undefined
@@ -91,12 +94,15 @@ const FOOTER =
   '<sub>Nothing is released by this pull request. A maintainer cuts releases from the release workflow; this preview shows what that would do if this pull request were merged now. It updates on every push and whenever the title changes.</sub>'
 
 // Cuts text to a limit at the last line break before it.
+/** Cut notes at the requested character limit or an earlier line break, then append a notice outside that limit. */
 const truncate = (text: string, limit: number) => {
+  // Prefer a complete line, but still bound a single oversized line; the notice deliberately sits outside the budget.
   if (text.length <= limit) return text
   const cut = text.lastIndexOf('\n', limit)
   return `${text.slice(0, cut > 0 ? cut : limit).trimEnd()}\n\n_The notes are cut short here; the job summary of the release preview run has them in full._`
 }
 
+/** Render commit titles inline without letting embedded backticks close the code span. */
 const inline = (text: string) => `\`${text.replaceAll('`', "'")}\``
 
 /**
@@ -107,6 +113,7 @@ const inline = (text: string) => `\`${text.replaceAll('`', "'")}\``
  * @returns A report headed by {@link MARKER}: the next version, what this pull request's commit adds to it, and the release notes in a collapsed block.
  */
 export const renderPreview = (preview: Preview, limit = Number.POSITIVE_INFINITY): string => {
+  // Describe aggregate release impact separately from this PR's own bump so tooling-only changes do not promise a release.
   const lines = [MARKER, '## Release preview', '']
   if (preview.version === undefined) {
     lines.push(
