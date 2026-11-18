@@ -13,6 +13,7 @@ import type { Reporter, TestCase } from 'vitest/node'
 
 const workspaceRoot = fileURLToPath(new URL('../..', import.meta.url))
 
+/** One retried-then-passing test, retained for annotations and the final project summary. */
 interface Flaky {
   readonly project: string
   readonly file: string
@@ -22,15 +23,21 @@ interface Flaky {
 }
 
 // Workflow command escaping, as in @actions/core.
+/** Encode annotation data so test names cannot inject workflow commands or line breaks. */
 const escapeData = (text: string) => text.replaceAll('%', '%25').replaceAll('\r', '%0D').replaceAll('\n', '%0A')
+/** Escape annotation properties, whose commas and colons also delimit workflow syntax. */
 const escapeProperty = (text: string) => escapeData(text).replaceAll(':', '%3A').replaceAll(',', '%2C')
 // Markdown table cells cannot hold a pipe or a line break.
+/** Escape pipes and flatten LF or CRLF line breaks in summary table cells; other Markdown is unchanged. */
 const cell = (text: string) => text.replaceAll('|', '\\|').replaceAll(/\r?\n/g, ' ')
+/** Format the retry count with singular wording only for exactly one retry. */
 const times = (count: number) => (count === 1 ? '1 retry' : `${count} retries`)
 
+/** Surface retried successes as warnings and append a per-project CI summary without failing the run. */
 export default class FlakyTestReporter implements Reporter {
   private readonly flaky: Array<Flaky> = []
 
+  /** Record only Vitest-designated flaky outcomes and emit a location-aware escaped annotation. */
   onTestCaseResult(testCase: TestCase) {
     const diagnostic = testCase.diagnostic()
     if (!diagnostic?.flaky) return
@@ -51,12 +58,13 @@ export default class FlakyTestReporter implements Reporter {
     )
   }
 
+  /** Append this reporter instance's flaky-test table when CI provides a summary destination. */
   onTestRunEnd() {
     const summary = process.env['GITHUB_STEP_SUMMARY']
     const [first] = this.flaky
     if (first === undefined || !summary) return
     const rows = this.flaky.map(
-      (flaky) =>
+      /** Escape each user-authored name and path before inserting it into a Markdown table row. */ (flaky) =>
         `| \`${cell(flaky.file)}${flaky.line === undefined ? '' : `:${flaky.line}`}\` | ${cell(flaky.name)} | ${flaky.retries} |`,
     )
     appendFileSync(

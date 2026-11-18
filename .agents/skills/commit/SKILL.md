@@ -38,8 +38,8 @@ duration method live in the bundled files below; do not grow this file.
 3. Stage only the relevant files. No secrets, no unrelated work in progress.
 4. Commit with a HEREDOC message, shaped per
    `references/message-shape.md`, ending with a DCO
-   `Signed-off-by: <name> <email>` for the configured git author (`git commit -s`,
-   or write the trailer yourself under GitButler). Above the sign-off, add the
+   `Signed-off-by: <name> <email>` for the configured git author (`git commit -s`
+   in the task worktree). Above the sign-off, add the
    AI policy's trailer for every AI tool that wrote or materially changed
    the commit (`AI_POLICY.md` AI-02 in `Resnovas/.github`):
    `Co-authored-by: <tool and model> <the tool's attribution address>`,

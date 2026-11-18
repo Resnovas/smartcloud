@@ -38,7 +38,8 @@ const EMOJI = /\p{Extended_Pictographic}/u
 const HOST_LINE = /^(?:claude-session|made-with|generated-by|generated with|🤖)/i
 
 // Staged files the dash scan leaves alone: generated, vendored or not text.
-const SKIP_PATH = /^(?:graphify-out\/|externals\/|docs\/reference\/|LLMS\.md$|CHANGELOG\.md$|.*lock\.(?:yaml|json)$|.*\.(?:min\.js|map|svg|png|jpe?g|gif|pdf|woff2?|ttf|ico)$)/
+// The Linear mirror paths preserve verbatim source, not human-authored prose.
+const SKIP_PATH = /^(?:graphify-out\/|externals\/|docs\/reference\/|docs\/planning\/issues\/|tools\/documentation\/linear-snapshot\.json$|LLMS\.md$|CHANGELOG\.md$|.*lock\.(?:yaml|json)$|.*\.(?:min\.js|map|svg|png|jpe?g|gif|pdf|woff2?|ttf|ico)$)/
 
 // TypeScript the code scan covers: sources, not tests, typings, vendored code
 // or repository tooling (coding-preferences, references/effect.md).
