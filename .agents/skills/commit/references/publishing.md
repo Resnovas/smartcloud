@@ -5,13 +5,7 @@
 A change is finished when it is reviewable. The reviewer does not run git
 commands or finish an agent's commit for it.
 
-In a GitButler repository, `but pr new <branch-id> -m "Title..."` pushes and
-opens the pull request in one step.
-
-If the work depends on another branch already in flight, stack it rather than
-mixing the changes. **Never use `gh pr create` on a stacked branch**: it
-targets the default branch, so the pull request swallows the parent's commits
-and the stack metadata is lost.
+Use ordinary Git in the task worktree: push the task branch, then create the PR with an explicit head and base. For dependent work, use the parent branch as the base: `gh pr create --draft --head <task-branch> --base <parent-branch> --body-file <description-file>`. Follow the repository template and the house batch policy.
 
 Use `--draft` when the work is real but not ready for review, rather than
 withholding the pull request entirely. A pull request an agent opens is

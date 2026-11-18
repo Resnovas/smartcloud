@@ -6,7 +6,7 @@
 
 **Preference:** Use `git subtree` to vendor external source code.
 
-**Rationale:** Submodules require initialization, introduce indirection, require `.gitmodules` tracking, and break GitButler. Subtrees behave like regular directories.
+**Rationale:** Submodules require initialization, introduce indirection, require `.gitmodules` tracking, and add checkout setup requirements. Subtrees behave like regular directories.
 
 Two flags matter when adding one: `--prefix` sets the directory the repo lives in, and `--squash` collapses the entire upstream history into a single commit, which avoids importing thousands of commits. Each later update then shows up as one commit, which is easy to review.
 

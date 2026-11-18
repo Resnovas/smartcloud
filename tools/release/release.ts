@@ -26,9 +26,12 @@
 // The first release has no v* tag to count from, so it takes an explicit
 // specifier and --first-release; its notes start at the newest earlier tag.
 //
-// With --dry-run nothing is written, committed, pushed or published: Nx prints
-// the version, the release notes it would use and the changes it would make to
-// each changelog file. Runs on Node's built-in TypeScript support.
+// With --dry-run Nx previews version and changelog changes without writing
+// them. When a version is proposed, this script still builds the configured
+// bundles, deletes their source maps and strips the map comments, with uploads
+// disabled. It creates no release commit or tag and pushes or publishes
+// nothing, but may append GitHub Actions outputs. Runs on Node's built-in
+// TypeScript support.
 
 import { releaseChangelog, releaseVersion } from 'nx/release'
 import { execFileSync } from 'node:child_process'
@@ -58,20 +61,26 @@ const specifier = values.specifier === undefined || values.specifier.trim() === 
 // The release commit is authored and signed off by the Actions bot, for the DCO check.
 const BOT = { name: 'github-actions[bot]', email: '41898282+github-actions[bot]@users.noreply.github.com' }
 
+/** Execute a required Git command in the release checkout and propagate its failure. */
 const git = (...args: string[]): string =>
   execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'inherit'] }).trim()
+/** Probe optional tags, returning undefined for any command failure without masking required release mutations. */
 const tryGit = (...args: string[]): string | undefined => {
+  // Absence is allowed for tag discovery; writes and required reads always use the throwing helper.
   try {
     return execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }).trim()
   } catch {
     return undefined
   }
 }
+/** Run the pinned workspace Nx binary with visible diagnostics and fail the release on command failure. */
 const nx = (...args: string[]) =>
   execFileSync(join(root, 'node_modules', '.bin', 'nx'), args, { cwd: root, stdio: 'inherit' })
 
 // Hands values to later workflow steps; a no-op outside GitHub Actions.
+/** Append a caller-provided single-line workflow output when a destination is configured. */
 const output = (name: string, value: string) => {
+  // Local runs have no workflow destination; an empty path must not become a filesystem write.
   const file = process.env['GITHUB_OUTPUT']
   if (file !== undefined && file !== '') appendFileSync(file, `${name}=${value}\n`)
 }
@@ -105,15 +114,19 @@ if (tryGit('rev-parse', '--quiet', '--verify', `refs/tags/${tag}`) !== undefined
   process.exit(1)
 }
 
-// Build each bundle from this commit's source, with the new versions on disk,
-// then hand its source map to error tracking and drop it: the tag ships the
-// bundle only. A dry run uploads nothing.
+// Build each bundle from this commit's source. Only a real release writes the
+// new versions to disk first. A dry run still builds and strips source maps,
+// but removes the upload key; a real release may upload maps before stripping.
 const { POSTHOG_CLI_API_KEY: _key, ...withoutKey } = process.env
 for (const bundle of config.bundles) nx('run', bundle.target, '--output-style=static')
 if (config.bundles.length > 0) {
   execFileSync(
     process.execPath,
-    [join(root, 'tools/release/sourcemaps.ts'), workspaceVersion, ...config.bundles.map((bundle) => bundle.output)],
+    [
+      join(root, 'tools/release/sourcemaps.ts'),
+      workspaceVersion,
+      ...config.bundles.map(/** Select built artifacts for source-map removal or upload. */ (bundle) => bundle.output),
+    ],
     { cwd: root, stdio: 'inherit', env: dryRun ? withoutKey : process.env },
   )
 }
@@ -122,7 +135,9 @@ if (config.bundles.length > 0) {
 // kind rather than at the first commit.
 const from = firstRelease ? tryGit('describe', '--tags', '--abbrev=0', 'HEAD') : undefined
 
-const outputs = config.bundles.map((bundle) => bundle.output)
+const outputs = config.bundles.map(
+  /** Preserve configured artifact order for release staging and the dry-run plan. */ (bundle) => bundle.output,
+)
 if (dryRun) {
   console.log(
     `Dry run: would commit ${[...outputs, 'the new versions'].join(', ')}${config.dropFromReleaseCommit.length > 0 ? `, drop ${config.dropFromReleaseCommit.join(', ')}` : ''}, tag ${tag}${config.majorTag ? ` and move ${major}` : ''}.`,

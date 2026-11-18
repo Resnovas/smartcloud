@@ -13,10 +13,19 @@ const STABLE = /^v(\d+)\.(\d+)\.(\d+)$/
 /** The stable `v<major>.<minor>.<patch>` tags of one major, newest first. */
 const stableTags = (tags: ReadonlyArray<string>, major: number): ReadonlyArray<[number, number, number]> =>
   tags
-    .map((tag) => STABLE.exec(tag))
-    .filter((match) => match !== null && Number(match[1]) === major)
-    .map((match) => [Number(match![1]), Number(match![2]), Number(match![3])] as [number, number, number])
-    .sort((a, b) => b[0] - a[0] || b[1] - a[1] || b[2] - a[2])
+    .map(/** Parse only full stable tags, leaving nightly and major aliases unmatched. */ (tag) => STABLE.exec(tag))
+    .filter(
+      /** Keep stable releases from the requested major line only. */ (match) =>
+        match !== null && Number(match[1]) === major,
+    )
+    .map(
+      /** Convert already filtered version components to numeric sort keys. */ (match) =>
+        [Number(match![1]), Number(match![2]), Number(match![3])] as [number, number, number],
+    )
+    .sort(
+      /** Order semantic components numerically with the newest stable release first. */ (a, b) =>
+        b[0] - a[0] || b[1] - a[1] || b[2] - a[2],
+    )
 
 /**
  * The version of a nightly pre-release cut on a date.
@@ -27,6 +36,7 @@ const stableTags = (tags: ReadonlyArray<string>, major: number): ReadonlyArray<[
  * @returns `<version>-nightly.<yyyymmdd>`, with `.<n>` added when that day already has a nightly.
  */
 export const nightlyVersion = (tags: ReadonlyArray<string>, major: number, date: Date): string => {
+  // Preview the next stable patch, or the major's first release, and use existing tags to disambiguate the UTC day.
   const newest = stableTags(tags, major)[0]
   const next = newest === undefined ? `${major}.0.0` : `${newest[0]}.${newest[1]}.${newest[2] + 1}`
   const day = date.toISOString().slice(0, 10).replaceAll('-', '')
