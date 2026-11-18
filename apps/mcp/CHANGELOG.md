@@ -1,3 +1,13 @@
+## 2.0.1 (2026-11-18)
+
+### Documentation
+
+- **ai-docs:** regenerate LLMS.md after the house sync ([#738](https://github.com/Resnovas/smartcloud/pull/738))
+
+### Thank you
+
+- Jonathan S @TGTGamer
+
 # 2.0.0 (2026-10-11)
 
 ### Features
