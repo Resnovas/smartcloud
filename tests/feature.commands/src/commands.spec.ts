@@ -218,7 +218,7 @@ describe('commands: pull requests', () => {
   it.effect('/automerge turns auto-merge on with a method, or off', () =>
     Effect.gen(function* () {
       const on = yield* answer('/automerge rebase')
-      expect(on.github.state.graphql[0]?.variables).toStrictEqual({ id: 'PR_7', method: 'REBASE' })
+      expect(on.github.state.graphql[0]?.variables).toStrictEqual({ id: 'PR_7', mergeMethod: 'REBASE' })
       expect(on.changes).toStrictEqual(['/automerge rebase: turned on auto-merge (rebase) for #7'])
       const off = yield* answer('/automerge OFF')
       expect(off.github.state.graphql[0]?.query).toContain('disablePullRequestAutoMerge')

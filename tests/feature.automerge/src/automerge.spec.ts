@@ -60,7 +60,7 @@ describe('turning auto-merge on', () => {
       const result = yield* run(config(), github)
       expect(github.mutations).toHaveLength(1)
       expect(github.mutations[0]?.query).toContain('enablePullRequestAutoMerge')
-      expect(github.mutations[0]?.variables).toStrictEqual({ id: 'PR_7', method: 'SQUASH' })
+      expect(github.mutations[0]?.variables).toStrictEqual({ id: 'PR_7', mergeMethod: 'SQUASH' })
       expect(result.changes).toStrictEqual([
         { feature: 'automerge', description: 'Turned on auto-merge (squash) for #7 (patch).' },
       ])
@@ -75,7 +75,7 @@ describe('turning auto-merge on', () => {
     Effect.gen(function* () {
       const github = memory()
       yield* run(config({ rules: { patch: { when: PATCH, method: 'rebase' } } }), github)
-      expect(github.mutations[0]?.variables).toStrictEqual({ id: 'PR_7', method: 'REBASE' })
+      expect(github.mutations[0]?.variables).toStrictEqual({ id: 'PR_7', mergeMethod: 'REBASE' })
     }),
   )
 

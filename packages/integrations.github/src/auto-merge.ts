@@ -34,8 +34,10 @@ export const MERGE_METHODS = ['merge', 'squash', 'rebase'] as const
 /** One of {@link MERGE_METHODS}. */
 export type MergeMethod = (typeof MERGE_METHODS)[number]
 
+// Octokit reads `method` as a request option, so the live client refuses a
+// variable with that name; the merge method goes in `mergeMethod` instead.
 const ENABLE =
-  'mutation($id: ID!, $method: PullRequestMergeMethod!) { enablePullRequestAutoMerge(input: { pullRequestId: $id, mergeMethod: $method }) { clientMutationId } }'
+  'mutation($id: ID!, $mergeMethod: PullRequestMergeMethod!) { enablePullRequestAutoMerge(input: { pullRequestId: $id, mergeMethod: $mergeMethod }) { clientMutationId } }'
 const DISABLE = 'mutation($id: ID!) { disablePullRequestAutoMerge(input: { pullRequestId: $id }) { clientMutationId } }'
 
 /**
@@ -60,7 +62,7 @@ const DISABLE = 'mutation($id: ID!) { disablePullRequestAutoMerge(input: { pullR
  * @returns Completion once GitHub has accepted it.
  */
 export const enableAutoMerge = (nodeId: string, method: MergeMethod): Effect.Effect<void, GitHubError, GitHub> =>
-  Effect.flatMap(GitHub, (github) => github.graphql(ENABLE, { id: nodeId, method: method.toUpperCase() }))
+  Effect.flatMap(GitHub, (github) => github.graphql(ENABLE, { id: nodeId, mergeMethod: method.toUpperCase() }))
 
 /**
  * Turns off GitHub auto-merge for a pull request.
