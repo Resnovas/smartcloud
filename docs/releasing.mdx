@@ -28,6 +28,8 @@ Change the file, not the workflows: the workflows are managed by the house sync.
 
 ## Action bundle budget
 
+The action bundle is generated, not committed on `main`. Both the CI smoke job and the self-check workflow build `dist/index.js` before running the local action. Workflow lint therefore ignores only the missing `dist/index.js` diagnostic for those two workflow files in `.github/actionlint.yaml`; all other diagnostics remain enabled. If a local action run cannot find the bundle, run `pnpm nx run @resnovas/action:bundle` and check that the build succeeds before running it again. Do not commit the generated bundle to `main` to silence lint.
+
 `pnpm bundle:check` builds the action and checks `dist/index.js` against the raw and gzip byte limits in `bundle-size.json`. CI runs the same command in its build job, which feeds the required `check` context on pull requests and merge queue groups. Changes that skip the build job also skip the bundle check.
 
 The checked-in baseline is 3,881,093 raw bytes and 796,299 gzip bytes, with limits of 4,269,203 and 875,929 bytes respectively (10% headroom, rounded up). Gzip uses level 9. Only `dist/index.js` counts, including its linked source-map comment; the source map and other release assets do not. This measures the CI bundle before release version stamping and PostHog processing.

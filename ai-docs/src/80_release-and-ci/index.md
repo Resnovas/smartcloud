@@ -27,6 +27,12 @@ release in a trailing comment; `permissions: {}` at the top and per-job
 scopes; `timeout-minutes` on every job with steps. actionlint and zizmor run
 on every pull request (`uvx --from actionlint-py actionlint`, `uvx zizmor .`).
 
+The repository's `.github/actionlint.yaml` ignores only the missing
+`dist/index.js` diagnostic in `ci.yml` and `smartcloud.yml`: both workflows
+bundle the local action before `uses: ./`. The bundle is committed only on
+release tags. Keep other actionlint diagnostics enabled; verify runtime
+bundle production through the build and smoke jobs.
+
 ### Smoke tests
 
 For each event recorded in `tools/ci/smoke/events` (`issues`,
