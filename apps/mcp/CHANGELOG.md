@@ -1,3 +1,7 @@
+## 2.0.2 (2026-11-19)
+
+This was a version bump only for @resnovas/smartcloud-mcp to align it with other projects, there were no code changes.
+
 ## 2.0.1 (2026-11-18)
 
 ### Documentation
