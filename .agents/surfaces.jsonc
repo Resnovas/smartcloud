@@ -21,6 +21,8 @@
     { "id": "dev", "label": "Dev: watch build", "script": "dev", "primary": true },
     { "id": "docs", "label": "Docs: local server", "script": "docs:dev", "url": "http://localhost:3000" },
     { "id": "fix", "label": "Fix: format and licence headers", "script": "fix" },
+    { "id": "funnel-static", "label": "Funnel: static checks before docs", "script": "funnel:static" },
+    { "id": "funnel-verify", "label": "Funnel: behavior and coverage", "script": "funnel:verify" },
     { "id": "release", "label": "Release: dry run", "script": "release:dry-run" },
   ],
 }

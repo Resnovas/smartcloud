@@ -17,7 +17,15 @@
 import { type Freeze, type FreezeWindow, parseFreezeTime } from '@resnovas/config'
 import { DateTime } from 'effect'
 
-/** A merge freeze in effect, and what to tell people about it. */
+/**
+ * Carry the selected window's identity and explanation without implying a fixed UTC end instant.
+ *
+ * @example
+ * ```ts
+ * import type { ActiveFreeze } from '@resnovas/feature.freeze'
+ * const freeze: ActiveFreeze = { key: 'weekend', reason: 'Reduced staffing', until: 'Mon 08:00 (UTC)' }
+ * ```
+ */
 export interface ActiveFreeze {
   /** The window's key, or `active` for the manual freeze. */
   readonly key: string
@@ -40,7 +48,12 @@ export const MANUAL = 'active'
 
 const DAY = 24 * 60
 
-// Minutes into the day, or into the week from Sunday 00:00 when the time names a day. The schema only lets valid times through.
+/**
+ * Convert validated recurrence text to minutes from midnight, or Sunday midnight for weekly text.
+ *
+ * @param text - Daily or weekday-prefixed time already validated by the configuration schema.
+ * @returns The recurrence offset in minutes, with zero fallback for absent parsed components.
+ */
 const minuteOf = (text: string) => {
   const time = parseFreezeTime(text)
   return (time?.day ?? 0) * DAY + (time?.minutes ?? 0)
@@ -56,7 +69,6 @@ const minuteOf = (text: string) => {
  * `to` comes before `from` it runs over midnight, or over the end of the
  * week. Recurring times are read on the local clock, so a daylight saving
  * change moves them with it.
- *
  * @example
  * ```ts import.meta.vitest name="windowEnd"
  * import { windowEnd } from '@resnovas/feature.freeze'
@@ -66,7 +78,6 @@ const minuteOf = (text: string) => {
  * windowEnd({ from: '22:00', to: '06:00', timezone: 'Europe/London' }, saturday) // => undefined
  * windowEnd({ start: '2026-09-01T00:00:00Z', end: '2026-10-01T00:00:00Z' }, saturday) // => '2026-10-01T00:00:00Z'
  * ```
- *
  * @param window - The window, as the config gives it.
  * @param now - The moment, in epoch milliseconds.
  * @returns When the window ends, as people read it, while it is in effect; undefined otherwise.
@@ -97,7 +108,6 @@ export const windowEnd = (window: FreezeWindow, now: number): string | undefined
  * activeFreeze({ active: true, reason: 'Release' }, now)?.until // => undefined
  * activeFreeze({ active: false }, now) // => undefined
  * ```
- *
  * @param freeze - The config's `freeze` section.
  * @param now - The moment, in epoch milliseconds.
  * @returns The freeze in effect, or undefined when merges are open.
@@ -121,7 +131,6 @@ export const activeFreeze = (freeze: Freeze, now: number): ActiveFreeze | undefi
  * describeFreeze({ key: 'weekend', reason: 'No weekend deploys', until: 'Mon 08:00 (UTC)' }) // => 'Merges are frozen by the weekend window (No weekend deploys) until Mon 08:00 (UTC).'
  * describeFreeze({ key: 'active', reason: undefined, until: undefined }) // => 'Merges are frozen by freeze.active until it is turned off.'
  * ```
- *
  * @param freeze - The freeze in effect.
  * @returns The sentence.
  */

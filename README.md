@@ -100,11 +100,13 @@ The documentation lives in [`docs/`](docs/introduction.mdx) and is built with Mi
 This is an Nx and pnpm workspace on Node 24 or later. CI runs the tests on Linux, macOS and Windows, with Node 24 and the current release.
 
 ```sh
-pnpm install
-pnpm nx run-many -t lint typecheck test build
+node --run setup
+node --run funnel:static
+node --run funnel:verify
+node --run check
 ```
 
-See [AGENTS.md](AGENTS.md) for the layout and conventions. After changing the config schema, regenerate the JSON Schema with `SMARTCLOUD_UPDATE_SCHEMA=1 pnpm nx test @resnovas/config-tests`, then the configuration reference with `pnpm docs:reference`. CI fails when either is stale.
+The [verification registry](docs/verification.md) lists every feature and workflow, its triggers, local checks and expected evidence. Run static analysis immediately after coding, before documentation. Setup installs a pre-commit hook that checks static analysis and tests; it preserves existing hooks and refuses a staged snapshot that differs from the worktree. See [AGENT-SETUP.md](AGENT-SETUP.md) for setup troubleshooting and [AGENTS.md](AGENTS.md) for ownership decisions. After changing the config schema, regenerate the JSON Schema with `SMARTCLOUD_UPDATE_SCHEMA=1 pnpm nx test @resnovas/config-tests`, then the configuration reference with `pnpm docs:reference`. CI fails when either is stale.
 
 ## Licence
 

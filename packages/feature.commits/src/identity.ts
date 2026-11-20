@@ -15,6 +15,7 @@
  */
 
 import { compilePattern } from '@resnovas/conditions'
+import { Either } from 'effect'
 
 /** A person or tool named in a commit trailer, with a lower-cased email. */
 export interface Identity {
@@ -38,21 +39,23 @@ const AI_NAME = /\b(?:claude|codex|chatgpt|gpt-?\d|copilot|cursor|gemini|devin|a
 
 type Test = (value: string) => boolean
 
-// Config patterns are written by the repository's maintainers, so they are
-// trusted to be safe to run. The config schema holds them as plain strings,
-// so one that does not compile is matched as a literal, ignoring case,
-// rather than failing the whole run.
-const compile = (pattern: string): Test => {
-  try {
-    const compiled = compilePattern(pattern)
-    // A global or sticky flag would make `test` stateful between calls.
-    const stateless = new RegExp(compiled.source, compiled.flags.replace('g', '').replace('y', ''))
-    return (value) => stateless.test(value)
-  } catch {
-    const needle = pattern.toLowerCase()
-    return (value) => value.toLowerCase().includes(needle)
-  }
-}
+/** Match invalid or unsafe patterns literally; valid patterns must remain stateless across trailers. */
+const compile = (pattern: string): Test =>
+  Either.match(
+    Either.try(() => compilePattern(pattern)),
+    {
+      onLeft: () => {
+        // Preserve the literal fallback for existing, unvalidated identity configuration.
+        const needle = pattern.toLowerCase()
+        return (value: string) => value.toLowerCase().includes(needle)
+      },
+      onRight: (compiled) => {
+        // A global or sticky flag would make test stateful between calls.
+        const stateless = new RegExp(compiled.source, compiled.flags.replace('g', '').replace('y', ''))
+        return (value: string) => stateless.test(value)
+      },
+    },
+  )
 
 /**
  * Builds a predicate recognising AI tool identities, compiling the config

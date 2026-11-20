@@ -4,11 +4,6 @@
 url = "https://gateway-mcp.mem0.ai/mcp"
 bearer_token_env_var = "MEM0_GATEWAY_TOKEN"
 
-[mcp_servers.cognee]
-command = "uvx"
-args = ["cognee-mcp==0.5.5"]
-env_vars = ["COGNEE_BASE_URL", "COGNEE_API_KEY"]
-
 [mcp_servers.graphify]
 command = "sh"
 args = ["tools/graphify/graphify", "mcp"]

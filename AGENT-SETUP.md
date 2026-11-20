@@ -33,7 +33,7 @@ Never write values into repo files.
 ## Setup
 
 - `scripts/agent-setup` (Windows: `scripts\agent-setup.cmd`; any OS: `node scripts/agent-setup.ts`). Idempotent. Non-interactive.
-- Steps: Node check, pnpm, `pnpm install`, `pnpm nx sync`, `pnpm nx run-many -t build`, `pnpm run cli --version`, `surfaces install` (not on CI).
+- Steps: Node check, pnpm, `pnpm install`, `pnpm nx sync`, `pnpm nx run-many -t build`, `pnpm run cli --version`, `surfaces install` and funnel pre-commit installation (neither on CI). Existing foreign hooks are preserved and reported as a setup conflict.
 - `--no-build`: stop after `nx sync`.
 - Success: last line `agent-setup: ok`. About 20 s warm, few minutes clean.
 
@@ -64,7 +64,10 @@ Port 3000 only for `docs:dev`. Affected only: `pnpm nx affected -t lint typechec
 ## Verify
 
 - `pnpm run cli --version` prints version.
-- Full: `CI=true NX_NO_CLOUD=true pnpm nx run-many -t lint typecheck test build`.
+- Immediately after coding, before documentation: `node --run funnel:static`.
+- Behavior and coverage: `node --run funnel:verify`. Registry, lint and hook contracts: `node --run funnel:contracts`.
+- Full: `node --run check`. Feature triggers and observable evidence: [verification registry](docs/verification.md).
+- Pre-commit runs static analysis before tests and refuses unstaged tracked or non-ignored untracked files. Stage intended files or use an isolated worktree; the hook never stashes work.
 
 ## Runner notes
 

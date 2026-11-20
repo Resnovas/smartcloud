@@ -10,6 +10,8 @@ out-tsc
 coverage
 test-output
 tmp
+# Disposable Git repositories used by the pre-commit contract tests.
+.amp/in/orb-backup/
 
 # Nx
 .nx/cache

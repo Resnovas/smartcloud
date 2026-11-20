@@ -14,7 +14,7 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
-import { Schema } from 'effect'
+import { Either, Schema } from 'effect'
 
 /**
  * A day of the week, by its three-letter English name.
@@ -52,14 +52,9 @@ export const TimeOfDay = Schema.String.pipe(Schema.pattern(/^(?:[01]\d|2[0-3]):[
   description: 'A time of day on the 24-hour clock, as HH:MM.',
 })
 
-const isTimeZone = (zone: string) => {
-  try {
-    new Intl.DateTimeFormat('en-US', { timeZone: zone })
-    return true
-  } catch {
-    return false
-  }
-}
+/** Validate aliases as well as canonical IANA names using the runtime's Intl database. */
+const isTimeZone = (zone: string): boolean =>
+  Either.isRight(Either.try(() => new Intl.DateTimeFormat('en-US', { timeZone: zone })))
 
 /**
  * An IANA time zone name, such as `Europe/London`, or `UTC`, validated when

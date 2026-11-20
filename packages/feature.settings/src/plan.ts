@@ -16,6 +16,7 @@
 
 import type { Roles, Settings } from '@resnovas/config'
 import type { Repository, RepositoryRequest } from '@resnovas/integrations.github'
+import { Either } from 'effect'
 
 // Pure planning for the repository settings baseline, ported from the house
 // script (Resnovas/.github scripts/lib/settings.mjs). Every request shape was
@@ -730,14 +731,12 @@ const teamSteps = (teams: SettingsConfig['teams'], repository: Repository): Read
     permission: TEAM_ROLES[role],
   }))
 
-// The host alone, so a token in a webhook's path or query never reaches a report.
-const hostOf = (url: string): string => {
-  try {
-    return new URL(url).host
-  } catch {
-    return 'an invalid URL'
-  }
-}
+/** Return only the host so tokens in webhook paths, queries and parser errors never reach reports. */
+const hostOf = (url: string): string =>
+  Either.getOrElse(
+    Either.try(() => new URL(url).host),
+    () => 'an invalid URL',
+  )
 
 const webhookSteps = (webhooks: SettingsConfig['webhooks']): ReadonlyArray<SettingsStep> =>
   Object.entries(webhooks ?? {}).map(([name, webhook]) => ({

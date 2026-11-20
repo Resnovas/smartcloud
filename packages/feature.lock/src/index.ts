@@ -14,6 +14,33 @@
  * DELETING THIS NOTICE AUTOMATICALLY VOIDS YOUR LICENSE.
  */
 
+/**
+ * Register scheduled conversation locking with the feature engine.
+ *
+ * @example
+ * ```ts
+ * import { lock } from '@resnovas/feature.lock'
+ * const enabled = lock.enabled?.({ version: 2, lock: { afterDays: 30 } })
+ * ```
+ */
 export { lock } from './feature.js'
+/**
+ * Expose retention calculations and GitHub-backed operations for custom sweeps.
+ *
+ * @example
+ * ```ts
+ * import { closedBefore } from '@resnovas/feature.lock'
+ * const cutoff = closedBefore(30, Date.parse('2026-02-01T00:00:00Z'))
+ * ```
+ */
 export { closedBefore, LOCK_MARKER, lockItem, sweepLocks } from './sweep.js'
+/**
+ * Share the non-optional locking policy accepted by individual-item operations.
+ *
+ * @example
+ * ```ts
+ * import type { LockConfig } from '@resnovas/feature.lock'
+ * const policy: LockConfig = { afterDays: 30, reason: 'resolved' }
+ * ```
+ */
 export type { LockConfig } from './sweep.js'

@@ -1,5 +1,19 @@
 ## Testing
 
+### Verification funnel
+
+Run `node --run funnel:static` immediately after coding, before documentation or other work. It runs production and test-project type checks plus corrective ESLint rules. Then run `node --run funnel:verify` for behavior and coverage, and `node --run check` before delivery. Setup installs a pre-commit hook outside CI that runs static checks before tests and refuses a staged tree different from the worktree; existing foreign hooks are preserved, not overwritten.
+
+Hook creation uses an exclusive write rather than checking existence before writing. Reinstalling a matching hook does not rewrite it; existing unreadable or foreign hooks fail closed with a preservation diagnostic.
+
+The hook captures the initial index tree and rejects staged-tree changes, tracked worktree drift or untracked files after either phase. Successful generators must not silently replace the tree being certified; review and stage their output, then rerun. Only verification children have Git-local environment variables removed. The hook itself retains the committing Git environment so temporary and alternate indexes are inspected correctly. Installed-hook regression commits cover mutation in both phases, unchanged success, child Git isolation and foreign-hook preservation. Checks observe phase boundaries; they do not lock out concurrent writers.
+
+The canonical Markdown registry is `docs/verification.md`. It maps the runtime `FEATURES` registration and every workflow to triggers, executable checks and expected observations. Update the relevant row with new behavior; `node --run funnel:contracts` checks inventory drift and exercises lint rejection/acceptance plus real disposable Git hook scenarios. PR CI runs these contracts even for docs-only changes. Local in-memory tests do not prove live permissions or releases; record live checks as pending until a GitHub run proves them.
+
+The syntax restrictions exclude integration SDK callbacks and repository tooling. The existing MCP startup await has one documented exception pending lifecycle migration; synchronous parser throw contracts are unchanged. These limits are not blanket permission to add Promise-based feature code.
+
+Shared JSDoc adoption is tracked by SMC-176 and Resnovas/smartcloud#749. Document and enable the shared contracts for each package in the same commit, retaining its base ESLint config and all existing gates. The root config opts in `feature.lock` and `feature.freeze` sources using house revision `92bb0b9d06e95d88395d158e35c5aaf1b9e65004`; package configs keep importing the base without cross-boundary tooling imports. The shared adapter resolves canonical header identity from its repository location, independently of ESLint cwd. Test root and nested-package invocation, noncanonical headers and declaration prose; do not change legal notices or suppress rules. The migration status and verification commands live in `docs/verification.md`; global enforcement follows completion of every editable package.
+
 ### Layout and tools
 
 - Tests live in `tests/<name>`, one project per package, and mirror sources
