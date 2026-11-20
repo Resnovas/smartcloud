@@ -250,7 +250,7 @@ if (${JSON.stringify(mutation)} === 'isolated') {
     expect(output).toContain(diagnostic)
   })
 
-  it('preserves hooks and rejects snapshots or failed checks without running later phases', () => {
+  it.each(['installation', 'rejection', 'success'])('checks hook %s in an isolated repository', (scenario) => {
     const scratch = join(root, '.amp/in/orb-backup')
     mkdirSync(scratch, { recursive: true })
     const cwd = mkdtempSync(join(scratch, 'funnel-hook-'))
@@ -273,10 +273,6 @@ if (${JSON.stringify(mutation)} === 'isolated') {
     expect(run('--install').status).toBe(0)
     const installedHook = readFileSync(hookPath, 'utf8')
     expect(installedHook).toContain('exec node --run funnel:pre-commit')
-    writeFileSync(hookPath, '#!/bin/sh\necho existing-hook\n')
-    expect(run('--install').status).toBe(1)
-    expect(readFileSync(hookPath, 'utf8')).toBe('#!/bin/sh\necho existing-hook\n')
-    writeFileSync(hookPath, installedHook)
 
     const manifest = (staticExit: number) =>
       JSON.stringify({
@@ -287,16 +283,21 @@ if (${JSON.stringify(mutation)} === 'isolated') {
         },
       })
     writeFileSync(join(cwd, 'package.json'), manifest(0))
-    const declaration = readFileSync(join(root, '.agents/surfaces.jsonc'), 'utf8').match(/"preCommit":\s*(\{[^}]+\})/)
-    expect(declaration).not.toBeNull()
-    // Batch the installer assertions in one isolated process instead of paying
-    // Node startup for every probe on Windows. Keep the inherited Git state out.
-    const composition = spawnSync(
-      process.execPath,
-      [
-        '--input-type=module',
-        '--eval',
-        `import { installPreCommit } from ${JSON.stringify(pathToFileURL(join(root, 'tools/dev/pre-commit.mjs')).href)}
+    if (scenario === 'installation') {
+      writeFileSync(hookPath, '#!/bin/sh\necho existing-hook\n')
+      expect(run('--install').status).toBe(1)
+      expect(readFileSync(hookPath, 'utf8')).toBe('#!/bin/sh\necho existing-hook\n')
+      writeFileSync(hookPath, installedHook)
+      const declaration = readFileSync(join(root, '.agents/surfaces.jsonc'), 'utf8').match(/"preCommit":\s*(\{[^}]+\})/)
+      expect(declaration).not.toBeNull()
+      // Batch the installer assertions in one isolated process instead of paying
+      // Node startup for every probe on Windows. Keep the inherited Git state out.
+      const composition = spawnSync(
+        process.execPath,
+        [
+          '--input-type=module',
+          '--eval',
+          `import { installPreCommit } from ${JSON.stringify(pathToFileURL(join(root, 'tools/dev/pre-commit.mjs')).href)}
 import assert from 'node:assert/strict'
 import { readFileSync, writeFileSync } from 'node:fs'
 const native = JSON.parse(process.argv[1])
@@ -313,34 +314,38 @@ assert.throws(() => installPreCommit(process.cwd(), false, native), /Preserve th
 assert.equal(readFileSync(path, 'utf8'), '#!/bin/sh\\necho foreign\\n')
 writeFileSync(path, expected)
 `,
-        declaration?.[1] ?? '{}',
-      ],
-      { cwd, env, encoding: 'utf8' },
-    )
-    expect(composition.status, composition.stderr).toBe(0)
+          declaration?.[1] ?? '{}',
+        ],
+        { cwd, env, encoding: 'utf8' },
+      )
+      expect(composition.status, composition.stderr).toBe(0)
 
-    // Finish both installers' foreign-hook probes before inspecting metadata.
-    // Keep the checked file open: no path-based access may follow this check.
-    const installedAt = new Date('2001-01-01T00:00:00Z')
-    const hookFile = openSync(hookPath, 'r+')
-    try {
-      futimesSync(hookFile, installedAt, installedAt)
-      expect(run('--install').status).toBe(0)
-      expect(fstatSync(hookFile).mtimeMs).toBe(installedAt.getTime())
-      expect(readFileSync(hookFile, 'utf8')).toBe(installedHook)
-    } finally {
-      closeSync(hookFile)
+      // Finish both installers' foreign-hook probes before inspecting metadata.
+      // Keep the checked file open: no path-based access may follow this check.
+      const installedAt = new Date('2001-01-01T00:00:00Z')
+      const hookFile = openSync(hookPath, 'r+')
+      try {
+        futimesSync(hookFile, installedAt, installedAt)
+        expect(run('--install').status).toBe(0)
+        expect(fstatSync(hookFile).mtimeMs).toBe(installedAt.getTime())
+        expect(readFileSync(hookFile, 'utf8')).toBe(installedHook)
+      } finally {
+        closeSync(hookFile)
+      }
+      return
     }
-    expect(run().stderr).toContain('Untracked files')
-    git('add', 'package.json')
-    writeFileSync(join(cwd, 'package.json'), manifest(1))
-    expect(run().stderr).toContain('Unstaged tracked changes')
-    git('add', 'package.json')
-    const failed = run()
-    expect(failed.status).toBe(1)
-    expect(failed.stdout).toContain('static-sentinel')
-    expect(failed.stdout).not.toContain('verify-sentinel')
-    writeFileSync(join(cwd, 'package.json'), manifest(0))
+    if (scenario === 'rejection') {
+      expect(run().stderr).toContain('Untracked files')
+      git('add', 'package.json')
+      writeFileSync(join(cwd, 'package.json'), manifest(1))
+      expect(run().stderr).toContain('Unstaged tracked changes')
+      git('add', 'package.json')
+      const failed = run()
+      expect(failed.status).toBe(1)
+      expect(failed.stdout).toContain('static-sentinel')
+      expect(failed.stdout).not.toContain('verify-sentinel')
+      return
+    }
     git('add', 'package.json')
     const passed = run()
     expect(passed.status, passed.stderr).toBe(0)
