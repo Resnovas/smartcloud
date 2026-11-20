@@ -88,6 +88,115 @@ describe('production funnel lint', () => {
 })
 
 describe('funnel pre-commit', () => {
+  it.each([
+    ['staged', 'static', 'Staged tree changed'],
+    ['staged', 'verify', 'Staged tree changed'],
+    ['worktree', 'static', 'Unstaged tracked changes'],
+    ['worktree', 'verify', 'Unstaged tracked changes'],
+    ['untracked', 'static', 'Untracked files'],
+    ['untracked', 'verify', 'Untracked files'],
+    ['isolated', 'verify', 'passed for the staged tree'],
+  ])('checks %s state after %s through an installed hook', (mutation, phase, diagnostic) => {
+    const scratch = join(root, '.amp/in/orb-backup')
+    mkdirSync(scratch, { recursive: true })
+    const cwd = mkdtempSync(join(scratch, 'funnel-mutation-'))
+    const env = { ...process.env }
+    const localEnv = spawnSync('git', ['rev-parse', '--local-env-vars'], { cwd: root, encoding: 'utf8' })
+    expect(localEnv.status, localEnv.stderr).toBe(0)
+    const localNames = localEnv.stdout.trim().split('\n')
+    for (const name of localNames) delete env[name]
+    const git = (...args: string[]) => spawnSync('git', args, { cwd, env, encoding: 'utf8' })
+    expect(git('init', '--quiet').status).toBe(0)
+    expect(git('config', 'core.hooksPath', '.git/hooks').status).toBe(0)
+    if (mutation === 'isolated') {
+      // Only this alternate index contains the staged files. The hook must inspect it,
+      // while child Git commands must be free to operate in their own repositories.
+      env.GIT_INDEX_FILE = join(cwd, '.git/checked.index')
+      env.GIT_DIR = join(cwd, '.git')
+      env.GIT_WORK_TREE = cwd
+    }
+    writeFileSync(join(cwd, 'feature.mjs'), 'export const value = 1\n')
+    writeFileSync(
+      join(cwd, 'generate.mjs'),
+      `import { writeFileSync, mkdirSync } from 'node:fs'
+import { execFileSync } from 'node:child_process'
+import assert from 'node:assert/strict'
+import { resolve } from 'node:path'
+console.log(process.argv[2] + '-sentinel')
+if (${JSON.stringify(mutation)} === 'isolated') {
+  for (const name of ${JSON.stringify(localNames)}) assert.equal(process.env[name], undefined, name)
+  const nested = resolve('.git/nested-' + process.argv[2])
+  mkdirSync(nested)
+  execFileSync('git', ['init', '--quiet'], { cwd: nested })
+  assert.equal(execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: nested, encoding: 'utf8' }).trim().replaceAll('\\\\', '/'), nested.replaceAll('\\\\', '/'))
+} else if (process.argv[2] === ${JSON.stringify(phase)}) {
+  writeFileSync(${JSON.stringify(mutation === 'untracked' ? 'unexpected.mjs' : 'feature.mjs')}, 'export const value = ;\\n')
+  if (${JSON.stringify(mutation)} === 'staged') execFileSync('git', ['add', 'feature.mjs'])
+}
+`,
+    )
+    writeFileSync(
+      join(cwd, 'package.json'),
+      JSON.stringify({
+        scripts: {
+          'funnel:pre-commit': `"${process.execPath}" "${join(root, 'tools/dev/funnel.ts')}"`,
+          'funnel:static': 'node --check feature.mjs && node generate.mjs static',
+          'funnel:verify': 'node generate.mjs verify',
+        },
+      }),
+    )
+    expect(git('add', '.').status).toBe(0)
+    const before = git('write-tree')
+    expect(before.status).toBe(0)
+    const install = spawnSync(process.execPath, [join(root, 'tools/dev/funnel.ts'), '--install'], {
+      cwd,
+      env,
+      encoding: 'utf8',
+    })
+    expect(install.status, install.stderr).toBe(0)
+    const commit = git(
+      '-c',
+      'user.name=Funnel fixture',
+      '-c',
+      'user.email=fixture@example.invalid',
+      '-c',
+      'commit.gpgsign=false',
+      'commit',
+      '-m',
+      'test: verify the original staged tree',
+    )
+    const output = commit.stdout + commit.stderr
+    if (mutation === 'isolated') {
+      expect(commit.status, output).toBe(0)
+      expect(git('rev-parse', 'HEAD^{tree}').stdout).toBe(before.stdout)
+      expect(output).toContain('static-sentinel')
+      expect(output).toContain('verify-sentinel')
+    } else {
+      const after = git('write-tree')
+      expect(after.status).toBe(0)
+      if (mutation === 'staged') {
+        expect(after.stdout).not.toBe(before.stdout)
+        expect(git('diff', '--quiet').status).toBe(0)
+      }
+      const invalid = spawnSync(
+        process.execPath,
+        ['--check', mutation === 'untracked' ? 'unexpected.mjs' : 'feature.mjs'],
+        { cwd, env, encoding: 'utf8' },
+      )
+      expect(invalid.status).toBe(1)
+      expect(
+        commit.status,
+        `${output}\nTrees: ${before.stdout.trim()} -> ${after.stdout.trim()}; final syntax exit ${invalid.status}`,
+      ).toBe(1)
+      expect(git('rev-parse', '--verify', 'HEAD').status).not.toBe(0)
+      expect(output).not.toContain('passed for the staged tree')
+      if (phase === 'static') expect(output).not.toContain('verify-sentinel')
+      else expect(output).toContain('verify-sentinel')
+      expect(output).toContain(`after funnel:${phase}`)
+    }
+    expect(output).toContain(diagnostic)
+  })
+
   it('preserves hooks and rejects snapshots or failed checks without running later phases', () => {
     const scratch = join(root, '.amp/in/orb-backup')
     mkdirSync(scratch, { recursive: true })

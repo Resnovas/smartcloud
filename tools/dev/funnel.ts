@@ -30,6 +30,31 @@ const fail = (message: string): never => {
   process.exit(1)
 }
 
+/** Identify the index Git will commit, including a hook's temporary or alternate index. */
+const stagedTree = (): string => {
+  const result = git('write-tree')
+  if (result.status !== 0) fail(`Cannot read the staged tree: ${result.stderr}`)
+  return result.stdout.trim()
+}
+
+/** Keep every phase bound to the original index and the source files its checks read. */
+const checkSnapshot = (expectedTree: string, phase: string): void => {
+  if (stagedTree() !== expectedTree) {
+    fail(`Staged tree changed ${phase}. Review the generated changes, stage the intended tree and rerun verification.`)
+  }
+  if (git('diff', '--quiet').status !== 0) {
+    fail(
+      `Unstaged tracked changes ${phase} would verify a different tree. Stage the intended change or commit from a clean task worktree; no files were restored.`,
+    )
+  }
+  const untracked = git('ls-files', '--others', '--exclude-standard')
+  if (untracked.status !== 0) fail(`Cannot inspect untracked files ${phase}: ${untracked.stderr}`)
+  if (untracked.stdout.trim() !== '')
+    fail(
+      `Untracked files ${phase} could affect verification. Stage intended files or move scratch files outside the source tree.`,
+    )
+}
+
 if (process.argv.includes('--install')) {
   const result = git('rev-parse', '--git-path', 'hooks/pre-commit')
   if (result.status !== 0) fail(`Cannot locate Git hooks: ${result.stderr}`)
@@ -56,19 +81,16 @@ if (process.argv.includes('--install')) {
 } else {
   // Tests inspect the worktree. Refuse a different staged snapshot rather than
   // stashing somebody's edits or reporting a false green for a partial commit.
-  if (git('diff', '--quiet').status !== 0) {
-    fail(
-      'Unstaged tracked changes would verify a different tree. Stage the intended change or commit from a clean task worktree; no files were changed.',
-    )
-  }
-  const untracked = git('ls-files', '--others', '--exclude-standard')
-  if (untracked.status !== 0) fail(`Cannot inspect untracked files: ${untracked.stderr}`)
-  if (untracked.stdout.trim() !== '')
-    fail(
-      'Untracked files could affect verification. Stage intended files or move scratch files outside the source tree.',
-    )
+  const expectedTree = stagedTree()
+  checkSnapshot(expectedTree, 'before verification')
+  const localEnv = git('rev-parse', '--local-env-vars')
+  if (localEnv.status !== 0) fail(`Cannot identify Git-local environment variables: ${localEnv.stderr}`)
+  const childEnv = { ...process.env }
+  for (const name of localEnv.stdout.trim().split('\n')) delete childEnv[name]
   for (const script of ['funnel:static', 'funnel:verify']) {
-    const result = spawnSync(process.execPath, ['--run', script], { stdio: 'inherit' })
+    // Only children are isolated: our Git inspections must retain the committing index.
+    const result = spawnSync(process.execPath, ['--run', script], { stdio: 'inherit', env: childEnv })
+    checkSnapshot(expectedTree, `after ${script}`)
     if (result.status !== 0) fail(`${script} failed; fix the reported error and rerun it before committing.`)
   }
   console.log('funnel: static analysis and verification passed for the staged tree')
