@@ -47,24 +47,24 @@ Feature event kinds below are the engine's decoded envelopes: `pullRequest` come
 
 Each suite uses the public feature interface and the in-memory GitHub service. Its assertions inspect findings, checks, proposals or repository state; they do not perform live writes. The suite contains the event/config fixtures needed to reproduce the behavior. Every feature also has a `smartcloud-<feature>` flag; the existing in-code default is true, and configuration still decides whether the feature is enabled. Runtime flag-off tests live in `tests/runtime/src/flags.spec.ts`.
 
-| Feature       | Handles                        | Enabled by                                       | Verification                                       | Expected evidence                                                                                    |
-| ------------- | ------------------------------ | ------------------------------------------------ | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `conventions` | pullRequest, issue             | Non-empty conventions rules                      | `pnpm nx test @resnovas/feature.conventions-tests` | Invalid titles produce the configured finding; matching titles do not.                               |
-| `commits`     | pullRequest                    | commits config                                   | `pnpm nx test @resnovas/feature.commits-tests`     | Author, DCO and AI trailer violations are reported with trusted-role behavior preserved.             |
-| `disclosure`  | pullRequest                    | disclosure config                                | `pnpm nx test @resnovas/feature.disclosure-tests`  | Missing or inconsistent AI disclosure fails; valid disclosure and role exemptions are distinguished. |
-| `reviews`     | pullRequest                    | reviews config                                   | `pnpm nx test @resnovas/feature.reviews-tests`     | Review counts, stale/dismissed reviews and requested reviewers produce expected findings.            |
-| `labels`      | repository, pullRequest, issue | labels, labelling or sizeLabels                  | `pnpm nx test @resnovas/feature.labels-tests`      | Label definitions and subject labels match configured conditions, aliases and size thresholds.       |
-| `stale`       | repository                     | stale config; sweep event                        | `pnpm nx test @resnovas/feature.stale-tests`       | Clock-controlled inactivity marks or closes eligible items while exempt items stay unchanged.        |
-| `settings`    | repository                     | settings config; repository event                | `pnpm nx test @resnovas/feature.settings-tests`    | Plans contain requested settings only; failed writes and restricted access are reported.             |
-| `sync`        | repository, pullRequest        | sync config; repository event or PR check        | `pnpm nx test @resnovas/feature.sync-tests`        | Template proposals preserve local blocks; unauthorized managed-file edits are findings.              |
-| `required`    | pullRequest                    | required config and checkRunId                   | `pnpm nx test @resnovas/feature.required-tests`    | Aggregate check waits for relevant checks, rejects failures and times out under TestClock.           |
-| `freeze`      | pullRequest, repository        | freeze config                                    | `pnpm nx test @resnovas/feature.freeze-tests`      | Active windows block eligible PRs and schedule changes refresh the expected checks.                  |
-| `branches`    | pullRequest                    | Non-empty branches rules                         | `pnpm nx test @resnovas/feature.branches-tests`    | Branch names and targets are accepted or rejected by the selected rule.                              |
-| `codeowners`  | repository, pullRequest        | codeowners config                                | `pnpm nx test @resnovas/feature.codeowners-tests`  | Generated ownership proposals preserve managed boundaries and detect invalid or shadowed rules.      |
-| `lock`        | repository                     | lock config; sweep event                         | `pnpm nx test @resnovas/feature.lock-tests`        | Eligible closed conversations lock after the configured age; exempt items remain unlocked.           |
-| `backport`    | pullRequest                    | backport config; closed merged PR                | `pnpm nx test @resnovas/feature.backport-tests`    | Labels select target branches; proposals and conflicts are reported without duplicate writes.        |
-| `automerge`   | pullRequest                    | autoMerge config                                 | `pnpm nx test @resnovas/feature.automerge-tests`   | Matching rules enable auto-merge; changed conditions disable it and update the explanation.          |
-| `commands`    | comment, pullRequest           | commands config; authorized comment or merged PR | `pnpm nx test @resnovas/feature.commands-tests`    | Authorized commands execute, unauthorized commands are refused, and reruns publish their results.    |
+| Feature       | Handles                        | Enabled by                                                         | Verification                                       | Expected evidence                                                                                    |
+| ------------- | ------------------------------ | ------------------------------------------------------------------ | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `conventions` | pullRequest, issue             | Non-empty conventions rules                                        | `pnpm nx test @resnovas/feature.conventions-tests` | Invalid titles produce the configured finding; matching titles do not.                               |
+| `commits`     | pullRequest                    | commits config                                                     | `pnpm nx test @resnovas/feature.commits-tests`     | Author, DCO and AI trailer violations are reported with trusted-role behavior preserved.             |
+| `disclosure`  | pullRequest                    | disclosure config                                                  | `pnpm nx test @resnovas/feature.disclosure-tests`  | Missing or inconsistent AI disclosure fails; valid disclosure and role exemptions are distinguished. |
+| `reviews`     | pullRequest                    | reviews config                                                     | `pnpm nx test @resnovas/feature.reviews-tests`     | Review counts, stale/dismissed reviews and requested reviewers produce expected findings.            |
+| `labels`      | repository, pullRequest, issue | labels, labelling or sizeLabels                                    | `pnpm nx test @resnovas/feature.labels-tests`      | Label definitions and subject labels match configured conditions, aliases and size thresholds.       |
+| `stale`       | repository                     | stale config; sweep event                                          | `pnpm nx test @resnovas/feature.stale-tests`       | Clock-controlled inactivity marks or closes eligible items while exempt items stay unchanged.        |
+| `settings`    | repository                     | settings config; repository event                                  | `pnpm nx test @resnovas/feature.settings-tests`    | Plans contain requested settings only; failed writes and restricted access are reported.             |
+| `sync`        | repository, pullRequest        | sync config; repository event or PR check                          | `pnpm nx test @resnovas/feature.sync-tests`        | Template proposals preserve local blocks; unauthorized managed-file edits are findings.              |
+| `required`    | pullRequest, repository        | required config and checkRunId; PR or merge_group checks_requested | `pnpm nx test @resnovas/feature.required-tests`    | Aggregate uses the event head SHA, rejects failed/missing checks and times out under TestClock.      |
+| `freeze`      | pullRequest, repository        | freeze config                                                      | `pnpm nx test @resnovas/feature.freeze-tests`      | Active windows block eligible PRs and schedule changes refresh the expected checks.                  |
+| `branches`    | pullRequest                    | Non-empty branches rules                                           | `pnpm nx test @resnovas/feature.branches-tests`    | Branch names and targets are accepted or rejected by the selected rule.                              |
+| `codeowners`  | repository, pullRequest        | codeowners config                                                  | `pnpm nx test @resnovas/feature.codeowners-tests`  | Generated ownership proposals preserve managed boundaries and detect invalid or shadowed rules.      |
+| `lock`        | repository                     | lock config; sweep event                                           | `pnpm nx test @resnovas/feature.lock-tests`        | Eligible closed conversations lock after the configured age; exempt items remain unlocked.           |
+| `backport`    | pullRequest                    | backport config; closed merged PR                                  | `pnpm nx test @resnovas/feature.backport-tests`    | Labels select target branches; proposals and conflicts are reported without duplicate writes.        |
+| `automerge`   | pullRequest                    | autoMerge config                                                   | `pnpm nx test @resnovas/feature.automerge-tests`   | Matching rules enable auto-merge; changed conditions disable it and update the explanation.          |
+| `commands`    | comment, pullRequest           | commands config; authorized comment or merged PR                   | `pnpm nx test @resnovas/feature.commands-tests`    | Authorized commands execute, unauthorized commands are refused, and reruns publish their results.    |
 
 Notifications and reporting run after features, rather than being separate registered features. Run `pnpm nx test @resnovas/notifications-tests` and `pnpm nx test @resnovas/reporting-tests`; assert channel payloads, deduplication, redaction and dry-run suppression. Run `pnpm nx test @resnovas/runtime-tests` for selection, flags and orchestration. Live webhook delivery is not proven by these suites.
 
@@ -96,3 +96,34 @@ The registry contract checks exact feature names/handles, test-suite paths, work
 Known migration boundaries: the MCP stdio entry point retains its top-level await with one explained lint exception; its startup rejection and lifetime need a dedicated lifecycle migration. Synchronous pattern/config parsers retain existing throw contracts. Integration SDK callbacks remain outside the production syntax restrictions. These are not claims of complete Effect-boundary enforcement.
 
 If registry checks fail, update the relevant row with the real registration/trigger and a test that checks observable behavior. If a fixture lint test fails, fix the selector or its code example, keeping its positive and negative controls. If the hook reports a different staged tree, preserve the unstaged work and use an isolated checkout rather than bypassing checks.
+
+## Required checks on merge-group commits
+
+Tracking: [SMC-176](https://linear.app/resnovas/issue/SMC-176) and [issue #749](https://github.com/Resnovas/smartcloud/issues/749). This runtime correction extends the registry from merged PR #750.
+
+| Feature    | Trigger                                                | Prerequisites                                                                                   | Verification                                    | Expected evidence                                                                                                                     |
+| ---------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `required` | Pull request events or `merge_group: checks_requested` | `required` configured, `smartcloud-required` enabled (default true), current job's `checkRunId` | `pnpm nx test @resnovas/feature.required-tests` | The decoded merge-group head SHA determines passed, failed, pending and missing-check findings. Original PR checks cannot substitute. |
+
+### Reproduce locally
+
+Install the locked workspace dependencies with `pnpm install --frozen-lockfile`, then run:
+
+```sh
+node tools/test/file.ts tests/feature.required/src/feature.spec.ts
+pnpm nx run-many -t test typecheck docgen contracts -p @resnovas/engine @resnovas/engine-tests @resnovas/feature.required @resnovas/feature.required-tests
+```
+
+The feature tests pass a `checks_requested` payload through `runFeatures` and the real `decodeEvent`, then provide checks keyed by SHA through the in-memory GitHub service. Opposite outcomes on the original PR SHA catch querying the wrong commit. The test clock advances to exercise the existing timeout without waiting a real minute.
+
+Expect `required.passed` only for successful queue checks; expect error findings `required.failed`, `required.pending` or `required.missing` for the corresponding cases. The aggregate excludes its own in-progress job. Missing `checkRunId` fails closed in action mode. Pushes, schedules, dispatches and destroyed merge groups neither poll nor require a check-run ID. Existing PR polling and exclusion tests remain controls.
+
+Before the correction, the focused suite reports `5 failed | 20 passed`: all four merge-group outcomes are skipped and the missing-job-ID case has no error finding. After the correction it reports `25 passed`. This is deterministic runtime evidence, not a live queue run.
+
+### Release and live acceptance
+
+After Jonathan merges the focused runtime PR, the normal `House release` workflow on `main` builds and publishes the action. Record the completed release URL and verify its tagged source includes this correction before telling the shared-workflow owner which release to use. A PR preview or passing unit test is not a published release.
+
+With an approved queue entry, verify that the deployed workflow subscribes to `merge_group: checks_requested` and does not skip its smartcloud job. Both the aggregate and each `required.expect` check must run on that group's head SHA. Record the event's `head_sha`, action release, workflow run URL, job summary and check conclusions. A successful group must report `required.passed`; a failed expected check must prevent aggregate success. Do not alter production checks just to create a failing demonstration.
+
+Live queue and released-bundle evidence remain pending until those runs exist. Shared workflow changes are owned by `Resnovas/.github`; this runtime PR changes no workflow, token, readiness policy or repository setting.

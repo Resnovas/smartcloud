@@ -543,14 +543,15 @@ tracing and reporting.
 
 `Feature` in `@resnovas/engine`:
 
-| Field            | Meaning                                                                                               |
-| ---------------- | ----------------------------------------------------------------------------------------------------- |
-| `name`           | The id used in findings, check runs, flags (`smartcloud-<name>`) and `--features`.                    |
-| `handles`        | The envelope kinds it acts on: `pullRequest`, `issue`, `comment`, `repository`.                       |
-| `enabled?`       | Whether the config asks for it, normally "its section is present". Defaults to always.                |
-| `facets?`        | The subject facets its conditions need (use `requiredFacets` from `@resnovas/conditions`).            |
-| `needsCheckRun?` | Runs only when the job passes `checkRunId`; skipped in a CLI dry run, and fails closed in the action. |
-| `run`            | `(context) => Effect<void, unknown, GitHub \| Report>`.                                               |
+| Field            | Meaning                                                                                                     |
+| ---------------- | ----------------------------------------------------------------------------------------------------------- |
+| `name`           | The id used in findings, check runs, flags (`smartcloud-<name>`) and `--features`.                          |
+| `handles`        | The envelope kinds it acts on: `pullRequest`, `issue`, `comment`, `repository`.                             |
+| `acceptsEvent?`  | Pure event/action filter within handled kinds. Defaults to accepting all; evaluated before `needsCheckRun`. |
+| `enabled?`       | Whether the config asks for it, normally "its section is present". Defaults to always.                      |
+| `facets?`        | The subject facets its conditions need (use `requiredFacets` from `@resnovas/conditions`).                  |
+| `needsCheckRun?` | Runs only when the job passes `checkRunId`; skipped in a CLI dry run, and fails closed in the action.       |
+| `run`            | `(context) => Effect<void, unknown, GitHub \| Report>`.                                                     |
 
 `FeatureContext` carries the resolved `config`, the `envelope`, the `subject`
 with every requested facet loaded, and `checkRunId` when there is one. A
@@ -558,6 +559,10 @@ with every requested facet loaded, and `checkRunId` when there is one. A
 itself (for example `listClosedUnlocked`), and one event kind can mean several
 triggers, so check `envelope.event` (`lock` sweeps only on `schedule` and
 `workflow_dispatch`, not on `push`).
+
+The `required` feature accepts pull request envelopes and repository envelopes for `merge_group: checks_requested`. It aggregates checks on the decoded `headSha`, which is `merge_group.head_sha` for the queue, never the original pull request SHA. The optional `acceptsEvent` predicate filters unrelated repository events before the missing-check-run gate; those events must not start polling or fail for an absent job ID. Merge-group actions without `checkRunId` still fail closed when `checkRunRequired` is true. The existing `smartcloud-required` flag and `required` configuration control both paths.
+
+The regression in `tests/feature.required/src/feature.spec.ts` calls `runFeatures` with a real merge-group payload and opposite check outcomes on the merge-group and PR SHAs. It covers passed, failed, pending and missing checks, missing job ID, unrelated events and destroyed groups. `docs/verification.md` records commands and live-release acceptance; unit proof does not establish a deployed workflow or release.
 
 ### Findings and changes
 

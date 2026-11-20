@@ -194,13 +194,18 @@ describe('runFeatures', () => {
           feature('pr-only', { handles: ['pullRequest'] }),
           feature('off', { enabled: () => false }),
           feature('on', { enabled: () => true }),
+          feature('queue-only', { acceptsEvent: ({ event }) => event === 'merge_group', needsCheckRun: true }),
+          feature('schedule-only', { acceptsEvent: ({ event }) => event === 'schedule' }),
         ],
+        checkRunRequired: true,
       })
-      expect(result.ran).toStrictEqual(['on'])
+      expect(result.ran).toStrictEqual(['on', 'schedule-only'])
       expect(result.skipped).toStrictEqual([
         { feature: 'pr-only', reason: 'does not handle repository events' },
         { feature: 'off', reason: 'not configured' },
+        { feature: 'queue-only', reason: 'does not handle schedule events' },
       ])
+      expect(result.findings.map(({ rule }) => rule)).toStrictEqual(['on.rule', 'schedule-only.rule'])
     }).pipe(Effect.provide(GitHubMemory())),
   )
 
