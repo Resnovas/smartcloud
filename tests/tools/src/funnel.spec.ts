@@ -43,6 +43,7 @@ describe('production funnel lint', () => {
   beforeAll(async () => {
     // Load the real Nx/TypeScript config once as setup, not inside the first rule assertion's time budget.
     await eslint.calculateConfigForFile('packages/conditions/src/funnel-probe.ts')
+    await eslint.calculateConfigForFile('packages/feature.lock/src/funnel-probe.ts')
   })
 
   it.each([
@@ -63,6 +64,49 @@ describe('production funnel lint', () => {
   it('keeps production restrictions active through app and package configs', async () => {
     expect(await violations('setTimeout(work, 0)', 'apps/action/src/funnel-probe.ts')).toHaveLength(1)
     expect(await violations('setTimeout(work, 0)', 'packages/runtime/src/funnel-probe.ts')).toHaveLength(1)
+  })
+
+  it.each(['.', 'packages/feature.lock'])('enforces shared documentation contracts from cwd %s', async (cwd) => {
+    const projectLint = new ESLint({ cwd: join(root, cwd) })
+    const repositoryPath = 'packages/feature.lock/src/funnel-probe.ts'
+    const filePath = join(root, repositoryPath)
+    const undocumented = await projectLint.lintText('export const eligible = (age: number) => age > 30', { filePath })
+    expect(
+      undocumented.flatMap((result) => result.messages).some((message) => message.ruleId === 'jsdoc/require-jsdoc'),
+    ).toBe(true)
+
+    const declaration = `/**
+ * Keep conversations open through the thirty-day grace period.
+ *
+ * @param age - Whole days since the conversation closed.
+ * @returns Whether the grace period has elapsed.
+ * @example eligible(31) // true
+ */
+export const eligible = (age: number) => age > 30`
+    const header = readFileSync(join(root, 'tools/license/header.txt'), 'utf8')
+      .replace('__FILE__', repositoryPath)
+      .replace('__YEAR__', String(new Date().getFullYear()))
+    const documentationMessages = async (code: string) =>
+      (await projectLint.lintText(code, { filePath })).flatMap((result) =>
+        result.messages.filter((message) => /^(jsdoc|house)\//.test(message.ruleId ?? '')),
+      )
+    expect(await documentationMessages(declaration)).toEqual([])
+    expect(await documentationMessages(`${header}\n${declaration}`)).toEqual([])
+    for (const noncanonical of [
+      header.replace(repositoryPath, 'packages/feature.lock/src/other.ts'),
+      header.replace(repositoryPath, 'src/funnel-probe.ts'),
+      header.replace(`Copyright ${new Date().getFullYear()}`, `Copyright ${new Date().getFullYear() - 1}`),
+    ]) {
+      expect(
+        (await documentationMessages(`${noncanonical}\n${declaration}`)).map((message) => message.ruleId),
+      ).toContain('house/require-description')
+    }
+    expect(
+      (
+        await documentationMessages(`${header}\n${declaration.replace('Keep conversations', 'keep conversations')}`)
+      ).map((message) => message.ruleId),
+    ).toContain('house/match-description')
+    expect(await violations('setTimeout(work, 0)', filePath)).toHaveLength(1)
   })
 
   it('allows Effect composition, explicit parse outcomes and unrelated method names', async () => {

@@ -16,3 +16,5 @@ allowBuilds:
   nx: true
 catalog:
   effect: 3.22.2
+minimumReleaseAgeExclude:
+  - eslint-plugin-jsdoc@65.5.0

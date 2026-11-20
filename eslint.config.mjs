@@ -16,6 +16,7 @@
 
 import nx from '@nx/eslint-plugin'
 import { fileURLToPath } from 'node:url'
+import { contracts } from './tools/lint/funnel.mjs'
 
 // House module boundaries (coding-preferences, references/architecture.md):
 // types only depend downwards (core, shared, database, extension, platform),
@@ -45,6 +46,12 @@ export default [
   ...nx.configs['flat/base'],
   ...nx.configs['flat/typescript'],
   ...nx.configs['flat/javascript'],
+  {
+    // Opt in each package only after its declarations satisfy the shared contracts.
+    ...contracts,
+    basePath: fileURLToPath(new URL('.', import.meta.url)),
+    files: ['packages/feature.lock/src/**/*.ts'],
+  },
   {
     ignores: [
       '**/dist',

@@ -94,3 +94,5 @@ tests/config/src/fixtures/
 
 # The v1 config, read through the migration; kept as written.
 .github/config.json
+# Canonical shared lint rules retain the house source's formatting.
+tools/lint/funnel.mjs

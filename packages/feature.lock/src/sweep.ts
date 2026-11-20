@@ -22,7 +22,15 @@ import { Clock, Effect } from 'effect'
 const FEATURE = 'lock'
 const DAY = 86_400_000
 
-/** The config's `lock` section. */
+/**
+ * Require a locking policy when acting on an individual closed conversation.
+ *
+ * @example
+ * ```ts
+ * import type { LockConfig } from '@resnovas/feature.lock'
+ * const policy: LockConfig = { afterDays: 30, exempt: { labels: ['keep-open'] } }
+ * ```
+ */
 export type LockConfig = NonNullable<SmartcloudConfig['lock']>
 
 /**
@@ -46,15 +54,38 @@ export const LOCK_MARKER = '<!-- smartcloud:lock -->'
  *
  * closedBefore(1.5, 3 * 86_400_000).toISOString() // => '1970-01-02T12:00:00.000Z'
  * ```
- *
  * @param afterDays - The config's `lock.afterDays`.
  * @param now - The current time, in milliseconds.
  * @returns The cut-off time.
  */
 export const closedBefore = (afterDays: number, now: number): Date => new Date(now - afterDays * DAY)
 
+/**
+ * Treat exemption labels case-insensitively, matching GitHub label identity.
+ *
+ * @param item - Closed conversation returned by the search service.
+ * @param labels - Exemption labels from repository policy; an empty list never matches.
+ * @returns Whether at least one attached label exempts this conversation.
+ */
 const hasAny = (item: ClosedIssueSummary, labels: ReadonlyArray<string>) =>
-  item.labels.some((name) => labels.some((label) => label.toLowerCase() === name.toLowerCase()))
+  item.labels.some(
+    /**
+     * Compare one attached label against the configured exemptions.
+     *
+     * @param name - Label attached to the closed conversation.
+     * @returns Whether repository policy exempts this label.
+     */
+    (name) =>
+      labels.some(
+        /**
+         * Ignore casing differences between configured and attached labels.
+         *
+         * @param label - One configured exemption.
+         * @returns Whether both spellings identify the same label.
+         */
+        (label) => label.toLowerCase() === name.toLowerCase(),
+      ),
+  )
 
 /**
  * Comments on, labels and locks one closed item, as `lock` says.
@@ -65,7 +96,6 @@ const hasAny = (item: ClosedIssueSummary, labels: ReadonlyArray<string>) =>
  * comment written by a bot account or a trusted login is edited rather than
  * repeated, so an item that failed to lock part way, or that GitHub's search
  * still lists as unlocked, is not commented on twice.
- *
  * @example
  * ```ts
  * import { lockItem } from '@resnovas/feature.lock'
@@ -78,7 +108,6 @@ const hasAny = (item: ClosedIssueSummary, labels: ReadonlyArray<string>) =>
  *   for (const item of yield* (yield* GitHub).listClosedUnlocked('issue', new Date())) yield* lockItem(lock, item)
  * })
  * ```
- *
  * @param lock - The config's `lock` section.
  * @param item - The closed, unlocked item.
  * @param trusted - Logins whose lock comments count as well as bot
@@ -90,28 +119,42 @@ export const lockItem = (
   item: ClosedIssueSummary,
   trusted: ReadonlyArray<string> = [],
 ): Effect.Effect<void, GitHubError, GitHub | Report> =>
-  Effect.gen(function* () {
-    const github = yield* GitHub
-    const report = yield* Report
-    if (lock.comment !== undefined) {
-      const body = `${LOCK_MARKER}\n${lock.comment}`
-      const existing = (yield* github.listComments(item.number)).find(
-        (comment) => comment.body.includes(LOCK_MARKER) && isTrustedComment(comment, trusted),
-      )
-      if (existing === undefined) yield* github.createComment(item.number, body)
-      else yield* github.updateComment(existing.id, body)
-      yield* report.change({ feature: FEATURE, description: `commented on #${item.number} before locking it` })
-    }
-    if (lock.label !== undefined) {
-      yield* github.addLabels(item.number, [lock.label])
-      yield* report.change({ feature: FEATURE, description: `labelled #${item.number} "${lock.label}"` })
-    }
-    yield* github.lockIssue(item.number, lock.reason)
-    yield* report.change({
-      feature: FEATURE,
-      description: `locked #${item.number}${lock.reason === undefined ? '' : ` as ${lock.reason}`}`,
-    })
-  })
+  Effect.gen(
+    /**
+     * Publish optional context before locking, preserving retry-safe bot comments.
+     *
+     * @yields GitHub writes and report entries in comment, label, lock order.
+     * @returns No value; any GitHub failure propagates to the caller.
+     */
+    function* () {
+      const github = yield* GitHub
+      const report = yield* Report
+      if (lock.comment !== undefined) {
+        const body = `${LOCK_MARKER}\n${lock.comment}`
+        const existing = (yield* github.listComments(item.number)).find(
+          /**
+           * Reuse only marked comments whose authors may speak for automation.
+           *
+           * @param comment - Candidate returned by GitHub's comment listing.
+           * @returns Whether editing it avoids a duplicate without trusting user-authored markers.
+           */
+          (comment) => comment.body.includes(LOCK_MARKER) && isTrustedComment(comment, trusted),
+        )
+        if (existing === undefined) yield* github.createComment(item.number, body)
+        else yield* github.updateComment(existing.id, body)
+        yield* report.change({ feature: FEATURE, description: `commented on #${item.number} before locking it` })
+      }
+      if (lock.label !== undefined) {
+        yield* github.addLabels(item.number, [lock.label])
+        yield* report.change({ feature: FEATURE, description: `labelled #${item.number} "${lock.label}"` })
+      }
+      yield* github.lockIssue(item.number, lock.reason)
+      yield* report.change({
+        feature: FEATURE,
+        description: `locked #${item.number}${lock.reason === undefined ? '' : ` as ${lock.reason}`}`,
+      })
+    },
+  )
 
 /**
  * Locks every issue and pull request that has been closed for `lock.afterDays`.
@@ -126,7 +169,6 @@ export const lockItem = (
  * error naming the item, and the sweep carries on. Age is read from Effect's
  * `Clock`. Lock comments count only when a bot account or a
  * `roles.trustedBots` login wrote them.
- *
  * @example
  * ```ts
  * import { sweepLocks } from '@resnovas/feature.lock'
@@ -134,36 +176,64 @@ export const lockItem = (
  * // Needs the GitHub service and a Report, as the engine provides them.
  * const program = sweepLocks({ version: 2, lock: { afterDays: 30, reason: 'resolved' } })
  * ```
- *
  * @param config - The whole config; `lock` and `roles.trustedBots` are read.
  * @returns Nothing; the changes and errors are in the report.
  */
 export const sweepLocks = (config: SmartcloudConfig): Effect.Effect<void, GitHubError, GitHub | Report> =>
-  Effect.gen(function* () {
-    const lock = config.lock
-    if (lock === undefined) return
-    const github = yield* GitHub
-    const report = yield* Report
-    const before = closedBefore(lock.afterDays, yield* Clock.currentTimeMillis)
-    const exempt = lock.exempt?.labels ?? []
-    const trusted = config.roles?.trustedBots ?? []
-    for (const kind of lock.on ?? ['pullRequest', 'issue']) {
-      const items = yield* github.listClosedUnlocked(kind, before)
-      const swept = items.filter((item) => !hasAny(item, exempt))
-      yield* Effect.logInfo(`lock: locking ${swept.length} of ${items.length} closed ${kind}(s)`).pipe(
-        Effect.annotateLogs({ feature: FEATURE, rule: 'lock.sweep', kind, closed: items.length, swept: swept.length }),
-      )
-      for (const item of swept) {
-        yield* lockItem(lock, item, trusted).pipe(
-          Effect.catchAll((error) =>
-            report.add({
-              feature: FEATURE,
-              rule: 'lock.sweep',
-              level: 'error',
-              message: `#${item.number} was not locked: ${error.message}`,
-            }),
-          ),
+  Effect.gen(
+    /**
+     * Search configured conversation kinds and isolate failures to individual items.
+     *
+     * @yields Clock reads, GitHub searches, item operations and diagnostic reports.
+     * @returns No value; search failures propagate while item failures are recorded and skipped.
+     */
+    function* () {
+      const lock = config.lock
+      if (lock === undefined) return
+      const github = yield* GitHub
+      const report = yield* Report
+      const before = closedBefore(lock.afterDays, yield* Clock.currentTimeMillis)
+      const exempt = lock.exempt?.labels ?? []
+      const trusted = config.roles?.trustedBots ?? []
+      for (const kind of lock.on ?? ['pullRequest', 'issue']) {
+        const items = yield* github.listClosedUnlocked(kind, before)
+        const swept = items.filter(
+          /**
+           * Preserve conversations carrying any configured exemption label.
+           *
+           * @param item - Closed conversation eligible by age and lock state.
+           * @returns Whether the conversation may proceed to locking.
+           */
+          (item) => !hasAny(item, exempt),
         )
+        yield* Effect.logInfo(`lock: locking ${swept.length} of ${items.length} closed ${kind}(s)`).pipe(
+          Effect.annotateLogs({
+            feature: FEATURE,
+            rule: 'lock.sweep',
+            kind,
+            closed: items.length,
+            swept: swept.length,
+          }),
+        )
+        for (const item of swept) {
+          yield* lockItem(lock, item, trusted).pipe(
+            Effect.catchAll(
+              /**
+               * Record a failed item's identity without stopping subsequent conversations.
+               *
+               * @param error - Typed GitHub failure from the individual-item operation.
+               * @returns A report update that converts this failure into an observable finding.
+               */
+              (error) =>
+                report.add({
+                  feature: FEATURE,
+                  rule: 'lock.sweep',
+                  level: 'error',
+                  message: `#${item.number} was not locked: ${error.message}`,
+                }),
+            ),
+          )
+        }
       }
-    }
-  })
+    },
+  )

@@ -33,7 +33,6 @@ const SWEEP_EVENTS = new Set(['schedule', 'workflow_dispatch'])
  * to comment, label and lock. It writes at most one
  * `<!-- smartcloud:lock -->` comment per item, editing an existing one a bot
  * account or a `roles.trustedBots` login wrote.
- *
  * @example
  * ```ts import.meta.vitest name="lock"
  * import { lock } from '@resnovas/feature.lock'
@@ -45,6 +44,20 @@ const SWEEP_EVENTS = new Set(['schedule', 'workflow_dispatch'])
 export const lock: Feature = {
   name: 'lock',
   handles: ['repository'],
+  /**
+   * Activate locking only when the repository supplies its retention policy.
+   *
+   * @param config - Validated repository configuration.
+   * @returns Whether a lock section is present, including one using defaults.
+   */
   enabled: (config) => config.lock !== undefined,
+  /**
+   * Avoid repository-wide searches on pushes and merge queue events.
+   *
+   * @param context - Configuration and the decoded event selected by the engine.
+   * @param context.config - Repository policy passed to the sweep unchanged.
+   * @param context.envelope - Event whose name distinguishes scheduled or manual sweeps.
+   * @returns The sweep effect for supported events, otherwise a successful no-op.
+   */
   run: ({ config, envelope }) => (SWEEP_EVENTS.has(envelope.event) ? sweepLocks(config) : Effect.void),
 }

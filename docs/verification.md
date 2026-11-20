@@ -20,6 +20,20 @@ Installation creates the hook exclusively, so a concurrent writer cannot have it
 
 To improve the funnel after a repeated mistake: fix the example people copy, add a lint diagnostic saying what to do instead or a regression test showing the contract, prove that the old case fails and the corrected case passes, then remove the duplicate prose. Keep approvals, ownership, sensitive-data decisions and unresolved tradeoffs in agent guidance.
 
+## Shared documentation contracts migration
+
+Track adoption in [SMC-176](https://linear.app/resnovas/issue/SMC-176) and [issue #749](https://github.com/Resnovas/smartcloud/issues/749). The approved sequence is to document one package's contracts, enable the shared JSDoc rules for that package in the same commit, and pass `node --run check` before proceeding. Existing Nx boundaries, declaration checks, compiled examples and coverage remain required. Packages awaiting migration are not yet opted in; there is no diagnostic baseline or suppression. Global enforcement follows the last package.
+
+The shared rules come from `tools/lint/funnel.mjs`, copied from house revision `92bb0b9d06e95d88395d158e35c5aaf1b9e65004`, and use the approved development dependency `eslint-plugin-jsdoc@65.5.0`. Describe constraints, units, failure behavior and examples rather than repeating declaration names. The root ESLint config composes the shared contracts with existing rules and scopes them to each migrated package's source files; package configs continue importing that base. This keeps tooling imports outside production packages without relaxing Nx boundaries. Only the exact current-year, repository-relative licence header is exempt from the two prose checks; declarations and noncanonical headers remain checked.
+
+Current sequence:
+
+- Completed: the initial corrective checks, hook, registry and Cognee/config repair are published in PR #750. The snapshot/isolation repair at `e27e9689` passed the full CI matrix, CodeQL and required aggregate, including sequential recovery of a cancelled duplicate. Protected landing remains with the review host and its separate merge-group coverage hold.
+- Current package: `feature.lock` documents event eligibility, retention units, label exemptions, trusted-comment reuse, write ordering and item-level failure isolation. Shared contracts are enabled for its sources. The accepted adapter resolves its template and file identity from the repository root, so both root and Nx package-directory lint work without modifying legal headers. Regression probes retain wrong-path/year and malformed-declaration checks in both invocation directories.
+- Upcoming: migrate the remaining packages with the same per-package gate, then adopt shared evidence adapters, document budgets and the readiness guard before final global enforcement. The house merge does not establish downstream verification or resolve the queue-policy hold.
+
+For the first package, run `pnpm exec eslint packages/feature.lock/src`, then `pnpm nx run-many -t test typecheck docgen contracts -p @resnovas/feature.lock @resnovas/feature.lock-tests`. Run `node --run funnel:contracts` to verify that the discovered package config rejects missing documentation, accepts a documented declaration and retains the existing timer restriction. A package is complete only when these commands and the full check pass without changing legal notices.
+
 ## Action entry point
 
 `action.yml` ships one Node action, built as `dist/index.js`. CI's `smoke` matrix calls `uses: ./` for `pull_request`, `issues`, `push` and `schedule` with `tools/ci/smoke/config.yml`, `dryRun: true` and `telemetry: false`. `tools/ci/smoke/replay.ts` substitutes the checked-in event payloads. `tools/ci/smoke/check.ts` checks the feature-result table, expected change lines and dry-run heading against `expected.json`. The smoke summaries are the evidence, not an invented UI screenshot.
