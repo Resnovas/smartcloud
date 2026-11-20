@@ -41,4 +41,5 @@ transport.onclose = () => void shutdown()
 process.stdin.once('end', () => void shutdown())
 for (const signal of ['SIGINT', 'SIGTERM'] as const)
   process.once(signal, () => void shutdown().finally(() => process.exit(0)))
+// eslint-disable-next-line no-restricted-syntax -- Existing stdio SDK entry boundary: preserve startup rejection and process lifetime until MCP lifecycle ownership is migrated.
 await server.connect(transport)

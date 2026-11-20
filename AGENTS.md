@@ -237,110 +237,11 @@ These apply only when the human asks for them or the host provides them; do not 
 End every task with a message a reader who did not watch you work can act on: what changed and where, the commands you ran with their result, the tools you needed and did not have with what you did instead, any rule you could not follow and why, and what a human must do next (approve, sign, mark ready, accept a memory). Never claim a test, a lookup or a check you did not run.
 <!-- house:managed:end -->
 <!-- house:local - add this repository's own agent instructions below this line. -->
-<!-- Previous content of this file, kept when it was first synced. Re-add what is still needed as local rules, then delete this. -->
-<!--
-# Working in smartcloud
 
-smartcloud v2 is tracked in Linear (team SMC). v1 is no longer in the tree; its last release is the `1.0.0-beta.8` tag, and v1 configs are still read through the migration in `packages/config`.
+## Smartcloud judgment and self-improvement
 
-House standards apply: the PostHog skill `coding-preferences` (Effect v3, strict TypeScript, pnpm, Nx module boundaries, FCL-1.0-MIT) and the rules in `Resnovas/.github`.
-
-The Effect Language Service (`@effect/language-service`) is a TypeScript plugin in `tsconfig.base.json`, and `pnpm install` patches the workspace TypeScript (`prepare`) so its diagnostics also fail `typecheck`. Use the workspace TypeScript in your editor (`.vscode/settings.json` and `.zed/settings.json` set it). Set `EFFECT_DEVTOOLS=true` to stream the CLI's or MCP server's spans to the Effect Dev Tools extension (`effectful-tech.effect-vscode`).
-
-## Layout
-
-| Path              | What lives there                                                                                                                                                                                                                                                                      |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/<name>` | Libraries. Tag every project with a type (`type_core`, `type_shared`, `type_database`, `type_extension`, `type_platform`) and a layer (`layer_shared`, `layer_backend`, `layer_frontend`) under `tags` in its `project.json`. GitHub API code only in `packages/integrations.github`. |
-| `apps/<name>`     | Platforms: the GitHub Action, the CLI and the MCP server. Their `project.json` sets `projectType: library`, because the test projects import them and Nx forbids importing an application.                                                                                            |
-| `tests/<name>`    | One test project per package, mirroring `packages/<name>/src`, and `tests/tools` for the release tooling under `tools/release`. Tagged `type_test`.                                                                                                                                   |
-| `tools/`          | Workspace scripts, run with Node's built-in TypeScript support.                                                                                                                                                                                                                       |
-
-## Commands
-
-Agents and cloud runners set up with `scripts/agent-setup` (Windows: `scripts\agent-setup.cmd`); `AGENT-SETUP.md` lists the environment, network and runner settings. Editor tasks, debug configurations and agent surfaces only call the package scripts below.
-
-```sh
-pnpm install
-pnpm run setup                                   # install, nx sync, build (idempotent)
-pnpm nx run-many -t lint typecheck test build   # everything
-pnpm nx affected -t lint typecheck test build   # what a change affects
-pnpm headers                                     # licence header check (pnpm headers:fix to add them)
-pnpm typecheck:tests                             # type-check every test project (Nx skips them)
-pnpm docs:api                                    # docgen (type-checks @example blocks) and the contracts check
-```
-
-## Editor and agent surfaces
-
-The editor tasks, debug configurations and app actions are synced from `Resnovas/.github` with managed blocks: `.zed/`, `.vscode/tasks.json` and `launch.json`, `.run/house-*.run.xml`, `.codex/environments/environment.toml`, `orca.yaml`, `.agents/surfaces.jsonc`, `.agents/mcp.jsonc` and the `verify`, `review` and `address-review` prompts. Never edit inside a `house:managed` block; add smartcloud's own entries after the `house:local` line (or, for JetBrains and prompts, as other files). Every entry calls a package script or a synced tool.
-
-Orca quick commands and OpenChamber project actions live in per-user settings, so `node tools/dev/surfaces.mjs install` (run by the setup script) registers everything in `.agents/surfaces.jsonc` for the checkout. Agent prompts live once in `.agents/prompts/<name>.md`, and MCP servers once in `.agents/mcp.jsonc`; `node tools/dev/surfaces.mjs sync` writes the prompts to `.claude/commands` and `.cursor/commands` and the servers to `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json` and `.codex/config.toml`, and `pnpm run check` fails when those drift. Edit the sources, never the generated copies.
-
-## Workflows
-
-Pin every third-party action to a full commit SHA with its release as a trailing comment (`uses: actions/checkout@<sha> # v7.0.1`); Dependabot's `github-actions` update moves the SHA and the comment together. Only first-party references stay on a ref: the local action (`uses: ./`) and the `Resnovas/.github` reusable workflows, which track `main` so house changes roll out on the next run.
-
-Grant the workflow token per job: set `permissions: {}` at the top of every workflow and give each job only the scopes it uses, so a new job starts with no access. A job that calls a reusable workflow grants no more than that workflow's jobs declare.
-
-Set `timeout-minutes` on every job that runs steps, a few times its usual run, so a hung step fails in minutes instead of holding a runner for GitHub's six-hour default. A job that calls a reusable workflow cannot set one; the called workflow's jobs do.
-
-CI (`.github/workflows/ci.yml`) runs `lint`, `typecheck`, `test`, `build`, `smoke` and `docs` as parallel jobs on the affected projects. On pull requests and the merge queue, the `changes` job (`tools/ci/changes.ts`) first decides which of the last five the change needs (`smoke` runs whenever `build` does): Markdown, MDX and `docs/` files that no code depends on in the Graphify graph need only `lint` and `docs`; files inside Nx projects need the jobs whose targets `nx show projects --affected` reports; any other file (workflows, root configuration, `tools/`, `scripts/`) runs every job, as do pushes to `main`. Every night (`schedule`, 02:23 UTC) and on a manual run (`workflow_dispatch`), every job runs `nx run-many` on every project instead of `nx affected`, with `NX_SKIP_NX_CACHE` and no cache restored, so a failure that no change set off (a new Node release or runner image, a dependency, a stale cache entry) shows up by the next morning rather than on an unrelated pull request; GitHub emails a failed scheduled run to whoever last changed its `cron`. A merge queue group is compared with the commit it lands on (`merge_group.base_sha`), not its parent, so it also covers the pull requests queued ahead of it whichever grouping the queue uses. `test` runs as a matrix on Linux, macOS and Windows, each with Node 24 (`.nvmrc`, the minimum) and the current release, and its steps run in bash on every OS; the `test` target's Nx inputs include `node --version` and the platform (`nx.json`), so a cached result never replays on another combination. Keep tests portable: build paths with `node:path`, and never assume a shell, line ending or case-sensitive file system. On CI (`CI=true`) every test project retries a failed test twice (`flakyTests` in `vitest.shared.ts`), and the `tools/ci/flaky-tests.ts` reporter turns each test that passed only on a retry into a warning annotation on its file and line and a table in the job summary; locally tests run once. A flaky test is a bug to fix, never a reason to raise the retry count. The `check` job needs them all and passes only when each succeeded or was skipped because `changes` said it was not needed; it is the single context the ruleset and the merge queue require, so add a new CI job to its `needs` rather than to `statusChecks.checks` in `.github/smartcloud.yml`, and gate it on a `changes` output only when its work is covered by one.
-
-The `smoke` job is the action's end-to-end test: for each event recorded in `tools/ci/smoke/events`, it bundles the action, runs it through `uses: ./` with `dryRun: true`, telemetry off and the inline config in `tools/ci/smoke/config.yml`, then `tools/ci/smoke/check.ts` compares the job summary with `tools/ci/smoke/expected.json`. The runner sets `GITHUB_EVENT_NAME`, `GITHUB_EVENT_PATH` and `GITHUB_STEP_SUMMARY` for an action over the step's `env`, so the `tools/ci/smoke/replay.ts` preload (through `NODE_OPTIONS`) points them at the recording. It needs only the read-only workflow token. When a change alters what the action reports for a recorded event, update `expected.json` in the same pull request; to add an event, record its payload in `events/`, add its expectations and add it to the job's matrix.
-
-The `House release preview` workflow (`.github/workflows/house-release-preview.yml`) shows on each pull request the release it would lead to. It runs on `pull_request` (opened, pushed, reopened, and edited when the title or base changes), apart from `ci.yml` so a rename does not rerun CI. Its `preview` job checks out the merge commit with full history and tags, and `tools/release/release-preview.ts` swaps that commit for the squash commit the merge queue would land (the title with ` (#<number>)` over the commits' messages), runs Nx `releaseVersion` and `releaseChangelog` in dry-run mode and writes the version, the bump the pull request's own commit calls for and the notes to the job summary and a `report` output. The `comment` job, the only one with `pull-requests: write`, checks out and runs nothing and keeps one comment marked `<!-- house:release-preview -->` up to date; it is skipped for forks and Dependabot, whose token cannot write. The preview must never fail a pull request: a preview error becomes a warning and a short report, both jobs set `continue-on-error`, and it stays out of `check`'s `needs`. Keep its pure logic in `tools/release/preview.ts`, tested in `tests/tools`.
-
-A job that runs Nx restores and saves `.nx/cache` with `actions/cache`, keyed on the runner OS, the `pnpm-lock.yaml` hash, the commit, the workflow and the job, and restoring the latest earlier entry, so tasks whose inputs did not change replay from the last run; the nightly and manual full runs skip it. Never restore a cache in the release workflow, so nothing it builds or publishes can come from a cache entry.
-
-The synced House workflow lint runs actionlint and zizmor on every pull request and fails on any finding. Run them locally with `uvx --from actionlint-py actionlint` and `uvx zizmor .`. zizmor reads the synced `.github/zizmor.yml`; ignore an intended finding where it occurs with a trailing `# zizmor: ignore[<audit>]` comment, and put the reason on the line above. smartcloud's actionlint exceptions go in `.github/actionlint.yaml`.
-
-The synced House dependency review fails a pull request that adds a runtime or development dependency with a high or critical advisory, and lists the changed dependencies in its job summary. Allow an advisory that does not apply, with the reason, in `.github/dependency-review-config.yml` (`allow-ghsas`).
-
-The synced House Scorecard runs OpenSSF Scorecard on `main` weekly and on every push, uploads its findings to code scanning (category `scorecard`) and publishes the score behind the README badge. It uses only the workflow token; fix a finding in the repository rather than suppressing it.
-
-## Review bots
-
-CodeRabbit, Copilot code review, Qodo, Cursor Bugbot and Graphify each have one job, set in `GOVERNANCE.md` (Review bots) and configured by files synced from `Resnovas/.github`: `.coderabbit.yaml`, `.github/copilot-instructions.md` and `.github/instructions/house-*.instructions.md`, `.pr_agent.toml`, `.cursor/BUGBOT.md` and `.graphifyignore`. smartcloud's own review rules go after each file's `house:local` line, or in `.github/instructions/smartcloud-*.instructions.md`. Only a Copilot security finding, a CodeRabbit major or critical comment, the Graphify gate and a Qodo ticket mismatch block a merge (`APPROVAL_POLICY.md`, AP-31).
-
-## Adding a package
-
-1. `packages/<name>/package.json`: `"name": "@resnovas/<name>"`, `"type": "module"`, and an export map whose `.` entry lists `"@resnovas/source": "./src/index.ts"` first, then `types` and `import` pointing at `dist/`. Nx configuration stays out of `package.json`.
-2. `packages/<name>/project.json`: `name` (the package name), `$schema` (`../../node_modules/nx/schemas/project-schema.json`), `projectType: library`, `sourceRoot: packages/<name>/src` and the `tags`. Targets come from the Nx plugins and `targetDefaults` in `nx.json`; declare one here only for what those do not provide, and spread (`"..."`) any inherited array you extend.
-3. `packages/<name>/tsconfig.json` referencing `tsconfig.lib.json`, which extends `../../tsconfig.base.json` with `rootDir: src`, `outDir: dist` and `emitDeclarationOnly: false`.
-4. `packages/<name>/eslint.config.mjs` spreading the root config.
-5. `tests/<name>/`: a `package.json` depending on `@resnovas/<name>` with `workspace:*`, a `project.json` tagged `type_test` and the package's layer, `vitest.config.mts` calling `testProject('<name>', ['packages/<name>/src/**'])` from `vitest.shared.ts`, a `tsconfig.json` with `noEmit`, and `src/**/*.spec.ts` using `@effect/vitest`.
-6. `pnpm install`, then `pnpm headers:fix`.
-
-Coverage runs on every test. Below 90% of lines, functions, statements or branches the run fails; 100% is the goal, and below it `tools/ci/coverage-goal.ts` warns without failing. The GitHub ruleset blocks a pull request only below 80%. Never delete a test to make a build pass.
-
-Tests mirror sources file for file: `packages/<name>/src/<path>.ts` is tested by `tests/<name>/src/<path>.spec.ts` (apps map the same way). Barrels and type-only files need no spec; shared fixtures stay as non-spec helper files.
-
-## API contracts
-
-Every exported const, function and class carries a description, a typed `@example` importing from the package's public path, `@param` per parameter and `@returns` unless it returns void; add `@remarks` where behaviour needs explaining. Exports left out of the package's `index.ts` are marked `@internal`. Each package and app has a `docgen.json` for `@effect/docgen`, whose `docgen` target type-checks every example and writes the API docs to `dist/docs`; the `contracts` target (`tools/docs/check-contracts.ts`) checks the built declarations for the tags. Mark an example fence `ts import.meta.vitest` to run it as a test through `@effect/doctest`, and assert with a trailing `// => value` comment (primitives only: Effect 3's `Equal` compares plain objects and arrays by reference). Vitest counts a run example's coverage against the source file it sits in, so a runnable example must call every function it defines; leave the marker off an example that cannot.
-
-## Documentation
-
-Everything is documented twice, in the same change as the code:
-
-- **For people, in `docs/`** (the Mintlify site, navigation in `docs/docs.json`): every feature, configuration option, preset, CLI command, MCP tool and workflow, written ELI5. Say what it is and why you would want it before how, give step-by-step setup a newcomer can follow, one complete example, what they will see on GitHub, every option with its default, and common problems with their fixes. Define every term on first use. `docs/reference/configuration.mdx` is generated from the schema (`pnpm docs:reference`); never edit it by hand.
-- **For agents, in `ai-docs/`**: numbered sections (`ai-docs/src/NN_name/index.md`) with compiled `.ts` examples beside them, assembled into `LLMS.md` by `pnpm ai-docs`. `pnpm run check` fails when `LLMS.md` is stale or an example stops compiling. The generator (`tools/ai-docs/docgen.mjs`), `ai-docs/README.md` and the house-standards section are synced from `Resnovas/.github`; smartcloud's own sections start at `10_`.
-
-A feature, option or preset is not done until both are updated.
-
-## Releasing
-
-Releases are cut by Nx release from the synced `House release` workflow (Actions, run on `main`); see `docs/releasing.mdx`. The workflows and `tools/release/` are synced from the house; what this repository ships is in `release.config.json`, the only release file to edit here besides `tools/release/prepare-cli.ts`. Conventional commits since the last `v*` tag decide the version, and the tag is the only record of it: the release commit is never on `main`, whose app versions stay `0.0.0`. The workflow pushes a `v<version>` tag on a release commit that holds `dist/index.js` and the bumped versions, writes the notes to a draft GitHub release, moves `v<major>`, publishes `@resnovas/smartcloud` to npm, attaches the SBOMs and attestations, and then publishes the release (immutable releases lock a published one).
-
-The GitHub release holds the main notes. Nx writes the same notes, through `tools/release/changelog-renderer.ts`, to the root `CHANGELOG.md` (v2 releases above the v1 history) and to `CHANGELOG.md` in `apps/action`, `apps/cli` and `apps/mcp`. The workflow's `changelogs` job commits them through the GitHub API as the Resnovas Bot app (a GitHub-signed commit) and opens a `chore(release): changelogs for v<version>` pull request to `main`; merge it before the next release.
-
-- Never run `nx release` without `--dry-run`: the workflow is the only release path, and a local run pushes and creates a GitHub release.
-- The first v2 release has no `v*` tag to count from (v1's tags have no `v`): run the workflow once with `specifier` `2.0.0` and `first-release` ticked. Every later release leaves both empty.
-- Every pull request gets a release preview comment (the next version and notes if it merged now); run the same preview locally with `pnpm release:preview`.
-- Preview a release, with its notes and the change to each changelog file, with `pnpm release:dry-run` (add `--first-release --specifier 2.0.0` before the first release), or run the workflow with `dry-run` ticked (the default).
-- The `House nightly` workflow cuts a `v<version>-nightly.<date>` pre-release from `main` each night when `main` has moved, and moves `v2` to it until the first stable 2.x release. `releaseTag.strictPreid` in `nx.json` keeps nightly tags out of a stable release's version and notes; never turn it off.
-
-## Commits and pull requests
-
-Small stacked pull requests through GitButler, one Linear issue each, titled with conventional commits and the issue key in the branch. Every commit is signed off (DCO).
--->
+- Smartcloud work belongs to Linear team SMC. Keep assigned owning issues and linked GitHub issues current; never invent mappings.
+- Preserve v1 configuration migration and public synchronous pattern APIs. Contract changes and SDK lifecycle migrations require an explicit compatibility decision.
+- Follow [the verification registry](docs/verification.md). Run `node --run funnel:static` immediately after coding, before docs or other tasks, then run affected verification and record evidence. Local dry runs do not prove live write permissions.
+- On a repeated mistake, fix the copied code example, add a corrective lint/typecheck rule or failing regression case, prove rejection and acceptance, then remove redundant guidance. Keep only ownership, approval and unresolved judgment here.
+- Managed guidance, shared skills and reusable workflows belong to `Resnovas/.github`. Propose promotions there rather than editing downstream copies. Human readiness, review and merge remain required.

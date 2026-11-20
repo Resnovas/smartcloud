@@ -27,7 +27,7 @@ import {
   type InvocationSummary,
   type TelemetryEvent,
 } from '@resnovas/integrations.posthog'
-import { Effect, Option, Schema } from 'effect'
+import { Effect, Either, Option, Schema } from 'effect'
 import { parse as parseYaml } from 'yaml'
 import { FEATURE_SECTIONS, FEATURES } from './features.js'
 
@@ -317,15 +317,17 @@ const entries = (value: unknown): number => {
   return Object.keys(typeof rules === 'object' && rules !== null ? rules : value).length
 }
 
-// The version the file is written in; anything that is not version 2 is read as v1 and migrated.
-const writtenVersion = (text: string): 1 | 2 => {
-  try {
-    const raw: unknown = parseYaml(text)
-    return typeof raw === 'object' && raw !== null && 'version' in raw && raw.version === 2 ? 2 : 1
-  } catch {
-    return 2
-  }
-}
+/** Classify legacy configs as v1; malformed YAML keeps the existing v2 analytics fallback. */
+const writtenVersion = (text: string): 1 | 2 =>
+  Either.match(
+    Either.try((): unknown => parseYaml(text)),
+    {
+      // Do not send parser errors or configuration content to analytics.
+      onLeft: () => 2 as const,
+      onRight: (raw) =>
+        typeof raw === 'object' && raw !== null && 'version' in raw && raw.version === 2 ? (2 as const) : (1 as const),
+    },
+  )
 
 /**
  * The `config resolved` event for a resolved config.

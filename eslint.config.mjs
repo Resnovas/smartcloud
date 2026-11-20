@@ -15,6 +15,7 @@
  */
 
 import nx from '@nx/eslint-plugin'
+import { fileURLToPath } from 'node:url'
 
 // House module boundaries (coding-preferences, references/architecture.md):
 // types only depend downwards (core, shared, database, extension, platform),
@@ -70,6 +71,53 @@ export default [
       ],
       '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+    },
+  },
+  {
+    // Project configs import this array; keep production globs rooted here.
+    basePath: fileURLToPath(new URL('.', import.meta.url)),
+    files: ['packages/*/src/**/*.ts', 'apps/*/src/**/*.ts'],
+    ignores: ['packages/integrations.*/**'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: ':function[async=true], AwaitExpression, NewExpression[callee.name="Promise"]',
+          message:
+            'Compose work with Effect.gen and yield*. Wrap Promise SDK calls in the owning integrations.<vendor> package with Effect.tryPromise.',
+        },
+        {
+          selector: 'CatchClause[param=null]',
+          message:
+            'Make the fallback explicit with Either.try and Either.match/getOrElse for synchronous parsing; use Effect.catchTag for typed operational failures.',
+        },
+        {
+          selector:
+            'CallExpression[callee.name=/^(setTimeout|setInterval)$/], CallExpression[callee.object.name="globalThis"][callee.property.name=/^(setTimeout|setInterval)$/]',
+          message:
+            'Use Effect.sleep or Schedule so cancellation and TestClock own time. For a zero-delay yield use Effect.yieldNow, not a timer.',
+        },
+      ],
+      'no-restricted-imports': [
+        'error',
+        {
+          patterns: [
+            {
+              group: ['@octokit/*'],
+              message: 'Use @resnovas/integrations.github; keep GitHub SDK calls behind the GitHub service.',
+            },
+            {
+              group: ['posthog-node', 'posthog-node/*', '@posthog/*', '@openfeature/*'],
+              message:
+                'Use @resnovas/integrations.posthog; keep telemetry SDKs and flag providers in their integration package.',
+            },
+            {
+              group: ['node:timers', 'node:timers/*', 'timers', 'timers/*'],
+              message: 'Use Effect.sleep or Schedule for cancellable, test-clock-controlled time.',
+            },
+          ],
+        },
+      ],
     },
   },
 ]

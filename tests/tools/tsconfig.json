@@ -8,5 +8,5 @@
     "composite": false,
     "emitDeclarationOnly": false
   },
-  "include": ["src/**/*.ts", "vitest.config.mts"]
+  "include": ["src/**/*.ts", "vitest.config.mts", "../../tools/dev/funnel.ts"]
 }

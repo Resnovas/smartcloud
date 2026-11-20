@@ -107,6 +107,9 @@ if (!process.env['CI']) {
   const result = run(process.execPath, [join(root, 'tools/dev/surfaces.mjs'), 'install'])
   if (result.status !== 0)
     log('note: registering Orca and OpenChamber actions failed; run `node tools/dev/surfaces.mjs install`.')
+  // A pre-commit check complements, rather than replaces, the house commit-msg hook.
+  if (run(process.execPath, [join(root, 'tools/dev/funnel.ts'), '--install']).status !== 0)
+    fail('Installing the funnel pre-commit hook failed; resolve the reported hook conflict without overwriting it.')
 }
 
 // Secrets are never needed to set up; say where the optional one comes from.

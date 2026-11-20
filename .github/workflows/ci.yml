@@ -148,7 +148,14 @@ jobs:
           echo "NX_HEAD=$GROUP_HEAD" >> "$GITHUB_ENV"
 
       - name: Lint the projects
-        run: pnpm nx "$NX_RUN" -t lint
+        run: |
+          pnpm nx "$NX_RUN" -t lint
+          pnpm exec eslint tools/dev/funnel.ts
+
+      # Always runs, even for docs-only changes: the Markdown registry is a
+      # contract with the action's feature list and the workflow trigger inventory.
+      - name: Verify the funnel contracts
+        run: pnpm run funnel:contracts
 
       - name: Licence headers
         run: pnpm headers
