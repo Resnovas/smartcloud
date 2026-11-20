@@ -109,9 +109,16 @@ describe('funnel pre-commit', () => {
     git('config', 'core.hooksPath', '.git/hooks')
     const hookPath = join(cwd, '.git/hooks/pre-commit')
     expect(run('--install').status).toBe(0)
+    const installedHook = readFileSync(hookPath, 'utf8')
+    expect(installedHook).toContain('exec node --run funnel:pre-commit')
+    writeFileSync(hookPath, '#!/bin/sh\necho existing-hook\n')
+    expect(run('--install').status).toBe(1)
+    expect(readFileSync(hookPath, 'utf8')).toBe('#!/bin/sh\necho existing-hook\n')
+    writeFileSync(hookPath, installedHook)
+
     // Reinstallation must not rewrite a hook another process could replace after validation.
     const installedAt = new Date('2001-01-01T00:00:00Z')
-    // Keep metadata operations on the same file instead of checking and reopening its path.
+    // Finish fixture replacements before opening the file whose metadata must remain unchanged.
     const hookFile = openSync(hookPath, 'r+')
     try {
       futimesSync(hookFile, installedAt, installedAt)
@@ -120,12 +127,6 @@ describe('funnel pre-commit', () => {
     } finally {
       closeSync(hookFile)
     }
-    const installedHook = readFileSync(hookPath, 'utf8')
-    expect(installedHook).toContain('exec node --run funnel:pre-commit')
-    writeFileSync(hookPath, '#!/bin/sh\necho existing-hook\n')
-    expect(run('--install').status).toBe(1)
-    expect(readFileSync(hookPath, 'utf8')).toBe('#!/bin/sh\necho existing-hook\n')
-    writeFileSync(hookPath, installedHook)
 
     const manifest = (staticExit: number) =>
       JSON.stringify({
