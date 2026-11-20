@@ -16,7 +16,7 @@
 
 import { beforeAll, describe, expect, it } from '@effect/vitest'
 import { ESLint } from 'eslint'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import {
   closeSync,
@@ -140,6 +140,7 @@ describe('funnel pre-commit', () => {
     ['untracked', 'static', 'Untracked files'],
     ['untracked', 'verify', 'Untracked files'],
     ['isolated', 'verify', 'passed for the staged tree'],
+    ['failed', 'verify', 'test:affected failed'],
   ])('checks %s state after %s through an installed hook', (mutation, phase, diagnostic) => {
     const scratch = join(root, '.amp/in/orb-backup')
     mkdirSync(scratch, { recursive: true })
@@ -174,6 +175,7 @@ if (${JSON.stringify(mutation)} === 'isolated') {
   execFileSync('git', ['init', '--quiet'], { cwd: nested })
   assert.equal(execFileSync('git', ['rev-parse', '--show-toplevel'], { cwd: nested, encoding: 'utf8' }).trim().replaceAll('\\\\', '/'), nested.replaceAll('\\\\', '/'))
 } else if (process.argv[2] === ${JSON.stringify(phase)}) {
+  if (${JSON.stringify(mutation)} === 'failed') process.exit(7)
   writeFileSync(${JSON.stringify(mutation === 'untracked' ? 'unexpected.mjs' : 'feature.mjs')}, 'export const value = ;\\n')
   if (${JSON.stringify(mutation)} === 'staged') execFileSync('git', ['add', 'feature.mjs'])
 }
@@ -184,8 +186,8 @@ if (${JSON.stringify(mutation)} === 'isolated') {
       JSON.stringify({
         scripts: {
           'funnel:pre-commit': `"${process.execPath}" "${join(root, 'tools/dev/funnel.ts')}"`,
-          'funnel:static': 'node --check feature.mjs && node generate.mjs static',
-          'funnel:verify': 'node generate.mjs verify',
+          'verify:static': 'node --check feature.mjs && node generate.mjs static',
+          'test:affected': 'node generate.mjs verify',
         },
       }),
     )
@@ -215,6 +217,13 @@ if (${JSON.stringify(mutation)} === 'isolated') {
       expect(git('rev-parse', 'HEAD^{tree}').stdout).toBe(before.stdout)
       expect(output).toContain('static-sentinel')
       expect(output).toContain('verify-sentinel')
+    } else if (mutation === 'failed') {
+      expect(commit.status, output).toBe(1)
+      expect(output).toContain('static-sentinel')
+      expect(output).toContain('verify-sentinel')
+      expect(output).not.toContain('passed for the staged tree')
+      expect(git('rev-parse', '--verify', 'HEAD').status).not.toBe(0)
+      expect(git('write-tree').stdout).toBe(before.stdout)
     } else {
       const after = git('write-tree')
       expect(after.status).toBe(0)
@@ -236,12 +245,12 @@ if (${JSON.stringify(mutation)} === 'isolated') {
       expect(output).not.toContain('passed for the staged tree')
       if (phase === 'static') expect(output).not.toContain('verify-sentinel')
       else expect(output).toContain('verify-sentinel')
-      expect(output).toContain(`after funnel:${phase}`)
+      expect(output).toContain(`after ${phase === 'static' ? 'verify:static' : 'test:affected'}`)
     }
     expect(output).toContain(diagnostic)
   })
 
-  it('preserves hooks and rejects snapshots or failed checks without running later phases', () => {
+  it.each(['installation', 'rejection', 'success'])('checks hook %s in an isolated repository', (scenario) => {
     const scratch = join(root, '.amp/in/orb-backup')
     mkdirSync(scratch, { recursive: true })
     const cwd = mkdtempSync(join(scratch, 'funnel-hook-'))
@@ -264,42 +273,79 @@ if (${JSON.stringify(mutation)} === 'isolated') {
     expect(run('--install').status).toBe(0)
     const installedHook = readFileSync(hookPath, 'utf8')
     expect(installedHook).toContain('exec node --run funnel:pre-commit')
-    writeFileSync(hookPath, '#!/bin/sh\necho existing-hook\n')
-    expect(run('--install').status).toBe(1)
-    expect(readFileSync(hookPath, 'utf8')).toBe('#!/bin/sh\necho existing-hook\n')
-    writeFileSync(hookPath, installedHook)
-
-    // Reinstallation must not rewrite a hook another process could replace after validation.
-    const installedAt = new Date('2001-01-01T00:00:00Z')
-    // Finish fixture replacements before opening the file whose metadata must remain unchanged.
-    const hookFile = openSync(hookPath, 'r+')
-    try {
-      futimesSync(hookFile, installedAt, installedAt)
-      expect(run('--install').status).toBe(0)
-      expect(fstatSync(hookFile).mtimeMs).toBe(installedAt.getTime())
-    } finally {
-      closeSync(hookFile)
-    }
 
     const manifest = (staticExit: number) =>
       JSON.stringify({
         scripts: {
           'funnel:pre-commit': `"${process.execPath}" "${join(root, 'tools/dev/funnel.ts')}"`,
-          'funnel:static': `node -e "console.log('static-sentinel'); process.exit(${staticExit})"`,
-          'funnel:verify': 'node -e "console.log(\'verify-sentinel\')"',
+          'verify:static': `node -e "console.log('static-sentinel'); process.exit(${staticExit})"`,
+          'test:affected': 'node -e "console.log(\'verify-sentinel\')" --',
         },
       })
     writeFileSync(join(cwd, 'package.json'), manifest(0))
-    expect(run().stderr).toContain('Untracked files')
-    git('add', 'package.json')
-    writeFileSync(join(cwd, 'package.json'), manifest(1))
-    expect(run().stderr).toContain('Unstaged tracked changes')
-    git('add', 'package.json')
-    const failed = run()
-    expect(failed.status).toBe(1)
-    expect(failed.stdout).toContain('static-sentinel')
-    expect(failed.stdout).not.toContain('verify-sentinel')
-    writeFileSync(join(cwd, 'package.json'), manifest(0))
+    if (scenario === 'installation') {
+      writeFileSync(hookPath, '#!/bin/sh\necho existing-hook\n')
+      expect(run('--install').status).toBe(1)
+      expect(readFileSync(hookPath, 'utf8')).toBe('#!/bin/sh\necho existing-hook\n')
+      writeFileSync(hookPath, installedHook)
+      const declaration = readFileSync(join(root, '.agents/surfaces.jsonc'), 'utf8').match(/"preCommit":\s*(\{[^}]+\})/)
+      expect(declaration).not.toBeNull()
+      // Batch the installer assertions in one isolated process instead of paying
+      // Node startup for every probe on Windows. Keep the inherited Git state out.
+      const composition = spawnSync(
+        process.execPath,
+        [
+          '--input-type=module',
+          '--eval',
+          `import { installPreCommit } from ${JSON.stringify(pathToFileURL(join(root, 'tools/dev/pre-commit.mjs')).href)}
+import assert from 'node:assert/strict'
+import { readFileSync, writeFileSync } from 'node:fs'
+const native = JSON.parse(process.argv[1])
+const path = '.git/hooks/pre-commit'
+const expected = readFileSync(path, 'utf8')
+for (let attempt = 0; attempt < 2; attempt++) {
+  assert.match(installPreCommit(process.cwd(), false, native), /already installed/)
+  assert.equal(readFileSync(path, 'utf8'), expected)
+}
+assert.throws(() => installPreCommit(process.cwd(), false, { ...native, script: 'missing' }), /Define package script/)
+assert.throws(() => installPreCommit(process.cwd(), false, { ...native, script: 'funnel:pre-commit; true' }), /preCommit must contain/)
+writeFileSync(path, '#!/bin/sh\\necho foreign\\n')
+assert.throws(() => installPreCommit(process.cwd(), false, native), /Preserve the existing/)
+assert.equal(readFileSync(path, 'utf8'), '#!/bin/sh\\necho foreign\\n')
+writeFileSync(path, expected)
+`,
+          declaration?.[1] ?? '{}',
+        ],
+        { cwd, env, encoding: 'utf8' },
+      )
+      expect(composition.status, composition.stderr).toBe(0)
+
+      // Finish both installers' foreign-hook probes before inspecting metadata.
+      // Keep the checked file open: no path-based access may follow this check.
+      const installedAt = new Date('2001-01-01T00:00:00Z')
+      const hookFile = openSync(hookPath, 'r+')
+      try {
+        futimesSync(hookFile, installedAt, installedAt)
+        expect(run('--install').status).toBe(0)
+        expect(fstatSync(hookFile).mtimeMs).toBe(installedAt.getTime())
+        expect(readFileSync(hookFile, 'utf8')).toBe(installedHook)
+      } finally {
+        closeSync(hookFile)
+      }
+      return
+    }
+    if (scenario === 'rejection') {
+      expect(run().stderr).toContain('Untracked files')
+      git('add', 'package.json')
+      writeFileSync(join(cwd, 'package.json'), manifest(1))
+      expect(run().stderr).toContain('Unstaged tracked changes')
+      git('add', 'package.json')
+      const failed = run()
+      expect(failed.status).toBe(1)
+      expect(failed.stdout).toContain('static-sentinel')
+      expect(failed.stdout).not.toContain('verify-sentinel')
+      return
+    }
     git('add', 'package.json')
     const passed = run()
     expect(passed.status, passed.stderr).toBe(0)

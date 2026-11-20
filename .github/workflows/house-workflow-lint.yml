@@ -4,7 +4,8 @@
 # Dependabot configuration with zizmor. Both fail on any finding. Configure
 # zizmor with the synced .github/zizmor.yml, or ignore one intended finding
 # with a trailing `# zizmor: ignore[<audit>]` comment; configure actionlint with
-# .github/actionlint.yaml. Uses only the workflow token.
+# .github/actionlint.yaml. Also enforces smartcloud queue execution in the
+# canonical workflow format. Uses only the workflow token.
 name: House workflow lint
 
 on:
@@ -20,5 +21,63 @@ jobs:
     uses: Resnovas/.github/.github/workflows/workflow-lint.yml@main
     permissions:
       contents: read
+
+  merge-group-contract:
+    name: merge-group-contract
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      # Validate the canonical block-format workflow without installing repository code.
+      # Unknown shapes fail closed; actionlint remains responsible for YAML syntax.
+      - name: Require smartcloud execution on queued commits
+        shell: node {0}
+        run: |
+          const { readFileSync } = require('node:fs')
+          const file = '.github/workflows/smartcloud.yml'
+          const fail = () => {
+            throw new Error(`${file}: keep the unfiltered merge_group trigger and unconditional smartcloud job/action from house sync. Required queue checks must execute, not report skipped success.`)
+          }
+          const source = readFileSync(file, 'utf8')
+          const lines = source.split(/\r?\n/).filter((line) => line.trim() && !line.trimStart().startsWith('#'))
+          if (process.env.GITHUB_REPOSITORY === 'Resnovas/smartcloud' || lines.some((line) => {
+            const entry = line.match(/^\s+(?:- )?(\w+): (\S+)/)
+            return entry?.[1] === 'uses' && entry[2].startsWith('./')
+          })) {
+            require(process.cwd() + '/tools/ci/smartcloud-native-contract.cjs').checkNativeWorkflow(source, process.env.GITHUB_REPOSITORY)
+            console.log('Trusted smartcloud native-self-build recipe accepted.')
+          } else {
+            const block = (scope, key, indent) => {
+              const prefix = ' '.repeat(indent)
+              const matches = scope.flatMap((line, index) => line === `${prefix}${key}:` ? [index] : [])
+              if (matches.length !== 1) fail()
+              const rest = scope.slice(matches[0] + 1)
+              const end = rest.findIndex((line) => line.search(/\S/) <= indent)
+              return rest.slice(0, end === -1 ? undefined : end)
+            }
+            const event = block(block(lines, 'on', 0), 'merge_group', 2)
+            if (event.length !== 0) fail()
+            const job = block(block(lines, 'jobs', 0), 'smartcloud', 2)
+            const fields = job.filter((line) => /^ {4}\S/.test(line))
+            const allowed = /^(?:name|runs-on|timeout-minutes|env|permissions|steps):/
+            if (fields.some((line) => !allowed.test(line.trimStart()))) fail()
+            if (!fields.includes('    name: smartcloud') || !fields.includes('    runs-on: ubuntu-latest')) fail()
+            const steps = block(job, 'steps', 4)
+            const actions = steps.flatMap((line, index) => {
+              const entry = line.match(/^ {6}- (\w+): (\S+)$/)
+              return entry?.[1] === 'uses' && /^resnovas\/smartcloud@\S+$/.test(entry[2]) ? [index] : []
+            })
+            if (actions.length !== 1) fail()
+            const rest = steps.slice(actions[0] + 1)
+            const end = rest.findIndex((line) => /^ {6}- /.test(line))
+            const action = rest.slice(0, end === -1 ? undefined : end)
+            if (action.filter((line) => /^ {8}\S/.test(line)).some((line) => line !== '        with:')) fail()
+            console.log('Required smartcloud job and action are unconditional on merge_group.')
+          }
 # house:managed:end
 # house:local - add further jobs below, indented under jobs.

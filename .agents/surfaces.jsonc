@@ -17,11 +17,13 @@
   ],
   // house:managed:end
   // house:local - add this repository's own actions to the list below.
+  "preCommit": { "script": "funnel:pre-commit", "marker": "smartcloud-funnel pre-commit" },
   "actions": [
     { "id": "dev", "label": "Dev: watch build", "script": "dev", "primary": true },
     { "id": "docs", "label": "Docs: local server", "script": "docs:dev", "url": "http://localhost:3000" },
     { "id": "fix", "label": "Fix: format and licence headers", "script": "fix" },
     { "id": "funnel-static", "label": "Funnel: static checks before docs", "script": "funnel:static" },
+    { "id": "affected-tests", "label": "Test: staged affected projects", "script": "test:affected" },
     { "id": "funnel-verify", "label": "Funnel: behavior and coverage", "script": "funnel:verify" },
     { "id": "release", "label": "Release: dry run", "script": "release:dry-run" },
   ],

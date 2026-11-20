@@ -87,9 +87,11 @@ if (process.argv.includes('--install')) {
   if (localEnv.status !== 0) fail(`Cannot identify Git-local environment variables: ${localEnv.stderr}`)
   const childEnv = { ...process.env }
   for (const name of localEnv.stdout.trim().split('\n')) delete childEnv[name]
-  for (const script of ['funnel:static', 'funnel:verify']) {
+  for (const script of ['verify:static', 'test:affected']) {
     // Only children are isolated: our Git inspections must retain the committing index.
-    const result = spawnSync(process.execPath, ['--run', script], { stdio: 'inherit', env: childEnv })
+    // Pass its tree explicitly so alternate indexes still select the correct tests.
+    const args = script === 'test:affected' ? ['--', '--staged-tree', expectedTree] : []
+    const result = spawnSync(process.execPath, ['--run', script, ...args], { stdio: 'inherit', env: childEnv })
     checkSnapshot(expectedTree, `after ${script}`)
     if (result.status !== 0) fail(`${script} failed; fix the reported error and rerun it before committing.`)
   }
