@@ -1,11 +1,13 @@
 ---
 title: 'Required'
-description: 'One aggregate check that passes only when every other check on a pull request has passed.'
+description: 'One aggregate check for pull request and merge-queue commits.'
 ---
 
 GitHub lets a branch [ruleset](/glossary#ruleset) block merging until named checks pass. The trouble is the names: every new workflow job means editing the ruleset, and a renamed job quietly stops being required.
 
 The required feature replaces that list with one check. The job running smartcloud waits for every other check on the pull request's head commit, and passes only when they have all passed. Your ruleset then requires that one job's check, and any job you add later is covered without touching the ruleset.
+
+For a merge queue, it checks the temporary combined commit GitHub creates, using `merge_group.head_sha` from a `merge_group: checks_requested` event. Passing checks on the original pull request commit do not establish that the combined commit passes. Other repository events and destroyed merge groups do not run this aggregate.
 
 ## Turn it on
 
@@ -105,12 +107,14 @@ name: smartcloud
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened, ready_for_review, converted_to_draft, closed]
+  merge_group:
+    types: [checks_requested]
 
 permissions: {}
 
-# A newer run on the same pull request and event replaces the older one.
+# Keep different queue groups separate while replacing older runs on the same ref.
 concurrency:
-  group: smartcloud-${{ github.event.pull_request.number }}-${{ github.event_name }}
+  group: smartcloud-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 jobs:
@@ -131,6 +135,8 @@ jobs:
 ```
 
 ## How it works
+
+Subscribe both the aggregate workflow and each expected CI workflow to `merge_group: checks_requested`. A job-level condition must not skip the aggregate for that event. Keep `checkRunId` set to the current job's ID. A queue group has its own commit and checks, so `required.expect` must match checks produced on that commit, not only on a pull request. See the [verification registry](https://github.com/Resnovas/smartcloud/blob/main/docs/verification.md) for the decoded-event regression and live queue acceptance steps.
 
 ### What counts
 
@@ -172,7 +178,7 @@ The checks are read with the workflow's own token (the `workflowToken` input, wh
 
 - The job's own check (named after the job, such as `smartcloud`) stays in progress while the feature waits, then fails if any counted check failed, is still pending, is missing, or its own run was never listed. That is the check your ruleset requires.
 - A `smartcloud / required` [check run](/glossary#check-run) with the same findings: failure on any error, success with the `required.passed` notice otherwise.
-- The failed, pending and missing checks in the [report comment](/glossary#report-comment) on the pull request, each linking to the check.
+- The failed, pending and missing checks in the [report comment](/glossary#report-comment) on pull request events, each linking to the check. Merge groups have no pull request subject, so their findings appear in checks and the job summary rather than a comment.
 - In the job summary, every [finding](/glossary#finding), including the notice with the number of checks that passed.
 
 ## Forks and restricted runs

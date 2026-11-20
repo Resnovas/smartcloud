@@ -55,6 +55,8 @@ export interface FeatureContext {
 export interface Feature {
   readonly name: string
   readonly handles: ReadonlyArray<EnvelopeKind>
+  /** Narrows handled kinds to specific events or actions, before the check-run requirement is evaluated. Defaults to accepting every handled event. */
+  readonly acceptsEvent?: (envelope: SupportedEnvelope) => boolean
   /** Whether the config asks for this feature at all. Defaults to always. */
   readonly enabled?: (config: SmartcloudConfig) => boolean
   /**
@@ -303,6 +305,10 @@ export const runFeatures = (options: {
       }
       if (!feature.handles.includes(envelope.kind)) {
         skipped.push({ feature: feature.name, reason: `does not handle ${envelope.kind} events` })
+        return false
+      }
+      if (feature.acceptsEvent !== undefined && !feature.acceptsEvent(envelope)) {
+        skipped.push({ feature: feature.name, reason: `does not handle ${envelope.event} events` })
         return false
       }
       if (feature.enabled !== undefined && !feature.enabled(options.config)) {

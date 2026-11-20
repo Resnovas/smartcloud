@@ -15,7 +15,7 @@
  */
 
 import { REQUIRED_TIMEOUT } from '@resnovas/config'
-import { type Feature, Report } from '@resnovas/engine'
+import { type Feature, Report, type SupportedEnvelope } from '@resnovas/engine'
 import { type CommitCheck, GitHub } from '@resnovas/integrations.github'
 import { Clock, Duration, Effect } from 'effect'
 import { type Assessment, assessChecks } from './assess.js'
@@ -144,14 +144,22 @@ const describe = (check: CommitCheck) =>
 
 const linked = (check: CommitCheck) => (check.url === undefined ? {} : { link: check.url })
 
+const isCheckEvent = (envelope: SupportedEnvelope): envelope is SupportedEnvelope & { readonly headSha: string } =>
+  envelope.kind === 'pullRequest' ||
+  (envelope.kind === 'repository' &&
+    envelope.event === 'merge_group' &&
+    envelope.action === 'checks_requested' &&
+    envelope.headSha !== undefined)
+
 /**
  * The aggregate "all required" check: the job running smartcloud passes only
- * when every other check on the pull request's head commit has passed, so a
- * ruleset requires that one check instead of a list of names.
+ * when every other check on the pull request or merge-group head commit has
+ * passed, so a ruleset requires that one check instead of a list of names.
  *
  * @remarks
- * Runs on pull request events when the config has a `required` section and
- * the workflow passes the job's `checkRunId`; without it the job would wait
+ * Runs on pull request events and `merge_group: checks_requested` when the
+ * config has a `required` section and the workflow passes the job's
+ * `checkRunId`; without it the job would wait
  * for itself, so the feature is skipped. It looks at the head commit's
  * latest run of each check and latest status of each context, first after
  * {@link POLL_INTERVAL} and then twice as long after each look that finds
@@ -172,19 +180,28 @@ const linked = (check: CommitCheck) => (check.url === undefined ? {} : { link: c
  * import { requiredFeature } from '@resnovas/feature.required'
  * import { runFeatures } from '@resnovas/engine'
  *
- * declare const payload: unknown
- * const run = runFeatures({ config: { version: 2, required: {} }, event: 'pull_request', payload, features: [requiredFeature], checkRunId: 42 })
+ * const run = runFeatures({
+ *   config: { version: 2, required: {} },
+ *   event: 'merge_group',
+ *   payload: {
+ *     action: 'checks_requested',
+ *     merge_group: { head_sha: 'queue-head', head_ref: 'refs/heads/gh-readonly-queue/main/pr-7' },
+ *   },
+ *   features: [requiredFeature],
+ *   checkRunId: 42,
+ * })
  * ```
  */
 export const requiredFeature: Feature = {
   name: FEATURE,
-  handles: ['pullRequest'],
+  handles: ['pullRequest', 'repository'],
+  acceptsEvent: isCheckEvent,
   needsCheckRun: true,
   enabled: (config) => config.required !== undefined,
   run: ({ config, envelope, checkRunId }) =>
     Effect.gen(function* () {
       // The runner only calls a feature that needs a check run with one, on the events it handles.
-      if (envelope.kind !== 'pullRequest' || checkRunId === undefined) return
+      if (!isCheckEvent(envelope) || checkRunId === undefined) return
       const report = yield* Report
       const timeout = config.required?.timeout ?? REQUIRED_TIMEOUT
       const deadline = (yield* Clock.currentTimeMillis) + Duration.toMillis(Duration.minutes(timeout))

@@ -122,6 +122,100 @@ describe('requiredFeature', () => {
     expect(requiredFeature.enabled?.({ version: 2, required: {} })).toBe(true)
   })
 
+  for (const scenario of [
+    { state: 'success', checks: [check('ci / test', 'success')], rule: 'required.passed', level: 'notice' },
+    { state: 'failure', checks: [check('ci / test', 'failure')], rule: 'required.failed', level: 'error' },
+    { state: 'pending', checks: [check('ci / test', 'pending')], rule: 'required.pending', level: 'error' },
+    { state: 'missing', checks: [], rule: 'required.missing', level: 'error' },
+  ]) {
+    it.effect(`aggregates ${scenario.state} checks on the decoded merge-group head, not the pull request head`, () =>
+      Effect.gen(function* () {
+        const github = makeMemoryGitHub()
+        const mergeSha = 'merge-queue-head'
+        github.state.commitChecks.set(mergeSha, [self, ...scenario.checks])
+        // The original PR has the opposite outcome: querying it would give the wrong decision.
+        github.state.commitChecks.set(SHA, [
+          self,
+          check('ci / test', scenario.state === 'success' ? 'failure' : 'success'),
+        ])
+        const fiber = yield* Effect.fork(
+          runFeatures({
+            config: { version: 2, required: { expect: ['^ci / test$'], timeout: 1 } },
+            event: 'merge_group',
+            payload: {
+              action: 'checks_requested',
+              merge_group: { head_sha: mergeSha, head_ref: 'refs/heads/gh-readonly-queue/main/pr-7' },
+            },
+            features: [requiredFeature],
+            checkRunId: SELF,
+            checkRunRequired: true,
+          }).pipe(Effect.provideService(GitHub, github.service)),
+        )
+        yield* TestClock.adjust(Duration.minutes(1))
+        const result = yield* Fiber.join(fiber)
+        expect(result.envelope).toStrictEqual({
+          kind: 'repository',
+          event: 'merge_group',
+          action: 'checks_requested',
+          headSha: mergeSha,
+        })
+        expect(result.ran).toStrictEqual(['required'])
+        expect(result.failed).toStrictEqual([])
+        expect(result.findings.map(({ rule, level }) => ({ rule, level }))).toStrictEqual([
+          { rule: scenario.rule, level: scenario.level },
+        ])
+        if (scenario.state === 'success') {
+          expect(result.findings[0]?.message).toBe('All 1 other check(s) on this commit passed.')
+        }
+      }),
+    )
+  }
+
+  it.effect('fails closed when a merge-group action omits its own check run', () =>
+    Effect.gen(function* () {
+      const result = yield* runFeatures({
+        config: { version: 2, required: {} },
+        event: 'merge_group',
+        payload: {
+          action: 'checks_requested',
+          merge_group: { head_sha: 'merge-queue-head', head_ref: 'refs/heads/gh-readonly-queue/main/pr-7' },
+        },
+        features: [requiredFeature],
+        checkRunRequired: true,
+      }).pipe(Effect.provideService(GitHub, makeMemoryGitHub().service))
+      expect(result.ran).toStrictEqual([])
+      expect(result.findings.map(({ rule, level }) => ({ rule, level }))).toStrictEqual([
+        { rule: 'required.check-run-missing', level: 'error' },
+      ])
+    }),
+  )
+
+  it.effect('does not aggregate other repository events or require a check run for them', () =>
+    Effect.gen(function* () {
+      const github = scripted([[]])
+      for (const event of ['push', 'schedule', 'workflow_dispatch', 'repository_dispatch', 'merge_group']) {
+        for (const checkRunId of [SELF, undefined]) {
+          const result = yield* runFeatures({
+            config: { version: 2, required: {} },
+            event,
+            payload: {
+              action: 'destroyed',
+              ref: 'refs/heads/main',
+              after: SHA,
+              merge_group: { head_sha: SHA, head_ref: 'refs/heads/gh-readonly-queue/main/pr-7' },
+            },
+            features: [requiredFeature],
+            checkRunId,
+            checkRunRequired: true,
+          }).pipe(Effect.provideService(GitHub, github.service))
+          expect(result.ran).toStrictEqual([])
+          expect(result.findings).toStrictEqual([])
+        }
+      }
+      expect(github.looks()).toBe(0)
+    }),
+  )
+
   it.effect('passes once every other check has passed on two looks in a row', () =>
     Effect.gen(function* () {
       const github = scripted([[check('ci / test', 'success'), check('ci / lint', 'success', 'skipped')]])
