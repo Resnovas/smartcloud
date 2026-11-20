@@ -1266,6 +1266,8 @@ export const example = Effect.gen(function* () {
 
 Run `node --run funnel:static` immediately after coding, before documentation or other work. It runs production and test-project type checks plus corrective ESLint rules. Then run `node --run funnel:verify` for behavior and coverage, and `node --run check` before delivery. Setup installs a pre-commit hook outside CI that runs static checks before tests and refuses a staged tree different from the worktree; existing foreign hooks are preserved, not overwritten.
 
+Hook creation uses an exclusive write rather than checking existence before writing. Reinstalling a matching hook does not rewrite it; existing unreadable or foreign hooks fail closed with a preservation diagnostic.
+
 The canonical Markdown registry is `docs/verification.md`. It maps the runtime `FEATURES` registration and every workflow to triggers, executable checks and expected observations. Update the relevant row with new behavior; `node --run funnel:contracts` checks inventory drift and exercises lint rejection/acceptance plus real disposable Git hook scenarios. PR CI runs these contracts even for docs-only changes. Local in-memory tests do not prove live permissions or releases; record live checks as pending until a GitHub run proves them.
 
 The syntax restrictions exclude integration SDK callbacks and repository tooling. The existing MCP startup await has one documented exception pending lifecycle migration; synchronous parser throw contracts are unchanged. These limits are not blanket permission to add Promise-based feature code.

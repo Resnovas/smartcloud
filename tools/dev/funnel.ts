@@ -15,7 +15,7 @@
  */
 
 import { spawnSync } from 'node:child_process'
-import { existsSync, mkdirSync, readFileSync, writeFileSync, chmodSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 
 const marker = '# smartcloud-funnel pre-commit'
@@ -34,14 +34,24 @@ if (process.argv.includes('--install')) {
   const result = git('rev-parse', '--git-path', 'hooks/pre-commit')
   if (result.status !== 0) fail(`Cannot locate Git hooks: ${result.stderr}`)
   const path = resolve(result.stdout.trim())
-  if (existsSync(path) && readFileSync(path, 'utf8') !== hook) {
-    fail(
-      `Preserving existing hook ${path}. Automatic setup requires ownership of this hook. Ask its owner to preserve and relocate it before rerunning setup; do not overwrite it or bypass its checks.`,
-    )
-  }
   mkdirSync(dirname(path), { recursive: true })
-  writeFileSync(path, hook)
-  chmodSync(path, 0o755)
+  try {
+    // Exclusive creation cannot overwrite a hook replaced concurrently or follow a dangling symlink.
+    writeFileSync(path, hook, { flag: 'wx', mode: 0o755 })
+  } catch (error) {
+    if (!(error instanceof Error && 'code' in error && error.code === 'EEXIST')) {
+      fail(`Cannot create hook ${path}: ${String(error)}`)
+    }
+    try {
+      if (readFileSync(path, 'utf8') !== hook) {
+        fail(
+          `Preserving existing hook ${path}. Automatic setup requires ownership of this hook. Ask its owner to preserve and relocate it before rerunning setup; do not overwrite it or bypass its checks.`,
+        )
+      }
+    } catch (readError) {
+      fail(`Preserving existing hook ${path}; cannot read it: ${String(readError)}`)
+    }
+  }
   console.log('funnel: pre-commit installed')
 } else {
   // Tests inspect the worktree. Refuse a different staged snapshot rather than

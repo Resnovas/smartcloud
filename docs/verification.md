@@ -12,6 +12,8 @@ This is the canonical Markdown registry for the shipped GitHub Action, its runti
 
 The pre-commit hook runs layers 2 and 3 in that order. It refuses unstaged tracked changes and non-ignored untracked files, because tests read the worktree rather than the index. Stage the intended change or use a clean task worktree. It never stashes or rewrites someone else's work. The existing house commit-msg hook still checks attribution and commit policy. No extra dependencies or flags are required. This is developer verification tooling, not a runtime feature toggle.
 
+Installation creates the hook exclusively, so a concurrent writer cannot have its hook overwritten. Reinstalling an identical hook leaves its contents and modification time unchanged; an unreadable or different existing hook stops installation with a preservation diagnostic.
+
 To improve the funnel after a repeated mistake: fix the example people copy, add a lint diagnostic saying what to do instead or a regression test showing the contract, prove that the old case fails and the corrected case passes, then remove the duplicate prose. Keep approvals, ownership, sensitive-data decisions and unresolved tradeoffs in agent guidance.
 
 ## Action entry point

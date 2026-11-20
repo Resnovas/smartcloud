@@ -18,7 +18,7 @@ import { beforeAll, describe, expect, it } from '@effect/vitest'
 import { ESLint } from 'eslint'
 import { fileURLToPath } from 'node:url'
 import { spawnSync } from 'node:child_process'
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, readFileSync, statSync, utimesSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const root = fileURLToPath(new URL('../../..', import.meta.url))
@@ -100,7 +100,11 @@ describe('funnel pre-commit', () => {
     git('config', 'core.hooksPath', '.git/hooks')
     const hookPath = join(cwd, '.git/hooks/pre-commit')
     expect(run('--install').status).toBe(0)
+    // Reinstallation must not rewrite a hook another process could replace after validation.
+    const installedAt = new Date('2001-01-01T00:00:00Z')
+    utimesSync(hookPath, installedAt, installedAt)
     expect(run('--install').status).toBe(0)
+    expect(statSync(hookPath).mtimeMs).toBe(installedAt.getTime())
     const installedHook = readFileSync(hookPath, 'utf8')
     expect(installedHook).toContain('exec node --run funnel:pre-commit')
     writeFileSync(hookPath, '#!/bin/sh\necho existing-hook\n')
