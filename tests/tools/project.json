@@ -6,7 +6,15 @@
   "tags": ["type_test", "layer_shared"],
   "targets": {
     "test": {
-      "inputs": ["...", "{workspaceRoot}/tools/dev/funnel.ts"]
+      "inputs": [
+        "...",
+        "{workspaceRoot}/tools/dev/funnel.ts",
+        "{workspaceRoot}/tools/dev/pre-commit.mjs",
+        "{workspaceRoot}/tools/test/affected.ts",
+        "{workspaceRoot}/tools/ci/smartcloud-native*",
+        "{workspaceRoot}/.github/workflows/**/*",
+        "{workspaceRoot}/.agents/surfaces.jsonc"
+      ]
     }
   }
 }

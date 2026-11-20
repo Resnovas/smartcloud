@@ -150,7 +150,8 @@ jobs:
       - name: Lint the projects
         run: |
           pnpm nx "$NX_RUN" -t lint
-          pnpm exec eslint tools/dev/funnel.ts
+          pnpm exec eslint tools/dev/funnel.ts tools/test/affected.ts
+          pnpm exec tsc --ignoreConfig --noEmit --skipLibCheck --module NodeNext --target ES2022 --strict --types node tools/dev/funnel.ts tools/test/affected.ts
 
       # Always runs, even for docs-only changes: the Markdown registry is a
       # contract with the action's feature list and the workflow trigger inventory.

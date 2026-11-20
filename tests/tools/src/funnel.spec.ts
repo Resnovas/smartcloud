@@ -16,7 +16,7 @@
 
 import { beforeAll, describe, expect, it } from '@effect/vitest'
 import { ESLint } from 'eslint'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 import { spawnSync } from 'node:child_process'
 import {
   closeSync,
@@ -184,8 +184,8 @@ if (${JSON.stringify(mutation)} === 'isolated') {
       JSON.stringify({
         scripts: {
           'funnel:pre-commit': `"${process.execPath}" "${join(root, 'tools/dev/funnel.ts')}"`,
-          'funnel:static': 'node --check feature.mjs && node generate.mjs static',
-          'funnel:verify': 'node generate.mjs verify',
+          'verify:static': 'node --check feature.mjs && node generate.mjs static',
+          'test:affected': 'node generate.mjs verify',
         },
       }),
     )
@@ -236,7 +236,7 @@ if (${JSON.stringify(mutation)} === 'isolated') {
       expect(output).not.toContain('passed for the staged tree')
       if (phase === 'static') expect(output).not.toContain('verify-sentinel')
       else expect(output).toContain('verify-sentinel')
-      expect(output).toContain(`after funnel:${phase}`)
+      expect(output).toContain(`after ${phase === 'static' ? 'verify:static' : 'test:affected'}`)
     }
     expect(output).toContain(diagnostic)
   })
@@ -281,15 +281,40 @@ if (${JSON.stringify(mutation)} === 'isolated') {
       closeSync(hookFile)
     }
 
-    const manifest = (staticExit: number) =>
+    const manifest = (staticExit: number, affectedExit = 0) =>
       JSON.stringify({
         scripts: {
           'funnel:pre-commit': `"${process.execPath}" "${join(root, 'tools/dev/funnel.ts')}"`,
-          'funnel:static': `node -e "console.log('static-sentinel'); process.exit(${staticExit})"`,
-          'funnel:verify': 'node -e "console.log(\'verify-sentinel\')"',
+          'verify:static': `node -e "console.log('static-sentinel'); process.exit(${staticExit})"`,
+          'test:affected': `node -e "console.log('verify-sentinel'); process.exit(${affectedExit})" --`,
         },
       })
     writeFileSync(join(cwd, 'package.json'), manifest(0))
+    const declaration = readFileSync(join(root, '.agents/surfaces.jsonc'), 'utf8').match(/"preCommit":\s*(\{[^}]+\})/)
+    expect(declaration).not.toBeNull()
+    const compose = (configuration = declaration?.[1] ?? '{}') =>
+      spawnSync(
+        process.execPath,
+        [
+          '--input-type=module',
+          '--eval',
+          `import { installPreCommit } from ${JSON.stringify(pathToFileURL(join(root, 'tools/dev/pre-commit.mjs')).href)}; console.log(installPreCommit(process.cwd(), false, JSON.parse(process.argv[1])))`,
+          configuration,
+        ],
+        { cwd, env, encoding: 'utf8' },
+      )
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const result = compose()
+      expect(result.status, result.stderr).toBe(0)
+      expect(result.stdout).toContain('already installed')
+      expect(readFileSync(hookPath, 'utf8')).toBe(installedHook)
+    }
+    expect(compose('{"script":"missing","marker":"smartcloud-funnel pre-commit"}').status).toBe(1)
+    expect(compose('{"script":"funnel:pre-commit; true","marker":"smartcloud-funnel pre-commit"}').status).toBe(1)
+    writeFileSync(hookPath, '#!/bin/sh\necho foreign\n')
+    expect(compose().status).toBe(1)
+    expect(readFileSync(hookPath, 'utf8')).toContain('echo foreign')
+    writeFileSync(hookPath, installedHook)
     expect(run().stderr).toContain('Untracked files')
     git('add', 'package.json')
     writeFileSync(join(cwd, 'package.json'), manifest(1))
@@ -299,6 +324,25 @@ if (${JSON.stringify(mutation)} === 'isolated') {
     expect(failed.status).toBe(1)
     expect(failed.stdout).toContain('static-sentinel')
     expect(failed.stdout).not.toContain('verify-sentinel')
+    writeFileSync(join(cwd, 'package.json'), manifest(0, 1))
+    git('add', 'package.json')
+    const affectedFailed = spawnSync(
+      'git',
+      [
+        '-c',
+        'user.name=Funnel fixture',
+        '-c',
+        'user.email=fixture@example.invalid',
+        '-c',
+        'commit.gpgsign=false',
+        'commit',
+        '-m',
+        'test: reject failed affected tests',
+      ],
+      { cwd, env, encoding: 'utf8' },
+    )
+    expect(affectedFailed.status).toBe(1)
+    expect(affectedFailed.stderr).toContain('test:affected failed')
     writeFileSync(join(cwd, 'package.json'), manifest(0))
     git('add', 'package.json')
     const passed = run()

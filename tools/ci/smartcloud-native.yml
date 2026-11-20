@@ -1,0 +1,124 @@
+# Canonical native-self-build profile, authorized only for Resnovas/smartcloud.
+# Copy this complete recipe to .github/workflows/smartcloud.yml during owned adoption.
+name: smartcloud
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, ready_for_review, closed]
+  issues:
+    types: [opened, edited, reopened, labeled, unlabeled]
+  # Authorized slash commands only; checkout/build/config always use trusted main.
+  issue_comment: # zizmor: ignore[dangerous-triggers]
+    types: [created]
+  push:
+    branches: [main]
+  merge_group:
+  schedule:
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: smartcloud-${{ github.event_name }}-${{ github.event.pull_request.number || github.event.issue.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name != 'issue_comment' }}
+
+jobs:
+  smartcloud:
+    name: smartcloud
+    if: >-
+      github.event_name != 'issue_comment' ||
+      contains(github.event.comment.body, '/') &&
+      contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    env:
+      HAS_APP_KEY: ${{ vars.RESNOVAS_BOT_APP_ID != '' && secrets.RESNOVAS_BOT_PRIVATE_KEY != '' }}
+    permissions:
+      contents: read
+      checks: write
+      issues: write
+      pull-requests: write
+      statuses: read
+    steps:
+      # Validate metadata before checkout, installation or token minting. Never fall back to a PR ref.
+      - name: Validate trusted execution metadata
+        shell: node {0}
+        env:
+          CHECK_RUN_ID: ${{ job.check_run_id }}
+        run: |
+          const { readFileSync } = require('node:fs')
+          const event = JSON.parse(readFileSync(process.env.GITHUB_EVENT_PATH, 'utf8'))
+          const fail = () => { throw new Error('Require smartcloud repository, main queue base, exact queue SHA and nonempty checkRunId; never run candidate code or skip queue verification.') }
+          if (process.env.GITHUB_REPOSITORY !== 'Resnovas/smartcloud' || !/^[1-9]\d*$/.test(process.env.CHECK_RUN_ID || '')) fail()
+          if (process.env.GITHUB_EVENT_NAME === 'merge_group') {
+            const group = event.merge_group
+            if (event.action !== 'checks_requested' || event.repository?.default_branch !== 'main' || group?.base_ref !== 'refs/heads/main' ||
+                !group?.head_ref?.startsWith('refs/heads/gh-readonly-queue/main/') || group.head_ref !== process.env.GITHUB_REF ||
+                !/^[0-9a-f]{40}$/.test(group?.base_sha || '') || !/^[0-9a-f]{40}$/.test(group?.head_sha || '') ||
+                group.head_sha !== process.env.GITHUB_SHA) fail()
+          }
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: Resnovas/smartcloud
+          ref: refs/heads/main
+          persist-credentials: false
+
+      - uses: pnpm/action-setup@ea17c68df8912ef543352723c149a84f56e3d413 # v6.1.0
+        with:
+          run_install: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+
+      # No PR cache or lifecycle entry point may supply the privileged action bundle.
+      - name: Bundle the trusted action
+        run: pnpm exec nx run @resnovas/action:bundle --skip-nx-cache
+
+      - name: Mint the read-only house token
+        id: house
+        if: >-
+          env.HAS_APP_KEY == 'true'
+          && (!github.event.pull_request || github.event.pull_request.head.repo.full_name == github.repository)
+          && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.RESNOVAS_BOT_APP_ID }}
+          private-key: ${{ secrets.RESNOVAS_BOT_PRIVATE_KEY }}
+          owner: Resnovas
+          repositories: .github
+          permission-contents: read
+
+      # Queue, comment and open-PR events never receive the full app token.
+      - name: Mint the Resnovas Bot token
+        id: app
+        if: >-
+          env.HAS_APP_KEY == 'true'
+          && (
+            contains(fromJSON('["push", "schedule", "workflow_dispatch"]'), github.event_name)
+            || github.event_name == 'pull_request' && github.event.action == 'closed'
+            && github.event.pull_request.merged == true
+            && github.event.pull_request.head.repo.full_name == github.repository
+          )
+          && github.actor != 'dependabot[bot]' && github.event.pull_request.user.login != 'dependabot[bot]'
+          && (github.event_name != 'workflow_dispatch' || github.ref_name == github.event.repository.default_branch)
+        continue-on-error: true
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0 # zizmor: ignore[github-app]
+        with:
+          client-id: ${{ vars.RESNOVAS_BOT_APP_ID }}
+          private-key: ${{ secrets.RESNOVAS_BOT_PRIVATE_KEY }}
+          owner: Resnovas
+          repositories: smartcloud
+
+      - name: Run smartcloud
+        uses: ./
+        with:
+          GITHUB_TOKEN: ${{ steps.app.outputs.token || github.token }}
+          houseToken: ${{ steps.house.outputs.token }}
+          configRef: refs/heads/main
+          checkRunId: ${{ job.check_run_id }}

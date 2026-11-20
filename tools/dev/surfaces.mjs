@@ -36,6 +36,7 @@ import { homedir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
+import { installPreCommit } from './pre-commit.mjs'
 
 
 
@@ -652,6 +653,10 @@ if (command === 'sync' || command === 'check') {
   }
   const prompts = readPrompts()
   console.log(installCommitHook())
+  // A sync cannot invent a repository's staged affected-test selection or move CI work into commits.
+  const packagePath = join(root, 'package.json')
+  const scripts = existsSync(packagePath) ? JSON.parse(readFileSync(packagePath, 'utf8')).scripts : {}
+  if (manifest.preCommit !== undefined || (scripts?.['verify:static'] && scripts?.['test:affected'])) console.log(installPreCommit(root, dryRun, manifest.preCommit))
   console.log(await installOrca(prompts))
   console.log(installOpenChamber())
   if (dryRun) console.log('Dry run: nothing was written.')
