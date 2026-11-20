@@ -7,17 +7,6 @@
         "Authorization": "Bearer ${MEM0_GATEWAY_TOKEN:-}"
       }
     },
-    "cognee": {
-      "type": "stdio",
-      "command": "uvx",
-      "args": [
-        "cognee-mcp==0.5.5"
-      ],
-      "env": {
-        "COGNEE_BASE_URL": "${COGNEE_BASE_URL:-}",
-        "COGNEE_API_KEY": "${COGNEE_API_KEY:-}"
-      }
-    },
     "graphify": {
       "type": "stdio",
       "command": "sh",
