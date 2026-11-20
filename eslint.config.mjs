@@ -50,7 +50,7 @@ export default [
     // Opt in each package only after its declarations satisfy the shared contracts.
     ...contracts,
     basePath: fileURLToPath(new URL('.', import.meta.url)),
-    files: ['packages/feature.lock/src/**/*.ts'],
+    files: ['packages/feature.lock/src/**/*.ts', 'packages/feature.freeze/src/**/*.ts'],
   },
   {
     ignores: [
