@@ -1,3 +1,14 @@
+## 2.1.1 (2026-11-20)
+
+### Bug fixes
+
+- **required:** aggregate merge-group head checks (SMC-176) ([#755](https://github.com/Resnovas/smartcloud/pull/755))
+
+### Thank you
+
+- Jonathan S @TGTGamer
+- OpenAI GPT-6 Astra
+
 ## 2.0.2 (2026-11-19)
 
 This was a version bump only, there were no code changes.
