@@ -1,3 +1,15 @@
+## 2.1.0 (2026-11-20)
+
+### Features
+
+- **funnel:** enforce corrective checks and verification (SMC-176) ([#750](https://github.com/Resnovas/smartcloud/pull/750))
+
+### Thank you
+
+- Amp GPT-6 Astra
+- Jonathan S @TGTGamer
+- OpenAI GPT-6 Astra
+
 ## 2.0.2 (2026-11-19)
 
 This was a version bump only, there were no code changes.
