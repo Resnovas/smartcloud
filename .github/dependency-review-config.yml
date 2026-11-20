@@ -31,3 +31,10 @@ allow-licenses:
   - Zlib
 # house:managed:end
 # house:local - add this repository's own policy below this line.
+# Owner-approved for all versions of exactly these three packages across the house.
+# Provenance and licence review: https://github.com/Resnovas/.github/pull/57
+# Licence exceptions only; vulnerability severity and scope checks remain unchanged.
+allow-dependencies-licenses:
+  - pkg:npm/parse-statements
+  - pkg:npm/spdx-exceptions
+  - pkg:npm/uri-js
