@@ -9,7 +9,7 @@ const message = 'Do not assert that source code, a symbol or a source file is ab
 const property = (node) => node?.type === 'MemberExpression' ? (node.computed ? node.property.value : node.property.name) : undefined
 const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url))
 
-/** Delegate prose checks unchanged except for reports inside the exact licence header required by the repository. */
+/** Delegate JSDoc checks unchanged except for reports on the exact licence header required by the repository. */
 const withLicenceHeader = (rule) => ({
   ...rule,
   create(context) {
@@ -24,12 +24,20 @@ const withLicenceHeader = (rule) => ({
     return rule.create(Object.create(context, {
       report: { value(descriptor) {
         const line = descriptor.loc?.start?.line ?? descriptor.loc?.line ?? descriptor.node?.loc?.start?.line
-        if (line >= firstLine && line <= lastLine) return
+        // Location-only settings errors and whole-file reports are not header diagnostics.
+        const node = descriptor.node
+        if (node?.type === 'Block' && node.loc.start.line === firstLine && node.loc.end.line === lastLine && line >= firstLine && line <= lastLine) return
         context.report(descriptor)
       } },
     }))
   },
 })
+
+// Both exports share one plugin identity, including consumer-enabled upstream rules.
+const licenceAwareJsdoc = {
+  meta: jsdoc.meta,
+  rules: Object.fromEntries(Object.entries(jsdoc.rules).map(([name, rule]) => [name, withLicenceHeader(rule)])),
+}
 
 /** Follow local initializer provenance, not variable spelling, to distinguish source inspection from runtime output. */
 export const noSourceAbsence = {
@@ -112,13 +120,13 @@ export const noSourceAbsence = {
 
 const house = { rules: {
   'no-source-absence': noSourceAbsence,
-  'require-description': withLicenceHeader(jsdoc.rules['require-description']),
-  'match-description': withLicenceHeader(jsdoc.rules['match-description']),
+  'require-description': licenceAwareJsdoc.rules['require-description'],
+  'match-description': licenceAwareJsdoc.rules['match-description'],
 } }
 
 /** Shared additive rules: callers retain their parser, boundaries, declaration contracts and rationale checks. */
 export const funnel = {
-  plugins: { jsdoc, house },
+  plugins: { jsdoc: licenceAwareJsdoc, house },
   rules: {
     'house/no-source-absence': 'error',
     'jsdoc/informative-docs': ['error', { aliases: { run: ['runs', 'running'], main: ['entry', 'point'] } }],
@@ -127,7 +135,7 @@ export const funnel = {
 
 /** Apply to editable production TypeScript, alongside the repository's existing TypeScript parser. */
 export const contracts = {
-  plugins: { jsdoc, house },
+  plugins: { jsdoc: licenceAwareJsdoc, house },
   settings: { jsdoc: { mode: 'typescript' } },
   rules: {
     'jsdoc/require-jsdoc': ['error', {
@@ -138,7 +146,7 @@ export const contracts = {
       exemptEmptyConstructors: false,
       exemptEmptyFunctions: false,
     }],
-    // Replace only these two vendor rules with licence-aware delegates; never exempt declarations or whole files.
+    // Preserve the original house rule IDs for consumers; all jsdoc/ rules now share the same exemption.
     'jsdoc/require-description': 'off',
     'jsdoc/match-description': 'off',
     'house/require-description': ['error', { contexts: ['any'] }],

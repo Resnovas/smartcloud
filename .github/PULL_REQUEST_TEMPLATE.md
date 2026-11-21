@@ -13,7 +13,7 @@ read every changed line and run it yourself.
 
 ## What changed and why
 
-<!-- The behaviour change first, then why. Link the issue: "Fixes #123". -->
+<!-- The behaviour change first, then why. Reference the verified task issues with non-closing "Refs" for partial delivery; use closing keywords only when whole-issue acceptance is verified. -->
 
 ## Evidence
 

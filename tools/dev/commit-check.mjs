@@ -13,6 +13,9 @@
 //   node tools/dev/commit-check.mjs --message "<text>"     check a message
 //     --author "Name <email>"   the author to check against; git's by default
 //     --no-diff                 skip the staged-text scan
+// TASK_LINEAR_PREFIX in house sync.values opts a repository into paired
+// Linear/GitHub issue references. Unmapped repositories default to none.
+// This offline check verifies syntax, not remote mapping or acceptance.
 //
 // `node tools/dev/surfaces.mjs install` (run by setup) installs it as
 // .git/hooks/commit-msg. It has no dependencies and never talks to the
@@ -100,9 +103,10 @@ const parseMessage = (message) => {
  *
  * @param {string} message
  * @param {{ name: string, email: string }} author
+ * @param {string} linearPrefix - Configured team key, or none for unmapped repositories.
  * @returns {string[]}
  */
-export const checkMessage = (message, author) => {
+export const checkMessage = (message, author, linearPrefix = 'none') => {
   const problems = []
   const { subject, lines, trailers } = parseMessage(message)
   const text = lines.join('\n')
@@ -117,6 +121,19 @@ export const checkMessage = (message, author) => {
   // A merge, revert, fixup or squash commit is git's own: no sign-off or credit to check
   // (the pull request check exempts merge commits too, and fixups never land).
   if (subject === '' || GIT_GENERATED.test(subject)) return [...new Set(problems)]
+
+  // Opt in through the existing renderer, not by guessing tracker IDs from
+  // branch names or contacting a tracker in a local commit hook.
+  if (linearPrefix !== 'none') {
+    if (!/^[A-Z][A-Z0-9]*$/.test(linearPrefix)) {
+      problems.push('An invalid task Linear prefix was rendered; set TASK_LINEAR_PREFIX to the verified team key or none in house sync.values.')
+    } else {
+      const linear = new RegExp(`(?:^|[^A-Za-z0-9_-])${linearPrefix}-[1-9]\\d*(?![A-Za-z0-9_-])`)
+      const github = /(?:^|[\s(,])(?:[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9]\d*|https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*)(?=$|[\s),.;])/m
+      if (!linear.test(text)) problems.push(`Reference the owning ${linearPrefix} issue in this task commit, including generated docs/graph commits; use a verified ID, never a placeholder.`)
+      if (!github.test(text)) problems.push('Reference the verified linked, qualified GitHub issue as owner/repo#number or https://github.com/owner/repo/issues/number; a bare #number or pull request is not a mapping. Use Refs for partial delivery, not closing keywords.')
+    }
+  }
 
   const trailer = (key) =>
     trailers
@@ -134,7 +151,7 @@ export const checkMessage = (message, author) => {
   }
   if (!signOffs.some((signer) => !isAi(signer) && signer.email === author.email)) {
     problems.push(
-      `No Signed-off-by matching the author <${author.email}>. Commit with git commit -s as the accountable human; an agent adds someone's sign-off only where they set it up. See ${POLICY}/CONTRIBUTING.md#dco`,
+      `No Signed-off-by matching the author <${author.email}>. The accountable human must certify with git commit -s; agents must not delegate certification except under AI-03's narrow owner-session exception in loaded personal instructions. See ${POLICY}/AI_POLICY.md#ai-03`,
     )
   }
   for (const value of trailer('Co-authored-by')) {
@@ -233,7 +250,10 @@ const main = () => {
   }
   // A merge or revert in progress stages already-reviewed changes; only the message is checked.
   if (scanDiff && ['MERGE_HEAD', 'REVERT_HEAD'].some((head) => existsSync(resolve(git('rev-parse', '--git-path', head).trim())))) scanDiff = false
-  const problems = [...checkMessage(message, author), ...(scanDiff ? checkStagedText(git('diff', '--cached', '--unified=1', '--no-color')) : [])]
+  // Keep rendered configuration as data: even quotes/newlines cannot become
+  // executable JavaScript before the team-key validation runs.
+  const linearPrefix = readFileSync(new URL('./commit-check-linear-prefix.txt', import.meta.url), 'utf8').trim()
+  const problems = [...checkMessage(message, author, linearPrefix), ...(scanDiff ? checkStagedText(git('diff', '--cached', '--unified=1', '--no-color')) : [])]
   for (const problem of problems) console.error(`commit-check: ${problem}`)
   if (problems.length > 0) console.error('commit-check: the commit was not made. Fix the message or the staged text, or set HOUSE_SKIP_COMMIT_CHECK=1 for an emergency commit; the pull request check still applies.')
   return problems.length === 0 ? 0 : 1
