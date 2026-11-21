@@ -60,6 +60,8 @@ tools/ci/smartcloud-native-contract.cjs
 tools/ci/smartcloud-native.yml
 tools/test-process/process.mjs
 tools/test-process/process.d.mts
+tools/test-process/windows.mjs
+tools/test-process/build-windows.mjs
 tools/test/file.ts
 tools/typecheck/tests.ts
 tools/ai-docs/
