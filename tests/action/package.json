@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "devDependencies": {
-    "@effect/platform-node": "^0.108.2",
+    "@effect/platform-node": "^4.1.4",
     "@resnovas/action": "workspace:*",
     "@resnovas/config": "workspace:*",
     "@resnovas/engine": "workspace:*",
