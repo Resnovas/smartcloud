@@ -18,7 +18,7 @@
   },
   "dependencies": {
     "@effect/platform": "^0.97.2",
-    "@effect/platform-node": "^0.108.2",
+    "@effect/platform-node": "^4.1.4",
     "@modelcontextprotocol/sdk": "^1.32.2",
     "@resnovas/config": "workspace:*",
     "@resnovas/integrations.github": "workspace:*",
