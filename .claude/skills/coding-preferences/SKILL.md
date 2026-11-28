@@ -74,7 +74,7 @@ Do not restate their content here, and do not restate this there.
 - `feature-flags` - the feature-flag standard for every app and Odoo module.
 - `ai-sdk-vendor`, `workflow-sdk-vendor`, `chat-sdk-vendor`, `flags-sdk-vendor` - Vercel's own skills behind the house overrides.
 - `project-dev-surfaces` - every project ships Commands, Actions and Debug configs for each tool, one idempotent setup script, and a machine-only `AGENT-SETUP.md` for cloud agents.
-- `graphify` - the committed per-repository code graph, and the private cross-repo Graphify Cloud workspace.
+- `graphify` - ignored local code navigation, daily main snapshot artifacts, and the private Graphify Cloud memory workspace.
 
 **Compound Engineering** (`everyinc/compound-engineering-plugin`) is a Cursor/Codex
 **plugin**, not a PostHog skill companion. Install it in the IDE when you want its

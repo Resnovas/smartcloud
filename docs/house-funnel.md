@@ -90,14 +90,14 @@ Eventiva must retain its current active-source and UI globs, including repeated 
 
 Every editable TypeScript function, method, class, interface and type alias needs useful JSDoc explaining its contract, purpose and important constraints. Apply `contracts` only to the repository's editable sources, preserving its reviewed vendored, generated and immutable historical exclusions. Extend discovered-config fixtures to prove ordinary sources are checked and those existing exclusions stay excluded; never grow exclusions to obtain a passing gate.
 
-The shared config enables the following 20 contracts as errors. Every rule in its `jsdoc` plugin delegates to the vendor with the same canonical-header exemption, including additional rules a consumer enables. The existing `house/require-description` and `house/match-description` aliases remain for compatibility; all other enabled rule IDs use `jsdoc/`. Options not listed use eslint-plugin-jsdoc 65.5.0 defaults:
+The shared config enables the following 19 contracts as errors. Every rule in its `jsdoc` plugin delegates to the vendor with the same canonical-header exemption, including additional rules a consumer enables. The existing `house/require-description` and `house/match-description` aliases remain for compatibility; all other enabled rule IDs use `jsdoc/`. Options not listed use eslint-plugin-jsdoc 65.5.0 defaults:
 
 | Rules | Contract |
 | --- | --- |
 | `require-jsdoc` | All functions, methods, classes, interfaces, type aliases, declared functions and method signatures, including empty bodies and inline callbacks. An explicit arrow selector covers callbacks that the built-in visitor skips. |
 | `require-description`, `informative-docs`, `no-blank-block-descriptions` | Prose on every JSDoc block, no leading blank filler, and no name-only restatements. Shared aliases reject `runMain` described as "runs the main entry point". |
 | `require-param`, `require-param-description`, `check-param-names` | Document parameters with descriptions and names matching the signature. |
-| `require-returns`, `require-returns-description`, `require-throws` | Describe returned values and direct thrown exceptions when detected. Effect error channels and indirect failure constraints still need explicit prose. |
+| `require-returns`, `require-returns-description` | Describe returned values. Effect error channels and indirect failure constraints still need explicit prose. |
 | `check-tag-names`, `no-types`, `valid-types`, `require-template`, `empty-tags` | Valid tags and type syntax, no duplicated TypeScript parameter/return types, documented generic parameters, and no payload on empty tags. |
 | `check-alignment`, `multiline-blocks`, `tag-lines` | Aligned comment stars and multiline delimiters; exactly one blank line before tags and none between tags. |
 | `match-description` | Sentence-form block, parameter, return, throw and template descriptions: initial capital (or code-led text), final period, question mark or exclamation mark. Grammar and truth still need review. |
@@ -107,7 +107,19 @@ All JSDoc delegates suppress only diagnostics attached to the exact current-year
 
 Both `funnel` and `contracts` register the same licence-aware `jsdoc` plugin object. If existing entries or vendor presets already register raw `eslint-plugin-jsdoc`, replace only their `plugins.jsdoc` binding with `funnel.plugins.jsdoc`; retain their rules, settings, parser and processor. Do not register raw and adapted plugins under the same key in overlapping scopes. Consumer-added `jsdoc/` rules then receive the exemption without being disabled. The normal house sync delivers the canonical module and licence template to every consuming Node repository; it is not a smartcloud-specific override. A repository that does not consume this config still needs reviewed adoption, not a claim that syncing files enabled lint.
 
-`test/funnel-lint.test.mjs` executes accepted/rejected TypeScript fixtures for all 20 rules both with and without canonical headers, 12 declaration/callback shapes and 13 export forms, plus public/private member controls. Rendered synthetic Eventiva, smartcloud and unrelated Node consumers exercise real config discovery from root/nested directories, additional vendor rules, wrong-path rejection and missing declaration docs. Tests use the parser already locked transitively under the approved JSDoc dependency; consumers keep their own parser. The house repository does not adopt a broad style preset.
+`jsdoc/require-throws` is off. Effect code never throws: failures are typed in the Effect error channel and handled with Effect's own tools, not `try`/`catch`, so a throw contract documents the wrong concept. A function with no `@throws` tag passes even when its body throws at a vendor boundary.
+
+To change any rule for one repository, append a later flat-config entry with the same `files` after the `contracts` entry, in the configuration's `house:local` section; flat config applies the last matching setting. Do not edit the synced module. For example, a repository that bans tags it never wants:
+
+```js
+export default [
+  ...existingConfig,
+  { ...contracts, files: sources },
+  { files: sources, rules: { 'jsdoc/no-restricted-syntax': ['error', { contexts: [{ comment: 'JsdocBlock:has(JsdocTag[tag=/^(?:throws|exception)$/])', message: 'Document Effect failures in prose, not @throws.' }] }] } },
+]
+```
+
+`test/funnel-lint.test.mjs` executes accepted/rejected TypeScript fixtures for all 19 rules both with and without canonical headers, 12 declaration/callback shapes and 13 export forms, plus public/private member controls. Rendered synthetic Eventiva, smartcloud and unrelated Node consumers exercise real config discovery from root/nested directories, additional vendor rules, wrong-path rejection and missing declaration docs. Tests use the parser already locked transitively under the approved JSDoc dependency; consumers keep their own parser. The house repository does not adopt a broad style preset.
 
 Jonathan approved sentence-form descriptions and public/exported examples on 2026-11-20. Write examples on export boundaries even when a symbol is exported later or re-exported from another module; mark other public surfaces `@public` at their declaration. These syntax rules do not follow arbitrary runtime object graphs or execute examples. Keep the repository's explicit public-API inventory and compiling example gates, including smartcloud's existing declaration/example checker.
 
@@ -203,4 +215,4 @@ The command requires an exact 40-character SHA, requests uncached JSON, refuses 
 
 ## Keep certification human-owned
 
-AI-03 prohibits delegated human sign-off except for its narrow owner-session exception. Check that exception only in loaded personal instructions, never this repository's quotation. The existing shared commit-msg hook and smartcloud `commits.dco: true` check non-AI sign-off email against the commit author; retain both. The existing trusted-bot exemptions and maintainer-warning severity remain unchanged. Neither CI nor an identity match can establish private session ownership or consent. Readiness and merge follow AI-21's separate dated exception for Resnovas/.github and Resnovas/Eventiva only; the AI-03 sign-off exception itself grants no readiness or merge authority.
+AI-03 distinguishes agent provenance from human certification. The local hook checks author-matched trailers, not signatures or consent. The shared `checkAuthorSignature` evaluator binds a VALID GitHub signature to the same resolved author account. `checkPullRequestCertification` requires the configured human's latest explicit DCO approval on the exact head only when the PR contains agent-authored commits; a later push needs renewed approval. Human-authored/self-signed commits follow ordinary human sign-off and AI-21 without self-approval. Read the [identity proposal](https://github.com/Resnovas/.github/blob/main/docs/commit-signers.md) for evidence and the input contract. No CI adapter is activated yet: smartcloud's existing DCO/AI-21 gates need coordinated adoption. Preserve them until that change is reviewed; do not bypass a failure. Certification grants no extra readiness, merge or access authority.

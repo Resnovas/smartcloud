@@ -10,7 +10,7 @@
   "agents": ["claude", "codex"],
   "house": [
     { "id": "setup", "label": "Setup", "script": "setup" },
-    { "id": "check", "label": "Check: everything CI runs", "script": "check" },
+    { "id": "check", "label": "Check: repository consistency", "script": "check" },
     { "id": "test", "label": "Test", "script": "test" },
     { "id": "graph", "label": "Graph: open viewer", "command": "node tools/dev/open.mjs graphify-out/graph.html" },
     { "id": "graph-update", "label": "Graph: update", "command": "sh tools/graphify/graphify update" },

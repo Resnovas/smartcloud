@@ -1,5 +1,7 @@
 # Changelog
 
+- 2026-11-27: RES-74 separates ignored local navigation from automation-owned tracked snapshots; daily main signed PRs retain normal protections and the commit guard rejects manual generated output.
+- 2026-11-20: Align `references/agent-git.md` with AI-03's author-matched provenance and separate human PR certification.
 - 2026-11-17: Use colon-separated Nx tags and Eventiva's intersecting 16-constraint baseline; remove the obsolete database import exemption and distinguish cycle checks in `references/architecture.md` (EVE-22).
 - 2026-09-26: Effect repositories install the Effect Language Service (tsconfig plugin, patched tsc via `prepare`, workspace TypeScript in editors) and Effect Dev Tools (extension recommendation, opt-in `EFFECT_DEVTOOLS` layer) by default. See `references/effect.md`.
 

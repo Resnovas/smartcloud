@@ -1,5 +1,9 @@
 # Changelog
 
+## 2026-11-27
+
+- RES-74: ignored checkout-local lifecycle and atomic source fingerprints replace local graph commits and PR freshness checks. The commit guard reserves separate tracked snapshots for daily main automation through signed PRs. Preserve semantic caches and foreign hooks.
+
 ## 2026-09-26
 
 - House documents are now Markdown, so they reach the graph; `references/adopt.md` drops the AsciiDoc caveat and lists Eventiva's old `.adoc` files to delete.

@@ -37,7 +37,7 @@ duration method live in the bundled files below; do not grow this file.
 2. Classify the unit from the work, not the file count. If unsure, routine.
 3. Stage only the relevant files. No secrets, no unrelated work in progress.
 4. Commit with a HEREDOC message, shaped per
-   `references/message-shape.md`, ending with a DCO
+   `references/message-shape.md`, ending with an author-matched
    `Signed-off-by: <name> <email>` for the configured git author (`git commit -s`
    in the task worktree). Above the sign-off, add the
    AI policy's trailer for every AI tool that wrote or materially changed
@@ -46,8 +46,9 @@ duration method live in the bundled files below; do not grow this file.
    naming the model actually running, plus `Assisted-by: <tool>:<model>`
    only where the repository sets `commits.assistedBy`. Write them
    yourself and replace a host's own attribution line, which uses another
-   format. The commit author and the sign-off are the accountable human; an
-   AI tool never signs off. Human co-authors stay. No "Generated with"
+   format. Follow AI-03: an agent identity's sign-off records provenance,
+   with separate human PR certification; human-authored/self-signed commits
+   follow the ordinary human path. Human co-authors stay. No "Generated with"
    footer, robot emoji or session line.
 5. `git status` afterwards to confirm.
 6. If a hook fails, fix it and create a **new** commit. Do not amend a

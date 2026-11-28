@@ -1,8 +1,8 @@
 # house:managed:begin - synced from Resnovas/.github templates/.graphifyignore. Edits inside this block are overwritten.
 #
-# What Graphify must not read when it builds graphify-out/graph.json. The graph
-# is committed and public wherever the repository is, so anything it reads can
-# be published through it.
+# What Graphify must not read when it builds ignored graphify-out/graph.json.
+# Daily main snapshots are published in the repository and Actions artifacts,
+# so anything read can be published there.
 #
 # Git-style patterns. Graphify already honours .gitignore, which wins: a rule
 # here cannot re-include a path .gitignore excludes. It also skips .git,
@@ -51,6 +51,7 @@ tmp/
 
 # Generated output, including Graphify's own.
 graphify-out/
+graphify-snapshot/
 *.min.js
 *.map
 
