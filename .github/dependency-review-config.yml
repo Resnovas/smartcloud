@@ -12,8 +12,9 @@
 # or unknown licence fails until a maintainer reviews it.
 #
 # A repository adds its own keys below the managed block, such as allow-ghsas
-# for an advisory that does not apply, or allow-dependencies-licenses for one
-# package a maintainer has cleared. It cannot redefine allow-licenses.
+# for an advisory that does not apply. It cannot redefine allow-licenses or
+# allow-dependencies-licenses. Remove a duplicate local three-package list
+# during reviewed sync; preserve and escalate any other local exceptions.
 allow-licenses:
   - 0BSD
   - Apache-2.0
@@ -29,6 +30,13 @@ allow-licenses:
   - Python-2.0
   - Unlicense
   - Zlib
+# Owner-approved ALL versions of exactly these packages for RES-67 (#57).
+# Licence exceptions only; vulnerability checks remain required.
+# Land this policy before adding JSDoc dependencies: review uses base policy.
+allow-dependencies-licenses:
+  - pkg:npm/spdx-exceptions
+  - pkg:npm/uri-js
+  - pkg:npm/parse-statements
 # house:managed:end
 # house:local - add this repository's own policy below this line.
 # Owner-approved for all versions of exactly these three packages across the house.

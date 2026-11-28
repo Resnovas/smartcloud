@@ -11,7 +11,7 @@ A routing layer over Graphify's own Agent Skill for Claude (Graphify-Labs/graphi
 
 ## The two rules that bite hardest
 
-1. **Run Graphify through the repository wrapper, `sh tools/graphify/graphify`, not a bare `graphify`.** The wrapper clears provider API keys, keeps the global graph out of shared locations and upgrades Graphify daily. The vendor skill assumes a global install, `graphify install` and whichever model backend has a key; none of that applies here.
+1. **Run Graphify through the repository wrapper, `sh tools/graphify/graphify`, not a bare `graphify`.** The wrapper clears provider API keys and isolates local navigation. Upgrades are explicit, not daily. The vendor skill assumes a global install, `graphify install` and whichever model backend has a key; none of that applies here.
 2. **No paid or remote model over a repository.** The vendor pipeline dispatches semantic extraction to assistant subagents or an API backend. In house repositories, documents go through local Ollama only (`sh tools/graphify/graphify semantic`); code extraction needs no model at all.
 
 ## Source
@@ -38,10 +38,10 @@ A local copy at the pinned commit lives in the repository under `.agents/skills/
 
 ## House overrides
 
-1. **Wrapper**: every command through `sh tools/graphify/graphify`; use `-- <args>` for anything it does not wrap.
+1. **Wrapper**: every command through `sh tools/graphify/graphify`; see `help` for supported operations. Do not install upstream hooks or use raw commands to bypass freshness and storage ownership.
 2. **Backends**: `--backend ollama` only, through the wrapper's `semantic`. Never `claude`, `openai`, `gemini`, `kimi`, `deepseek` or `bedrock` over a repository, and never the assistant-subagent extraction path.
 3. **Install**: never `graphify install`, `graphify <platform> install`, `graphify global add` or `extract --global`; they write outside the repository or pool graphs into a shared global graph.
-4. **Committed output**: only `graph.json` and `cache/semantic*/`. Exports (`graph.html`, Obsidian, wiki) are generated on demand and never committed.
+4. **Output ownership**: local graphs, caches and exports stay ignored. Daily main automation alone updates the separate tracked snapshot through a signed PR and retains revision-labelled artifacts. Preserve existing semantic caches; see `docs/graphify.md` before migration.
 5. **MCP**: stdio through `sh tools/graphify/graphify mcp`. Shared HTTP serving is for the maintainer's private Graphify Cloud, not a repository.
 
 ## Companions

@@ -34,7 +34,7 @@ Follow [the Security Policy](SECURITY.md) instead.
 This project does **not** use a Contributor Licence Agreement.
 Every contribution is made under the [Developer Certificate of Origin 1.1](DCO.md) (DCO), and there is nothing to sign in advance.
 
-You certify the DCO by adding a `Signed-off-by` trailer, with your real name and the email address of the commit author, to **every** commit:
+For human-authored commits, certify the DCO with a `Signed-off-by` trailer containing your real name and the commit author's email:
 
 ```shell
 git commit -s
@@ -46,11 +46,10 @@ feat(billing): add proration preview
 Signed-off-by: Jane Doe <jane@example.com>
 ```
 
-- The sign-off applies to every contribution, however small.
-There is no size below which it is not needed.
+- Every ordinary commit needs an author-matched sign-off, however small. An agent identity's trailer is provenance, not certification. The human certifies agent-authored contributions through the exact-head approved-review path in [AI-03](AI_POLICY.md#ai-03) and reviews/merges the PR. A later push needs a fresh certification. Human-authored PRs retain ordinary sign-off and AI-21 fields without self-approval.
 - The address in the sign-off **must** match the commit author's address, or the check fails.
-- By signing off you also certify any part of the commit an AI tool produced.
-An AI tool **never** signs off; see [AI-03](AI_POLICY.md#ai-03).
+- A human certification covers the AI-produced parts as well as the human's own.
+An agent's own sign-off never supplies that human certification.
 - If you forgot, add it to existing commits with `git rebase --signoff main` and force-push your branch.
 - Commits made in the GitHub web interface are signed off automatically; the repository requires it.
 
@@ -60,12 +59,7 @@ Licence breaches, including those that come from AI-produced material, are cured
 ## <a id="AiAssisted"></a>AI-assisted contributions
 
 AI tools are allowed, and a human is always accountable for what they produce.
-The full rules are in the [AI Contribution Policy](AI_POLICY.md); these are the parts you will meet first:
-
-- Declare the autonomy level (`unassisted`, `autocomplete`, `chat`, `agent` or `autonomous`) and the tools on every issue and pull request.
-- Credit each AI tool that materially changed a commit with a `Co-authored-by` trailer, and sign off yourself.
-- Open AI-assisted pull requests as drafts, and mark them ready only once you have reviewed and run every change yourself.
-- Reply to reviewers in your own words.
+Follow the [AI Contribution Policy](AI_POLICY.md#everyone) for disclosure and attribution, [draft review requirements](AI_POLICY.md#ai-21) before marking ready, and [own-voice review rules](AI_POLICY.md#ai-05). Those are the canonical rules, not a separate checklist here.
 
 ## <a id="Responsibilities"></a>Responsibilities
 
@@ -200,19 +194,21 @@ Do not repeat what the code already says.
 Code quality is never traded for speed.
 Linting, type checking and tests must pass locally before you ask for review.
 
+The [funnel adoption guide](docs/house-funnel.md) owns static-first commands, staged-safe pre-commit installation, Markdown feature registries and synthetic evidence handling. Preserve repository-specific gates; `check` alone need not run product verification. Promote recurring corrections into behavioral tests or corrective lints before adding more agent guidance.
+
 ### <a id="CodeGraph"></a>Code graph
 
-Repositories that contain `tools/graphify/graphify` commit a [Graphify](https://github.com/Graphify-Labs/graphify) knowledge graph of their code in `graphify-out/graph.json`.
+Migrated repositories keep a [Graphify](https://github.com/Graphify-Labs/graphify) knowledge graph as ignored local output in `graphify-out/graph.json`.
 You and your tools can query it to find what a change touches, without reading the whole codebase.
 Everything runs on your machine: building the code graph uses local parsers only, with no model, no network and no cost.
 
 1. Install [uv](https://docs.astral.sh/uv/).
 1. Run `sh tools/graphify/graphify setup` once in your clone.
-This installs the latest Graphify release, which it keeps up to date, and git hooks that keep the graph current.
+This installs Graphify if missing and composes post-event hooks. Tool upgrades are explicit; pre-commit verification is preserved.
 1. Ask questions with `sh tools/graphify/graphify query "<question>"`.
-1. After changing code, run `sh tools/graphify/graphify update` and commit the changes under `graphify-out/` in the same pull request.
+1. After changing code, run `sh tools/graphify/graphify update`. Never stage, commit or push generated output.
 
-A stale graph never blocks a pull request: CI reports it, and the default branch refreshes itself.
+A stale graph never blocks a pull request. PR workflows neither generate nor publish graphs. Daily main automation updates the separate tracked snapshot through a signed PR with normal checks and retains revision-labelled artifacts. The commit-msg guard rejects manual generated-output changes while preserving source/config commits and removal of legacy tracked local output; see [local navigation and migration](docs/graphify.md).
 AI agents find the full instructions in `.agents/skills/graphify/SKILL.md`.
 
 ## <a id="MinorContributions"></a>Minor contributions
@@ -255,7 +251,7 @@ Which of their findings block a merge, and which are advisory, is set out in [th
 | Qodo Merge | Checks the change against its ticket, and reviews its tests and edge cases. |
 | Cursor Bugbot | Looks for logic bugs. |
 | Cursor approval agent | Approves low-risk pull requests under the [Approval Policy](APPROVAL_POLICY.md). |
-| Graphify | Architecture review from the committed code graph: coupling, blast radius and module boundaries. |
+| Graphify | Local navigation of coupling, blast radius and module boundaries, not a freshness gate. |
 | GitHub code scanning (CodeQL) with Copilot Autofix | Security and quality analysis; high or critical findings block the merge, and Autofix suggests fixes. |
 | GitHub secret scanning | Blocks pushes containing credentials, including AI-detected generic secrets. |
 | Dependabot | Dependency alerts, and grouped security and version update pull requests. |

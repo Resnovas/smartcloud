@@ -2,8 +2,8 @@
 # <a id="top"></a>Developer Certificate of Origin
 
 Every contribution to this project is made under the Developer Certificate of Origin below.
-You certify it by adding `Signed-off-by: Your Name <your@email>` to every commit, with `git commit -s`.
-Only a person can certify it; an AI tool never signs off.
+A human certifies it by adding `Signed-off-by: Your Name <your@email>` with `git commit -s`, or through the PR-level human attestation for agent-authored contributions in [AI-03](AI_POLICY.md#ai-03).
+Only a person can certify it. An agent's own sign-off records provenance only, never a human DCO certificate.
 The trusted bots named in [the governance document](GOVERNANCE.md#trusted-bots) (`dependabot[bot], renovate[bot], github-actions[bot], resnovas-smartcloud[bot]`) are exempt, because no person writes their commits.
 See [Contributing: Developer Certificate of Origin](CONTRIBUTING.md#dco) and [AI-03](AI_POLICY.md#ai-03).
 

@@ -96,8 +96,9 @@ Only these findings block an approval until they are fixed, or a maintainer dism
 
 - a security finding from GitHub Copilot code review;
 - a CodeRabbit comment marked major or critical;
-- a failing Graphify gate;
 - Qodo reporting that the change does not match its ticket.
+
+Graphify generation and freshness are navigation only, not approval gates. Required source architecture checks still apply.
 
 Every other bot finding is advisory: it needs a fix or a reply from the accountable human, as item 2 of [AP-30](#ap-30) says, but it does not block on its own.
 Code scanning alerts and failing required checks block through [AP-40](#ap-40) whatever this list says.

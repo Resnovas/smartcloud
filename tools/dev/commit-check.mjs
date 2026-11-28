@@ -13,11 +13,14 @@
 //   node tools/dev/commit-check.mjs --message "<text>"     check a message
 //     --author "Name <email>"   the author to check against; git's by default
 //     --no-diff                 skip the staged-text scan
+// TASK_LINEAR_PREFIX in house sync.values opts a repository into paired
+// Linear/GitHub issue references. Unmapped repositories default to none.
+// This offline check verifies syntax, not remote mapping or acceptance.
 //
 // `node tools/dev/surfaces.mjs install` (run by setup) installs it as
 // .git/hooks/commit-msg. It has no dependencies and never talks to the
-// network. HOUSE_SKIP_COMMIT_CHECK=1 skips it for one emergency commit; the
-// smartcloud check on the pull request still applies every rule.
+// network. HOUSE_SKIP_COMMIT_CHECK=1 skips ordinary checks for an emergency
+// commit, but never the generated-output guard. PR policy still applies.
 
 import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
@@ -39,7 +42,7 @@ const HOST_LINE = /^(?:claude-session|made-with|generated-by|generated with|🤖
 
 // Staged files the dash scan leaves alone: generated, vendored or not text.
 // The Linear mirror paths preserve verbatim source, not human-authored prose.
-const SKIP_PATH = /^(?:graphify-out\/|externals\/|docs\/reference\/|docs\/planning\/issues\/|tools\/documentation\/linear-snapshot\.json$|LLMS\.md$|CHANGELOG\.md$|.*lock\.(?:yaml|json)$|.*\.(?:min\.js|map|svg|png|jpe?g|gif|pdf|woff2?|ttf|ico)$)/
+const SKIP_PATH = /^(?:graphify-out\/|graphify-snapshot\/|externals\/|docs\/reference\/|docs\/planning\/issues\/|tools\/documentation\/linear-snapshot\.json$|LLMS\.md$|CHANGELOG\.md$|.*lock\.(?:yaml|json)$|.*\.(?:min\.js|map|svg|png|jpe?g|gif|pdf|woff2?|ttf|ico)$)/
 
 // TypeScript the code scan covers: sources, not tests, typings, vendored code
 // or repository tooling (coding-preferences, references/effect.md).
@@ -100,9 +103,10 @@ const parseMessage = (message) => {
  *
  * @param {string} message
  * @param {{ name: string, email: string }} author
+ * @param {string} linearPrefix - Configured team key, or none for unmapped repositories.
  * @returns {string[]}
  */
-export const checkMessage = (message, author) => {
+export const checkMessage = (message, author, linearPrefix = 'none') => {
   const problems = []
   const { subject, lines, trailers } = parseMessage(message)
   const text = lines.join('\n')
@@ -118,23 +122,30 @@ export const checkMessage = (message, author) => {
   // (the pull request check exempts merge commits too, and fixups never land).
   if (subject === '' || GIT_GENERATED.test(subject)) return [...new Set(problems)]
 
+  // Opt in through the existing renderer, not by guessing tracker IDs from
+  // branch names or contacting a tracker in a local commit hook.
+  if (linearPrefix !== 'none') {
+    if (!/^[A-Z][A-Z0-9]*$/.test(linearPrefix)) {
+      problems.push('An invalid task Linear prefix was rendered; set TASK_LINEAR_PREFIX to the verified team key or none in house sync.values.')
+    } else {
+      const linear = new RegExp(`(?:^|[^A-Za-z0-9_-])${linearPrefix}-[1-9]\\d*(?![A-Za-z0-9_-])`)
+      const github = /(?:^|[\s(,])(?:[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+#[1-9]\d*|https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/issues\/[1-9]\d*)(?=$|[\s),.;])/m
+      if (!linear.test(text)) problems.push(`Reference the owning ${linearPrefix} issue in this task commit, including generated docs/graph commits; use a verified ID, never a placeholder.`)
+      if (!github.test(text)) problems.push('Reference the verified linked, qualified GitHub issue as owner/repo#number or https://github.com/owner/repo/issues/number; a bare #number or pull request is not a mapping. Use Refs for partial delivery, not closing keywords.')
+    }
+  }
+
   const trailer = (key) =>
     trailers
       .filter((line) => line.toLowerCase().startsWith(`${key.toLowerCase()}: `))
       .map((line) => line.slice(key.length + 2).trim())
 
-  if (isAi(author)) {
-    problems.push(
-      `The commit author "${author.name} <${author.email}>" is an AI tool. Set the author to the accountable human: git -c user.name="Name" -c user.email="you@example.com" commit ..., or GIT_AUTHOR_NAME and GIT_AUTHOR_EMAIL. See ${POLICY}/AI_POLICY.md#ai-03`,
-    )
-  }
+  // Before signing, identity text proves neither platform nor human consent.
+  // An agent's matching trailer records provenance; PR certification is separate.
   const signOffs = trailer('Signed-off-by').map(parseIdentity).filter((identity) => identity !== undefined)
-  for (const signer of signOffs) {
-    if (isAi(signer)) problems.push(`Signed-off-by "${signer.name} <${signer.email}>" names an AI tool; only a person certifies the DCO (AI-03). See ${POLICY}/AI_POLICY.md#ai-03`)
-  }
-  if (!signOffs.some((signer) => !isAi(signer) && signer.email === author.email)) {
+  if (!signOffs.some((signer) => signer.email === author.email.toLowerCase())) {
     problems.push(
-      `No Signed-off-by matching the author <${author.email}>. Commit with git commit -s as the accountable human; an agent adds someone's sign-off only where they set it up. See ${POLICY}/CONTRIBUTING.md#dco`,
+      `No Signed-off-by matching the author <${author.email}>. Use git commit -s with your authorized identity. An agent's own trailer is provenance only and needs separate human PR certification. See ${POLICY}/AI_POLICY.md#ai-03`,
     )
   }
   for (const value of trailer('Co-authored-by')) {
@@ -152,6 +163,63 @@ export const checkMessage = (message, author) => {
       problems.push(`Remove the host attribution line "${line.trim()}"; the Co-authored-by trailer and the sign-off are the only attribution (AI-02). See ${POLICY}/AI_POLICY.md#ai-02`)
   }
   return [...new Set(problems)]
+}
+
+/**
+ * Bind a commit to its author's own GitHub-verified signing account.
+ * A trusted CI adapter supplies immutable-commit API data. This pure
+ * evaluator neither classifies authors nor runs in the pre-signature hook;
+ * the same account-binding rule works without a per-tool fingerprint list.
+ *
+ * @param {object} commit - GitHub commit data, never candidate-authored evidence.
+ * @param {object} commit.author - Git actor including its resolved user account.
+ * @param {object|null} commit.signature - GitHub signature validity, state and signer.
+ * @returns {string[]} Corrective failures; passing does not certify the human DCO.
+ */
+export const checkAuthorSignature = ({ author, signature }) => {
+  const authorId = author?.user?.databaseId
+  const signerId = signature?.signer?.databaseId
+  if (signature?.isValid !== true || signature.state !== 'VALID' || !Number.isSafeInteger(authorId) || authorId <= 0 || signerId !== authorId) {
+    return ['Sign with your own identity: require a VALID GitHub signature whose signer account matches the resolved author account. Agent-authored commits must use that agent account, not a human signing account.']
+  }
+  return []
+}
+
+/**
+ * Evaluate human certification for PRs containing agent-authored commits.
+ *
+ * Pure policy only, not called by the pre-signature hook. A trusted CI adapter
+ * must supply complete author classifications from trusted account policy,
+ * configured human accounts, and complete authenticated GitHub review data.
+ * No CI adapter is activated by this function.
+ *
+ * @param {object} evidence - Trusted normalized PR evidence, never PR-supplied JSON.
+ * @param {string} evidence.headSha - Immutable PR head being certified.
+ * @param {boolean} evidence.commitsComplete - Whether all PR commits were classified.
+ * @param {string[]} evidence.commitKinds - agent, human or trusted-bot; unknown fails closed.
+ * @param {string[]} [evidence.humanLogins] - Human certifiers from trusted policy, not the PR body.
+ * @param {string} [evidence.accountableHuman] - Existing AI-21 accountable-human field.
+ * @param {string} [evidence.humanReview] - Existing AI-21 human-review field.
+ * @param {boolean} [evidence.reviewsComplete] - Whether every review page was read successfully.
+ * @param {object[]} [evidence.reviews] - GitHub review objects, including id, state, commit_id, body and user.
+ * @returns {string[]} Unsatisfied certification requirements; empty does not grant merge authority.
+ */
+export const checkPullRequestCertification = ({ headSha, commitsComplete, commitKinds, humanLogins, accountableHuman, humanReview, reviewsComplete, reviews }) => {
+  if (commitsComplete !== true || !Array.isArray(commitKinds) || commitKinds.length === 0 || commitKinds.some((kind) => !['agent', 'human', 'trusted-bot'].includes(kind))) {
+    return ['Classify every PR author using trusted account policy before deciding whether human PR certification is required.']
+  }
+  // Ordinary human sign-off and existing AI-21 gates remain independent.
+  // GitHub forbids self-approval, so human-authored PRs do not use this path.
+  if (!commitKinds.includes('agent')) return []
+  const failure = ['Obtain an exact-head human DCO approval from the named accountable human. Agent sign-offs and PR description fields alone never certify the DCO.']
+  const login = accountableHuman?.replace(/^@/, '').toLowerCase()
+  if (!/^[a-f0-9]{40}$/.test(headSha ?? '') || !login || !humanReview?.trim() || reviewsComplete !== true || !Array.isArray(reviews)) return failure
+  if (!humanLogins?.some((human) => human.toLowerCase() === login)) return failure
+  const ownReviews = reviews.filter((review) => review.user?.login?.toLowerCase() === login)
+  if (ownReviews.length === 0 || ownReviews.some((review) => !Number.isSafeInteger(review.id) || review.id <= 0)) return failure
+  const latest = ownReviews.reduce((newest, review) => review.id > newest.id ? review : newest)
+  const certificate = 'DCO certification: I certify the Developer Certificate of Origin for all changes in this pull request.'
+  return latest.user.type === 'User' && latest.state === 'APPROVED' && latest.commit_id === headSha && latest.body?.trim() === certificate ? [] : failure
 }
 
 /**
@@ -207,8 +275,48 @@ export const checkStagedText = (diff) => {
 // so the buffer is well above Node's default of one megabyte.
 const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 512 * 1024 * 1024 })
 
+/**
+ * Reject generated content before message exemptions or staged-text switches.
+ * Only legacy local-output deletions and its two configuration files are ordinary changes.
+ * Workflow context is an accident guard, not authentication; GitHub permissions,
+ * signed automation PRs and required reviews/checks remain the security boundary.
+ *
+ * @param {string} message - Complete proposed commit message.
+ * @returns {{ problems: string[], automation: boolean }} Guard decision without publishing its configured value.
+ */
+const checkGeneratedGraph = (message) => {
+  const fields = git('diff', '--cached', '--name-status', '--no-renames', '-z').split('\0')
+  const changes = []
+  for (let i = 0; i + 1 < fields.length; i += 2) changes.push({ status: fields[i], path: fields[i + 1] })
+  const generated = changes.filter(({ status, path }) => path.startsWith('graphify-snapshot/') ||
+    (path.startsWith('graphify-out/') && !['graphify-out/.gitignore', 'graphify-out/.gitattributes'].includes(path) && status !== 'D'))
+  if (generated.length === 0) return { problems: [], automation: false }
+  const denied = { problems: ['Generated graph commits cause merge conflicts; graph updates are handled only by repository automation. Unstage generated output and commit source/configuration changes instead.'], automation: false }
+  // No cache, local graph, source change, rename or deletion can ride the publisher exception.
+  const outputs = ['graphify-snapshot/graph.json', 'graphify-snapshot/provenance.json']
+  if (!changes.every(({ status, path }) => ['A', 'M'].includes(status) && outputs.includes(path))) return denied
+  const env = process.env
+  if (env.GITHUB_ACTIONS !== 'true' || !['schedule', 'workflow_dispatch'].includes(env.GITHUB_EVENT_NAME) ||
+    !['Resnovas/Eventiva', 'Resnovas/.github'].includes(env.GITHUB_REPOSITORY) || env.GITHUB_REF !== 'refs/heads/main' ||
+    env.GITHUB_WORKFLOW_REF !== `${env.GITHUB_REPOSITORY}/.github/workflows/house-graphify.yml@refs/heads/main`) return denied
+  try {
+    const event = JSON.parse(readFileSync(env.GITHUB_EVENT_PATH, 'utf8'))
+    if (event.repository?.full_name !== env.GITHUB_REPOSITORY || event.repository?.default_branch !== 'main' ||
+      git('symbolic-ref', '--short', 'HEAD').trim() !== 'main' || git('rev-parse', 'HEAD').trim() !== env.GITHUB_SHA) return denied
+    // Read committed workflow configuration; an unstaged/staged edit cannot grant an exception.
+    const workflow = git('show', 'HEAD:.github/workflows/house-graphify.yml')
+    const values = [...workflow.matchAll(/^      publication-message: '([^'\r\n]+)'$/gm)]
+    if (values.length !== 1 || message.replace(/\r?\n$/, '') !== values[0][1]) return denied
+    const modes = git('ls-files', '--stage', '--', ...outputs).trim().split('\n')
+    if (modes.length !== outputs.length || modes.some((entry) => !entry.startsWith('100644 ') || !/ 0\t/.test(entry))) return denied
+    return { problems: [], automation: true }
+  } catch {
+    // Missing/malformed workflow evidence denies publication without leaking message or event data.
+    return denied
+  }
+}
+
 const main = () => {
-  if (process.env['HOUSE_SKIP_COMMIT_CHECK'] === '1') return 0
   const args = process.argv.slice(2)
   let message
   let author
@@ -225,6 +333,12 @@ const main = () => {
     console.error('usage: node tools/dev/commit-check.mjs <message-file> | --message "<text>" [--author "Name <email>"] [--no-diff]')
     return 2
   }
+  const graph = checkGeneratedGraph(message)
+  if (graph.problems.length > 0) {
+    for (const problem of graph.problems) console.error(`commit-check: ${problem}`)
+    return 1
+  }
+  if (graph.automation || process.env['HOUSE_SKIP_COMMIT_CHECK'] === '1') return 0
   if (author === undefined) {
     // "Name <email> 1700000000 +0000"
     const ident = git('var', 'GIT_AUTHOR_IDENT').trim().replace(/\s+\d+\s+[+-]\d{4}$/, '')
@@ -233,7 +347,10 @@ const main = () => {
   }
   // A merge or revert in progress stages already-reviewed changes; only the message is checked.
   if (scanDiff && ['MERGE_HEAD', 'REVERT_HEAD'].some((head) => existsSync(resolve(git('rev-parse', '--git-path', head).trim())))) scanDiff = false
-  const problems = [...checkMessage(message, author), ...(scanDiff ? checkStagedText(git('diff', '--cached', '--unified=1', '--no-color')) : [])]
+  // Keep rendered configuration as data: even quotes/newlines cannot become
+  // executable JavaScript before the team-key validation runs.
+  const linearPrefix = readFileSync(new URL('./commit-check-linear-prefix.txt', import.meta.url), 'utf8').trim()
+  const problems = [...checkMessage(message, author, linearPrefix), ...(scanDiff ? checkStagedText(git('diff', '--cached', '--unified=1', '--no-color')) : [])]
   for (const problem of problems) console.error(`commit-check: ${problem}`)
   if (problems.length > 0) console.error('commit-check: the commit was not made. Fix the message or the staged text, or set HOUSE_SKIP_COMMIT_CHECK=1 for an emergency commit; the pull request check still applies.')
   return problems.length === 0 ? 0 : 1

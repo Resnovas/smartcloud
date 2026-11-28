@@ -8,6 +8,10 @@ pointer at the bottom naming the cutoff version when you trim.
 One terse line per change. If an entry wants a second sentence, that sentence
 belongs in a reference file and the line points at it.
 
+## 2026-11-20
+
+- Separate agent provenance from human PR DCO certification using author identity, not the tool that made a commit.
+
 ## 2026-09-27
 
 - Replaced the ban on AI attribution with the AI policy: AI-02 trailers on every agent commit, and agent PRs as drafts carrying the AI disclosure.
